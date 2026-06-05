@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
@@ -8,7 +8,8 @@ import PasswordStrength from '../components/PasswordStrength.jsx';
 export default function ForgotPassword() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [step, setStep] = useState(1); // 1: إدخال البريد | 2: الكود + كلمة المرور
+  const emailRef = useRef(null);
+  const [step, setStep] = useState(1); // 1: البريد | 2: الكود + كلمة المرور
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -18,9 +19,17 @@ export default function ForgotPassword() {
 
   const sendCode = async (e) => {
     e.preventDefault();
-    setError(''); setBusy(true);
+    setError(''); setMsg('');
+    // نقرأ القيمة من الحالة أو مباشرة من الحقل (لتفادي مشاكل الإكمال التلقائي بالآيفون)
+    const em = (email || emailRef.current?.value || '').trim();
+    if (!/^\S+@\S+\.\S+$/.test(em)) {
+      setError(t('errors.invalidEmail'));
+      return;
+    }
+    setEmail(em);
+    setBusy(true);
     try {
-      await api.post('/auth/forgot-password', { email });
+      await api.post('/auth/forgot-password', { email: em });
       setMsg(t('auth.codeSentHint'));
       setStep(2);
     } catch (err) {
@@ -32,7 +41,12 @@ export default function ForgotPassword() {
 
   const reset = async (e) => {
     e.preventDefault();
-    setError(''); setBusy(true);
+    setError('');
+    if (!code.trim() || newPassword.length < 8) {
+      setError(t('errors.generic'));
+      return;
+    }
+    setBusy(true);
     try {
       await api.post('/auth/reset-password', { email, token: code.trim(), newPassword });
       setMsg(t('auth.resetDone'));
@@ -59,7 +73,19 @@ export default function ForgotPassword() {
             <form onSubmit={sendCode} className="space-y-4">
               <div>
                 <label className="label">{t('auth.email')}</label>
-                <input type="email" required dir="ltr" className="input" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
+                <input
+                  ref={emailRef}
+                  type="text"
+                  inputMode="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  dir="ltr"
+                  className="input"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  placeholder="you@email.com"
+                />
               </div>
               <button type="submit" disabled={busy} className="btn-primary w-full">
                 {busy ? t('common.loading') : t('auth.sendCode')}
@@ -70,17 +96,20 @@ export default function ForgotPassword() {
           <form onSubmit={reset} className="space-y-4">
             <div>
               <label className="label">{t('auth.codeLabel')}</label>
-              <input type="text" inputMode="numeric" required dir="ltr" maxLength={6}
+              <input type="text" inputMode="numeric" dir="ltr" maxLength={6}
                 className="input text-center text-2xl tracking-[0.5em]" value={code} onChange={(e) => setCode(e.target.value)} placeholder="••••••" />
             </div>
             <div>
               <label className="label">{t('auth.newPassword')}</label>
-              <input type="password" required className="input" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} autoComplete="new-password" />
+              <input type="password" className="input" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} autoComplete="new-password" />
               <PasswordStrength password={newPassword} />
               <p className="mt-1.5 text-xs text-stone-400">{t('auth.passwordHint')}</p>
             </div>
             <button type="submit" disabled={busy} className="btn-primary w-full">
               {busy ? t('common.loading') : t('auth.resetSubmit')}
+            </button>
+            <button type="button" onClick={() => setStep(1)} className="w-full text-center text-xs text-stone-400 hover:text-gold-200">
+              {t('auth.backToLogin') /* رجوع لإدخال البريد */}
             </button>
           </form>
         )}

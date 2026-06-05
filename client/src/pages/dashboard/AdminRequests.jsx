@@ -27,6 +27,29 @@ export default function AdminRequests() {
   const [rErr, setRErr] = useState('');
   const [rBusy, setRBusy] = useState(false);
 
+  // تعليمات الدفع
+  const [payInfo, setPayInfo] = useState('');
+  const [payMsg, setPayMsg] = useState('');
+  const [payBusy, setPayBusy] = useState(false);
+
+  useEffect(() => {
+    api.get('/subscription/settings').then((r) => setPayInfo(r.data.paymentInfo || '')).catch(() => {});
+  }, []);
+
+  const savePayment = async (e) => {
+    e.preventDefault();
+    setPayMsg(''); setPayBusy(true);
+    try {
+      await api.put('/subscription/settings', { paymentInfo: payInfo });
+      setPayMsg(t('admin.paymentSaved'));
+      setTimeout(() => setPayMsg(''), 2000);
+    } catch (err) {
+      setPayMsg(getErrorMessage(err, t('errors.generic')));
+    } finally {
+      setPayBusy(false);
+    }
+  };
+
   const doReset = async (e) => {
     e.preventDefault();
     setRMsg(''); setRErr(''); setRBusy(true);
@@ -102,6 +125,17 @@ export default function AdminRequests() {
         <button type="submit" disabled={rBusy} className="btn-primary">{rBusy ? t('common.loading') : t('admin.doReset')}</button>
       </form>
 
+      {/* تعليمات الدفع */}
+      <form onSubmit={savePayment} className="glass space-y-3 p-5">
+        <h2 className="font-display text-lg font-bold text-stone-100">💳 {t('admin.paymentTitle')}</h2>
+        <p className="text-xs text-stone-400">{t('admin.paymentHint')}</p>
+        {payMsg && <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-200">{payMsg}</div>}
+        <textarea rows={4} className="input resize-none" value={payInfo} onChange={(e) => setPayInfo(e.target.value)}
+          placeholder="مثال: للاشتراك حوّل المبلغ عبر Payoneer إلى بريدك@... أو محفظة PalPay رقم ...، ثم أرسل رقم العملية." />
+        <button type="submit" disabled={payBusy} className="btn-primary">{payBusy ? t('common.loading') : t('admin.savePayment')}</button>
+      </form>
+
+      <h2 className="font-display text-lg font-bold text-stone-100">{t('admin.requests')}</h2>
       {requests.length === 0 ? (
         <div className="glass p-10 text-center text-stone-400">{t('admin.noRequests')}</div>
       ) : (

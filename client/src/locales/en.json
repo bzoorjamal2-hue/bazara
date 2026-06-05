@@ -254,7 +254,11 @@
     "newPassword": "New password",
     "generate": "Generate strong password",
     "doReset": "Reset",
-    "resetDone": "Done! Send the new password to the subscriber."
+    "resetDone": "Done! Send the new password to the subscriber.",
+    "paymentTitle": "Payment instructions for subscribers",
+    "paymentHint": "Describe how subscribers pay (Payoneer / wallet / bank / cash). Shown on the subscribe page.",
+    "savePayment": "Save payment instructions",
+    "paymentSaved": "Payment instructions saved."
   },
   "order": {
     "choose": "Choose order method",
@@ -276,6 +280,7 @@
   },
   "errors": {
     "generic": "Something went wrong, please try again.",
+    "invalidEmail": "Invalid email address.",
     "notFound": "Page not found.",
     "storeNotFound": "Store not found."
   }

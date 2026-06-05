@@ -102,3 +102,9 @@ CREATE TABLE IF NOT EXISTS subscription_requests (
 );
 CREATE INDEX IF NOT EXISTS idx_subreq_user ON subscription_requests(user_id);
 CREATE INDEX IF NOT EXISTS idx_subreq_status ON subscription_requests(status);
+
+-- إعدادات المنصة (يحرّرها المدير من اللوحة) مثل تعليمات الدفع
+CREATE TABLE IF NOT EXISTS app_settings (
+    key   TEXT PRIMARY KEY,
+    value TEXT DEFAULT ''
+);

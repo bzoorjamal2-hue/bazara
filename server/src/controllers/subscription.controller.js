@@ -3,12 +3,39 @@ import { isUserActive, daysRemaining, isAdminEmail, planPeriodEnd } from '../uti
 
 const PLANS = { monthly: true, yearly: true };
 
-// تعليمات الدفع التي يضبطها المدير (Payoneer / بنك / محفظة محلية)
-function paymentInfo() {
+// تعليمات الدفع: من قاعدة البيانات (يحرّرها المدير)، وإلا من المتغيّر، وإلا نص افتراضي.
+async function getPaymentInfo() {
+  const r = await query("SELECT value FROM app_settings WHERE key = 'payment_info'");
+  const dbVal = r.rows[0]?.value;
   return (
+    (dbVal && dbVal.trim()) ||
     process.env.ADMIN_PAYMENT_INFO ||
     'سيتم إضافة تفاصيل الدفع قريباً. تواصل مع إدارة Bazara لإتمام الاشتراك.'
   );
+}
+
+// جلب إعدادات المنصة (للمدير)
+export async function getSettings(_req, res, next) {
+  try {
+    res.json({ paymentInfo: await getPaymentInfo() });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// تحديث تعليمات الدفع (للمدير)
+export async function updateSettings(req, res, next) {
+  const { paymentInfo } = req.body;
+  try {
+    await query(
+      `INSERT INTO app_settings (key, value) VALUES ('payment_info', $1)
+       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
+      [paymentInfo || '']
+    );
+    res.json({ message: 'تم حفظ تعليمات الدفع.', paymentInfo: paymentInfo || '' });
+  } catch (err) {
+    next(err);
+  }
 }
 
 // حالة اشتراك المستخدم الحالي + آخر طلب + تعليمات الدفع
@@ -36,7 +63,7 @@ export async function getStatus(req, res, next) {
       isAdmin: isAdminEmail(u.email),
       pending: last && last.status === 'pending',
       lastRequest: last ? { plan: last.plan, status: last.status, createdAt: last.created_at } : null,
-      paymentInfo: paymentInfo(),
+      paymentInfo: await getPaymentInfo(),
     });
   } catch (err) {
     next(err);
