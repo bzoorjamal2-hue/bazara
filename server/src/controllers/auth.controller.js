@@ -215,7 +215,8 @@ export async function forgotPassword(req, res, next) {
       r.rows[0].id,
     ]);
 
-    await sendMail({
+    // إرسال غير متزامن (لا نوقف الرد على المستخدم)
+    sendMail({
       to: email,
       subject: 'رمز استعادة كلمة المرور — Bazara',
       html: `<div style="font-family:Tahoma,Arial;direction:rtl;text-align:right">
@@ -225,7 +226,8 @@ export async function forgotPassword(req, res, next) {
         <p>أدخله في صفحة استعادة كلمة المرور لتعيين كلمة مرور جديدة.</p>
         <p>إذا لم تطلب ذلك، تجاهل هذه الرسالة.</p>
       </div>`,
-    });
+    }).catch((e) => console.error('sendMail failed:', e.message));
+
     res.json(generic);
   } catch (err) {
     next(err);
