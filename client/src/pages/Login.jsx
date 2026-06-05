@@ -78,10 +78,6 @@ export default function Login() {
           </button>
         </form>
 
-        <p className="mt-4 text-center text-sm">
-          <Link to="/forgot-password" className="text-stone-400 hover:text-gold-200">{t('auth.forgotLink')}</Link>
-        </p>
-
         <p className="mt-5 text-center text-sm text-stone-400">
           {t('auth.noAccount')}{' '}
           <Link to="/register" className="font-semibold text-gold-300 hover:text-gold-200">

@@ -229,6 +229,22 @@ export async function forgotPassword(req, res, next) {
   }
 }
 
+// إعادة تعيين كلمة مرور أي مستخدم (للمدير فقط — بدون إيميل)
+export async function adminResetPassword(req, res, next) {
+  const { email, newPassword } = req.body;
+  try {
+    const hash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+    const r = await query(
+      'UPDATE users SET password_hash = $1, reset_token = NULL, reset_token_expires = NULL WHERE email = $2 RETURNING email',
+      [hash, email]
+    );
+    if (r.rows.length === 0) return res.status(404).json({ error: 'لا يوجد مستخدم بهذا البريد.' });
+    res.json({ message: 'تم تعيين كلمة مرور جديدة لهذا المستخدم.', email: r.rows[0].email });
+  } catch (err) {
+    next(err);
+  }
+}
+
 // تعيين كلمة مرور جديدة عبر التوكن
 export async function resetPassword(req, res, next) {
   const { email, token, newPassword } = req.body;

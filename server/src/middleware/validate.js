@@ -56,6 +56,11 @@ export const resetPasswordRules = [
   body('newPassword').matches(STRONG_PASSWORD).withMessage('كلمة المرور يجب أن تكون 8 أحرف على الأقل وتحتوي على حرف ورقم ورمز.'),
 ];
 
+export const adminResetRules = [
+  body('email').trim().isEmail().withMessage('بريد إلكتروني غير صالح.').normalizeEmail(),
+  body('newPassword').matches(STRONG_PASSWORD).withMessage('كلمة المرور يجب أن تكون 8 أحرف على الأقل وتحتوي على حرف ورقم ورمز.'),
+];
+
 export const profileRules = [
   body('name').trim().isLength({ min: 2, max: 100 }).withMessage('الاسم يجب أن يكون بين 2 و100 حرف.'),
   body('avatarUrl').optional({ nullable: true, checkFalsy: true }).custom(isUrlOrDataImage).withMessage('صورة غير صالحة.'),

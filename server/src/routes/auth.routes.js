@@ -10,8 +10,9 @@ import {
   changeEmail,
   forgotPassword,
   resetPassword,
+  adminResetPassword,
 } from '../controllers/auth.controller.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, requireAdmin } from '../middleware/auth.js';
 import {
   handleValidation,
   registerRules,
@@ -21,6 +22,7 @@ import {
   changeEmailRules,
   forgotPasswordRules,
   resetPasswordRules,
+  adminResetRules,
 } from '../middleware/validate.js';
 
 const router = Router();
@@ -45,5 +47,8 @@ router.put('/email', requireAuth, changeEmailRules, handleValidation, changeEmai
 // استعادة كلمة المرور (بدون تسجيل دخول)
 router.post('/forgot-password', authLimiter, forgotPasswordRules, handleValidation, forgotPassword);
 router.post('/reset-password', authLimiter, resetPasswordRules, handleValidation, resetPassword);
+
+// إعادة تعيين كلمة مرور مستخدم (للمدير)
+router.post('/admin/reset-password', requireAuth, requireAdmin, adminResetRules, handleValidation, adminResetPassword);
 
 export default router;

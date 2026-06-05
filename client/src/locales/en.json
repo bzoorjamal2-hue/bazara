@@ -242,7 +242,14 @@
     "approved": "Active",
     "rejected": "Rejected",
     "pending": "Pending",
-    "done": "Done."
+    "done": "Done.",
+    "resetSection": "Reset a subscriber's password",
+    "resetHint": "If a subscriber forgets their password: they contact you, you set a new one here and send it to them.",
+    "userEmail": "Subscriber email",
+    "newPassword": "New password",
+    "generate": "Generate strong password",
+    "doReset": "Reset",
+    "resetDone": "Done! Send the new password to the subscriber."
   },
   "order": {
     "choose": "Choose order method",
