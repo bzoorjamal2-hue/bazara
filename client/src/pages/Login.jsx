@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -14,13 +14,19 @@ export default function Login() {
   const [form, setForm] = useState({ email: location.state?.email || '', password: '' });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const emailRef = useRef(null);
 
   const submit = async (e) => {
     e.preventDefault();
     setError('');
+    const email = (form.email || emailRef.current?.value || '').trim();
+    if (!email || !form.password) {
+      setError(t('errors.invalidEmail'));
+      return;
+    }
     setBusy(true);
     try {
-      const data = await login(form.email, form.password);
+      const data = await login(email, form.password);
       // غير المشترك يُوجَّه لصفحة الاشتراك لتفعيل متجره
       if (data?.subscription && !data.subscription.active) navigate('/subscribe');
       else navigate('/dashboard');
@@ -54,8 +60,12 @@ export default function Login() {
           <div>
             <label className="label">{t('auth.email')}</label>
             <input
-              type="email"
-              required
+              ref={emailRef}
+              type="text"
+              inputMode="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              dir="ltr"
               className="input"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -13,13 +13,20 @@ export default function Register() {
   const [form, setForm] = useState({ name: '', email: '', password: '', storeName: '', phone: '' });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const emailRef = useRef(null);
 
   const submit = async (e) => {
     e.preventDefault();
     setError('');
+    // نقرأ الإيميل من الحالة أو من الحقل مباشرة (لتفادي مشاكل الإكمال التلقائي بالآيفون)
+    const email = (form.email || emailRef.current?.value || '').trim();
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      setError(t('errors.invalidEmail'));
+      return;
+    }
     setBusy(true);
     try {
-      const data = await register(form);
+      const data = await register({ ...form, email });
       // إن كان مفعّلاً (مثلاً مدير) للوحة التحكم، وإلا لصفحة الدفع/الاشتراك
       if (data?.subscription?.active) navigate('/dashboard');
       else navigate('/subscribe');
@@ -67,7 +74,7 @@ export default function Register() {
           </div>
           <div>
             <label className="label">{t('auth.email')}</label>
-            <input type="email" required className="input" value={form.email} onChange={set('email')} autoComplete="email" />
+            <input ref={emailRef} type="text" inputMode="email" autoCapitalize="none" autoCorrect="off" dir="ltr" className="input" value={form.email} onChange={set('email')} autoComplete="email" placeholder="you@email.com" />
           </div>
           <div>
             <label className="label">{t('auth.password')}</label>
