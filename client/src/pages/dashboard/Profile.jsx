@@ -38,6 +38,18 @@ export default function Profile() {
     }
   };
 
+  // حفظ الصورة فوراً
+  const saveAvatar = async () => {
+    setMsg(''); setError('');
+    try {
+      await updateProfile({ name: form.name || user?.name || '', avatarUrl: form.avatarUrl });
+      setMsg(t('image.imageSaved'));
+      setTimeout(() => setMsg(''), 2000);
+    } catch (err) {
+      setError(getErrorMessage(err, t('errors.generic')));
+    }
+  };
+
   const submitPassword = async (e) => {
     e.preventDefault();
     setPwMsg(''); setPwErr(''); setPwBusy(true);
@@ -82,7 +94,10 @@ export default function Profile() {
       <form onSubmit={submit} className="glass space-y-5 p-6">
         <Alert ok>{msg}</Alert>
         <Alert>{error}</Alert>
-        <ImageInput label={t('dashboard.profileSection.avatar')} value={form.avatarUrl} onChange={(v) => setForm({ ...form, avatarUrl: v })} round />
+        <div>
+          <ImageInput label={t('dashboard.profileSection.avatar')} value={form.avatarUrl} onChange={(v) => setForm({ ...form, avatarUrl: v })} round />
+          <button type="button" onClick={saveAvatar} className="btn-ghost mt-3 text-sm">💾 {t('image.saveImage')}</button>
+        </div>
         <div>
           <label className="label">{t('auth.name')}</label>
           <input type="text" required className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />

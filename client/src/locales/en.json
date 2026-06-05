@@ -41,7 +41,9 @@
     "upload": "Upload",
     "url": "URL",
     "chooseFile": "Choose an image from your device",
-    "remove": "Remove image"
+    "remove": "Remove image",
+    "saveImage": "Save image",
+    "imageSaved": "Image saved ✓"
   },
   "home": {
     "heroTitle": "Your destination for",

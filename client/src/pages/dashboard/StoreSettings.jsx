@@ -48,6 +48,19 @@ export default function StoreSettings() {
     }
   };
 
+  // حفظ الشعار فوراً
+  const saveLogo = async () => {
+    setMsg(''); setError('');
+    try {
+      await api.put('/stores/me', form);
+      await refresh();
+      setMsg(t('image.imageSaved'));
+      setTimeout(() => setMsg(''), 2000);
+    } catch (err) {
+      setError(getErrorMessage(err, t('errors.generic')));
+    }
+  };
+
   if (!form) return <Spinner />;
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
@@ -61,7 +74,10 @@ export default function StoreSettings() {
       <form onSubmit={submit} className="space-y-5">
         {/* الأساسيات */}
         <div className="glass space-y-4 p-6">
-          <ImageInput label={t('dashboard.store.logo')} value={form.logoUrl} onChange={(v) => setForm({ ...form, logoUrl: v })} />
+          <div>
+            <ImageInput label={t('dashboard.store.logo')} value={form.logoUrl} onChange={(v) => setForm({ ...form, logoUrl: v })} />
+            <button type="button" onClick={saveLogo} className="btn-ghost mt-3 text-sm">💾 {t('image.saveImage')}</button>
+          </div>
           <div>
             <label className="label">{t('dashboard.store.name')}</label>
             <input type="text" required className="input" value={form.name} onChange={set('name')} />
