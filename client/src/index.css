@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-ink-950 text-stone-100 font-sans antialiased;
+  min-height: 100vh;
+}
+
+/* خلفية فاخرة سوداء بلمسات ذهبية ناعمة (غير مزدحمة) */
+.app-bg {
+  position: relative;
+  min-height: 100vh;
+  background:
+    radial-gradient(1100px 550px at 85% -8%, rgba(212, 175, 55, 0.14), transparent 60%),
+    radial-gradient(800px 500px at 5% 5%, rgba(212, 175, 55, 0.08), transparent 55%),
+    radial-gradient(700px 700px at 50% 120%, rgba(212, 175, 55, 0.06), transparent 60%),
+    linear-gradient(180deg, #070708 0%, #0b0b0d 100%);
+  overflow-x: hidden;
+}
+
+/* عند تفعيل العربية نستخدم خط Tajawal للنصوص */
+html[lang='ar'] body {
+  @apply font-ar;
+}
+/* العناوين الفخمة تبقى Playfair بالإنجليزي وCairo بالعربي */
+html[lang='ar'] .font-display {
+  font-family: 'Cairo', serif;
+}
+
+/* بطاقة زجاجية بحدود ذهبية خفيفة */
+.glass {
+  @apply rounded-2xl border border-gold-400/15 bg-white/[0.03] backdrop-blur-xl shadow-glass;
+}
+.glass-strong {
+  @apply rounded-2xl border border-gold-400/25 bg-white/[0.05] backdrop-blur-2xl shadow-glass;
+}
+
+/* أزرار */
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 font-semibold
+         transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gold-400/50
+         disabled:opacity-50 disabled:cursor-not-allowed;
+}
+.btn-primary {
+  @apply btn text-ink-950 shadow-gold hover:-translate-y-0.5;
+  background: linear-gradient(135deg, #e6c878 0%, #d4af37 45%, #b8932c 100%);
+}
+.btn-ghost {
+  @apply btn border border-gold-400/30 bg-white/[0.03] text-stone-100 hover:bg-gold-400/10 hover:border-gold-400/50;
+}
+.btn-danger {
+  @apply btn bg-red-500/90 text-white hover:bg-red-500;
+}
+.btn-whatsapp {
+  @apply btn text-white hover:-translate-y-0.5;
+  background: linear-gradient(135deg, #25d366 0%, #1da851 100%);
+}
+
+/* حقول الإدخال */
+.input {
+  @apply w-full rounded-xl border border-gold-400/15 bg-black/30 px-4 py-2.5 text-stone-100
+         placeholder:text-stone-500 focus:border-gold-400/60 focus:outline-none
+         focus:ring-2 focus:ring-gold-400/25 transition;
+}
+.label {
+  @apply mb-1.5 block text-sm font-medium text-stone-300;
+}
+
+/* عناوين ذهبية متدرّجة */
+.gradient-text {
+  background: linear-gradient(135deg, #f6edcf 0%, #e0c25f 45%, #d4af37 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* فاصل ذهبي رفيع */
+.gold-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.5), transparent);
+}
+
+/* شارة */
+.badge {
+  @apply rounded-full px-2.5 py-0.5 text-xs font-semibold;
+}
+
+/* شريط تمرير ذهبي لطيف */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.25); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(212, 175, 55, 0.4); }
+
+/* قص النص لعدة أسطر */
+.line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }

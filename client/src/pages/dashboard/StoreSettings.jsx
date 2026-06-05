@@ -1,0 +1,124 @@
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import api, { getErrorMessage } from '../../api/client.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import Spinner from '../../components/Spinner.jsx';
+import ImageInput from '../../components/ImageInput.jsx';
+
+const EMPTY = {
+  name: '', description: '', logoUrl: '', phone: '', whatsapp: '',
+  instagram: '', tiktok: '', themeColor: '#d4af37', deliveryInfo: '', paymentInfo: '',
+};
+
+export default function StoreSettings() {
+  const { t } = useTranslation();
+  const { refresh } = useAuth();
+  const [form, setForm] = useState(null);
+  const [msg, setMsg] = useState('');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    api
+      .get('/stores/me')
+      .then((res) => {
+        const s = res.data.store;
+        setForm({
+          name: s.name || '', description: s.description || '', logoUrl: s.logoUrl || '',
+          phone: s.phone || '', whatsapp: s.whatsapp || '', instagram: s.instagram || '',
+          tiktok: s.tiktok || '', themeColor: s.themeColor || '#d4af37',
+          deliveryInfo: s.deliveryInfo || '', paymentInfo: s.paymentInfo || '',
+        });
+      })
+      .catch((err) => setError(getErrorMessage(err)));
+  }, []);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setMsg(''); setError(''); setBusy(true);
+    try {
+      await api.put('/stores/me', form);
+      await refresh();
+      setMsg(t('dashboard.store.saved'));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      setError(getErrorMessage(err, t('errors.generic')));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (!form) return <Spinner />;
+  const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+
+  return (
+    <div className="space-y-6">
+      <h1 className="font-display text-2xl font-bold gradient-text">{t('dashboard.storeSettings')}</h1>
+
+      {msg && <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-200">{msg}</div>}
+      {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
+
+      <form onSubmit={submit} className="space-y-5">
+        {/* الأساسيات */}
+        <div className="glass space-y-4 p-6">
+          <ImageInput label={t('dashboard.store.logo')} value={form.logoUrl} onChange={(v) => setForm({ ...form, logoUrl: v })} />
+          <div>
+            <label className="label">{t('dashboard.store.name')}</label>
+            <input type="text" required className="input" value={form.name} onChange={set('name')} />
+          </div>
+          <div>
+            <label className="label">{t('dashboard.store.description')}</label>
+            <textarea rows={3} className="input resize-none" value={form.description} onChange={set('description')} />
+          </div>
+          <div>
+            <label className="label">{t('dashboard.store.themeColor')}</label>
+            <div className="flex items-center gap-3">
+              <input type="color" className="h-11 w-16 cursor-pointer rounded-lg border border-gold-400/20 bg-black/30" value={form.themeColor} onChange={set('themeColor')} />
+              <span className="text-sm text-stone-400" dir="ltr">{form.themeColor}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* التواصل */}
+        <div className="glass space-y-4 p-6">
+          <h2 className="font-display text-lg font-bold text-stone-100">{t('dashboard.store.contact')}</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="label">{t('dashboard.store.whatsapp')}</label>
+              <input type="text" dir="ltr" className="input" placeholder="+962790000000" value={form.whatsapp} onChange={set('whatsapp')} />
+              <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.whatsappHint')}</p>
+            </div>
+            <div>
+              <label className="label">{t('dashboard.store.phone')}</label>
+              <input type="text" dir="ltr" className="input" value={form.phone} onChange={set('phone')} />
+            </div>
+            <div>
+              <label className="label">{t('dashboard.store.instagram')}</label>
+              <input type="text" dir="ltr" className="input" placeholder="username" value={form.instagram} onChange={set('instagram')} />
+            </div>
+            <div>
+              <label className="label">{t('dashboard.store.tiktok')}</label>
+              <input type="text" dir="ltr" className="input" placeholder="username" value={form.tiktok} onChange={set('tiktok')} />
+            </div>
+          </div>
+        </div>
+
+        {/* التوصيل والدفع */}
+        <div className="glass space-y-4 p-6">
+          <div>
+            <label className="label">{t('dashboard.store.delivery')}</label>
+            <textarea rows={2} className="input resize-none" value={form.deliveryInfo} onChange={set('deliveryInfo')} />
+          </div>
+          <div>
+            <label className="label">{t('dashboard.store.payment')}</label>
+            <textarea rows={2} className="input resize-none" value={form.paymentInfo} onChange={set('paymentInfo')} />
+          </div>
+        </div>
+
+        <button type="submit" disabled={busy} className="btn-primary">
+          {busy ? t('common.loading') : t('common.save')}
+        </button>
+      </form>
+    </div>
+  );
+}

@@ -1,0 +1,59 @@
+import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useAuth } from '../context/AuthContext.jsx';
+
+// يعرض حالة الاشتراك: فعّال / سينتهي خلال 3 أيام / منتهٍ / وضع تجريبي
+export default function SubscriptionBanner() {
+  const { t } = useTranslation();
+  const { subscription } = useAuth();
+  if (!subscription) return null;
+
+  const { active, daysRemaining, status, currentPeriodEnd, isAdmin, pending } = subscription;
+  const dateStr = currentPeriodEnd ? new Date(currentPeriodEnd).toLocaleDateString() : '';
+
+  // المدير لا يحتاج اشتراكاً
+  if (isAdmin) return null;
+
+  // طلب قيد المراجعة
+  if (!active && pending) {
+    return (
+      <div className="rounded-2xl border border-orange-400/40 bg-orange-500/10 p-4 text-sm text-orange-200">
+        ⏳ {t('subscription.pendingBanner')}
+      </div>
+    );
+  }
+
+  // منتهٍ / غير مشترك
+  if (!active && status !== 'active') {
+    return (
+      <div className="flex flex-col items-start justify-between gap-3 rounded-2xl border border-red-400/40 bg-red-500/10 p-4 sm:flex-row sm:items-center">
+        <p className="text-sm text-red-200">⚠️ {t('subscription.expired')}</p>
+        <Link to="/subscribe" className="btn-primary !py-2 text-sm">{t('subscription.renew')}</Link>
+      </div>
+    );
+  }
+
+  // سينتهي خلال 3 أيام
+  if (active && daysRemaining != null && daysRemaining <= 3) {
+    return (
+      <div className="flex flex-col items-start justify-between gap-3 rounded-2xl border border-orange-400/40 bg-orange-500/10 p-4 sm:flex-row sm:items-center">
+        <p className="text-sm text-orange-200">
+          ⏳ {t('subscription.expiringSoon')} ({t('subscription.daysLeft', { count: daysRemaining })})
+        </p>
+        <Link to="/subscribe" className="btn-primary !py-2 text-sm">{t('subscription.renew')}</Link>
+      </div>
+    );
+  }
+
+  // فعّال
+  if (active) {
+    return (
+      <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-4 text-sm text-emerald-200">
+        ✓ {t('subscription.active')}
+        {dateStr && <span className="text-emerald-300/70"> — {t('subscription.expiresOn')} {dateStr}</span>}
+      </div>
+    );
+  }
+
+  return null;
+}

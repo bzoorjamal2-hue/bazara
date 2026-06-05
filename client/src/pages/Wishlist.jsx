@@ -1,0 +1,42 @@
+import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useWishlist } from '../context/WishlistContext.jsx';
+import { useCart } from '../context/CartContext.jsx';
+import Seo from '../components/Seo.jsx';
+
+const PH = 'https://placehold.co/300x300/121214/d4af37?text=%F0%9F%91%97';
+
+export default function Wishlist() {
+  const { t } = useTranslation();
+  const { items, remove } = useWishlist();
+  const { add } = useCart();
+
+  return (
+    <>
+      <Seo title={t('wishlist.title')} />
+      <h1 className="mb-6 font-display text-2xl font-bold gradient-text">❤️ {t('wishlist.title')}</h1>
+
+      {items.length === 0 ? (
+        <div className="glass p-10 text-center text-stone-400">{t('wishlist.empty')}</div>
+      ) : (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          {items.map((p, i) => (
+            <div key={p.id} className="glass animate-fade-up overflow-hidden" style={{ animationDelay: `${i * 50}ms` }}>
+              <Link to={`/product/${p.id}`} className="block aspect-square overflow-hidden bg-ink-800">
+                <img src={p.imageUrl || PH} alt={p.name} className="h-full w-full object-cover transition hover:scale-105" onError={(e) => (e.currentTarget.src = PH)} />
+              </Link>
+              <div className="p-3">
+                <Link to={`/product/${p.id}`} className="line-clamp-1 font-semibold text-stone-100 hover:text-gold-200">{p.name}</Link>
+                <p className="mt-1 font-display font-bold text-gold-300">{t('common.currency')}{p.price}</p>
+                <div className="mt-2 flex gap-2">
+                  <button onClick={() => add(p)} className="btn-primary flex-1 !px-2 !py-1.5 text-xs">🛒 {t('product.addToCart')}</button>
+                  <button onClick={() => remove(p.id)} className="btn-ghost !px-2.5 !py-1.5 text-xs">✕</button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}

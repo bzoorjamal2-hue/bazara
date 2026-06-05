@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/sitemap.xml",
+      "destination": "https://REPLACE-WITH-YOUR-API.onrender.com/sitemap.xml"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "https://REPLACE-WITH-YOUR-API.onrender.com/robots.txt"
+    },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
