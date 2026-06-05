@@ -29,6 +29,7 @@ export const registerRules = [
     .matches(STRONG_PASSWORD)
     .withMessage('كلمة المرور يجب أن تكون 8 أحرف على الأقل وتحتوي على حرف ورقم ورمز.'),
   body('storeName').trim().isLength({ min: 2, max: 120 }).withMessage('اسم المتجر يجب أن يكون بين 2 و120 حرف.'),
+  body('phone').trim().matches(/^[+\d][\d\s-]{6,20}$/).withMessage('رقم هاتف غير صالح.'),
 ];
 
 export const loginRules = [

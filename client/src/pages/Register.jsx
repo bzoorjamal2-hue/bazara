@@ -10,7 +10,7 @@ export default function Register() {
   const { t } = useTranslation();
   const { register } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: '', email: '', password: '', storeName: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', storeName: '', phone: '' });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -59,6 +59,11 @@ export default function Register() {
               value={form.storeName}
               onChange={set('storeName')}
             />
+          </div>
+          <div>
+            <label className="label">{t('auth.phone')}</label>
+            <input type="tel" required dir="ltr" className="input" placeholder="+970590000000" value={form.phone} onChange={set('phone')} autoComplete="tel" />
+            <p className="mt-1 text-xs text-stone-400">{t('auth.phoneHint')}</p>
           </div>
           <div>
             <label className="label">{t('auth.email')}</label>

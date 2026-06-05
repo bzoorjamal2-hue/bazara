@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 
-// إرسال البريد عبر Gmail SMTP (يُفعّل عند ضبط EMAIL_USER و EMAIL_PASS).
+// إرسال البريد عبر SMTP عام (Brevo مثلاً) أو Gmail.
+// يُفعّل عند ضبط EMAIL_USER و EMAIL_PASS (مع EMAIL_HOST للخدمات العامة).
 let transporter = null;
 
 export function isMailConfigured() {
@@ -10,20 +11,29 @@ export function isMailConfigured() {
 function getTransporter() {
   if (transporter) return transporter;
   if (!isMailConfigured()) return null;
-  transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-  });
+
+  if (process.env.EMAIL_HOST) {
+    // خدمة SMTP عامة مثل Brevo
+    transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: Number(process.env.EMAIL_PORT) || 587,
+      secure: false, // STARTTLS على 587
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    });
+  } else {
+    // Gmail
+    transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    });
+  }
   return transporter;
 }
 
 export async function sendMail({ to, subject, html }) {
   const t = getTransporter();
   if (!t) throw new Error('mail-not-configured');
-  await t.sendMail({
-    from: `Bazara <${process.env.EMAIL_USER}>`,
-    to,
-    subject,
-    html,
-  });
+  // المُرسِل: EMAIL_FROM إن وُجد (مطلوب لبعض الخدمات)، وإلا EMAIL_USER
+  const from = process.env.EMAIL_FROM || `Bazara <${process.env.EMAIL_USER}>`;
+  await t.sendMail({ from, to, subject, html });
 }

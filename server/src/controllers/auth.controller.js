@@ -29,7 +29,7 @@ function signToken(user) {
 
 // إنشاء حساب جديد + متجر خاص بالمستخدم (لا يسجّل الدخول تلقائياً)
 export async function register(req, res, next) {
-  const { name, email, password, storeName } = req.body;
+  const { name, email, password, storeName, phone } = req.body;
   const client = await pool.connect();
   try {
     const existing = await client.query('SELECT id FROM users WHERE email = $1', [email]);
@@ -42,15 +42,17 @@ export async function register(req, res, next) {
 
     await client.query('BEGIN');
     const userResult = await client.query(
-      'INSERT INTO users (name, email, password_hash, subscriber_code) VALUES ($1, $2, $3, $4) RETURNING id, name, email',
-      [name, email, passwordHash, generateSubscriberCode()]
+      'INSERT INTO users (name, email, password_hash, subscriber_code, phone) VALUES ($1, $2, $3, $4, $5) RETURNING id, name, email',
+      [name, email, passwordHash, generateSubscriberCode(), phone || '']
     );
     const user = userResult.rows[0];
 
-    await client.query('INSERT INTO stores (user_id, name, slug) VALUES ($1, $2, $3)', [
+    // نعبّي رقم واتساب/هاتف المتجر تلقائياً برقم التسجيل (يقدر يغيّره لاحقاً)
+    await client.query('INSERT INTO stores (user_id, name, slug, phone, whatsapp) VALUES ($1, $2, $3, $4, $4)', [
       user.id,
       storeName,
       slug,
+      phone || '',
     ]);
     await client.query('COMMIT');
 
@@ -204,22 +206,23 @@ export async function forgotPassword(req, res, next) {
       return res.json(generic);
     }
 
-    const rawToken = crypto.randomBytes(32).toString('hex');
-    const expires = new Date(Date.now() + 60 * 60 * 1000); // ساعة
+    // كود من 6 أرقام صالح 15 دقيقة
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    const expires = new Date(Date.now() + 15 * 60 * 1000);
     await query('UPDATE users SET reset_token = $1, reset_token_expires = $2 WHERE id = $3', [
-      hashToken(rawToken),
+      hashToken(code),
       expires,
       r.rows[0].id,
     ]);
 
-    const link = `${firstUrl(process.env.CLIENT_URL) || firstUrl(process.env.PUBLIC_SITE_URL)}/reset?token=${rawToken}&email=${encodeURIComponent(email)}`;
     await sendMail({
       to: email,
-      subject: 'استعادة كلمة المرور — Bazara',
+      subject: 'رمز استعادة كلمة المرور — Bazara',
       html: `<div style="font-family:Tahoma,Arial;direction:rtl;text-align:right">
-        <h2>استعادة كلمة المرور</h2>
-        <p>اضغط الرابط التالي لتعيين كلمة مرور جديدة (صالح لمدة ساعة):</p>
-        <p><a href="${link}" style="background:#d4af37;color:#0b0b0d;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:bold">إعادة تعيين كلمة المرور</a></p>
+        <h2>رمز استعادة كلمة المرور</h2>
+        <p>رمز التحقق الخاص بك (صالح لمدة 15 دقيقة):</p>
+        <p style="font-size:28px;font-weight:bold;letter-spacing:6px;color:#b8932c">${code}</p>
+        <p>أدخله في صفحة استعادة كلمة المرور لتعيين كلمة مرور جديدة.</p>
         <p>إذا لم تطلب ذلك، تجاهل هذه الرسالة.</p>
       </div>`,
     });

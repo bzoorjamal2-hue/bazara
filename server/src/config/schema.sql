@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT DEFAULT '';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS phone      VARCHAR(40) DEFAULT '';
 -- حقول الاشتراك (Stripe)
 ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_status    VARCHAR(20) NOT NULL DEFAULT 'inactive'; -- inactive|active|past_due|canceled
 ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_plan      VARCHAR(20);   -- monthly|yearly
