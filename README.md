@@ -133,6 +133,9 @@ npm run dev                  # يفتح http://localhost:5173
    | `PUBLIC_SITE_URL` | نفس رابط Vercel |
    | `COOKIE_SECURE` | `true` |
    | `COOKIE_SAMESITE` | `none` |
+   | `SUBSCRIPTIONS_ENABLED` | `true` (إلزام الاشتراك) |
+   | `ADMIN_EMAIL` | بريدك (للوحة الإدارة وتفعيل الاشتراكات) |
+   | `ADMIN_PAYMENT_INFO` | نص تعليمات الدفع للمشتركين (Payoneer/محفظة/بنك) |
    | `INDEXNOW_KEY` | مفتاح عشوائي (اختياري، انظر قسم IndexNow) |
 5. بعد أول نشر، شغّل تهيئة الجداول والبيانات من **Shell** في Render:
    ```bash
