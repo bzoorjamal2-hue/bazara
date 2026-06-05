@@ -49,22 +49,26 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50">
       <nav className="glass-strong mx-auto mt-4 flex max-w-6xl items-center justify-between gap-2 px-4 py-3 sm:px-6">
-        {/* الشعار + الاسم (للمستخدم: اسم متجره ويوديه للوحته) */}
+        {/* للمستخدم: زر القائمة ☰ (مكان اللوجو) + اسم متجره. للزائر: شعار Bazara */}
         <div className="flex items-center gap-2.5">
-          <Link to={user ? '/dashboard' : '/'} className="flex items-center gap-2.5">
-            <Logo className="h-9 w-9" />
-            <span className="font-display text-xl font-bold tracking-wide gradient-text">{brandName}</span>
-          </Link>
-
-          {/* زر قائمة المستخدم (بجانب اسم المتجر) */}
-          {user && (
-            <button
-              onClick={() => setMenuOpen((o) => !o)}
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-gold-400/30 text-gold-200 hover:bg-gold-400/10"
-              aria-label="menu"
-            >
-              <MenuIcon className="h-5 w-5" />
-            </button>
+          {user ? (
+            <>
+              <button
+                onClick={() => setMenuOpen((o) => !o)}
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-gold-400/30 text-gold-200 hover:bg-gold-400/10"
+                aria-label="menu"
+              >
+                <MenuIcon className="h-5 w-5" />
+              </button>
+              <Link to="/dashboard" className="font-display text-xl font-bold tracking-wide gradient-text">
+                {brandName}
+              </Link>
+            </>
+          ) : (
+            <Link to="/" className="flex items-center gap-2.5">
+              <Logo className="h-9 w-9" />
+              <span className="font-display text-xl font-bold tracking-wide gradient-text">{brandName}</span>
+            </Link>
           )}
         </div>
 
@@ -89,14 +93,7 @@ export default function Navbar() {
             )}
           </button>
 
-          {user ? (
-            <>
-              <Link to="/dashboard" className="hidden items-center gap-2 rounded-lg px-2 py-1 text-sm text-stone-200 hover:text-gold-200 sm:flex">
-                <Avatar user={user} />
-              </Link>
-              <button onClick={handleLogout} className="btn-ghost !px-3 !py-1.5 text-sm">{t('nav.logout')}</button>
-            </>
-          ) : (
+          {!user && (
             <>
               <NavLink to="/login" className="rounded-lg px-3 py-1.5 text-sm text-stone-200 hover:text-gold-200">{t('nav.login')}</NavLink>
               <Link to="/register" className="btn-primary !px-4 !py-1.5 text-sm">{t('nav.register')}</Link>
