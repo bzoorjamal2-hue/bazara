@@ -1,8 +1,27 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { register, login, logout, me, updateProfile } from '../controllers/auth.controller.js';
+import {
+  register,
+  login,
+  logout,
+  me,
+  updateProfile,
+  changePassword,
+  changeEmail,
+  forgotPassword,
+  resetPassword,
+} from '../controllers/auth.controller.js';
 import { requireAuth } from '../middleware/auth.js';
-import { handleValidation, registerRules, loginRules, profileRules } from '../middleware/validate.js';
+import {
+  handleValidation,
+  registerRules,
+  loginRules,
+  profileRules,
+  changePasswordRules,
+  changeEmailRules,
+  forgotPasswordRules,
+  resetPasswordRules,
+} from '../middleware/validate.js';
 
 const router = Router();
 
@@ -20,5 +39,11 @@ router.post('/login', authLimiter, loginRules, handleValidation, login);
 router.post('/logout', logout);
 router.get('/me', requireAuth, me);
 router.put('/profile', requireAuth, profileRules, handleValidation, updateProfile);
+router.put('/password', requireAuth, changePasswordRules, handleValidation, changePassword);
+router.put('/email', requireAuth, changeEmailRules, handleValidation, changeEmail);
+
+// استعادة كلمة المرور (بدون تسجيل دخول)
+router.post('/forgot-password', authLimiter, forgotPasswordRules, handleValidation, forgotPassword);
+router.post('/reset-password', authLimiter, resetPasswordRules, handleValidation, resetPassword);
 
 export default router;

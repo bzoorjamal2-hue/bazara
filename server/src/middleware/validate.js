@@ -36,6 +36,26 @@ export const loginRules = [
   body('password').notEmpty().withMessage('كلمة المرور مطلوبة.'),
 ];
 
+export const changePasswordRules = [
+  body('currentPassword').notEmpty().withMessage('كلمة المرور الحالية مطلوبة.'),
+  body('newPassword').matches(STRONG_PASSWORD).withMessage('كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل وتحتوي على حرف ورقم ورمز.'),
+];
+
+export const changeEmailRules = [
+  body('currentPassword').notEmpty().withMessage('كلمة المرور مطلوبة.'),
+  body('newEmail').trim().isEmail().withMessage('بريد إلكتروني غير صالح.').normalizeEmail(),
+];
+
+export const forgotPasswordRules = [
+  body('email').trim().isEmail().withMessage('بريد إلكتروني غير صالح.').normalizeEmail(),
+];
+
+export const resetPasswordRules = [
+  body('email').trim().isEmail().withMessage('بريد إلكتروني غير صالح.').normalizeEmail(),
+  body('token').notEmpty().withMessage('رمز غير صالح.'),
+  body('newPassword').matches(STRONG_PASSWORD).withMessage('كلمة المرور يجب أن تكون 8 أحرف على الأقل وتحتوي على حرف ورقم ورمز.'),
+];
+
 export const profileRules = [
   body('name').trim().isLength({ min: 2, max: 100 }).withMessage('الاسم يجب أن يكون بين 2 و100 حرف.'),
   body('avatarUrl').optional({ nullable: true, checkFalsy: true }).custom(isUrlOrDataImage).withMessage('صورة غير صالحة.'),

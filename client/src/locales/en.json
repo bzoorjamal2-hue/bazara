@@ -75,6 +75,16 @@
     "registerNow": "Sign up",
     "submitLogin": "Sign in",
     "submitRegister": "Create account",
+    "forgotLink": "Forgot password?",
+    "forgotTitle": "Reset your password",
+    "forgotDesc": "Enter your email and we'll send you a link to set a new password.",
+    "sendResetLink": "Send reset link",
+    "resetSent": "If the email is registered, we sent you a reset link. Check your inbox (and Spam).",
+    "backToLogin": "Back to login",
+    "resetTitle": "Set a new password",
+    "newPassword": "New password",
+    "resetSubmit": "Set password",
+    "resetDone": "Password set successfully! Log in now.",
     "registeredTitle": "Account created successfully! 🎉",
     "registeredDesc": "Log in now to access your store and dashboard."
   },
@@ -92,7 +102,19 @@
       "title": "Profile",
       "avatar": "Profile picture",
       "saved": "Profile saved.",
-      "emailNote": "Email cannot be changed."
+      "emailNote": "To change your email, use the section below."
+    },
+    "security": {
+      "title": "Security",
+      "changePassword": "Change password",
+      "changeEmail": "Change email",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "newEmail": "New email",
+      "savePassword": "Save password",
+      "saveEmail": "Save email",
+      "passwordChanged": "Password changed successfully.",
+      "emailChanged": "Email changed successfully."
     },
     "store": {
       "name": "Store name",

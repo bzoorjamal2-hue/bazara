@@ -5,6 +5,8 @@ import RequireSubscription from './components/RequireSubscription.jsx';
 import Home from './pages/Home.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
+import ForgotPassword from './pages/ForgotPassword.jsx';
+import ResetPassword from './pages/ResetPassword.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Subscribe from './pages/Subscribe.jsx';
 import StorePage from './pages/StorePage.jsx';
@@ -20,6 +22,8 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset" element={<ResetPassword />} />
         <Route path="/wishlist" element={<Wishlist />} />
         <Route
           path="/dashboard"

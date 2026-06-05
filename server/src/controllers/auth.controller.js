@@ -1,8 +1,13 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import pool, { query } from '../config/db.js';
 import { generateUniqueStoreSlug } from '../utils/slug.js';
 import { generateSubscriberCode, isUserActive, daysRemaining, isAdminEmail } from '../utils/subscription.js';
+import { sendMail, isMailConfigured } from '../utils/mail.js';
+
+const hashToken = (t) => crypto.createHash('sha256').update(t).digest('hex');
+const firstUrl = (v) => (v || '').split(',')[0].trim().replace(/\/$/, '');
 
 const SALT_ROUNDS = 12;
 
@@ -143,6 +148,106 @@ export async function updateProfile(req, res, next) {
     );
     const u = result.rows[0];
     res.json({ user: { id: u.id, name: u.name, email: u.email, avatarUrl: u.avatar_url } });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// تغيير كلمة المرور (يتطلب كلمة المرور الحالية)
+export async function changePassword(req, res, next) {
+  const { currentPassword, newPassword } = req.body;
+  try {
+    const r = await query('SELECT password_hash FROM users WHERE id = $1', [req.user.id]);
+    const ok = await bcrypt.compare(currentPassword, r.rows[0].password_hash);
+    if (!ok) return res.status(400).json({ error: 'كلمة المرور الحالية غير صحيحة.' });
+    const hash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+    await query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, req.user.id]);
+    res.json({ message: 'تم تغيير كلمة المرور بنجاح.' });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// تغيير البريد الإلكتروني (يتطلب كلمة المرور الحالية)
+export async function changeEmail(req, res, next) {
+  const { currentPassword, newEmail } = req.body;
+  try {
+    const r = await query('SELECT password_hash FROM users WHERE id = $1', [req.user.id]);
+    const ok = await bcrypt.compare(currentPassword, r.rows[0].password_hash);
+    if (!ok) return res.status(400).json({ error: 'كلمة المرور غير صحيحة.' });
+
+    const taken = await query('SELECT id FROM users WHERE email = $1 AND id <> $2', [newEmail, req.user.id]);
+    if (taken.rows.length > 0) return res.status(409).json({ error: 'البريد مستخدم مسبقاً.' });
+
+    const updated = await query(
+      'UPDATE users SET email = $1 WHERE id = $2 RETURNING id, name, email, avatar_url',
+      [newEmail, req.user.id]
+    );
+    const u = updated.rows[0];
+    res.json({ user: { id: u.id, name: u.name, email: u.email, avatarUrl: u.avatar_url } });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// طلب استعادة كلمة المرور (يرسل رابطاً للبريد)
+export async function forgotPassword(req, res, next) {
+  const { email } = req.body;
+  try {
+    const r = await query('SELECT id FROM users WHERE email = $1', [email]);
+    // رد عام دائماً (عدم كشف وجود البريد)
+    const generic = { message: 'إذا كان البريد مسجّلاً، فقد أرسلنا رابط استعادة كلمة المرور.' };
+
+    if (r.rows.length === 0) return res.json(generic);
+    if (!isMailConfigured()) {
+      console.warn('forgotPassword: email not configured');
+      return res.json(generic);
+    }
+
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 60 * 60 * 1000); // ساعة
+    await query('UPDATE users SET reset_token = $1, reset_token_expires = $2 WHERE id = $3', [
+      hashToken(rawToken),
+      expires,
+      r.rows[0].id,
+    ]);
+
+    const link = `${firstUrl(process.env.CLIENT_URL) || firstUrl(process.env.PUBLIC_SITE_URL)}/reset?token=${rawToken}&email=${encodeURIComponent(email)}`;
+    await sendMail({
+      to: email,
+      subject: 'استعادة كلمة المرور — Bazara',
+      html: `<div style="font-family:Tahoma,Arial;direction:rtl;text-align:right">
+        <h2>استعادة كلمة المرور</h2>
+        <p>اضغط الرابط التالي لتعيين كلمة مرور جديدة (صالح لمدة ساعة):</p>
+        <p><a href="${link}" style="background:#d4af37;color:#0b0b0d;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:bold">إعادة تعيين كلمة المرور</a></p>
+        <p>إذا لم تطلب ذلك، تجاهل هذه الرسالة.</p>
+      </div>`,
+    });
+    res.json(generic);
+  } catch (err) {
+    next(err);
+  }
+}
+
+// تعيين كلمة مرور جديدة عبر التوكن
+export async function resetPassword(req, res, next) {
+  const { email, token, newPassword } = req.body;
+  try {
+    const r = await query(
+      'SELECT id, reset_token, reset_token_expires FROM users WHERE email = $1',
+      [email]
+    );
+    const u = r.rows[0];
+    const valid =
+      u && u.reset_token && u.reset_token === hashToken(token) && new Date(u.reset_token_expires) > new Date();
+    if (!valid) return res.status(400).json({ error: 'الرابط غير صالح أو منتهي الصلاحية.' });
+
+    const hash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+    await query(
+      'UPDATE users SET password_hash = $1, reset_token = NULL, reset_token_expires = NULL WHERE id = $2',
+      [hash, u.id]
+    );
+    res.json({ message: 'تم تعيين كلمة المرور. يمكنك تسجيل الدخول الآن.' });
   } catch (err) {
     next(err);
   }
