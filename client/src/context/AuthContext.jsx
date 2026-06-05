@@ -35,9 +35,10 @@ export function AuthProvider({ children }) {
     return await refresh();
   };
 
-  // التسجيل لا يُدخِل المستخدم تلقائياً — يعود ويسجّل الدخول بنفسه
+  // التسجيل يُدخِل المستخدم تلقائياً ليصل مباشرةً لصفحة الاشتراك/الدفع
   const register = async (payload) => {
     await api.post('/auth/register', payload);
+    return await refresh();
   };
 
   const logout = async () => {

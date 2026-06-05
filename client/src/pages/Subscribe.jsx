@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -13,6 +14,7 @@ const PLANS = [
 export default function Subscribe() {
   const { t } = useTranslation();
   const { refresh } = useAuth();
+  const navigate = useNavigate();
   const [status, setStatus] = useState(null);
   const [selected, setSelected] = useState(null); // الخطة المختارة
   const [form, setForm] = useState({ method: '', reference: '' });
@@ -20,8 +22,16 @@ export default function Subscribe() {
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
 
-  const load = () => api.get('/subscription/status').then((r) => setStatus(r.data)).catch(() => setStatus({}));
-  useEffect(() => { load(); }, []);
+  const load = () =>
+    api
+      .get('/subscription/status')
+      .then((r) => {
+        // المفعّل (مثل المدير) لا يحتاج دفعاً → للوحة التحكم
+        if (r.data.active) navigate('/dashboard');
+        else setStatus(r.data);
+      })
+      .catch(() => setStatus({}));
+  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const submit = async (e) => {
     e.preventDefault();

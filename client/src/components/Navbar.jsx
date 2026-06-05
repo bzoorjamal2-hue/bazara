@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import LanguageSwitcher from './LanguageSwitcher.jsx';
+import Logo from './Logo.jsx';
 import { CartIcon, HeartIcon } from './icons.jsx';
 
 function Avatar({ user, size = 'h-8 w-8' }) {
@@ -33,11 +34,9 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50">
       <nav className="glass-strong mx-auto mt-4 flex max-w-6xl items-center justify-between gap-2 px-4 py-3 sm:px-6">
-        <Link to="/" className="flex items-center gap-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-gold-300 to-gold-500 text-lg text-ink-950 shadow-gold">
-            👑
-          </span>
-          <span className="font-display text-lg font-bold gradient-text">{t('app.name')}</span>
+        <Link to="/" className="flex items-center gap-2.5">
+          <Logo className="h-9 w-9" />
+          <span className="font-display text-xl font-bold tracking-wide gradient-text">{t('app.name')}</span>
         </Link>
 
         <div className="flex items-center gap-1.5 sm:gap-2">

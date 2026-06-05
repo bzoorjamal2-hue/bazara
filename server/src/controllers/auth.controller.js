@@ -49,8 +49,10 @@ export async function register(req, res, next) {
     ]);
     await client.query('COMMIT');
 
-    // لا نضع كوكي هنا — المستخدم يعود للرئيسية ثم يسجّل الدخول
-    res.status(201).json({ message: 'تم إنشاء الحساب بنجاح.', email: user.email });
+    // دخول تلقائي بعد التسجيل ليصل المستخدم مباشرةً لصفحة الدفع/الاشتراك
+    const token = signToken(user);
+    res.cookie('token', token, cookieOptions());
+    res.status(201).json({ user: { id: user.id, name: user.name, email: user.email } });
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
     next(err);

@@ -19,9 +19,10 @@ export default function Register() {
     setError('');
     setBusy(true);
     try {
-      await register(form);
-      // لا دخول تلقائي: نرجع لصفحة الدخول ليسجّل المستخدم ويدخل متجره
-      navigate('/login', { state: { registered: true, email: form.email } });
+      const data = await register(form);
+      // إن كان مفعّلاً (مثلاً مدير) للوحة التحكم، وإلا لصفحة الدفع/الاشتراك
+      if (data?.subscription?.active) navigate('/dashboard');
+      else navigate('/subscribe');
     } catch (err) {
       setError(getErrorMessage(err, t('errors.generic')));
     } finally {
