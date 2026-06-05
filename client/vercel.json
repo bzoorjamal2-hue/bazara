@@ -2,6 +2,10 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "https://bazara-hwux.onrender.com/api/:path*"
+    },
+    {
       "source": "/sitemap.xml",
       "destination": "https://bazara-hwux.onrender.com/sitemap.xml"
     },

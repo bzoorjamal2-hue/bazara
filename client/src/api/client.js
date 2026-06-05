@@ -1,7 +1,10 @@
 import axios from 'axios';
 
-// عند وجود VITE_API_URL نستخدمه (النشر)، وإلا نعتمد على وكيل Vite (نفس الأصل)
-const baseURL = (import.meta.env.VITE_API_URL || '') + '/api';
+// نستخدم دائماً نفس الأصل (/api):
+// - محلياً: وكيل Vite يحوّله إلى localhost:5000
+// - عند النشر: وكيل Vercel (rewrite) يحوّله إلى خادم Render
+// هذا يجعل الكوكيز "first-party" فتعمل على كل المتصفحات (Safari/iOS أيضاً).
+const baseURL = '/api';
 
 const api = axios.create({
   baseURL,
