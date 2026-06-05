@@ -188,7 +188,8 @@
     "featured": "Featured products",
     "contactWhatsapp": "WhatsApp",
     "deliveryInfo": "Delivery info",
-    "paymentInfo": "Payment info"
+    "paymentInfo": "Payment info",
+    "ownerView": "You're viewing your own store"
   },
   "cart": {
     "title": "Shopping cart",

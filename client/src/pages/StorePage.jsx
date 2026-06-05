@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
+import { useAuth } from '../context/AuthContext.jsx';
 import Seo from '../components/Seo.jsx';
 import Spinner from '../components/Spinner.jsx';
 import ProductCard from '../components/ProductCard.jsx';
@@ -12,6 +13,8 @@ import { buildWhatsappLink } from '../utils/whatsapp.js';
 export default function StorePage() {
   const { slug } = useParams();
   const { t } = useTranslation();
+  const { store: myStore } = useAuth();
+  const isOwner = myStore?.slug === slug;
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
   const [q, setQ] = useState('');
@@ -112,6 +115,14 @@ export default function StorePage() {
             ))}
           </div>
         </section>
+      )}
+
+      {/* شريط صاحب المتجر */}
+      {isOwner && (
+        <div className="mb-6 flex flex-col items-center justify-between gap-3 rounded-2xl border border-gold-400/30 bg-gold-400/5 p-4 sm:flex-row">
+          <p className="text-sm text-gold-200">👋 {t('store.ownerView')}</p>
+          <Link to="/dashboard?tab=myProducts" className="btn-primary !py-2 text-sm">＋ {t('dashboard.addProduct')}</Link>
+        </div>
       )}
 
       {/* تصفّح حسب الفئة */}

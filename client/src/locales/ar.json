@@ -188,7 +188,8 @@
     "featured": "منتجات مميّزة",
     "contactWhatsapp": "تواصل واتساب",
     "deliveryInfo": "معلومات التوصيل",
-    "paymentInfo": "معلومات الدفع"
+    "paymentInfo": "معلومات الدفع",
+    "ownerView": "أنت تشاهد متجرك الخاص"
   },
   "cart": {
     "title": "سلة التسوّق",

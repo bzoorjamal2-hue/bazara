@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client.js';
+import { useAuth } from '../context/AuthContext.jsx';
 import Seo from '../components/Seo.jsx';
 import Spinner from '../components/Spinner.jsx';
 import ProductCard from '../components/ProductCard.jsx';
@@ -10,8 +11,15 @@ import { ShieldIcon, DiamondIcon, BoltIcon } from '../components/icons.jsx';
 
 export default function Home() {
   const { t } = useTranslation();
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // المستخدم المسجّل لا يرى الرئيسية العامة — يُحوّل للوحته حتى يسجّل خروج
+  useEffect(() => {
+    if (!authLoading && user) navigate('/dashboard', { replace: true });
+  }, [authLoading, user, navigate]);
 
   useEffect(() => {
     api

@@ -100,6 +100,14 @@ export function SearchIcon({ className = 'h-5 w-5' }) {
   );
 }
 
+export function MenuIcon({ className = 'h-6 w-6' }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <path {...L} d="M4 7 H20 M4 12 H20 M4 17 H20" />
+    </svg>
+  );
+}
+
 export function WhatsAppIcon({ className = 'h-6 w-6' }) {
   return (
     <svg viewBox="0 0 24 24" className={className} aria-hidden="true" fill="currentColor">

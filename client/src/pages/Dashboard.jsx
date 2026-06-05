@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -20,7 +20,9 @@ const SECTIONS = [
 export default function Dashboard() {
   const { t } = useTranslation();
   const { user, store, subscription } = useAuth();
-  const [section, setSection] = useState('overview');
+  const [params, setParams] = useSearchParams();
+  const section = params.get('tab') || 'overview';
+  const setSection = (key) => setParams(key === 'overview' ? {} : { tab: key });
   const [productsCount, setProductsCount] = useState(null);
   const isAdmin = subscription?.isAdmin;
   const sections = isAdmin ? [...SECTIONS, { key: 'admin', icon: '🛡️' }] : SECTIONS;
@@ -37,8 +39,8 @@ export default function Dashboard() {
     <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
       <Seo title={t('dashboard.title')} />
 
-      {/* الشريط الجانبي */}
-      <aside className="glass-strong h-fit p-4 lg:sticky lg:top-24">
+      {/* الشريط الجانبي (مخفي على الموبايل — القائمة ☰ بالأعلى تغطّيه) */}
+      <aside className="hidden h-fit p-4 lg:sticky lg:top-24 lg:block glass-strong">
         <div className="mb-4 flex items-center gap-3 border-b border-gold-400/15 pb-4">
           {avatar}
           <div className="min-w-0">
