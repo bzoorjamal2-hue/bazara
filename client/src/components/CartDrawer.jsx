@@ -48,8 +48,8 @@ export default function CartDrawer() {
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex justify-end bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)}>
-      <aside className="flex h-full w-full max-w-md animate-slide-in flex-col border-s border-gold-400/20 bg-ink-900" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[70] flex justify-end bg-black/60 backdrop-blur-sm">
+      <aside className="flex h-full w-full max-w-md animate-slide-in flex-col border-s border-gold-400/20 bg-ink-900">
         <div className="flex items-center justify-between border-b border-gold-400/15 p-4">
           <h2 className="font-display text-xl font-bold gradient-text">🛒 {t('cart.title')}</h2>
           <button onClick={() => setOpen(false)} className="rounded-lg p-2 text-stone-400 hover:text-gold-200">✕</button>

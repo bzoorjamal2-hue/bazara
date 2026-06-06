@@ -60,11 +60,14 @@ export default function ProductForm({ initial, onClose, onSaved }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" onClick={onClose}>
-      <div className="glass-strong max-h-[92vh] w-full max-w-lg animate-fade-up overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
-        <h2 className="mb-5 font-display text-xl font-bold gradient-text">
-          {isEdit ? t('dashboard.product.editTitle') : t('dashboard.product.newTitle')}
-        </h2>
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+      <div className="glass-strong max-h-[92vh] w-full max-w-lg animate-fade-up overflow-y-auto p-6">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="font-display text-xl font-bold gradient-text">
+            {isEdit ? t('dashboard.product.editTitle') : t('dashboard.product.newTitle')}
+          </h2>
+          <button type="button" onClick={onClose} className="rounded-lg p-2 text-stone-400 hover:text-gold-200" aria-label="close">✕</button>
+        </div>
 
         {error && <div className="mb-4 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
 
