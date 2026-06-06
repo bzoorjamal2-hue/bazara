@@ -103,3 +103,144 @@ html[lang='ar'] .font-display {
 /* قص النص لعدة أسطر */
 .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
 .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* ============================================================= */
+/*  ثيم المتجر العام الفاخر (خمري/بوردو + عاجي كريمي)             */
+/*  موسكوب تحت .theme-pub — يطبَّق فقط على الصفحات العامة         */
+/*  ولا يمسّ لوحة التحكم/الإعدادات (تبقى داكنة كما هي).            */
+/* ============================================================= */
+.theme-pub {
+  background: #f8f3ec;
+  color: #2b2b2b;
+  min-height: 100vh;
+  font-family: 'Almarai', 'Tajawal', sans-serif;
+}
+.theme-pub .font-display {
+  font-family: 'El Messiri', 'Cairo', serif;
+}
+
+/* خلفية كريمية ناعمة بزخارف خمرية خفيفة */
+.theme-pub.app-bg,
+.theme-pub .app-bg {
+  background:
+    radial-gradient(900px 480px at 90% -10%, rgba(92, 26, 46, 0.06), transparent 60%),
+    radial-gradient(700px 460px at 0% 0%, rgba(92, 26, 46, 0.05), transparent 55%),
+    #f8f3ec;
+}
+
+/* البطاقات: بيضاء بزوايا دائرية وظل ناعم */
+.theme-pub .glass {
+  background: #ffffff;
+  border-color: rgba(92, 26, 46, 0.08);
+  box-shadow: 0 6px 22px rgba(92, 26, 46, 0.08);
+  backdrop-filter: none;
+}
+.theme-pub .glass-strong {
+  background: #ffffff;
+  border-color: rgba(92, 26, 46, 0.1);
+  box-shadow: 0 12px 34px rgba(92, 26, 46, 0.12);
+  backdrop-filter: none;
+}
+
+/* الأزرار الأساسية: خمري بنص عاجي */
+.theme-pub .btn-primary {
+  background: #5c1a2e;
+  color: #f8f3ec;
+  box-shadow: 0 10px 24px -10px rgba(92, 26, 46, 0.6);
+}
+.theme-pub .btn-primary:hover { background: #4a1322; }
+.theme-pub .btn-ghost {
+  background: #ffffff;
+  border-color: rgba(92, 26, 46, 0.25);
+  color: #5c1a2e;
+}
+.theme-pub .btn-ghost:hover { background: rgba(92, 26, 46, 0.06); border-color: #5c1a2e; }
+.theme-pub .btn:focus { --tw-ring-color: rgba(92, 26, 46, 0.4); }
+
+/* الحقول */
+.theme-pub .input {
+  background: #ffffff;
+  border-color: rgba(92, 26, 46, 0.18);
+  color: #2b2b2b;
+}
+.theme-pub .input::placeholder { color: #a89ca0; }
+.theme-pub .input:focus { border-color: rgba(92, 26, 46, 0.5); --tw-ring-color: rgba(92, 26, 46, 0.18); }
+.theme-pub .label { color: #5a4d51; }
+
+/* العناوين الخمرية المتدرّجة */
+.theme-pub .gradient-text {
+  background: linear-gradient(135deg, #7a2238 0%, #5c1a2e 60%, #4a1322 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.theme-pub .gold-divider {
+  background: linear-gradient(90deg, transparent, rgba(92, 26, 46, 0.35), transparent);
+}
+
+/* ===== تجاوز ألوان الـ utilities داخل الثيم العام ===== */
+.theme-pub .text-stone-100,
+.theme-pub .text-stone-200 { color: #2b2b2b; }
+.theme-pub .text-stone-300 { color: #4a4145; }
+.theme-pub .text-stone-400 { color: #7a6f73; }
+.theme-pub .text-stone-500 { color: #9c9296; }
+.theme-pub .text-gold-100,
+.theme-pub .text-gold-200,
+.theme-pub .text-gold-300,
+.theme-pub .text-gold-400 { color: #5c1a2e; }
+.theme-pub .text-ink-950 { color: #f8f3ec; }
+.theme-pub .hover\:text-gold-100:hover,
+.theme-pub .hover\:text-gold-200:hover { color: #5c1a2e; }
+.theme-pub .hover\:text-ink-950:hover { color: #f8f3ec; }
+
+.theme-pub .bg-ink-800 { background-color: #f1e9dd; }
+.theme-pub .bg-ink-900 { background-color: #f8f3ec; }
+.theme-pub .bg-ink-700 { background-color: #e7ddcf; }
+.theme-pub .bg-gold-400 { background-color: #5c1a2e; }
+.theme-pub .hover\:bg-gold-400:hover { background-color: #5c1a2e; }
+.theme-pub .bg-gold-400\/5 { background-color: rgba(92, 26, 46, 0.05); }
+.theme-pub .bg-gold-400\/10,
+.theme-pub .bg-gold-400\/15 { background-color: rgba(92, 26, 46, 0.08); }
+.theme-pub .hover\:bg-gold-400\/10:hover { background-color: rgba(92, 26, 46, 0.08); }
+.theme-pub .bg-emerald-500 { background-color: #2eb872; }
+
+.theme-pub .border-gold-400 { border-color: #5c1a2e; }
+.theme-pub .border-gold-400\/15,
+.theme-pub .border-gold-400\/20,
+.theme-pub .border-gold-400\/25,
+.theme-pub .border-gold-400\/30,
+.theme-pub .border-gold-400\/40,
+.theme-pub .border-gold-400\/60 { border-color: rgba(92, 26, 46, 0.18); }
+.theme-pub .ring-gold-400\/60 { --tw-ring-color: rgba(92, 26, 46, 0.4); }
+
+.theme-pub .shadow-gold { box-shadow: 0 10px 30px -12px rgba(92, 26, 46, 0.45); }
+.theme-pub .hover\:shadow-glow:hover { box-shadow: 0 14px 32px -10px rgba(92, 26, 46, 0.28); }
+
+/* شريط التمرير خمري داخل الثيم العام */
+.theme-pub ::-webkit-scrollbar-thumb { background: rgba(92, 26, 46, 0.28); }
+.theme-pub ::-webkit-scrollbar-thumb:hover { background: rgba(92, 26, 46, 0.45); }
+
+/* ===== الشريط العلوي الخمري (Navbar) ===== */
+.pub-navbar {
+  background: #4a1322;
+  border: 1px solid rgba(248, 243, 236, 0.12);
+  box-shadow: 0 10px 28px rgba(74, 19, 34, 0.35);
+}
+
+/* ===== بطاقة الفئة الخمرية (أيقونة عاجية) ===== */
+.pub-cat {
+  background: #5c1a2e;
+  border: 1px solid rgba(74, 19, 34, 0.4);
+  box-shadow: 0 8px 22px -10px rgba(92, 26, 46, 0.5);
+}
+.pub-cat:hover { background: #6a1f36; }
+
+/* ===== بانر Hero الخمري ===== */
+.pub-hero {
+  background:
+    radial-gradient(600px 300px at 85% 10%, rgba(248, 243, 236, 0.08), transparent 60%),
+    linear-gradient(135deg, #4a1322 0%, #5c1a2e 55%, #6a1f36 100%);
+}
+
+/* ===== الفوتر الخمري ===== */
+.pub-footer { background: #4a1322; color: #f8f3ec; }

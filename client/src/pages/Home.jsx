@@ -33,21 +33,28 @@ export default function Home() {
     <>
       <Seo title={t('app.name')} description={t('home.heroDesc')} />
 
-      {/* Hero */}
+      {/* Hero — بانر خمري فاخر */}
       <section className="relative overflow-hidden rounded-3xl">
-        <div className="glass-strong relative px-6 py-16 text-center sm:py-24">
-          <div className="pointer-events-none absolute -top-10 start-1/4 h-40 w-40 animate-float rounded-full bg-gold-400/20 blur-3xl" />
-          <div className="pointer-events-none absolute bottom-0 end-1/4 h-40 w-40 animate-float rounded-full bg-gold-500/15 blur-3xl" />
-          <p className="mb-3 animate-fade-in text-sm font-semibold tracking-[0.3em] text-gold-300">LUXURY FASHION</p>
-          <h1 className="animate-fade-up font-display text-4xl font-extrabold leading-tight sm:text-6xl">
-            {t('home.heroTitle')} <span className="gradient-text">{t('home.heroHighlight')}</span>
+        <div className="pub-hero relative px-6 py-16 text-center sm:py-24">
+          {/* زخارف عاجية شفافة */}
+          <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-cream/10 blur-3xl" />
+          <div className="pointer-events-none absolute bottom-0 end-1/4 h-44 w-44 animate-float rounded-full bg-cream/[0.07] blur-3xl" />
+          <p className="mb-3 animate-fade-in text-sm font-semibold tracking-[0.3em] text-cream/70">LUXURY FASHION</p>
+          <h1 className="animate-fade-up font-display text-4xl font-extrabold leading-tight text-cream sm:text-6xl">
+            {t('home.heroTitle')} <span className="text-cream/95 underline decoration-cream/30 decoration-2 underline-offset-8">{t('home.heroHighlight')}</span>
           </h1>
-          <p className="mx-auto mt-5 max-w-2xl animate-fade-up text-base text-stone-300 sm:text-lg" style={{ animationDelay: '80ms' }}>
+          <p className="mx-auto mt-5 max-w-2xl animate-fade-up text-base text-cream/80 sm:text-lg" style={{ animationDelay: '80ms' }}>
             {t('home.heroDesc')}
           </p>
           <div className="mt-8 flex animate-fade-up flex-wrap items-center justify-center gap-3" style={{ animationDelay: '160ms' }}>
-            <Link to="/register" className="btn-primary text-base">{t('home.ctaStart')}</Link>
-            <a href="#stores" className="btn-ghost text-base">{t('home.ctaExplore')}</a>
+            <Link to="/register" className="inline-flex items-center rounded-xl bg-cream px-6 py-2.5 text-base font-semibold text-wine shadow-lg transition hover:-translate-y-0.5 hover:bg-white">{t('home.ctaStart')}</Link>
+            <a href="#stores" className="inline-flex items-center rounded-xl border border-cream/40 px-6 py-2.5 text-base font-semibold text-cream transition hover:bg-cream/10">{t('home.ctaExplore')}</a>
+          </div>
+          {/* نقاط التنقّل */}
+          <div className="mt-9 flex items-center justify-center gap-2">
+            <span className="h-2 w-6 rounded-full bg-cream/80" />
+            <span className="h-2 w-2 rounded-full bg-cream/30" />
+            <span className="h-2 w-2 rounded-full bg-cream/30" />
           </div>
         </div>
       </section>

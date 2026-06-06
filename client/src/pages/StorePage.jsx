@@ -52,7 +52,7 @@ export default function StorePage() {
 
   const { store } = data;
   const wa = store.whatsapp;
-  const accent = store.themeColor || '#d4af37';
+  const accent = store.themeColor || '#5C1A2E';
   const featured = data.products.filter((p) => p.featured);
   const CatIcon = cat !== 'all' ? CATEGORY_ICON[cat] : null;
 

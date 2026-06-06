@@ -8,8 +8,18 @@ export default {
         sans: ['Inter', 'Tajawal', 'system-ui', 'sans-serif'],
         ar: ['Tajawal', 'Cairo', 'sans-serif'],
         display: ['"Playfair Display"', 'Cairo', 'serif'],
+        // ثيم المتجر العام (خمري/عاجي): عناوين El Messiri + نصوص Almarai
+        messiri: ['"El Messiri"', 'Cairo', 'serif'],
+        almarai: ['Almarai', 'Tajawal', 'sans-serif'],
       },
       colors: {
+        // هوية المتجر العام الفاخرة: خمري/بوردو + عاجي كريمي
+        wine: {
+          light: '#7a2238',
+          DEFAULT: '#5C1A2E',
+          dark: '#4A1322',
+        },
+        cream: '#F8F3EC',
         // ذهبي معدني فاخر
         gold: {
           50: '#fbf8ef',

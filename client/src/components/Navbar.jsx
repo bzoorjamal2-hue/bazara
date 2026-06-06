@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
@@ -26,7 +26,11 @@ export default function Navbar() {
   const { count, setOpen } = useCart();
   const { count: wishCount } = useWishlist();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // الشريط الخمري الفاخر على صفحات المتجر العامة فقط
+  const pub = /^\/(store\/|category\/|product\/|wishlist|$)/.test(pathname);
 
   const isAdmin = subscription?.isAdmin;
   const brandName = user ? store?.name || t('app.name') : t('app.name');
@@ -52,57 +56,67 @@ export default function Navbar() {
       : []),
   ];
 
+  // أصناف ديناميكية حسب الثيم (خمري للصفحات العامة / داكن للوحة التحكم)
+  const brandCls = pub ? 'text-cream' : 'gradient-text';
+  const iconCls = pub ? 'text-cream/85 hover:text-cream' : 'text-stone-300 hover:text-gold-200';
+  const linkCls = pub ? 'text-cream/85 hover:text-cream' : 'text-stone-200 hover:text-gold-200';
+  const countCls = pub ? 'bg-red-500 text-white' : 'bg-gold-400 text-ink-950';
+
   return (
     <header className="sticky top-0 z-50">
-      <nav className="glass-strong mx-auto mt-4 flex max-w-6xl items-center justify-between gap-2 px-4 py-3 sm:px-6">
+      <nav className={`${pub ? 'pub-navbar' : 'glass-strong'} mx-auto mt-4 flex max-w-6xl items-center justify-between gap-2 rounded-2xl px-4 py-3 sm:px-6`}>
         {/* للمستخدم: زر القائمة ☰ (مكان اللوجو) + اسم متجره. للزائر: شعار Bazara */}
         <div className="flex items-center gap-2.5">
           {user ? (
             <>
               <button
                 onClick={() => setMenuOpen((o) => !o)}
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-gold-400/30 text-gold-200 hover:bg-gold-400/10"
+                className={`flex h-9 w-9 items-center justify-center rounded-xl border ${pub ? 'border-cream/30 text-cream hover:bg-cream/10' : 'border-gold-400/30 text-gold-200 hover:bg-gold-400/10'}`}
                 aria-label="menu"
               >
                 <MenuIcon className="h-5 w-5" />
               </button>
-              <Link to="/dashboard" className="font-display text-xl font-bold tracking-wide gradient-text">
+              <Link to="/dashboard" className={`font-display text-xl font-bold tracking-wide ${brandCls}`}>
                 {brandName}
               </Link>
             </>
           ) : (
             <Link to="/" className="flex items-center gap-2.5">
               <Logo className="h-9 w-9" />
-              <span className="font-display text-xl font-bold tracking-wide gradient-text">{brandName}</span>
+              <span className={`font-display text-xl font-bold tracking-wide ${brandCls}`}>{brandName}</span>
             </Link>
           )}
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2">
           {!user && (
-            <NavLink to="/" className="hidden rounded-lg px-3 py-1.5 text-sm text-stone-300 hover:text-gold-200 sm:block">
+            <NavLink to="/" className={`hidden rounded-lg px-3 py-1.5 text-sm sm:block ${linkCls}`}>
               {t('nav.home')}
             </NavLink>
           )}
 
-          <Link to="/wishlist" className="relative rounded-lg p-2 text-stone-300 hover:text-gold-200" title={t('nav.wishlist')}>
+          <Link to="/wishlist" className={`relative rounded-lg p-2 ${iconCls}`} title={t('nav.wishlist')}>
             <HeartIcon className="h-5 w-5" />
             {wishCount > 0 && (
-              <span className="absolute -end-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gold-400 px-1 text-[10px] font-bold text-ink-950">{wishCount}</span>
+              <span className={`absolute -end-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold ${countCls}`}>{wishCount}</span>
             )}
           </Link>
 
-          <button onClick={() => setOpen(true)} className="relative rounded-lg p-2 text-stone-300 hover:text-gold-200" title={t('nav.cart')}>
+          <button onClick={() => setOpen(true)} className={`relative rounded-lg p-2 ${iconCls}`} title={t('nav.cart')}>
             <CartIcon className="h-5 w-5" />
             {count > 0 && (
-              <span className="absolute -end-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gold-400 px-1 text-[10px] font-bold text-ink-950">{count}</span>
+              <span className={`absolute -end-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold ${countCls}`}>{count}</span>
             )}
           </button>
 
           {!user && (
             <>
-              <NavLink to="/login" className="rounded-lg px-3 py-1.5 text-sm text-stone-200 hover:text-gold-200">{t('nav.login')}</NavLink>
-              <Link to="/register" className="btn-primary !px-4 !py-1.5 text-sm">{t('nav.register')}</Link>
+              <NavLink to="/login" className={`rounded-lg px-3 py-1.5 text-sm ${linkCls}`}>{t('nav.login')}</NavLink>
+              {pub ? (
+                <Link to="/register" className="inline-flex items-center rounded-xl bg-cream px-4 py-1.5 text-sm font-semibold text-wine transition hover:bg-white">{t('nav.register')}</Link>
+              ) : (
+                <Link to="/register" className="btn-primary !px-4 !py-1.5 text-sm">{t('nav.register')}</Link>
+              )}
             </>
           )}
 

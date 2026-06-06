@@ -4,7 +4,7 @@ import { CATEGORY_ICON } from './icons.jsx';
 
 const CATS = ['abaya', 'set', 'dress', 'hijab'];
 
-// شبكة بطاقات الفئات برسوم ملابس ذهبية.
+// شبكة بطاقات الفئات: بطاقة خمرية بأيقونة عاجية + اسم الفئة أسفلها.
 // onSelect → أزرار فلترة (صفحة المتجر) | بدونها → روابط لصفحة الفئة (الرئيسية)
 export default function CategoryGrid({ onSelect, active }) {
   const { t } = useTranslation();
@@ -16,17 +16,19 @@ export default function CategoryGrid({ onSelect, active }) {
         const isActive = active === c;
         const inner = (
           <>
-            <div className="flex h-20 items-center justify-center sm:h-24 lg:h-28">
-              <Icon className={`h-12 w-12 transition-transform duration-300 group-hover:scale-110 sm:h-16 sm:w-16 ${isActive ? 'text-gold-300' : 'text-gold-400/80'}`} />
+            <div
+              className={`pub-cat flex h-24 items-center justify-center rounded-2xl p-4 transition-all duration-300 group-hover:-translate-y-1 sm:h-28 lg:h-32 ${
+                isActive ? 'ring-2 ring-wine ring-offset-2 ring-offset-cream' : ''
+              }`}
+            >
+              <Icon className="h-12 w-12 text-cream transition-transform duration-300 group-hover:scale-110 sm:h-14 sm:w-14 lg:h-16 lg:w-16" />
             </div>
-            <span className={`block text-center text-xs font-semibold sm:text-sm ${isActive ? 'text-gold-200' : 'text-stone-200'}`}>
+            <span className={`mt-2 block text-center text-xs font-semibold sm:text-sm ${isActive ? 'text-wine' : 'text-[#2b2b2b]'}`}>
               {t(`categories.${c}`)}
             </span>
           </>
         );
-        const cls = `group glass animate-fade-up p-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-glow sm:p-4 ${
-          isActive ? 'ring-1 ring-gold-400/60' : ''
-        }`;
+        const cls = 'group animate-fade-up block';
         const style = { animationDelay: `${i * 60}ms` };
 
         return onSelect ? (

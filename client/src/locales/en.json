@@ -1,5 +1,6 @@
 {
   "app": { "name": "Bazara", "tagline": "Your destination for luxury fashion" },
+  "footer": { "rights": "All rights reserved" },
   "nav": {
     "home": "Home",
     "dashboard": "Dashboard",
