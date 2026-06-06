@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
@@ -26,13 +26,17 @@ export default function Navbar() {
   const { count, setOpen } = useCart();
   const { count: wishCount } = useWishlist();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
 
   // الشريط الخمري الفاخر على كل الموقع
   const pub = true;
+  const isHome = pathname === '/'; // على الرئيسية نعرض اسم Bazara (مش اسم المتجر)
 
   const isAdmin = subscription?.isAdmin;
-  const brandName = user ? store?.name || t('app.name') : t('app.name');
+  // مسجّل دخول: اسم متجره — إلا على الصفحة الرئيسية فنعرض Bazara
+  const brandName = user && !isHome ? store?.name || t('app.name') : t('app.name');
+  const brandTo = user && !isHome ? '/dashboard' : '/';
 
   const handleLogout = async () => {
     setMenuOpen(false);
@@ -75,7 +79,7 @@ export default function Navbar() {
               >
                 <MenuIcon className="h-5 w-5" />
               </button>
-              <Link to="/dashboard" className={`font-display text-xl font-bold tracking-wide ${brandCls}`}>
+              <Link to={brandTo} className={`font-display text-xl font-bold tracking-wide ${brandCls}`}>
                 {brandName}
               </Link>
             </>
