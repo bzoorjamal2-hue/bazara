@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client.js';
-import { useAuth } from '../context/AuthContext.jsx';
 import Seo from '../components/Seo.jsx';
 import Spinner from '../components/Spinner.jsx';
 import ProductCard from '../components/ProductCard.jsx';
@@ -11,18 +10,10 @@ import { ShieldIcon, DiamondIcon, BoltIcon } from '../components/icons.jsx';
 
 export default function Home() {
   const { t } = useTranslation();
-  const { user, loading: authLoading } = useAuth();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const previewHome = searchParams.get('home') === '1'; // معاينة الرئيسية وأنت مسجّل دخول
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // المستخدم المسجّل يُحوّل للوحته — إلا إذا فتح الرئيسية برابط المعاينة (?home=1)
-  useEffect(() => {
-    if (!authLoading && user && !previewHome) navigate('/dashboard', { replace: true });
-  }, [authLoading, user, navigate, previewHome]);
-
+  // الصفحة الرئيسية متاحة دائماً على الرابط / للجميع (بدون أي تحويل)
   useEffect(() => {
     api
       .get('/public/home')

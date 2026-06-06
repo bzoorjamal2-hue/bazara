@@ -74,9 +74,9 @@ export default function Dashboard() {
             🔗 {t('dashboard.viewPublicStore')}
           </Link>
         )}
-        <a href="/?home=1" className="btn-ghost mt-2 w-full !justify-start text-sm" target="_blank" rel="noreferrer">
+        <Link to="/" className="btn-ghost mt-2 w-full !justify-start text-sm">
           🏠 {t('dashboard.viewHome')}
-        </a>
+        </Link>
       </aside>
 
       {/* المحتوى */}
