@@ -73,7 +73,8 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
       {/* الدرج الجانبي المنزلق */}
       {drawer && (
         <div className="fixed inset-0 z-[60]">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setDrawer(false)} />
+          {/* الخلفية لا تُغلق الدرج — الإغلاق فقط بزر ✕ */}
+          <div className="absolute inset-0 bg-black/50" />
           <aside className="absolute inset-y-0 right-0 flex w-80 max-w-[85%] animate-slide-in flex-col bg-wine-dark p-5 text-cream shadow-2xl">
             {/* أزرار علوية: دخول + مفضّلة + إغلاق */}
             <div className="flex items-center gap-2">
