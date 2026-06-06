@@ -215,7 +215,15 @@
     "searchPlaceholder": "ابحث عن منتج...",
     "allProducts": "جميع المنتجات",
     "viewAll": "عرض الكل",
-    "browseByCategory": "تصفّحي حسب الفئة"
+    "browseByCategory": "تصفّحي حسب الفئة",
+    "sortBy": "ترتيب حسب",
+    "sortDefault": "افتراضي",
+    "sortNewest": "الأحدث",
+    "sortPriceAsc": "السعر: الأقل",
+    "sortPriceDesc": "السعر: الأعلى",
+    "sizeLabel": "المقاس",
+    "allSizes": "كل المقاسات",
+    "specialOffers": "عروض خاصة"
   },
   "cart": {
     "title": "سلة التسوّق",

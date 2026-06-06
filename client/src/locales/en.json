@@ -215,7 +215,15 @@
     "searchPlaceholder": "Search for a product...",
     "allProducts": "All products",
     "viewAll": "View all",
-    "browseByCategory": "Browse by category"
+    "browseByCategory": "Browse by category",
+    "sortBy": "Sort by",
+    "sortDefault": "Default",
+    "sortNewest": "Newest",
+    "sortPriceAsc": "Price: low",
+    "sortPriceDesc": "Price: high",
+    "sizeLabel": "Size",
+    "allSizes": "All sizes",
+    "specialOffers": "Special offers"
   },
   "cart": {
     "title": "Shopping cart",

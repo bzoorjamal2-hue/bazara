@@ -13,6 +13,7 @@ import { buildWhatsappLink } from '../utils/whatsapp.js';
 import { CATEGORY_ICON } from '../components/icons.jsx';
 
 const PAGE_SIZE = 8;
+const CATS = ['abaya', 'set', 'dress', 'hijab'];
 
 export default function StorePage() {
   const { slug } = useParams();
@@ -23,6 +24,9 @@ export default function StorePage() {
   const [error, setError] = useState('');
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('all'); // 'all' = الصفحة الرئيسية للمتجر
+  const [sort, setSort] = useState('default');
+  const [sizeF, setSizeF] = useState('all');
+  const [offersOnly, setOffersOnly] = useState(false);
   const [page, setPage] = useState(1);
 
   useEffect(() => {
@@ -34,16 +38,31 @@ export default function StorePage() {
       .catch((err) => setError(getErrorMessage(err, t('errors.storeNotFound'))));
   }, [slug, t]);
 
-  useEffect(() => setPage(1), [cat, q]);
+  useEffect(() => setPage(1), [cat, q, sort, sizeF, offersOnly]);
+
+  // المقاسات المتوفّرة (تُستخرج من المنتجات)
+  const sizes = useMemo(() => {
+    if (!data) return [];
+    return [...new Set(data.products.map((p) => (p.size || '').trim()).filter(Boolean))];
+  }, [data]);
 
   const filtered = useMemo(() => {
     if (!data) return [];
-    return data.products.filter((p) => {
+    let list = data.products.filter((p) => {
       const matchQ = !q || p.name.toLowerCase().includes(q.toLowerCase());
       const matchCat = cat === 'all' || p.category === cat;
-      return matchQ && matchCat;
+      const matchSize = sizeF === 'all' || (p.size || '').trim() === sizeF;
+      const matchOffers = !offersOnly || (p.oldPrice && p.oldPrice > p.price);
+      return matchQ && matchCat && matchSize && matchOffers;
     });
-  }, [data, q, cat]);
+    const cmp = {
+      newest: (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+      priceAsc: (a, b) => a.price - b.price,
+      priceDesc: (a, b) => b.price - a.price,
+    }[sort];
+    if (cmp) list = [...list].sort(cmp);
+    return list;
+  }, [data, q, cat, sizeF, offersOnly, sort]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -140,6 +159,48 @@ export default function StorePage() {
         </>
       )}
 
+      {/* شريط الفلاتر والترتيب (أفقي قابل للسحب على الموبايل) */}
+      {data.products.length > 0 && (
+        <div className="mb-4 -mx-4 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
+          <div className="flex w-max items-center gap-2">
+            <PillSelect
+              value={sort}
+              onChange={setSort}
+              prefix={t('store.sortBy')}
+              options={[
+                ['default', t('store.sortDefault')],
+                ['newest', t('store.sortNewest')],
+                ['priceAsc', t('store.sortPriceAsc')],
+                ['priceDesc', t('store.sortPriceDesc')],
+              ]}
+            />
+            <PillSelect
+              value={cat}
+              onChange={setCat}
+              prefix={t('store.filterCategory')}
+              options={[['all', t('store.allProducts')], ...CATS.map((c) => [c, t(`categories.${c}`)])]}
+            />
+            {sizes.length > 0 && (
+              <PillSelect
+                value={sizeF}
+                onChange={setSizeF}
+                prefix={t('store.sizeLabel')}
+                options={[['all', t('store.allSizes')], ...sizes.map((s) => [s, s])]}
+              />
+            )}
+            <button
+              type="button"
+              onClick={() => setOffersOnly((o) => !o)}
+              className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                offersOnly ? 'border-wine bg-wine text-cream' : 'border-wine/25 bg-white text-wine hover:bg-wine/5'
+              }`}
+            >
+              {t('store.specialOffers')}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* شبكة المنتجات */}
       {filtered.length === 0 ? (
         <div className="glass p-10 text-center text-stone-400">
@@ -170,6 +231,26 @@ export default function StorePage() {
 
       <FloatingWhatsApp number={wa} />
     </>
+  );
+}
+
+// قائمة منسدلة على شكل حبة (pill) لشريط الفلاتر/الترتيب
+function PillSelect({ value, onChange, options, prefix }) {
+  return (
+    <div className="relative shrink-0">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="cursor-pointer appearance-none rounded-full border border-wine/25 bg-white py-2 pe-9 ps-4 text-sm font-semibold text-wine focus:outline-none focus:ring-2 focus:ring-wine/20"
+      >
+        {options.map(([v, l]) => (
+          <option key={v} value={v}>
+            {prefix ? `${prefix}: ${l}` : l}
+          </option>
+        ))}
+      </select>
+      <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-[10px] text-wine">▼</span>
+    </div>
   );
 }
 

@@ -98,10 +98,17 @@ async function ensureBannersColumn() {
   }
 }
 
-ensureBannersColumn().finally(() => {
+function start() {
   app.listen(PORT, () => {
     console.log(`🚀 الخادم يعمل على المنفذ ${PORT}`);
   });
-});
+}
+
+// الترقية التلقائية على الإنتاج فقط (Render). محلياً نشغّل مباشرة بلا لمس قاعدة البيانات.
+if (process.env.NODE_ENV === 'production') {
+  ensureBannersColumn().finally(start);
+} else {
+  start();
+}
 
 export default app;
