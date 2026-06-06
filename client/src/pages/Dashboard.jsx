@@ -8,6 +8,7 @@ import SubscriptionBanner from '../components/SubscriptionBanner.jsx';
 import Profile from './dashboard/Profile.jsx';
 import StoreSettings from './dashboard/StoreSettings.jsx';
 import ProductsManager from './dashboard/ProductsManager.jsx';
+import OrdersManager from './dashboard/OrdersManager.jsx';
 import AdminRequests from './dashboard/AdminRequests.jsx';
 
 const SECTIONS = [
@@ -15,6 +16,7 @@ const SECTIONS = [
   { key: 'profile', icon: '👤' },
   { key: 'storeSettings', icon: '⚙️' },
   { key: 'myProducts', icon: '🧺' },
+  { key: 'myOrders', icon: '🧾' },
 ];
 
 export default function Dashboard() {
@@ -75,6 +77,7 @@ export default function Dashboard() {
         {section === 'profile' && <Profile />}
         {section === 'storeSettings' && <StoreSettings />}
         {section === 'myProducts' && <ProductsManager onCount={setProductsCount} />}
+        {section === 'myOrders' && <OrdersManager />}
         {section === 'admin' && isAdmin && <AdminRequests />}
       </div>
     </div>

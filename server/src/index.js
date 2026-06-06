@@ -11,6 +11,7 @@ import storeRoutes from './routes/store.routes.js';
 import productRoutes from './routes/product.routes.js';
 import publicRoutes from './routes/public.routes.js';
 import subscriptionRoutes from './routes/subscription.routes.js';
+import orderRoutes from './routes/order.routes.js';
 import { robots, sitemap, indexNowKey } from './controllers/seo.controller.js';
 import { issueCsrfToken, verifyCsrf, getCsrfToken } from './middleware/csrf.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
@@ -76,6 +77,7 @@ app.use('/api/stores', storeRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/subscription', subscriptionRoutes);
+app.use('/api/orders', orderRoutes);
 
 // مسارات SEO (على الجذر)
 app.get('/robots.txt', robots);

@@ -119,3 +119,20 @@ CREATE TABLE IF NOT EXISTS app_settings (
     key   TEXT PRIMARY KEY,
     value TEXT DEFAULT ''
 );
+
+-- الطلبات (الدفع بالبطاقة عبر Lahza)
+CREATE TABLE IF NOT EXISTS orders (
+    id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    store_id       UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+    customer_name  VARCHAR(100) DEFAULT '',
+    customer_email VARCHAR(255) DEFAULT '',
+    customer_phone VARCHAR(40)  DEFAULT '',
+    items          JSONB NOT NULL DEFAULT '[]',
+    total          NUMERIC(10,2) NOT NULL,
+    currency       VARCHAR(10) NOT NULL DEFAULT 'ILS',
+    status         VARCHAR(20) NOT NULL DEFAULT 'pending', -- pending|paid|failed
+    reference      TEXT,
+    created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_orders_store ON orders(store_id);
+CREATE INDEX IF NOT EXISTS idx_orders_reference ON orders(reference);

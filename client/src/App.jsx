@@ -13,6 +13,7 @@ import StorePage from './pages/StorePage.jsx';
 import CategoryPage from './pages/CategoryPage.jsx';
 import ProductDetails from './pages/ProductDetails.jsx';
 import Wishlist from './pages/Wishlist.jsx';
+import PaymentCallback from './pages/PaymentCallback.jsx';
 import NotFound from './pages/NotFound.jsx';
 
 export default function App() {
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset" element={<ResetPassword />} />
         <Route path="/wishlist" element={<Wishlist />} />
+        <Route path="/payment/callback" element={<PaymentCallback />} />
         <Route
           path="/dashboard"
           element={
