@@ -120,6 +120,18 @@ CREATE TABLE IF NOT EXISTS app_settings (
     value TEXT DEFAULT ''
 );
 
+-- أكواد تفعيل الاشتراك (يولّدها المدير، يدخلها المشترك بعد التحويل)
+CREATE TABLE IF NOT EXISTS activation_codes (
+    id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    code       VARCHAR(30) UNIQUE NOT NULL,
+    plan       VARCHAR(20) NOT NULL,            -- monthly|yearly
+    used       BOOLEAN NOT NULL DEFAULT false,
+    used_by    UUID REFERENCES users(id) ON DELETE SET NULL,
+    used_at    TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_codes_used ON activation_codes(used);
+
 -- الطلبات (الدفع بالبطاقة عبر Lahza)
 CREATE TABLE IF NOT EXISTS orders (
     id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),

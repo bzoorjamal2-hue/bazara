@@ -7,6 +7,9 @@ import {
   rejectRequest,
   getSettings,
   updateSettings,
+  redeemCode,
+  generateCodes,
+  listCodes,
 } from '../controllers/subscription.controller.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
 import { handleValidation, idParamRule } from '../middleware/validate.js';
@@ -16,6 +19,11 @@ const router = Router();
 // للمستخدم
 router.get('/status', requireAuth, getStatus);
 router.post('/request', requireAuth, requestSubscription);
+router.post('/redeem', requireAuth, redeemCode);
+
+// أكواد التفعيل (للمدير)
+router.get('/codes', requireAuth, requireAdmin, listCodes);
+router.post('/codes', requireAuth, requireAdmin, generateCodes);
 
 // للمدير
 router.get('/settings', requireAuth, requireAdmin, getSettings);

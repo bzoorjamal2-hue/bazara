@@ -1,16 +1,10 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCart } from '../context/CartContext.jsx';
-import api, { getErrorMessage } from '../api/client.js';
 import { buildWhatsappOrder } from '../utils/whatsapp.js';
 
 export default function CartDrawer() {
   const { t, i18n } = useTranslation();
   const { items, open, setOpen, remove, setQty, total, clear } = useCart();
-  const [payOpen, setPayOpen] = useState(false);
-  const [cust, setCust] = useState({ name: '', email: '', phone: '' });
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState('');
 
   if (!open) return null;
 
@@ -24,27 +18,6 @@ export default function CartDrawer() {
     Object.entries(groups).forEach(([wa, groupItems]) => {
       window.open(buildWhatsappOrder(wa === 'none' ? '' : wa, groupItems, i18n.language), '_blank');
     });
-  };
-
-  // دفع بالبطاقة عبر Lahza
-  const payCard = async (e) => {
-    e.preventDefault();
-    setErr('');
-    if (!/^\S+@\S+\.\S+$/.test(cust.email)) {
-      setErr(t('errors.invalidEmail'));
-      return;
-    }
-    setBusy(true);
-    try {
-      const { data } = await api.post('/orders/checkout', {
-        items: items.map((i) => ({ id: i.id, qty: i.qty })),
-        customer: cust,
-      });
-      window.location.href = data.authorizationUrl; // تحويل لصفحة Lahza الآمنة
-    } catch (e2) {
-      setErr(getErrorMessage(e2, t('errors.generic')));
-      setBusy(false);
-    }
   };
 
   return (
@@ -88,25 +61,8 @@ export default function CartDrawer() {
                 <span className="text-stone-300">{t('cart.total')}</span>
                 <span className="font-display text-2xl font-bold gradient-text">{t('common.currency')}{total.toFixed(2)}</span>
               </div>
-
-              {err && <div className="mb-3 rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">{err}</div>}
-
-              {!payOpen ? (
-                <>
-                  <button onClick={() => setPayOpen(true)} className="btn-primary mb-2 w-full">💳 {t('cart.payCard')}</button>
-                  <button onClick={orderWhatsapp} className="btn-whatsapp w-full">💬 {t('cart.orderWhatsapp')}</button>
-                  <button onClick={clear} className="mt-2 w-full text-center text-xs text-stone-400 hover:text-red-300">{t('cart.clear')}</button>
-                </>
-              ) : (
-                <form onSubmit={payCard} className="space-y-3">
-                  <p className="text-sm font-semibold text-gold-200">💳 {t('checkout.title')}</p>
-                  <input className="input" placeholder={t('checkout.name')} value={cust.name} onChange={(e) => setCust({ ...cust, name: e.target.value })} />
-                  <input className="input" type="text" inputMode="email" dir="ltr" placeholder={t('checkout.email')} value={cust.email} onChange={(e) => setCust({ ...cust, email: e.target.value })} />
-                  <input className="input" type="tel" dir="ltr" placeholder={t('checkout.phone')} value={cust.phone} onChange={(e) => setCust({ ...cust, phone: e.target.value })} />
-                  <button type="submit" disabled={busy} className="btn-primary w-full">{busy ? t('checkout.redirecting') : t('checkout.pay')}</button>
-                  <button type="button" onClick={() => setPayOpen(false)} className="w-full text-center text-xs text-stone-400 hover:text-gold-200">{t('checkout.cancel')}</button>
-                </form>
-              )}
+              <button onClick={orderWhatsapp} className="btn-whatsapp w-full">💬 {t('cart.orderWhatsapp')}</button>
+              <button onClick={clear} className="mt-2 w-full text-center text-xs text-stone-400 hover:text-red-300">{t('cart.clear')}</button>
             </div>
           </>
         )}

@@ -16,32 +16,30 @@ export default function Subscribe() {
   const { refresh } = useAuth();
   const navigate = useNavigate();
   const [status, setStatus] = useState(null);
-  const [selected, setSelected] = useState(null); // الخطة المختارة
-  const [form, setForm] = useState({ method: '', reference: '' });
+  const [selected, setSelected] = useState(null);
+  const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const [sent, setSent] = useState(false);
 
   const load = () =>
     api
       .get('/subscription/status')
       .then((r) => {
-        // المفعّل (مثل المدير) لا يحتاج دفعاً → للوحة التحكم
-        if (r.data.active) navigate('/dashboard');
+        if (r.data.active) navigate('/dashboard'); // المفعّل/المدير → اللوحة
         else setStatus(r.data);
       })
       .catch(() => setStatus({}));
   useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const submit = async (e) => {
+  const redeem = async (e) => {
     e.preventDefault();
     setError('');
+    if (!code.trim()) { setError(t('subscription.enterCode')); return; }
     setBusy(true);
     try {
-      await api.post('/subscription/request', { plan: selected, ...form });
-      setSent(true);
+      await api.post('/subscription/redeem', { code: code.trim() });
       await refresh();
-      load();
+      navigate('/dashboard');
     } catch (err) {
       setError(getErrorMessage(err, t('errors.generic')));
     } finally {
@@ -50,20 +48,6 @@ export default function Subscribe() {
   };
 
   if (!status) return <Spinner full />;
-
-  // تم إرسال الطلب أو هناك طلب معلّق
-  if (sent || status.pending) {
-    return (
-      <div className="mx-auto max-w-md">
-        <Seo title={t('subscription.title')} />
-        <div className="glass-strong animate-fade-up p-8 text-center">
-          <p className="mb-3 text-5xl">⏳</p>
-          <h1 className="font-display text-2xl font-bold gradient-text">{t('subscription.pendingTitle')}</h1>
-          <p className="mt-3 text-stone-300">{t('subscription.pendingDesc')}</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -97,25 +81,26 @@ export default function Subscribe() {
             {t('subscription.payTitle', { plan: t(`subscription.${selected}`) })}
           </h2>
 
-          {/* تعليمات الدفع */}
+          {/* تعليمات الدفع (التحويل المباشر) */}
           <div className="mt-4 rounded-xl border border-gold-400/20 bg-black/30 p-4">
             <p className="mb-1 text-sm font-semibold text-gold-200">💳 {t('subscription.payInstructions')}</p>
             <p className="whitespace-pre-line text-sm text-stone-300">{status.paymentInfo}</p>
           </div>
 
-          {/* نموذج إثبات الدفع */}
-          <form onSubmit={submit} className="mt-5 space-y-4">
-            <div>
-              <label className="label">{t('subscription.method')}</label>
-              <input type="text" className="input" placeholder={t('subscription.methodPlaceholder')} value={form.method} onChange={(e) => setForm({ ...form, method: e.target.value })} />
-            </div>
-            <div>
-              <label className="label">{t('subscription.reference')}</label>
-              <textarea rows={2} className="input resize-none" value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value })} />
-              <p className="mt-1 text-xs text-stone-400">{t('subscription.referenceHint')}</p>
-            </div>
+          {/* إدخال كود التفعيل */}
+          <form onSubmit={redeem} className="mt-5 space-y-3">
+            <label className="label">🔑 {t('subscription.haveCode')}</label>
+            <input
+              type="text"
+              dir="ltr"
+              className="input text-center text-lg tracking-widest"
+              placeholder="BZ-XXXX-XXXX"
+              value={code}
+              onChange={(e) => setCode(e.target.value.toUpperCase())}
+            />
+            <p className="text-xs text-stone-400">{t('subscription.codeHint')}</p>
             <button type="submit" disabled={busy} className="btn-primary w-full">
-              {busy ? t('common.loading') : t('subscription.submitRequest')}
+              {busy ? t('common.loading') : t('subscription.activate')}
             </button>
           </form>
         </div>

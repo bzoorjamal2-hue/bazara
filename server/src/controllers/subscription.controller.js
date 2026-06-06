@@ -97,7 +97,83 @@ export async function requestSubscription(req, res, next) {
   }
 }
 
+// توليد كود عشوائي بصيغة BZ-XXXX-XXXX
+function genCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const part = () => Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  return `BZ-${part()}-${part()}`;
+}
+
+// المشترك يُدخل كود التفعيل بعد التحويل
+export async function redeemCode(req, res, next) {
+  const code = (req.body.code || '').trim().toUpperCase();
+  if (!code) return res.status(400).json({ error: 'أدخل كود التفعيل.' });
+  try {
+    const r = await query('SELECT * FROM activation_codes WHERE code = $1', [code]);
+    const c = r.rows[0];
+    if (!c || c.used) return res.status(400).json({ error: 'كود غير صالح أو مُستخدَم مسبقاً.' });
+
+    // التمديد من نهاية الفترة الحالية إن كانت مستقبلية (تجديد يتراكم)
+    const userRow = await query('SELECT current_period_end FROM users WHERE id = $1', [req.user.id]);
+    const cur = userRow.rows[0]?.current_period_end;
+    const from = cur && new Date(cur) > new Date() ? new Date(cur) : new Date();
+    const end = planPeriodEnd(c.plan, from);
+
+    await query(
+      "UPDATE users SET subscription_status='active', subscription_plan=$1, current_period_end=$2 WHERE id=$3",
+      [c.plan, end, req.user.id]
+    );
+    await query('UPDATE activation_codes SET used=true, used_by=$1, used_at=now() WHERE id=$2', [req.user.id, c.id]);
+
+    res.json({ message: 'تم تفعيل اشتراكك بنجاح!', plan: c.plan, currentPeriodEnd: end });
+  } catch (err) {
+    next(err);
+  }
+}
+
 // ===== مسارات المدير =====
+
+// توليد أكواد تفعيل (للمدير)
+export async function generateCodes(req, res, next) {
+  const { plan } = req.body;
+  if (!PLANS[plan]) return res.status(400).json({ error: 'خطة غير صالحة.' });
+  const count = Math.min(50, Math.max(1, parseInt(req.body.count, 10) || 1));
+  try {
+    const created = [];
+    for (let i = 0; i < count; i++) {
+      let code;
+      // نضمن التفرّد
+      for (let tries = 0; tries < 5; tries++) {
+        code = genCode();
+        const exists = await query('SELECT 1 FROM activation_codes WHERE code = $1', [code]);
+        if (exists.rows.length === 0) break;
+      }
+      await query('INSERT INTO activation_codes (code, plan) VALUES ($1, $2)', [code, plan]);
+      created.push(code);
+    }
+    res.json({ codes: created, plan });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// قائمة الأكواد (للمدير)
+export async function listCodes(req, res, next) {
+  try {
+    const r = await query(
+      `SELECT c.code, c.plan, c.used, c.used_at, c.created_at, u.email AS used_email
+       FROM activation_codes c LEFT JOIN users u ON u.id = c.used_by
+       ORDER BY c.used ASC, c.created_at DESC LIMIT 200`
+    );
+    res.json({
+      codes: r.rows.map((x) => ({
+        code: x.code, plan: x.plan, used: x.used, usedAt: x.used_at, usedEmail: x.used_email, createdAt: x.created_at,
+      })),
+    });
+  } catch (err) {
+    next(err);
+  }
+}
 
 // قائمة الطلبات (الأحدث أولاً) مع بيانات المستخدم والمتجر
 export async function listRequests(req, res, next) {
