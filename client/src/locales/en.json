@@ -147,6 +147,7 @@
       "whatsapp": "WhatsApp number (for orders)",
       "whatsappHint": "International format, e.g. +962790000000",
       "instagram": "Instagram (username)",
+      "facebook": "Facebook (page link)",
       "tiktok": "TikTok (username)",
       "themeColor": "Store brand color",
       "delivery": "Delivery info",

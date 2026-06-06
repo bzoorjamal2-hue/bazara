@@ -7,7 +7,7 @@ import ImageInput from '../../components/ImageInput.jsx';
 
 const EMPTY = {
   name: '', description: '', logoUrl: '', phone: '', whatsapp: '',
-  instagram: '', tiktok: '', themeColor: '#d4af37', deliveryInfo: '', paymentInfo: '', banners: [],
+  instagram: '', facebook: '', tiktok: '', themeColor: '#d4af37', deliveryInfo: '', paymentInfo: '', banners: [],
 };
 
 // شرايح افتراضية يقترحها النظام عند عدم وجود بانرات (يقدر المالك يعدّلها أو يحذفها)
@@ -33,7 +33,7 @@ export default function StoreSettings() {
         setForm({
           name: s.name || '', description: s.description || '', logoUrl: s.logoUrl || '',
           phone: s.phone || '', whatsapp: s.whatsapp || '', instagram: s.instagram || '',
-          tiktok: s.tiktok || '', themeColor: s.themeColor || '#d4af37',
+          facebook: s.facebook || '', tiktok: s.tiktok || '', themeColor: s.themeColor || '#d4af37',
           deliveryInfo: s.deliveryInfo || '', paymentInfo: s.paymentInfo || '',
           banners: Array.isArray(s.banners) && s.banners.length ? s.banners : DEFAULT_BANNERS,
         });
@@ -137,6 +137,10 @@ export default function StoreSettings() {
             <div>
               <label className="label">{t('dashboard.store.instagram')}</label>
               <input type="text" dir="ltr" className="input" placeholder="username" value={form.instagram} onChange={set('instagram')} />
+            </div>
+            <div>
+              <label className="label">{t('dashboard.store.facebook')}</label>
+              <input type="text" dir="ltr" className="input" placeholder="facebook.com/yourpage" value={form.facebook} onChange={set('facebook')} />
             </div>
             <div>
               <label className="label">{t('dashboard.store.tiktok')}</label>

@@ -93,6 +93,7 @@ app.use(errorHandler);
 async function ensureColumns() {
   try {
     await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS banners JSONB DEFAULT '[]'::jsonb;");
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS facebook VARCHAR(200) DEFAULT '';");
     await pool.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS video_url TEXT DEFAULT '';");
   } catch (err) {
     console.error('⚠️ تعذّر تطبيق الترقيات:', err.message);

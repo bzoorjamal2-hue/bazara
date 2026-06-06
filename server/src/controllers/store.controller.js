@@ -12,6 +12,7 @@ function mapStore(s) {
     phone: s.phone,
     whatsapp: s.whatsapp,
     instagram: s.instagram,
+    facebook: s.facebook,
     tiktok: s.tiktok,
     themeColor: s.theme_color,
     deliveryInfo: s.delivery_info,
@@ -53,7 +54,7 @@ export async function getMyStore(req, res, next) {
 
 // تحديث إعدادات المتجر (المالك فقط)
 export async function updateMyStore(req, res, next) {
-  const { name, description, logoUrl, phone, whatsapp, instagram, tiktok, themeColor, deliveryInfo, paymentInfo } = req.body;
+  const { name, description, logoUrl, phone, whatsapp, instagram, facebook, tiktok, themeColor, deliveryInfo, paymentInfo } = req.body;
   const banners = sanitizeBanners(req.body.banners);
   try {
     const current = await query('SELECT id, name, slug FROM stores WHERE user_id = $1', [req.user.id]);
@@ -68,10 +69,10 @@ export async function updateMyStore(req, res, next) {
     const updated = await query(
       `UPDATE stores SET
          name = $1, description = $2, logo_url = $3, slug = $4,
-         phone = $5, whatsapp = $6, instagram = $7, tiktok = $8,
-         theme_color = $9, delivery_info = $10, payment_info = $11,
-         banners = $12::jsonb, updated_at = now()
-       WHERE id = $13
+         phone = $5, whatsapp = $6, instagram = $7, facebook = $8, tiktok = $9,
+         theme_color = $10, delivery_info = $11, payment_info = $12,
+         banners = $13::jsonb, updated_at = now()
+       WHERE id = $14
        RETURNING *`,
       [
         name,
@@ -81,6 +82,7 @@ export async function updateMyStore(req, res, next) {
         phone || '',
         whatsapp || '',
         instagram || '',
+        facebook || '',
         tiktok || '',
         themeColor || '#d4af37',
         deliveryInfo || '',

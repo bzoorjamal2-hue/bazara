@@ -6,14 +6,14 @@ import CartDrawer from './CartDrawer.jsx';
 // الهوية الخمرية/العاجية الفاخرة مطبّقة على كل الموقع (متجر عام + لوحة تحكم لكل المشتركين).
 export default function Layout({ children }) {
   const { pathname } = useLocation();
-  // صفحات المتجر العامة لها هيدر خاص (StoreHeader) بدل شريط Bazara العام
-  const hideNavbar = /^\/store\//.test(pathname);
+  // صفحات المتجر العامة لها هيدر وفوتر خاص بالمتجر بدل شريط/فوتر Bazara العام
+  const isStorePage = /^\/store\//.test(pathname);
 
   return (
     <div className="app-bg theme-pub flex min-h-screen flex-col">
-      {!hideNavbar && <Navbar />}
+      {!isStorePage && <Navbar />}
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">{children}</main>
-      <PublicFooter />
+      {!isStorePage && <PublicFooter />}
       <CartDrawer />
     </div>
   );

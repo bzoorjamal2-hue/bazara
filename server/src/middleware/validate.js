@@ -74,6 +74,7 @@ export const storeUpdateRules = [
   body('phone').optional({ nullable: true }).trim().isLength({ max: 40 }),
   body('whatsapp').optional({ nullable: true }).trim().isLength({ max: 40 }),
   body('instagram').optional({ nullable: true }).trim().isLength({ max: 120 }),
+  body('facebook').optional({ nullable: true }).trim().isLength({ max: 200 }),
   body('tiktok').optional({ nullable: true }).trim().isLength({ max: 120 }),
   body('themeColor').optional({ nullable: true, checkFalsy: true }).matches(/^#[0-9a-fA-F]{6}$/).withMessage('لون غير صالح.'),
   body('deliveryInfo').optional({ nullable: true }).trim().isLength({ max: 1000 }),

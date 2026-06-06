@@ -26,6 +26,7 @@ function mapStorePublic(s) {
     phone: s.phone,
     whatsapp: s.whatsapp,
     instagram: s.instagram,
+    facebook: s.facebook,
     tiktok: s.tiktok,
     themeColor: s.theme_color,
     deliveryInfo: s.delivery_info,
