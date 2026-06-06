@@ -1,7 +1,9 @@
 import { query } from '../config/db.js';
 import { isUserActive, daysRemaining, isAdminEmail, planPeriodEnd } from '../utils/subscription.js';
+import { sendMail, isMailConfigured } from '../utils/mail.js';
 
 const PLANS = { monthly: true, yearly: true };
+const planLabel = (p) => (p === 'yearly' ? 'سنوية' : 'شهرية');
 
 // تعليمات الدفع: من قاعدة البيانات (يحرّرها المدير)، وإلا من المتغيّر، وإلا نص افتراضي.
 async function getPaymentInfo() {
@@ -120,8 +122,8 @@ export async function redeemCode(req, res, next) {
     const end = planPeriodEnd(c.plan, from);
 
     await query(
-      "UPDATE users SET subscription_status='active', subscription_plan=$1, current_period_end=$2 WHERE id=$3",
-      [c.plan, end, req.user.id]
+      "UPDATE users SET subscription_status='active', subscription_plan=$1, current_period_end=$2, subscription_started_at=$3 WHERE id=$4",
+      [c.plan, end, from, req.user.id]
     );
     await query('UPDATE activation_codes SET used=true, used_by=$1, used_at=now() WHERE id=$2', [req.user.id, c.id]);
 
@@ -152,6 +154,76 @@ export async function generateCodes(req, res, next) {
       created.push(code);
     }
     res.json({ codes: created, plan });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// توليد كود وإرساله مباشرة لبريد المشترك (للمدير)
+export async function sendCodeToSubscriber(req, res, next) {
+  const { email, plan } = req.body;
+  if (!PLANS[plan]) return res.status(400).json({ error: 'خطة غير صالحة.' });
+  try {
+    const r = await query('SELECT id, name FROM users WHERE email = $1', [email]);
+    const u = r.rows[0];
+    if (!u) return res.status(404).json({ error: 'لا يوجد مشترك بهذا البريد.' });
+
+    let code;
+    for (let tries = 0; tries < 5; tries++) {
+      code = genCode();
+      const exists = await query('SELECT 1 FROM activation_codes WHERE code = $1', [code]);
+      if (exists.rows.length === 0) break;
+    }
+    await query('INSERT INTO activation_codes (code, plan) VALUES ($1, $2)', [code, plan]);
+
+    let mailed = false;
+    if (isMailConfigured()) {
+      try {
+        await sendMail({
+          to: email,
+          subject: 'كود تفعيل اشتراكك — Bazara',
+          html: `<div style="font-family:Tahoma,Arial;direction:rtl;text-align:right">
+            <h2>كود تفعيل اشتراكك في Bazara</h2>
+            <p>مرحباً ${u.name || ''}، تم تجهيز كود تفعيل اشتراكك (حزمة ${planLabel(plan)}):</p>
+            <p style="font-size:26px;font-weight:bold;letter-spacing:4px;color:#b8932c">${code}</p>
+            <p>سجّل دخولك ← صفحة الاشتراك ← أدخل الكود لتفعيل متجرك.</p>
+          </div>`,
+        });
+        mailed = true;
+      } catch (e) {
+        console.error('sendCode mail failed:', e.message);
+      }
+    }
+    res.json({ message: mailed ? 'تم إرسال الكود إلى بريد المشترك.' : 'تم توليد الكود (تعذّر الإرسال بالبريد، أرسله يدوياً).', code, mailed });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// قائمة المشتركين (للمدير)
+export async function listSubscribers(req, res, next) {
+  try {
+    const r = await query(
+      `SELECT u.name, u.email, u.subscription_plan, u.subscription_status,
+              u.subscription_started_at, u.current_period_end, u.created_at,
+              s.name AS store_name, s.slug AS store_slug
+       FROM users u JOIN stores s ON s.user_id = u.id
+       ORDER BY u.created_at DESC LIMIT 300`
+    );
+    res.json({
+      subscribers: r.rows.map((x) => ({
+        name: x.name,
+        email: x.email,
+        plan: x.subscription_plan,
+        status: x.subscription_status,
+        startedAt: x.subscription_started_at,
+        currentPeriodEnd: x.current_period_end,
+        storeName: x.store_name,
+        storeSlug: x.store_slug,
+        active: isUserActive({ email: x.email, subscription_status: x.subscription_status, current_period_end: x.current_period_end }),
+        isAdmin: isAdminEmail(x.email),
+      })),
+    });
   } catch (err) {
     next(err);
   }

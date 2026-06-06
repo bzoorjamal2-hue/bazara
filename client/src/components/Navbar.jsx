@@ -44,7 +44,12 @@ export default function Navbar() {
     { key: 'storeSettings', label: t('dashboard.storeSettings'), icon: '⚙️' },
     { key: 'myProducts', label: t('dashboard.myProducts'), icon: '🧺' },
     { key: 'myOrders', label: t('dashboard.myOrders'), icon: '🧾' },
-    ...(isAdmin ? [{ key: 'admin', label: t('admin.nav'), icon: '🛡️' }] : []),
+    ...(isAdmin
+      ? [
+          { key: 'subscribers', label: t('admin.subscribersNav'), icon: '👥' },
+          { key: 'admin', label: t('admin.nav'), icon: '🛡️' },
+        ]
+      : []),
   ];
 
   return (

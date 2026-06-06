@@ -10,6 +10,7 @@ import StoreSettings from './dashboard/StoreSettings.jsx';
 import ProductsManager from './dashboard/ProductsManager.jsx';
 import OrdersManager from './dashboard/OrdersManager.jsx';
 import AdminRequests from './dashboard/AdminRequests.jsx';
+import SubscribersManager from './dashboard/SubscribersManager.jsx';
 
 const SECTIONS = [
   { key: 'overview', icon: '📊' },
@@ -27,7 +28,11 @@ export default function Dashboard() {
   const setSection = (key) => setParams(key === 'overview' ? {} : { tab: key });
   const [productsCount, setProductsCount] = useState(null);
   const isAdmin = subscription?.isAdmin;
-  const sections = isAdmin ? [...SECTIONS, { key: 'admin', icon: '🛡️' }] : SECTIONS;
+  const sections = isAdmin
+    ? [...SECTIONS, { key: 'subscribers', icon: '👥' }, { key: 'admin', icon: '🛡️' }]
+    : SECTIONS;
+  const labelFor = (key) =>
+    key === 'admin' ? t('admin.nav') : key === 'subscribers' ? t('admin.subscribersNav') : t(`dashboard.${key}`);
 
   const avatar = user?.avatarUrl ? (
     <img src={user.avatarUrl} alt={user.name} className="h-12 w-12 rounded-full border border-gold-400/40 object-cover" />
@@ -60,7 +65,7 @@ export default function Dashboard() {
               }`}
             >
               <span>{s.icon}</span>
-              {s.key === 'admin' ? t('admin.nav') : t(`dashboard.${s.key}`)}
+              {labelFor(s.key)}
             </button>
           ))}
         </nav>
@@ -78,6 +83,7 @@ export default function Dashboard() {
         {section === 'storeSettings' && <StoreSettings />}
         {section === 'myProducts' && <ProductsManager onCount={setProductsCount} />}
         {section === 'myOrders' && <OrdersManager />}
+        {section === 'subscribers' && isAdmin && <SubscribersManager />}
         {section === 'admin' && isAdmin && <AdminRequests />}
       </div>
     </div>

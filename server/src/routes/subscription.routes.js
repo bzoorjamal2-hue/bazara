@@ -10,6 +10,8 @@ import {
   redeemCode,
   generateCodes,
   listCodes,
+  sendCodeToSubscriber,
+  listSubscribers,
 } from '../controllers/subscription.controller.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
 import { handleValidation, idParamRule } from '../middleware/validate.js';
@@ -21,9 +23,11 @@ router.get('/status', requireAuth, getStatus);
 router.post('/request', requireAuth, requestSubscription);
 router.post('/redeem', requireAuth, redeemCode);
 
-// أكواد التفعيل (للمدير)
+// أكواد التفعيل والمشتركون (للمدير)
 router.get('/codes', requireAuth, requireAdmin, listCodes);
 router.post('/codes', requireAuth, requireAdmin, generateCodes);
+router.post('/send-code', requireAuth, requireAdmin, sendCodeToSubscriber);
+router.get('/subscribers', requireAuth, requireAdmin, listSubscribers);
 
 // للمدير
 router.get('/settings', requireAuth, requireAdmin, getSettings);

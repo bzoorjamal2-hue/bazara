@@ -299,7 +299,21 @@
     "newCodes": "الأكواد الجديدة (انسخها وأرسلها للمشترك):",
     "code": "الكود",
     "available": "متاح",
-    "usedBadge": "مستخدم"
+    "usedBadge": "مستخدم",
+    "subscribersNav": "المشتركون",
+    "subscribersTitle": "المشتركون في متجرك",
+    "subscribersHint": "كل من سجّل واشترك. أرسل كود التفعيل مباشرة على بريد المشترك.",
+    "subName": "الاسم",
+    "subPlan": "الحزمة",
+    "subStarted": "تاريخ الاشتراك",
+    "subExpires": "ينتهي في",
+    "subActive": "فعّال ✓",
+    "subExpired": "منتهٍ — مغلق",
+    "subNone": "لا مشترك",
+    "subStore": "رابط المتجر",
+    "sendCodeBtn": "إرسال كود التفعيل",
+    "codeSentTo": "تم إرسال الكود إلى",
+    "noSubscribers": "لا يوجد مشتركون بعد."
   },
   "order": {
     "choose": "اختر طريقة الطلب",

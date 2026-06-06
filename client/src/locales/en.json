@@ -299,7 +299,21 @@
     "newCodes": "New codes (copy and send to the subscriber):",
     "code": "Code",
     "available": "Available",
-    "usedBadge": "Used"
+    "usedBadge": "Used",
+    "subscribersNav": "Subscribers",
+    "subscribersTitle": "Your subscribers",
+    "subscribersHint": "Everyone who registered and subscribed. Send the activation code straight to their email.",
+    "subName": "Name",
+    "subPlan": "Plan",
+    "subStarted": "Subscribed on",
+    "subExpires": "Expires",
+    "subActive": "Active ✓",
+    "subExpired": "Expired — locked",
+    "subNone": "No plan",
+    "subStore": "Store link",
+    "sendCodeBtn": "Send activation code",
+    "codeSentTo": "Code sent to",
+    "noSubscribers": "No subscribers yet."
   },
   "order": {
     "choose": "Choose order method",

@@ -16,15 +16,15 @@ export default function CategoryGrid({ onSelect, active }) {
         const isActive = active === c;
         const inner = (
           <>
-            <div className="flex h-24 items-center justify-center sm:h-28">
-              <Icon className={`h-16 w-16 transition-transform duration-300 group-hover:scale-110 ${isActive ? 'text-gold-300' : 'text-gold-400/80'}`} />
+            <div className="flex h-20 items-center justify-center sm:h-24 lg:h-28">
+              <Icon className={`h-12 w-12 transition-transform duration-300 group-hover:scale-110 sm:h-16 sm:w-16 ${isActive ? 'text-gold-300' : 'text-gold-400/80'}`} />
             </div>
-            <span className={`block text-center text-sm font-semibold ${isActive ? 'text-gold-200' : 'text-stone-200'}`}>
+            <span className={`block text-center text-xs font-semibold sm:text-sm ${isActive ? 'text-gold-200' : 'text-stone-200'}`}>
               {t(`categories.${c}`)}
             </span>
           </>
         );
-        const cls = `group glass animate-fade-up p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-glow ${
+        const cls = `group glass animate-fade-up p-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-glow sm:p-4 ${
           isActive ? 'ring-1 ring-gold-400/60' : ''
         }`;
         const style = { animationDelay: `${i * 60}ms` };
