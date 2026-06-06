@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 html {
@@ -11,7 +11,9 @@ html {
 }
 
 body {
-  @apply bg-ink-950 text-stone-100 font-sans antialiased;
+  @apply font-sans antialiased;
+  background-color: #f8f3ec;
+  color: #2b2b2b;
   min-height: 100vh;
 }
 
@@ -215,6 +217,21 @@ html[lang='ar'] .font-display {
 
 .theme-pub .shadow-gold { box-shadow: 0 10px 30px -12px rgba(92, 26, 46, 0.45); }
 .theme-pub .hover\:shadow-glow:hover { box-shadow: 0 14px 32px -10px rgba(92, 26, 46, 0.28); }
+
+/* فواصل/حدود/خلفيات بيضاء أو سوداء خفيفة (كانت للثيم الداكن) → تظهر على الفاتح */
+.theme-pub .border-white,
+.theme-pub .border-white\/20 { border-color: rgba(92, 26, 46, 0.45); }
+.theme-pub .border-white\/5,
+.theme-pub .border-white\/10 { border-color: rgba(92, 26, 46, 0.1); }
+.theme-pub .divide-white\/5 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(92, 26, 46, 0.1); }
+.theme-pub .hover\:bg-white\/5:hover,
+.theme-pub .hover\:bg-white\/10:hover { background-color: rgba(92, 26, 46, 0.06); }
+.theme-pub .bg-white\/5,
+.theme-pub .bg-white\/\[0\.03\],
+.theme-pub .bg-white\/\[0\.05\] { background-color: rgba(92, 26, 46, 0.04); }
+/* صناديق/حقول بخلفية سوداء خفيفة → لمسة كريمية */
+.theme-pub .bg-black\/20,
+.theme-pub .bg-black\/30 { background-color: rgba(92, 26, 46, 0.05); }
 
 /* شريط التمرير خمري داخل الثيم العام */
 .theme-pub ::-webkit-scrollbar-thumb { background: rgba(92, 26, 46, 0.28); }

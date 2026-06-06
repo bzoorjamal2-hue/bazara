@@ -1,33 +1,15 @@
 import { useTranslation } from 'react-i18next';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Navbar from './Navbar.jsx';
 import CartDrawer from './CartDrawer.jsx';
 
-// الصفحات العامة (تجربة المتجر) تأخذ الثيم الخمري/العاجي الفاخر.
-// لوحة التحكم/الإعدادات/الدخول تبقى بالثيم الداكن كما هي.
-function isPublicStoreRoute(pathname) {
-  return /^\/(store\/|category\/|product\/|wishlist|$)/.test(pathname);
-}
-
+// الهوية الخمرية/العاجية الفاخرة مطبّقة على كل الموقع (متجر عام + لوحة تحكم لكل المشتركين).
 export default function Layout({ children }) {
-  const { t } = useTranslation();
-  const { pathname } = useLocation();
-  const pub = isPublicStoreRoute(pathname);
-
   return (
-    <div className={`app-bg flex min-h-screen flex-col ${pub ? 'theme-pub' : ''}`}>
+    <div className="app-bg theme-pub flex min-h-screen flex-col">
       <Navbar />
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">{children}</main>
-
-      {pub ? (
-        <PublicFooter />
-      ) : (
-        <footer className="mx-auto w-full max-w-6xl px-4 pb-8 pt-4 text-center text-sm text-stone-500 sm:px-6">
-          <div className="gold-divider mb-5" />
-          © {new Date().getFullYear()} {t('app.name')} — {t('app.tagline')}
-        </footer>
-      )}
-
+      <PublicFooter />
       <CartDrawer />
     </div>
   );

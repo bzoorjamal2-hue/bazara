@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
@@ -26,11 +26,10 @@ export default function Navbar() {
   const { count, setOpen } = useCart();
   const { count: wishCount } = useWishlist();
   const navigate = useNavigate();
-  const { pathname } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // الشريط الخمري الفاخر على صفحات المتجر العامة فقط
-  const pub = /^\/(store\/|category\/|product\/|wishlist|$)/.test(pathname);
+  // الشريط الخمري الفاخر على كل الموقع
+  const pub = true;
 
   const isAdmin = subscription?.isAdmin;
   const brandName = user ? store?.name || t('app.name') : t('app.name');
