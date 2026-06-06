@@ -226,7 +226,9 @@
     "sortPriceDesc": "Price: high",
     "sizeLabel": "Size",
     "allSizes": "All sizes",
-    "specialOffers": "Special offers"
+    "specialOffers": "Special offers",
+    "apply": "Apply",
+    "discounts": "Discounts"
   },
   "cart": {
     "title": "Shopping cart",

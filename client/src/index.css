@@ -261,3 +261,10 @@ html[lang='ar'] .font-display {
 
 /* ===== الفوتر الخمري ===== */
 .pub-footer { background: #4a1322; color: #f8f3ec; }
+
+/* ===== نافذة الفلاتر السفلية (Bottom Sheet) ===== */
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.animate-sheet { animation: sheet-up 0.28s ease-out both; }

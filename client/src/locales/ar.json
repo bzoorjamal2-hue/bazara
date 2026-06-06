@@ -226,7 +226,9 @@
     "sortPriceDesc": "السعر: الأعلى",
     "sizeLabel": "المقاس",
     "allSizes": "كل المقاسات",
-    "specialOffers": "عروض خاصة"
+    "specialOffers": "عروض خاصة",
+    "apply": "تطبيق",
+    "discounts": "خصومات"
   },
   "cart": {
     "title": "سلة التسوّق",
