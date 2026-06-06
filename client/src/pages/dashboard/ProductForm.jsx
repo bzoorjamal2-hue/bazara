@@ -4,6 +4,7 @@ import api, { getErrorMessage } from '../../api/client.js';
 import ImageInput from '../../components/ImageInput.jsx';
 
 const CATEGORIES = ['abaya', 'set', 'dress', 'hijab'];
+const SIZES = ['36', '38', '40', '42', '44', '46', '48'];
 const EMPTY = {
   name: '', price: '', oldPrice: '', description: '', size: '', color: '',
   category: 'abaya', imageUrl: '', images: [], videoUrl: '', stock: '', featured: false,
@@ -28,6 +29,14 @@ export default function ProductForm({ initial, onClose, onSaved }) {
   const [busy, setBusy] = useState(false);
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+
+  // مقاسات المنتج (متعدّدة) — مخزّنة كنص مفصول بفواصل
+  const selectedSizes = form.size ? form.size.split(',').map((s) => s.trim()).filter(Boolean) : [];
+  const toggleSize = (s) => {
+    const setS = new Set(selectedSizes);
+    setS.has(s) ? setS.delete(s) : setS.add(s);
+    setForm({ ...form, size: SIZES.filter((x) => setS.has(x)).join(',') });
+  };
 
   const setGalleryAt = (idx, val) => {
     const images = [...form.images];
@@ -134,15 +143,29 @@ export default function ProductForm({ initial, onClose, onSaved }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="label">{t('dashboard.product.size')}</label>
-              <input type="text" className="input" value={form.size} onChange={set('size')} />
+          <div>
+            <label className="label">{t('dashboard.product.size')} <span className="text-stone-500">({t('common.optional')})</span></label>
+            <div className="flex flex-wrap gap-2">
+              {SIZES.map((s) => (
+                <button
+                  type="button"
+                  key={s}
+                  onClick={() => toggleSize(s)}
+                  className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition ${
+                    selectedSizes.includes(s)
+                      ? 'border-gold-400 bg-gold-400/20 text-gold-100'
+                      : 'border-gold-400/20 text-stone-300 hover:bg-white/5'
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
             </div>
-            <div>
-              <label className="label">{t('dashboard.product.color')}</label>
-              <input type="text" className="input" value={form.color} onChange={set('color')} />
-            </div>
+          </div>
+
+          <div>
+            <label className="label">{t('dashboard.product.color')}</label>
+            <input type="text" className="input" value={form.color} onChange={set('color')} />
           </div>
 
           <div>

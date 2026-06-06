@@ -12,6 +12,7 @@ import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
 
 const PAGE_SIZE = 8;
 const CATS = ['abaya', 'set', 'dress', 'hijab'];
+const SIZES = ['36', '38', '40', '42', '44', '46', '48'];
 
 export default function StorePage() {
   const { slug } = useParams();
@@ -39,18 +40,14 @@ export default function StorePage() {
 
   useEffect(() => setPage(1), [cat, q, sort, sizesSel, offersOnly]);
 
-  // المقاسات المتوفّرة (تُستخرج من المنتجات)
-  const sizes = useMemo(() => {
-    if (!data) return [];
-    return [...new Set(data.products.map((p) => (p.size || '').trim()).filter(Boolean))];
-  }, [data]);
-
   const filtered = useMemo(() => {
     if (!data) return [];
     let list = data.products.filter((p) => {
       const matchQ = !q || p.name.toLowerCase().includes(q.toLowerCase());
       const matchCat = cat === 'all' || p.category === cat;
-      const matchSize = sizesSel.length === 0 || sizesSel.includes((p.size || '').trim());
+      // مقاسات المنتج قد تكون متعدّدة (مفصولة بفواصل)
+      const prodSizes = (p.size || '').split(',').map((s) => s.trim()).filter(Boolean);
+      const matchSize = sizesSel.length === 0 || sizesSel.some((s) => prodSizes.includes(s));
       const matchOffers = !offersOnly || (p.oldPrice && p.oldPrice > p.price);
       return matchQ && matchCat && matchSize && matchOffers;
     });
@@ -131,11 +128,9 @@ export default function StorePage() {
             <Chip onClick={() => setOpenSheet('sort')}>
               {t('store.sortBy')}: {t(SORT_LABEL[sort] || 'store.sortDefault')}
             </Chip>
-            {sizes.length > 0 && (
-              <Chip onClick={() => setOpenSheet('size')} active={sizesSel.length > 0}>
-                {t('store.sizeLabel')}{sizesSel.length ? ` (${sizesSel.length})` : ''}
-              </Chip>
-            )}
+            <Chip onClick={() => setOpenSheet('size')} active={sizesSel.length > 0}>
+              {t('store.sizeLabel')}{sizesSel.length ? ` (${sizesSel.length})` : ''}
+            </Chip>
             <Chip onClick={() => setOpenSheet('offers')} active={offersOnly}>
               {t('store.specialOffers')}
             </Chip>
@@ -176,7 +171,7 @@ export default function StorePage() {
         <SortSheet value={sort} onClose={() => setOpenSheet(null)} onApply={(v) => { setSort(v); setOpenSheet(null); }} />
       )}
       {openSheet === 'size' && (
-        <SizeSheet sizes={sizes} value={sizesSel} onClose={() => setOpenSheet(null)} onApply={(v) => { setSizesSel(v); setOpenSheet(null); }} />
+        <SizeSheet sizes={SIZES} value={sizesSel} onClose={() => setOpenSheet(null)} onApply={(v) => { setSizesSel(v); setOpenSheet(null); }} />
       )}
       {openSheet === 'offers' && (
         <OffersSheet value={offersOnly} onClose={() => setOpenSheet(null)} onApply={(v) => { setOffersOnly(v); setOpenSheet(null); }} />
@@ -214,7 +209,8 @@ function FilterSheet({ title, onClose, onReset, onApply, children }) {
   const { t } = useTranslation();
   return (
     <div className="fixed inset-0 z-[80] flex items-end">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      {/* الخلفية لا تُغلق النافذة — الإغلاق فقط بزر ✕ */}
+      <div className="absolute inset-0 bg-black/40" />
       <div className="animate-sheet relative max-h-[80vh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl">
         <div className="mb-4 flex items-center justify-between">
           <button onClick={onReset} className="w-16 text-start text-sm font-medium text-wine/70 hover:text-wine">Reset</button>
