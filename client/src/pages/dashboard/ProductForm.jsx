@@ -6,7 +6,7 @@ import ImageInput from '../../components/ImageInput.jsx';
 const CATEGORIES = ['abaya', 'set', 'dress', 'hijab'];
 const EMPTY = {
   name: '', price: '', oldPrice: '', description: '', size: '', color: '',
-  category: 'abaya', imageUrl: '', images: [], stock: '', featured: false,
+  category: 'abaya', imageUrl: '', images: [], videoUrl: '', stock: '', featured: false,
 };
 
 export default function ProductForm({ initial, onClose, onSaved }) {
@@ -90,6 +90,16 @@ export default function ProductForm({ initial, onClose, onSaved }) {
                 <button type="button" onClick={addGallery} className="btn-ghost w-full text-sm">＋ {t('dashboard.product.addImage')}</button>
               )}
             </div>
+          </div>
+
+          {/* فيديو المنتج (رابط) */}
+          <div>
+            <label className="label">🎬 {t('dashboard.product.video')} <span className="text-stone-500">({t('common.optional')})</span></label>
+            <input type="url" dir="ltr" className="input" placeholder="https://...mp4" value={form.videoUrl} onChange={set('videoUrl')} />
+            <p className="mt-1 text-xs text-stone-400">{t('dashboard.product.videoHint')}</p>
+            {form.videoUrl && (
+              <video src={form.videoUrl} controls playsInline className="mt-2 max-h-48 w-full rounded-xl bg-black/40" />
+            )}
           </div>
 
           <div>

@@ -76,6 +76,7 @@ ALTER TABLE products ADD COLUMN IF NOT EXISTS images    TEXT[]        DEFAULT '{
 ALTER TABLE products ADD COLUMN IF NOT EXISTS old_price NUMERIC(10,2);
 ALTER TABLE products ADD COLUMN IF NOT EXISTS stock     INTEGER; -- NULL = متوفّر دائماً، 0 = نفد
 ALTER TABLE products ADD COLUMN IF NOT EXISTS featured  BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS video_url TEXT DEFAULT ''; -- رابط فيديو المنتج (اختياري)
 
 -- تحويل الفئة إلى نص حر (فئات أزياء مخصّصة) + إعادة تعيين القيم القديمة
 ALTER TABLE products ALTER COLUMN category TYPE TEXT USING category::text;

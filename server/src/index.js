@@ -89,12 +89,13 @@ app.get('/:key([a-f0-9]+\\.txt)', indexNowKey); // ملف مفتاح IndexNow
 app.use(notFound);
 app.use(errorHandler);
 
-// ترقية تلقائية خفيفة عند الإقلاع: إضافة عمود البانرات فقط (idempotent وفوري، بلا إعادة بناء جداول)
-async function ensureBannersColumn() {
+// ترقيات تلقائية خفيفة عند الإقلاع (idempotent وفورية، بلا إعادة بناء جداول)
+async function ensureColumns() {
   try {
     await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS banners JSONB DEFAULT '[]'::jsonb;");
+    await pool.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS video_url TEXT DEFAULT '';");
   } catch (err) {
-    console.error('⚠️ تعذّر تطبيق ترقية عمود البانرات:', err.message);
+    console.error('⚠️ تعذّر تطبيق الترقيات:', err.message);
   }
 }
 
@@ -106,7 +107,7 @@ function start() {
 
 // الترقية التلقائية على الإنتاج فقط (Render). محلياً نشغّل مباشرة بلا لمس قاعدة البيانات.
 if (process.env.NODE_ENV === 'production') {
-  ensureBannersColumn().finally(start);
+  ensureColumns().finally(start);
 } else {
   start();
 }

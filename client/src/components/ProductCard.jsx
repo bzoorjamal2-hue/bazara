@@ -59,7 +59,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
         <HeartIcon className="h-4 w-4" filled={liked} />
       </button>
 
-      <div className="aspect-square overflow-hidden bg-ink-800">
+      <div className="relative aspect-square overflow-hidden bg-ink-800">
         <img
           src={cover}
           alt={product.name}
@@ -67,6 +67,11 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
           onError={(e) => (e.currentTarget.src = PLACEHOLDER)}
           className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-110 ${outOfStock ? 'opacity-50' : ''}`}
         />
+        {product.videoUrl && (
+          <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black/55 text-lg text-white backdrop-blur-sm">▶</span>
+          </span>
+        )}
       </div>
 
       <div className="p-4">

@@ -84,6 +84,16 @@ export default function ProductDetails() {
               ))}
             </div>
           )}
+
+          {/* فيديو المنتج */}
+          {product.videoUrl && (
+            <video
+              src={product.videoUrl}
+              controls
+              playsInline
+              className="mt-3 max-h-[420px] w-full rounded-2xl bg-black"
+            />
+          )}
         </div>
 
         {/* التفاصيل */}

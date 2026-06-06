@@ -29,10 +29,10 @@ export async function createProduct(req, res, next) {
 
     const result = await query(
       `INSERT INTO products
-         (store_id, name, price, old_price, description, size, color, category, image_url, images, stock, featured)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+         (store_id, name, price, old_price, description, size, color, category, image_url, images, stock, featured, video_url)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
        RETURNING *`,
-      [store.id, p.name, p.price, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured]
+      [store.id, p.name, p.price, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, p.videoUrl]
     );
 
     const product = result.rows[0];
@@ -61,10 +61,10 @@ export async function updateProduct(req, res, next) {
     const result = await query(
       `UPDATE products SET
          name=$1, price=$2, old_price=$3, description=$4, size=$5, color=$6,
-         category=$7, image_url=$8, images=$9, stock=$10, featured=$11, updated_at=now()
-       WHERE id=$12 AND store_id=$13
+         category=$7, image_url=$8, images=$9, stock=$10, featured=$11, video_url=$12, updated_at=now()
+       WHERE id=$13 AND store_id=$14
        RETURNING *`,
-      [p.name, p.price, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, id, store.id]
+      [p.name, p.price, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, p.videoUrl, id, store.id]
     );
     res.json({ product: mapProduct(result.rows[0]) });
   } catch (err) {
@@ -103,6 +103,7 @@ function normalizeBody(b) {
     images: Array.isArray(b.images) ? b.images.filter(Boolean).slice(0, 6) : [],
     stock,
     featured: Boolean(b.featured),
+    videoUrl: typeof b.videoUrl === 'string' ? b.videoUrl.trim().slice(0, 2000) : '',
   };
 }
 
@@ -118,6 +119,7 @@ export function mapProduct(p) {
     category: p.category,
     imageUrl: p.image_url,
     images: p.images || [],
+    videoUrl: p.video_url || '',
     stock: p.stock, // null = متوفّر دائماً
     featured: p.featured,
     ratingAvg: p.rating_avg != null ? Math.round(Number(p.rating_avg) * 10) / 10 : 0,

@@ -72,8 +72,7 @@ export default function StorePage() {
   // واتساب المتجر: رقم الإعدادات إن وُجد، وإلا رقم المالك المُدخل عند التسجيل
   const wa = store.whatsapp || store.ownerPhone || '';
   const featured = data.products.filter((p) => p.featured);
-  const scrollToAll = () => document.getElementById('all-products')?.scrollIntoView({ behavior: 'smooth' });
-  const pickCategory = (c) => { setCat(c); setTimeout(scrollToAll, 60); };
+  const pickCategory = (c) => { setCat(c); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
   return (
     <>
@@ -90,39 +89,39 @@ export default function StorePage() {
         </div>
       )}
 
-      {/* سلايدر البانرات (شريحة ثابتة + شرايح عروض المالك) */}
-      <HeroSlider store={store} />
+      {cat === 'all' ? (
+        <>
+          {/* سلايدر البانرات (شريحة ثابتة + شرايح عروض المالك) */}
+          <HeroSlider store={store} />
 
-      {/* تصفّحي حسب الفئة (تبقى ظاهرة دائماً — الضغط يفلتر المنتجات تحت) */}
-      <section className="mb-8 mt-7">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className="font-display text-xl font-bold gradient-text">{t('store.browseByCategory')}</h2>
-          {cat !== 'all' && (
-            <button
-              onClick={() => setCat('all')}
-              className="inline-flex items-center gap-1 rounded-full border border-wine/30 px-4 py-1.5 text-sm font-semibold text-wine transition hover:bg-wine/5"
-            >
-              {t('store.allProducts')}
-            </button>
+          {/* تصفّحي حسب الفئة */}
+          <section className="mb-8 mt-7">
+            <h2 className="mb-4 font-display text-xl font-bold gradient-text">{t('store.browseByCategory')}</h2>
+            <CategoryGrid onSelect={pickCategory} active={cat} />
+          </section>
+
+          {/* منتجات مميّزة */}
+          {featured.length > 0 && (
+            <section className="mb-8">
+              <h2 className="mb-4 font-display text-xl font-bold gradient-text">★ {t('store.featured')}</h2>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                {featured.slice(0, 4).map((p, i) => <ProductCard key={p.id} product={p} index={i} whatsapp={wa} />)}
+              </div>
+            </section>
           )}
-        </div>
-        <CategoryGrid onSelect={pickCategory} active={cat} />
-      </section>
 
-      {/* منتجات مميّزة (في العرض العام فقط) */}
-      {cat === 'all' && featured.length > 0 && (
-        <section className="mb-8">
-          <h2 className="mb-4 font-display text-xl font-bold gradient-text">★ {t('store.featured')}</h2>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {featured.slice(0, 4).map((p, i) => <ProductCard key={p.id} product={p} index={i} whatsapp={wa} />)}
-          </div>
-        </section>
+          <h2 className="mb-4 font-display text-xl font-bold gradient-text">{t('store.products')}</h2>
+        </>
+      ) : (
+        /* صفحة الفئة المخصّصة: مسار التنقّل (🏠 ← المتجر ← الفئة) */
+        <nav className="mb-4 mt-2 flex items-center gap-2 text-sm">
+          <button onClick={() => pickCategory('all')} className="text-wine/70 hover:text-wine" aria-label="home">🏠</button>
+          <span className="text-wine/40">←</span>
+          <button onClick={() => pickCategory('all')} className="text-wine/70 hover:text-wine">{t('store.storeRoot')}</button>
+          <span className="text-wine/40">←</span>
+          <span className="font-display text-lg font-bold text-wine">{t(`categories.${cat}`)}</span>
+        </nav>
       )}
-
-      {/* عنوان المنتجات (يعرض اسم الفئة عند اختيارها) */}
-      <h2 id="all-products" className="mb-4 scroll-mt-28 font-display text-xl font-bold gradient-text">
-        {cat === 'all' ? t('store.products') : t(`categories.${cat}`)}
-      </h2>
 
       {/* شريط الفلاتر والترتيب (أفقي قابل للسحب على الموبايل) */}
       {data.products.length > 0 && (
