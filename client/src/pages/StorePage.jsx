@@ -10,7 +10,6 @@ import CategoryGrid from '../components/CategoryGrid.jsx';
 import StoreHeader from '../components/StoreHeader.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
-import { CATEGORY_ICON } from '../components/icons.jsx';
 
 const PAGE_SIZE = 8;
 const CATS = ['abaya', 'set', 'dress', 'hijab'];
@@ -73,8 +72,8 @@ export default function StorePage() {
   const { store } = data;
   const wa = store.whatsapp;
   const featured = data.products.filter((p) => p.featured);
-  const CatIcon = cat !== 'all' ? CATEGORY_ICON[cat] : null;
   const scrollToAll = () => document.getElementById('all-products')?.scrollIntoView({ behavior: 'smooth' });
+  const pickCategory = (c) => { setCat(c); setTimeout(scrollToAll, 60); };
 
   return (
     <>
@@ -91,73 +90,61 @@ export default function StorePage() {
         </div>
       )}
 
-      {cat === 'all' ? (
-        <>
-          {/* سلايدر البانرات (شريحة ثابتة + شرايح عروض المالك) */}
-          <HeroSlider store={store} />
+      {/* سلايدر البانرات (شريحة ثابتة + شرايح عروض المالك) */}
+      <HeroSlider store={store} />
 
-          {/* أزرار التواصل + عدد المنتجات */}
-          <div className="mb-7 flex flex-col items-center gap-3">
-            <p className="text-sm text-stone-400">{data.products.length} {t('store.products')}</p>
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              {wa && (
-                <a href={buildWhatsappLink(wa)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-[#25d366] px-4 py-2 text-sm font-semibold text-white">
-                  💬 {t('store.contactWhatsapp')}
-                </a>
-              )}
-              {store.instagram && (
-                <a href={`https://instagram.com/${store.instagram}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-wine/30 px-4 py-2 text-sm font-semibold text-wine hover:bg-wine/5">
-                  📸 Instagram
-                </a>
-              )}
-              {store.phone && (
-                <a href={`tel:${store.phone}`} dir="ltr" className="inline-flex items-center gap-1.5 rounded-full border border-wine/30 px-4 py-2 text-sm font-semibold text-wine hover:bg-wine/5">
-                  📞 {store.phone}
-                </a>
-              )}
-            </div>
-          </div>
-
-          {/* تصفّحي حسب الفئة + عرض الكل */}
-          <section className="mb-8">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 className="font-display text-xl font-bold gradient-text">{t('store.browseByCategory')}</h2>
-              <button
-                onClick={scrollToAll}
-                className="inline-flex items-center gap-1 rounded-full border border-wine/30 px-4 py-1.5 text-sm font-semibold text-wine transition hover:bg-wine/5"
-              >
-                {t('store.viewAll')} ‹
-              </button>
-            </div>
-            <CategoryGrid onSelect={setCat} active={cat} />
-          </section>
-
-          {/* منتجات مميّزة */}
-          {featured.length > 0 && (
-            <section className="mb-8">
-              <h2 className="mb-4 font-display text-xl font-bold gradient-text">★ {t('store.featured')}</h2>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                {featured.slice(0, 4).map((p, i) => <ProductCard key={p.id} product={p} index={i} whatsapp={wa} />)}
-              </div>
-            </section>
+      {/* أزرار التواصل + عدد المنتجات */}
+      <div className="mb-7 flex flex-col items-center gap-3">
+        <p className="text-sm text-stone-400">{data.products.length} {t('store.products')}</p>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {wa && (
+            <a href={buildWhatsappLink(wa)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-[#25d366] px-4 py-2 text-sm font-semibold text-white">
+              💬 {t('store.contactWhatsapp')}
+            </a>
           )}
+          {store.instagram && (
+            <a href={`https://instagram.com/${store.instagram}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-wine/30 px-4 py-2 text-sm font-semibold text-wine hover:bg-wine/5">
+              📸 Instagram
+            </a>
+          )}
+          {store.phone && (
+            <a href={`tel:${store.phone}`} dir="ltr" className="inline-flex items-center gap-1.5 rounded-full border border-wine/30 px-4 py-2 text-sm font-semibold text-wine hover:bg-wine/5">
+              📞 {store.phone}
+            </a>
+          )}
+        </div>
+      </div>
 
-          {/* كل المنتجات */}
-          <h2 id="all-products" className="mb-4 scroll-mt-28 font-display text-xl font-bold gradient-text">{t('store.products')}</h2>
-        </>
-      ) : (
-        <>
-          {/* فتات التنقّل */}
-          <nav className="mb-4 flex items-center gap-2 text-sm text-stone-400">
-            <button onClick={() => setCat('all')} className="hover:text-gold-200">🏠 {store.name}</button>
-            <span>›</span>
-            <span className="flex items-center gap-1.5 font-semibold text-gold-200">{CatIcon && <CatIcon className="h-5 w-5" />}{t(`categories.${cat}`)}</span>
-          </nav>
-          <div className="mb-4 flex items-center justify-between">
-            <button onClick={() => setCat('all')} className="btn-ghost !py-1.5 text-sm">← {t('common.back')}</button>
+      {/* تصفّحي حسب الفئة (تبقى ظاهرة دائماً — الضغط يفلتر المنتجات تحت) */}
+      <section className="mb-8">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 className="font-display text-xl font-bold gradient-text">{t('store.browseByCategory')}</h2>
+          {cat !== 'all' && (
+            <button
+              onClick={() => setCat('all')}
+              className="inline-flex items-center gap-1 rounded-full border border-wine/30 px-4 py-1.5 text-sm font-semibold text-wine transition hover:bg-wine/5"
+            >
+              {t('store.allProducts')}
+            </button>
+          )}
+        </div>
+        <CategoryGrid onSelect={pickCategory} active={cat} />
+      </section>
+
+      {/* منتجات مميّزة (في العرض العام فقط) */}
+      {cat === 'all' && featured.length > 0 && (
+        <section className="mb-8">
+          <h2 className="mb-4 font-display text-xl font-bold gradient-text">★ {t('store.featured')}</h2>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            {featured.slice(0, 4).map((p, i) => <ProductCard key={p.id} product={p} index={i} whatsapp={wa} />)}
           </div>
-        </>
+        </section>
       )}
+
+      {/* عنوان المنتجات (يعرض اسم الفئة عند اختيارها) */}
+      <h2 id="all-products" className="mb-4 scroll-mt-28 font-display text-xl font-bold gradient-text">
+        {cat === 'all' ? t('store.products') : t(`categories.${cat}`)}
+      </h2>
 
       {/* شريط الفلاتر والترتيب (أفقي قابل للسحب على الموبايل) */}
       {data.products.length > 0 && (
