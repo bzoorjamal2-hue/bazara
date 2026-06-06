@@ -7,11 +7,11 @@ export default function LanguageSwitcher() {
   return (
     <button
       onClick={toggle}
-      className="btn-ghost !px-3 !py-1.5 text-sm"
+      className="inline-flex shrink-0 items-center rounded-xl bg-cream px-2.5 py-1.5 text-sm font-bold text-wine shadow-sm transition hover:bg-white"
       aria-label="Switch language"
       title="عربي / English"
     >
-      <span className="font-semibold">{i18n.language === 'ar' ? 'EN' : 'ع'}</span>
+      {i18n.language === 'ar' ? 'EN' : 'ع'}
     </button>
   );
 }

@@ -67,7 +67,7 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50">
-      <nav className={`${pub ? 'pub-navbar' : 'glass-strong'} mx-auto mt-4 flex max-w-6xl items-center justify-between gap-2 rounded-2xl px-4 py-3 sm:px-6`}>
+      <nav className={`${pub ? 'pub-navbar' : 'glass-strong'} mx-auto mt-4 flex max-w-6xl items-center justify-between gap-1 rounded-2xl px-2.5 py-3 sm:gap-2 sm:px-6`}>
         {/* للمستخدم: زر القائمة ☰ (مكان اللوجو) + اسم متجره. للزائر: شعار Bazara */}
         <div className="flex items-center gap-2.5">
           {user ? (
@@ -84,28 +84,28 @@ export default function Navbar() {
               </Link>
             </>
           ) : (
-            <Link to="/" className="flex items-center gap-2.5">
-              <Logo className="h-9 w-9" />
-              <span className={`font-display text-xl font-bold tracking-wide ${brandCls}`}>{brandName}</span>
+            <Link to="/" className="flex items-center gap-2">
+              <Logo className="h-8 w-8 sm:h-9 sm:w-9" />
+              <span className={`font-display text-base font-bold tracking-wide sm:text-xl ${brandCls}`}>{brandName}</span>
             </Link>
           )}
         </div>
 
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           {!user && (
             <NavLink to="/" className={`hidden rounded-lg px-3 py-1.5 text-sm sm:block ${linkCls}`}>
               {t('nav.home')}
             </NavLink>
           )}
 
-          <Link to="/wishlist" className={`relative rounded-lg p-2 ${iconCls}`} title={t('nav.wishlist')}>
+          <Link to="/wishlist" className={`relative hidden rounded-lg p-2 sm:block ${iconCls}`} title={t('nav.wishlist')}>
             <HeartIcon className="h-5 w-5" />
             {wishCount > 0 && (
               <span className={`absolute -end-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold ${countCls}`}>{wishCount}</span>
             )}
           </Link>
 
-          <button onClick={() => setOpen(true)} className={`relative rounded-lg p-2 ${iconCls}`} title={t('nav.cart')}>
+          <button onClick={() => setOpen(true)} className={`relative rounded-lg p-1.5 sm:p-2 ${iconCls}`} title={t('nav.cart')}>
             <CartIcon className="h-5 w-5" />
             {count > 0 && (
               <span className={`absolute -end-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold ${countCls}`}>{count}</span>
@@ -114,9 +114,9 @@ export default function Navbar() {
 
           {!user && (
             <>
-              <NavLink to="/login" className={`rounded-lg px-3 py-1.5 text-sm ${linkCls}`}>{t('nav.login')}</NavLink>
+              <NavLink to="/login" className={`whitespace-nowrap rounded-lg px-1 py-1.5 text-sm ${linkCls}`}>{t('nav.login')}</NavLink>
               {pub ? (
-                <Link to="/register" className="inline-flex items-center rounded-xl bg-cream px-4 py-1.5 text-sm font-semibold text-wine transition hover:bg-white">{t('nav.register')}</Link>
+                <Link to="/register" className="inline-flex shrink-0 items-center whitespace-nowrap rounded-xl bg-cream px-2.5 py-1.5 text-sm font-semibold text-wine shadow-sm transition hover:bg-white">{t('nav.register')}</Link>
               ) : (
                 <Link to="/register" className="btn-primary !px-4 !py-1.5 text-sm">{t('nav.register')}</Link>
               )}
