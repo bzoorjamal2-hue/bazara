@@ -7,9 +7,10 @@ import Seo from '../components/Seo.jsx';
 import Spinner from '../components/Spinner.jsx';
 import ProductCard from '../components/ProductCard.jsx';
 import CategoryGrid from '../components/CategoryGrid.jsx';
+import StoreHeader from '../components/StoreHeader.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
-import { SearchIcon, CATEGORY_ICON } from '../components/icons.jsx';
+import { CATEGORY_ICON } from '../components/icons.jsx';
 
 const PAGE_SIZE = 8;
 
@@ -52,41 +53,16 @@ export default function StorePage() {
 
   const { store } = data;
   const wa = store.whatsapp;
-  const accent = store.themeColor || '#5C1A2E';
   const featured = data.products.filter((p) => p.featured);
   const CatIcon = cat !== 'all' ? CATEGORY_ICON[cat] : null;
+  const scrollToAll = () => document.getElementById('all-products')?.scrollIntoView({ behavior: 'smooth' });
 
   return (
     <>
       <Seo title={store.name} description={store.description || `${store.name}`} image={store.logoUrl} />
 
-      {/* ترويسة المتجر */}
-      <section className="glass-strong mb-5 overflow-hidden p-6 sm:p-8" style={{ borderColor: `${accent}55` }}>
-        <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:text-start">
-          <img
-            src={store.logoUrl || 'https://placehold.co/120x120/121214/d4af37?text=%F0%9F%91%91'}
-            alt={store.name}
-            className="h-24 w-24 rounded-2xl object-cover shadow-gold"
-            style={{ borderWidth: 2, borderStyle: 'solid', borderColor: accent }}
-          />
-          <div className="min-w-0 flex-1">
-            <h1 className="font-display text-3xl font-extrabold" style={{ color: accent }}>{store.name}</h1>
-            {store.description && <p className="mt-2 max-w-2xl text-stone-300">{store.description}</p>}
-            <p className="mt-2 text-sm text-stone-400">{data.products.length} {t('store.products')}</p>
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-              {wa && <a href={buildWhatsappLink(wa)} target="_blank" rel="noreferrer" className="btn-whatsapp !px-3 !py-1.5 text-sm">💬 {t('store.contactWhatsapp')}</a>}
-              {store.instagram && <a href={`https://instagram.com/${store.instagram}`} target="_blank" rel="noreferrer" className="btn-ghost !px-3 !py-1.5 text-sm">📸 Instagram</a>}
-              {store.phone && <a href={`tel:${store.phone}`} className="btn-ghost !px-3 !py-1.5 text-sm" dir="ltr">📞 {store.phone}</a>}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* شريط البحث */}
-      <div className="glass mb-5 flex items-center gap-2 p-2">
-        <span className="px-2 text-stone-400"><SearchIcon className="h-5 w-5" /></span>
-        <input className="w-full bg-transparent py-2 text-stone-100 placeholder:text-stone-500 focus:outline-none" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('common.search')} />
-      </div>
+      {/* الهيدر الخاص بالمتجر: قائمة + اسم + بحث */}
+      <StoreHeader store={store} q={q} setQ={setQ} cat={cat} setCat={setCat} />
 
       {/* شريط المالك */}
       {isOwner && (
@@ -98,9 +74,57 @@ export default function StorePage() {
 
       {cat === 'all' ? (
         <>
-          {/* تصفّح حسب الفئة */}
+          {/* بانر Hero خمري فخم */}
+          <section className="pub-hero relative mb-7 overflow-hidden rounded-3xl px-6 py-12 text-center sm:py-16">
+            <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-cream/10 blur-3xl" />
+            {store.logoUrl && (
+              <img
+                src={store.logoUrl}
+                alt={store.name}
+                className="mx-auto mb-4 h-20 w-20 rounded-2xl border-2 border-cream/30 object-cover shadow-lg sm:h-24 sm:w-24"
+              />
+            )}
+            <h1 className="font-display text-3xl font-extrabold text-cream sm:text-5xl">{store.name}</h1>
+            {store.description && <p className="mx-auto mt-3 max-w-xl text-cream/80">{store.description}</p>}
+            <p className="mt-2 text-sm text-cream/60">{data.products.length} {t('store.products')}</p>
+
+            {/* أزرار التواصل */}
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+              {wa && (
+                <a href={buildWhatsappLink(wa)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-[#25d366] px-4 py-2 text-sm font-semibold text-white">
+                  💬 {t('store.contactWhatsapp')}
+                </a>
+              )}
+              {store.instagram && (
+                <a href={`https://instagram.com/${store.instagram}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-cream/40 px-4 py-2 text-sm font-semibold text-cream hover:bg-cream/10">
+                  📸 Instagram
+                </a>
+              )}
+              {store.phone && (
+                <a href={`tel:${store.phone}`} dir="ltr" className="inline-flex items-center gap-1.5 rounded-full border border-cream/40 px-4 py-2 text-sm font-semibold text-cream hover:bg-cream/10">
+                  📞 {store.phone}
+                </a>
+              )}
+            </div>
+
+            {/* نقاط التنقّل */}
+            <div className="mt-7 flex items-center justify-center gap-2">
+              <span className="h-2 w-6 rounded-full bg-cream/80" />
+              <span className="h-2 w-2 rounded-full bg-cream/30" />
+            </div>
+          </section>
+
+          {/* تصفّحي حسب الفئة + عرض الكل */}
           <section className="mb-8">
-            <h2 className="mb-4 font-display text-xl font-bold gradient-text">{t('home.browseByCategory')}</h2>
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="font-display text-xl font-bold gradient-text">{t('store.browseByCategory')}</h2>
+              <button
+                onClick={scrollToAll}
+                className="inline-flex items-center gap-1 rounded-full border border-wine/30 px-4 py-1.5 text-sm font-semibold text-wine transition hover:bg-wine/5"
+              >
+                {t('store.viewAll')} ‹
+              </button>
+            </div>
             <CategoryGrid onSelect={setCat} active={cat} />
           </section>
 
@@ -115,7 +139,7 @@ export default function StorePage() {
           )}
 
           {/* كل المنتجات */}
-          <h2 className="mb-4 font-display text-xl font-bold gradient-text">{t('store.products')}</h2>
+          <h2 id="all-products" className="mb-4 scroll-mt-28 font-display text-xl font-bold gradient-text">{t('store.products')}</h2>
         </>
       ) : (
         <>

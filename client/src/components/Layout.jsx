@@ -1,13 +1,17 @@
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import Navbar from './Navbar.jsx';
 import CartDrawer from './CartDrawer.jsx';
 
 // الهوية الخمرية/العاجية الفاخرة مطبّقة على كل الموقع (متجر عام + لوحة تحكم لكل المشتركين).
 export default function Layout({ children }) {
+  const { pathname } = useLocation();
+  // صفحات المتجر العامة لها هيدر خاص (StoreHeader) بدل شريط Bazara العام
+  const hideNavbar = /^\/store\//.test(pathname);
+
   return (
     <div className="app-bg theme-pub flex min-h-screen flex-col">
-      <Navbar />
+      {!hideNavbar && <Navbar />}
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">{children}</main>
       <PublicFooter />
       <CartDrawer />

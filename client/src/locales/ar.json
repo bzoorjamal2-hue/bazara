@@ -204,7 +204,11 @@
     "contactWhatsapp": "تواصل واتساب",
     "deliveryInfo": "معلومات التوصيل",
     "paymentInfo": "معلومات الدفع",
-    "ownerView": "أنت تشاهد متجرك الخاص"
+    "ownerView": "أنت تشاهد متجرك الخاص",
+    "searchPlaceholder": "ابحث عن منتج...",
+    "allProducts": "جميع المنتجات",
+    "viewAll": "عرض الكل",
+    "browseByCategory": "تصفّحي حسب الفئة"
   },
   "cart": {
     "title": "سلة التسوّق",

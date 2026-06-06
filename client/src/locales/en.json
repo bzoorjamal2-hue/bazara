@@ -204,7 +204,11 @@
     "contactWhatsapp": "WhatsApp",
     "deliveryInfo": "Delivery info",
     "paymentInfo": "Payment info",
-    "ownerView": "You're viewing your own store"
+    "ownerView": "You're viewing your own store",
+    "searchPlaceholder": "Search for a product...",
+    "allProducts": "All products",
+    "viewAll": "View all",
+    "browseByCategory": "Browse by category"
   },
   "cart": {
     "title": "Shopping cart",
