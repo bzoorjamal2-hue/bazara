@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -13,13 +13,15 @@ export default function Home() {
   const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const previewHome = searchParams.get('home') === '1'; // معاينة الرئيسية وأنت مسجّل دخول
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // المستخدم المسجّل لا يرى الرئيسية العامة — يُحوّل للوحته حتى يسجّل خروج
+  // المستخدم المسجّل يُحوّل للوحته — إلا إذا فتح الرئيسية برابط المعاينة (?home=1)
   useEffect(() => {
-    if (!authLoading && user) navigate('/dashboard', { replace: true });
-  }, [authLoading, user, navigate]);
+    if (!authLoading && user && !previewHome) navigate('/dashboard', { replace: true });
+  }, [authLoading, user, navigate, previewHome]);
 
   useEffect(() => {
     api

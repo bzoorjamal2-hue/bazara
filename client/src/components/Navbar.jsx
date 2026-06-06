@@ -157,6 +157,15 @@ export default function Navbar() {
                   🔗 {t('dashboard.viewPublicStore')}
                 </a>
               )}
+              <a
+                href="/?home=1"
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-stone-200 hover:bg-gold-400/10 hover:text-gold-100"
+              >
+                🏠 {t('dashboard.viewHome')}
+              </a>
               <button
                 onClick={handleLogout}
                 className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-red-300 hover:bg-red-500/10"
