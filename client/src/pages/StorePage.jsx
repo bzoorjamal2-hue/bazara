@@ -249,7 +249,8 @@ function HeroSlider({ store }) {
   const len = slides.length;
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
-  const startX = useRef(null);
+  const containerRef = useRef(null);
+  const touch = useRef({ x: 0, y: 0, active: false, horiz: false });
 
   useEffect(() => {
     if (len <= 1 || paused) return undefined;
@@ -259,24 +260,50 @@ function HeroSlider({ store }) {
 
   const go = (n) => setI(((n % len) + len) % len);
 
-  const onTouchStart = (e) => {
-    startX.current = e.touches[0].clientX;
-    setPaused(true);
-  };
-  const onTouchEnd = (e) => {
-    if (startX.current == null) return;
-    const dx = e.changedTouches[0].clientX - startX.current;
-    if (Math.abs(dx) > 40) go(i + (dx < 0 ? 1 : -1));
-    startX.current = null;
-    setPaused(false);
-  };
+  // السحب باللمس: نثبّت الصفحة عمودياً أثناء السحب الأفقي، واتجاه طبيعي (RTL)
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || len <= 1) return undefined;
+
+    const onStart = (e) => {
+      const tch = e.touches[0];
+      touch.current = { x: tch.clientX, y: tch.clientY, active: true, horiz: false };
+      setPaused(true);
+    };
+    const onMove = (e) => {
+      if (!touch.current.active) return;
+      const tch = e.touches[0];
+      const dx = tch.clientX - touch.current.x;
+      const dy = tch.clientY - touch.current.y;
+      if (!touch.current.horiz && Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8) touch.current.horiz = true;
+      if (touch.current.horiz) e.preventDefault(); // يمنع تمرير الصفحة عمودياً أثناء السحب الأفقي
+    };
+    const onEnd = (e) => {
+      if (!touch.current.active) return;
+      const dx = e.changedTouches[0].clientX - touch.current.x;
+      if (touch.current.horiz && Math.abs(dx) > 40) {
+        setI((p) => (((p + (dx < 0 ? -1 : 1)) % len) + len) % len); // سحب لليسار = السابق، لليمين = التالي
+      }
+      touch.current.active = false;
+      setPaused(false);
+    };
+
+    el.addEventListener('touchstart', onStart, { passive: true });
+    el.addEventListener('touchmove', onMove, { passive: false });
+    el.addEventListener('touchend', onEnd, { passive: true });
+    return () => {
+      el.removeEventListener('touchstart', onStart);
+      el.removeEventListener('touchmove', onMove);
+      el.removeEventListener('touchend', onEnd);
+    };
+  }, [len]);
 
   return (
     <section className="relative mb-5">
       <div
+        ref={containerRef}
         className="overflow-hidden rounded-3xl"
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
+        style={{ touchAction: 'pan-y' }}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
