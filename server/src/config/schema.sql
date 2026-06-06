@@ -45,6 +45,8 @@ ALTER TABLE stores ADD COLUMN IF NOT EXISTS tiktok        VARCHAR(120) DEFAULT '
 ALTER TABLE stores ADD COLUMN IF NOT EXISTS theme_color   VARCHAR(20)  DEFAULT '#d4af37';
 ALTER TABLE stores ADD COLUMN IF NOT EXISTS delivery_info TEXT DEFAULT '';
 ALTER TABLE stores ADD COLUMN IF NOT EXISTS payment_info  TEXT DEFAULT '';
+-- شرايح السلايدر (بانرات العرض) القابلة للتخصيص من صاحب المتجر
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS banners       JSONB DEFAULT '[]'::jsonb;
 
 CREATE INDEX IF NOT EXISTS idx_stores_slug ON stores(slug);
 

@@ -30,6 +30,7 @@ function mapStorePublic(s) {
     themeColor: s.theme_color,
     deliveryInfo: s.delivery_info,
     paymentInfo: s.payment_info,
+    banners: Array.isArray(s.banners) ? s.banners : [],
     createdAt: s.created_at,
   };
 }

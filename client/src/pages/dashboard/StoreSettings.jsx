@@ -7,8 +7,15 @@ import ImageInput from '../../components/ImageInput.jsx';
 
 const EMPTY = {
   name: '', description: '', logoUrl: '', phone: '', whatsapp: '',
-  instagram: '', tiktok: '', themeColor: '#d4af37', deliveryInfo: '', paymentInfo: '',
+  instagram: '', tiktok: '', themeColor: '#d4af37', deliveryInfo: '', paymentInfo: '', banners: [],
 };
+
+// شرايح افتراضية يقترحها النظام عند عدم وجود بانرات (يقدر المالك يعدّلها أو يحذفها)
+const DEFAULT_BANNERS = [
+  { title: 'تشكيلة جديدة وصلت', subtitle: 'تصفّحوا أحدث القطع لدينا' },
+  { title: 'عروض خاصة', subtitle: 'تابعونا لكل جديد وحصري' },
+];
+const MAX_BANNERS = 5;
 
 export default function StoreSettings() {
   const { t } = useTranslation();
@@ -28,6 +35,7 @@ export default function StoreSettings() {
           phone: s.phone || '', whatsapp: s.whatsapp || '', instagram: s.instagram || '',
           tiktok: s.tiktok || '', themeColor: s.themeColor || '#d4af37',
           deliveryInfo: s.deliveryInfo || '', paymentInfo: s.paymentInfo || '',
+          banners: Array.isArray(s.banners) && s.banners.length ? s.banners : DEFAULT_BANNERS,
         });
       })
       .catch((err) => setError(getErrorMessage(err)));
@@ -63,6 +71,14 @@ export default function StoreSettings() {
 
   if (!form) return <Spinner />;
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+
+  // التحكم بشرايح السلايدر
+  const setBanner = (idx, key, val) =>
+    setForm((f) => ({ ...f, banners: f.banners.map((b, i) => (i === idx ? { ...b, [key]: val } : b)) }));
+  const addBanner = () =>
+    setForm((f) => ({ ...f, banners: [...f.banners, { title: '', subtitle: '' }] }));
+  const removeBanner = (idx) =>
+    setForm((f) => ({ ...f, banners: f.banners.filter((_, i) => i !== idx) }));
 
   return (
     <div className="space-y-6">
@@ -127,6 +143,48 @@ export default function StoreSettings() {
               <input type="text" dir="ltr" className="input" placeholder="username" value={form.tiktok} onChange={set('tiktok')} />
             </div>
           </div>
+        </div>
+
+        {/* بانرات السلايدر */}
+        <div className="glass space-y-4 p-6">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="font-display text-lg font-bold text-stone-100">{t('dashboard.store.banners')}</h2>
+            {form.banners.length < MAX_BANNERS && (
+              <button type="button" onClick={addBanner} className="btn-ghost !py-1.5 text-sm">＋ {t('dashboard.store.addBanner')}</button>
+            )}
+          </div>
+          <p className="text-xs text-stone-400">{t('dashboard.store.bannersHint')}</p>
+
+          {form.banners.length === 0 ? (
+            <p className="rounded-xl border border-gold-400/15 bg-black/20 p-4 text-center text-sm text-stone-400">{t('dashboard.store.noBanners')}</p>
+          ) : (
+            <div className="space-y-3">
+              {form.banners.map((b, idx) => (
+                <div key={idx} className="rounded-xl border border-gold-400/15 bg-black/20 p-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-sm font-semibold text-gold-200">{t('dashboard.store.slide')} {idx + 2}</span>
+                    <button type="button" onClick={() => removeBanner(idx)} className="text-xs text-red-300 hover:text-red-200">🗑 {t('common.delete')}</button>
+                  </div>
+                  <input
+                    type="text"
+                    className="input mb-2"
+                    placeholder={t('dashboard.store.bannerTitle')}
+                    value={b.title}
+                    maxLength={80}
+                    onChange={(e) => setBanner(idx, 'title', e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder={t('dashboard.store.bannerSubtitle')}
+                    value={b.subtitle}
+                    maxLength={160}
+                    onChange={(e) => setBanner(idx, 'subtitle', e.target.value)}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* التوصيل والدفع */}

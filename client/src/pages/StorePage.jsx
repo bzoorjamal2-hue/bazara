@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
@@ -74,45 +74,30 @@ export default function StorePage() {
 
       {cat === 'all' ? (
         <>
-          {/* بانر Hero خمري فخم */}
-          <section className="pub-hero relative mb-7 overflow-hidden rounded-3xl px-6 py-12 text-center sm:py-16">
-            <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-cream/10 blur-3xl" />
-            {store.logoUrl && (
-              <img
-                src={store.logoUrl}
-                alt={store.name}
-                className="mx-auto mb-4 h-20 w-20 rounded-2xl border-2 border-cream/30 object-cover shadow-lg sm:h-24 sm:w-24"
-              />
-            )}
-            <h1 className="font-display text-3xl font-extrabold text-cream sm:text-5xl">{store.name}</h1>
-            {store.description && <p className="mx-auto mt-3 max-w-xl text-cream/80">{store.description}</p>}
-            <p className="mt-2 text-sm text-cream/60">{data.products.length} {t('store.products')}</p>
+          {/* سلايدر البانرات (شريحة ثابتة + شرايح عروض المالك) */}
+          <HeroSlider store={store} />
 
-            {/* أزرار التواصل */}
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+          {/* أزرار التواصل + عدد المنتجات */}
+          <div className="mb-7 flex flex-col items-center gap-3">
+            <p className="text-sm text-stone-400">{data.products.length} {t('store.products')}</p>
+            <div className="flex flex-wrap items-center justify-center gap-2">
               {wa && (
                 <a href={buildWhatsappLink(wa)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-[#25d366] px-4 py-2 text-sm font-semibold text-white">
                   💬 {t('store.contactWhatsapp')}
                 </a>
               )}
               {store.instagram && (
-                <a href={`https://instagram.com/${store.instagram}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-cream/40 px-4 py-2 text-sm font-semibold text-cream hover:bg-cream/10">
+                <a href={`https://instagram.com/${store.instagram}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-wine/30 px-4 py-2 text-sm font-semibold text-wine hover:bg-wine/5">
                   📸 Instagram
                 </a>
               )}
               {store.phone && (
-                <a href={`tel:${store.phone}`} dir="ltr" className="inline-flex items-center gap-1.5 rounded-full border border-cream/40 px-4 py-2 text-sm font-semibold text-cream hover:bg-cream/10">
+                <a href={`tel:${store.phone}`} dir="ltr" className="inline-flex items-center gap-1.5 rounded-full border border-wine/30 px-4 py-2 text-sm font-semibold text-wine hover:bg-wine/5">
                   📞 {store.phone}
                 </a>
               )}
             </div>
-
-            {/* نقاط التنقّل */}
-            <div className="mt-7 flex items-center justify-center gap-2">
-              <span className="h-2 w-6 rounded-full bg-cream/80" />
-              <span className="h-2 w-2 rounded-full bg-cream/30" />
-            </div>
-          </section>
+          </div>
 
           {/* تصفّحي حسب الفئة + عرض الكل */}
           <section className="mb-8">
@@ -185,5 +170,88 @@ export default function StorePage() {
 
       <FloatingWhatsApp number={wa} />
     </>
+  );
+}
+
+// سلايدر البانرات: شريحة أولى ثابتة (اسم المتجر + شعار/تاغلاين) + شرايح المالك المتغيّرة.
+// تشغيل تلقائي + سحب باللمس + نقاط تنقّل.
+function HeroSlider({ store }) {
+  const banners = Array.isArray(store.banners) ? store.banners : [];
+  const slides = [{ fixed: true }, ...banners];
+  const len = slides.length;
+  const [i, setI] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const startX = useRef(null);
+
+  useEffect(() => {
+    if (len <= 1 || paused) return undefined;
+    const id = setInterval(() => setI((p) => (p + 1) % len), 3500);
+    return () => clearInterval(id);
+  }, [len, paused]);
+
+  const go = (n) => setI(((n % len) + len) % len);
+
+  const onTouchStart = (e) => {
+    startX.current = e.touches[0].clientX;
+    setPaused(true);
+  };
+  const onTouchEnd = (e) => {
+    if (startX.current == null) return;
+    const dx = e.changedTouches[0].clientX - startX.current;
+    if (Math.abs(dx) > 40) go(i + (dx < 0 ? 1 : -1));
+    startX.current = null;
+    setPaused(false);
+  };
+
+  return (
+    <section className="relative mb-5">
+      <div
+        className="overflow-hidden rounded-3xl"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+      >
+        {/* المسار: نفرضه LTR لتفادي مشاكل اتجاه RTL مع الإزاحة */}
+        <div className="flex transition-transform duration-500 ease-out" style={{ transform: `translateX(-${i * 100}%)`, direction: 'ltr' }}>
+          {slides.map((s, idx) => (
+            <div key={idx} className="w-full shrink-0" dir="rtl">
+              <div className="pub-hero relative flex min-h-[230px] flex-col items-center justify-center px-6 py-12 text-center sm:min-h-[300px] sm:py-16">
+                <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-cream/10 blur-3xl" />
+                {s.fixed ? (
+                  <>
+                    {store.logoUrl && (
+                      <img src={store.logoUrl} alt={store.name} className="mb-4 h-20 w-20 rounded-2xl border-2 border-cream/30 object-cover shadow-lg sm:h-24 sm:w-24" />
+                    )}
+                    <h1 className="font-display text-3xl font-extrabold text-cream sm:text-5xl">{store.name}</h1>
+                    <p className="mt-3 font-display text-lg text-cream/90 sm:text-2xl">أناقة .. حشمة .. تميز</p>
+                    <p className="mt-1 text-xs tracking-[0.25em] text-cream/55 sm:text-sm">ELEGANCE · MODESTY · DISTINCTION</p>
+                  </>
+                ) : (
+                  <>
+                    <h2 className="font-display text-3xl font-extrabold text-cream sm:text-5xl">{s.title}</h2>
+                    {s.subtitle && <p className="mx-auto mt-3 max-w-xl text-cream/80 sm:text-lg">{s.subtitle}</p>}
+                  </>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* نقاط التنقّل */}
+      {len > 1 && (
+        <div className="mt-4 flex items-center justify-center gap-2">
+          {slides.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => go(idx)}
+              aria-label={`slide ${idx + 1}`}
+              className={`h-2 rounded-full transition-all ${idx === i ? 'w-6 bg-wine' : 'w-2 bg-wine/30'}`}
+            />
+          ))}
+        </div>
+      )}
+    </section>
   );
 }

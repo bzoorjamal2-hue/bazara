@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import pool from './config/db.js';
 
 import authRoutes from './routes/auth.routes.js';
 import storeRoutes from './routes/store.routes.js';
@@ -88,8 +89,19 @@ app.get('/:key([a-f0-9]+\\.txt)', indexNowKey); // ملف مفتاح IndexNow
 app.use(notFound);
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`🚀 الخادم يعمل على المنفذ ${PORT}`);
+// ترقية تلقائية خفيفة عند الإقلاع: إضافة عمود البانرات فقط (idempotent وفوري، بلا إعادة بناء جداول)
+async function ensureBannersColumn() {
+  try {
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS banners JSONB DEFAULT '[]'::jsonb;");
+  } catch (err) {
+    console.error('⚠️ تعذّر تطبيق ترقية عمود البانرات:', err.message);
+  }
+}
+
+ensureBannersColumn().finally(() => {
+  app.listen(PORT, () => {
+    console.log(`🚀 الخادم يعمل على المنفذ ${PORT}`);
+  });
 });
 
 export default app;

@@ -16,8 +16,21 @@ function mapStore(s) {
     themeColor: s.theme_color,
     deliveryInfo: s.delivery_info,
     paymentInfo: s.payment_info,
+    banners: Array.isArray(s.banners) ? s.banners : [],
     createdAt: s.created_at,
   };
+}
+
+// تنقية شرايح البانر القادمة من النموذج (حد أقصى 5، نص آمن)
+function sanitizeBanners(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .slice(0, 5)
+    .map((b) => ({
+      title: String(b?.title || '').trim().slice(0, 80),
+      subtitle: String(b?.subtitle || '').trim().slice(0, 160),
+    }))
+    .filter((b) => b.title || b.subtitle);
 }
 
 // جلب متجر المستخدم الحالي مع إحصائيات بسيطة
@@ -41,6 +54,7 @@ export async function getMyStore(req, res, next) {
 // تحديث إعدادات المتجر (المالك فقط)
 export async function updateMyStore(req, res, next) {
   const { name, description, logoUrl, phone, whatsapp, instagram, tiktok, themeColor, deliveryInfo, paymentInfo } = req.body;
+  const banners = sanitizeBanners(req.body.banners);
   try {
     const current = await query('SELECT id, name, slug FROM stores WHERE user_id = $1', [req.user.id]);
     const store = current.rows[0];
@@ -55,8 +69,9 @@ export async function updateMyStore(req, res, next) {
       `UPDATE stores SET
          name = $1, description = $2, logo_url = $3, slug = $4,
          phone = $5, whatsapp = $6, instagram = $7, tiktok = $8,
-         theme_color = $9, delivery_info = $10, payment_info = $11, updated_at = now()
-       WHERE id = $12
+         theme_color = $9, delivery_info = $10, payment_info = $11,
+         banners = $12::jsonb, updated_at = now()
+       WHERE id = $13
        RETURNING *`,
       [
         name,
@@ -70,6 +85,7 @@ export async function updateMyStore(req, res, next) {
         themeColor || '#d4af37',
         deliveryInfo || '',
         paymentInfo || '',
+        JSON.stringify(banners),
         store.id,
       ]
     );
