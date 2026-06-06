@@ -32,10 +32,10 @@
     "optional": "اختياري"
   },
   "categories": {
-    "men": "رجالي",
-    "women": "نسائي",
-    "kids": "أطفال",
-    "accessories": "إكسسوارات"
+    "abaya": "عبايات",
+    "set": "أطقم تنانير",
+    "dress": "فساتين",
+    "hijab": "حجابات"
   },
   "image": {
     "upload": "رفع",

@@ -32,10 +32,10 @@
     "optional": "optional"
   },
   "categories": {
-    "men": "Men",
-    "women": "Women",
-    "kids": "Kids",
-    "accessories": "Accessories"
+    "abaya": "Abayas",
+    "set": "Two-piece sets",
+    "dress": "Dresses",
+    "hijab": "Hijabs"
   },
   "image": {
     "upload": "Upload",

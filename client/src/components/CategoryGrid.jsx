@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { CATEGORY_ICON } from './icons.jsx';
 
-const CATS = ['women', 'men', 'kids', 'accessories'];
+const CATS = ['abaya', 'set', 'dress', 'hijab'];
 
 // شبكة بطاقات الفئات برسوم ملابس ذهبية.
 // onSelect → أزرار فلترة (صفحة المتجر) | بدونها → روابط لصفحة الفئة (الرئيسية)

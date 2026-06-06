@@ -115,7 +115,7 @@ export async function getProductById(req, res, next) {
 // منتجات فئة معيّنة عبر كل المتاجر الفعّالة (تصفّح حسب الفئة)
 export async function getByCategory(req, res, next) {
   const { cat } = req.params;
-  const valid = ['men', 'women', 'kids', 'accessories'];
+  const valid = ['abaya', 'set', 'dress', 'hijab'];
   if (!valid.includes(cat)) return res.status(400).json({ error: 'فئة غير صالحة.' });
   try {
     const active = activeStoreSql('u');

@@ -11,32 +11,38 @@ export function DressIcon({ className = 'h-16 w-16' }) {
   );
 }
 
-export function ShirtIcon({ className = 'h-16 w-16' }) {
+// عباية: رداء طويل بأكمام واسعة
+export function AbayaIcon({ className = 'h-16 w-16' }) {
   return (
     <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
-      <path {...G} d="M24 9 L28 9 Q32 15 36 9 L40 9 L49 19 L42 25 L42 55 L22 55 L22 25 L15 19 Z" />
+      <path {...G} d="M25 7 Q32 11 39 7 L48 16 L42 23 L45 57 L36 57 L34 26 L30 26 L28 57 L19 57 L22 23 L16 16 Z" />
     </svg>
   );
 }
 
-export function KidsIcon({ className = 'h-16 w-16' }) {
+// طقم (قطعتين): جاكيت فوق + تنورة بشكل A
+export function SetIcon({ className = 'h-16 w-16' }) {
   return (
     <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
-      <path {...G} d="M25 14 Q32 19 39 14 L47 21 L41.5 26 L41.5 46 L22.5 46 L22.5 26 L17 21 Z" />
+      <path {...G} d="M24 7 Q32 11 40 7 L47 15 L42 20 L42 31 L22 31 L22 20 L17 15 Z" />
+      <path {...G} d="M25 34 L39 34 L47 57 L17 57 Z" />
     </svg>
   );
 }
 
-export function BagIcon({ className = 'h-16 w-16' }) {
+// حجاب: وشاح مطوي (طية أمامية + انسدال مثلّث)
+export function HijabIcon({ className = 'h-16 w-16' }) {
   return (
     <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
-      <path d="M25 27 V22 A7 7 0 0 1 39 22 V27" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-      <path {...G} d="M18 26 H46 L43 55 H21 Z" />
+      {/* الطية الأمامية */}
+      <path {...G} d="M12 18 Q32 9 52 18 L52 26 Q32 17 12 26 Z" />
+      {/* الانسدال المثلّث */}
+      <path {...G} d="M15 25 L49 25 L32 54 Z" />
     </svg>
   );
 }
 
-export const CATEGORY_ICON = { women: DressIcon, men: ShirtIcon, kids: KidsIcon, accessories: BagIcon };
+export const CATEGORY_ICON = { abaya: AbayaIcon, set: SetIcon, dress: DressIcon, hijab: HijabIcon };
 
 // ===== أيقونات واجهة (خطّية رفيعة) =====
 const L = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round' };

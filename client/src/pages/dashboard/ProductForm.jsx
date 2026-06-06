@@ -3,10 +3,10 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import ImageInput from '../../components/ImageInput.jsx';
 
-const CATEGORIES = ['men', 'women', 'kids', 'accessories'];
+const CATEGORIES = ['abaya', 'set', 'dress', 'hijab'];
 const EMPTY = {
   name: '', price: '', oldPrice: '', description: '', size: '', color: '',
-  category: 'women', imageUrl: '', images: [], stock: '', featured: false,
+  category: 'abaya', imageUrl: '', images: [], stock: '', featured: false,
 };
 
 export default function ProductForm({ initial, onClose, onSaved }) {

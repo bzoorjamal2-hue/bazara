@@ -74,6 +74,17 @@ ALTER TABLE products ADD COLUMN IF NOT EXISTS old_price NUMERIC(10,2);
 ALTER TABLE products ADD COLUMN IF NOT EXISTS stock     INTEGER; -- NULL = متوفّر دائماً، 0 = نفد
 ALTER TABLE products ADD COLUMN IF NOT EXISTS featured  BOOLEAN NOT NULL DEFAULT false;
 
+-- تحويل الفئة إلى نص حر (فئات أزياء مخصّصة) + إعادة تعيين القيم القديمة
+ALTER TABLE products ALTER COLUMN category TYPE TEXT USING category::text;
+ALTER TABLE products ALTER COLUMN category SET DEFAULT 'dress';
+UPDATE products SET category = CASE category
+    WHEN 'women' THEN 'dress'
+    WHEN 'men' THEN 'set'
+    WHEN 'kids' THEN 'abaya'
+    WHEN 'accessories' THEN 'hijab'
+    ELSE category END
+  WHERE category IN ('women', 'men', 'kids', 'accessories');
+
 CREATE INDEX IF NOT EXISTS idx_products_store ON products(store_id);
 CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
 CREATE INDEX IF NOT EXISTS idx_products_featured ON products(featured);
