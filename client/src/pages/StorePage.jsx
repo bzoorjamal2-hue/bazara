@@ -9,7 +9,6 @@ import ProductCard from '../components/ProductCard.jsx';
 import CategoryGrid from '../components/CategoryGrid.jsx';
 import StoreHeader from '../components/StoreHeader.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
-import { buildWhatsappLink } from '../utils/whatsapp.js';
 
 const PAGE_SIZE = 8;
 const CATS = ['abaya', 'set', 'dress', 'hijab'];
@@ -70,7 +69,8 @@ export default function StorePage() {
   if (!data) return <Spinner full />;
 
   const { store } = data;
-  const wa = store.whatsapp;
+  // واتساب المتجر: رقم الإعدادات إن وُجد، وإلا رقم المالك المُدخل عند التسجيل
+  const wa = store.whatsapp || store.ownerPhone || '';
   const featured = data.products.filter((p) => p.featured);
   const scrollToAll = () => document.getElementById('all-products')?.scrollIntoView({ behavior: 'smooth' });
   const pickCategory = (c) => { setCat(c); setTimeout(scrollToAll, 60); };
@@ -93,30 +93,8 @@ export default function StorePage() {
       {/* سلايدر البانرات (شريحة ثابتة + شرايح عروض المالك) */}
       <HeroSlider store={store} />
 
-      {/* أزرار التواصل + عدد المنتجات */}
-      <div className="mb-7 flex flex-col items-center gap-3">
-        <p className="text-sm text-stone-400">{data.products.length} {t('store.products')}</p>
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          {wa && (
-            <a href={buildWhatsappLink(wa)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-[#25d366] px-4 py-2 text-sm font-semibold text-white">
-              💬 {t('store.contactWhatsapp')}
-            </a>
-          )}
-          {store.instagram && (
-            <a href={`https://instagram.com/${store.instagram}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-wine/30 px-4 py-2 text-sm font-semibold text-wine hover:bg-wine/5">
-              📸 Instagram
-            </a>
-          )}
-          {store.phone && (
-            <a href={`tel:${store.phone}`} dir="ltr" className="inline-flex items-center gap-1.5 rounded-full border border-wine/30 px-4 py-2 text-sm font-semibold text-wine hover:bg-wine/5">
-              📞 {store.phone}
-            </a>
-          )}
-        </div>
-      </div>
-
       {/* تصفّحي حسب الفئة (تبقى ظاهرة دائماً — الضغط يفلتر المنتجات تحت) */}
-      <section className="mb-8">
+      <section className="mb-8 mt-7">
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className="font-display text-xl font-bold gradient-text">{t('store.browseByCategory')}</h2>
           {cat !== 'all' && (

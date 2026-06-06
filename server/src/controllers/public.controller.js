@@ -31,6 +31,7 @@ function mapStorePublic(s) {
     deliveryInfo: s.delivery_info,
     paymentInfo: s.payment_info,
     banners: Array.isArray(s.banners) ? s.banners : [],
+    ownerPhone: s.owner_phone || '', // رقم المالك من التسجيل (احتياطي للواتساب)
     createdAt: s.created_at,
   };
 }
@@ -65,7 +66,7 @@ export async function getStoreBySlug(req, res, next) {
   try {
     const active = activeStoreSql('u');
     const storeResult = await query(
-      `SELECT s.* FROM stores s JOIN users u ON u.id = s.user_id WHERE s.slug = $1 AND ${active}`,
+      `SELECT s.*, u.phone AS owner_phone FROM stores s JOIN users u ON u.id = s.user_id WHERE s.slug = $1 AND ${active}`,
       [slug]
     );
     const store = storeResult.rows[0];
