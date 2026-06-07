@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import ProductForm from './ProductForm.jsx';
+import ConfirmModal from '../../components/ConfirmModal.jsx';
 
 const PH = 'https://placehold.co/48x48/121214/d4af37?text=%F0%9F%91%97';
 
@@ -12,6 +13,8 @@ export default function ProductsManager({ onCount }) {
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');
   const [modal, setModal] = useState(null);
+  const [confirmDel, setConfirmDel] = useState(null); // المنتج المراد حذفه
+  const [delBusy, setDelBusy] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -29,14 +32,19 @@ export default function ProductsManager({ onCount }) {
 
   const handleSaved = (m) => { setModal(null); flash(m); load(); };
 
-  const remove = async (id) => {
-    if (!window.confirm(t('common.confirmDelete'))) return;
+  const doRemove = async () => {
+    if (!confirmDel) return;
+    setDelBusy(true);
     try {
-      await api.delete(`/products/${id}`);
+      await api.delete(`/products/${confirmDel.id}`);
+      setConfirmDel(null);
       flash(t('dashboard.product.deleted'));
       load();
     } catch (err) {
       setError(getErrorMessage(err, t('errors.generic')));
+      setConfirmDel(null);
+    } finally {
+      setDelBusy(false);
     }
   };
 
@@ -87,7 +95,7 @@ export default function ProductsManager({ onCount }) {
                   <td className="p-4">
                     <div className="flex justify-end gap-2">
                       <button onClick={() => setModal(p)} className="btn-ghost !px-3 !py-1.5 text-xs">{t('common.edit')}</button>
-                      <button onClick={() => remove(p.id)} className="btn-danger !px-3 !py-1.5 text-xs">{t('common.delete')}</button>
+                      <button onClick={() => setConfirmDel(p)} className="btn-danger !px-3 !py-1.5 text-xs">{t('common.delete')}</button>
                     </div>
                   </td>
                 </tr>
@@ -104,7 +112,7 @@ export default function ProductsManager({ onCount }) {
                   <p className="text-xs text-stone-400">{t(`categories.${p.category}`)} · <span className="text-gold-300">{t('common.currency')}{p.price}</span></p>
                 </div>
                 <button onClick={() => setModal(p)} className="btn-ghost !px-2.5 !py-1.5 text-xs">{t('common.edit')}</button>
-                <button onClick={() => remove(p.id)} className="btn-danger !px-2.5 !py-1.5 text-xs">{t('common.delete')}</button>
+                <button onClick={() => setConfirmDel(p)} className="btn-danger !px-2.5 !py-1.5 text-xs">{t('common.delete')}</button>
               </div>
             ))}
           </div>
@@ -114,6 +122,16 @@ export default function ProductsManager({ onCount }) {
       {modal !== null && (
         <ProductForm initial={modal.id ? modal : null} onClose={() => setModal(null)} onSaved={handleSaved} />
       )}
+
+      <ConfirmModal
+        open={!!confirmDel}
+        title={t('dashboard.product.deleteTitle')}
+        message={confirmDel ? `${t('dashboard.product.deleteMsg')}\n«${confirmDel.name}»` : ''}
+        confirmLabel={t('common.delete')}
+        busy={delBusy}
+        onConfirm={doRemove}
+        onCancel={() => setConfirmDel(null)}
+      />
     </div>
   );
 }
