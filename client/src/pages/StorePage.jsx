@@ -483,7 +483,7 @@ function HeroSlider({ store }) {
 
       {/* نقاط التنقّل */}
       {len > 1 && (
-        <div className="mt-4 flex items-center justify-center gap-2">
+        <div dir="ltr" className="mt-4 flex items-center justify-center gap-2">
           {slides.map((_, idx) => (
             <button
               key={idx}

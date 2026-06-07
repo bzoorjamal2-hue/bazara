@@ -207,7 +207,7 @@ function HomeHero() {
         </div>
       </div>
 
-      <div className="mt-5 flex items-center justify-center gap-2">
+      <div dir="ltr" className="mt-5 flex items-center justify-center gap-2">
         {slides.map((_, idx) => (
           <button
             key={idx}
