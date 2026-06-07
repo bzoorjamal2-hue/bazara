@@ -2,6 +2,8 @@ import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router-dom';
 import Navbar from './Navbar.jsx';
 import CartDrawer from './CartDrawer.jsx';
+import { buildWhatsappLink } from '../utils/whatsapp.js';
+import { BAZARA_WHATSAPP, BAZARA_INSTAGRAM, BAZARA_FACEBOOK } from '../config/site.js';
 
 // الهوية الخمرية/العاجية الفاخرة مطبّقة على كل الموقع (متجر عام + لوحة تحكم لكل المشتركين).
 export default function Layout({ children }) {
@@ -31,18 +33,27 @@ function PublicFooter() {
 
         <div className="mt-6 flex items-center justify-center gap-3">
           {[
-            { label: 'Facebook', icon: <FacebookGlyph /> },
-            { label: 'Instagram', icon: <InstagramGlyph /> },
-            { label: 'WhatsApp', icon: <WhatsAppGlyph /> },
-          ].map((s) => (
-            <span
-              key={s.label}
-              aria-label={s.label}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-cream/25 text-cream/90 transition hover:bg-cream/10"
-            >
-              {s.icon}
-            </span>
-          ))}
+            BAZARA_WHATSAPP && { label: 'WhatsApp', href: buildWhatsappLink(BAZARA_WHATSAPP), icon: <WhatsAppGlyph /> },
+            BAZARA_INSTAGRAM && { label: 'Instagram', href: `https://instagram.com/${BAZARA_INSTAGRAM.replace(/^@/, '')}`, icon: <InstagramGlyph /> },
+            BAZARA_FACEBOOK && {
+              label: 'Facebook',
+              href: /^https?:\/\//.test(BAZARA_FACEBOOK) ? BAZARA_FACEBOOK : `https://facebook.com/${BAZARA_FACEBOOK.replace(/^@/, '')}`,
+              icon: <FacebookGlyph />,
+            },
+          ]
+            .filter(Boolean)
+            .map((s) => (
+              <a
+                key={s.label}
+                href={s.href}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={s.label}
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-cream/25 text-cream/90 transition hover:bg-cream/10"
+              >
+                {s.icon}
+              </a>
+            ))}
         </div>
 
         <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-cream/80">

@@ -44,20 +44,20 @@ export default function Navbar() {
     navigate('/');
   };
 
-  // أقسام لوحة التحكم (تظهر في قائمة المستخدم)
-  const sections = [
-    { key: 'overview', label: t('dashboard.overview'), icon: '📊' },
-    { key: 'profile', label: t('dashboard.profile'), icon: '👤' },
-    { key: 'storeSettings', label: t('dashboard.storeSettings'), icon: '⚙️' },
-    { key: 'myProducts', label: t('dashboard.myProducts'), icon: '🧺' },
-    { key: 'myOrders', label: t('dashboard.myOrders'), icon: '🧾' },
-    ...(isAdmin
-      ? [
-          { key: 'subscribers', label: t('admin.subscribersNav'), icon: '👥' },
-          { key: 'admin', label: t('admin.nav'), icon: '🛡️' },
-        ]
-      : []),
-  ];
+  // أقسام لوحة التحكم (تظهر في قائمة المستخدم) — المدير: تحكّم فقط بلا بيع
+  const sections = isAdmin
+    ? [
+        { key: 'subscribers', label: t('admin.subscribersNav'), icon: '👥' },
+        { key: 'admin', label: t('admin.nav'), icon: '🛡️' },
+        { key: 'profile', label: t('dashboard.profile'), icon: '👤' },
+      ]
+    : [
+        { key: 'overview', label: t('dashboard.overview'), icon: '📊' },
+        { key: 'profile', label: t('dashboard.profile'), icon: '👤' },
+        { key: 'storeSettings', label: t('dashboard.storeSettings'), icon: '⚙️' },
+        { key: 'myProducts', label: t('dashboard.myProducts'), icon: '🧺' },
+        { key: 'myOrders', label: t('dashboard.myOrders'), icon: '🧾' },
+      ];
 
   // أصناف ديناميكية حسب الثيم (خمري للصفحات العامة / داكن للوحة التحكم)
   const brandCls = pub ? 'text-cream' : 'gradient-text';
@@ -150,7 +150,7 @@ export default function Navbar() {
                   <span>{s.icon}</span> {s.label}
                 </Link>
               ))}
-              {store && (
+              {store && !isAdmin && (
                 <a
                   href={`/store/${store.slug}`}
                   target="_blank"

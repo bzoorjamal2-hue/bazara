@@ -12,6 +12,7 @@ import OrdersManager from './dashboard/OrdersManager.jsx';
 import AdminRequests from './dashboard/AdminRequests.jsx';
 import SubscribersManager from './dashboard/SubscribersManager.jsx';
 
+// أقسام البائع (المشترك العادي)
 const SECTIONS = [
   { key: 'overview', icon: '📊' },
   { key: 'profile', icon: '👤' },
@@ -20,17 +21,26 @@ const SECTIONS = [
   { key: 'myOrders', icon: '🧾' },
 ];
 
+// أقسام المدير (تحكّم فقط — بلا بيع/منتجات)
+const ADMIN_SECTIONS = [
+  { key: 'subscribers', icon: '👥' },
+  { key: 'admin', icon: '🛡️' },
+  { key: 'profile', icon: '👤' },
+];
+
 export default function Dashboard() {
   const { t } = useTranslation();
   const { user, store, subscription } = useAuth();
   const [params, setParams] = useSearchParams();
-  const section = params.get('tab') || 'overview';
-  const setSection = (key) => setParams(key === 'overview' ? {} : { tab: key });
   const [productsCount, setProductsCount] = useState(null);
   const isAdmin = subscription?.isAdmin;
-  const sections = isAdmin
-    ? [...SECTIONS, { key: 'subscribers', icon: '👥' }, { key: 'admin', icon: '🛡️' }]
-    : SECTIONS;
+  const sections = isAdmin ? ADMIN_SECTIONS : SECTIONS;
+  const allowed = sections.map((s) => s.key);
+  const defaultTab = isAdmin ? 'subscribers' : 'overview';
+  const raw = params.get('tab') || defaultTab;
+  // المدير لا يصل لأقسام البيع حتى عبر الرابط
+  const section = allowed.includes(raw) ? raw : defaultTab;
+  const setSection = (key) => setParams(key === defaultTab ? {} : { tab: key });
   const labelFor = (key) =>
     key === 'admin' ? t('admin.nav') : key === 'subscribers' ? t('admin.subscribersNav') : t(`dashboard.${key}`);
 
@@ -69,7 +79,7 @@ export default function Dashboard() {
             </button>
           ))}
         </nav>
-        {store && (
+        {store && !isAdmin && (
           <Link to={`/store/${store.slug}`} className="btn-ghost mt-4 w-full !justify-start text-sm" target="_blank" rel="noreferrer">
             🔗 {t('dashboard.viewPublicStore')}
           </Link>
@@ -81,11 +91,11 @@ export default function Dashboard() {
 
       {/* المحتوى */}
       <div className="min-w-0">
-        {section === 'overview' && <Overview productsCount={productsCount} />}
+        {section === 'overview' && !isAdmin && <Overview productsCount={productsCount} />}
         {section === 'profile' && <Profile />}
-        {section === 'storeSettings' && <StoreSettings />}
-        {section === 'myProducts' && <ProductsManager onCount={setProductsCount} />}
-        {section === 'myOrders' && <OrdersManager />}
+        {section === 'storeSettings' && !isAdmin && <StoreSettings />}
+        {section === 'myProducts' && !isAdmin && <ProductsManager onCount={setProductsCount} />}
+        {section === 'myOrders' && !isAdmin && <OrdersManager />}
         {section === 'subscribers' && isAdmin && <SubscribersManager />}
         {section === 'admin' && isAdmin && <AdminRequests />}
       </div>
