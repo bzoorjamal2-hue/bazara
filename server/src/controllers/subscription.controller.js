@@ -232,6 +232,20 @@ export async function listSubscribers(req, res, next) {
   }
 }
 
+// حذف حساب مشترك نهائياً (للمدير) — يحذف معه المتجر والمنتجات (CASCADE)
+export async function deleteSubscriber(req, res, next) {
+  const email = (req.body.email || '').trim().toLowerCase();
+  if (!email) return res.status(400).json({ error: 'البريد مطلوب.' });
+  if (isAdminEmail(email)) return res.status(400).json({ error: 'لا يمكن حذف حساب المدير.' });
+  try {
+    const r = await query('DELETE FROM users WHERE lower(email) = $1 RETURNING id', [email]);
+    if (r.rows.length === 0) return res.status(404).json({ error: 'لا يوجد حساب بهذا البريد.' });
+    res.json({ message: 'تم حذف الحساب وكل بياناته.', email });
+  } catch (err) {
+    next(err);
+  }
+}
+
 // قائمة الأكواد (للمدير)
 export async function listCodes(req, res, next) {
   try {

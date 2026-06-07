@@ -7,12 +7,14 @@ function fmt(d) {
   return d ? new Date(d).toLocaleString() : '—';
 }
 
-function SubRow({ s }) {
+function SubRow({ s, onDeleted }) {
   const { t } = useTranslation();
   const [plan, setPlan] = useState(s.plan || 'monthly');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
   const [err, setErr] = useState('');
+  const [confirmDel, setConfirmDel] = useState(false);
+  const [delBusy, setDelBusy] = useState(false);
 
   const send = async () => {
     setMsg(''); setErr(''); setBusy(true);
@@ -24,6 +26,18 @@ function SubRow({ s }) {
       setErr(getErrorMessage(e, t('errors.generic')));
     } finally {
       setBusy(false);
+    }
+  };
+
+  const remove = async () => {
+    setErr(''); setDelBusy(true);
+    try {
+      await api.post('/subscription/delete-subscriber', { email: s.email });
+      onDeleted?.(s.email);
+    } catch (e) {
+      setErr(getErrorMessage(e, t('errors.generic')));
+      setDelBusy(false);
+      setConfirmDel(false);
     }
   };
 
@@ -70,6 +84,20 @@ function SubRow({ s }) {
           <button onClick={send} disabled={busy} className="btn-primary !py-1.5 text-sm">
             {busy ? t('common.loading') : `✉️ ${t('admin.sendCodeBtn')}`}
           </button>
+
+          {/* حذف الحساب (تأكيد بخطوتين) */}
+          {confirmDel ? (
+            <span className="inline-flex items-center gap-2">
+              <button onClick={remove} disabled={delBusy} className="rounded-lg bg-red-500/90 px-3 py-1.5 text-sm font-semibold text-white hover:bg-red-500">
+                {delBusy ? t('common.loading') : `🗑 ${t('admin.confirmDelete')}`}
+              </button>
+              <button onClick={() => setConfirmDel(false)} className="text-sm text-stone-400 hover:text-stone-200">{t('common.cancel')}</button>
+            </span>
+          ) : (
+            <button onClick={() => setConfirmDel(true)} className="rounded-lg border border-red-400/40 px-3 py-1.5 text-sm font-medium text-red-300 hover:bg-red-500/10">
+              🗑 {t('admin.deleteAccount')}
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -96,7 +124,11 @@ export default function SubscribersManager() {
       {subs && subs.length === 0 ? (
         <div className="glass p-10 text-center text-stone-400">{t('admin.noSubscribers')}</div>
       ) : (
-        <div className="space-y-3">{subs?.map((s) => <SubRow key={s.email} s={s} />)}</div>
+        <div className="space-y-3">
+          {subs?.map((s) => (
+            <SubRow key={s.email} s={s} onDeleted={(email) => setSubs((prev) => prev.filter((x) => x.email !== email))} />
+          ))}
+        </div>
       )}
     </div>
   );

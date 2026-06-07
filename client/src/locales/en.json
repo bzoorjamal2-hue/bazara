@@ -339,6 +339,8 @@
     "subNone": "No plan",
     "lifetime": "Lifetime",
     "noExpiry": "No expiry ∞",
+    "deleteAccount": "Delete account",
+    "confirmDelete": "Confirm permanent delete",
     "subStore": "Store link",
     "sendCodeBtn": "Send activation code",
     "codeSentTo": "Code sent to",

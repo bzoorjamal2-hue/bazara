@@ -339,6 +339,8 @@
     "subNone": "لا مشترك",
     "lifetime": "مدى الحياة",
     "noExpiry": "بلا انتهاء ∞",
+    "deleteAccount": "حذف الحساب",
+    "confirmDelete": "تأكيد الحذف نهائياً",
     "subStore": "رابط المتجر",
     "sendCodeBtn": "إرسال كود التفعيل",
     "codeSentTo": "تم إرسال الكود إلى",

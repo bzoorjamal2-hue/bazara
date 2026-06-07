@@ -12,6 +12,7 @@ import {
   listCodes,
   sendCodeToSubscriber,
   listSubscribers,
+  deleteSubscriber,
 } from '../controllers/subscription.controller.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
 import { handleValidation, idParamRule } from '../middleware/validate.js';
@@ -28,6 +29,7 @@ router.get('/codes', requireAuth, requireAdmin, listCodes);
 router.post('/codes', requireAuth, requireAdmin, generateCodes);
 router.post('/send-code', requireAuth, requireAdmin, sendCodeToSubscriber);
 router.get('/subscribers', requireAuth, requireAdmin, listSubscribers);
+router.post('/delete-subscriber', requireAuth, requireAdmin, deleteSubscriber);
 
 // للمدير
 router.get('/settings', requireAuth, requireAdmin, getSettings);
