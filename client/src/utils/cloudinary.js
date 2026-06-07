@@ -15,7 +15,8 @@ export function cldVideoPoster(url) {
 // رابط محسّن بجودة عالية (صيغة تلقائية + أعلى جودة بصرية، بدون فقدان ملحوظ)
 export function cldOptimized(url, kind = 'image') {
   if (typeof url !== 'string' || !url.includes('/upload/')) return url;
-  const tr = kind === 'video' ? 'f_auto,q_auto:best' : 'f_auto,q_auto:best,dpr_auto';
+  // الفيديو: جودة متوازنة تلقائية لتحميل أسرع | الصور: أعلى جودة
+  const tr = kind === 'video' ? 'f_auto,q_auto' : 'f_auto,q_auto:best,dpr_auto';
   return url.replace('/upload/', `/upload/${tr}/`);
 }
 

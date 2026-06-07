@@ -38,7 +38,7 @@ export default function CartDrawer() {
             <div className="flex-1 space-y-3 overflow-y-auto p-4">
               {items.map((i) => (
                 <div key={i.id} className="glass flex gap-3 p-3">
-                  <img src={i.imageUrl || 'https://placehold.co/64x64/121214/d4af37?text=%F0%9F%91%97'} alt={i.name} className="h-16 w-16 rounded-lg object-cover" />
+                  <img src={i.imageUrl || 'https://placehold.co/120x120/f1e9dd/5c1a2e?text=%F0%9F%91%97'} alt={i.name} className="h-16 w-16 rounded-lg object-cover" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-stone-100">{i.name}</p>
                     <p className="text-xs text-stone-400">{i.storeName}</p>

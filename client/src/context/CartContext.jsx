@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { cldVideoPoster } from '../utils/cloudinary.js';
 
 const CartContext = createContext(null);
 const KEY = 'cart_v1';
@@ -29,7 +30,7 @@ export function CartProvider({ children }) {
           id: product.id,
           name: product.name,
           price: product.price,
-          imageUrl: product.imageUrl || (product.images && product.images[0]) || '',
+          imageUrl: product.imageUrl || (product.images && product.images[0]) || (product.videoUrl ? cldVideoPoster(product.videoUrl) : '') || '',
           storeName: product.storeName,
           storeSlug: product.storeSlug,
           whatsapp: product.whatsapp || '',

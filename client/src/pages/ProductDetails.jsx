@@ -96,7 +96,8 @@ export default function ProductDetails() {
               poster={cldVideoPoster(product.videoUrl)}
               controls
               playsInline
-              className="mx-auto mt-3 block max-h-[75vh] w-auto max-w-full rounded-2xl"
+              preload="metadata"
+              className="mx-auto mt-3 block max-h-[75vh] w-auto max-w-full rounded-2xl bg-ink-900"
             />
           )}
         </div>

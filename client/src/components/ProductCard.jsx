@@ -72,7 +72,11 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
         />
         {product.videoUrl && (
           <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black/55 text-lg text-white backdrop-blur-sm">▶</span>
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-black/45 ring-1 ring-white/50 backdrop-blur-sm">
+              <svg viewBox="0 0 24 24" className="h-6 w-6 translate-x-[1px] fill-white drop-shadow" aria-hidden="true">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </span>
           </span>
         )}
       </div>
