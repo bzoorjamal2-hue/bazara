@@ -268,3 +268,10 @@ html[lang='ar'] .font-display {
   to { transform: translateY(0); }
 }
 .animate-sheet { animation: sheet-up 0.28s ease-out both; }
+
+/* انزلاق درج من اليسار (للوضع الإنجليزي LTR) */
+@keyframes slide-in-left {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+.animate-slide-in-left { animation: slide-in-left 0.3s ease-out both; }

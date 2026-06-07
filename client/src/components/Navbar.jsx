@@ -21,7 +21,8 @@ function Avatar({ user, size = 'h-8 w-8' }) {
 }
 
 export default function Navbar() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const ltr = i18n.language !== 'ar';
   const { user, store, subscription, logout } = useAuth();
   const { count, setOpen } = useCart();
   const { count: wishCount } = useWishlist();
@@ -133,7 +134,7 @@ export default function Navbar() {
         <div className="fixed inset-0 z-[70]">
           {/* خلفية معتّمة (لا تُغلق — الإغلاق بزر ✕) */}
           <div className="absolute inset-0 bg-black/50" />
-          <aside dir="rtl" className="absolute inset-y-0 right-0 flex w-80 max-w-[85%] animate-slide-in flex-col bg-wine-dark p-5 text-cream shadow-2xl">
+          <aside className={`absolute inset-y-0 start-0 flex w-80 max-w-[85%] flex-col bg-wine-dark p-5 text-cream shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}>
             {/* أعلى: إغلاق + اللغة */}
             <div className="flex items-center justify-between">
               <button

@@ -11,7 +11,8 @@ const CATS = ['abaya', 'set', 'dress', 'hijab'];
 // هيدر صفحة المتجر العامة — مستوحى من متاجر الأزياء الفاخرة:
 // صف 1: زر قائمة (☰) + اسم/شعار المتجر | صف 2: سلة + خانة بحث عريضة | درج جانبي للفئات.
 export default function StoreHeader({ store, q, setQ, cat, setCat }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const ltr = i18n.language !== 'ar';
   const { count, setOpen } = useCart();
   const { count: wishCount } = useWishlist();
   const [drawer, setDrawer] = useState(false);
@@ -75,7 +76,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
         <div className="fixed inset-0 z-[60]">
           {/* الخلفية لا تُغلق الدرج — الإغلاق فقط بزر ✕ */}
           <div className="absolute inset-0 bg-black/50" />
-          <aside className="absolute inset-y-0 right-0 flex w-80 max-w-[85%] animate-slide-in flex-col bg-wine-dark p-5 text-cream shadow-2xl">
+          <aside className={`absolute inset-y-0 start-0 flex w-80 max-w-[85%] flex-col bg-wine-dark p-5 text-cream shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}>
             {/* أزرار علوية: دخول + مفضّلة + إغلاق */}
             <div className="flex items-center gap-2">
               <Link

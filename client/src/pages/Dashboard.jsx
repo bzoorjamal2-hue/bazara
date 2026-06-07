@@ -53,43 +53,10 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
+    <div className="mx-auto w-full max-w-4xl">
       <Seo title={t('dashboard.title')} />
 
-      {/* الشريط الجانبي (مخفي على الموبايل — القائمة ☰ بالأعلى تغطّيه) */}
-      <aside className="hidden h-fit p-4 lg:sticky lg:top-24 lg:block glass-strong">
-        <div className="mb-4 flex items-center gap-3 border-b border-gold-400/15 pb-4">
-          {avatar}
-          <div className="min-w-0">
-            <p className="text-xs text-stone-400">{t('dashboard.welcome')}</p>
-            <p className="truncate font-semibold text-stone-100">{user?.name}</p>
-          </div>
-        </div>
-        <nav className="space-y-1">
-          {sections.map((s) => (
-            <button
-              key={s.key}
-              onClick={() => setSection(s.key)}
-              className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-                section === s.key ? 'bg-gold-400/15 text-gold-100' : 'text-stone-300 hover:bg-white/5'
-              }`}
-            >
-              <span>{s.icon}</span>
-              {labelFor(s.key)}
-            </button>
-          ))}
-        </nav>
-        {store && !isAdmin && (
-          <Link to={`/store/${store.slug}`} className="btn-ghost mt-4 w-full !justify-start text-sm" target="_blank" rel="noreferrer">
-            🔗 {t('dashboard.viewPublicStore')}
-          </Link>
-        )}
-        <Link to="/" className="btn-ghost mt-2 w-full !justify-start text-sm">
-          🏠 {t('dashboard.viewHome')}
-        </Link>
-      </aside>
-
-      {/* المحتوى */}
+      {/* التنقّل عبر القائمة المنسدلة (☰) بالأعلى */}
       <div className="min-w-0">
         {section === 'overview' && !isAdmin && <Overview productsCount={productsCount} />}
         {section === 'profile' && <Profile />}
