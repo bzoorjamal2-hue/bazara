@@ -447,7 +447,7 @@ function HeroSlider({ store }) {
             return (
               <div key={idx} className="w-full shrink-0" dir="rtl">
                 <div
-                  className={`relative flex min-h-[230px] flex-col items-center justify-center overflow-hidden px-6 py-12 text-center sm:min-h-[300px] sm:py-16 ${custom ? '' : 'pub-hero'}`}
+                  className={`relative flex h-[260px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[340px] ${custom ? '' : 'pub-hero'}`}
                   style={style}
                 >
                   {isVideo && (
