@@ -126,74 +126,86 @@ export default function Navbar() {
           <LanguageSwitcher />
         </div>
 
-        {/* قائمة المستخدم المنسدلة (متموضعة بالنسبة للشريط فتبقى ضمن حافته) */}
-        {user && menuOpen && (
-          <>
-            <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
-            <div className="glass-strong absolute start-2 top-full z-50 mt-2 w-64 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl p-2 shadow-xl sm:start-4">
-              {/* رأس: الأفاتار + الاسم */}
-              <div className="mb-1 flex items-center gap-3 rounded-xl bg-gold-400/[0.06] p-3">
-                <Avatar user={user} size="h-10 w-10" />
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-bold text-stone-100">{store?.name || t('app.name')}</p>
-                  <p className="truncate text-xs text-stone-400">{user.name}</p>
-                </div>
-              </div>
-
-              {/* الأقسام */}
-              <div className="py-1">
-                {sections.map((s) => (
-                  <Link
-                    key={s.key}
-                    to={`/dashboard?tab=${s.key}`}
-                    onClick={() => setMenuOpen(false)}
-                    className="flex items-center gap-3 rounded-xl px-2 py-2 text-sm font-medium text-stone-200 transition hover:bg-gold-400/10 hover:text-gold-100"
-                  >
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold-400/10 text-[15px]">{s.icon}</span>
-                    {s.label}
-                  </Link>
-                ))}
-              </div>
-
-              <div className="my-1 h-px bg-gold-400/15" />
-
-              {/* روابط سريعة */}
-              <div className="py-1">
-                {store && !isAdmin && (
-                  <a
-                    href={`/store/${store.slug}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={() => setMenuOpen(false)}
-                    className="flex items-center gap-3 rounded-xl px-2 py-2 text-sm font-medium text-stone-200 transition hover:bg-gold-400/10 hover:text-gold-100"
-                  >
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold-400/10 text-[15px]">🔗</span>
-                    {t('dashboard.viewPublicStore')}
-                  </a>
-                )}
-                <Link
-                  to="/"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-3 rounded-xl px-2 py-2 text-sm font-medium text-stone-200 transition hover:bg-gold-400/10 hover:text-gold-100"
-                >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold-400/10 text-[15px]">🏠</span>
-                  {t('dashboard.viewHome')}
-                </Link>
-              </div>
-
-              <div className="my-1 h-px bg-gold-400/15" />
-
-              <button
-                onClick={handleLogout}
-                className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-sm font-medium text-red-300 transition hover:bg-red-500/10"
-              >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-500/10 text-[15px]">🚪</span>
-                {t('nav.logout')}
-              </button>
-            </div>
-          </>
-        )}
       </nav>
+
+      {/* قائمة الحساب — ملء الشاشة فاخرة (خمري/عاجي) */}
+      {user && menuOpen && (
+        <div
+          dir="rtl"
+          className="animate-fade-in fixed inset-0 z-[70] flex flex-col overflow-y-auto text-cream"
+          style={{ background: 'linear-gradient(160deg,#4a1322 0%,#5c1a2e 55%,#6a1f36 100%)' }}
+        >
+          {/* شريط علوي: إغلاق + اللغة */}
+          <div className="flex items-center justify-between px-5 pt-6">
+            <button
+              onClick={() => setMenuOpen(false)}
+              aria-label="close"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-cream text-lg font-bold text-wine shadow transition hover:bg-white"
+            >
+              ✕
+            </button>
+            <LanguageSwitcher />
+          </div>
+
+          {/* الهوية */}
+          <div className="mt-3 flex flex-col items-center px-6 text-center">
+            {user.avatarUrl ? (
+              <img src={user.avatarUrl} alt={user.name} className="h-16 w-16 rounded-full border-2 border-cream/40 object-cover" />
+            ) : store?.logoUrl ? (
+              <img src={store.logoUrl} alt={store.name} className="h-16 w-16 rounded-2xl border-2 border-cream/40 object-cover" />
+            ) : (
+              <span className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-cream/40 bg-cream/15 text-2xl font-bold text-cream">
+                {user.name?.[0] || '👤'}
+              </span>
+            )}
+            <h2 className="mt-3 font-display text-3xl font-bold tracking-wide text-cream">{store?.name || t('app.name')}</h2>
+            <p className="mt-1 text-sm text-cream/60">{user.name}</p>
+            <div className="mx-auto mt-5 h-px w-20 bg-cream/30" />
+          </div>
+
+          {/* الروابط */}
+          <nav className="mx-auto mt-3 flex w-full max-w-sm flex-1 flex-col px-8">
+            {sections.map((s) => (
+              <Link
+                key={s.key}
+                to={`/dashboard?tab=${s.key}`}
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center justify-center gap-3 border-b border-cream/15 py-4 font-display text-xl text-cream/90 transition hover:text-cream"
+              >
+                <span className="text-lg opacity-80">{s.icon}</span> {s.label}
+              </Link>
+            ))}
+            {store && !isAdmin && (
+              <a
+                href={`/store/${store.slug}`}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center justify-center gap-3 border-b border-cream/15 py-4 font-display text-xl text-cream/90 transition hover:text-cream"
+              >
+                <span className="text-lg opacity-80">🔗</span> {t('dashboard.viewPublicStore')}
+              </a>
+            )}
+            <Link
+              to="/"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center justify-center gap-3 py-4 font-display text-xl text-cream/90 transition hover:text-cream"
+            >
+              <span className="text-lg opacity-80">🏠</span> {t('dashboard.viewHome')}
+            </Link>
+          </nav>
+
+          {/* خروج */}
+          <div className="px-8 pb-10 pt-4 text-center">
+            <button
+              onClick={handleLogout}
+              className="mx-auto inline-flex items-center gap-2 rounded-full border border-cream/40 px-10 py-3 text-sm font-semibold text-cream transition hover:bg-cream/10"
+            >
+              🚪 {t('nav.logout')}
+            </button>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
