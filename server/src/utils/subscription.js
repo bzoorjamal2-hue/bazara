@@ -42,14 +42,15 @@ export function planPeriodEnd(plan, from = new Date()) {
   return d;
 }
 
-// شرط SQL لإظهار متاجر المشتركين الفعّالين (والمديرين) فقط في الصفحات العامة
+// شرط SQL لإظهار متاجر المشتركين الفعّالين فقط في الصفحات العامة.
+// حسابات المدير مستثناة (حسابات تحكّم، ليست للبيع — لا تظهر متاجرها للعامة).
 export function activeStoreSql(userAlias = 'u') {
-  if (!isSubscriptionsEnabled()) return 'TRUE';
   const admins = adminEmails();
-  const adminCond = admins.length
-    ? ` OR ${userAlias}.email IN (${admins.map((e) => `'${e.replace(/'/g, "''")}'`).join(',')})`
+  const excludeAdmins = admins.length
+    ? ` AND ${userAlias}.email NOT IN (${admins.map((e) => `'${e.replace(/'/g, "''")}'`).join(',')})`
     : '';
-  return `((${userAlias}.subscription_status = 'active' AND ${userAlias}.current_period_end > now())${adminCond})`;
+  if (!isSubscriptionsEnabled()) return `(TRUE${excludeAdmins})`;
+  return `(${userAlias}.subscription_status = 'active' AND ${userAlias}.current_period_end > now()${excludeAdmins})`;
 }
 
 // توليد رمز مشترك فريد بصيغة BZ-XXXXXX
