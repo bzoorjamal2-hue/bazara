@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client.js';
@@ -28,31 +28,8 @@ export default function Home() {
     <>
       <Seo title={t('app.name')} description={t('home.heroDesc')} />
 
-      {/* Hero — بانر خمري فاخر */}
-      <section className="relative overflow-hidden rounded-3xl">
-        <div className="pub-hero relative px-6 py-16 text-center sm:py-24">
-          {/* زخارف عاجية شفافة */}
-          <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-cream/10 blur-3xl" />
-          <div className="pointer-events-none absolute bottom-0 end-1/4 h-44 w-44 animate-float rounded-full bg-cream/[0.07] blur-3xl" />
-          <p className="mb-3 animate-fade-in text-sm font-semibold tracking-[0.3em] text-cream/70">LUXURY FASHION</p>
-          <h1 className="animate-fade-up font-display text-4xl font-extrabold leading-tight text-cream sm:text-6xl">
-            {t('home.heroTitle')} <span className="text-cream/95 underline decoration-cream/30 decoration-2 underline-offset-8">{t('home.heroHighlight')}</span>
-          </h1>
-          <p className="mx-auto mt-5 max-w-2xl animate-fade-up text-base text-cream/80 sm:text-lg" style={{ animationDelay: '80ms' }}>
-            {t('home.heroDesc')}
-          </p>
-          <div className="mt-8 flex animate-fade-up flex-wrap items-center justify-center gap-3" style={{ animationDelay: '160ms' }}>
-            <Link to="/register" className="inline-flex items-center rounded-xl bg-cream px-6 py-2.5 text-base font-semibold text-wine shadow-lg transition hover:-translate-y-0.5 hover:bg-white">{t('home.ctaStart')}</Link>
-            <a href="#stores" className="inline-flex items-center rounded-xl border border-cream/40 px-6 py-2.5 text-base font-semibold text-cream transition hover:bg-cream/10">{t('home.ctaExplore')}</a>
-          </div>
-          {/* نقاط التنقّل */}
-          <div className="mt-9 flex items-center justify-center gap-2">
-            <span className="h-2 w-6 rounded-full bg-cream/80" />
-            <span className="h-2 w-2 rounded-full bg-cream/30" />
-            <span className="h-2 w-2 rounded-full bg-cream/30" />
-          </div>
-        </div>
-      </section>
+      {/* Hero — سلايدر بانرات (شريحة ثابتة + شريحتين) */}
+      <HomeHero />
 
       {/* تصفّح حسب الفئة */}
       <section className="mt-14">
@@ -138,6 +115,109 @@ export default function Home() {
 
       <FloatingWhatsApp number={BAZARA_WHATSAPP} />
     </>
+  );
+}
+
+// سلايدر الـ Hero للصفحة الرئيسية: شريحة ثابتة + شريحتين، تحريك تلقائي + سحب باللمس
+function HomeHero() {
+  const { t } = useTranslation();
+  const slides = [
+    { eyebrow: 'LUXURY FASHION', title: t('home.heroTitle'), highlight: t('home.heroHighlight'), desc: t('home.heroDesc') },
+    { eyebrow: 'BAZARA', title: t('home.s2Title'), desc: t('home.s2Desc') },
+    { eyebrow: 'SEO • سيو', title: t('home.s3Title'), desc: t('home.s3Desc') },
+  ];
+  const len = slides.length;
+  const [i, setI] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const containerRef = useRef(null);
+  const touch = useRef({ x: 0, y: 0, active: false, horiz: false });
+
+  useEffect(() => {
+    if (paused) return undefined;
+    const id = setInterval(() => setI((p) => (p + 1) % len), 4000);
+    return () => clearInterval(id);
+  }, [len, paused]);
+
+  const go = (n) => setI(((n % len) + len) % len);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return undefined;
+    const onStart = (e) => {
+      const tt = e.touches[0];
+      touch.current = { x: tt.clientX, y: tt.clientY, active: true, horiz: false };
+      setPaused(true);
+    };
+    const onMove = (e) => {
+      if (!touch.current.active) return;
+      const tt = e.touches[0];
+      const dx = tt.clientX - touch.current.x;
+      const dy = tt.clientY - touch.current.y;
+      if (!touch.current.horiz && Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8) touch.current.horiz = true;
+      if (touch.current.horiz) e.preventDefault();
+    };
+    const onEnd = (e) => {
+      if (!touch.current.active) return;
+      const dx = e.changedTouches[0].clientX - touch.current.x;
+      if (touch.current.horiz && Math.abs(dx) > 40) setI((p) => (((p + (dx < 0 ? -1 : 1)) % len) + len) % len);
+      touch.current.active = false;
+      setPaused(false);
+    };
+    el.addEventListener('touchstart', onStart, { passive: true });
+    el.addEventListener('touchmove', onMove, { passive: false });
+    el.addEventListener('touchend', onEnd, { passive: true });
+    return () => {
+      el.removeEventListener('touchstart', onStart);
+      el.removeEventListener('touchmove', onMove);
+      el.removeEventListener('touchend', onEnd);
+    };
+  }, [len]);
+
+  return (
+    <section className="relative">
+      <div
+        ref={containerRef}
+        className="overflow-hidden rounded-3xl"
+        style={{ touchAction: 'pan-y' }}
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+      >
+        <div className="flex transition-transform duration-500 ease-out" style={{ transform: `translateX(-${i * 100}%)`, direction: 'ltr' }}>
+          {slides.map((s, idx) => (
+            <div key={idx} className="w-full shrink-0" dir="rtl">
+              <div className="pub-hero relative flex h-[340px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[420px]">
+                <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-cream/10 blur-3xl" />
+                <p className="mb-3 text-sm font-semibold tracking-[0.3em] text-cream/70">{s.eyebrow}</p>
+                <h1 className="font-display text-3xl font-extrabold leading-tight text-cream sm:text-5xl">
+                  {s.title}
+                  {s.highlight && <> <span className="underline decoration-cream/30 decoration-2 underline-offset-8">{s.highlight}</span></>}
+                </h1>
+                <p className="mx-auto mt-4 max-w-2xl text-cream/80 sm:text-lg">{s.desc}</p>
+                <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+                  <Link to="/register" className="inline-flex items-center rounded-xl bg-cream px-6 py-2.5 text-base font-semibold text-wine shadow-lg transition hover:-translate-y-0.5 hover:bg-white">
+                    {t('home.ctaStart')}
+                  </Link>
+                  <a href="#stores" className="inline-flex items-center rounded-xl border border-cream/40 px-6 py-2.5 text-base font-semibold text-cream transition hover:bg-cream/10">
+                    {t('home.ctaExplore')}
+                  </a>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-5 flex items-center justify-center gap-2">
+        {slides.map((_, idx) => (
+          <button
+            key={idx}
+            onClick={() => go(idx)}
+            aria-label={`slide ${idx + 1}`}
+            className={`h-2 rounded-full transition-all ${idx === i ? 'w-6 bg-wine' : 'w-2 bg-wine/30'}`}
+          />
+        ))}
+      </div>
+    </section>
   );
 }
 
