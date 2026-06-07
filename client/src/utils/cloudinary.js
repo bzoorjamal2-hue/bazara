@@ -3,6 +3,15 @@ import { CLOUDINARY_CLOUD, CLOUDINARY_PRESET } from '../config/site.js';
 // هل الرفع المباشر مفعّل؟ (تمّت تهيئة Cloudinary)
 export const cloudinaryEnabled = Boolean(CLOUDINARY_CLOUD && CLOUDINARY_PRESET);
 
+// صورة غلاف (أول لقطة) من فيديو Cloudinary — تظهر بكل الأجهزة بما فيها iOS
+export function cldVideoPoster(url) {
+  if (typeof url !== 'string') return '';
+  if (!/res\.cloudinary\.com\/.+\/video\/upload\//.test(url)) return '';
+  let poster = url.replace(/\.(mp4|mov|webm|m4v|avi|mkv|ogv)(\?.*)?$/i, '.jpg');
+  poster = poster.replace('/upload/', '/upload/so_0/'); // اللقطة عند الثانية 0
+  return poster;
+}
+
 // رابط محسّن بجودة عالية (صيغة تلقائية + أعلى جودة بصرية، بدون فقدان ملحوظ)
 export function cldOptimized(url, kind = 'image') {
   if (typeof url !== 'string' || !url.includes('/upload/')) return url;

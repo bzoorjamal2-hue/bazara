@@ -4,6 +4,7 @@ import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import ProductForm from './ProductForm.jsx';
 import ConfirmModal from '../../components/ConfirmModal.jsx';
+import { cldVideoPoster } from '../../utils/cloudinary.js';
 
 const PH = 'https://placehold.co/48x48/121214/d4af37?text=%F0%9F%91%97';
 
@@ -52,10 +53,7 @@ export default function ProductsManager({ onCount }) {
 
   // صورة مصغّرة: تعرض مشهد الفيديو إذا ما في صورة
   const Thumb = ({ p, size }) => {
-    const img = p.imageUrl || (p.images && p.images[0]);
-    if (!img && p.videoUrl) {
-      return <video src={p.videoUrl} muted playsInline preload="metadata" className={`${size} rounded-lg object-cover`} />;
-    }
+    const img = p.imageUrl || (p.images && p.images[0]) || (p.videoUrl && cldVideoPoster(p.videoUrl));
     return <img src={img || PH} alt={p.name} className={`${size} rounded-lg object-cover`} />;
   };
 

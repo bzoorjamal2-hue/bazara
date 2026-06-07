@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import StarRating from './StarRating.jsx';
 import { HeartIcon, CartIcon } from './icons.jsx';
+import { cldVideoPoster } from '../utils/cloudinary.js';
 
 const PLACEHOLDER =
   'data:image/svg+xml;utf8,' +
@@ -17,7 +18,8 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
   const { has, toggle } = useWishlist();
 
   const hasImage = product.imageUrl || (product.images && product.images[0]);
-  const cover = hasImage || PLACEHOLDER;
+  const videoPoster = product.videoUrl ? cldVideoPoster(product.videoUrl) : '';
+  const cover = hasImage || videoPoster || PLACEHOLDER;
   const outOfStock = product.stock === 0;
   const hasDiscount = product.oldPrice && product.oldPrice > product.price;
   const discountPct = hasDiscount ? Math.round((1 - product.price / product.oldPrice) * 100) : 0;
@@ -61,23 +63,13 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
       </button>
 
       <div className="relative aspect-[3/4] overflow-hidden bg-ink-800">
-        {!hasImage && product.videoUrl ? (
-          <video
-            src={product.videoUrl}
-            muted
-            playsInline
-            preload="metadata"
-            className={`h-full w-full object-cover ${outOfStock ? 'opacity-50' : ''}`}
-          />
-        ) : (
-          <img
-            src={cover}
-            alt={product.name}
-            loading="lazy"
-            onError={(e) => (e.currentTarget.src = PLACEHOLDER)}
-            className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-110 ${outOfStock ? 'opacity-50' : ''}`}
-          />
-        )}
+        <img
+          src={cover}
+          alt={product.name}
+          loading="lazy"
+          onError={(e) => (e.currentTarget.src = PLACEHOLDER)}
+          className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-110 ${outOfStock ? 'opacity-50' : ''}`}
+        />
         {product.videoUrl && (
           <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black/55 text-lg text-white backdrop-blur-sm">▶</span>

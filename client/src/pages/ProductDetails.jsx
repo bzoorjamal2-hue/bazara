@@ -8,6 +8,7 @@ import StarRating from '../components/StarRating.jsx';
 import OrderOptions from '../components/OrderOptions.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
+import { cldVideoPoster } from '../utils/cloudinary.js';
 
 const PH = 'https://placehold.co/600x600/121214/d4af37?text=%F0%9F%91%97';
 
@@ -92,6 +93,7 @@ export default function ProductDetails() {
           {product.videoUrl && (
             <video
               src={product.videoUrl}
+              poster={cldVideoPoster(product.videoUrl)}
               controls
               playsInline
               className="mx-auto mt-3 block max-h-[75vh] w-auto max-w-full rounded-2xl"
