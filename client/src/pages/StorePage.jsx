@@ -71,7 +71,9 @@ export default function StorePage() {
   // واتساب المتجر: رقم الإعدادات إن وُجد، وإلا رقم المالك المُدخل عند التسجيل
   const wa = store.whatsapp || store.ownerPhone || '';
   const featured = data.products.filter((p) => p.featured);
+  const searching = q.trim().length > 0;
   const pickCategory = (c) => { setCat(c); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const clearSearch = () => { setQ(''); setCat('all'); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
   return (
     <>
@@ -88,7 +90,14 @@ export default function StorePage() {
         </div>
       )}
 
-      {cat === 'all' ? (
+      {searching ? (
+        /* عرض نتائج البحث */
+        <nav className="mb-4 mt-2 flex items-center gap-2 text-sm">
+          <button onClick={clearSearch} className="text-wine/70 hover:text-wine" aria-label="home">🏠</button>
+          <span className="text-wine/40">←</span>
+          <span className="font-display text-lg font-bold text-wine">{t('store.searchResults')} «{q.trim()}»</span>
+        </nav>
+      ) : cat === 'all' ? (
         <>
           {/* سلايدر البانرات (شريحة ثابتة + شرايح عروض المالك) */}
           <HeroSlider store={store} />
