@@ -337,6 +337,8 @@
     "subActive": "Active ✓",
     "subExpired": "Expired — locked",
     "subNone": "No plan",
+    "lifetime": "Lifetime",
+    "noExpiry": "No expiry ∞",
     "subStore": "Store link",
     "sendCodeBtn": "Send activation code",
     "codeSentTo": "Code sent to",

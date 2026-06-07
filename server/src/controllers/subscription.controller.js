@@ -63,6 +63,7 @@ export async function getStatus(req, res, next) {
       daysRemaining: daysRemaining(u),
       subscriberCode: u.subscriber_code,
       isAdmin: isAdminEmail(u.email),
+      lifetime: isAdminEmail(u.email),
       pending: last && last.status === 'pending',
       lastRequest: last ? { plan: last.plan, status: last.status, createdAt: last.created_at } : null,
       paymentInfo: await getPaymentInfo(),
@@ -216,12 +217,14 @@ export async function listSubscribers(req, res, next) {
         email: x.email,
         plan: x.subscription_plan,
         status: x.subscription_status,
-        startedAt: x.subscription_started_at,
+        // المدير: تاريخ اشتراك = تاريخ إنشاء حسابه، واشتراكه مدى الحياة بلا انتهاء
+        startedAt: x.subscription_started_at || (isAdminEmail(x.email) ? x.created_at : null),
         currentPeriodEnd: x.current_period_end,
         storeName: x.store_name,
         storeSlug: x.store_slug,
         active: isUserActive({ email: x.email, subscription_status: x.subscription_status, current_period_end: x.current_period_end }),
         isAdmin: isAdminEmail(x.email),
+        lifetime: isAdminEmail(x.email),
       })),
     });
   } catch (err) {

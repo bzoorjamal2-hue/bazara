@@ -337,6 +337,8 @@
     "subActive": "فعّال ✓",
     "subExpired": "منتهٍ — مغلق",
     "subNone": "لا مشترك",
+    "lifetime": "مدى الحياة",
+    "noExpiry": "بلا انتهاء ∞",
     "subStore": "رابط المتجر",
     "sendCodeBtn": "إرسال كود التفعيل",
     "codeSentTo": "تم إرسال الكود إلى",

@@ -47,9 +47,15 @@ function SubRow({ s }) {
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-stone-400 sm:grid-cols-3">
-        <div><span className="text-stone-500">{t('admin.subPlan')}:</span> {s.plan ? t(`subscription.${s.plan}`) : t('admin.subNone')}</div>
+        <div>
+          <span className="text-stone-500">{t('admin.subPlan')}:</span>{' '}
+          {s.lifetime ? t('admin.lifetime') : s.plan ? t(`subscription.${s.plan}`) : t('admin.subNone')}
+        </div>
         <div><span className="text-stone-500">{t('admin.subStarted')}:</span> {fmt(s.startedAt)}</div>
-        <div><span className="text-stone-500">{t('admin.subExpires')}:</span> {fmt(s.currentPeriodEnd)}</div>
+        <div>
+          <span className="text-stone-500">{t('admin.subExpires')}:</span>{' '}
+          {s.lifetime ? <span className="font-semibold text-gold-300">{t('admin.noExpiry')}</span> : fmt(s.currentPeriodEnd)}
+        </div>
       </div>
 
       {msg && <div className="mt-2 rounded-lg border border-emerald-400/30 bg-emerald-500/10 px-3 py-1.5 text-xs text-emerald-200">{msg}</div>}
