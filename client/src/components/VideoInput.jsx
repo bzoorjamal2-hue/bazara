@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { uploadToCloudinary, cloudinaryEnabled } from '../utils/cloudinary.js';
+import { uploadToCloudinary, cldOptimized, cloudinaryEnabled } from '../utils/cloudinary.js';
 
 // حقل فيديو موحّد: رفع مباشر من الجهاز (Cloudinary) أو لصق رابط.
 export default function VideoInput({ value, onChange, label }) {
@@ -20,7 +20,7 @@ export default function VideoInput({ value, onChange, label }) {
     setProgress(0);
     try {
       const link = await uploadToCloudinary(file, 'video', setProgress);
-      onChange(link);
+      onChange(cldOptimized(link, 'video'));
     } catch (er) {
       setErr(er.message);
     } finally {

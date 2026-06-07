@@ -3,6 +3,13 @@ import { CLOUDINARY_CLOUD, CLOUDINARY_PRESET } from '../config/site.js';
 // هل الرفع المباشر مفعّل؟ (تمّت تهيئة Cloudinary)
 export const cloudinaryEnabled = Boolean(CLOUDINARY_CLOUD && CLOUDINARY_PRESET);
 
+// رابط محسّن بجودة عالية (صيغة تلقائية + أعلى جودة بصرية، بدون فقدان ملحوظ)
+export function cldOptimized(url, kind = 'image') {
+  if (typeof url !== 'string' || !url.includes('/upload/')) return url;
+  const tr = kind === 'video' ? 'f_auto,q_auto:best' : 'f_auto,q_auto:best,dpr_auto';
+  return url.replace('/upload/', `/upload/${tr}/`);
+}
+
 // رفع ملف (صورة/فيديو) مباشرة من جهاز المستخدم إلى Cloudinary، ويعيد الرابط الآمن.
 // resourceType: 'video' | 'image' | 'auto'
 export async function uploadToCloudinary(file, resourceType = 'auto', onProgress) {

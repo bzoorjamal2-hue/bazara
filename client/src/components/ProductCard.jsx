@@ -16,7 +16,8 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
   const { add } = useCart();
   const { has, toggle } = useWishlist();
 
-  const cover = product.imageUrl || (product.images && product.images[0]) || PLACEHOLDER;
+  const hasImage = product.imageUrl || (product.images && product.images[0]);
+  const cover = hasImage || PLACEHOLDER;
   const outOfStock = product.stock === 0;
   const hasDiscount = product.oldPrice && product.oldPrice > product.price;
   const discountPct = hasDiscount ? Math.round((1 - product.price / product.oldPrice) * 100) : 0;
@@ -59,14 +60,24 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
         <HeartIcon className="h-4 w-4" filled={liked} />
       </button>
 
-      <div className="relative aspect-square overflow-hidden bg-ink-800">
-        <img
-          src={cover}
-          alt={product.name}
-          loading="lazy"
-          onError={(e) => (e.currentTarget.src = PLACEHOLDER)}
-          className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-110 ${outOfStock ? 'opacity-50' : ''}`}
-        />
+      <div className="relative aspect-[3/4] overflow-hidden bg-ink-800">
+        {!hasImage && product.videoUrl ? (
+          <video
+            src={product.videoUrl}
+            muted
+            playsInline
+            preload="metadata"
+            className={`h-full w-full object-cover ${outOfStock ? 'opacity-50' : ''}`}
+          />
+        ) : (
+          <img
+            src={cover}
+            alt={product.name}
+            loading="lazy"
+            onError={(e) => (e.currentTarget.src = PLACEHOLDER)}
+            className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-110 ${outOfStock ? 'opacity-50' : ''}`}
+          />
+        )}
         {product.videoUrl && (
           <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black/55 text-lg text-white backdrop-blur-sm">▶</span>

@@ -43,7 +43,8 @@ export default function ProductDetails() {
   if (!product) return <Spinner full />;
 
   const gallery = [product.imageUrl, ...(product.images || [])].filter(Boolean);
-  if (gallery.length === 0) gallery.push(PH);
+  const hasImages = gallery.length > 0;
+  if (!hasImages && !product.videoUrl) gallery.push(PH); // عنصر بديل فقط لو ما في صور ولا فيديو
   const outOfStock = product.stock === 0;
   const hasDiscount = product.oldPrice && product.oldPrice > product.price;
   const liked = has(product.id);
@@ -67,10 +68,12 @@ export default function ProductDetails() {
       <div className="glass-strong grid gap-8 overflow-hidden p-6 md:grid-cols-2">
         {/* معرض الصور */}
         <div>
+          {hasImages && (
           <div className="relative aspect-square overflow-hidden rounded-2xl bg-ink-800">
             <img src={gallery[active]} alt={product.name} className="h-full w-full object-cover" onError={(e) => (e.currentTarget.src = PH)} />
             {hasDiscount && <span className="badge absolute start-3 top-3 bg-red-500 text-white">-{Math.round((1 - product.price / product.oldPrice) * 100)}%</span>}
           </div>
+          )}
           {gallery.length > 1 && (
             <div className="mt-3 flex gap-2 overflow-x-auto">
               {gallery.map((g, i) => (
@@ -85,13 +88,13 @@ export default function ProductDetails() {
             </div>
           )}
 
-          {/* فيديو المنتج */}
+          {/* فيديو المنتج — يتأقلم مع مقاسه (9:16) بلا سواد حوله */}
           {product.videoUrl && (
             <video
               src={product.videoUrl}
               controls
               playsInline
-              className="mt-3 max-h-[420px] w-full rounded-2xl bg-black"
+              className="mx-auto mt-3 block max-h-[75vh] w-auto max-w-full rounded-2xl"
             />
           )}
         </div>

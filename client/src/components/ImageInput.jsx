@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { resizeImageFile } from '../utils/image.js';
+import { uploadToCloudinary, cldOptimized, cloudinaryEnabled } from '../utils/cloudinary.js';
 
 // حقل صورة موحّد: رفع من الجهاز أو لصق رابط. القيمة سلسلة نصية (رابط أو data URL).
 export default function ImageInput({ value, onChange, round = false, label }) {
@@ -16,8 +17,14 @@ export default function ImageInput({ value, onChange, round = false, label }) {
     setErr('');
     setBusy(true);
     try {
-      const dataUrl = await resizeImageFile(file);
-      onChange(dataUrl);
+      if (cloudinaryEnabled) {
+        // رفع بجودة عالية إلى Cloudinary (بدون ضغط يقلّل الدقة)
+        const url = await uploadToCloudinary(file, 'image');
+        onChange(cldOptimized(url, 'image'));
+      } else {
+        const dataUrl = await resizeImageFile(file);
+        onChange(dataUrl);
+      }
     } catch (er) {
       setErr(er.message);
     } finally {
