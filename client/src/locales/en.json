@@ -158,7 +158,12 @@
       "noBanners": "No extra slides — the slider shows the fixed slide only.",
       "slide": "Slide",
       "bannerTitle": "Title (e.g. Ramadan offers)",
-      "bannerSubtitle": "Subtitle (optional)"
+      "bannerSubtitle": "Subtitle (optional)",
+      "bannerBg": "Slide background",
+      "bgTheme": "Default (maroon)",
+      "bgColor": "Color",
+      "bgImage": "Image",
+      "bgVideo": "Video"
     },
     "product": {
       "name": "Item name",

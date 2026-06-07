@@ -22,16 +22,19 @@ function mapStore(s) {
   };
 }
 
-// تنقية شرايح البانر القادمة من النموذج (حد أقصى 5، نص آمن)
+// تنقية شرايح البانر القادمة من النموذج (حد أقصى 5، نص آمن + خلفية مخصّصة)
 function sanitizeBanners(raw) {
   if (!Array.isArray(raw)) return [];
+  const bgTypes = ['color', 'image', 'video'];
   return raw
     .slice(0, 5)
     .map((b) => ({
       title: String(b?.title || '').trim().slice(0, 80),
       subtitle: String(b?.subtitle || '').trim().slice(0, 160),
+      bgType: bgTypes.includes(b?.bgType) ? b.bgType : '',
+      bgValue: String(b?.bgValue || '').slice(0, 900000), // يسمح بصورة base64 مضغوطة أو رابط
     }))
-    .filter((b) => b.title || b.subtitle);
+    .filter((b) => b.title || b.subtitle || b.bgValue);
 }
 
 // جلب متجر المستخدم الحالي مع إحصائيات بسيطة

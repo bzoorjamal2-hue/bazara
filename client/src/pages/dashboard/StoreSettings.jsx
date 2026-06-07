@@ -12,9 +12,10 @@ const EMPTY = {
 
 // شرايح افتراضية يقترحها النظام عند عدم وجود بانرات (يقدر المالك يعدّلها أو يحذفها)
 const DEFAULT_BANNERS = [
-  { title: 'تشكيلة جديدة وصلت', subtitle: 'تصفّحوا أحدث القطع لدينا' },
-  { title: 'عروض خاصة', subtitle: 'تابعونا لكل جديد وحصري' },
+  { title: 'تشكيلة جديدة وصلت', subtitle: 'تصفّحوا أحدث القطع لدينا', bgType: '', bgValue: '' },
+  { title: 'عروض خاصة', subtitle: 'تابعونا لكل جديد وحصري', bgType: '', bgValue: '' },
 ];
+const BG_TYPES = [['', 'bgTheme'], ['color', 'bgColor'], ['image', 'bgImage'], ['video', 'bgVideo']];
 const MAX_BANNERS = 5;
 
 export default function StoreSettings() {
@@ -76,9 +77,12 @@ export default function StoreSettings() {
   const setBanner = (idx, key, val) =>
     setForm((f) => ({ ...f, banners: f.banners.map((b, i) => (i === idx ? { ...b, [key]: val } : b)) }));
   const addBanner = () =>
-    setForm((f) => ({ ...f, banners: [...f.banners, { title: '', subtitle: '' }] }));
+    setForm((f) => ({ ...f, banners: [...f.banners, { title: '', subtitle: '', bgType: '', bgValue: '' }] }));
   const removeBanner = (idx) =>
     setForm((f) => ({ ...f, banners: f.banners.filter((_, i) => i !== idx) }));
+  // تغيير نوع الخلفية يصفّر القيمة السابقة
+  const setBannerBg = (idx, bgType) =>
+    setForm((f) => ({ ...f, banners: f.banners.map((b, i) => (i === idx ? { ...b, bgType, bgValue: '' } : b)) }));
 
   return (
     <div className="space-y-6">
@@ -185,6 +189,40 @@ export default function StoreSettings() {
                     maxLength={160}
                     onChange={(e) => setBanner(idx, 'subtitle', e.target.value)}
                   />
+
+                  {/* خلفية الشريحة: افتراضي / لون / صورة / فيديو */}
+                  <div className="mt-3 border-t border-gold-400/10 pt-3">
+                    <p className="mb-2 text-xs font-semibold text-stone-300">{t('dashboard.store.bannerBg')}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {BG_TYPES.map(([val, key]) => (
+                        <button
+                          type="button"
+                          key={key}
+                          onClick={() => setBannerBg(idx, val)}
+                          className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                            (b.bgType || '') === val ? 'border-gold-400 bg-gold-400/20 text-gold-100' : 'border-gold-400/20 text-stone-300 hover:bg-white/5'
+                          }`}
+                        >
+                          {t(`dashboard.store.${key}`)}
+                        </button>
+                      ))}
+                    </div>
+
+                    {b.bgType === 'color' && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <input type="color" className="h-9 w-12 cursor-pointer rounded-lg border border-gold-400/20 bg-black/30" value={b.bgValue || '#5C1A2E'} onChange={(e) => setBanner(idx, 'bgValue', e.target.value)} />
+                        <span className="text-xs text-stone-400" dir="ltr">{b.bgValue || '#5C1A2E'}</span>
+                      </div>
+                    )}
+                    {b.bgType === 'image' && (
+                      <div className="mt-2">
+                        <ImageInput value={b.bgValue} onChange={(v) => setBanner(idx, 'bgValue', v)} />
+                      </div>
+                    )}
+                    {b.bgType === 'video' && (
+                      <input type="url" dir="ltr" className="input mt-2" placeholder="https://...mp4" value={b.bgValue || ''} onChange={(e) => setBanner(idx, 'bgValue', e.target.value)} />
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

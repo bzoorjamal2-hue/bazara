@@ -434,28 +434,50 @@ function HeroSlider({ store }) {
       >
         {/* المسار: نفرضه LTR لتفادي مشاكل اتجاه RTL مع الإزاحة */}
         <div className="flex transition-transform duration-500 ease-out" style={{ transform: `translateX(-${i * 100}%)`, direction: 'ltr' }}>
-          {slides.map((s, idx) => (
-            <div key={idx} className="w-full shrink-0" dir="rtl">
-              <div className="pub-hero relative flex min-h-[230px] flex-col items-center justify-center px-6 py-12 text-center sm:min-h-[300px] sm:py-16">
-                <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-cream/10 blur-3xl" />
-                {s.fixed ? (
-                  <>
-                    {store.logoUrl && (
-                      <img src={store.logoUrl} alt={store.name} className="mb-4 h-20 w-20 rounded-2xl border-2 border-cream/30 object-cover shadow-lg sm:h-24 sm:w-24" />
+          {slides.map((s, idx) => {
+            const isColor = !s.fixed && s.bgType === 'color' && s.bgValue;
+            const isImage = !s.fixed && s.bgType === 'image' && s.bgValue;
+            const isVideo = !s.fixed && s.bgType === 'video' && s.bgValue;
+            const custom = isColor || isImage || isVideo;
+            const style = isColor
+              ? { background: s.bgValue }
+              : isImage
+                ? { backgroundImage: `url("${s.bgValue}")`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                : undefined;
+            return (
+              <div key={idx} className="w-full shrink-0" dir="rtl">
+                <div
+                  className={`relative flex min-h-[230px] flex-col items-center justify-center overflow-hidden px-6 py-12 text-center sm:min-h-[300px] sm:py-16 ${custom ? '' : 'pub-hero'}`}
+                  style={style}
+                >
+                  {isVideo && (
+                    <video src={s.bgValue} autoPlay muted loop playsInline className="absolute inset-0 h-full w-full object-cover" />
+                  )}
+                  {/* طبقة تعتيم لوضوح النص فوق الصورة/الفيديو */}
+                  {(isImage || isVideo) && <div className="absolute inset-0 bg-black/40" />}
+                  {!custom && <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-cream/10 blur-3xl" />}
+
+                  <div className="relative z-10">
+                    {s.fixed ? (
+                      <>
+                        {store.logoUrl && (
+                          <img src={store.logoUrl} alt={store.name} className="mx-auto mb-4 h-20 w-20 rounded-2xl border-2 border-cream/30 object-cover shadow-lg sm:h-24 sm:w-24" />
+                        )}
+                        <h1 className="font-display text-3xl font-extrabold text-cream sm:text-5xl">{store.name}</h1>
+                        <p className="mt-3 font-display text-lg text-cream/90 sm:text-2xl">أناقة .. حشمة .. تميز</p>
+                        <p className="mt-1 text-xs tracking-[0.25em] text-cream/55 sm:text-sm">ELEGANCE · MODESTY · DISTINCTION</p>
+                      </>
+                    ) : (
+                      <>
+                        <h2 className="font-display text-3xl font-extrabold text-cream drop-shadow sm:text-5xl">{s.title}</h2>
+                        {s.subtitle && <p className="mx-auto mt-3 max-w-xl text-cream/90 drop-shadow sm:text-lg">{s.subtitle}</p>}
+                      </>
                     )}
-                    <h1 className="font-display text-3xl font-extrabold text-cream sm:text-5xl">{store.name}</h1>
-                    <p className="mt-3 font-display text-lg text-cream/90 sm:text-2xl">أناقة .. حشمة .. تميز</p>
-                    <p className="mt-1 text-xs tracking-[0.25em] text-cream/55 sm:text-sm">ELEGANCE · MODESTY · DISTINCTION</p>
-                  </>
-                ) : (
-                  <>
-                    <h2 className="font-display text-3xl font-extrabold text-cream sm:text-5xl">{s.title}</h2>
-                    {s.subtitle && <p className="mx-auto mt-3 max-w-xl text-cream/80 sm:text-lg">{s.subtitle}</p>}
-                  </>
-                )}
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
