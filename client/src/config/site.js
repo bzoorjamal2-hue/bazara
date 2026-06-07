@@ -5,3 +5,7 @@ export const BAZARA_WHATSAPP = '972592124988';
 export const BAZARA_INSTAGRAM = '';
 // فيسبوك: رابط الصفحة الكامل أو اسمها — اتركه فارغاً لإخفاء الأيقونة
 export const BAZARA_FACEBOOK = '';
+
+// Cloudinary — للرفع المباشر للفيديو/الصور من الجهاز (اتركهما فارغين لإخفاء زر الرفع)
+export const CLOUDINARY_CLOUD = 'dkzrnu4cs';
+export const CLOUDINARY_PRESET = 'bazara_unsigned';

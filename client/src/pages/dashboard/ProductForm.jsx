@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import ImageInput from '../../components/ImageInput.jsx';
+import VideoInput from '../../components/VideoInput.jsx';
 
 const CATEGORIES = ['abaya', 'set', 'dress', 'hijab'];
 const SIZES = ['36', '38', '40', '42', '44', '46', '48'];
@@ -101,14 +102,13 @@ export default function ProductForm({ initial, onClose, onSaved }) {
             </div>
           </div>
 
-          {/* فيديو المنتج (رابط) */}
+          {/* فيديو المنتج (رفع مباشر أو رابط) */}
           <div>
-            <label className="label">🎬 {t('dashboard.product.video')} <span className="text-stone-500">({t('common.optional')})</span></label>
-            <input type="url" dir="ltr" className="input" placeholder="https://...mp4" value={form.videoUrl} onChange={set('videoUrl')} />
-            <p className="mt-1 text-xs text-stone-400">{t('dashboard.product.videoHint')}</p>
-            {form.videoUrl && (
-              <video src={form.videoUrl} controls playsInline className="mt-2 max-h-48 w-full rounded-xl bg-black/40" />
-            )}
+            <VideoInput
+              label={`🎬 ${t('dashboard.product.video')} (${t('common.optional')})`}
+              value={form.videoUrl}
+              onChange={(v) => setForm({ ...form, videoUrl: v })}
+            />
           </div>
 
           <div>

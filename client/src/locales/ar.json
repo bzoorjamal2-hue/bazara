@@ -46,6 +46,11 @@
     "saveImage": "حفظ الصورة",
     "imageSaved": "تم حفظ الصورة ✓"
   },
+  "video": {
+    "chooseFile": "اختر فيديو من جهازك",
+    "uploading": "جاري الرفع...",
+    "notVideo": "الملف المختار ليس فيديو."
+  },
   "home": {
     "heroTitle": "وجهتك للأزياء",
     "heroHighlight": "الفاخرة",

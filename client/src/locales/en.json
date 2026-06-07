@@ -46,6 +46,11 @@
     "saveImage": "Save image",
     "imageSaved": "Image saved ✓"
   },
+  "video": {
+    "chooseFile": "Choose a video from your device",
+    "uploading": "Uploading...",
+    "notVideo": "The selected file is not a video."
+  },
   "home": {
     "heroTitle": "Your destination for",
     "heroHighlight": "luxury fashion",

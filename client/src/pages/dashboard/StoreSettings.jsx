@@ -4,6 +4,7 @@ import api, { getErrorMessage } from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import Spinner from '../../components/Spinner.jsx';
 import ImageInput from '../../components/ImageInput.jsx';
+import VideoInput from '../../components/VideoInput.jsx';
 
 const EMPTY = {
   name: '', description: '', logoUrl: '', phone: '', whatsapp: '',
@@ -220,7 +221,9 @@ export default function StoreSettings() {
                       </div>
                     )}
                     {b.bgType === 'video' && (
-                      <input type="url" dir="ltr" className="input mt-2" placeholder="https://...mp4" value={b.bgValue || ''} onChange={(e) => setBanner(idx, 'bgValue', e.target.value)} />
+                      <div className="mt-2">
+                        <VideoInput value={b.bgValue} onChange={(v) => setBanner(idx, 'bgValue', v)} />
+                      </div>
                     )}
                   </div>
                 </div>

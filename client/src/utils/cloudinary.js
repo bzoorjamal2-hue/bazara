@@ -1,0 +1,34 @@
+import { CLOUDINARY_CLOUD, CLOUDINARY_PRESET } from '../config/site.js';
+
+// هل الرفع المباشر مفعّل؟ (تمّت تهيئة Cloudinary)
+export const cloudinaryEnabled = Boolean(CLOUDINARY_CLOUD && CLOUDINARY_PRESET);
+
+// رفع ملف (صورة/فيديو) مباشرة من جهاز المستخدم إلى Cloudinary، ويعيد الرابط الآمن.
+// resourceType: 'video' | 'image' | 'auto'
+export async function uploadToCloudinary(file, resourceType = 'auto', onProgress) {
+  if (!cloudinaryEnabled) throw new Error('الرفع المباشر غير مُهيّأ.');
+
+  const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/${resourceType}/upload`;
+  const form = new FormData();
+  form.append('file', file);
+  form.append('upload_preset', CLOUDINARY_PRESET);
+
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () => {
+      try {
+        const res = JSON.parse(xhr.responseText);
+        if (xhr.status >= 200 && xhr.status < 300 && res.secure_url) resolve(res.secure_url);
+        else reject(new Error(res?.error?.message || 'فشل الرفع.'));
+      } catch {
+        reject(new Error('فشل الرفع.'));
+      }
+    };
+    xhr.onerror = () => reject(new Error('تعذّر الاتصال بخادم الرفع.'));
+    xhr.send(form);
+  });
+}
