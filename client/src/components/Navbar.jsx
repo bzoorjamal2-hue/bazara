@@ -130,51 +130,67 @@ export default function Navbar() {
         {user && menuOpen && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
-            <div className="glass-strong absolute start-2 top-full z-50 mt-2 w-64 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl p-2 sm:start-4">
-            <div className="flex items-center gap-3 border-b border-gold-400/15 p-3">
-              <Avatar user={user} />
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-stone-100">{store?.name}</p>
-                <p className="truncate text-xs text-stone-400">{user.name}</p>
+            <div className="glass-strong absolute start-2 top-full z-50 mt-2 w-64 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl p-2 shadow-xl sm:start-4">
+              {/* رأس: الأفاتار + الاسم */}
+              <div className="mb-1 flex items-center gap-3 rounded-xl bg-gold-400/[0.06] p-3">
+                <Avatar user={user} size="h-10 w-10" />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold text-stone-100">{store?.name || t('app.name')}</p>
+                  <p className="truncate text-xs text-stone-400">{user.name}</p>
+                </div>
               </div>
-            </div>
-            <div className="py-1">
-              {sections.map((s) => (
+
+              {/* الأقسام */}
+              <div className="py-1">
+                {sections.map((s) => (
+                  <Link
+                    key={s.key}
+                    to={`/dashboard?tab=${s.key}`}
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-3 rounded-xl px-2 py-2 text-sm font-medium text-stone-200 transition hover:bg-gold-400/10 hover:text-gold-100"
+                  >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold-400/10 text-[15px]">{s.icon}</span>
+                    {s.label}
+                  </Link>
+                ))}
+              </div>
+
+              <div className="my-1 h-px bg-gold-400/15" />
+
+              {/* روابط سريعة */}
+              <div className="py-1">
+                {store && !isAdmin && (
+                  <a
+                    href={`/store/${store.slug}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-3 rounded-xl px-2 py-2 text-sm font-medium text-stone-200 transition hover:bg-gold-400/10 hover:text-gold-100"
+                  >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold-400/10 text-[15px]">🔗</span>
+                    {t('dashboard.viewPublicStore')}
+                  </a>
+                )}
                 <Link
-                  key={s.key}
-                  to={`/dashboard?tab=${s.key}`}
+                  to="/"
                   onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-stone-200 hover:bg-gold-400/10 hover:text-gold-100"
+                  className="flex items-center gap-3 rounded-xl px-2 py-2 text-sm font-medium text-stone-200 transition hover:bg-gold-400/10 hover:text-gold-100"
                 >
-                  <span>{s.icon}</span> {s.label}
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold-400/10 text-[15px]">🏠</span>
+                  {t('dashboard.viewHome')}
                 </Link>
-              ))}
-              {store && !isAdmin && (
-                <a
-                  href={`/store/${store.slug}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-stone-200 hover:bg-gold-400/10 hover:text-gold-100"
-                >
-                  🔗 {t('dashboard.viewPublicStore')}
-                </a>
-              )}
-              <Link
-                to="/"
-                onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-stone-200 hover:bg-gold-400/10 hover:text-gold-100"
-              >
-                🏠 {t('dashboard.viewHome')}
-              </Link>
+              </div>
+
+              <div className="my-1 h-px bg-gold-400/15" />
+
               <button
                 onClick={handleLogout}
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-red-300 hover:bg-red-500/10"
+                className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-sm font-medium text-red-300 transition hover:bg-red-500/10"
               >
-                🚪 {t('nav.logout')}
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-500/10 text-[15px]">🚪</span>
+                {t('nav.logout')}
               </button>
             </div>
-          </div>
           </>
         )}
       </nav>
