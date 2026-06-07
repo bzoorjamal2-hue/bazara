@@ -41,11 +41,19 @@ function SubRow({ s, onDeleted }) {
     }
   };
 
-  const statusBadge = s.isAdmin
-    ? <span className="badge bg-gold-400/20 text-gold-200">مدير</span>
-    : s.active
-      ? <span className="badge bg-emerald-500/20 text-emerald-200">{t('admin.subActive')}</span>
-      : <span className="badge bg-red-500/20 text-red-200">{t('admin.subExpired')}</span>;
+  const statusBadge = s.isAdmin ? (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-400 px-3 py-1 text-xs font-bold text-ink-950 shadow-sm">
+      👑 {t('admin.statusAdmin')}
+    </span>
+  ) : s.active ? (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500 px-3 py-1 text-xs font-bold text-white shadow-sm">
+      <span className="h-2 w-2 rounded-full bg-white" /> {t('admin.statusActive')}
+    </span>
+  ) : (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white shadow-sm">
+      <span className="h-2 w-2 rounded-full bg-white" /> {t('admin.statusLocked')}
+    </span>
+  );
 
   return (
     <div className="glass p-4">
