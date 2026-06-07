@@ -67,7 +67,7 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50">
-      <nav className={`${pub ? 'pub-navbar' : 'glass-strong'} mx-auto mt-4 flex max-w-6xl items-center justify-between gap-1 rounded-2xl px-2.5 py-3 sm:gap-2 sm:px-6`}>
+      <nav className={`${pub ? 'pub-navbar' : 'glass-strong'} relative mx-auto mt-4 flex max-w-6xl items-center justify-between gap-1 rounded-2xl px-2.5 py-3 sm:gap-2 sm:px-6`}>
         {/* للمستخدم: زر القائمة ☰ (مكان اللوجو) + اسم متجره. للزائر: شعار Bazara */}
         <div className="flex items-center gap-2.5">
           {user ? (
@@ -125,13 +125,12 @@ export default function Navbar() {
 
           <LanguageSwitcher />
         </div>
-      </nav>
 
-      {/* قائمة المستخدم المنسدلة */}
-      {user && menuOpen && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
-          <div className="glass-strong absolute z-50 mt-2 w-60 overflow-hidden rounded-2xl p-2 start-4 sm:start-6" style={{ top: '100%' }}>
+        {/* قائمة المستخدم المنسدلة (متموضعة بالنسبة للشريط فتبقى ضمن حافته) */}
+        {user && menuOpen && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+            <div className="glass-strong absolute start-2 top-full z-50 mt-2 w-64 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl p-2 sm:start-4">
             <div className="flex items-center gap-3 border-b border-gold-400/15 p-3">
               <Avatar user={user} />
               <div className="min-w-0">
@@ -176,8 +175,9 @@ export default function Navbar() {
               </button>
             </div>
           </div>
-        </>
-      )}
+          </>
+        )}
+      </nav>
     </header>
   );
 }
