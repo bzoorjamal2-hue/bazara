@@ -50,6 +50,15 @@ export default function ProductsManager({ onCount }) {
 
   if (products === null) return <Spinner />;
 
+  // صورة مصغّرة: تعرض مشهد الفيديو إذا ما في صورة
+  const Thumb = ({ p, size }) => {
+    const img = p.imageUrl || (p.images && p.images[0]);
+    if (!img && p.videoUrl) {
+      return <video src={p.videoUrl} muted playsInline preload="metadata" className={`${size} rounded-lg object-cover`} />;
+    }
+    return <img src={img || PH} alt={p.name} className={`${size} rounded-lg object-cover`} />;
+  };
+
   const Badges = ({ p }) => (
     <span className="ms-2 inline-flex gap-1 align-middle">
       {p.featured && <span className="badge bg-gold-400/20 text-gold-200">★</span>}
@@ -86,7 +95,7 @@ export default function ProductsManager({ onCount }) {
                 <tr key={p.id} className="border-b border-white/5 last:border-0 hover:bg-white/5">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <img src={p.imageUrl || (p.images?.[0]) || PH} alt={p.name} className="h-10 w-10 rounded-lg object-cover" />
+                      <Thumb p={p} size="h-10 w-10" />
                       <span className="font-medium text-stone-100">{p.name}<Badges p={p} /></span>
                     </div>
                   </td>
@@ -106,7 +115,7 @@ export default function ProductsManager({ onCount }) {
           <div className="divide-y divide-white/5 sm:hidden">
             {products.map((p) => (
               <div key={p.id} className="flex items-center gap-3 p-4">
-                <img src={p.imageUrl || (p.images?.[0]) || PH} alt={p.name} className="h-12 w-12 rounded-lg object-cover" />
+                <Thumb p={p} size="h-12 w-12" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium text-stone-100">{p.name}</p>
                   <p className="text-xs text-stone-400">{t(`categories.${p.category}`)} · <span className="text-gold-300">{t('common.currency')}{p.price}</span></p>
