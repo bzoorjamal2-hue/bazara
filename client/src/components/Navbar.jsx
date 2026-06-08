@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -29,6 +29,23 @@ export default function Navbar() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  // عند التمرير: الشريط يلتصق بالأعلى بعرض كامل (بلا فراغ علوي) — وفوق يبقى طافياً
+  useEffect(() => {
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        setScrolled((prev) => (prev ? window.scrollY > 10 : window.scrollY > 40));
+        ticking = false;
+      });
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   // الشريط الخمري الفاخر على كل الموقع
   const pub = true;
@@ -68,7 +85,7 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50">
-      <nav className={`${pub ? 'pub-navbar' : 'glass-strong'} relative mx-auto mt-4 flex max-w-6xl items-center justify-between gap-1 rounded-2xl px-2.5 py-3 sm:gap-2 sm:px-6`}>
+      <nav className={`${pub ? 'pub-navbar' : 'glass-strong'} relative mx-auto flex items-center justify-between gap-1 px-2.5 py-3 transition-all duration-300 sm:gap-2 sm:px-6 ${scrolled ? 'mt-0 max-w-full rounded-none' : 'mt-4 max-w-6xl rounded-2xl'}`}>
         {/* للمستخدم: زر القائمة ☰ (مكان اللوجو) + اسم متجره. للزائر: شعار Bazara */}
         <div className="flex items-center gap-2.5">
           {user ? (
