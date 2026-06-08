@@ -94,6 +94,11 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
               className="w-full rounded-full border-0 bg-white py-2.5 pe-4 ps-10 text-[#2b2b2b] placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-cream/50"
             />
           </div>
+          {/* ☰ المُصغّر — يظهر تدريجياً عند التمرير */}
+          <div ref={compactWrapRef} className="shrink-0 overflow-hidden" style={{ width: 0, opacity: 0 }}>
+            <MenuBtn className="h-11 w-11" />
+          </div>
+          {/* السلة — آخر عنصر لتكون بأقصى الجهة محاذية لزر القائمة (☰) فوقها */}
           <button
             onClick={() => setOpen(true)}
             aria-label="cart"
@@ -106,10 +111,6 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
               </span>
             )}
           </button>
-          {/* ☰ المُصغّر — يظهر تدريجياً عند التمرير */}
-          <div ref={compactWrapRef} className="shrink-0 overflow-hidden" style={{ width: 0, opacity: 0 }}>
-            <MenuBtn className="h-11 w-11" />
-          </div>
         </div>
       </div>
 
