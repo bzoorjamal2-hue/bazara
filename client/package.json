@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "icons": "node scripts/gen-icons.mjs",
     "prebuild": "node scripts/gen-sitemap.mjs",
     "build": "vite build",
     "preview": "vite preview"
