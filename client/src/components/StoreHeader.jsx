@@ -19,20 +19,31 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
   const logoWrapRef = useRef(null);
   const compactWrapRef = useRef(null);
 
-  // حركة مربوطة بالتمرير (scroll-linked): صف الاسم يتقلّص تدريجياً مع إصبعك، والـ☰ المُصغّر يظهر تدريجياً
+  // حركة مربوطة بالتمرير مع تنعيم احترافي (smoothing/lerp):
+  // القيمة الحالية "تنساب" نحو هدف التمرير بدل القفز معه، مع منحنى easing ناعم —
+  // تظل الحلقة تشتغل حتى تستقر القيمة (يعطي إحساس انسيابي حتى بعد رفع الإصبع).
   useEffect(() => {
-    const RANGE = 120; // مسافة التمرير التي يكتمل خلالها الانكماش
+    const RANGE = 150; // مسافة التمرير التي يكتمل خلالها الانكماش (أطول = أنعم)
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const smoothstep = (t) => t * t * (3 - 2 * t); // منحنى ناعم بدل الخطّي
+    let target = Math.min(Math.max(window.scrollY / RANGE, 0), 1);
+    let cur = target;
     let raf = 0;
-    const apply = () => {
-      raf = 0;
-      const p = Math.min(Math.max(window.scrollY / RANGE, 0), 1);
+    let running = false;
+
+    const draw = () => {
+      // استيفاء أُسّي: القيمة الحالية تلحق الهدف بنعومة (معامل أصغر = أنعم وأبطأ)
+      cur += (target - cur) * (reduce ? 1 : 0.16);
+      if (Math.abs(target - cur) < 0.0006) cur = target;
+      const p = smoothstep(Math.min(Math.max(cur, 0), 1));
       const inv = 1 - p;
+
       const lw = logoWrapRef.current;
       if (lw) {
         lw.style.gridTemplateRows = inv + 'fr';
         lw.style.opacity = String(inv);
         lw.style.marginBottom = 12 * inv + 'px';
-        lw.style.transform = `translateY(${-8 * p}px)`;
+        lw.style.transform = `translate3d(0, ${-10 * p}px, 0)`;
       }
       const cw = compactWrapRef.current;
       if (cw) {
@@ -40,9 +51,22 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
         cw.style.opacity = String(p);
         cw.style.marginInlineStart = 10 * p + 'px';
       }
+
+      if (cur !== target) {
+        raf = requestAnimationFrame(draw);
+      } else {
+        running = false;
+        raf = 0;
+      }
     };
-    const onScroll = () => { if (!raf) raf = requestAnimationFrame(apply); };
-    apply();
+
+    const tick = () => { if (!running) { running = true; raf = requestAnimationFrame(draw); } };
+    const onScroll = () => {
+      target = Math.min(Math.max(window.scrollY / RANGE, 0), 1);
+      tick();
+    };
+
+    draw(); // رسم أولي
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => { window.removeEventListener('scroll', onScroll); if (raf) cancelAnimationFrame(raf); };
   }, []);
@@ -95,7 +119,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
             />
           </div>
           {/* ☰ المُصغّر — يظهر تدريجياً عند التمرير */}
-          <div ref={compactWrapRef} className="shrink-0 overflow-hidden" style={{ width: 0, opacity: 0 }}>
+          <div ref={compactWrapRef} className="shrink-0 overflow-hidden will-change-[width,opacity]" style={{ width: 0, opacity: 0 }}>
             <MenuBtn className="h-11 w-11" />
           </div>
           {/* السلة — آخر عنصر لتكون بأقصى الجهة محاذية لزر القائمة (☰) فوقها */}
