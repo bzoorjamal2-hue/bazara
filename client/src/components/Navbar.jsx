@@ -35,8 +35,8 @@ export default function Navbar() {
   const isHome = pathname === '/'; // على الرئيسية نعرض اسم Bazara (مش اسم المتجر)
 
   const isAdmin = subscription?.isAdmin;
-  // مسجّل دخول: اسم متجره — إلا على الصفحة الرئيسية فنعرض Bazara
-  const brandName = user && !isHome ? store?.name || t('app.name') : t('app.name');
+  // مسجّل دخول: اسم متجره — والمدير يظهر باسمه (حساب تحكّم) — وعلى الرئيسية نعرض Bazara
+  const brandName = user && !isHome ? (isAdmin ? user.name || t('app.name') : store?.name || t('app.name')) : t('app.name');
   const brandTo = user && !isHome ? '/dashboard' : '/';
 
   const handleLogout = async () => {
@@ -147,11 +147,11 @@ export default function Navbar() {
               <LanguageSwitcher />
             </div>
 
-            {/* الهوية */}
+            {/* الهوية — المدير يظهر باسمه وصورته (حساب تحكّم) */}
             <div className="mt-5 flex items-center gap-3 border-b border-cream/15 pb-4">
               {user.avatarUrl ? (
                 <img src={user.avatarUrl} alt={user.name} className="h-12 w-12 rounded-full border border-cream/40 object-cover" />
-              ) : store?.logoUrl ? (
+              ) : !isAdmin && store?.logoUrl ? (
                 <img src={store.logoUrl} alt={store.name} className="h-12 w-12 rounded-xl border border-cream/40 object-cover" />
               ) : (
                 <span className="flex h-12 w-12 items-center justify-center rounded-full border border-cream/40 bg-cream/15 text-lg font-bold text-cream">
@@ -159,8 +159,10 @@ export default function Navbar() {
                 </span>
               )}
               <div className="min-w-0">
-                <p className="truncate font-display text-lg font-bold text-cream">{store?.name || t('app.name')}</p>
-                <p className="truncate text-xs text-cream/60">{user.name}</p>
+                <p className="truncate font-display text-lg font-bold text-cream">
+                  {isAdmin ? user.name : store?.name || t('app.name')}
+                </p>
+                <p className="truncate text-xs text-cream/60">{isAdmin ? user.email : user.name}</p>
               </div>
             </div>
 
