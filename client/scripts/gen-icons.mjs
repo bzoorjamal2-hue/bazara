@@ -1,6 +1,7 @@
 // يولّد أيقونات PNG بأحجام مختلفة من icon-master.svg
 // عشان تشتغل على Safari (آيفون/آيباد) و Android التي لا تدعم أيقونة SVG.
 import sharp from 'sharp';
+import pngToIco from 'png-to-ico';
 import { readFileSync } from 'node:fs';
 
 const svg = readFileSync(new URL('./icon-master.svg', import.meta.url));
@@ -28,4 +29,10 @@ for (const [name, size] of favicons) {
   await sharp(svg, { density: 384 }).resize(size, size).png().toFile(out(name));
   console.log('icon:', name, size);
 }
+
+// favicon.ico (متعدّد الأحجام) — للطلب التلقائي /favicon.ico في كل المتصفحات
+const ico = await pngToIco(['public/favicon-16.png', 'public/favicon-32.png', 'public/favicon-48.png']);
+const { writeFileSync } = await import('node:fs');
+writeFileSync('public/favicon.ico', ico);
+console.log('icon: favicon.ico');
 console.log('done');
