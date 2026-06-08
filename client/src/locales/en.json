@@ -364,6 +364,8 @@
     "subStore": "Store link",
     "sendCodeBtn": "Send activation code",
     "codeSentTo": "Code sent to",
+    "saveChanges": "Save changes",
+    "subSaved": "Subscription saved; start and end dates updated.",
     "noSubscribers": "No subscribers yet."
   },
   "order": {

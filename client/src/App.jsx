@@ -1,53 +1,59 @@
+import { Suspense, lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import RequireSubscription from './components/RequireSubscription.jsx';
-import Home from './pages/Home.jsx';
-import Login from './pages/Login.jsx';
-import Register from './pages/Register.jsx';
-import ForgotPassword from './pages/ForgotPassword.jsx';
-import ResetPassword from './pages/ResetPassword.jsx';
-import Dashboard from './pages/Dashboard.jsx';
-import Subscribe from './pages/Subscribe.jsx';
-import StorePage from './pages/StorePage.jsx';
-import CategoryPage from './pages/CategoryPage.jsx';
-import ProductDetails from './pages/ProductDetails.jsx';
-import Wishlist from './pages/Wishlist.jsx';
-import PaymentCallback from './pages/PaymentCallback.jsx';
-import NotFound from './pages/NotFound.jsx';
+import Spinner from './components/Spinner.jsx';
+import Home from './pages/Home.jsx'; // الصفحة الرئيسية تبقى فورية (أول ما يفتح الزائر)
+
+// باقي الصفحات تُحمّل عند الحاجة فقط (code-splitting) — يقلّل حجم التحميل الأولي كثيراً
+const Login = lazy(() => import('./pages/Login.jsx'));
+const Register = lazy(() => import('./pages/Register.jsx'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword.jsx'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword.jsx'));
+const Dashboard = lazy(() => import('./pages/Dashboard.jsx'));
+const Subscribe = lazy(() => import('./pages/Subscribe.jsx'));
+const StorePage = lazy(() => import('./pages/StorePage.jsx'));
+const CategoryPage = lazy(() => import('./pages/CategoryPage.jsx'));
+const ProductDetails = lazy(() => import('./pages/ProductDetails.jsx'));
+const Wishlist = lazy(() => import('./pages/Wishlist.jsx'));
+const PaymentCallback = lazy(() => import('./pages/PaymentCallback.jsx'));
+const NotFound = lazy(() => import('./pages/NotFound.jsx'));
 
 export default function App() {
   return (
     <Layout>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset" element={<ResetPassword />} />
-        <Route path="/wishlist" element={<Wishlist />} />
-        <Route path="/payment/callback" element={<PaymentCallback />} />
-        <Route
-          path="/dashboard"
-          element={
-            <RequireSubscription>
-              <Dashboard />
-            </RequireSubscription>
-          }
-        />
-        <Route
-          path="/subscribe"
-          element={
-            <ProtectedRoute>
-              <Subscribe />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/store/:slug" element={<StorePage />} />
-        <Route path="/category/:cat" element={<CategoryPage />} />
-        <Route path="/product/:id" element={<ProductDetails />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <Suspense fallback={<Spinner full />}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset" element={<ResetPassword />} />
+          <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/payment/callback" element={<PaymentCallback />} />
+          <Route
+            path="/dashboard"
+            element={
+              <RequireSubscription>
+                <Dashboard />
+              </RequireSubscription>
+            }
+          />
+          <Route
+            path="/subscribe"
+            element={
+              <ProtectedRoute>
+                <Subscribe />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/store/:slug" element={<StorePage />} />
+          <Route path="/category/:cat" element={<CategoryPage />} />
+          <Route path="/product/:id" element={<ProductDetails />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
     </Layout>
   );
 }

@@ -231,6 +231,28 @@ export async function listSubscribers(req, res, next) {
 }
 
 // حذف حساب مشترك نهائياً (للمدير) — يحذف معه المتجر والمنتجات (CASCADE)
+// تعيين/تغيير اشتراك مشترك مباشرة (للمدير):
+// يضبط الخطة، وتاريخ البدء = وقت الضغط الفعلي، والانتهاء = البدء + مدة الخطة (شهر/سنة).
+export async function setSubscription(req, res, next) {
+  const email = (req.body.email || '').trim().toLowerCase();
+  const { plan } = req.body;
+  if (!email) return res.status(400).json({ error: 'البريد مطلوب.' });
+  if (!PLANS[plan]) return res.status(400).json({ error: 'خطة غير صالحة.' });
+  if (isAdminEmail(email)) return res.status(400).json({ error: 'لا يمكن تعديل اشتراك حساب المدير (اشتراكه مدى الحياة).' });
+  try {
+    const from = new Date(); // وقت الضغط الفعلي
+    const end = planPeriodEnd(plan, from);
+    const r = await query(
+      "UPDATE users SET subscription_status='active', subscription_plan=$1, subscription_started_at=$2, current_period_end=$3 WHERE lower(email)=$4 RETURNING id",
+      [plan, from, end, email]
+    );
+    if (r.rows.length === 0) return res.status(404).json({ error: 'لا يوجد حساب بهذا البريد.' });
+    res.json({ message: 'تم تحديث الاشتراك.', plan, startedAt: from, currentPeriodEnd: end });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function deleteSubscriber(req, res, next) {
   const email = (req.body.email || '').trim().toLowerCase();
   if (!email) return res.status(400).json({ error: 'البريد مطلوب.' });

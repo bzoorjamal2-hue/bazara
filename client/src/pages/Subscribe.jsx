@@ -7,8 +7,8 @@ import Seo from '../components/Seo.jsx';
 import Spinner from '../components/Spinner.jsx';
 
 const PLANS = [
-  { key: 'monthly', price: 10, per: 'perMonth' },
-  { key: 'yearly', price: 100, per: 'perYear', badge: 'save2months' },
+  { key: 'monthly', price: 20, per: 'perMonth' },
+  { key: 'yearly', price: 250, per: 'perYear' },
 ];
 
 export default function Subscribe() {

@@ -7,10 +7,11 @@ function fmt(d) {
   return d ? new Date(d).toLocaleString() : '—';
 }
 
-function SubRow({ s, onDeleted }) {
+function SubRow({ s, onDeleted, onUpdated }) {
   const { t } = useTranslation();
   const [plan, setPlan] = useState(s.plan || 'monthly');
   const [busy, setBusy] = useState(false);
+  const [saveBusy, setSaveBusy] = useState(false);
   const [msg, setMsg] = useState('');
   const [err, setErr] = useState('');
   const [confirmDel, setConfirmDel] = useState(false);
@@ -28,6 +29,29 @@ function SubRow({ s, onDeleted }) {
       setBusy(false);
     }
   };
+
+  // حفظ التعديلات: يضبط الخطة ويعيد ضبط تاريخ البدء = الآن والانتهاء = الآن + المدة
+  const save = async () => {
+    setMsg(''); setErr(''); setSaveBusy(true);
+    try {
+      const r = await api.post('/subscription/set-subscription', { email: s.email, plan });
+      onUpdated?.(s.email, {
+        plan,
+        status: 'active',
+        active: true,
+        startedAt: r.data.startedAt,
+        currentPeriodEnd: r.data.currentPeriodEnd,
+      });
+      setMsg(t('admin.subSaved'));
+      setTimeout(() => setMsg(''), 3000);
+    } catch (e) {
+      setErr(getErrorMessage(e, t('errors.generic')));
+    } finally {
+      setSaveBusy(false);
+    }
+  };
+
+  const dirty = plan !== (s.plan || 'monthly');
 
   const remove = async () => {
     setErr(''); setDelBusy(true);
@@ -86,10 +110,14 @@ function SubRow({ s, onDeleted }) {
       {!s.isAdmin && (
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <select value={plan} onChange={(e) => setPlan(e.target.value)} className="input !w-auto !py-1.5 text-sm">
-            <option value="monthly" className="bg-ink-800">{t('subscription.monthly')} ($10)</option>
-            <option value="yearly" className="bg-ink-800">{t('subscription.yearly')} ($100)</option>
+            <option value="monthly" className="bg-ink-800">{t('subscription.monthly')} ($20)</option>
+            <option value="yearly" className="bg-ink-800">{t('subscription.yearly')} ($250)</option>
           </select>
-          <button onClick={send} disabled={busy} className="btn-primary !py-1.5 text-sm">
+          {/* حفظ التعديلات: يفعّل الخطة المختارة ويعيد ضبط تاريخ البدء/الانتهاء للوقت الحالي */}
+          <button onClick={save} disabled={saveBusy} className={`!py-1.5 text-sm ${dirty ? 'btn-primary' : 'btn-ghost'}`}>
+            {saveBusy ? t('common.loading') : `💾 ${t('admin.saveChanges')}`}
+          </button>
+          <button onClick={send} disabled={busy} className="btn-ghost !py-1.5 text-sm">
             {busy ? t('common.loading') : `✉️ ${t('admin.sendCodeBtn')}`}
           </button>
 
@@ -134,7 +162,12 @@ export default function SubscribersManager() {
       ) : (
         <div className="space-y-3">
           {subs?.map((s) => (
-            <SubRow key={s.email} s={s} onDeleted={(email) => setSubs((prev) => prev.filter((x) => x.email !== email))} />
+            <SubRow
+              key={s.email}
+              s={s}
+              onDeleted={(email) => setSubs((prev) => prev.filter((x) => x.email !== email))}
+              onUpdated={(email, patch) => setSubs((prev) => prev.map((x) => (x.email === email ? { ...x, ...patch } : x)))}
+            />
           ))}
         </div>
       )}
