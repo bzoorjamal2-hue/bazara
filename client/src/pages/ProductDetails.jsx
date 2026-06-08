@@ -70,8 +70,9 @@ export default function ProductDetails() {
         {/* معرض الصور */}
         <div>
           {hasImages && (
-          <div className="relative aspect-square overflow-hidden rounded-2xl bg-ink-800">
-            <img src={gallery[active]} alt={product.name} className="h-full w-full object-cover" onError={(e) => (e.currentTarget.src = PH)} />
+          <div className="relative mx-auto w-fit">
+            {/* الصورة تظهر بحجمها الطبيعي (مثل الفيديو) بلا قص */}
+            <img src={gallery[active]} alt={product.name} className="block max-h-[75vh] w-auto max-w-full rounded-2xl bg-ink-800 object-contain" onError={(e) => (e.currentTarget.src = PH)} />
             {hasDiscount && <span className="badge absolute start-3 top-3 bg-red-500 text-white">-{Math.round((1 - product.price / product.oldPrice) * 100)}%</span>}
           </div>
           )}
