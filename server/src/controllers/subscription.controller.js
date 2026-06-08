@@ -278,6 +278,8 @@ export async function addSubscriptionDays(req, res, next) {
     // إن كان لسا فعّالاً نمدّد من تاريخ الانتهاء الحالي، وإن كان منتهياً نبدأ من الآن
     const base = cpe && cpe > now ? cpe : now;
     const end = new Date(base.getTime() + days * 24 * 60 * 60 * 1000);
+    // اضبط ساعة الانتهاء على لحظة الإضافة (أيام كاملة) — يبقى نفس عدد الأيام بدقّة من وقت الضغط
+    end.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
 
     await query(
       "UPDATE users SET subscription_status='active', current_period_end=$1 WHERE id=$2",
