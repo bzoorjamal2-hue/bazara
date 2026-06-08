@@ -35,6 +35,12 @@ export function AuthProvider({ children }) {
     return await refresh();
   };
 
+  // دخول + تجديد بكود التفعيل (للمشترك المنتهي اشتراكه)
+  const loginWithCode = async (email, password, code) => {
+    await api.post('/auth/login-with-code', { email, password, code });
+    return await refresh();
+  };
+
   // التسجيل يُدخِل المستخدم تلقائياً ليصل مباشرةً لصفحة الاشتراك/الدفع
   const register = async (payload) => {
     await api.post('/auth/register', payload);
@@ -54,7 +60,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, store, subscription, loading, login, register, logout, refresh, updateProfile, setStore }}>
+    <AuthContext.Provider value={{ user, store, subscription, loading, login, loginWithCode, register, logout, refresh, updateProfile, setStore }}>
       {children}
     </AuthContext.Provider>
   );

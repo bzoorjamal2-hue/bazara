@@ -37,6 +37,12 @@ export const loginRules = [
   body('password').notEmpty().withMessage('كلمة المرور مطلوبة.'),
 ];
 
+export const loginWithCodeRules = [
+  body('email').trim().isEmail().withMessage('بريد إلكتروني غير صالح.').normalizeEmail(),
+  body('password').notEmpty().withMessage('كلمة المرور مطلوبة.'),
+  body('code').trim().notEmpty().withMessage('كود التفعيل مطلوب.'),
+];
+
 export const changePasswordRules = [
   body('currentPassword').notEmpty().withMessage('كلمة المرور الحالية مطلوبة.'),
   body('newPassword').matches(STRONG_PASSWORD).withMessage('كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل وتحتوي على حرف ورقم ورمز.'),

@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import pool, { query } from '../config/db.js';
 import { generateUniqueStoreSlug } from '../utils/slug.js';
-import { generateSubscriberCode, isUserActive, daysRemaining, isAdminEmail } from '../utils/subscription.js';
+import { generateSubscriberCode, isUserActive, daysRemaining, isAdminEmail, planPeriodEnd } from '../utils/subscription.js';
 import { sendMail, isMailConfigured } from '../utils/mail.js';
 
 const hashToken = (t) => crypto.createHash('sha256').update(t).digest('hex');
@@ -72,7 +72,7 @@ export async function login(req, res, next) {
   const { email, password } = req.body;
   try {
     const result = await query(
-      'SELECT id, name, email, password_hash, avatar_url FROM users WHERE email = $1',
+      'SELECT id, name, email, password_hash, avatar_url, subscription_status, current_period_end FROM users WHERE email = $1',
       [email]
     );
     const user = result.rows[0];
@@ -82,6 +82,54 @@ export async function login(req, res, next) {
     if (!user) return invalid();
     const match = await bcrypt.compare(password, user.password_hash);
     if (!match) return invalid();
+
+    // منع الدخول إذا كان الاشتراك منتهياً أو غير مفعّل (لغير المدير) — يجدّد بكود من الإدارة
+    if (!isUserActive(user)) {
+      return res.status(403).json({
+        error: 'اشتراكك منتهٍ. أدخل كود التجديد الذي أرسلته لك الإدارة لتفعيل حسابك.',
+        code: 'SUBSCRIPTION_REQUIRED',
+      });
+    }
+
+    const token = signToken(user);
+    res.cookie('token', token, cookieOptions());
+    res.json({ user: { id: user.id, name: user.name, email: user.email, avatarUrl: user.avatar_url } });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// دخول + تجديد بكود التفعيل معاً (للمشترك المنتهي): يتحقّق من البيانات + الكود، يفعّل، ويسجّل الدخول.
+export async function loginWithCode(req, res, next) {
+  const { email, password } = req.body;
+  const code = (req.body.code || '').trim().toUpperCase();
+  try {
+    const result = await query(
+      'SELECT id, name, email, password_hash, avatar_url, current_period_end FROM users WHERE email = $1',
+      [email]
+    );
+    const user = result.rows[0];
+    if (!user) return res.status(401).json({ error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.' });
+    const match = await bcrypt.compare(password, user.password_hash);
+    if (!match) return res.status(401).json({ error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.' });
+
+    // تحقّق كود التفعيل
+    const r = await query('SELECT * FROM activation_codes WHERE code = $1', [code]);
+    const c = r.rows[0];
+    if (!c) return res.status(400).json({ error: 'كود التفعيل غير صحيح.' });
+    if (c.used) return res.status(400).json({ error: 'هذا الكود مُستخدَم مسبقاً.' });
+
+    // فعّل الاشتراك: من الآن + مدة الخطة + الوقت المتبقّي (إن وُجد)
+    const from = new Date();
+    const cpe = user.current_period_end ? new Date(user.current_period_end) : null;
+    const remainingMs = cpe ? Math.max(0, cpe.getTime() - from.getTime()) : 0;
+    const end = new Date(planPeriodEnd(c.plan, from).getTime() + remainingMs);
+
+    await query(
+      "UPDATE users SET subscription_status='active', subscription_plan=$1, current_period_end=$2, subscription_started_at=$3 WHERE id=$4",
+      [c.plan, end, from, user.id]
+    );
+    await query('UPDATE activation_codes SET used=true, used_by=$1, used_at=now() WHERE id=$2', [user.id, c.id]);
 
     const token = signToken(user);
     res.cookie('token', token, cookieOptions());

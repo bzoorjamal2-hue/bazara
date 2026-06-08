@@ -3,6 +3,7 @@ import rateLimit from 'express-rate-limit';
 import {
   register,
   login,
+  loginWithCode,
   logout,
   me,
   updateProfile,
@@ -17,6 +18,7 @@ import {
   handleValidation,
   registerRules,
   loginRules,
+  loginWithCodeRules,
   profileRules,
   changePasswordRules,
   changeEmailRules,
@@ -38,6 +40,7 @@ const authLimiter = rateLimit({
 
 router.post('/register', authLimiter, registerRules, handleValidation, register);
 router.post('/login', authLimiter, loginRules, handleValidation, login);
+router.post('/login-with-code', authLimiter, loginWithCodeRules, handleValidation, loginWithCode);
 router.post('/logout', logout);
 router.get('/me', requireAuth, me);
 router.put('/profile', requireAuth, profileRules, handleValidation, updateProfile);

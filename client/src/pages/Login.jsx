@@ -7,13 +7,15 @@ import Seo from '../components/Seo.jsx';
 
 export default function Login() {
   const { t } = useTranslation();
-  const { login } = useAuth();
+  const { login, loginWithCode } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const justRegistered = location.state?.registered;
   const [form, setForm] = useState({ email: location.state?.email || '', password: '' });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [needsCode, setNeedsCode] = useState(false); // اشتراك منتهٍ: يطلب كود التجديد
+  const [code, setCode] = useState('');
   const emailRef = useRef(null);
 
   const submit = async (e) => {
@@ -30,6 +32,28 @@ export default function Login() {
       // غير المشترك يُوجَّه لصفحة الاشتراك لتفعيل متجره
       if (data?.subscription && !data.subscription.active) navigate('/subscribe');
       else navigate('/dashboard');
+    } catch (err) {
+      // اشتراك منتهٍ → نُظهر خانة كود التجديد بدل رسالة خطأ عامة
+      if (err?.response?.status === 403 && err?.response?.data?.code === 'SUBSCRIPTION_REQUIRED') {
+        setNeedsCode(true);
+        setError('');
+      } else {
+        setError(getErrorMessage(err, t('errors.generic')));
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const renew = async (e) => {
+    e.preventDefault();
+    setError('');
+    const email = (form.email || emailRef.current?.value || '').trim();
+    if (!code.trim()) { setError(t('subscription.enterCode')); return; }
+    setBusy(true);
+    try {
+      await loginWithCode(email, form.password, code.trim());
+      navigate('/dashboard');
     } catch (err) {
       setError(getErrorMessage(err, t('errors.generic')));
     } finally {
@@ -50,13 +74,20 @@ export default function Login() {
           </div>
         )}
 
+        {needsCode && (
+          <div className="mb-4 rounded-xl border border-gold-400/40 bg-gold-400/10 px-4 py-3 text-sm text-gold-100">
+            <p className="font-bold">{t('auth.expiredTitle')}</p>
+            <p className="mt-1 text-gold-200/80">{t('auth.expiredDesc')}</p>
+          </div>
+        )}
+
         {error && (
           <div className="mb-4 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">
             {error}
           </div>
         )}
 
-        <form onSubmit={submit} className="space-y-4">
+        <form onSubmit={needsCode ? renew : submit} className="space-y-4">
           <div>
             <label className="label">{t('auth.email')}</label>
             <input
@@ -83,8 +114,24 @@ export default function Login() {
               autoComplete="current-password"
             />
           </div>
+          {needsCode && (
+            <div>
+              <label className="label">🔑 {t('auth.renewCodeLabel')}</label>
+              <input
+                type="text"
+                dir="ltr"
+                inputMode="numeric"
+                maxLength={6}
+                className="input text-center text-2xl font-bold tracking-[0.5em]"
+                placeholder="••••••"
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              />
+            </div>
+          )}
+
           <button type="submit" disabled={busy} className="btn-primary w-full">
-            {busy ? t('common.loading') : t('auth.submitLogin')}
+            {busy ? t('common.loading') : needsCode ? t('auth.renewBtn') : t('auth.submitLogin')}
           </button>
         </form>
 

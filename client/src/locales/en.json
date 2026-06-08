@@ -103,7 +103,11 @@
     "resetSubmit": "Set password",
     "resetDone": "Password set successfully! Log in now.",
     "registeredTitle": "Account created successfully! 🎉",
-    "registeredDesc": "Log in now to access your store and dashboard."
+    "registeredDesc": "Log in now to access your store and dashboard.",
+    "expiredTitle": "Your subscription has expired ⏳",
+    "expiredDesc": "To sign in again, contact the admin and pay, then enter the renewal code you receive below.",
+    "renewCodeLabel": "Renewal code (6 digits)",
+    "renewBtn": "Renew & sign in"
   },
   "dashboard": {
     "title": "Dashboard",
