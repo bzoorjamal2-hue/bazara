@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useCart } from '../context/CartContext.jsx';
@@ -16,6 +16,25 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
   const { count, setOpen } = useCart();
   const { count: wishCount } = useWishlist();
   const [drawer, setDrawer] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+
+  // عند التمرير لأسفل: يختفي صف اسم/شعار المتجر ويبقى هيدر مُصغّر (☰ + سلة + بحث)
+  useEffect(() => {
+    const onScroll = () => setCollapsed(window.scrollY > 70);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const MenuBtn = ({ className = '' }) => (
+    <button
+      onClick={() => setDrawer(true)}
+      aria-label="menu"
+      className={`flex items-center justify-center rounded-full bg-cream text-wine shadow transition hover:bg-white ${className}`}
+    >
+      <MenuIcon className="h-6 w-6" />
+    </button>
+  );
 
   const pick = (c) => {
     setCat(c);
@@ -26,25 +45,21 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
   return (
     <header className="sticky top-0 z-50 -mx-4 -mt-8 mb-5 bg-wine-dark shadow-lg sm:-mx-6">
       <div className="mx-auto max-w-6xl px-4 py-3 sm:px-6">
-        {/* الصف الأول: اسم/شعار المتجر (يمين) + قائمة ☰ (يسار) */}
-        <div className="flex items-center justify-between gap-3">
-          <Link to={`/store/${store.slug}`} onClick={() => setCat('all')} className="flex items-center gap-2.5">
-            {store.logoUrl && (
-              <img src={store.logoUrl} alt={store.name} className="h-10 w-10 rounded-xl border border-cream/30 object-cover" />
-            )}
-            <span className="font-display text-2xl font-bold tracking-wide text-cream">{store.name}</span>
-          </Link>
-          <button
-            onClick={() => setDrawer(true)}
-            aria-label="menu"
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-cream text-wine shadow transition hover:bg-white"
-          >
-            <MenuIcon className="h-6 w-6" />
-          </button>
+        {/* الصف الأول: اسم/شعار المتجر — يختفي بنعومة عند التمرير */}
+        <div className={`overflow-hidden transition-all duration-300 ${collapsed ? 'max-h-0 opacity-0' : 'mb-3 max-h-20 opacity-100'}`}>
+          <div className="flex items-center justify-between gap-3">
+            <Link to={`/store/${store.slug}`} onClick={() => setCat('all')} className="flex items-center gap-2.5">
+              {store.logoUrl && (
+                <img src={store.logoUrl} alt={store.name} className="h-10 w-10 rounded-xl border border-cream/30 object-cover" />
+              )}
+              <span className="font-display text-2xl font-bold tracking-wide text-cream">{store.name}</span>
+            </Link>
+            <MenuBtn className="h-11 w-11" />
+          </div>
         </div>
 
-        {/* الصف الثاني: بحث عريض (يمين) + سلة (يسار) */}
-        <div className="mt-3 flex items-center gap-2.5">
+        {/* صف البحث: بحث (يمين) + سلة (يسار) + ☰ مُصغّر عند التمرير */}
+        <div className="flex items-center gap-2.5">
           <div className="relative flex-1">
             <span className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-wine/50">
               <SearchIcon className="h-5 w-5" />
@@ -68,6 +83,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
               </span>
             )}
           </button>
+          {collapsed && <MenuBtn className="h-11 w-11 shrink-0" />}
         </div>
       </div>
 
