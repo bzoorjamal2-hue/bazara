@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useCart } from '../context/CartContext.jsx';
@@ -16,23 +16,35 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
   const { count, setOpen } = useCart();
   const { count: wishCount } = useWishlist();
   const [drawer, setDrawer] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+  const logoWrapRef = useRef(null);
+  const compactWrapRef = useRef(null);
 
-  // عند التمرير لأسفل: يختفي صف اسم/شعار المتجر ويبقى هيدر مُصغّر — بنعومة (rAF + هامش أمان)
+  // حركة مربوطة بالتمرير (scroll-linked): صف الاسم يتقلّص تدريجياً مع إصبعك، والـ☰ المُصغّر يظهر تدريجياً
   useEffect(() => {
-    let ticking = false;
-    const onScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        const y = window.scrollY;
-        setCollapsed((prev) => (prev ? y > 30 : y > 90)); // هامش أمان يمنع الرفرفة قرب الحدّ
-        ticking = false;
-      });
+    const RANGE = 120; // مسافة التمرير التي يكتمل خلالها الانكماش
+    let raf = 0;
+    const apply = () => {
+      raf = 0;
+      const p = Math.min(Math.max(window.scrollY / RANGE, 0), 1);
+      const inv = 1 - p;
+      const lw = logoWrapRef.current;
+      if (lw) {
+        lw.style.gridTemplateRows = inv + 'fr';
+        lw.style.opacity = String(inv);
+        lw.style.marginBottom = 12 * inv + 'px';
+        lw.style.transform = `translateY(${-8 * p}px)`;
+      }
+      const cw = compactWrapRef.current;
+      if (cw) {
+        cw.style.width = 44 * p + 'px';
+        cw.style.opacity = String(p);
+        cw.style.marginInlineStart = 10 * p + 'px';
+      }
     };
-    onScroll();
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(apply); };
+    apply();
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    return () => { window.removeEventListener('scroll', onScroll); if (raf) cancelAnimationFrame(raf); };
   }, []);
 
   const MenuBtn = ({ className = '' }) => (
@@ -54,9 +66,9 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
   return (
     <header className="sticky top-0 z-50 -mx-4 -mt-8 mb-5 bg-wine-dark shadow-lg sm:-mx-6">
       <div className="mx-auto max-w-6xl px-4 py-3 sm:px-6">
-        {/* الصف الأول: اسم/شعار المتجر — يختفي بنعومة عند التمرير (grid-rows) */}
-        <div className={`grid transition-all duration-300 ease-out ${collapsed ? 'grid-rows-[0fr] opacity-0' : 'mb-3 grid-rows-[1fr] opacity-100'}`}>
-          <div className="overflow-hidden">
+        {/* الصف الأول: اسم/شعار المتجر — يتقلّص تدريجياً مع التمرير */}
+        <div ref={logoWrapRef} className="grid will-change-transform" style={{ gridTemplateRows: '1fr', marginBottom: '12px' }}>
+          <div className="min-h-0 overflow-hidden">
             <div className="flex items-center justify-between gap-3">
               <Link to={`/store/${store.slug}`} onClick={() => setCat('all')} className="flex items-center gap-2.5">
                 {store.logoUrl && (
@@ -94,7 +106,10 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
               </span>
             )}
           </button>
-          {collapsed && <MenuBtn className="h-11 w-11 shrink-0" />}
+          {/* ☰ المُصغّر — يظهر تدريجياً عند التمرير */}
+          <div ref={compactWrapRef} className="shrink-0 overflow-hidden" style={{ width: 0, opacity: 0 }}>
+            <MenuBtn className="h-11 w-11" />
+          </div>
         </div>
       </div>
 
