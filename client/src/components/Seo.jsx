@@ -2,7 +2,8 @@ import { Helmet } from 'react-helmet-async';
 
 // مكوّن SEO ديناميكي: يضبط العنوان والوصف ووسوم Open Graph لكل صفحة/متجر.
 export default function Seo({ title, description, image, url, type = 'website' }) {
-  const fullTitle = title ? `${title} — Bazara` : 'Bazara — منصة الأزياء الفاخرة';
+  // نتجنّب تكرار الاسم (Bazara — Bazara) على الصفحة الرئيسية
+  const fullTitle = !title || title === 'Bazara' ? 'Bazara — وجهتك للأزياء الفاخرة' : `${title} — Bazara`;
   const desc = description || 'Bazara: منصة المتاجر الإلكترونية للأزياء الفاخرة.';
   const canonical = url || (typeof window !== 'undefined' ? window.location.href : '');
 
