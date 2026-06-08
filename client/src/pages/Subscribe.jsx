@@ -93,10 +93,12 @@ export default function Subscribe() {
             <input
               type="text"
               dir="ltr"
-              className="input text-center text-lg tracking-widest"
-              placeholder="BZ-XXXX-XXXX"
+              inputMode="numeric"
+              maxLength={6}
+              className="input text-center text-2xl font-bold tracking-[0.5em]"
+              placeholder="••••••"
               value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
             />
             <p className="text-xs text-stone-400">{t('subscription.codeHint')}</p>
             <button type="submit" disabled={busy} className="btn-primary w-full">

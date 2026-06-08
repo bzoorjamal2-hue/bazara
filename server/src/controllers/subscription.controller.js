@@ -100,11 +100,9 @@ export async function requestSubscription(req, res, next) {
   }
 }
 
-// توليد كود عشوائي بصيغة BZ-XXXX-XXXX
+// توليد كود تفعيل عشوائي مكوّن من 6 أرقام
 function genCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  const part = () => Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-  return `BZ-${part()}-${part()}`;
+  return Array.from({ length: 6 }, () => Math.floor(Math.random() * 10)).join('');
 }
 
 // المشترك يُدخل كود التفعيل بعد التحويل
