@@ -1,18 +1,28 @@
-// شعار Bazara: حرف B بخط سيرف فاخر داخل شارة ذهبية متدرّجة مع حلقة رفيعة.
+// شعار Bazara: دائرة عاجية أنيقة بحلقة ذهبية + حرف B خمري + قوس ذهبي ناعم.
 export default function Logo({ className = 'h-9 w-9' }) {
   return (
-    <span
-      className={`${className} relative inline-flex items-center justify-center rounded-xl shadow-gold`}
-      style={{ background: 'linear-gradient(135deg,#f6edcf 0%,#e0c25f 40%,#b8932c 100%)' }}
-    >
-      {/* حلقة داخلية رفيعة للعمق */}
-      <span className="pointer-events-none absolute inset-[3px] rounded-[8px] border border-ink-950/25" />
-      <span
-        className="relative font-extrabold leading-none text-ink-950"
-        style={{ fontFamily: '"Playfair Display", serif', fontSize: '1.15em' }}
+    <svg viewBox="0 0 100 100" className={className} aria-hidden="true">
+      <defs>
+        <linearGradient id="bazaraGold" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#e6c878" />
+          <stop offset="0.5" stopColor="#d4af37" />
+          <stop offset="1" stopColor="#b8932c" />
+        </linearGradient>
+      </defs>
+      <circle cx="50" cy="50" r="47" fill="#F8F3EC" stroke="url(#bazaraGold)" strokeWidth="3" />
+      <text
+        x="50"
+        y="52"
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontFamily="'Playfair Display', serif"
+        fontWeight="800"
+        fontSize="50"
+        fill="#5C1A2E"
       >
         B
-      </span>
-    </span>
+      </text>
+      <path d="M33 70 Q50 78 67 70" fill="none" stroke="url(#bazaraGold)" strokeWidth="2.5" strokeLinecap="round" />
+    </svg>
   );
 }
