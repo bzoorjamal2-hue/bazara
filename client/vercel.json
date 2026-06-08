@@ -21,10 +21,6 @@
       "source": "/sitemap.xml",
       "destination": "https://bazara-hwux.onrender.com/sitemap.xml"
     },
-    {
-      "source": "/robots.txt",
-      "destination": "https://bazara-hwux.onrender.com/robots.txt"
-    },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
