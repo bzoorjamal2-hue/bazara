@@ -260,6 +260,35 @@ export async function setSubscription(req, res, next) {
   }
 }
 
+// إضافة أيام على اشتراك مشترك (للمدير): تمدّد تاريخ الانتهاء بدقّة (1–365 يوم) دون تغيير الخطة.
+export async function addSubscriptionDays(req, res, next) {
+  const email = (req.body.email || '').trim().toLowerCase();
+  const days = Number(req.body.days);
+  if (!email) return res.status(400).json({ error: 'البريد مطلوب.' });
+  if (!Number.isInteger(days) || days < 1 || days > 365) {
+    return res.status(400).json({ error: 'عدد أيام غير صالح (من 1 إلى 365).' });
+  }
+  if (isAdminEmail(email)) return res.status(400).json({ error: 'لا يمكن تعديل اشتراك حساب المدير.' });
+  try {
+    const cur = await query('SELECT id, current_period_end FROM users WHERE lower(email) = $1', [email]);
+    if (cur.rows.length === 0) return res.status(404).json({ error: 'لا يوجد حساب بهذا البريد.' });
+
+    const now = new Date();
+    const cpe = cur.rows[0].current_period_end ? new Date(cur.rows[0].current_period_end) : null;
+    // إن كان لسا فعّالاً نمدّد من تاريخ الانتهاء الحالي، وإن كان منتهياً نبدأ من الآن
+    const base = cpe && cpe > now ? cpe : now;
+    const end = new Date(base.getTime() + days * 24 * 60 * 60 * 1000);
+
+    await query(
+      "UPDATE users SET subscription_status='active', current_period_end=$1 WHERE id=$2",
+      [end, cur.rows[0].id]
+    );
+    res.json({ message: 'تمت إضافة الأيام.', currentPeriodEnd: end, addedDays: days });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function deleteSubscriber(req, res, next) {
   const email = (req.body.email || '').trim().toLowerCase();
   if (!email) return res.status(400).json({ error: 'البريد مطلوب.' });

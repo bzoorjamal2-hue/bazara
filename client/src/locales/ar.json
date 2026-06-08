@@ -370,6 +370,10 @@
     "codeSentTo": "تم إرسال الكود إلى",
     "saveChanges": "حفظ التعديلات",
     "subSaved": "تم حفظ الاشتراك وضبط تاريخ البدء والانتهاء.",
+    "addDaysBtn": "إضافة أيام",
+    "daysPlaceholder": "أيام",
+    "daysRange": "أدخل عدد أيام بين 1 و365.",
+    "daysAdded": "تمت إضافة {{count}} يوم على الاشتراك.",
     "noSubscribers": "لا يوجد مشتركون بعد."
   },
   "order": {

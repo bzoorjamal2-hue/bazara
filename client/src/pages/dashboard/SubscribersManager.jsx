@@ -10,8 +10,10 @@ function fmt(d) {
 function SubRow({ s, onDeleted, onUpdated }) {
   const { t } = useTranslation();
   const [plan, setPlan] = useState(s.plan || 'monthly');
+  const [days, setDays] = useState('');
   const [busy, setBusy] = useState(false);
   const [saveBusy, setSaveBusy] = useState(false);
+  const [daysBusy, setDaysBusy] = useState(false);
   const [msg, setMsg] = useState('');
   const [err, setErr] = useState('');
   const [confirmDel, setConfirmDel] = useState(false);
@@ -48,6 +50,25 @@ function SubRow({ s, onDeleted, onUpdated }) {
       setErr(getErrorMessage(e, t('errors.generic')));
     } finally {
       setSaveBusy(false);
+    }
+  };
+
+  // إضافة أيام إضافية (1–365) على تاريخ الانتهاء الحالي
+  const addDays = async () => {
+    setMsg(''); setErr('');
+    const n = parseInt(days, 10);
+    if (!n || n < 1 || n > 365) { setErr(t('admin.daysRange')); return; }
+    setDaysBusy(true);
+    try {
+      const r = await api.post('/subscription/add-days', { email: s.email, days: n });
+      onUpdated?.(s.email, { status: 'active', active: true, currentPeriodEnd: r.data.currentPeriodEnd });
+      setDays('');
+      setMsg(t('admin.daysAdded', { count: n }));
+      setTimeout(() => setMsg(''), 3000);
+    } catch (e) {
+      setErr(getErrorMessage(e, t('errors.generic')));
+    } finally {
+      setDaysBusy(false);
     }
   };
 
@@ -120,6 +141,22 @@ function SubRow({ s, onDeleted, onUpdated }) {
           <button onClick={send} disabled={busy} className="btn-ghost !py-1.5 text-sm">
             {busy ? t('common.loading') : `✉️ ${t('admin.sendCodeBtn')}`}
           </button>
+
+          {/* إضافة أيام إضافية على الاشتراك (1–365) */}
+          <span className="inline-flex items-center gap-1.5">
+            <input
+              type="text"
+              inputMode="numeric"
+              maxLength={3}
+              value={days}
+              onChange={(e) => setDays(e.target.value.replace(/\D/g, '').slice(0, 3))}
+              placeholder={t('admin.daysPlaceholder')}
+              className="input !w-24 !py-1.5 text-center text-sm"
+            />
+            <button onClick={addDays} disabled={daysBusy} className="btn-primary !py-1.5 text-sm">
+              {daysBusy ? t('common.loading') : `➕ ${t('admin.addDaysBtn')}`}
+            </button>
+          </span>
 
           {/* حذف الحساب (تأكيد بخطوتين) */}
           {confirmDel ? (

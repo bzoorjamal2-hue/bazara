@@ -370,6 +370,10 @@
     "codeSentTo": "Code sent to",
     "saveChanges": "Save changes",
     "subSaved": "Subscription saved; start and end dates updated.",
+    "addDaysBtn": "Add days",
+    "daysPlaceholder": "Days",
+    "daysRange": "Enter a number of days between 1 and 365.",
+    "daysAdded": "Added {{count}} day(s) to the subscription.",
     "noSubscribers": "No subscribers yet."
   },
   "order": {
