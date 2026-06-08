@@ -129,7 +129,9 @@ function HomeHero() {
   const len = slides.length;
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [drag, setDrag] = useState(0); // إزاحة السحب الحيّة (px) — يتبع الإصبع
   const containerRef = useRef(null);
+  const draggingRef = useRef(false);
   const touch = useRef({ x: 0, y: 0, active: false, horiz: false });
 
   useEffect(() => {
@@ -140,6 +142,7 @@ function HomeHero() {
 
   const go = (n) => setI(((n % len) + len) % len);
 
+  // سحب لحظي يتبع الإصبع، ويستقر على شريحة واحدة فقط عند الإفلات
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return undefined;
@@ -153,14 +156,31 @@ function HomeHero() {
       const tt = e.touches[0];
       const dx = tt.clientX - touch.current.x;
       const dy = tt.clientY - touch.current.y;
-      if (!touch.current.horiz && Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8) touch.current.horiz = true;
-      if (touch.current.horiz) e.preventDefault();
+      if (!touch.current.horiz && Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 6) {
+        touch.current.horiz = true;
+        draggingRef.current = true;
+      }
+      if (touch.current.horiz) {
+        e.preventDefault();
+        let d = dx;
+        if ((i === 0 && dx > 0) || (i === len - 1 && dx < 0)) d = dx / 3; // مقاومة عند الحواف
+        setDrag(d);
+      }
     };
     const onEnd = (e) => {
       if (!touch.current.active) return;
       const dx = e.changedTouches[0].clientX - touch.current.x;
-      if (touch.current.horiz && Math.abs(dx) > 40) setI((p) => (((p + (dx < 0 ? -1 : 1)) % len) + len) % len);
+      const w = el.offsetWidth || 1;
+      const threshold = Math.min(70, w * 0.18);
+      let next = i;
+      if (touch.current.horiz && Math.abs(dx) > threshold) {
+        next = dx < 0 ? i + 1 : i - 1;               // يتبع الإصبع
+        next = Math.max(0, Math.min(len - 1, next));  // شريحة واحدة فقط
+      }
+      draggingRef.current = false;
       touch.current.active = false;
+      setDrag(0);
+      setI(next);
       setPaused(false);
     };
     el.addEventListener('touchstart', onStart, { passive: true });
@@ -171,7 +191,7 @@ function HomeHero() {
       el.removeEventListener('touchmove', onMove);
       el.removeEventListener('touchend', onEnd);
     };
-  }, [len]);
+  }, [len, i]);
 
   return (
     <section className="relative">
@@ -182,7 +202,15 @@ function HomeHero() {
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
-        <div className="flex transition-transform duration-500 ease-out" style={{ transform: `translateX(-${i * 100}%)`, direction: 'ltr' }}>
+        <div
+          className="flex"
+          style={{
+            transform: `translateX(calc(-${i * 100}% + ${drag}px))`,
+            direction: 'ltr',
+            transition: draggingRef.current ? 'none' : 'transform 480ms cubic-bezier(0.22, 0.61, 0.36, 1)',
+            willChange: 'transform',
+          }}
+        >
           {slides.map((s, idx) => (
             <div key={idx} className="w-full shrink-0" dir="rtl">
               <div className="pub-hero relative flex h-[340px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[420px]">
