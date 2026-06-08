@@ -240,13 +240,20 @@ export async function setSubscription(req, res, next) {
   if (!PLANS[plan]) return res.status(400).json({ error: 'خطة غير صالحة.' });
   if (isAdminEmail(email)) return res.status(400).json({ error: 'لا يمكن تعديل اشتراك حساب المدير (اشتراكه مدى الحياة).' });
   try {
+    const cur = await query('SELECT id, current_period_end FROM users WHERE lower(email) = $1', [email]);
+    if (cur.rows.length === 0) return res.status(404).json({ error: 'لا يوجد حساب بهذا البريد.' });
+
     const from = new Date(); // وقت الضغط الفعلي
-    const end = planPeriodEnd(plan, from);
-    const r = await query(
-      "UPDATE users SET subscription_status='active', subscription_plan=$1, subscription_started_at=$2, current_period_end=$3 WHERE lower(email)=$4 RETURNING id",
-      [plan, from, end, email]
+    // الوقت المتبقّي من الاشتراك الحالي (بالمللي ثانية، دقيق للثانية) — يُضاف فوق الخطة الجديدة
+    const cpe = cur.rows[0].current_period_end ? new Date(cur.rows[0].current_period_end) : null;
+    const remainingMs = cpe ? Math.max(0, cpe.getTime() - from.getTime()) : 0;
+    // النهاية = الآن + مدة الخطة الجديدة + المتبقّي
+    const end = new Date(planPeriodEnd(plan, from).getTime() + remainingMs);
+
+    await query(
+      "UPDATE users SET subscription_status='active', subscription_plan=$1, subscription_started_at=$2, current_period_end=$3 WHERE id=$4",
+      [plan, from, end, cur.rows[0].id]
     );
-    if (r.rows.length === 0) return res.status(404).json({ error: 'لا يوجد حساب بهذا البريد.' });
     res.json({ message: 'تم تحديث الاشتراك.', plan, startedAt: from, currentPeriodEnd: end });
   } catch (err) {
     next(err);
