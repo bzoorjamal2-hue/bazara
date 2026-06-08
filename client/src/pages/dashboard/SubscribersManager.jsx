@@ -113,7 +113,7 @@ function SubRow({ s, onDeleted, onUpdated }) {
         <a href={`/store/${s.storeSlug}`} target="_blank" rel="noreferrer" className="text-xs text-gold-300 hover:text-gold-200">🔗 {t('admin.subStore')}</a>
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-stone-400 sm:grid-cols-3">
+      <div className="mt-3 grid grid-cols-1 gap-1.5 text-xs text-stone-400 sm:grid-cols-3 sm:gap-2">
         <div>
           <span className="text-stone-500">{t('admin.subPlan')}:</span>{' '}
           {s.lifetime ? t('admin.lifetime') : s.plan ? t(`subscription.${s.plan}`) : t('admin.subNone')}
@@ -129,21 +129,20 @@ function SubRow({ s, onDeleted, onUpdated }) {
       {err && <div className="mt-2 rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-1.5 text-xs text-red-200">{err}</div>}
 
       {!s.isAdmin && (
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <select value={plan} onChange={(e) => setPlan(e.target.value)} className="input !w-auto !py-1.5 text-sm">
-            <option value="monthly" className="bg-ink-800">{t('subscription.monthly')} ($20)</option>
-            <option value="yearly" className="bg-ink-800">{t('subscription.yearly')} ($250)</option>
-          </select>
-          {/* حفظ التعديلات: يفعّل الخطة المختارة ويعيد ضبط تاريخ البدء/الانتهاء للوقت الحالي */}
-          <button onClick={save} disabled={saveBusy} className={`!py-1.5 text-sm ${dirty ? 'btn-primary' : 'btn-ghost'}`}>
-            {saveBusy ? t('common.loading') : `💾 ${t('admin.saveChanges')}`}
-          </button>
-          <button onClick={send} disabled={busy} className="btn-ghost !py-1.5 text-sm">
-            {busy ? t('common.loading') : `✉️ ${t('admin.sendCodeBtn')}`}
-          </button>
+        <div className="mt-3 space-y-2">
+          {/* المجموعة 1: الخطة + حفظ التعديلات */}
+          <div className="flex flex-wrap items-center gap-2">
+            <select value={plan} onChange={(e) => setPlan(e.target.value)} className="input !w-auto !py-1.5 text-sm">
+              <option value="monthly" className="bg-ink-800">{t('subscription.monthly')} ($20)</option>
+              <option value="yearly" className="bg-ink-800">{t('subscription.yearly')} ($250)</option>
+            </select>
+            <button onClick={save} disabled={saveBusy} className={`!py-1.5 text-sm flex-1 sm:flex-none ${dirty ? 'btn-primary' : 'btn-ghost'}`}>
+              {saveBusy ? t('common.loading') : `💾 ${t('admin.saveChanges')}`}
+            </button>
+          </div>
 
-          {/* إضافة أيام إضافية على الاشتراك (1–365) */}
-          <span className="inline-flex items-center gap-1.5">
+          {/* المجموعة 2: إضافة أيام إضافية (1–365) */}
+          <div className="flex items-center gap-2">
             <input
               type="text"
               inputMode="numeric"
@@ -151,26 +150,31 @@ function SubRow({ s, onDeleted, onUpdated }) {
               value={days}
               onChange={(e) => setDays(e.target.value.replace(/\D/g, '').slice(0, 3))}
               placeholder={t('admin.daysPlaceholder')}
-              className="input !w-24 !py-1.5 text-center text-sm"
+              className="input !w-20 shrink-0 !py-1.5 text-center text-sm"
             />
-            <button onClick={addDays} disabled={daysBusy} className="btn-primary !py-1.5 text-sm">
+            <button onClick={addDays} disabled={daysBusy} className="btn-primary !py-1.5 text-sm flex-1 sm:flex-none">
               {daysBusy ? t('common.loading') : `➕ ${t('admin.addDaysBtn')}`}
             </button>
-          </span>
+          </div>
 
-          {/* حذف الحساب (تأكيد بخطوتين) */}
-          {confirmDel ? (
-            <span className="inline-flex items-center gap-2">
-              <button onClick={remove} disabled={delBusy} className="rounded-lg bg-red-500/90 px-3 py-1.5 text-sm font-semibold text-white hover:bg-red-500">
-                {delBusy ? t('common.loading') : `🗑 ${t('admin.confirmDelete')}`}
-              </button>
-              <button onClick={() => setConfirmDel(false)} className="text-sm text-stone-400 hover:text-stone-200">{t('common.cancel')}</button>
-            </span>
-          ) : (
-            <button onClick={() => setConfirmDel(true)} className="rounded-lg border border-red-400/40 px-3 py-1.5 text-sm font-medium text-red-300 hover:bg-red-500/10">
-              🗑 {t('admin.deleteAccount')}
+          {/* المجموعة 3: إرسال الكود + حذف الحساب */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button onClick={send} disabled={busy} className="btn-ghost !py-1.5 text-sm flex-1 sm:flex-none">
+              {busy ? t('common.loading') : `✉️ ${t('admin.sendCodeBtn')}`}
             </button>
-          )}
+            {confirmDel ? (
+              <span className="flex flex-1 items-center gap-2 sm:flex-none">
+                <button onClick={remove} disabled={delBusy} className="flex-1 rounded-lg bg-red-500/90 px-3 py-1.5 text-sm font-semibold text-white hover:bg-red-500 sm:flex-none">
+                  {delBusy ? t('common.loading') : `🗑 ${t('admin.confirmDelete')}`}
+                </button>
+                <button onClick={() => setConfirmDel(false)} className="text-sm text-stone-400 hover:text-stone-200">{t('common.cancel')}</button>
+              </span>
+            ) : (
+              <button onClick={() => setConfirmDel(true)} className="rounded-lg border border-red-400/40 px-3 py-1.5 text-sm font-medium text-red-300 hover:bg-red-500/10 flex-1 sm:flex-none">
+                🗑 {t('admin.deleteAccount')}
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>
