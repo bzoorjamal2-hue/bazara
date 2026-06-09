@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import ImageInput from '../../components/ImageInput.jsx';
 import VideoInput from '../../components/VideoInput.jsx';
+import Select from '../../components/Select.jsx';
 
 const CATEGORIES = ['abaya', 'set', 'dress', 'hijab'];
 const SIZES = ['36', '38', '40', '42', '44', '46', '48'];
@@ -130,11 +131,11 @@ export default function ProductForm({ initial, onClose, onSaved }) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="label">{t('dashboard.product.category')}</label>
-              <select className="input" value={form.category} onChange={set('category')}>
-                {CATEGORIES.map((c) => (
-                  <option key={c} value={c} className="bg-ink-800">{t(`categories.${c}`)}</option>
-                ))}
-              </select>
+              <Select
+                value={form.category}
+                onChange={(v) => setForm((f) => ({ ...f, category: v }))}
+                options={CATEGORIES.map((c) => ({ value: c, label: t(`categories.${c}`) }))}
+              />
             </div>
             <div>
               <label className="label">{t('dashboard.product.stock')}</label>

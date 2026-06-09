@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
+import Select from '../../components/Select.jsx';
 
 function genPassword() {
   const lower = 'abcdefghijkmnpqrstuvwxyz';
@@ -104,10 +105,14 @@ export default function AdminRequests() {
         <form onSubmit={generate} className="flex flex-wrap items-end gap-3">
           <div>
             <label className="label">{t('admin.plan')}</label>
-            <select className="input" value={genPlan} onChange={(e) => setGenPlan(e.target.value)}>
-              <option value="monthly" className="bg-ink-800">{t('subscription.monthly')} ($10)</option>
-              <option value="yearly" className="bg-ink-800">{t('subscription.yearly')} ($100)</option>
-            </select>
+            <Select
+              value={genPlan}
+              onChange={setGenPlan}
+              options={[
+                { value: 'monthly', label: `${t('subscription.monthly')} ($20)` },
+                { value: 'yearly', label: `${t('subscription.yearly')} ($250)` },
+              ]}
+            />
           </div>
           <div className="w-24">
             <label className="label">{t('admin.count')}</label>

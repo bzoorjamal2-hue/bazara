@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
+import Select from '../../components/Select.jsx';
 
 function fmt(d) {
   return d ? new Date(d).toLocaleString() : '—';
@@ -135,10 +136,15 @@ function SubRow({ s, onDeleted, onUpdated }) {
         <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
           {/* المجموعة 1: الخطة + حفظ التعديلات */}
           <div className="flex flex-wrap items-center gap-2">
-            <select value={plan} onChange={(e) => setPlan(e.target.value)} className="input !w-auto !py-1.5 text-sm">
-              <option value="monthly" className="bg-ink-800">{t('subscription.monthly')} ($20)</option>
-              <option value="yearly" className="bg-ink-800">{t('subscription.yearly')} ($250)</option>
-            </select>
+            <Select
+              value={plan}
+              onChange={setPlan}
+              className="!w-auto !py-1.5 text-sm"
+              options={[
+                { value: 'monthly', label: `${t('subscription.monthly')} ($20)` },
+                { value: 'yearly', label: `${t('subscription.yearly')} ($250)` },
+              ]}
+            />
             <button onClick={save} disabled={saveBusy} className={`!py-1.5 text-sm flex-1 sm:flex-none ${dirty ? 'btn-primary' : 'btn-ghost'}`}>
               {saveBusy ? t('common.loading') : `💾 ${t('admin.saveChanges')}`}
             </button>
