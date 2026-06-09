@@ -55,12 +55,12 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
         lw.style.marginBottom = 12 * inv + 'px';
         lw.style.transform = `translate3d(0, ${-12 * p}px, 0)`;
       }
-      // زر القائمة المُصغّر: ينمو بنعومة (scale = العرض) فيبقى دائرة كاملة بلا قصّ
+      // زر القائمة المُصغّر: ينمو بنعومة (scale = العرض) عند الطرف، والسلة تبقى على يمينه
       const cw = compactWrapRef.current;
       if (cw) {
         cw.style.width = 44 * p + 'px';
         cw.style.opacity = String(p);
-        cw.style.marginInlineEnd = 10 * p + 'px';
+        cw.style.marginInlineStart = 10 * p + 'px';
         cw.style.pointerEvents = p > 0.5 ? 'auto' : 'none';
         const inner = cw.firstElementChild;
         if (inner) inner.style.transform = `scale(${p})`;
@@ -103,8 +103,8 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
           </div>
         </div>
 
-        {/* صف البحث + (قائمة مُصغّرة عند التمرير) + السلة بأقصى الحافة تحت زر القائمة تماماً */}
-        <div className="flex items-center gap-2.5">
+        {/* صف البحث + السلة + (قائمة مُصغّرة تظهر بأقصى الشمال عند التمرير) */}
+        <div className="flex items-center">
           <div className="relative flex-1">
             <span className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-wine/50">
               <SearchIcon className="h-5 w-5" />
@@ -117,16 +117,11 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
             />
           </div>
 
-          {/* زر القائمة المُصغّر — يظهر بنعومة عند التمرير (قبل السلة) */}
-          <div ref={compactWrapRef} className="flex shrink-0 items-center justify-center overflow-hidden" style={{ width: 0, opacity: 0 }}>
-            <div className="will-change-transform"><MenuBtn onOpen={openMenu} /></div>
-          </div>
-
-          {/* السلة — آخر عنصر، بأقصى الحافة، محاذية تماماً تحت زر القائمة فوقها */}
+          {/* السلة — على يمين زر القائمة، وتكون بأقصى الحافة (تحت ☰) قبل التمرير */}
           <button
             onClick={() => setOpen(true)}
             aria-label="cart"
-            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-cream/15 text-cream transition hover:bg-cream/25"
+            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-cream/15 text-cream transition hover:bg-cream/25 ms-2.5"
           >
             <CartIcon className="h-5 w-5" />
             {count > 0 && (
@@ -135,6 +130,11 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
               </span>
             )}
           </button>
+
+          {/* زر القائمة المُصغّر — يظهر بنعومة بأقصى الشمال (آخر عنصر)، والسلة على يمينه */}
+          <div ref={compactWrapRef} className="flex shrink-0 items-center justify-center overflow-hidden" style={{ width: 0, opacity: 0 }}>
+            <div className="will-change-transform"><MenuBtn onOpen={openMenu} /></div>
+          </div>
         </div>
       </div>
 
