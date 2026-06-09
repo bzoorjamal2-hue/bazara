@@ -168,8 +168,6 @@ export default function StorePage() {
             <CategoryGrid onSelect={pickCategory} active={cat} images={catImages} />
           </section>
 
-          <FeaturesBar />
-
           <ProductSection title={`${t('store.newArrivals')} ❤️`} products={newest} wa={wa} />
           <ProductSection title={t('store.bestSellers')} products={featured.slice(0, 8)} wa={wa} />
 
@@ -185,6 +183,9 @@ export default function StorePage() {
           )}
         </>
       )}
+
+      {/* شريط المزايا — بآخر كل صفحات المتجر، قبل الفوتر */}
+      <FeaturesBar />
 
       {/* فوتر المتجر بأيقونات تواصل مربوطة بحسابات المشترك */}
       <StoreFooter store={store} wa={wa} />

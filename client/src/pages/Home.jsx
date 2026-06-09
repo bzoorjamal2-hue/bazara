@@ -8,6 +8,7 @@ import ProductCard from '../components/ProductCard.jsx';
 import CategoryGrid from '../components/CategoryGrid.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
 import InstallApp from '../components/InstallApp.jsx';
+import FeaturesBar from '../components/FeaturesBar.jsx';
 import { BAZARA_WHATSAPP } from '../config/site.js';
 import { ShieldIcon, DiamondIcon, BoltIcon } from '../components/icons.jsx';
 
@@ -116,6 +117,9 @@ export default function Home() {
           </section>
         </>
       )}
+
+      {/* شريط المزايا — بآخر الصفحة */}
+      <FeaturesBar />
 
       <FloatingWhatsApp number={BAZARA_WHATSAPP} />
     </>
