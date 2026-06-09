@@ -81,6 +81,7 @@ export default function InstallApp() {
                 {t('pwa.iosOpenSafari')}
               </p>
             ) : (
+              <>
               <ol className="mt-4 space-y-3 text-start text-sm text-[#444]">
                 <li className="flex items-start gap-3">
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-wine/10 font-bold text-wine">1</span>
@@ -98,6 +99,7 @@ export default function InstallApp() {
                 </li>
               </ol>
               <p className="mt-3 text-xs text-stone-400">{t('pwa.iosHint')}</p>
+              </>
             )}
 
             <p className="mt-4 rounded-xl bg-wine/5 px-3 py-2 text-xs leading-relaxed text-wine">{t('pwa.iosReassure')}</p>
