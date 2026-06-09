@@ -49,6 +49,21 @@ export default function ProductsManager({ onCount }) {
     }
   };
 
+  // رابط مباشر لكل منتج — مشاركة (على الجوال) أو نسخ للحافظة
+  const shareProduct = async (p) => {
+    const url = `${window.location.origin}/product/${p.id}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: p.name, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        flash(t('common.copied'));
+      }
+    } catch {
+      /* أُلغيت المشاركة */
+    }
+  };
+
   if (products === null) return <Spinner />;
 
   // صورة مصغّرة: تعرض مشهد الفيديو إذا ما في صورة
@@ -101,6 +116,7 @@ export default function ProductsManager({ onCount }) {
                   <td className="p-4 font-semibold text-gold-300">{t('common.currency')}{p.price}</td>
                   <td className="p-4">
                     <div className="flex justify-end gap-2">
+                      <button onClick={() => shareProduct(p)} className="btn-ghost !px-3 !py-1.5 text-xs" title={t('common.copyLink')}>🔗 {t('common.share')}</button>
                       <button onClick={() => setModal(p)} className="btn-ghost !px-3 !py-1.5 text-xs">{t('common.edit')}</button>
                       <button onClick={() => setConfirmDel(p)} className="btn-danger !px-3 !py-1.5 text-xs">{t('common.delete')}</button>
                     </div>
@@ -118,6 +134,7 @@ export default function ProductsManager({ onCount }) {
                   <p className="truncate font-medium text-stone-100">{p.name}</p>
                   <p className="text-xs text-stone-400">{t(`categories.${p.category}`)} · <span className="text-gold-300">{t('common.currency')}{p.price}</span></p>
                 </div>
+                <button onClick={() => shareProduct(p)} className="btn-ghost !px-2.5 !py-1.5 text-xs" title={t('common.copyLink')}>🔗</button>
                 <button onClick={() => setModal(p)} className="btn-ghost !px-2.5 !py-1.5 text-xs">{t('common.edit')}</button>
                 <button onClick={() => setConfirmDel(p)} className="btn-danger !px-2.5 !py-1.5 text-xs">{t('common.delete')}</button>
               </div>

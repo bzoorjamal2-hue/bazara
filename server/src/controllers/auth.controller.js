@@ -11,19 +11,21 @@ const firstUrl = (v) => (v || '').split(',')[0].trim().replace(/\/$/, '');
 
 const SALT_ROUNDS = 12;
 
+const SESSION_DAYS = 90; // بقاء تسجيل الدخول لمدة طويلة (يظل المستخدم مسجّلاً)
+
 function cookieOptions() {
   return {
     httpOnly: true,
     secure: process.env.COOKIE_SECURE === 'true',
     sameSite: process.env.COOKIE_SAMESITE || 'lax',
-    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 أيام
+    maxAge: 1000 * 60 * 60 * 24 * SESSION_DAYS,
     path: '/',
   };
 }
 
 function signToken(user) {
   return jwt.sign({ sub: user.id, email: user.email }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+    expiresIn: process.env.JWT_EXPIRES_IN || `${SESSION_DAYS}d`,
   });
 }
 

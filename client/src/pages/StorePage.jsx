@@ -13,7 +13,7 @@ import useScrollLock from '../hooks/useScrollLock.js';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
 
 const PAGE_SIZE = 8;
-const CATS = ['abaya', 'set', 'dress', 'hijab'];
+const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench'];
 const SIZES = ['36', '38', '40', '42', '44', '46', '48'];
 
 export default function StorePage() {

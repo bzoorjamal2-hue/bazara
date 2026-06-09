@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { CATEGORY_ICON } from './icons.jsx';
 
-const CATS = ['abaya', 'set', 'dress', 'hijab'];
+const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench'];
 
 // شبكة بطاقات الفئات: بطاقة خمرية بأيقونة عاجية + اسم الفئة أسفلها.
 // onSelect → أزرار فلترة (صفحة المتجر) | بدونها → روابط لصفحة الفئة (الرئيسية)

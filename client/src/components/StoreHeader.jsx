@@ -7,7 +7,7 @@ import LanguageSwitcher from './LanguageSwitcher.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { MenuIcon, SearchIcon, CartIcon, HeartIcon } from './icons.jsx';
 
-const CATS = ['abaya', 'set', 'dress', 'hijab'];
+const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench'];
 
 function MenuBtn({ onOpen }) {
   return (

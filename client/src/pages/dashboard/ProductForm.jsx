@@ -5,7 +5,7 @@ import ImageInput from '../../components/ImageInput.jsx';
 import VideoInput from '../../components/VideoInput.jsx';
 import Select from '../../components/Select.jsx';
 
-const CATEGORIES = ['abaya', 'set', 'dress', 'hijab'];
+const CATEGORIES = ['abaya', 'set', 'dress', 'hijab', 'trench'];
 const SIZES = ['36', '38', '40', '42', '44', '46', '48'];
 const EMPTY = {
   name: '', price: '', oldPrice: '', description: '', size: '', color: '',

@@ -65,7 +65,25 @@ export function HijabIcon({ className = 'h-16 w-16' }) {
   );
 }
 
-export const CATEGORY_ICON = { abaya: AbayaIcon, set: SetIcon, dress: DressIcon, hijab: HijabIcon };
+// ترنش كوت: معطف بياقة عريضة، حزام عند الخصر، وصفّ أزرار وسطي
+export function TrenchIcon({ className = 'h-16 w-16' }) {
+  return (
+    <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
+      <path
+        {...GE}
+        d="M25 9 C24 9 23.2 9.6 23 10.6 L15.5 16 L19 23 L22 21 L22 55 L42 55 L42 21 L45 23 L48.5 16 L41 10.6 C40.8 9.6 40 9 39 9 L34.5 9 L34.5 30 L29.5 30 L29.5 9 Z
+           M31.4 33 a0.95 0.95 0 1 0 0.01 0
+           M31.4 39 a0.95 0.95 0 1 0 0.01 0
+           M31.4 45 a0.95 0.95 0 1 0 0.01 0"
+      />
+      {/* الحزام */}
+      <path {...G} d="M22 30.5 L42 30.5 L42 34 L22 34 Z" />
+      <path {...G} d="M40 30 L46 28.5 L46.6 31 L40.6 33 Z" />
+    </svg>
+  );
+}
+
+export const CATEGORY_ICON = { abaya: AbayaIcon, set: SetIcon, dress: DressIcon, hijab: HijabIcon, trench: TrenchIcon };
 
 // ===== أيقونات واجهة (خطّية رفيعة) =====
 const L = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round' };
