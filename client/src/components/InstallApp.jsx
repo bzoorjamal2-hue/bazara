@@ -8,10 +8,16 @@ const isStandalone = () =>
 const isIOS = () =>
   typeof navigator !== 'undefined' && /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
 
-// على آيفون "إضافة للشاشة الرئيسية" تعمل فقط داخل Safari (مش Chrome أو متصفح داخل تطبيق)
+// على آيفون "إضافة للشاشة الرئيسية" تعمل فقط داخل Safari الحقيقي
+// (مش Chrome ولا متصفح داخل تطبيق مثل واتساب/انستغرام/فيسبوك).
 const isIosSafari = () => {
+  if (!isIOS()) return false;
   const ua = navigator.userAgent || '';
-  return isIOS() && /safari/i.test(ua) && !/crios|fxios|edgios|gsa/i.test(ua);
+  // متصفحات أخرى أو داخل تطبيقات
+  if (/crios|fxios|edgios|gsa|fban|fbav|fb_iab|instagram|line|micromessenger|whatsapp/i.test(ua)) return false;
+  // Safari الحقيقي يُعرّف navigator.standalone (قيمة منطقية)؛ أما WKWebView داخل التطبيقات فتكون undefined
+  if (typeof navigator.standalone === 'undefined') return false;
+  return /safari/i.test(ua);
 };
 
 // بطاقة "تنزيل التطبيق" — تظهر بالصفحة الرئيسية وتشغّل تثبيت PWA،
