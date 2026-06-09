@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import LanguageSwitcher from './LanguageSwitcher.jsx';
+import CatThumb from './CatThumb.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { MenuIcon, SearchIcon, CartIcon, HeartIcon } from './icons.jsx';
 
@@ -183,8 +184,9 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
                 <button
                   key={c}
                   onClick={() => pick(c)}
-                  className={`block w-full rounded-xl px-3 py-3 text-start text-base transition hover:bg-cream/10 ${cat === c ? 'font-bold text-cream' : 'text-cream/85'}`}
+                  className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-base transition hover:bg-cream/10 ${cat === c ? 'font-bold text-cream' : 'text-cream/85'}`}
                 >
+                  <CatThumb cat={c} className="h-9 w-9" />
                   {t(`categories.${c}`)}
                 </button>
               ))}

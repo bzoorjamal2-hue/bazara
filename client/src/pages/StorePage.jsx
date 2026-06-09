@@ -9,6 +9,7 @@ import ProductCard from '../components/ProductCard.jsx';
 import CategoryGrid from '../components/CategoryGrid.jsx';
 import StoreHeader from '../components/StoreHeader.jsx';
 import FeaturesBar from '../components/FeaturesBar.jsx';
+import CatThumb from '../components/CatThumb.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { cldVideoPoster } from '../utils/cloudinary.js';
@@ -124,7 +125,10 @@ export default function StorePage() {
               <span className="text-wine/40">←</span>
               <button onClick={() => pickCategory('all')} className="text-wine/70 hover:text-wine">{t('store.storeRoot')}</button>
               <span className="text-wine/40">←</span>
-              <span className="font-display text-lg font-bold text-wine">{t(`categories.${cat}`)}</span>
+              <span className="flex items-center gap-2 font-display text-lg font-bold text-wine">
+                <CatThumb cat={cat} className="h-8 w-8" />
+                {t(`categories.${cat}`)}
+              </span>
             </nav>
           )}
 

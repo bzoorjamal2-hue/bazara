@@ -5,7 +5,7 @@ import api, { getErrorMessage } from '../api/client.js';
 import Seo from '../components/Seo.jsx';
 import Spinner from '../components/Spinner.jsx';
 import ProductCard from '../components/ProductCard.jsx';
-import { CATEGORY_ICON } from '../components/icons.jsx';
+import CatThumb from '../components/CatThumb.jsx';
 
 // لوقو بيت أنيق (زر العودة للصفحة الرئيسية)
 function HomeGlyph({ className = 'h-[18px] w-[18px]' }) {
@@ -32,8 +32,6 @@ export default function CategoryPage() {
       .catch((err) => setError(getErrorMessage(err)));
   }, [cat]);
 
-  const Icon = CATEGORY_ICON[cat];
-
   return (
     <>
       <Seo title={t(`categories.${cat}`)} />
@@ -51,7 +49,7 @@ export default function CategoryPage() {
         <Link to="/" className="text-wine/70 hover:text-wine">{t('nav.home')}</Link>
         <span className="text-wine/40">←</span>
         <span className="flex items-center gap-2 font-display text-lg font-bold text-wine">
-          {Icon && <Icon className="h-6 w-6 text-wine" />}
+          <CatThumb cat={cat} className="h-8 w-8" />
           {t(`categories.${cat}`)}
         </span>
       </nav>
