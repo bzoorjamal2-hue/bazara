@@ -82,17 +82,22 @@ export default function InstallApp() {
               </p>
             ) : (
               <ol className="mt-4 space-y-3 text-start text-sm text-[#444]">
-                <li className="flex items-center gap-3">
+                <li className="flex items-start gap-3">
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-wine/10 font-bold text-wine">1</span>
+                  <span>{t('pwa.iosStep0')}</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-wine/10 font-bold text-wine">2</span>
                   <span className="flex items-center gap-1">{t('pwa.iosStep1')}
                     <svg viewBox="0 0 24 24" className="h-5 w-5 text-wine" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 16V4M8 8l4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" /></svg>
                   </span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-wine/10 font-bold text-wine">2</span>
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-wine/10 font-bold text-wine">3</span>
                   <span>{t('pwa.iosStep2')}</span>
                 </li>
               </ol>
+              <p className="mt-3 text-xs text-stone-400">{t('pwa.iosHint')}</p>
             )}
 
             <p className="mt-4 rounded-xl bg-wine/5 px-3 py-2 text-xs leading-relaxed text-wine">{t('pwa.iosReassure')}</p>
