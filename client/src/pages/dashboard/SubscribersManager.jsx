@@ -110,7 +110,10 @@ function SubRow({ s, onDeleted, onUpdated }) {
           </div>
           <p className="mt-1 text-xs text-stone-400" dir="ltr">{s.email}</p>
         </div>
-        <a href={`/store/${s.storeSlug}`} target="_blank" rel="noreferrer" className="text-xs text-gold-300 hover:text-gold-200">🔗 {t('admin.subStore')}</a>
+        {/* المدير حساب تحكّم — بلا رابط متجر عام */}
+        {!s.isAdmin && (
+          <a href={`/store/${s.storeSlug}`} target="_blank" rel="noreferrer" className="text-xs text-gold-300 hover:text-gold-200">🔗 {t('admin.subStore')}</a>
+        )}
       </div>
 
       <div className="mt-3 grid grid-cols-1 gap-1.5 text-xs text-stone-400 sm:grid-cols-3 sm:gap-2">

@@ -17,8 +17,8 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
   const { count, setOpen } = useCart();
   const { count: wishCount } = useWishlist();
   const [drawer, setDrawer] = useState(false);
-  const [compact, setCompact] = useState(false); // ظهور زر القائمة المصغّر بعد التمرير
   const logoWrapRef = useRef(null);
+  const compactWrapRef = useRef(null);
 
   // انكماش الشعار مربوط بالتمرير مع تنعيم احترافي (lerp + smoothstep).
   useEffect(() => {
@@ -42,6 +42,15 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
         lw.style.marginBottom = 12 * inv + 'px';
         lw.style.transform = `translate3d(0, ${-12 * p}px, 0)`;
       }
+      // زر القائمة المُصغّر: ينمو بنعومة مربوطاً بالتمرير (scale = العرض) فيبقى دائرة كاملة بلا قصّ
+      const cw = compactWrapRef.current;
+      if (cw) {
+        cw.style.width = 44 * p + 'px';
+        cw.style.opacity = String(p);
+        cw.style.marginInlineStart = 10 * p + 'px';
+        const btn = cw.firstElementChild;
+        if (btn) btn.style.transform = `scale(${p})`;
+      }
       if (cur !== target) raf = requestAnimationFrame(draw);
       else { running = false; raf = 0; }
     };
@@ -49,8 +58,6 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
     const onScroll = () => {
       target = Math.min(Math.max(window.scrollY / RANGE, 0), 1);
       tick();
-      // ظهور/اختفاء بنطاق مختلف (hysteresis) لتفادي الوميض قرب الحد
-      setCompact((prev) => (prev ? window.scrollY > 60 : window.scrollY > 110));
     };
 
     draw();
@@ -117,8 +124,12 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
               </span>
             )}
           </button>
-          {/* يظهر بنعومة (تكبير + تلاشٍ) عند التمرير — بلا قصّ ولا تشابك */}
-          {compact && <MenuBtn className="h-11 w-11 shrink-0 animate-pop" />}
+          {/* زر القائمة المُصغّر — ينمو بنعومة مع التمرير (scale)، دائرة كاملة بلا قصّ */}
+          <div ref={compactWrapRef} className="flex shrink-0 items-center justify-center overflow-hidden will-change-[width,opacity]" style={{ width: 0, opacity: 0 }}>
+            <div className="will-change-transform">
+              <MenuBtn className="h-11 w-11" />
+            </div>
+          </div>
         </div>
       </div>
 

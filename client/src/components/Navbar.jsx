@@ -141,7 +141,8 @@ export default function Navbar() {
             </>
           )}
 
-          <LanguageSwitcher />
+          {/* زر اللغة بالشريط العلوي للزوّار فقط — المستخدم المسجّل يبدّلها من داخل القائمة */}
+          {!user && <LanguageSwitcher />}
         </div>
 
       </nav>
