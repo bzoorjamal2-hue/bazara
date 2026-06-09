@@ -42,7 +42,9 @@
     "install": "Install app",
     "iosTitle": "Add Bazara to your Home Screen",
     "iosStep1": "Tap the Share button",
-    "iosStep2": "Choose “Add to Home Screen”"
+    "iosStep2": "Choose “Add to Home Screen”",
+    "iosReassure": "After these 2 steps, Bazara becomes an app on your home screen that opens full-screen — the same experience as the store app. 🎉",
+    "iosOpenSafari": "Open the site in Safari first (not Chrome or an in-app browser), because “Add to Home Screen” is only available in Safari."
   },
   "categories": {
     "abaya": "Abayas",
