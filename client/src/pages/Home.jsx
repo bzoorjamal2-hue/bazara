@@ -10,7 +10,6 @@ import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
 import InstallApp from '../components/InstallApp.jsx';
 import FeaturesBar from '../components/FeaturesBar.jsx';
 import { BAZARA_WHATSAPP } from '../config/site.js';
-import { ShieldIcon, DiamondIcon, BoltIcon } from '../components/icons.jsx';
 
 export default function Home() {
   const { t } = useTranslation();
@@ -40,21 +39,6 @@ export default function Home() {
       <section className="mt-14">
         <SectionTitle>{t('home.browseByCategory')}</SectionTitle>
         <CategoryGrid />
-      </section>
-
-      {/* مزايا */}
-      <section className="mt-14 grid gap-4 sm:grid-cols-3">
-        {[
-          { t: t('home.feature1Title'), d: t('home.feature1Desc'), Icon: ShieldIcon },
-          { t: t('home.feature2Title'), d: t('home.feature2Desc'), Icon: DiamondIcon },
-          { t: t('home.feature3Title'), d: t('home.feature3Desc'), Icon: BoltIcon },
-        ].map((f, i) => (
-          <div key={i} className="glass animate-fade-up p-6" style={{ animationDelay: `${i * 80}ms` }}>
-            <f.Icon className="mb-3 h-8 w-8 text-gold-400" />
-            <h3 className="font-display text-lg font-bold text-stone-100">{f.t}</h3>
-            <p className="mt-1 text-sm text-stone-400">{f.d}</p>
-          </div>
-        ))}
       </section>
 
       {loading ? (

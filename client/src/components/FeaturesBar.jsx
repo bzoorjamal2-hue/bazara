@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 function ShieldIcon({ className = 'h-6 w-6' }) {
@@ -52,19 +53,57 @@ export default function FeaturesBar() {
     { Icon: TagIcon, title: t('store.featPrices') },
     { Icon: StarBoxIcon, title: t('store.featExclusive') },
   ];
+
+  const PER = 2; // ميزتان بنفس الوقت
+  const [page, setPage] = useState(0);
+  const pages = Math.ceil(items.length / PER);
+  const shown = items.slice(page * PER, page * PER + PER);
+  const go = (d) => setPage((p) => (p + d + pages) % pages);
+
+  const Arrow = ({ dir, onClick }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={dir === 'next' ? 'next' : 'prev'}
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-wine/20 bg-white text-wine shadow-sm transition hover:bg-wine hover:text-cream"
+    >
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d={dir === 'next' ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6'} />
+      </svg>
+    </button>
+  );
+
   return (
-    <section className="mt-12 -mx-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <div className="flex gap-3 sm:justify-center">
-        {items.map(({ Icon, title }, i) => (
-          <div
+    <section className="mt-12">
+      <div className="mx-auto flex max-w-xl items-center gap-2 sm:gap-3">
+        <Arrow dir="prev" onClick={() => go(-1)} />
+        <div className="flex flex-1 justify-center gap-3">
+          {shown.map(({ Icon, title }, i) => (
+            <div
+              key={i}
+              className="flex w-full max-w-[210px] flex-col items-center gap-2 rounded-2xl border border-wine/10 bg-white p-4 text-center shadow-sm sm:p-5"
+            >
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-wine/10 text-wine">
+                <Icon className="h-6 w-6" />
+              </span>
+              <span className="text-sm font-bold leading-snug text-[#2b2b2b]">{title}</span>
+            </div>
+          ))}
+          {/* عنصر فارغ لموازنة الصفحة الأخيرة (ميزة واحدة) */}
+          {shown.length < PER && <div className="w-full max-w-[210px]" aria-hidden="true" />}
+        </div>
+        <Arrow dir="next" onClick={() => go(1)} />
+      </div>
+
+      {/* نقاط التنقّل */}
+      <div className="mt-4 flex justify-center gap-1.5">
+        {Array.from({ length: pages }).map((_, i) => (
+          <button
             key={i}
-            className="flex min-w-[108px] flex-1 flex-col items-center gap-2 rounded-2xl border border-wine/10 bg-white p-4 text-center shadow-sm sm:min-w-0 sm:max-w-[160px]"
-          >
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-wine/10 text-wine">
-              <Icon className="h-6 w-6" />
-            </span>
-            <span className="text-xs font-bold leading-snug text-[#2b2b2b]">{title}</span>
-          </div>
+            onClick={() => setPage(i)}
+            aria-label={`page ${i + 1}`}
+            className={`h-1.5 rounded-full transition-all ${i === page ? 'w-5 bg-wine' : 'w-1.5 bg-wine/25'}`}
+          />
         ))}
       </div>
     </section>
