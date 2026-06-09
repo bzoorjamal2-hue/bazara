@@ -9,24 +9,6 @@ import { MenuIcon, SearchIcon, CartIcon, HeartIcon } from './icons.jsx';
 
 const CATS = ['abaya', 'set', 'dress', 'hijab'];
 
-// أزرار وعناصر ثابتة على مستوى الموديول (حتى لا يُعاد تركيبها فتفقد حركتها)
-function CartBtn({ count, onOpen }) {
-  return (
-    <button
-      onClick={onOpen}
-      aria-label="cart"
-      className="relative flex h-11 w-11 items-center justify-center rounded-full bg-cream/15 text-cream transition hover:bg-cream/25"
-    >
-      <CartIcon className="h-5 w-5" />
-      {count > 0 && (
-        <span className="absolute -end-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
-          {count}
-        </span>
-      )}
-    </button>
-  );
-}
-
 function MenuBtn({ onOpen }) {
   return (
     <button
@@ -39,22 +21,8 @@ function MenuBtn({ onOpen }) {
   );
 }
 
-// خانة دائرية تنمو/تتلاشى بنعومة (يضبط الـ rAF عرضها وشفافيتها وتكبير محتواها)
-function Slot({ refEl, start, children }) {
-  return (
-    <div
-      ref={refEl}
-      className="flex shrink-0 items-center justify-center overflow-hidden"
-      style={start ? undefined : { width: 0, opacity: 0 }}
-    >
-      <div className="will-change-transform">{children}</div>
-    </div>
-  );
-}
-
-// هيدر صفحة المتجر — حركة انسيابية مربوطة بالتمرير:
-// • الشعار يتقلّص بنعومة.  • السلة تنزلق من اليسار إلى اليمين عند النزول.
-// • زر القائمة (☰) يظهر بنعومة مكان السلة القديم على اليسار.
+// هيدر صفحة المتجر — صف 1: شعار/اسم المتجر + قائمة (☰). صف 2: بحث + سلة (تحت زر القائمة تماماً).
+// عند التمرير: الشعار يتقلّص بنعومة، ويظهر زر قائمة مُصغّر بحركة scale ناعمة (بلا قصّ ولا قفز).
 export default function StoreHeader({ store, q, setQ, cat, setCat }) {
   const { t, i18n } = useTranslation();
   const ltr = i18n.language !== 'ar';
@@ -62,9 +30,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
   const { count: wishCount } = useWishlist();
   const [drawer, setDrawer] = useState(false);
   const logoWrapRef = useRef(null);
-  const cartRightRef = useRef(null); // سلة تظهر عند التمرير (يمين/start)
-  const cartLeftRef = useRef(null);  // سلة الحالة الموسّعة (يسار/end)
-  const menuRef = useRef(null);      // زر القائمة المُصغّر (يسار/end)
+  const compactWrapRef = useRef(null);
   useScrollLock(drawer);
 
   useEffect(() => {
@@ -75,15 +41,6 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
     let cur = target;
     let raf = 0;
     let running = false;
-
-    const slot = (wrap, f) => {
-      if (!wrap) return;
-      wrap.style.width = 44 * f + 'px';
-      wrap.style.opacity = String(f);
-      wrap.style.pointerEvents = f > 0.5 ? 'auto' : 'none';
-      const inner = wrap.firstElementChild;
-      if (inner) inner.style.transform = `scale(${f})`;
-    };
 
     const draw = () => {
       cur += (target - cur) * (reduce ? 1 : 0.15);
@@ -98,9 +55,16 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
         lw.style.marginBottom = 12 * inv + 'px';
         lw.style.transform = `translate3d(0, ${-12 * p}px, 0)`;
       }
-      slot(cartRightRef.current, p);   // تظهر عند النزول (يمين)
-      slot(cartLeftRef.current, inv);  // تختفي عند النزول (يسار)
-      slot(menuRef.current, p);        // يظهر عند النزول (يسار)
+      // زر القائمة المُصغّر: ينمو بنعومة (scale = العرض) فيبقى دائرة كاملة بلا قصّ
+      const cw = compactWrapRef.current;
+      if (cw) {
+        cw.style.width = 44 * p + 'px';
+        cw.style.opacity = String(p);
+        cw.style.marginInlineEnd = 10 * p + 'px';
+        cw.style.pointerEvents = p > 0.5 ? 'auto' : 'none';
+        const inner = cw.firstElementChild;
+        if (inner) inner.style.transform = `scale(${p})`;
+      }
 
       if (cur !== target) raf = requestAnimationFrame(draw);
       else { running = false; raf = 0; }
@@ -119,13 +83,12 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const openCart = () => setOpen(true);
   const openMenu = () => setDrawer(true);
 
   return (
     <header className="sticky top-0 z-50 -mx-4 -mt-8 mb-5 bg-wine-dark shadow-lg sm:-mx-6">
       <div className="mx-auto max-w-6xl px-4 py-3 sm:px-6">
-        {/* الصف الأول: اسم/شعار المتجر + قائمة — يتقلّص بنعومة مع التمرير */}
+        {/* الصف الأول: اسم/شعار المتجر + زر القائمة (☰) — يتقلّص بنعومة مع التمرير */}
         <div ref={logoWrapRef} className="grid will-change-transform" style={{ gridTemplateRows: '1fr', marginBottom: '12px' }}>
           <div className="min-h-0 overflow-hidden">
             <div className="flex items-center justify-between gap-3">
@@ -140,11 +103,8 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
           </div>
         </div>
 
-        {/* صف البحث + السلة المتحرّكة + القائمة المُصغّرة */}
+        {/* صف البحث + (قائمة مُصغّرة عند التمرير) + السلة بأقصى الحافة تحت زر القائمة تماماً */}
         <div className="flex items-center gap-2.5">
-          {/* سلة تظهر على اليمين عند النزول */}
-          <Slot refEl={cartRightRef}><CartBtn count={count} onOpen={openCart} /></Slot>
-
           <div className="relative flex-1">
             <span className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-wine/50">
               <SearchIcon className="h-5 w-5" />
@@ -157,10 +117,24 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
             />
           </div>
 
-          {/* سلة الحالة الموسّعة (يسار) — تختفي عند النزول */}
-          <Slot refEl={cartLeftRef} start><CartBtn count={count} onOpen={openCart} /></Slot>
-          {/* زر القائمة المُصغّر (يسار) — يظهر بنعومة مكان السلة القديم */}
-          <Slot refEl={menuRef}><MenuBtn onOpen={openMenu} /></Slot>
+          {/* زر القائمة المُصغّر — يظهر بنعومة عند التمرير (قبل السلة) */}
+          <div ref={compactWrapRef} className="flex shrink-0 items-center justify-center overflow-hidden" style={{ width: 0, opacity: 0 }}>
+            <div className="will-change-transform"><MenuBtn onOpen={openMenu} /></div>
+          </div>
+
+          {/* السلة — آخر عنصر، بأقصى الحافة، محاذية تماماً تحت زر القائمة فوقها */}
+          <button
+            onClick={() => setOpen(true)}
+            aria-label="cart"
+            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-cream/15 text-cream transition hover:bg-cream/25"
+          >
+            <CartIcon className="h-5 w-5" />
+            {count > 0 && (
+              <span className="absolute -end-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                {count}
+              </span>
+            )}
+          </button>
         </div>
       </div>
 
