@@ -9,7 +9,8 @@
     "logout": "Logout",
     "myStore": "My store",
     "cart": "Cart",
-    "wishlist": "Wishlist"
+    "wishlist": "Wishlist",
+    "account": "Account"
   },
   "common": {
     "search": "Search",

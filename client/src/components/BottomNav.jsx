@@ -1,0 +1,66 @@
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useCart } from '../context/CartContext.jsx';
+import { useWishlist } from '../context/WishlistContext.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
+import { HeartIcon, CartIcon } from './icons.jsx';
+
+function HomeIcon({ className = 'h-6 w-6', filled }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 11l9-8 9 8M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9" />
+    </svg>
+  );
+}
+function UserIcon({ className = 'h-6 w-6', filled }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 20c0-4 4-6 8-6s8 2 8 6" />
+    </svg>
+  );
+}
+
+// شريط تنقّل سفلي بأسلوب التطبيقات (يظهر داخل التطبيق المثبّت فقط).
+export default function BottomNav() {
+  const { t } = useTranslation();
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const { count, setOpen } = useCart();
+  const { count: wishCount } = useWishlist();
+  const { user } = useAuth();
+
+  const accountTo = user ? '/dashboard' : '/login';
+  const items = [
+    { key: 'home', label: t('nav.home'), Icon: HomeIcon, active: pathname === '/shop', onClick: () => navigate('/shop') },
+    { key: 'fav', label: t('nav.wishlist'), Icon: HeartIcon, active: pathname === '/wishlist', badge: wishCount, onClick: () => navigate('/wishlist') },
+    { key: 'cart', label: t('nav.cart'), Icon: CartIcon, badge: count, onClick: () => setOpen(true) },
+    { key: 'account', label: t('nav.account') || 'حسابي', Icon: UserIcon, active: pathname.startsWith('/dashboard'), onClick: () => navigate(accountTo) },
+  ];
+
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-[55] border-t border-wine/10 bg-white/95 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 shadow-[0_-6px_20px_rgba(94,70,54,0.08)] backdrop-blur">
+      <div className="mx-auto flex max-w-md items-stretch justify-around px-2">
+        {items.map(({ key, label, Icon, active, badge, onClick }) => (
+          <button
+            key={key}
+            onClick={onClick}
+            className={`relative flex flex-1 flex-col items-center gap-1 rounded-xl py-1 text-[11px] font-medium transition ${
+              active ? 'text-wine' : 'text-stone-400'
+            }`}
+          >
+            <span className="relative">
+              <Icon className="h-6 w-6" filled={active} />
+              {badge > 0 && (
+                <span className="absolute -end-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-wine px-1 text-[9px] font-bold text-cream">
+                  {badge}
+                </span>
+              )}
+            </span>
+            {label}
+          </button>
+        ))}
+      </div>
+    </nav>
+  );
+}
