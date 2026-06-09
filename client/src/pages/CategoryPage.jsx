@@ -1,11 +1,21 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import Seo from '../components/Seo.jsx';
 import Spinner from '../components/Spinner.jsx';
 import ProductCard from '../components/ProductCard.jsx';
 import { CATEGORY_ICON } from '../components/icons.jsx';
+
+// لوقو بيت أنيق (زر العودة للصفحة الرئيسية)
+function HomeGlyph({ className = 'h-[18px] w-[18px]' }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3.2 11.3 12 4l8.8 7.3" />
+      <path d="M5.2 9.8V19a1 1 0 0 0 1 1h3.3v-4.6a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1V20h3.3a1 1 0 0 0 1-1V9.8" />
+    </svg>
+  );
+}
 
 export default function CategoryPage() {
   const { cat } = useParams();
@@ -27,11 +37,24 @@ export default function CategoryPage() {
   return (
     <>
       <Seo title={t(`categories.${cat}`)} />
-      <div className="mb-6 flex items-center gap-3">
-        {Icon && <Icon className="h-10 w-10 text-gold-400" />}
-        <h1 className="font-display text-3xl font-extrabold gradient-text">{t(`categories.${cat}`)}</h1>
-        <div className="gold-divider flex-1" />
-      </div>
+
+      {/* مسار التنقّل مع زر العودة للرئيسية */}
+      <nav className="mb-5 mt-1 flex items-center gap-2 text-sm">
+        <Link
+          to="/"
+          aria-label="home"
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-wine/10 text-wine shadow-sm ring-1 ring-wine/15 transition hover:bg-wine hover:text-cream"
+        >
+          <HomeGlyph />
+        </Link>
+        <span className="text-wine/40">←</span>
+        <Link to="/" className="text-wine/70 hover:text-wine">{t('nav.home')}</Link>
+        <span className="text-wine/40">←</span>
+        <span className="flex items-center gap-2 font-display text-lg font-bold text-wine">
+          {Icon && <Icon className="h-6 w-6 text-wine" />}
+          {t(`categories.${cat}`)}
+        </span>
+      </nav>
 
       {error ? (
         <div className="glass p-10 text-center text-stone-300">{error}</div>
