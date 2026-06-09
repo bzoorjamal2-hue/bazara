@@ -18,7 +18,7 @@ export default function Logo({ className = 'h-9 w-9' }) {
         fontFamily="'Playfair Display', serif"
         fontWeight="800"
         fontSize="50"
-        fill="#5C1A2E"
+        fill="#5e4636"
       >
         B
       </text>

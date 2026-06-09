@@ -11,7 +11,7 @@ export default function AppWelcome() {
     <div className="fixed inset-0 z-40 flex flex-col overflow-hidden bg-wine-dark text-cream">
       {/* توهّجات خلفية ناعمة */}
       <div className="pointer-events-none absolute -top-24 start-1/4 h-72 w-72 animate-float rounded-full bg-cream/10 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-0 end-0 h-80 w-80 rounded-full bg-[#7a2238]/40 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 end-0 h-80 w-80 rounded-full bg-[#8a6a4f]/40 blur-3xl" />
 
       {/* شريط علوي بسيط */}
       <div className="relative flex items-center justify-between px-5 pt-[max(env(safe-area-inset-top),16px)]">

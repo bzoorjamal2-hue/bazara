@@ -10,6 +10,7 @@ import CategoryGrid from '../components/CategoryGrid.jsx';
 import StoreHeader from '../components/StoreHeader.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
+import { cldVideoPoster } from '../utils/cloudinary.js';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
 
 const PAGE_SIZE = 8;
@@ -72,6 +73,13 @@ export default function StorePage() {
   // واتساب المتجر: رقم الإعدادات إن وُجد، وإلا رقم المالك المُدخل عند التسجيل
   const wa = store.whatsapp || store.ownerPhone || '';
   const featured = data.products.filter((p) => p.featured);
+  // صورة تمثيلية لكل فئة من أول منتج فيها (لعرض الفئات بصور حقيقية)
+  const catImages = {};
+  for (const p of data.products) {
+    if (catImages[p.category]) continue;
+    const im = p.imageUrl || (p.images && p.images[0]) || (p.videoUrl && cldVideoPoster(p.videoUrl));
+    if (im) catImages[p.category] = im;
+  }
   const searching = q.trim().length > 0;
   const pickCategory = (c) => { setCat(c); window.scrollTo({ top: 0, behavior: 'smooth' }); };
   const clearSearch = () => { setQ(''); setCat('all'); window.scrollTo({ top: 0, behavior: 'smooth' }); };
@@ -106,7 +114,7 @@ export default function StorePage() {
           {/* تصفّحي حسب الفئة */}
           <section className="mb-8 mt-7">
             <h2 className="mb-4 font-display text-xl font-bold gradient-text">{t('store.browseByCategory')}</h2>
-            <CategoryGrid onSelect={pickCategory} active={cat} />
+            <CategoryGrid onSelect={pickCategory} active={cat} images={catImages} />
           </section>
 
           {/* منتجات مميّزة */}

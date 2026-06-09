@@ -4,26 +4,38 @@ import { CATEGORY_ICON } from './icons.jsx';
 
 const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench'];
 
-// شبكة بطاقات الفئات: بطاقة خمرية بأيقونة عاجية + اسم الفئة أسفلها.
+// شبكة بطاقات الفئات: صورة منتج حقيقية من الفئة (إن توفّرت) وإلا أيقونة أنيقة.
 // onSelect → أزرار فلترة (صفحة المتجر) | بدونها → روابط لصفحة الفئة (الرئيسية)
-export default function CategoryGrid({ onSelect, active }) {
+export default function CategoryGrid({ onSelect, active, images }) {
   const { t } = useTranslation();
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
       {CATS.map((c, i) => {
         const Icon = CATEGORY_ICON[c];
+        const img = images?.[c];
         const isActive = active === c;
         const inner = (
           <>
             <div
-              className={`pub-cat flex h-24 items-center justify-center rounded-2xl p-4 transition-all duration-300 group-hover:-translate-y-1 sm:h-28 lg:h-32 ${
+              className={`relative aspect-[4/5] overflow-hidden rounded-2xl shadow-sm transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg ${
                 isActive ? 'ring-2 ring-wine ring-offset-2 ring-offset-cream' : ''
               }`}
             >
-              <Icon className="h-12 w-12 text-cream transition-transform duration-300 group-hover:scale-110 sm:h-14 sm:w-14 lg:h-16 lg:w-16" />
+              {img ? (
+                <img
+                  src={img}
+                  alt={t(`categories.${c}`)}
+                  loading="lazy"
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              ) : (
+                <div className="pub-cat flex h-full items-center justify-center">
+                  <Icon className="h-14 w-14 text-cream transition-transform duration-300 group-hover:scale-110 sm:h-16 sm:w-16" />
+                </div>
+              )}
             </div>
-            <span className={`mt-2 block text-center text-xs font-semibold sm:text-sm ${isActive ? 'text-wine' : 'text-[#2b2b2b]'}`}>
+            <span className={`mt-2 block text-center text-sm font-bold sm:text-base ${isActive ? 'text-wine' : 'text-[#2b2b2b]'}`}>
               {t(`categories.${c}`)}
             </span>
           </>

@@ -211,8 +211,8 @@ export default function StoreSettings() {
 
                     {b.bgType === 'color' && (
                       <div className="mt-2 flex items-center gap-2">
-                        <input type="color" className="h-9 w-12 cursor-pointer rounded-lg border border-gold-400/20 bg-black/30" value={b.bgValue || '#5C1A2E'} onChange={(e) => setBanner(idx, 'bgValue', e.target.value)} />
-                        <span className="text-xs text-stone-400" dir="ltr">{b.bgValue || '#5C1A2E'}</span>
+                        <input type="color" className="h-9 w-12 cursor-pointer rounded-lg border border-gold-400/20 bg-black/30" value={b.bgValue || '#5e4636'} onChange={(e) => setBanner(idx, 'bgValue', e.target.value)} />
+                        <span className="text-xs text-stone-400" dir="ltr">{b.bgValue || '#5e4636'}</span>
                       </div>
                     )}
                     {b.bgType === 'image' && (

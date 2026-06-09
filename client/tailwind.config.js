@@ -13,13 +13,14 @@ export default {
         almarai: ['Almarai', 'Tajawal', 'sans-serif'],
       },
       colors: {
-        // هوية المتجر العام الفاخرة: خمري/بوردو + عاجي كريمي
+        // هوية دافئة: بنّي قهوة + بيج كريمي (مستوحاة من أجواء الخريف)
+        // الأسماء "wine/cream" محفوظة كما هي لتفادي تغيير الأصناف عبر الموقع.
         wine: {
-          light: '#7a2238',
-          DEFAULT: '#5C1A2E',
-          dark: '#4A1322',
+          light: '#8a6a4f',
+          DEFAULT: '#5e4636',
+          dark: '#3f2e22',
         },
-        cream: '#F8F3EC',
+        cream: '#F4EDE2',
         // ذهبي معدني فاخر
         gold: {
           50: '#fbf8ef',
