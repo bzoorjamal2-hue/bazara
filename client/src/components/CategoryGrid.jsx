@@ -40,7 +40,11 @@ function CategoryCard({ c }) {
   );
 }
 
-function Arrow({ dir, onClick }) {
+function Arrow({ dir, rtl, onClick }) {
+  const RIGHT = 'M9 6l6 6-6 6'; // chevron ›
+  const LEFT = 'M15 6l-6 6 6 6'; // chevron ‹
+  // السابق نحو البداية، التالي نحو النهاية — يتبع اتجاه اللغة
+  const path = dir === 'prev' ? (rtl ? RIGHT : LEFT) : (rtl ? LEFT : RIGHT);
   return (
     <button
       type="button"
@@ -49,7 +53,7 @@ function Arrow({ dir, onClick }) {
       className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-wine/20 bg-white text-wine shadow-sm transition hover:bg-wine hover:text-cream"
     >
       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d={dir === 'next' ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6'} />
+        <path d={path} />
       </svg>
     </button>
   );
@@ -57,6 +61,8 @@ function Arrow({ dir, onClick }) {
 
 // شبكة/كاروسيل الفئات — تظهر بعدد متجاوب مع الشاشة، مع أسهم ونقاط عند الحاجة.
 export default function CategoryGrid({ onSelect, active }) {
+  const { i18n } = useTranslation();
+  const rtl = i18n.language !== 'en';
   const [perPage, setPerPage] = useState(getPerPage());
   const [page, setPage] = useState(0);
 
@@ -92,14 +98,14 @@ export default function CategoryGrid({ onSelect, active }) {
   return (
     <div>
       <div className="flex items-center gap-2 sm:gap-3">
-        {hasNav && <Arrow dir="prev" onClick={() => go(-1)} />}
+        {hasNav && <Arrow dir="prev" rtl={rtl} onClick={() => go(-1)} />}
         <div
           className="grid flex-1 gap-3 sm:gap-4"
           style={{ gridTemplateColumns: `repeat(${perPage}, minmax(0,1fr))` }}
         >
           {shown.map((c) => <Item key={c} c={c} />)}
         </div>
-        {hasNav && <Arrow dir="next" onClick={() => go(1)} />}
+        {hasNav && <Arrow dir="next" rtl={rtl} onClick={() => go(1)} />}
       </div>
 
       {pages > 1 && (

@@ -45,7 +45,7 @@ function StarBoxIcon({ className = 'h-6 w-6' }) {
 
 // شريط مزايا المتجر — يظهر بآخر الصفحة، أنيق ومنسّق بألوان المتجر.
 export default function FeaturesBar() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const items = [
     { Icon: ShieldIcon, title: t('store.featSecurity') },
     { Icon: TruckIcon, title: t('store.featDelivery') },
@@ -54,24 +54,30 @@ export default function FeaturesBar() {
     { Icon: StarBoxIcon, title: t('store.featExclusive') },
   ];
 
+  const rtl = i18n.language !== 'en';
   const PER = 2; // ميزتان بنفس الوقت
   const [page, setPage] = useState(0);
   const pages = Math.ceil(items.length / PER);
   const shown = items.slice(page * PER, page * PER + PER);
   const go = (d) => setPage((p) => (p + d + pages) % pages);
 
-  const Arrow = ({ dir, onClick }) => (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={dir === 'next' ? 'next' : 'prev'}
-      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-wine/20 bg-white text-wine shadow-sm transition hover:bg-wine hover:text-cream"
-    >
-      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d={dir === 'next' ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6'} />
-      </svg>
-    </button>
-  );
+  const Arrow = ({ dir, onClick }) => {
+    const RIGHT = 'M9 6l6 6-6 6';
+    const LEFT = 'M15 6l-6 6 6 6';
+    const path = dir === 'prev' ? (rtl ? RIGHT : LEFT) : (rtl ? LEFT : RIGHT);
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        aria-label={dir === 'next' ? 'next' : 'prev'}
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-wine/20 bg-white text-wine shadow-sm transition hover:bg-wine hover:text-cream"
+      >
+        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d={path} />
+        </svg>
+      </button>
+    );
+  };
 
   return (
     <section className="mt-12">
