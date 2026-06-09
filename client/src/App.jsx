@@ -5,6 +5,13 @@ import ProtectedRoute from './components/ProtectedRoute.jsx';
 import RequireSubscription from './components/RequireSubscription.jsx';
 import Spinner from './components/Spinner.jsx';
 import Home from './pages/Home.jsx'; // الصفحة الرئيسية تبقى فورية (أول ما يفتح الزائر)
+import AppWelcome from './components/AppWelcome.jsx';
+import { isStandalone } from './utils/pwa.js';
+
+// داخل التطبيق المثبّت: الجذر "/" يعرض شاشة افتتاح أنيقة. في المتصفح: يعرض الصفحة الرئيسية كالمعتاد.
+function Root() {
+  return isStandalone() ? <AppWelcome /> : <Home />;
+}
 
 // باقي الصفحات تُحمّل عند الحاجة فقط (code-splitting) — يقلّل حجم التحميل الأولي كثيراً
 const Login = lazy(() => import('./pages/Login.jsx'));
@@ -25,7 +32,8 @@ export default function App() {
     <Layout>
       <Suspense fallback={<Spinner full />}>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Root />} />
+          <Route path="/shop" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />

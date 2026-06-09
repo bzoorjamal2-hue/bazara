@@ -36,6 +36,10 @@
   "offline": {
     "message": "No internet connection — only the home page is available"
   },
+  "appWelcome": {
+    "browse": "Start shopping",
+    "openStore": "Create your store now"
+  },
   "pwa": {
     "title": "Get the Bazara app",
     "desc": "Shop faster — an icon on your home screen that opens full-screen.",

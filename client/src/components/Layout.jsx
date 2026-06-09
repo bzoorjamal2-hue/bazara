@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import Navbar from './Navbar.jsx';
 import CartDrawer from './CartDrawer.jsx';
 import OfflineBanner from './OfflineBanner.jsx';
+import { isStandalone } from '../utils/pwa.js';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
 import { BAZARA_WHATSAPP, BAZARA_INSTAGRAM, BAZARA_FACEBOOK } from '../config/site.js';
 
@@ -11,12 +12,15 @@ export default function Layout({ children }) {
   const { pathname } = useLocation();
   // صفحات المتجر العامة لها هيدر وفوتر خاص بالمتجر بدل شريط/فوتر Bazara العام
   const isStorePage = /^\/store\//.test(pathname);
+  // شاشة افتتاح التطبيق المثبّت (الجذر) — بلا شريط/فوتر ليبدو كتطبيق كامل
+  const isAppWelcome = pathname === '/' && isStandalone();
+  const hideChrome = isStorePage || isAppWelcome;
 
   return (
     <div className="app-bg theme-pub flex min-h-screen flex-col">
-      {!isStorePage && <Navbar />}
+      {!hideChrome && <Navbar />}
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">{children}</main>
-      {!isStorePage && <PublicFooter />}
+      {!hideChrome && <PublicFooter />}
       <CartDrawer />
       <OfflineBanner />
     </div>
