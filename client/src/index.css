@@ -260,7 +260,7 @@ html[lang='ar'] .font-display {
 }
 
 /* ===== الفوتر الخمري ===== */
-.pub-footer { background: #3f2e22; color: #F4EDE2; }
+.pub-footer { background: #221912; color: #F4EDE2; }
 
 /* ===== نافذة الفلاتر السفلية (Bottom Sheet) ===== */
 @keyframes sheet-up {

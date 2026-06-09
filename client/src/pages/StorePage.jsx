@@ -8,6 +8,7 @@ import Spinner from '../components/Spinner.jsx';
 import ProductCard from '../components/ProductCard.jsx';
 import CategoryGrid from '../components/CategoryGrid.jsx';
 import StoreHeader from '../components/StoreHeader.jsx';
+import FeaturesBar from '../components/FeaturesBar.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { cldVideoPoster } from '../utils/cloudinary.js';
@@ -166,6 +167,8 @@ export default function StorePage() {
             <h2 className="mb-4 text-center font-display text-2xl font-bold text-wine">{t('store.browseByCategory')}</h2>
             <CategoryGrid onSelect={pickCategory} active={cat} images={catImages} />
           </section>
+
+          <FeaturesBar />
 
           <ProductSection title={`${t('store.newArrivals')} ❤️`} products={newest} wa={wa} />
           <ProductSection title={t('store.bestSellers')} products={featured.slice(0, 8)} wa={wa} />
