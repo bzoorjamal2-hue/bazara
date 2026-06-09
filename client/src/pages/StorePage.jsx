@@ -30,6 +30,7 @@ export default function StorePage() {
   const [sizesSel, setSizesSel] = useState([]); // مقاسات مختارة (متعدّد)
   const [offersOnly, setOffersOnly] = useState(false);
   const [openSheet, setOpenSheet] = useState(null); // 'sort' | 'size' | 'offers'
+  const [viewAll, setViewAll] = useState(false); // "عرض جميع المنتجات" من الصفحة الرئيسية
   const [page, setPage] = useState(1);
 
   useEffect(() => {
@@ -81,8 +82,10 @@ export default function StorePage() {
     if (im) catImages[p.category] = im;
   }
   const searching = q.trim().length > 0;
-  const pickCategory = (c) => { setCat(c); window.scrollTo({ top: 0, behavior: 'smooth' }); };
-  const clearSearch = () => { setQ(''); setCat('all'); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  // أحدث المنتجات (لقسم "جديدنا")
+  const newest = [...data.products].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 8);
+  const pickCategory = (c) => { setViewAll(false); setCat(c); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const clearSearch = () => { setQ(''); setCat('all'); setViewAll(false); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
   return (
     <>
@@ -99,87 +102,82 @@ export default function StorePage() {
         </div>
       )}
 
-      {searching ? (
-        /* عرض نتائج البحث */
-        <nav className="mb-4 mt-2 flex items-center gap-2 text-sm">
-          <button onClick={clearSearch} className="text-wine/70 hover:text-wine" aria-label="home">🏠</button>
-          <span className="text-wine/40">←</span>
-          <span className="font-display text-lg font-bold text-wine">{t('store.searchResults')} «{q.trim()}»</span>
-        </nav>
-      ) : cat === 'all' ? (
+      {searching || cat !== 'all' || viewAll ? (
+        /* عرض الشبكة: نتائج بحث / فئة / كل المنتجات */
         <>
-          {/* سلايدر البانرات (شريحة ثابتة + شرايح عروض المالك) */}
+          {searching ? (
+            <nav className="mb-4 mt-2 flex items-center gap-2 text-sm">
+              <button onClick={clearSearch} className="text-wine/70 hover:text-wine" aria-label="home">🏠</button>
+              <span className="text-wine/40">←</span>
+              <span className="font-display text-lg font-bold text-wine">{t('store.searchResults')} «{q.trim()}»</span>
+            </nav>
+          ) : viewAll ? (
+            <nav className="mb-4 mt-2 flex items-center gap-2 text-sm">
+              <button onClick={() => { setViewAll(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-wine/70 hover:text-wine" aria-label="home">🏠</button>
+              <span className="text-wine/40">←</span>
+              <span className="font-display text-lg font-bold text-wine">{t('store.allProducts')}</span>
+            </nav>
+          ) : (
+            <nav className="mb-4 mt-2 flex items-center gap-2 text-sm">
+              <button onClick={() => pickCategory('all')} className="text-wine/70 hover:text-wine" aria-label="home">🏠</button>
+              <span className="text-wine/40">←</span>
+              <button onClick={() => pickCategory('all')} className="text-wine/70 hover:text-wine">{t('store.storeRoot')}</button>
+              <span className="text-wine/40">←</span>
+              <span className="font-display text-lg font-bold text-wine">{t(`categories.${cat}`)}</span>
+            </nav>
+          )}
+
+          {/* شرائط الفلترة */}
+          {data.products.length > 0 && (
+            <div className="mb-4 -mx-4 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
+              <div className="flex w-max items-center gap-2">
+                <Chip onClick={() => setOpenSheet('sort')}>{t('store.sortBy')}: {t(SORT_LABEL[sort] || 'store.sortDefault')}</Chip>
+                <Chip onClick={() => setOpenSheet('size')} active={sizesSel.length > 0}>{t('store.sizeLabel')}{sizesSel.length ? ` (${sizesSel.length})` : ''}</Chip>
+                <Chip onClick={() => setOpenSheet('offers')} active={offersOnly}>{t('store.specialOffers')}</Chip>
+              </div>
+            </div>
+          )}
+
+          {filtered.length === 0 ? (
+            <div className="glass p-10 text-center text-stone-400">
+              {data.products.length === 0 ? t('store.noProducts') : t('common.noResults')}
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                {pageItems.map((p, i) => <ProductCard key={p.id} product={p} index={i} whatsapp={wa} />)}
+              </div>
+              {totalPages > 1 && (
+                <div className="mt-8 flex items-center justify-center gap-2">
+                  {Array.from({ length: totalPages }).map((_, i) => (
+                    <button key={i} onClick={() => { setPage(i + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`h-9 w-9 rounded-lg text-sm font-semibold transition ${page === i + 1 ? 'bg-wine text-cream' : 'border border-wine/30 text-wine hover:bg-wine/10'}`}>{i + 1}</button>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </>
+      ) : (
+        /* الصفحة الرئيسية للمتجر — بأسلوب خريف: هيرو + فئات + جديدنا + الأكثر مبيعاً + عرض الكل */
+        <>
           <HeroSlider store={store} />
 
-          {/* تصفّحي حسب الفئة */}
-          <section className="mb-8 mt-7">
-            <h2 className="mb-4 font-display text-xl font-bold gradient-text">{t('store.browseByCategory')}</h2>
+          <section className="mb-9 mt-7">
+            <h2 className="mb-4 text-center font-display text-2xl font-bold text-wine">{t('store.browseByCategory')}</h2>
             <CategoryGrid onSelect={pickCategory} active={cat} images={catImages} />
           </section>
 
-          {/* منتجات مميّزة */}
-          {featured.length > 0 && (
-            <section className="mb-8">
-              <h2 className="mb-4 font-display text-xl font-bold gradient-text">★ {t('store.featured')}</h2>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                {featured.slice(0, 4).map((p, i) => <ProductCard key={p.id} product={p} index={i} whatsapp={wa} />)}
-              </div>
-            </section>
-          )}
+          <ProductSection title={`${t('store.newArrivals')} ❤️`} products={newest} wa={wa} />
+          <ProductSection title={t('store.bestSellers')} products={featured.slice(0, 8)} wa={wa} />
 
-          <h2 className="mb-4 font-display text-xl font-bold gradient-text">{t('store.products')}</h2>
-        </>
-      ) : (
-        /* صفحة الفئة المخصّصة: مسار التنقّل (🏠 ← المتجر ← الفئة) */
-        <nav className="mb-4 mt-2 flex items-center gap-2 text-sm">
-          <button onClick={() => pickCategory('all')} className="text-wine/70 hover:text-wine" aria-label="home">🏠</button>
-          <span className="text-wine/40">←</span>
-          <button onClick={() => pickCategory('all')} className="text-wine/70 hover:text-wine">{t('store.storeRoot')}</button>
-          <span className="text-wine/40">←</span>
-          <span className="font-display text-lg font-bold text-wine">{t(`categories.${cat}`)}</span>
-        </nav>
-      )}
-
-      {/* ٣ شرايط فلترة (كل واحد يفتح نافذة سفلية) — أفقي قابل للسحب */}
-      {data.products.length > 0 && (
-        <div className="mb-4 -mx-4 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
-          <div className="flex w-max items-center gap-2">
-            <Chip onClick={() => setOpenSheet('sort')}>
-              {t('store.sortBy')}: {t(SORT_LABEL[sort] || 'store.sortDefault')}
-            </Chip>
-            <Chip onClick={() => setOpenSheet('size')} active={sizesSel.length > 0}>
-              {t('store.sizeLabel')}{sizesSel.length ? ` (${sizesSel.length})` : ''}
-            </Chip>
-            <Chip onClick={() => setOpenSheet('offers')} active={offersOnly}>
-              {t('store.specialOffers')}
-            </Chip>
-          </div>
-        </div>
-      )}
-
-      {/* شبكة المنتجات */}
-      {filtered.length === 0 ? (
-        <div className="glass p-10 text-center text-stone-400">
-          {data.products.length === 0 ? t('store.noProducts') : t('common.noResults')}
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {pageItems.map((p, i) => <ProductCard key={p.id} product={p} index={i} whatsapp={wa} />)}
-          </div>
-
-          {/* ترقيم الصفحات */}
-          {totalPages > 1 && (
-            <div className="mt-8 flex items-center justify-center gap-2">
-              {Array.from({ length: totalPages }).map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => { setPage(i + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                  className={`h-9 w-9 rounded-lg text-sm font-semibold transition ${page === i + 1 ? 'bg-gold-400 text-ink-950' : 'border border-gold-400/30 text-stone-200 hover:bg-gold-400/10'}`}
-                >
-                  {i + 1}
-                </button>
-              ))}
+          {data.products.length > 0 && (
+            <div className="mb-10 text-center">
+              <button
+                onClick={() => { setViewAll(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                className="rounded-full border border-wine/40 px-8 py-3 font-semibold text-wine transition hover:bg-wine hover:text-cream"
+              >
+                {t('store.viewAllProducts')}
+              </button>
             </div>
           )}
         </>
@@ -291,6 +289,19 @@ function Chip({ onClick, active, children }) {
 }
 
 // قالب النافذة السفلية
+// قسم منتجات بعنوان مركزي (جديدنا / الأكثر مبيعاً)
+function ProductSection({ title, products, wa }) {
+  if (!products || products.length === 0) return null;
+  return (
+    <section className="mb-10">
+      <h2 className="mb-5 text-center font-display text-2xl font-bold text-wine">{title}</h2>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        {products.map((p, i) => <ProductCard key={p.id} product={p} index={i} whatsapp={wa} />)}
+      </div>
+    </section>
+  );
+}
+
 function FilterSheet({ title, onClose, onReset, onApply, children }) {
   const { t } = useTranslation();
   useScrollLock(true); // مفتوحة دائماً عند التركيب — تجمّد الخلفية
