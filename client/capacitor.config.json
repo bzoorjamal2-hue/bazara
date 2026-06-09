@@ -1,0 +1,17 @@
+{
+  "appId": "com.bazara.store",
+  "appName": "Bazara Store",
+  "webDir": "dist",
+  "backgroundColor": "#5C1A2E",
+  "server": {
+    "url": "https://bazara-alpha.vercel.app",
+    "cleartext": false
+  },
+  "android": {
+    "backgroundColor": "#5C1A2E"
+  },
+  "ios": {
+    "backgroundColor": "#5C1A2E",
+    "contentInset": "always"
+  }
+}
