@@ -50,6 +50,7 @@
     "iosStep1": "Tap Safari's Share button",
     "iosStep2": "Scroll and choose “Add to Home Screen”, then “Add”",
     "iosHint": "Note: this install button can't run automatically on iPhone — Apple only allows installing from Safari's Share button (steps above). On Android it installs with one tap.",
+    "desktopHelp": "To install on desktop: click the install icon (⬇️ or a small screen) in the address bar, or open the browser menu (⋮) and choose “Install Bazara”.",
     "iosReassure": "After these 2 steps, Bazara becomes an app on your home screen that opens full-screen — the same experience as the store app. 🎉",
     "iosOpenSafari": "Looks like you opened the link inside an app (e.g. WhatsApp). Open it in Safari first: tap ⋯ or the Share button, then choose “Open in Safari” — then repeat the 2 steps. (Add to Home Screen works only in Safari)"
   },
