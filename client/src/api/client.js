@@ -48,6 +48,14 @@ api.interceptors.response.use(
 
 // استخراج رسالة خطأ آمنة للعرض
 export function getErrorMessage(err, fallback = 'حدث خطأ، حاول مجدداً.') {
+  // خطأ شبكة (لا يوجد رد من الخادم) أو الجهاز غير متصل بالإنترنت
+  const noNetwork =
+    err &&
+    !err.response &&
+    (err.code === 'ERR_NETWORK' ||
+      err.message === 'Network Error' ||
+      (typeof navigator !== 'undefined' && navigator.onLine === false));
+  if (noNetwork) return 'فقدت الاتصال بالشبكة. تحقّق من اتصالك بالإنترنت وحاول مجدداً.';
   return err?.response?.data?.error || fallback;
 }
 

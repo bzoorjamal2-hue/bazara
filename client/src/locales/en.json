@@ -30,7 +30,19 @@
     "copyLink": "Copy link",
     "copied": "Copied!",
     "share": "Share store",
-    "optional": "optional"
+    "optional": "optional",
+    "ok": "OK"
+  },
+  "offline": {
+    "message": "No internet connection — only the home page is available"
+  },
+  "pwa": {
+    "title": "Get the Bazara app",
+    "desc": "Shop faster — an icon on your home screen that opens full-screen.",
+    "install": "Install app",
+    "iosTitle": "Add Bazara to your Home Screen",
+    "iosStep1": "Tap the Share button",
+    "iosStep2": "Choose “Add to Home Screen”"
   },
   "categories": {
     "abaya": "Abayas",

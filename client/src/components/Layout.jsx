@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router-dom';
 import Navbar from './Navbar.jsx';
 import CartDrawer from './CartDrawer.jsx';
+import OfflineBanner from './OfflineBanner.jsx';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
 import { BAZARA_WHATSAPP, BAZARA_INSTAGRAM, BAZARA_FACEBOOK } from '../config/site.js';
 
@@ -17,6 +18,7 @@ export default function Layout({ children }) {
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">{children}</main>
       {!isStorePage && <PublicFooter />}
       <CartDrawer />
+      <OfflineBanner />
     </div>
   );
 }

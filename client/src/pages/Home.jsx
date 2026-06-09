@@ -7,6 +7,7 @@ import Spinner from '../components/Spinner.jsx';
 import ProductCard from '../components/ProductCard.jsx';
 import CategoryGrid from '../components/CategoryGrid.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
+import InstallApp from '../components/InstallApp.jsx';
 import { BAZARA_WHATSAPP } from '../config/site.js';
 import { ShieldIcon, DiamondIcon, BoltIcon } from '../components/icons.jsx';
 
@@ -30,6 +31,9 @@ export default function Home() {
 
       {/* Hero — سلايدر بانرات (شريحة ثابتة + شريحتين) */}
       <HomeHero />
+
+      {/* بطاقة تنزيل التطبيق (تظهر إن كان قابلاً للتثبيت وغير مثبّت) */}
+      <InstallApp />
 
       {/* تصفّح حسب الفئة */}
       <section className="mt-14">
