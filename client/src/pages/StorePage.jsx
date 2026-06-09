@@ -108,19 +108,19 @@ export default function StorePage() {
         <>
           {searching ? (
             <nav className="mb-4 mt-2 flex items-center gap-2 text-sm">
-              <button onClick={clearSearch} className="text-wine/70 hover:text-wine" aria-label="home">🏠</button>
+              <button onClick={clearSearch} className="flex h-8 w-8 items-center justify-center rounded-full bg-wine/10 text-wine shadow-sm ring-1 ring-wine/15 transition hover:bg-wine hover:text-cream" aria-label="home"><HomeGlyph /></button>
               <span className="text-wine/40">←</span>
               <span className="font-display text-lg font-bold text-wine">{t('store.searchResults')} «{q.trim()}»</span>
             </nav>
           ) : viewAll ? (
             <nav className="mb-4 mt-2 flex items-center gap-2 text-sm">
-              <button onClick={() => { setViewAll(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-wine/70 hover:text-wine" aria-label="home">🏠</button>
+              <button onClick={() => { setViewAll(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="flex h-8 w-8 items-center justify-center rounded-full bg-wine/10 text-wine shadow-sm ring-1 ring-wine/15 transition hover:bg-wine hover:text-cream" aria-label="home"><HomeGlyph /></button>
               <span className="text-wine/40">←</span>
               <span className="font-display text-lg font-bold text-wine">{t('store.allProducts')}</span>
             </nav>
           ) : (
             <nav className="mb-4 mt-2 flex items-center gap-2 text-sm">
-              <button onClick={() => pickCategory('all')} className="text-wine/70 hover:text-wine" aria-label="home">🏠</button>
+              <button onClick={() => pickCategory('all')} className="flex h-8 w-8 items-center justify-center rounded-full bg-wine/10 text-wine shadow-sm ring-1 ring-wine/15 transition hover:bg-wine hover:text-cream" aria-label="home"><HomeGlyph /></button>
               <span className="text-wine/40">←</span>
               <button onClick={() => pickCategory('all')} className="text-wine/70 hover:text-wine">{t('store.storeRoot')}</button>
               <span className="text-wine/40">←</span>
@@ -293,6 +293,16 @@ function Chip({ onClick, active, children }) {
 }
 
 // قالب النافذة السفلية
+// لوقو بيت أنيق (زر العودة للصفحة الرئيسية للمتجر)
+function HomeGlyph({ className = 'h-[18px] w-[18px]' }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3.2 11.3 12 4l8.8 7.3" />
+      <path d="M5.2 9.8V19a1 1 0 0 0 1 1h3.3v-4.6a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1V20h3.3a1 1 0 0 0 1-1V9.8" />
+    </svg>
+  );
+}
+
 // قسم منتجات بعنوان مركزي (جديدنا / الأكثر مبيعاً)
 function ProductSection({ title, products, wa }) {
   if (!products || products.length === 0) return null;
