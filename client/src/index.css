@@ -282,3 +282,10 @@ html[lang='ar'] .font-display {
   to { opacity: 1; transform: scale(1); }
 }
 .animate-pop { animation: pop-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+/* تنبيه ينزل من الأعلى بنعومة */
+@keyframes toast-top {
+  from { opacity: 0; transform: translateY(-120%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-toast-top { animation: toast-top 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
