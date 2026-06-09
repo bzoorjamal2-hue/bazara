@@ -1,8 +1,11 @@
 import { useTranslation } from 'react-i18next';
 
-export default function LanguageSwitcher() {
+export default function LanguageSwitcher({ onChanged }) {
   const { i18n } = useTranslation();
-  const toggle = () => i18n.changeLanguage(i18n.language === 'ar' ? 'en' : 'ar');
+  const toggle = () => {
+    i18n.changeLanguage(i18n.language === 'ar' ? 'en' : 'ar');
+    onChanged?.();
+  };
 
   return (
     <button

@@ -149,19 +149,22 @@ export default function Navbar() {
       {/* قائمة الحساب — درج جانبي أنيق (مثل درج المتجر) */}
       {user && menuOpen && (
         <div className="fixed inset-0 z-[70]">
-          {/* خلفية معتّمة (لا تُغلق — الإغلاق بزر ✕) */}
-          <div className="absolute inset-0 bg-black/50" />
-          <aside className={`absolute inset-y-0 start-0 flex w-80 max-w-[85%] flex-col bg-wine-dark p-5 text-cream shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}>
+          {/* خلفية معتّمة — تُغلق الدرج بالضغط خارجه */}
+          <div className="absolute inset-0 bg-black/50 animate-fade-up" onClick={() => setMenuOpen(false)} />
+          <aside
+            onClick={(e) => e.stopPropagation()}
+            className={`absolute inset-y-0 start-0 flex w-80 max-w-[85%] flex-col bg-wine-dark p-5 text-cream shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}
+          >
             {/* أعلى: إغلاق + اللغة */}
             <div className="flex items-center justify-between">
               <button
                 onClick={() => setMenuOpen(false)}
                 aria-label="close"
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-cream text-lg font-bold text-wine"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-cream text-lg font-bold text-wine transition hover:bg-white"
               >
                 ✕
               </button>
-              <LanguageSwitcher />
+              <LanguageSwitcher onChanged={() => setMenuOpen(false)} />
             </div>
 
             {/* الهوية — المدير يظهر باسمه وصورته (حساب تحكّم) */}

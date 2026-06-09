@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
-// نافذة تأكيد أنيقة (بديلة عن window.confirm) — لا تُغلق بالضغط خارجها
+// نافذة تأكيد أنيقة (بديلة عن window.confirm) — تُغلق بالضغط خارجها (يُلغي)
 export default function ConfirmModal({
   open,
   title,
@@ -17,7 +17,7 @@ export default function ConfirmModal({
 
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !busy && onCancel?.()} />
       <div className="animate-fade-up relative w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-2xl">
         <div className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full ${danger ? 'bg-red-50 text-red-500' : 'bg-wine/10 text-wine'}`}>
           {danger ? (

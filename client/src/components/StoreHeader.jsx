@@ -9,7 +9,7 @@ import { MenuIcon, SearchIcon, CartIcon, HeartIcon } from './icons.jsx';
 const CATS = ['abaya', 'set', 'dress', 'hijab'];
 
 // هيدر صفحة المتجر العامة — مستوحى من متاجر الأزياء الفاخرة:
-// صف 1: زر قائمة (☰) + اسم/شعار المتجر | صف 2: سلة + خانة بحث عريضة | درج جانبي للفئات.
+// شعار/اسم المتجر (يتقلّص بنعومة عند التمرير) فوق شريط ثابت: قائمة (☰) + بحث + سلة.
 export default function StoreHeader({ store, q, setQ, cat, setCat }) {
   const { t, i18n } = useTranslation();
   const ltr = i18n.language !== 'ar';
@@ -17,69 +17,40 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
   const { count: wishCount } = useWishlist();
   const [drawer, setDrawer] = useState(false);
   const logoWrapRef = useRef(null);
-  const compactWrapRef = useRef(null);
 
-  // حركة مربوطة بالتمرير مع تنعيم احترافي (smoothing/lerp):
-  // القيمة الحالية "تنساب" نحو هدف التمرير بدل القفز معه، مع منحنى easing ناعم —
-  // تظل الحلقة تشتغل حتى تستقر القيمة (يعطي إحساس انسيابي حتى بعد رفع الإصبع).
+  // انكماش الشعار مربوط بالتمرير مع تنعيم احترافي (lerp + smoothstep) —
+  // الشعار وحده يتقلّص بنعومة، والشريط (قائمة/بحث/سلة) يبقى ثابتاً دائماً بلا تشابك.
   useEffect(() => {
-    const RANGE = 150; // مسافة التمرير التي يكتمل خلالها الانكماش (أطول = أنعم)
+    const RANGE = 150;
     const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const smoothstep = (t) => t * t * (3 - 2 * t); // منحنى ناعم بدل الخطّي
+    const smoothstep = (t) => t * t * (3 - 2 * t);
     let target = Math.min(Math.max(window.scrollY / RANGE, 0), 1);
     let cur = target;
     let raf = 0;
     let running = false;
 
     const draw = () => {
-      // استيفاء أُسّي: القيمة الحالية تلحق الهدف بنعومة (معامل أصغر = أنعم وأبطأ)
-      cur += (target - cur) * (reduce ? 1 : 0.16);
+      cur += (target - cur) * (reduce ? 1 : 0.15);
       if (Math.abs(target - cur) < 0.0006) cur = target;
       const p = smoothstep(Math.min(Math.max(cur, 0), 1));
       const inv = 1 - p;
-
       const lw = logoWrapRef.current;
       if (lw) {
         lw.style.gridTemplateRows = inv + 'fr';
         lw.style.opacity = String(inv);
         lw.style.marginBottom = 12 * inv + 'px';
-        lw.style.transform = `translate3d(0, ${-10 * p}px, 0)`;
+        lw.style.transform = `translate3d(0, ${-12 * p}px, 0)`;
       }
-      const cw = compactWrapRef.current;
-      if (cw) {
-        cw.style.width = 44 * p + 'px';
-        cw.style.opacity = String(p);
-        cw.style.marginInlineStart = 10 * p + 'px';
-      }
-
-      if (cur !== target) {
-        raf = requestAnimationFrame(draw);
-      } else {
-        running = false;
-        raf = 0;
-      }
+      if (cur !== target) raf = requestAnimationFrame(draw);
+      else { running = false; raf = 0; }
     };
-
     const tick = () => { if (!running) { running = true; raf = requestAnimationFrame(draw); } };
-    const onScroll = () => {
-      target = Math.min(Math.max(window.scrollY / RANGE, 0), 1);
-      tick();
-    };
+    const onScroll = () => { target = Math.min(Math.max(window.scrollY / RANGE, 0), 1); tick(); };
 
-    draw(); // رسم أولي
+    draw();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => { window.removeEventListener('scroll', onScroll); if (raf) cancelAnimationFrame(raf); };
   }, []);
-
-  const MenuBtn = ({ className = '' }) => (
-    <button
-      onClick={() => setDrawer(true)}
-      aria-label="menu"
-      className={`flex items-center justify-center rounded-full bg-cream text-wine shadow transition hover:bg-white ${className}`}
-    >
-      <MenuIcon className="h-6 w-6" />
-    </button>
-  );
 
   const pick = (c) => {
     setCat(c);
@@ -90,22 +61,19 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
   return (
     <header className="sticky top-0 z-50 -mx-4 -mt-8 mb-5 bg-wine-dark shadow-lg sm:-mx-6">
       <div className="mx-auto max-w-6xl px-4 py-3 sm:px-6">
-        {/* الصف الأول: اسم/شعار المتجر — يتقلّص تدريجياً مع التمرير */}
+        {/* اسم/شعار المتجر — يتقلّص بنعومة مع التمرير (وحده، بلا تداخل) */}
         <div ref={logoWrapRef} className="grid will-change-transform" style={{ gridTemplateRows: '1fr', marginBottom: '12px' }}>
           <div className="min-h-0 overflow-hidden">
-            <div className="flex items-center justify-between gap-3">
-              <Link to={`/store/${store.slug}`} onClick={() => setCat('all')} className="flex items-center gap-2.5">
-                {store.logoUrl && (
-                  <img src={store.logoUrl} alt={store.name} className="h-10 w-10 rounded-xl border border-cream/30 object-cover" />
-                )}
-                <span className="font-display text-2xl font-bold tracking-wide text-cream">{store.name}</span>
-              </Link>
-              <MenuBtn className="h-11 w-11" />
-            </div>
+            <Link to={`/store/${store.slug}`} onClick={() => setCat('all')} className="flex items-center justify-center gap-2.5">
+              {store.logoUrl && (
+                <img src={store.logoUrl} alt={store.name} className="h-10 w-10 rounded-xl border border-cream/30 object-cover" />
+              )}
+              <span className="font-display text-2xl font-bold tracking-wide text-cream">{store.name}</span>
+            </Link>
           </div>
         </div>
 
-        {/* صف البحث: بحث (يمين) + سلة (يسار) + ☰ مُصغّر عند التمرير */}
+        {/* الشريط الثابت: قائمة (☰) + بحث + سلة — يبقى ظاهراً دائماً */}
         <div className="flex items-center gap-2.5">
           <div className="relative flex-1">
             <span className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-wine/50">
@@ -118,11 +86,6 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
               className="w-full rounded-full border-0 bg-white py-2.5 pe-4 ps-10 text-[#2b2b2b] placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-cream/50"
             />
           </div>
-          {/* ☰ المُصغّر — يظهر تدريجياً عند التمرير */}
-          <div ref={compactWrapRef} className="shrink-0 overflow-hidden will-change-[width,opacity]" style={{ width: 0, opacity: 0 }}>
-            <MenuBtn className="h-11 w-11" />
-          </div>
-          {/* السلة — آخر عنصر لتكون بأقصى الجهة محاذية لزر القائمة (☰) فوقها */}
           <button
             onClick={() => setOpen(true)}
             aria-label="cart"
@@ -135,15 +98,24 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
               </span>
             )}
           </button>
+          <button
+            onClick={() => setDrawer(true)}
+            aria-label="menu"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-cream text-wine shadow transition hover:bg-white"
+          >
+            <MenuIcon className="h-6 w-6" />
+          </button>
         </div>
       </div>
 
-      {/* الدرج الجانبي المنزلق */}
+      {/* الدرج الجانبي المنزلق — يُغلق بالضغط خارجه أو بزر ✕ */}
       {drawer && (
         <div className="fixed inset-0 z-[60]">
-          {/* الخلفية لا تُغلق الدرج — الإغلاق فقط بزر ✕ */}
-          <div className="absolute inset-0 bg-black/50" />
-          <aside className={`absolute inset-y-0 start-0 flex w-80 max-w-[85%] flex-col bg-wine-dark p-5 text-cream shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}>
+          <div className="absolute inset-0 bg-black/50 animate-fade-up" onClick={() => setDrawer(false)} />
+          <aside
+            onClick={(e) => e.stopPropagation()}
+            className={`absolute inset-y-0 start-0 flex w-80 max-w-[85%] flex-col bg-wine-dark p-5 text-cream shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}
+          >
             {/* أزرار علوية: دخول + مفضّلة + إغلاق */}
             <div className="flex items-center gap-2">
               <Link
@@ -164,17 +136,17 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
               <button
                 onClick={() => setDrawer(false)}
                 aria-label="close"
-                className="ms-auto flex h-10 w-10 items-center justify-center rounded-full bg-cream text-lg font-bold text-wine"
+                className="ms-auto flex h-10 w-10 items-center justify-center rounded-full bg-cream text-lg font-bold text-wine transition hover:bg-white"
               >
                 ✕
               </button>
             </div>
 
-            {/* قائمة الفئات */}
+            {/* قائمة الفئات — محاذاة تتبع اللغة تلقائياً (start) */}
             <nav className="mt-6 space-y-1">
               <button
                 onClick={() => pick('all')}
-                className={`block w-full rounded-xl px-3 py-3 text-end text-lg font-bold hover:bg-cream/10 ${cat === 'all' ? 'text-cream' : 'text-cream/90'}`}
+                className={`block w-full rounded-xl px-3 py-3 text-start text-lg font-bold transition hover:bg-cream/10 ${cat === 'all' ? 'text-cream' : 'text-cream/90'}`}
               >
                 {t('store.allProducts')}
               </button>
@@ -183,7 +155,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
                 <button
                   key={c}
                   onClick={() => pick(c)}
-                  className={`block w-full rounded-xl px-3 py-3 text-end text-base hover:bg-cream/10 ${cat === c ? 'font-bold text-cream' : 'text-cream/85'}`}
+                  className={`block w-full rounded-xl px-3 py-3 text-start text-base transition hover:bg-cream/10 ${cat === c ? 'font-bold text-cream' : 'text-cream/85'}`}
                 >
                   {t(`categories.${c}`)}
                 </button>
@@ -191,7 +163,8 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
             </nav>
 
             <div className="mt-auto flex items-center justify-between pt-4">
-              <LanguageSwitcher />
+              {/* تبديل اللغة يُغلق الدرج ليُطبَّق الاتجاه الجديد بنظافة */}
+              <LanguageSwitcher onChanged={() => setDrawer(false)} />
               <Link to="/" onClick={() => setDrawer(false)} className="font-display text-xs text-cream/60 hover:text-cream">
                 Bazara
               </Link>

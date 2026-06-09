@@ -21,8 +21,8 @@ export default function OrderOptions({ store, items, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="glass-strong w-full max-w-sm animate-fade-up p-6">
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" onClick={onClose}>
+      <div className="glass-strong w-full max-w-sm animate-fade-up p-6" onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-center justify-between">
           <h3 className="font-display text-lg font-bold gradient-text">{t('order.choose')}</h3>
           <button onClick={onClose} className="text-stone-400 hover:text-gold-200">✕</button>

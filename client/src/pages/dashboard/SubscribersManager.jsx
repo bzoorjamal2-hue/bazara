@@ -129,7 +129,7 @@ function SubRow({ s, onDeleted, onUpdated }) {
       {err && <div className="mt-2 rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-1.5 text-xs text-red-200">{err}</div>}
 
       {!s.isAdmin && (
-        <div className="mt-3 space-y-2">
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
           {/* المجموعة 1: الخطة + حفظ التعديلات */}
           <div className="flex flex-wrap items-center gap-2">
             <select value={plan} onChange={(e) => setPlan(e.target.value)} className="input !w-auto !py-1.5 text-sm">
