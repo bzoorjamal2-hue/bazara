@@ -417,8 +417,9 @@ function OffersSheet({ value, onClose, onApply }) {
 // سلايدر البانرات: شريحة أولى ثابتة (اسم المتجر + شعار/تاغلاين) + شرايح المالك المتغيّرة.
 // تشغيل تلقائي + سحب باللمس + نقاط تنقّل.
 function HeroSlider({ store }) {
-  const banners = Array.isArray(store.banners) ? store.banners : [];
-  const slides = [{ fixed: true }, ...banners];
+  const banners = Array.isArray(store.banners) ? store.banners.filter(Boolean) : [];
+  // كل الشرائح من بانرات المالك (يتحكم بالأولى وكلها). لو ما في بانرات نعرض شريحة افتراضية باسم المتجر.
+  const slides = banners.length ? banners : [{ fixed: true }];
   const len = slides.length;
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);

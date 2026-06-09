@@ -189,7 +189,7 @@
       "delivery": "Delivery info",
       "payment": "Payment info",
       "banners": "Slider banners (offers)",
-      "bannersHint": "The first slide is fixed (your store name & logo). Add offer/announcement slides that rotate automatically — edit text, remove, or add (up to 5).",
+      "bannersHint": "You control every slide (including the first): its text and background (color/image/video), remove or add (up to 5). If you add none, a default slide with your store name is shown.",
       "addBanner": "Add slide",
       "noBanners": "No extra slides — the slider shows the fixed slide only.",
       "slide": "Slide",
