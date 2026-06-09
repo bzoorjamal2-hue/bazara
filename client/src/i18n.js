@@ -15,6 +15,8 @@ i18n
     fallbackLng: 'ar',
     supportedLngs: ['ar', 'en'],
     interpolation: { escapeValue: false },
+    // الترجمة مُضمّنة (resources) فلا حاجة لـ Suspense — يجعل تبديل اللغة فورياً بلا شاشة تحميل
+    react: { useSuspense: false },
     detection: {
       // نحفظ اختيار اللغة في localStorage
       order: ['localStorage', 'navigator'],

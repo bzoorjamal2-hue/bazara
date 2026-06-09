@@ -8,18 +8,19 @@ import { MenuIcon, SearchIcon, CartIcon, HeartIcon } from './icons.jsx';
 
 const CATS = ['abaya', 'set', 'dress', 'hijab'];
 
-// هيدر صفحة المتجر العامة — مستوحى من متاجر الأزياء الفاخرة:
-// شعار/اسم المتجر (يتقلّص بنعومة عند التمرير) فوق شريط ثابت: قائمة (☰) + بحث + سلة.
+// هيدر صفحة المتجر — مستوحى من متاجر الأزياء الفاخرة:
+// صف 1: اسم/شعار المتجر + قائمة (☰) — يتقلّص بنعومة عند التمرير.
+// صف 2: بحث + سلة — ثابت. وعند التمرير يظهر زر قائمة مُصغّر بنعومة (بلا تشابك).
 export default function StoreHeader({ store, q, setQ, cat, setCat }) {
   const { t, i18n } = useTranslation();
   const ltr = i18n.language !== 'ar';
   const { count, setOpen } = useCart();
   const { count: wishCount } = useWishlist();
   const [drawer, setDrawer] = useState(false);
+  const [compact, setCompact] = useState(false); // ظهور زر القائمة المصغّر بعد التمرير
   const logoWrapRef = useRef(null);
 
-  // انكماش الشعار مربوط بالتمرير مع تنعيم احترافي (lerp + smoothstep) —
-  // الشعار وحده يتقلّص بنعومة، والشريط (قائمة/بحث/سلة) يبقى ثابتاً دائماً بلا تشابك.
+  // انكماش الشعار مربوط بالتمرير مع تنعيم احترافي (lerp + smoothstep).
   useEffect(() => {
     const RANGE = 150;
     const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -45,12 +46,27 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
       else { running = false; raf = 0; }
     };
     const tick = () => { if (!running) { running = true; raf = requestAnimationFrame(draw); } };
-    const onScroll = () => { target = Math.min(Math.max(window.scrollY / RANGE, 0), 1); tick(); };
+    const onScroll = () => {
+      target = Math.min(Math.max(window.scrollY / RANGE, 0), 1);
+      tick();
+      // ظهور/اختفاء بنطاق مختلف (hysteresis) لتفادي الوميض قرب الحد
+      setCompact((prev) => (prev ? window.scrollY > 60 : window.scrollY > 110));
+    };
 
     draw();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => { window.removeEventListener('scroll', onScroll); if (raf) cancelAnimationFrame(raf); };
   }, []);
+
+  const MenuBtn = ({ className = '' }) => (
+    <button
+      onClick={() => setDrawer(true)}
+      aria-label="menu"
+      className={`flex items-center justify-center rounded-full bg-cream text-wine shadow transition hover:bg-white ${className}`}
+    >
+      <MenuIcon className="h-6 w-6" />
+    </button>
+  );
 
   const pick = (c) => {
     setCat(c);
@@ -61,19 +77,22 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
   return (
     <header className="sticky top-0 z-50 -mx-4 -mt-8 mb-5 bg-wine-dark shadow-lg sm:-mx-6">
       <div className="mx-auto max-w-6xl px-4 py-3 sm:px-6">
-        {/* اسم/شعار المتجر — يتقلّص بنعومة مع التمرير (وحده، بلا تداخل) */}
+        {/* الصف الأول: اسم/شعار المتجر + قائمة — يتقلّص بنعومة مع التمرير */}
         <div ref={logoWrapRef} className="grid will-change-transform" style={{ gridTemplateRows: '1fr', marginBottom: '12px' }}>
           <div className="min-h-0 overflow-hidden">
-            <Link to={`/store/${store.slug}`} onClick={() => setCat('all')} className="flex items-center justify-center gap-2.5">
-              {store.logoUrl && (
-                <img src={store.logoUrl} alt={store.name} className="h-10 w-10 rounded-xl border border-cream/30 object-cover" />
-              )}
-              <span className="font-display text-2xl font-bold tracking-wide text-cream">{store.name}</span>
-            </Link>
+            <div className="flex items-center justify-between gap-3">
+              <Link to={`/store/${store.slug}`} onClick={() => setCat('all')} className="flex items-center gap-2.5">
+                {store.logoUrl && (
+                  <img src={store.logoUrl} alt={store.name} className="h-10 w-10 rounded-xl border border-cream/30 object-cover" />
+                )}
+                <span className="font-display text-2xl font-bold tracking-wide text-cream">{store.name}</span>
+              </Link>
+              <MenuBtn className="h-11 w-11" />
+            </div>
           </div>
         </div>
 
-        {/* الشريط الثابت: قائمة (☰) + بحث + سلة — يبقى ظاهراً دائماً */}
+        {/* صف البحث: بحث + سلة + زر قائمة مُصغّر يظهر بنعومة عند التمرير */}
         <div className="flex items-center gap-2.5">
           <div className="relative flex-1">
             <span className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-wine/50">
@@ -98,13 +117,8 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
               </span>
             )}
           </button>
-          <button
-            onClick={() => setDrawer(true)}
-            aria-label="menu"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-cream text-wine shadow transition hover:bg-white"
-          >
-            <MenuIcon className="h-6 w-6" />
-          </button>
+          {/* يظهر بنعومة (تكبير + تلاشٍ) عند التمرير — بلا قصّ ولا تشابك */}
+          {compact && <MenuBtn className="h-11 w-11 shrink-0 animate-pop" />}
         </div>
       </div>
 
@@ -116,7 +130,6 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
             onClick={(e) => e.stopPropagation()}
             className={`absolute inset-y-0 start-0 flex w-80 max-w-[85%] flex-col bg-wine-dark p-5 text-cream shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}
           >
-            {/* أزرار علوية: دخول + مفضّلة + إغلاق */}
             <div className="flex items-center gap-2">
               <Link
                 to="/login"
@@ -142,7 +155,6 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
               </button>
             </div>
 
-            {/* قائمة الفئات — محاذاة تتبع اللغة تلقائياً (start) */}
             <nav className="mt-6 space-y-1">
               <button
                 onClick={() => pick('all')}
@@ -163,7 +175,6 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
             </nav>
 
             <div className="mt-auto flex items-center justify-between pt-4">
-              {/* تبديل اللغة يُغلق الدرج ليُطبَّق الاتجاه الجديد بنظافة */}
               <LanguageSwitcher onChanged={() => setDrawer(false)} />
               <Link to="/" onClick={() => setDrawer(false)} className="font-display text-xs text-cream/60 hover:text-cream">
                 Bazara
