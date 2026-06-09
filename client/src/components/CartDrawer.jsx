@@ -1,10 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import { useCart } from '../context/CartContext.jsx';
 import { buildWhatsappOrder } from '../utils/whatsapp.js';
+import useScrollLock from '../hooks/useScrollLock.js';
 
 export default function CartDrawer() {
   const { t, i18n } = useTranslation();
   const { items, open, setOpen, remove, setQty, total, clear } = useCart();
+  useScrollLock(open); // تجميد الخلفية عند فتح السلة
 
   if (!open) return null;
 

@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import useScrollLock from '../hooks/useScrollLock.js';
 
 // نافذة تأكيد أنيقة (بديلة عن window.confirm) — تُغلق بالضغط خارجها (يُلغي)
 export default function ConfirmModal({
@@ -13,6 +14,7 @@ export default function ConfirmModal({
   danger = true,
 }) {
   const { t } = useTranslation();
+  useScrollLock(open);
   if (!open) return null;
 
   return (

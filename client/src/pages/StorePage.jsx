@@ -9,6 +9,7 @@ import ProductCard from '../components/ProductCard.jsx';
 import CategoryGrid from '../components/CategoryGrid.jsx';
 import StoreHeader from '../components/StoreHeader.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
+import useScrollLock from '../hooks/useScrollLock.js';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
 
 const PAGE_SIZE = 8;
@@ -284,6 +285,7 @@ function Chip({ onClick, active, children }) {
 // قالب النافذة السفلية
 function FilterSheet({ title, onClose, onReset, onApply, children }) {
   const { t } = useTranslation();
+  useScrollLock(true); // مفتوحة دائماً عند التركيب — تجمّد الخلفية
   return (
     <div className="fixed inset-0 z-[80] flex items-end">
       {/* الخلفية تُغلق النافذة بالضغط خارجها */}

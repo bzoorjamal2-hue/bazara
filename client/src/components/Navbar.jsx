@@ -6,6 +6,7 @@ import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import LanguageSwitcher from './LanguageSwitcher.jsx';
 import Logo from './Logo.jsx';
+import useScrollLock from '../hooks/useScrollLock.js';
 import { CartIcon, HeartIcon, MenuIcon } from './icons.jsx';
 
 function Avatar({ user, size = 'h-8 w-8' }) {
@@ -30,6 +31,7 @@ export default function Navbar() {
   const { pathname } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  useScrollLock(menuOpen); // تجميد الخلفية عند فتح قائمة الحساب
 
   // عند التمرير: الشريط يلتصق بالأعلى بعرض كامل (بلا فراغ علوي) — وفوق يبقى طافياً
   useEffect(() => {

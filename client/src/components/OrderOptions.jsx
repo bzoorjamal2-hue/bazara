@@ -1,9 +1,11 @@
 import { useTranslation } from 'react-i18next';
 import { buildWhatsappOrder } from '../utils/whatsapp.js';
+import useScrollLock from '../hooks/useScrollLock.js';
 
 // نافذة تتيح للزبون اختيار طريقة الطلب (واتساب / إنستغرام / هاتف)
 export default function OrderOptions({ store, items, onClose }) {
   const { t, i18n } = useTranslation();
+  useScrollLock(true); // مفتوحة دائماً عند التركيب
   const { whatsapp, instagram, phone } = store || {};
   const hasAny = whatsapp || instagram || phone;
 

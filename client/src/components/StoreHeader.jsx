@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import LanguageSwitcher from './LanguageSwitcher.jsx';
+import useScrollLock from '../hooks/useScrollLock.js';
 import { MenuIcon, SearchIcon, CartIcon, HeartIcon } from './icons.jsx';
 
 const CATS = ['abaya', 'set', 'dress', 'hijab'];
@@ -19,6 +20,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
   const [drawer, setDrawer] = useState(false);
   const logoWrapRef = useRef(null);
   const compactWrapRef = useRef(null);
+  useScrollLock(drawer); // تجميد الخلفية عند فتح الدرج
 
   // انكماش الشعار مربوط بالتمرير مع تنعيم احترافي (lerp + smoothstep).
   useEffect(() => {
