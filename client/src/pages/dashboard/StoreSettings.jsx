@@ -171,7 +171,7 @@ export default function StoreSettings() {
               {form.banners.map((b, idx) => (
                 <div key={idx} className="rounded-xl border border-gold-400/15 bg-black/20 p-3">
                   <div className="mb-2 flex items-center justify-between">
-                    <span className="text-sm font-semibold text-gold-200">{t('dashboard.store.slide')} {idx + 2}</span>
+                    <span className="text-sm font-semibold text-gold-200">{t('dashboard.store.slide')} {idx + 1}</span>
                     <button type="button" onClick={() => removeBanner(idx)} className="text-xs text-red-300 hover:text-red-200">🗑 {t('common.delete')}</button>
                   </div>
                   <input

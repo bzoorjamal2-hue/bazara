@@ -7,8 +7,8 @@ export default function CatThumb({ cat, className = 'h-8 w-8' }) {
       alt=""
       aria-hidden="true"
       loading="lazy"
-      style={{ objectPosition: '50% 30%' }}
-      className={`${className} shrink-0 rounded-lg object-cover ring-1 ring-wine/15`}
+      style={{ background: '#594335' }}
+      className={`${className} shrink-0 rounded-lg object-contain ring-1 ring-wine/15`}
       onError={(e) => { e.currentTarget.style.display = 'none'; }}
     />
   );

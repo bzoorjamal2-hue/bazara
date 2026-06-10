@@ -14,28 +14,29 @@ function getPerPage() {
   return 5;
 }
 
-// بطاقة فئة: صورة اللوقو المصمّمة /categories/{key}.png — مع بطاقة احتياطية بأيقونة لو غابت الصورة.
+// بطاقة فئة: صورة الملبس (بنّي موحّد) + اسم الفئة بالنص (يبقى كاملاً ويترجم تلقائياً).
 function CategoryCard({ c }) {
   const { t } = useTranslation();
   const [err, setErr] = useState(false);
   const Icon = CATEGORY_ICON[c];
-  if (err) {
-    return (
-      <div className="pub-cat flex aspect-[3/4] flex-col items-center justify-center gap-3 rounded-3xl">
-        <Icon className="h-14 w-14 text-cream/90" />
-        <span className="font-display text-base font-bold text-cream">{t(`categories.${c}`)}</span>
-      </div>
-    );
-  }
   return (
-    <div className="aspect-[3/4] overflow-hidden rounded-3xl shadow-md ring-1 ring-wine/10">
-      <img
-        src={`/categories/${c}.png`}
-        alt={t(`categories.${c}`)}
-        loading="lazy"
-        onError={() => setErr(true)}
-        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-      />
+    <div
+      className="flex aspect-[3/4] flex-col items-center justify-between overflow-hidden rounded-3xl px-2 pb-4 pt-3 shadow-md ring-1 ring-wine/10"
+      style={{ background: '#594335' }}
+    >
+      {err ? (
+        <Icon className="my-auto h-20 w-20 text-cream/90" />
+      ) : (
+        <img
+          src={`/categories/${c}.png`}
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          onError={() => setErr(true)}
+          className="h-[78%] w-full object-contain transition-transform duration-500 group-hover:scale-105"
+        />
+      )}
+      <span className="font-display text-sm font-bold text-cream sm:text-base">{t(`categories.${c}`)}</span>
     </div>
   );
 }
