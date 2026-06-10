@@ -34,10 +34,14 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
   const liked = has(product.id);
   const isNew = product.createdAt && Date.now() - new Date(product.createdAt).getTime() < 14 * 86400000;
 
+  // هل للمنتج خيارات (مقاس/لون)؟ عندها نفتح النظرة السريعة لاختيارها بدل الإضافة المباشرة
+  const hasOptions = Boolean((product.size && product.size.trim()) || (product.color && product.color.trim()));
+
   const onAdd = (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (outOfStock) return;
+    if (hasOptions) { setQuickOpen(true); return; } // اختيار المقاس/اللون أولاً
     flyToCart(imgRef.current, cover); // طيران صورة المنتج إلى السلة
     add({ ...product, whatsapp });
     setOpen(true); // يفتح السلة فوراً (إحساس "اشترِ الآن")

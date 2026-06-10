@@ -22,6 +22,9 @@ export default function ProductDetails() {
   const [error, setError] = useState('');
   const [active, setActive] = useState(0);
   const [orderOpen, setOrderOpen] = useState(false);
+  const [selSize, setSelSize] = useState('');
+  const [selColor, setSelColor] = useState('');
+  const [pickErr, setPickErr] = useState('');
 
   const fetchData = () => {
     api
@@ -50,13 +53,29 @@ export default function ProductDetails() {
   const hasDiscount = product.oldPrice && product.oldPrice > product.price;
   const liked = has(product.id);
 
-  const cartProduct = { ...product, whatsapp: product.storeWhatsapp };
+  const sizes = (product.size || '').split(',').map((s) => s.trim()).filter(Boolean);
+  const colors = (product.color || '').split(',').map((s) => s.trim()).filter(Boolean);
+
+  const cartProduct = { ...product, whatsapp: product.storeWhatsapp, size: selSize, color: selColor };
   const orderStore = {
     whatsapp: product.storeWhatsapp,
     instagram: product.storeInstagram,
     phone: product.storePhone,
   };
-  const orderItems = [{ name: product.name, price: product.price, qty: 1 }];
+  const orderItems = [{ name: `${product.name}${selSize ? ` (${selSize})` : ''}${selColor ? ` - ${selColor}` : ''}`, price: product.price, qty: 1 }];
+
+  // التحقق من اختيار المقاس/اللون قبل الإضافة أو الشراء
+  const validatePick = () => {
+    if (sizes.length && !selSize) { setPickErr(t('product.pickSize')); return false; }
+    if (colors.length && !selColor) { setPickErr(t('product.pickColor')); return false; }
+    setPickErr('');
+    return true;
+  };
+  const handleAdd = () => { if (outOfStock || !validatePick()) return; add(cartProduct); };
+  const handleBuy = () => { if (outOfStock || !validatePick()) return; setOrderOpen(true); };
+
+  const chipCls = (on) =>
+    `min-w-11 rounded-xl border px-3.5 py-1.5 text-sm font-semibold transition ${on ? 'border-wine bg-wine text-cream' : 'border-wine/30 text-wine hover:bg-wine/10'}`;
 
   return (
     <>
@@ -135,21 +154,36 @@ export default function ProductDetails() {
 
           {product.description && <p className="mt-5 leading-relaxed text-stone-300">{product.description}</p>}
 
-          <dl className="mt-6 grid grid-cols-2 gap-4 text-sm">
-            {product.size && (
-              <div className="glass p-3"><dt className="text-stone-400">{t('dashboard.product.size')}</dt><dd className="font-semibold text-stone-100">{product.size}</dd></div>
-            )}
-            {product.color && (
-              <div className="glass p-3"><dt className="text-stone-400">{t('dashboard.product.color')}</dt><dd className="font-semibold text-stone-100">{product.color}</dd></div>
-            )}
-          </dl>
+          {sizes.length > 0 && (
+            <div className="mt-6">
+              <p className="mb-2 text-sm font-semibold text-stone-300">{t('product.selectSize')}</p>
+              <div className="flex flex-wrap gap-2">
+                {sizes.map((s) => (
+                  <button key={s} onClick={() => { setSelSize(s); setPickErr(''); }} className={chipCls(selSize === s)}>{s}</button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {colors.length > 0 && (
+            <div className="mt-5">
+              <p className="mb-2 text-sm font-semibold text-stone-300">{t('product.selectColor')}</p>
+              <div className="flex flex-wrap gap-2">
+                {colors.map((c) => (
+                  <button key={c} onClick={() => { setSelColor(c); setPickErr(''); }} className={chipCls(selColor === c)}>{c}</button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {pickErr && <p className="mt-4 text-sm font-medium text-red-500">{pickErr}</p>}
 
           {/* أزرار الشراء */}
           <div className="mt-auto flex flex-col gap-3 pt-6 sm:flex-row">
-            <button onClick={() => add(cartProduct)} disabled={outOfStock} className="btn-primary flex-1">
+            <button onClick={handleAdd} disabled={outOfStock} className="btn-primary flex-1">
               🛒 {t('product.addToCart')}
             </button>
-            <button onClick={() => setOrderOpen(true)} disabled={outOfStock} className="btn-ghost flex-1">
+            <button onClick={handleBuy} disabled={outOfStock} className="btn-ghost flex-1">
               🛍️ {t('product.buyNow')}
             </button>
           </div>

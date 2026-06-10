@@ -34,8 +34,8 @@ export function buildWhatsappCheckout(number, items, customer, lang = 'ar') {
 
   const line = (i, n) =>
     ar
-      ? `${n + 1}) ${i.name} — الكمية: ${i.qty} × ₪${i.price}${i.size ? ` — المقاس: ${i.size}` : ''}`
-      : `${n + 1}) ${i.name} — Qty: ${i.qty} × ₪${i.price}${i.size ? ` — Size: ${i.size}` : ''}`;
+      ? `${n + 1}) ${i.name} — الكمية: ${i.qty} × ₪${i.price}${i.size ? ` — المقاس: ${i.size}` : ''}${i.color ? ` — اللون: ${i.color}` : ''}`
+      : `${n + 1}) ${i.name} — Qty: ${i.qty} × ₪${i.price}${i.size ? ` — Size: ${i.size}` : ''}${i.color ? ` — Color: ${i.color}` : ''}`;
 
   const lines = ar
     ? [

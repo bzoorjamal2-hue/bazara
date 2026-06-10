@@ -74,19 +74,24 @@ export default function CartDrawer() {
               <motion.div key="cart" initial={{ opacity: 0, x: ar ? -16 : 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: ar ? 16 : -16 }} transition={{ duration: 0.2 }} className="flex min-h-0 flex-1 flex-col">
                 <div className="flex-1 space-y-3 overflow-y-auto p-4">
                   {items.map((i) => (
-                    <div key={i.id} className="glass flex gap-3 p-3">
+                    <div key={i.key} className="glass flex gap-3 p-3">
                       <img src={i.imageUrl || 'https://placehold.co/120x120/f1e9dd/5c1a2e?text=%F0%9F%91%97'} alt={i.name} className="h-16 w-16 rounded-lg object-cover" />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold text-stone-100">{i.name}</p>
-                        <p className="text-xs text-stone-400">{i.storeName}</p>
+                        {(i.size || i.color) && (
+                          <p className="mt-0.5 flex flex-wrap gap-1.5 text-[11px] text-stone-400">
+                            {i.size && <span className="rounded bg-wine/10 px-1.5 py-0.5 text-wine">{t('store.sizeLabel')}: {i.size}</span>}
+                            {i.color && <span className="rounded bg-wine/10 px-1.5 py-0.5 text-wine">{i.color}</span>}
+                          </p>
+                        )}
                         <p className="mt-1 font-bold text-gold-300">{t('common.currency')}{i.price}</p>
                       </div>
                       <div className="flex flex-col items-end justify-between">
-                        <button onClick={() => remove(i.id)} className="text-stone-500 hover:text-red-300">✕</button>
+                        <button onClick={() => remove(i.key)} className="text-stone-500 hover:text-red-300">✕</button>
                         <div className="flex items-center gap-2">
-                          <button onClick={() => setQty(i.id, i.qty - 1)} className="h-6 w-6 rounded-md border border-gold-400/30 text-gold-200">−</button>
+                          <button onClick={() => setQty(i.key, i.qty - 1)} className="h-6 w-6 rounded-md border border-gold-400/30 text-gold-200">−</button>
                           <span className="w-5 text-center text-sm">{i.qty}</span>
-                          <button onClick={() => setQty(i.id, i.qty + 1)} className="h-6 w-6 rounded-md border border-gold-400/30 text-gold-200">+</button>
+                          <button onClick={() => setQty(i.key, i.qty + 1)} className="h-6 w-6 rounded-md border border-gold-400/30 text-gold-200">+</button>
                         </div>
                       </div>
                     </div>
@@ -130,8 +135,8 @@ export default function CartDrawer() {
                     <h3 className="mb-2 text-sm font-bold text-wine">🧾 {t('co.summary')}</h3>
                     <div className="space-y-1.5 text-sm">
                       {items.map((i) => (
-                        <div key={i.id} className="flex items-center justify-between text-stone-300">
-                          <span className="truncate pe-2">{i.name} ×{i.qty}</span>
+                        <div key={i.key} className="flex items-center justify-between text-stone-300">
+                          <span className="truncate pe-2">{i.name}{i.size ? ` (${i.size})` : ''}{i.color ? ` - ${i.color}` : ''} ×{i.qty}</span>
                           <span className="shrink-0">{t('common.currency')}{(i.price * i.qty).toFixed(2)}</span>
                         </div>
                       ))}

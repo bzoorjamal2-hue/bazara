@@ -4,10 +4,15 @@ import { cldVideoPoster } from '../utils/cloudinary.js';
 const CartContext = createContext(null);
 const KEY = 'cart_v1';
 
+// مفتاح فريد لسطر السلة: نفس المنتج بمقاس/لون مختلف = سطر منفصل
+const lineKey = (p) => `${p.id}__${p.size || ''}__${p.color || ''}`;
+
 export function CartProvider({ children }) {
   const [items, setItems] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem(KEY)) || [];
+      const saved = JSON.parse(localStorage.getItem(KEY)) || [];
+      // ترقية السلات القديمة: نضمن وجود مفتاح سطر لكل عنصر
+      return saved.map((i) => ({ size: '', color: '', ...i, key: i.key || lineKey(i) }));
     } catch {
       return [];
     }
@@ -23,13 +28,15 @@ export function CartProvider({ children }) {
       // متجر مختلف عن السلة الحالية → نفرّغها أولاً (لا نخلط منتجات متجرين)
       const slug = product.storeSlug;
       const base = slug && prev.length && prev[0].storeSlug && prev[0].storeSlug !== slug ? [] : prev;
-      const existing = base.find((i) => i.id === product.id);
+      const key = lineKey(product);
+      const existing = base.find((i) => i.key === key);
       if (existing) {
-        return base.map((i) => (i.id === product.id ? { ...i, qty: i.qty + qty } : i));
+        return base.map((i) => (i.key === key ? { ...i, qty: i.qty + qty } : i));
       }
       return [
         ...base,
         {
+          key,
           id: product.id,
           name: product.name,
           price: product.price,
@@ -37,6 +44,8 @@ export function CartProvider({ children }) {
           storeName: product.storeName,
           storeSlug: product.storeSlug,
           whatsapp: product.whatsapp || '',
+          size: product.size || '',
+          color: product.color || '',
           qty,
         },
       ];
@@ -44,9 +53,9 @@ export function CartProvider({ children }) {
     setOpen(true);
   };
 
-  const remove = (id) => setItems((prev) => prev.filter((i) => i.id !== id));
-  const setQty = (id, qty) =>
-    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, qty: Math.max(1, qty) } : i)));
+  const remove = (key) => setItems((prev) => prev.filter((i) => i.key !== key));
+  const setQty = (key, qty) =>
+    setItems((prev) => prev.map((i) => (i.key === key ? { ...i, qty: Math.max(1, qty) } : i)));
   const clear = () => setItems([]);
 
   // تفرّغ السلة تلقائياً عند دخول متجر مختلف عن متجر عناصر السلة الحالية
