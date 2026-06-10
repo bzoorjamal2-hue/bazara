@@ -1,5 +1,6 @@
-import { Suspense, lazy } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Suspense, lazy, useEffect } from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import Layout from './components/Layout.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import RequireSubscription from './components/RequireSubscription.jsx';
@@ -27,11 +28,26 @@ const Wishlist = lazy(() => import('./pages/Wishlist.jsx'));
 const PaymentCallback = lazy(() => import('./pages/PaymentCallback.jsx'));
 const NotFound = lazy(() => import('./pages/NotFound.jsx'));
 
-export default function App() {
+// انتقالات ناعمة بين الصفحات (إحساس تطبيق Native) + التمرير لأعلى عند تغيّر الصفحة
+function AnimatedRoutes() {
+  const location = useLocation();
+
+  // التمرير لأعلى عند الانتقال لصفحة جديدة (لا يتأثّر بتنقّل الفئات داخل نفس الرابط)
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, [location.pathname]);
+
   return (
-    <Layout>
-      <Suspense fallback={<Spinner full />}>
-        <Routes>
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={location.pathname}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.26, ease: [0.22, 0.61, 0.36, 1] }}
+      >
+        <Suspense fallback={<Spinner full />}>
+        <Routes location={location}>
           <Route path="/" element={<Root />} />
           <Route path="/shop" element={<Home />} />
           <Route path="/login" element={<Login />} />
@@ -61,7 +77,16 @@ export default function App() {
           <Route path="/product/:id" element={<ProductDetails />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </Suspense>
+        </Suspense>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+export default function App() {
+  return (
+    <Layout>
+      <AnimatedRoutes />
     </Layout>
   );
 }
