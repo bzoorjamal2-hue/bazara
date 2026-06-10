@@ -15,8 +15,8 @@ export default function Layout({ children }) {
   const isStorePage = /^\/store\//.test(pathname);
   // شاشة افتتاح التطبيق المثبّت (الجذر) — بلا شريط/فوتر ليبدو كتطبيق كامل
   const isAppWelcome = pathname === '/' && isStandalone();
-  // صفحة تسجيل الدخول — تصميم بملء الشاشة (هيرو + نموذج) بلا شريط/فوتر
-  const isAuthFull = pathname === '/login';
+  // صفحات الحساب — تصميم بملء الشاشة (هيرو + نموذج) بلا شريط/فوتر
+  const isAuthFull = ['/login', '/register', '/forgot-password', '/reset'].includes(pathname);
   const hideChrome = isStorePage || isAppWelcome || isAuthFull;
   // شريط التنقّل السفلي يظهر داخل التطبيق المثبّت فقط (وليس على شاشة الترحيب أو المتجر أو الدخول)
   const showBottomNav = isStandalone() && !isAppWelcome && !isStorePage && !isAuthFull;
