@@ -1,13 +1,14 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import StarRating from './StarRating.jsx';
 import { HeartIcon, CartIcon } from './icons.jsx';
 import { cldVideoPoster } from '../utils/cloudinary.js';
 import { flyToCart } from '../utils/flyToCart.js';
+import QuickViewModal from './QuickViewModal.jsx';
 
 const MotionLink = motion.create(Link);
 
@@ -22,6 +23,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
   const { add, setOpen } = useCart();
   const { has, toggle } = useWishlist();
   const imgRef = useRef(null);
+  const [quickOpen, setQuickOpen] = useState(false);
 
   const hasImage = product.imageUrl || (product.images && product.images[0]);
   const videoPoster = product.videoUrl ? cldVideoPoster(product.videoUrl) : '';
@@ -45,8 +47,14 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
     e.stopPropagation();
     toggle(product);
   };
+  const onQuickView = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setQuickOpen(true);
+  };
 
   return (
+    <>
     <MotionLink
       to={`/product/${product.id}`}
       className="group glass relative animate-fade-up overflow-hidden transition-shadow duration-300 hover:shadow-glow"
@@ -75,6 +83,20 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
         aria-label="wishlist"
       >
         <HeartIcon className="h-4 w-4" filled={liked} />
+      </motion.button>
+
+      {/* نظرة سريعة — تفتح نافذة بدون مغادرة الصفحة */}
+      <motion.button
+        onClick={onQuickView}
+        whileTap={{ scale: 0.85 }}
+        className="absolute end-2 top-[3.25rem] z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur transition hover:bg-black/60"
+        aria-label={t('product.quickView')}
+        title={t('product.quickView')}
+      >
+        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+          <path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" />
+          <circle cx="12" cy="12" r="3" />
+        </svg>
       </motion.button>
 
       <div className="relative aspect-[3/4] overflow-hidden bg-ink-800">
@@ -116,5 +138,12 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
         </motion.button>
       </div>
     </MotionLink>
+
+    <AnimatePresence>
+      {quickOpen && (
+        <QuickViewModal product={product} whatsapp={whatsapp} onClose={() => setQuickOpen(false)} />
+      )}
+    </AnimatePresence>
+    </>
   );
 }
