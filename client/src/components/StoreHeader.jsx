@@ -7,6 +7,7 @@ import LanguageSwitcher from './LanguageSwitcher.jsx';
 import CatThumb from './CatThumb.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { MenuIcon, SearchIcon, CartIcon, HeartIcon } from './icons.jsx';
+import ThemeToggle from './ThemeToggle.jsx';
 
 const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench'];
 
@@ -164,6 +165,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
               >
                 <HeartIcon className="h-5 w-5" filled={wishCount > 0} />
               </Link>
+              <ThemeToggle className="bg-cream/15 text-cream hover:bg-cream/25" />
               <button
                 onClick={() => setDrawer(false)}
                 aria-label="close"

@@ -8,6 +8,7 @@ import LanguageSwitcher from './LanguageSwitcher.jsx';
 import Logo from './Logo.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { CartIcon, HeartIcon, MenuIcon } from './icons.jsx';
+import ThemeToggle from './ThemeToggle.jsx';
 
 function Avatar({ user, size = 'h-8 w-8' }) {
   if (user?.avatarUrl) {
@@ -131,6 +132,8 @@ export default function Navbar() {
               <span className={`absolute -end-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold ${countCls}`}>{count}</span>
             )}
           </button>
+
+          <ThemeToggle className={iconCls} />
 
           {!user && (
             <>
