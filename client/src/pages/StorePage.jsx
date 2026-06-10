@@ -527,17 +527,18 @@ function HeroSlider({ store }) {
             return (
               <div key={idx} className="w-full shrink-0" dir="rtl">
                 <div
-                  className={`relative flex h-[260px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[340px] ${custom ? '' : 'pub-hero'}`}
+                  className={`relative isolate flex h-[260px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[340px] ${custom ? '' : 'pub-hero'}`}
                   style={style}
                 >
                   {isVideo && (
-                    <video src={s.bgValue} autoPlay muted loop playsInline className="absolute inset-0 h-full w-full object-cover" />
+                    <video src={s.bgValue} autoPlay muted loop playsInline className="absolute inset-0 z-0 h-full w-full object-cover" />
                   )}
                   {/* طبقة تعتيم لوضوح النص فوق الصورة/الفيديو */}
-                  {(isImage || isVideo) && <div className="absolute inset-0 bg-black/40" />}
+                  {(isImage || isVideo) && <div className="absolute inset-0 z-[1] bg-black/40" />}
                   {!custom && <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-cream/10 blur-3xl" />}
 
-                  <div className="relative z-10">
+                  {/* النص فوق الفيديو دائماً (طبقة GPU مستقلة لتفادي اختفائه على iOS أثناء الانتقال) */}
+                  <div className="relative z-10" style={{ transform: 'translateZ(0)' }}>
                     {s.fixed ? (
                       <>
                         {store.logoUrl && (

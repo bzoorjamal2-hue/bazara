@@ -1,5 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+
+// عدد البطاقات حسب عرض الشاشة (جوال 2 · آيباد 3 · كمبيوتر 5)
+function getPerPage() {
+  if (typeof window === 'undefined') return 5;
+  const w = window.innerWidth;
+  if (w < 640) return 2;
+  if (w < 1024) return 3;
+  return 5;
+}
 
 function ShieldIcon({ className = 'h-6 w-6' }) {
   return (
@@ -55,10 +64,19 @@ export default function FeaturesBar() {
   ];
 
   const rtl = i18n.language !== 'en';
-  const PER = 2; // ميزتان بنفس الوقت
+  const [perPage, setPerPage] = useState(getPerPage());
   const [page, setPage] = useState(0);
-  const pages = Math.ceil(items.length / PER);
-  const shown = items.slice(page * PER, page * PER + PER);
+  useEffect(() => {
+    const onResize = () => setPerPage(getPerPage());
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  const pages = Math.ceil(items.length / perPage);
+  useEffect(() => { setPage((p) => Math.min(p, pages - 1)); }, [pages]);
+  const hasNav = items.length > perPage;
+  const maxStart = Math.max(0, items.length - perPage);
+  const start = Math.min(page * perPage, maxStart);
+  const shown = items.slice(start, start + perPage);
   const go = (d) => setPage((p) => (p + d + pages) % pages);
 
   const Arrow = ({ dir, onClick }) => {
@@ -81,37 +99,36 @@ export default function FeaturesBar() {
 
   return (
     <section className="mt-12">
-      <div className="mx-auto flex max-w-xl items-center gap-2 sm:gap-3">
-        <Arrow dir="prev" onClick={() => go(-1)} />
-        <div className="flex flex-1 justify-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
+        {hasNav && <Arrow dir="prev" onClick={() => go(-1)} />}
+        <div className="grid flex-1 gap-3 sm:gap-4" style={{ gridTemplateColumns: `repeat(${perPage}, minmax(0,1fr))` }}>
           {shown.map(({ Icon, title }, i) => (
             <div
               key={i}
-              className="flex w-full max-w-[210px] flex-col items-center gap-2 rounded-2xl border border-wine/10 bg-white p-4 text-center shadow-sm sm:p-5"
+              className="flex flex-col items-center gap-2 rounded-2xl border border-wine/10 bg-white p-4 text-center shadow-sm sm:p-5"
             >
               <span className="flex h-12 w-12 items-center justify-center rounded-full bg-wine/10 text-wine">
                 <Icon className="h-6 w-6" />
               </span>
-              <span className="text-sm font-bold leading-snug text-[#2b2b2b]">{title}</span>
+              <span className="text-xs font-bold leading-snug text-[#2b2b2b] sm:text-sm">{title}</span>
             </div>
           ))}
-          {/* عنصر فارغ لموازنة الصفحة الأخيرة (ميزة واحدة) */}
-          {shown.length < PER && <div className="w-full max-w-[210px]" aria-hidden="true" />}
         </div>
-        <Arrow dir="next" onClick={() => go(1)} />
+        {hasNav && <Arrow dir="next" onClick={() => go(1)} />}
       </div>
 
-      {/* نقاط التنقّل */}
-      <div className="mt-4 flex justify-center gap-1.5">
-        {Array.from({ length: pages }).map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setPage(i)}
-            aria-label={`page ${i + 1}`}
-            className={`h-1.5 rounded-full transition-all ${i === page ? 'w-5 bg-wine' : 'w-1.5 bg-wine/25'}`}
-          />
-        ))}
-      </div>
+      {pages > 1 && (
+        <div className="mt-4 flex justify-center gap-1.5">
+          {Array.from({ length: pages }).map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setPage(i)}
+              aria-label={`page ${i + 1}`}
+              className={`h-1.5 rounded-full transition-all ${i === page ? 'w-5 bg-wine' : 'w-1.5 bg-wine/25'}`}
+            />
+          ))}
+        </div>
+      )}
     </section>
   );
 }
