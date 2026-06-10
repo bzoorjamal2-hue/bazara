@@ -45,6 +45,7 @@ export default function BottomNav() {
           <button
             key={key}
             onClick={onClick}
+            data-cart-target={key === 'cart' ? '' : undefined}
             className={`relative flex flex-1 flex-col items-center gap-1 rounded-xl py-1 text-[11px] font-medium transition ${
               active ? 'text-wine' : 'text-stone-400'
             }`}

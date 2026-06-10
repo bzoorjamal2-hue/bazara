@@ -120,6 +120,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
 
           {/* السلة — على يمين زر القائمة، وتكون بأقصى الحافة (تحت ☰) قبل التمرير */}
           <button
+            data-cart-target
             onClick={() => setOpen(true)}
             aria-label="cart"
             className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-cream/15 text-cream transition hover:bg-cream/25 ms-2.5"
