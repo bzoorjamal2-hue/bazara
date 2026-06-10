@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import Seo from '../components/Seo.jsx';
-import Spinner from '../components/Spinner.jsx';
+import { ProductGridSkeleton } from '../components/Skeleton.jsx';
 import ProductCard from '../components/ProductCard.jsx';
 import CatThumb from '../components/CatThumb.jsx';
 
@@ -57,7 +57,7 @@ export default function CategoryPage() {
       {error ? (
         <div className="glass p-10 text-center text-stone-300">{error}</div>
       ) : !products ? (
-        <Spinner full />
+        <ProductGridSkeleton count={8} />
       ) : products.length === 0 ? (
         <div className="glass p-10 text-center text-stone-400">{t('common.noResults')}</div>
       ) : (

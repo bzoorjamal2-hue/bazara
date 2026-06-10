@@ -5,7 +5,7 @@ import api, { getErrorMessage } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import Seo from '../components/Seo.jsx';
-import Spinner from '../components/Spinner.jsx';
+import { StorePageSkeleton } from '../components/Skeleton.jsx';
 import ProductCard from '../components/ProductCard.jsx';
 import CategoryGrid from '../components/CategoryGrid.jsx';
 import StoreHeader from '../components/StoreHeader.jsx';
@@ -79,7 +79,7 @@ export default function StorePage() {
   const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   if (error) return <div className="glass p-10 text-center text-stone-300">{error}</div>;
-  if (!data) return <Spinner full />;
+  if (!data) return <StorePageSkeleton />;
 
   const { store } = data;
   // واتساب المتجر: رقم الإعدادات إن وُجد، وإلا رقم المالك المُدخل عند التسجيل

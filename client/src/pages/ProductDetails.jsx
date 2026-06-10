@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import Seo from '../components/Seo.jsx';
-import Spinner from '../components/Spinner.jsx';
+import { ProductDetailsSkeleton } from '../components/Skeleton.jsx';
 import StarRating from '../components/StarRating.jsx';
 import OrderOptions from '../components/OrderOptions.jsx';
 import { useCart } from '../context/CartContext.jsx';
@@ -41,7 +41,7 @@ export default function ProductDetails() {
   }, [id]);
 
   if (error) return <div className="glass p-10 text-center text-stone-300">{error}</div>;
-  if (!product) return <Spinner full />;
+  if (!product) return <ProductDetailsSkeleton />;
 
   const gallery = [product.imageUrl, ...(product.images || [])].filter(Boolean);
   const hasImages = gallery.length > 0;

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client.js';
 import Seo from '../components/Seo.jsx';
-import Spinner from '../components/Spinner.jsx';
+import { ProductGridSkeleton } from '../components/Skeleton.jsx';
 import ProductCard from '../components/ProductCard.jsx';
 import CategoryGrid from '../components/CategoryGrid.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
@@ -42,7 +42,9 @@ export default function Home() {
       </section>
 
       {loading ? (
-        <Spinner />
+        <section className="mt-14">
+          <ProductGridSkeleton count={8} />
+        </section>
       ) : (
         <>
           {/* منتجات مميّزة */}
