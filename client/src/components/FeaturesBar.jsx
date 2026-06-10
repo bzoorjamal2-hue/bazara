@@ -74,8 +74,8 @@ export default function FeaturesBar() {
   const pages = Math.ceil(items.length / perPage);
   useEffect(() => { setPage((p) => Math.min(p, pages - 1)); }, [pages]);
   const hasNav = items.length > perPage;
-  const maxStart = Math.max(0, items.length - perPage);
-  const start = Math.min(page * perPage, maxStart);
+  // صفحات غير متداخلة: كل ميزة تظهر مرة واحدة فقط (آخر صفحة قد تكون أقل عدداً)
+  const start = page * perPage;
   const shown = items.slice(start, start + perPage);
   const go = (d) => setPage((p) => (p + d + pages) % pages);
 

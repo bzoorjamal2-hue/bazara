@@ -377,6 +377,23 @@ html.dark .theme-pub .bg-wine\/10 { background-color: rgba(230, 200, 120, 0.10);
 /* نافذة الفلاتر/المعاينة السفلية البيضاء → داكنة */
 html.dark .theme-pub .bg-white\/95 { background-color: rgba(43, 33, 26, 0.97); }
 
+/* ===== النصوص/الأسطح المثبّتة بقيم صريحة (كانت تختفي على الداكن) ===== */
+/* نصوص داكنة صريحة → فاتحة لتُقرأ على الأسطح الداكنة */
+html.dark .theme-pub .text-\[\#2b2b2b\] { color: #ece3d6; }
+html.dark .theme-pub .text-\[\#444\] { color: #cabdab; }
+html.dark .theme-pub .text-\[\#6b6b6b\] { color: #ab9f90; }
+/* أسطح فاتحة صريحة → بنّي داكن */
+html.dark .theme-pub .bg-\[\#f3ece0\] { background-color: #2b211a; }
+/* placeholder النصوص في حقول البحث المخصّصة */
+html.dark .theme-pub .placeholder\:text-stone-400::placeholder { color: #9b8f80; }
+/* نصوص خضراء/حمراء داكنة (تأكيدات/أخطاء) → فاتحة قليلاً */
+html.dark .theme-pub .text-emerald-700 { color: #6ee7b7; }
+html.dark .theme-pub .text-red-600 { color: #fca5a5; }
+/* حدود/فواصل بنّية شفافة → ذهبية خفيفة */
+html.dark .theme-pub .bg-wine\/10,
+html.dark .theme-pub .bg-wine\/15 { background-color: rgba(230, 200, 120, 0.12); }
+html.dark .theme-pub .border-wine\/10 { border-color: rgba(230, 200, 120, 0.18); }
+
 /* ===== هياكل التحميل (Skeleton) — لمعان متحرّك بدل دوائر التحميل ===== */
 @keyframes skeleton-sheen {
   0% { background-position: 200% 0; }

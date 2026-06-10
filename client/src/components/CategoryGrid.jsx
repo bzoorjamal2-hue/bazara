@@ -77,8 +77,8 @@ export default function CategoryGrid({ onSelect, active }) {
   useEffect(() => { setPage((p) => Math.min(p, pages - 1)); }, [pages]);
 
   const hasNav = CATS.length > perPage;
-  const maxStart = Math.max(0, CATS.length - perPage);
-  const start = Math.min(page * perPage, maxStart);
+  // صفحات غير متداخلة: كل فئة تظهر مرة واحدة فقط (آخر صفحة قد تكون أقل عدداً)
+  const start = page * perPage;
   const shown = CATS.slice(start, start + perPage);
   const go = (d) => setPage((p) => (p + d + pages) % pages);
 
