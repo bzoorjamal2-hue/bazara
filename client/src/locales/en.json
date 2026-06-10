@@ -302,7 +302,29 @@
     "total": "Total",
     "orderWhatsapp": "Order via WhatsApp",
     "payCard": "Pay by card 💳",
-    "clear": "Clear cart"
+    "clear": "Clear cart",
+    "proceed": "Proceed to order"
+  },
+  "co": {
+    "title": "Complete your order",
+    "customer": "Delivery details",
+    "name": "Full name",
+    "phone": "Phone number",
+    "city": "City / area",
+    "selectCity": "Select city",
+    "address": "Detailed address",
+    "addressHint": "Neighborhood, street, nearest landmark",
+    "notes": "Notes (optional)",
+    "notesHint": "Any extra details about your order",
+    "summary": "Order summary",
+    "subtotal": "Subtotal",
+    "delivery": "Delivery fee",
+    "grandTotal": "Grand total",
+    "cod": "Cash on delivery",
+    "confirm": "Confirm order via WhatsApp",
+    "back": "Back to cart",
+    "required": "Please enter your name, phone and city",
+    "deliveryNote": "Delivery fee is an estimate, confirmed by the store"
   },
   "checkout": {
     "title": "Card payment",
