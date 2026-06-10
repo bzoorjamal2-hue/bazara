@@ -97,6 +97,10 @@
   },
   "auth": {
     "loginTitle": "Login",
+    "loginSubtitle": "Welcome back — sign in to manage your store",
+    "emailOrPhone": "Email or phone number",
+    "rememberMe": "Remember me",
+    "showPassword": "Show password",
     "registerTitle": "Create an account",
     "name": "Name",
     "email": "Email",
