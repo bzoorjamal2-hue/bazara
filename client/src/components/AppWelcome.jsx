@@ -1,53 +1,142 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
 import Logo from './Logo.jsx';
 import LanguageSwitcher from './LanguageSwitcher.jsx';
 
-// شاشة افتتاح التطبيق المثبّت (standalone) — تصميم أنيق فخم بألوان Bazara.
+// شاشة افتتاح التطبيق المثبّت (standalone) — تصميم فخم متحرّك بألوان Bazara.
 // تظهر فقط داخل التطبيق؛ الموقع في المتصفح يبقى كما هو.
+
+// تنسيق الحركة: دخول متدرّج للعناصر من الأسفل للأعلى
+const container = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.14, delayChildren: 0.15 } },
+};
+const rise = {
+  hidden: { opacity: 0, y: 26 },
+  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 90, damping: 16 } },
+};
+
+const MLink = motion.create(Link);
+
 export default function AppWelcome() {
   const { t } = useTranslation();
   return (
     <div className="fixed inset-0 z-40 flex flex-col overflow-hidden bg-wine-dark text-cream">
-      {/* توهّجات خلفية ناعمة */}
-      <div className="pointer-events-none absolute -top-24 start-1/4 h-72 w-72 animate-float rounded-full bg-cream/10 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-0 end-0 h-80 w-80 rounded-full bg-[#8a6a4f]/40 blur-3xl" />
+      {/* خلفية متدرّجة فاخرة + توهّجات متحرّكة */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(120% 80% at 50% -10%, rgba(212,175,55,0.18), transparent 55%), radial-gradient(100% 70% at 50% 110%, rgba(138,106,79,0.45), transparent 60%), linear-gradient(180deg, #3f2e22 0%, #2a1d14 100%)',
+        }}
+      />
+      <motion.div
+        className="pointer-events-none absolute -top-24 start-1/4 h-72 w-72 rounded-full bg-[#d4af37]/15 blur-3xl"
+        animate={{ y: [0, 24, 0], opacity: [0.5, 0.85, 0.5] }}
+        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div
+        className="pointer-events-none absolute bottom-0 end-0 h-80 w-80 rounded-full bg-[#8a6a4f]/40 blur-3xl"
+        animate={{ y: [0, -18, 0], opacity: [0.4, 0.7, 0.4] }}
+        transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
+      />
 
-      {/* شريط علوي بسيط */}
-      <div className="relative flex items-center justify-between px-5 pt-[max(env(safe-area-inset-top),16px)]">
+      {/* شريط علوي */}
+      <motion.div
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="relative flex items-center justify-between px-5 pt-[max(env(safe-area-inset-top),16px)]"
+      >
         <LanguageSwitcher />
         <span className="font-display text-sm tracking-[0.3em] text-cream/60">ELEGANCE</span>
-      </div>
+      </motion.div>
 
       {/* المنتصف: الشعار + الاسم */}
-      <div className="relative flex flex-1 flex-col items-center justify-center px-8 text-center">
-        <div className="relative">
-          <div className="absolute inset-0 -z-10 animate-pulse rounded-full bg-cream/10 blur-2xl" />
-          <Logo className="h-28 w-28 drop-shadow-2xl sm:h-32 sm:w-32" />
-        </div>
-        <h1 className="mt-7 font-display text-4xl font-extrabold tracking-wide text-cream sm:text-5xl">Bazara</h1>
-        <p className="mt-3 font-display text-lg text-cream/85 sm:text-xl">{t('app.tagline')}</p>
-        <p className="mt-1 text-xs tracking-[0.25em] text-cream/45">ELEGANCE · MODESTY · DISTINCTION</p>
-      </div>
+      <motion.div
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="relative flex flex-1 flex-col items-center justify-center px-8 text-center"
+      >
+        <motion.div
+          variants={rise}
+          className="relative"
+        >
+          {/* حلقة ذهبية متوهّجة تدور خلف الشعار */}
+          <motion.div
+            className="absolute inset-[-22px] -z-10 rounded-full"
+            style={{ background: 'conic-gradient(from 0deg, transparent, rgba(212,175,55,0.55), transparent 60%)' }}
+            animate={{ rotate: 360 }}
+            transition={{ duration: 14, repeat: Infinity, ease: 'linear' }}
+          />
+          <div className="absolute inset-0 -z-10 rounded-full bg-cream/10 blur-2xl" />
+          <motion.div
+            animate={{ y: [0, -8, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            <Logo className="h-28 w-28 drop-shadow-2xl sm:h-32 sm:w-32" />
+          </motion.div>
+        </motion.div>
+
+        <motion.h1
+          variants={rise}
+          className="mt-8 font-display text-5xl font-extrabold tracking-wide sm:text-6xl"
+          style={{
+            background: 'linear-gradient(180deg, #f7ecd2 0%, #d4af37 70%, #b8932c 100%)',
+            WebkitBackgroundClip: 'text',
+            backgroundClip: 'text',
+            color: 'transparent',
+          }}
+        >
+          Bazara
+        </motion.h1>
+
+        <motion.div variants={rise} className="mt-4 flex items-center gap-3">
+          <span className="h-px w-8 bg-gradient-to-r from-transparent to-[#d4af37]/70" />
+          <span className="text-2xl">✦</span>
+          <span className="h-px w-8 bg-gradient-to-l from-transparent to-[#d4af37]/70" />
+        </motion.div>
+
+        <motion.p variants={rise} className="mt-4 font-display text-lg text-cream/90 sm:text-xl">
+          {t('app.tagline')}
+        </motion.p>
+        <motion.p variants={rise} className="mt-2 text-xs tracking-[0.25em] text-cream/45">
+          ELEGANCE · MODESTY · DISTINCTION
+        </motion.p>
+      </motion.div>
 
       {/* الأزرار */}
-      <div className="relative space-y-3 px-7 pb-[max(env(safe-area-inset-bottom),28px)]">
-        <Link
+      <motion.div
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="relative space-y-3 px-7 pb-[max(env(safe-area-inset-bottom),28px)]"
+      >
+        <MLink
+          variants={rise}
           to="/shop"
-          className="block w-full rounded-2xl bg-cream py-4 text-center font-bold text-wine shadow-xl transition active:scale-[0.98]"
+          whileTap={{ scale: 0.97 }}
+          className="block w-full rounded-2xl py-4 text-center font-bold text-wine-dark shadow-xl"
+          style={{ background: 'linear-gradient(135deg, #f7ecd2 0%, #F4EDE2 50%, #e6c878 100%)' }}
         >
           🛍️ {t('appWelcome.browse')}
-        </Link>
-        <Link
+        </MLink>
+        <MLink
+          variants={rise}
           to="/login"
-          className="block w-full rounded-2xl border border-cream/35 py-3.5 text-center font-semibold text-cream transition hover:bg-cream/10 active:scale-[0.98]"
+          whileTap={{ scale: 0.97 }}
+          className="block w-full rounded-2xl border border-cream/35 py-3.5 text-center font-semibold text-cream transition hover:bg-cream/10"
         >
           {t('nav.login')}
-        </Link>
-        <Link to="/register" className="block pt-1 text-center text-sm text-cream/75 transition hover:text-cream">
-          {t('appWelcome.openStore')} ←
-        </Link>
-      </div>
+        </MLink>
+        <motion.div variants={rise} className="text-center">
+          <Link to="/register" className="inline-block pt-1 text-sm text-cream/75 transition hover:text-cream">
+            {t('appWelcome.openStore')} ←
+          </Link>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }
