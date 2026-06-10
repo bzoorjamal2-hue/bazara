@@ -116,7 +116,7 @@ export default function ProductsManager({ onCount }) {
                   <td className="p-4 font-semibold text-gold-300">{t('common.currency')}{p.price}</td>
                   <td className="p-4">
                     <div className="flex justify-end gap-2">
-                      <button onClick={() => shareProduct(p)} className="btn-ghost !px-3 !py-1.5 text-xs" title={t('common.copyLink')}>🔗 {t('common.share')}</button>
+                      <button onClick={() => shareProduct(p)} className="btn-ghost !px-3 !py-1.5 text-xs" title={t('product.shareProduct')}>🔗 {t('product.shareProduct')}</button>
                       <button onClick={() => setModal(p)} className="btn-ghost !px-3 !py-1.5 text-xs">{t('common.edit')}</button>
                       <button onClick={() => setConfirmDel(p)} className="btn-danger !px-3 !py-1.5 text-xs">{t('common.delete')}</button>
                     </div>
@@ -134,7 +134,7 @@ export default function ProductsManager({ onCount }) {
                   <p className="truncate font-medium text-stone-100">{p.name}</p>
                   <p className="text-xs text-stone-400">{t(`categories.${p.category}`)} · <span className="text-gold-300">{t('common.currency')}{p.price}</span></p>
                 </div>
-                <button onClick={() => shareProduct(p)} className="btn-ghost !px-2.5 !py-1.5 text-xs" title={t('common.copyLink')}>🔗</button>
+                <button onClick={() => shareProduct(p)} className="btn-ghost !px-2.5 !py-1.5 text-xs" title={t('product.shareProduct')}>🔗</button>
                 <button onClick={() => setModal(p)} className="btn-ghost !px-2.5 !py-1.5 text-xs">{t('common.edit')}</button>
                 <button onClick={() => setConfirmDel(p)} className="btn-danger !px-2.5 !py-1.5 text-xs">{t('common.delete')}</button>
               </div>
