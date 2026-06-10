@@ -29,6 +29,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
   );
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [colorInput, setColorInput] = useState('');
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
@@ -39,6 +40,16 @@ export default function ProductForm({ initial, onClose, onSaved }) {
     setS.has(s) ? setS.delete(s) : setS.add(s);
     setForm({ ...form, size: SIZES.filter((x) => setS.has(x)).join(',') });
   };
+
+  // ألوان المنتج (متعدّدة) — يكتبها صاحب المتجر ويختارها الزبون لاحقاً
+  const selectedColors = form.color ? form.color.split(',').map((s) => s.trim()).filter(Boolean) : [];
+  const addColor = (val) => {
+    const v = (val || '').trim();
+    if (!v || selectedColors.includes(v)) { setColorInput(''); return; }
+    setForm({ ...form, color: [...selectedColors, v].join(',') });
+    setColorInput('');
+  };
+  const removeColor = (c) => setForm({ ...form, color: selectedColors.filter((x) => x !== c).join(',') });
 
   const setGalleryAt = (idx, val) => {
     const images = [...form.images];
@@ -165,8 +176,28 @@ export default function ProductForm({ initial, onClose, onSaved }) {
           </div>
 
           <div>
-            <label className="label">{t('dashboard.product.color')}</label>
-            <input type="text" className="input" value={form.color} onChange={set('color')} />
+            <label className="label">{t('dashboard.product.color')} <span className="text-stone-500">({t('common.optional')})</span></label>
+            {selectedColors.length > 0 && (
+              <div className="mb-2 flex flex-wrap gap-2">
+                {selectedColors.map((c) => (
+                  <span key={c} className="flex items-center gap-1.5 rounded-full border border-gold-400/30 bg-gold-400/15 px-3 py-1 text-sm text-gold-100">
+                    {c}
+                    <button type="button" onClick={() => removeColor(c)} aria-label="remove" className="text-gold-200 transition hover:text-white">×</button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                className="input flex-1"
+                placeholder={t('dashboard.product.colorHint')}
+                value={colorInput}
+                onChange={(e) => setColorInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addColor(colorInput); } }}
+              />
+              <button type="button" onClick={() => addColor(colorInput)} className="btn-ghost shrink-0 !px-4">＋</button>
+            </div>
           </div>
 
           <div>

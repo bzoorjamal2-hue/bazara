@@ -42,11 +42,13 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
   const discountPct = hasDiscount ? Math.round((1 - product.price / product.oldPrice) * 100) : 0;
   const liked = has(product.id);
 
+  const hasVideo = !!product.videoUrl;
+
   const onAdd = () => {
     if (outOfStock) return;
     if (sizes.length && !size) { setErr(t('product.pickSize')); return; }
     if (colors.length && !color) { setErr(t('product.pickColor')); return; }
-    flyToCart(imgRef.current, gallery[active]);
+    flyToCart(imgRef.current, hasVideo ? (poster || gallery[active]) : gallery[active]);
     add({ ...product, whatsapp, size, color }, qty);
     onClose();
   };
@@ -79,22 +81,34 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
           ✕
         </button>
 
-        {/* الصور */}
+        {/* الوسائط — فيديو يشتغل تلقائياً أو صورة، بحجمها الطبيعي 9:16 (بلا قصّ) */}
         <div className="bg-[#f3ece0] p-3">
-          <div className="relative aspect-square overflow-hidden rounded-2xl bg-[#594335]">
-            <img
-              ref={imgRef}
-              src={cldThumb(gallery[active], 800)}
-              alt={product.name}
-              decoding="async"
-              onError={(e) => (e.currentTarget.src = PLACEHOLDER)}
-              className="h-full w-full object-cover"
-            />
+          <div ref={imgRef} className="relative mx-auto aspect-[9/16] max-h-[68vh] w-full overflow-hidden rounded-2xl bg-[#594335]">
+            {hasVideo ? (
+              <video
+                src={product.videoUrl}
+                poster={poster}
+                autoPlay
+                muted
+                loop
+                playsInline
+                controls
+                className="h-full w-full object-contain"
+              />
+            ) : (
+              <img
+                src={cldThumb(gallery[active], 800)}
+                alt={product.name}
+                decoding="async"
+                onError={(e) => (e.currentTarget.src = PLACEHOLDER)}
+                className="h-full w-full object-contain"
+              />
+            )}
             {hasDiscount && (
-              <span className="absolute start-3 top-3 rounded-full bg-red-500 px-2.5 py-0.5 text-xs font-semibold text-white">-{discountPct}%</span>
+              <span className="absolute start-3 top-3 z-10 rounded-full bg-red-500 px-2.5 py-0.5 text-xs font-semibold text-white">-{discountPct}%</span>
             )}
           </div>
-          {gallery.length > 1 && (
+          {!hasVideo && gallery.length > 1 && (
             <div className="mt-3 flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {gallery.map((g, i) => (
                 <button

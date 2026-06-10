@@ -213,6 +213,7 @@
       "description": "Description",
       "size": "Size",
       "color": "Color",
+      "colorHint": "Type a color and press Enter (e.g. Black)",
       "category": "Category",
       "image": "Main image",
       "gallery": "Additional images (gallery)",

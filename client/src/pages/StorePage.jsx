@@ -536,14 +536,25 @@ function HeroSlider({ store }) {
             return (
               <div key={idx} className="w-full shrink-0" dir="rtl">
                 <div
-                  className={`relative isolate flex h-[260px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[340px] ${custom ? '' : 'pub-hero'}`}
+                  className={`relative isolate flex h-[260px] flex-col items-center justify-center overflow-hidden bg-wine-dark px-6 text-center sm:h-[340px] ${custom ? '' : 'pub-hero'}`}
                   style={style}
                 >
                   {isVideo && (
-                    <video src={s.bgValue} autoPlay muted loop playsInline className="absolute inset-0 z-0 h-full w-full object-cover" />
+                    <video
+                      src={s.bgValue}
+                      poster={cldVideoPoster(s.bgValue)}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="auto"
+                      className="absolute inset-0 z-0 h-full w-full object-cover"
+                    />
                   )}
-                  {/* طبقة تعتيم لوضوح النص فوق الصورة/الفيديو */}
-                  {(isImage || isVideo) && <div className="absolute inset-0 z-[1] bg-black/40" />}
+                  {/* طبقة تظليل متدرّجة ثابتة فوق الصورة/الفيديو (متناسقة مع الشريحة الأولى) */}
+                  {(isImage || isVideo) && (
+                    <div className="absolute inset-0 z-[1] bg-gradient-to-t from-black/65 via-black/35 to-black/45" />
+                  )}
                   {!custom && <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-cream/10 blur-3xl" />}
 
                   {/* النص فوق الفيديو دائماً (طبقة GPU مستقلة لتفادي اختفائه على iOS أثناء الانتقال) */}

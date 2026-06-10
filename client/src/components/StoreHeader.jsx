@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import LanguageSwitcher from './LanguageSwitcher.jsx';
 import CatThumb from './CatThumb.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
@@ -31,6 +32,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
   const ltr = i18n.language !== 'ar';
   const { count, setOpen } = useCart();
   const { count: wishCount } = useWishlist();
+  const { user } = useAuth();
   const [drawer, setDrawer] = useState(false);
   const [focus, setFocus] = useState(false);
 
@@ -182,12 +184,13 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
             className={`absolute inset-y-0 start-0 flex w-80 max-w-[85%] flex-col bg-wine-dark p-5 text-cream shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}
           >
             <div className="flex items-center gap-2">
+              {/* مسجّل الدخول (صاحب متجر) → لوحة التحكم. زائر → تسجيل الدخول. لا يوجد زر خروج داخل المتجر. */}
               <Link
-                to="/login"
+                to={user ? '/dashboard' : '/login'}
                 onClick={() => setDrawer(false)}
                 className="flex items-center gap-2 rounded-full bg-cream px-4 py-2 text-sm font-semibold text-wine"
               >
-                <UserGlyph /> {t('nav.login')}
+                <UserGlyph /> {user ? t('nav.dashboard') : t('nav.login')}
               </Link>
               <Link
                 to="/wishlist"
