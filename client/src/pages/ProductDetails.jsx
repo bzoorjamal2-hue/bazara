@@ -6,9 +6,12 @@ import Seo from '../components/Seo.jsx';
 import { ProductDetailsSkeleton } from '../components/Skeleton.jsx';
 import StarRating from '../components/StarRating.jsx';
 import OrderOptions from '../components/OrderOptions.jsx';
+import Lightbox from '../components/Lightbox.jsx';
+import ProductRail from '../components/ProductRail.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import { cldVideoPoster } from '../utils/cloudinary.js';
+import { pushRecent, getRecent } from '../utils/recentlyViewed.js';
 
 const PH = 'https://placehold.co/600x600/121214/d4af37?text=%F0%9F%91%97';
 
@@ -19,22 +22,44 @@ export default function ProductDetails() {
   const { has, toggle } = useWishlist();
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
+  const [related, setRelated] = useState([]);
+  const [recent, setRecent] = useState([]);
   const [error, setError] = useState('');
   const [active, setActive] = useState(0);
   const [orderOpen, setOrderOpen] = useState(false);
   const [selSize, setSelSize] = useState('');
   const [selColor, setSelColor] = useState('');
   const [pickErr, setPickErr] = useState('');
+  const [lightbox, setLightbox] = useState(false);
 
   const fetchData = () => {
     api
       .get(`/public/product/${id}`)
       .then((res) => {
-        setProduct(res.data.product);
+        const p = res.data.product;
+        setProduct(p);
         setReviews(res.data.reviews || []);
         setActive(0);
+        pushRecent(p);
+        setRecent(getRecent());
+        fetchRelated(p);
       })
       .catch((err) => setError(getErrorMessage(err, t('errors.notFound'))));
+  };
+
+  // "قد يعجبك أيضاً": منتجات من نفس المتجر ونفس الفئة (عدا الحالي)
+  const fetchRelated = (p) => {
+    if (!p?.storeSlug) return;
+    api
+      .get(`/public/store/${p.storeSlug}`)
+      .then((res) => {
+        const list = (res.data.products || [])
+          .filter((x) => x.id !== p.id && x.category === p.category)
+          .slice(0, 10)
+          .map((x) => ({ ...x, storeSlug: p.storeSlug }));
+        setRelated(list);
+      })
+      .catch(() => setRelated([]));
   };
 
   useEffect(() => {
@@ -46,7 +71,7 @@ export default function ProductDetails() {
   if (error) return <div className="glass p-10 text-center text-stone-300">{error}</div>;
   if (!product) return <ProductDetailsSkeleton />;
 
-  const gallery = [product.imageUrl, ...(product.images || [])].filter(Boolean);
+  const gallery = [...new Set([product.imageUrl, ...(product.images || [])].filter(Boolean))];
   const hasImages = gallery.length > 0;
   if (!hasImages && !product.videoUrl) gallery.push(PH); // عنصر بديل فقط لو ما في صور ولا فيديو
   const outOfStock = product.stock === 0;
@@ -90,9 +115,19 @@ export default function ProductDetails() {
         <div>
           {hasImages && (
           <div className="relative mx-auto w-fit">
-            {/* الصورة تظهر بحجمها الطبيعي (مثل الفيديو) بلا قص */}
-            <img src={gallery[active]} alt={product.name} className="block max-h-[75vh] w-auto max-w-full rounded-2xl bg-ink-800 object-contain" onError={(e) => (e.currentTarget.src = PH)} />
+            {/* الصورة تظهر بحجمها الطبيعي (مثل الفيديو) بلا قص — نقر للتكبير */}
+            <img
+              src={gallery[active]}
+              alt={product.name}
+              onClick={() => setLightbox(true)}
+              className="block max-h-[75vh] w-auto max-w-full cursor-zoom-in rounded-2xl bg-ink-800 object-contain"
+              onError={(e) => (e.currentTarget.src = PH)}
+            />
             {hasDiscount && <span className="badge absolute start-3 top-3 bg-red-500 text-white">-{Math.round((1 - product.price / product.oldPrice) * 100)}%</span>}
+            {/* أيقونة تكبير */}
+            <button onClick={() => setLightbox(true)} aria-label="zoom" className="absolute end-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur transition hover:bg-black/65">
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3M11 8v6M8 11h6" /></svg>
+            </button>
           </div>
           )}
           {gallery.length > 1 && (
@@ -192,8 +227,16 @@ export default function ProductDetails() {
 
       {orderOpen && <OrderOptions store={orderStore} items={orderItems} onClose={() => setOrderOpen(false)} />}
 
+      {lightbox && hasImages && <Lightbox images={gallery} index={active} onClose={() => setLightbox(false)} />}
+
+      {/* قد يعجبك أيضاً */}
+      <ProductRail title={t('product.youMayLike')} products={related} currentId={product.id} />
+
       {/* التقييمات */}
       <Reviews productId={product.id} reviews={reviews} onAdded={fetchData} />
+
+      {/* شاهدت مؤخراً */}
+      <ProductRail title={t('product.recentlyViewed')} products={recent} currentId={product.id} />
     </>
   );
 }

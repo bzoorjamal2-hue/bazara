@@ -5,6 +5,8 @@ import api from '../api/client.js';
 import Seo from '../components/Seo.jsx';
 import { ProductGridSkeleton } from '../components/Skeleton.jsx';
 import ProductCard from '../components/ProductCard.jsx';
+import ProductRail from '../components/ProductRail.jsx';
+import { getRecent } from '../utils/recentlyViewed.js';
 import CategoryGrid from '../components/CategoryGrid.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
 import InstallApp from '../components/InstallApp.jsx';
@@ -15,6 +17,7 @@ export default function Home() {
   const { t } = useTranslation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const recent = getRecent();
 
   // الصفحة الرئيسية متاحة دائماً على الرابط / للجميع (بدون أي تحويل)
   useEffect(() => {
@@ -40,6 +43,9 @@ export default function Home() {
         <SectionTitle>{t('home.browseByCategory')}</SectionTitle>
         <CategoryGrid />
       </section>
+
+      {/* شاهدت مؤخراً */}
+      {recent.length > 0 && <ProductRail title={t('product.recentlyViewed')} products={recent} />}
 
       {loading ? (
         <section className="mt-14">
