@@ -20,12 +20,15 @@ export function CartProvider({ children }) {
 
   const add = (product, qty = 1) => {
     setItems((prev) => {
-      const existing = prev.find((i) => i.id === product.id);
+      // متجر مختلف عن السلة الحالية → نفرّغها أولاً (لا نخلط منتجات متجرين)
+      const slug = product.storeSlug;
+      const base = slug && prev.length && prev[0].storeSlug && prev[0].storeSlug !== slug ? [] : prev;
+      const existing = base.find((i) => i.id === product.id);
       if (existing) {
-        return prev.map((i) => (i.id === product.id ? { ...i, qty: i.qty + qty } : i));
+        return base.map((i) => (i.id === product.id ? { ...i, qty: i.qty + qty } : i));
       }
       return [
-        ...prev,
+        ...base,
         {
           id: product.id,
           name: product.name,
@@ -46,11 +49,17 @@ export function CartProvider({ children }) {
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, qty: Math.max(1, qty) } : i)));
   const clear = () => setItems([]);
 
+  // تفرّغ السلة تلقائياً عند دخول متجر مختلف عن متجر عناصر السلة الحالية
+  const ensureStore = (slug) => {
+    if (!slug) return;
+    setItems((prev) => (prev.length && prev[0].storeSlug && prev[0].storeSlug !== slug ? [] : prev));
+  };
+
   const count = useMemo(() => items.reduce((s, i) => s + i.qty, 0), [items]);
   const total = useMemo(() => items.reduce((s, i) => s + i.price * i.qty, 0), [items]);
 
   return (
-    <CartContext.Provider value={{ items, add, remove, setQty, clear, count, total, open, setOpen }}>
+    <CartContext.Provider value={{ items, add, remove, setQty, clear, ensureStore, count, total, open, setOpen }}>
       {children}
     </CartContext.Provider>
   );

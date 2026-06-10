@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useCart } from '../context/CartContext.jsx';
 import Seo from '../components/Seo.jsx';
 import Spinner from '../components/Spinner.jsx';
 import ProductCard from '../components/ProductCard.jsx';
@@ -23,6 +24,7 @@ export default function StorePage() {
   const { slug } = useParams();
   const { t } = useTranslation();
   const { store: myStore } = useAuth();
+  const { ensureStore } = useCart();
   const isOwner = myStore?.slug === slug;
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
@@ -40,8 +42,15 @@ export default function StorePage() {
     setError('');
     api
       .get(`/public/store/${slug}`)
-      .then((res) => setData(res.data))
+      .then((res) => {
+        const s = res.data.store;
+        // نحقن معرّف/اسم المتجر بكل منتج، وننادي ensureStore لتفريغ السلة إن كانت من متجر مختلف
+        const products = (res.data.products || []).map((p) => ({ ...p, storeSlug: s.slug, storeName: s.name }));
+        setData({ ...res.data, products });
+        ensureStore(s.slug);
+      })
       .catch((err) => setError(getErrorMessage(err, t('errors.storeNotFound'))));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, t]);
 
   useEffect(() => setPage(1), [cat, q, sort, sizesSel, offersOnly]);
