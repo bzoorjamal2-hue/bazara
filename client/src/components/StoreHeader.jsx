@@ -8,6 +8,7 @@ import CatThumb from './CatThumb.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { MenuIcon, SearchIcon, CartIcon, HeartIcon } from './icons.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
+import { cldThumb } from '../utils/cloudinary.js';
 
 const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench'];
 
@@ -25,12 +26,17 @@ function MenuBtn({ onOpen }) {
 
 // هيدر صفحة المتجر — صف 1: شعار/اسم المتجر + قائمة (☰). صف 2: بحث + سلة (تحت زر القائمة تماماً).
 // عند التمرير: الشعار يتقلّص بنعومة، ويظهر زر قائمة مُصغّر بحركة scale ناعمة (بلا قصّ ولا قفز).
-export default function StoreHeader({ store, q, setQ, cat, setCat }) {
+export default function StoreHeader({ store, q, setQ, cat, setCat, products = [] }) {
   const { t, i18n } = useTranslation();
   const ltr = i18n.language !== 'ar';
   const { count, setOpen } = useCart();
   const { count: wishCount } = useWishlist();
   const [drawer, setDrawer] = useState(false);
+  const [focus, setFocus] = useState(false);
+
+  // اقتراحات البحث الفوري: أول 6 منتجات يطابق اسمها ما يكتبه المستخدم
+  const term = q.trim().toLowerCase();
+  const suggestions = term ? products.filter((p) => p.name.toLowerCase().includes(term)).slice(0, 6) : [];
   const logoWrapRef = useRef(null);
   const compactWrapRef = useRef(null);
   useScrollLock(drawer);
@@ -114,9 +120,35 @@ export default function StoreHeader({ store, q, setQ, cat, setCat }) {
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
+              onFocus={() => setFocus(true)}
+              onBlur={() => setTimeout(() => setFocus(false), 150)}
               placeholder={t('store.searchPlaceholder')}
               className="w-full rounded-full border-0 bg-white py-2.5 pe-4 ps-10 text-[#2b2b2b] placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-cream/50"
             />
+
+            {/* اقتراحات البحث الفوري */}
+            {focus && suggestions.length > 0 && (
+              <div className="absolute inset-x-0 top-full z-[60] mt-2 overflow-hidden rounded-2xl border border-wine/10 bg-white shadow-2xl">
+                {suggestions.map((p) => {
+                  const img = cldThumb(p.imageUrl || (p.images && p.images[0]) || '', 120);
+                  return (
+                    <Link
+                      key={p.id}
+                      to={`/product/${p.id}`}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => setFocus(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 transition hover:bg-wine/5"
+                    >
+                      <img src={img} alt="" className="h-12 w-12 shrink-0 rounded-lg object-cover" onError={(e) => (e.currentTarget.style.visibility = 'hidden')} />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-semibold text-[#2b2b2b]">{p.name}</span>
+                        <span className="text-sm font-bold text-wine">{t('common.currency')}{p.price}</span>
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* السلة — على يمين زر القائمة، وتكون بأقصى الحافة (تحت ☰) قبل التمرير */}
