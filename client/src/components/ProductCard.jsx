@@ -6,7 +6,7 @@ import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import StarRating from './StarRating.jsx';
 import { HeartIcon, CartIcon } from './icons.jsx';
-import { cldVideoPoster } from '../utils/cloudinary.js';
+import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
 import { flyToCart } from '../utils/flyToCart.js';
 import QuickViewModal from './QuickViewModal.jsx';
 
@@ -27,7 +27,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
 
   const hasImage = product.imageUrl || (product.images && product.images[0]);
   const videoPoster = product.videoUrl ? cldVideoPoster(product.videoUrl) : '';
-  const cover = hasImage || videoPoster || PLACEHOLDER;
+  const cover = cldThumb(hasImage || videoPoster || PLACEHOLDER, 500);
   const outOfStock = product.stock === 0;
   const hasDiscount = product.oldPrice && product.oldPrice > product.price;
   const discountPct = hasDiscount ? Math.round((1 - product.price / product.oldPrice) * 100) : 0;
@@ -105,6 +105,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
           src={cover}
           alt={product.name}
           loading="lazy"
+          decoding="async"
           onError={(e) => (e.currentTarget.src = PLACEHOLDER)}
           className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-110 ${outOfStock ? 'opacity-50' : ''}`}
         />

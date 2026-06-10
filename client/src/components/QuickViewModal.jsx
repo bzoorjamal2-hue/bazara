@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import { HeartIcon, CartIcon } from './icons.jsx';
-import { cldVideoPoster } from '../utils/cloudinary.js';
+import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
 import { flyToCart } from '../utils/flyToCart.js';
 import useScrollLock from '../hooks/useScrollLock.js';
 
@@ -79,8 +79,9 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
           <div className="relative aspect-square overflow-hidden rounded-2xl bg-[#594335]">
             <img
               ref={imgRef}
-              src={gallery[active]}
+              src={cldThumb(gallery[active], 800)}
               alt={product.name}
+              decoding="async"
               onError={(e) => (e.currentTarget.src = PLACEHOLDER)}
               className="h-full w-full object-cover"
             />
@@ -96,7 +97,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
                   onClick={() => setActive(i)}
                   className={`h-14 w-14 shrink-0 overflow-hidden rounded-xl border-2 transition ${i === active ? 'border-wine' : 'border-transparent opacity-70'}`}
                 >
-                  <img src={g} alt="" className="h-full w-full object-cover" onError={(e) => (e.currentTarget.src = PLACEHOLDER)} />
+                  <img src={cldThumb(g, 150)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" onError={(e) => (e.currentTarget.src = PLACEHOLDER)} />
                 </button>
               ))}
             </div>

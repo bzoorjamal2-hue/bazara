@@ -20,6 +20,13 @@ export function cldOptimized(url, kind = 'image') {
   return url.replace('/upload/', `/upload/${tr}/`);
 }
 
+// صورة مصغّرة محسّنة للشبكات (بطاقات المنتجات) — تقلّل الحجم كثيراً وتسرّع التحميل.
+// width بالبكسل (الحد الأقصى)؛ المتصفّح يصغّرها للعرض المطلوب.
+export function cldThumb(url, width = 500) {
+  if (typeof url !== 'string' || !url.includes('/upload/')) return url;
+  return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width},c_limit,dpr_auto/`);
+}
+
 // رفع ملف (صورة/فيديو) مباشرة من جهاز المستخدم إلى Cloudinary، ويعيد الرابط الآمن.
 // resourceType: 'video' | 'image' | 'auto'
 export async function uploadToCloudinary(file, resourceType = 'auto', onProgress) {
