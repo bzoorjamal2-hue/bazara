@@ -28,11 +28,14 @@ export default function BottomNav() {
   const navigate = useNavigate();
   const { count, setOpen } = useCart();
   const { count: wishCount } = useWishlist();
-  const { user } = useAuth();
+  const { user, store } = useAuth();
 
   const accountTo = user ? '/dashboard' : '/login';
+  // "الرئيسية" للمشترك المسجّل → صفحة متجره العام؛ للزائر → بازارا العام (كل المتاجر)
+  const homeTo = user && store?.slug ? `/store/${store.slug}` : '/shop';
+  const homeActive = homeTo === '/shop' ? pathname === '/shop' : pathname === homeTo;
   const items = [
-    { key: 'home', label: t('nav.home'), Icon: HomeIcon, active: pathname === '/shop', onClick: () => navigate('/shop') },
+    { key: 'home', label: t('nav.home'), Icon: HomeIcon, active: homeActive, onClick: () => navigate(homeTo) },
     { key: 'fav', label: t('nav.wishlist'), Icon: HeartIcon, active: pathname === '/wishlist', badge: wishCount, onClick: () => navigate('/wishlist') },
     { key: 'cart', label: t('nav.cart'), Icon: CartIcon, badge: count, onClick: () => setOpen(true) },
     { key: 'account', label: t('nav.account') || 'حسابي', Icon: UserIcon, active: pathname.startsWith('/dashboard'), onClick: () => navigate(accountTo) },

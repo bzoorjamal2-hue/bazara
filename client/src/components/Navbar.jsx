@@ -9,6 +9,7 @@ import Logo from './Logo.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { CartIcon, HeartIcon, MenuIcon } from './icons.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
+import { isStandalone } from '../utils/pwa.js';
 
 function Avatar({ user, size = 'h-8 w-8' }) {
   if (user?.avatarUrl) {
@@ -52,6 +53,7 @@ export default function Navbar() {
 
   // الشريط الخمري الفاخر على كل الموقع
   const pub = true;
+  const standalone = isStandalone(); // داخل التطبيق المثبّت: الدخول من شاشة الترحيب فقط
   const isHome = pathname === '/'; // على الرئيسية نعرض اسم Bazara (مش اسم المتجر)
 
   const isAdmin = subscription?.isAdmin;
@@ -135,7 +137,8 @@ export default function Navbar() {
 
           <ThemeToggle className={iconCls} />
 
-          {!user && (
+          {/* الدخول/التسجيل في المتصفّح فقط — داخل التطبيق يكون من شاشة الترحيب ليبقى التسوّق نظيفاً */}
+          {!user && !standalone && (
             <>
               <NavLink to="/login" className={`whitespace-nowrap rounded-lg px-1 py-1.5 text-sm ${linkCls}`}>{t('nav.login')}</NavLink>
               {pub ? (
@@ -159,7 +162,7 @@ export default function Navbar() {
           <div className="absolute inset-0 bg-black/50 animate-fade-up" onClick={() => setMenuOpen(false)} />
           <aside
             onClick={(e) => e.stopPropagation()}
-            className={`absolute inset-y-0 start-0 flex w-80 max-w-[85%] flex-col bg-wine-dark p-5 text-cream shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}
+            className={`absolute inset-y-0 start-0 flex w-80 max-w-[85%] flex-col bg-wine-dark px-5 pt-5 pb-[max(env(safe-area-inset-bottom),20px)] text-cream shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}
           >
             {/* أعلى: إغلاق + اللغة */}
             <div className="flex items-center justify-between">
@@ -192,8 +195,8 @@ export default function Navbar() {
               </div>
             </div>
 
-            {/* الروابط */}
-            <nav className="mt-3 space-y-1 overflow-y-auto">
+            {/* الروابط — تأخذ المساحة وتتمرّر داخلياً ليبقى زر الخروج ظاهراً دائماً */}
+            <nav className="mt-3 min-h-0 flex-1 space-y-1 overflow-y-auto">
               {sections.map((s) => (
                 <Link
                   key={s.key}
@@ -225,12 +228,12 @@ export default function Navbar() {
               </Link>
             </nav>
 
-            {/* خروج */}
+            {/* تسجيل الخروج — ثابت بأسفل القائمة دائماً */}
             <button
               onClick={handleLogout}
-              className="mt-auto flex items-center gap-3 rounded-xl px-3 py-3 text-base font-medium text-red-200 transition hover:bg-red-500/15"
+              className="mt-3 flex shrink-0 items-center justify-center gap-2 rounded-xl border border-red-300/40 bg-red-500/15 px-3 py-3 text-base font-bold text-red-100 transition hover:bg-red-500/30"
             >
-              <span className="w-5 text-center">🚪</span> {t('nav.logout')}
+              <span>🚪</span> {t('nav.logout')}
             </button>
           </aside>
         </div>
