@@ -71,12 +71,24 @@ export default function AppWelcome() {
             animate={{ rotate: 360 }}
             transition={{ duration: 14, repeat: Infinity, ease: 'linear' }}
           />
-          <div className="absolute inset-0 -z-10 rounded-full bg-cream/10 blur-2xl" />
           <motion.div
-            animate={{ y: [0, -8, 0] }}
-            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute inset-0 -z-10 rounded-full bg-cream/15 blur-2xl"
+            animate={{ opacity: [0.4, 0.8, 0.4], scale: [1, 1.08, 1] }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          {/* دخول: لفّة كاملة مع عقارب الساعة + تكبير وتلاشٍ ناعم */}
+          <motion.div
+            initial={{ rotate: 0, scale: 0.55, opacity: 0 }}
+            animate={{ rotate: 360, scale: 1, opacity: 1 }}
+            transition={{ duration: 1.3, ease: [0.22, 0.61, 0.36, 1] }}
           >
-            <Logo className="h-28 w-28 drop-shadow-2xl sm:h-32 sm:w-32" />
+            {/* استمرار: طفو ناعم دائم */}
+            <motion.div
+              animate={{ y: [0, -9, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <Logo className="h-28 w-28 drop-shadow-2xl sm:h-32 sm:w-32" />
+            </motion.div>
           </motion.div>
         </motion.div>
 

@@ -15,9 +15,10 @@ import { useAuth } from './context/AuthContext.jsx';
 // - زائر → شاشة افتتاح أنيقة.
 // في المتصفح: يعرض الصفحة الرئيسية العامة كالمعتاد.
 function Root() {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   if (!isStandalone()) return <Home />;
-  if (loading) return <Spinner full />; // ريثما نتحقّق من الجلسة المحفوظة
+  // مسجّل دخوله → لوحة التحكم. غير ذلك → نعرض شاشة الترحيب فوراً (بحركتها) بدل
+  // الانتظار على شاشة تحميل فارغة قد تعلّق لو كان الخادم بطيئاً بالاستيقاظ.
   if (user) return <Navigate to="/dashboard" replace />;
   return <AppWelcome />;
 }
