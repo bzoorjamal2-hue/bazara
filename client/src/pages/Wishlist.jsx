@@ -8,7 +8,8 @@ import { cldThumb } from '../utils/cloudinary.js';
 const PH = 'https://placehold.co/300x300/f1e9dd/5e4636?text=%F0%9F%91%97';
 
 export default function Wishlist() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const rtl = i18n.language !== 'en';
   const { items, remove } = useWishlist();
   const { add } = useCart();
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ export default function Wishlist() {
           aria-label={t('common.back')}
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-wine/10 text-wine transition hover:bg-wine hover:text-cream"
         >
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 6 6 6-6 6" /></svg>
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={rtl ? 'm9 6 6 6-6 6' : 'm15 6-6 6 6 6'} /></svg>
         </button>
         <h1 className="font-display text-2xl font-bold gradient-text">❤️ {t('wishlist.title')}</h1>
       </div>

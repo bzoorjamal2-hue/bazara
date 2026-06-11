@@ -117,7 +117,8 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50">
-      <nav className={`${pub ? 'pub-navbar' : 'glass-strong'} relative mx-auto flex items-center justify-between gap-1 px-2.5 py-3 transition-all duration-300 sm:gap-2 sm:px-6 ${scrolled ? 'mt-0 max-w-full rounded-none' : 'mt-4 max-w-6xl rounded-2xl'}`}>
+      <nav className={`${pub ? 'pub-navbar' : 'glass-strong'} relative flex w-full justify-center rounded-none px-3 py-3 transition-shadow duration-300 sm:px-6 ${scrolled ? 'shadow-lg' : ''}`}>
+        <div className="flex w-full max-w-6xl items-center justify-between gap-1 sm:gap-2">
         {/* للمستخدم: زر القائمة ☰ (مكان اللوجو) + اسم متجره. للزائر: شعار Bazara */}
         <div className="flex items-center gap-2.5">
           {user ? (
@@ -179,7 +180,7 @@ export default function Navbar() {
           {/* زر اللغة بالشريط العلوي للزوّار فقط — المستخدم المسجّل يبدّلها من داخل القائمة */}
           {!user && <LanguageSwitcher />}
         </div>
-
+        </div>
       </nav>
 
       {/* قائمة الحساب — درج جانبي أنيق (مثل درج المتجر) */}
