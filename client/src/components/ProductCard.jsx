@@ -139,7 +139,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
           className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-wine/30 py-2 text-sm font-semibold text-wine transition-colors hover:bg-wine hover:text-cream disabled:cursor-not-allowed disabled:opacity-40"
         >
           <CartIcon className="h-4 w-4" />
-          {outOfStock ? t('product.outOfStock') : t('product.shopNow')}
+          {outOfStock ? t('product.outOfStock') : t('product.addToCart')}
         </motion.button>
       </div>
     </MotionLink>

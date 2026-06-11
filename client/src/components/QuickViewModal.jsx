@@ -189,7 +189,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
               className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-wine py-3 font-semibold text-cream transition hover:bg-wine-dark disabled:cursor-not-allowed disabled:opacity-40"
             >
               <CartIcon className="h-5 w-5" />
-              {outOfStock ? t('product.outOfStock') : t('product.shopNow')}
+              {outOfStock ? t('product.outOfStock') : t('product.addToCart')}
             </motion.button>
             <motion.button
               onClick={() => toggle(product)}

@@ -1,6 +1,13 @@
 // "شاهدت مؤخراً" — تتبّع آخر المنتجات التي زارها المستخدم (محلياً، بلا خادم).
+import { cldVideoPoster } from './cloudinary.js';
+
 const KEY = 'recently_viewed_v1';
 const MAX = 12;
+
+// صورة المنتج: صورة، أو أول صورة معرض، أو لقطة من الفيديو (للمنتجات الفيديو)
+export function productThumb(p) {
+  return p.imageUrl || (p.images && p.images[0]) || (p.videoUrl ? cldVideoPoster(p.videoUrl) : '') || '';
+}
 
 export function getRecent() {
   try {
@@ -18,7 +25,7 @@ export function pushRecent(product) {
       name: product.name,
       price: product.price,
       oldPrice: product.oldPrice || null,
-      imageUrl: product.imageUrl || (product.images && product.images[0]) || '',
+      imageUrl: productThumb(product),
       storeSlug: product.storeSlug || '',
     };
     const list = getRecent().filter((p) => p.id !== product.id);

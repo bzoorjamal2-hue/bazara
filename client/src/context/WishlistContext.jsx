@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
+import { productThumb } from '../utils/recentlyViewed.js';
 
 const WishlistContext = createContext(null);
 const KEY = 'wishlist_v1';
@@ -28,7 +29,7 @@ export function WishlistProvider({ children }) {
           name: product.name,
           price: product.price,
           oldPrice: product.oldPrice,
-          imageUrl: product.imageUrl || (product.images && product.images[0]) || '',
+          imageUrl: productThumb(product),
           category: product.category,
           storeSlug: product.storeSlug,
           storeName: product.storeName,
