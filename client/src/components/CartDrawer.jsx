@@ -6,20 +6,41 @@ import { buildWhatsappCheckout } from '../utils/whatsapp.js';
 import useScrollLock from '../hooks/useScrollLock.js';
 import Select from './Select.jsx';
 
-// مناطق التوصيل ورسومها التقديرية (قابلة للتعديل) — افتراضية لفلسطين
+// مناطق التوصيل ورسومها (قابلة للتعديل): مدن الضفة 20₪ · القدس 35₪ · مدن الداخل 70₪
 const AREAS = [
-  { ar: 'رام الله والبيرة', en: 'Ramallah & Al-Bireh', fee: 20 },
-  { ar: 'نابلس', en: 'Nablus', fee: 20 },
+  // مدن الضفة الغربية — 20₪
+  { ar: 'رام الله والبيرة', en: 'Ramallah & Al-Bireh', fee: 25 },
+  { ar: 'نابلس', en: 'Nablus', fee: 25 },
   { ar: 'الخليل', en: 'Hebron', fee: 25 },
-  { ar: 'بيت لحم', en: 'Bethlehem', fee: 20 },
-  { ar: 'القدس', en: 'Jerusalem', fee: 30 },
+  { ar: 'بيت لحم', en: 'Bethlehem', fee: 25 },
   { ar: 'جنين', en: 'Jenin', fee: 25 },
   { ar: 'طولكرم', en: 'Tulkarm', fee: 25 },
   { ar: 'قلقيلية', en: 'Qalqilya', fee: 25 },
   { ar: 'سلفيت', en: 'Salfit', fee: 25 },
-  { ar: 'أريحا', en: 'Jericho', fee: 30 },
-  { ar: 'طوباس', en: 'Tubas', fee: 30 },
-  { ar: 'غزة', en: 'Gaza', fee: 35 },
+  { ar: 'أريحا', en: 'Jericho', fee: 25 },
+  { ar: 'طوباس', en: 'Tubas', fee: 25 },
+  // القدس — 35₪
+  { ar: 'القدس', en: 'Jerusalem', fee: 35 },
+  // مدن الداخل (أراضي 48) — 70₪
+  { ar: 'حيفا', en: 'Haifa', fee: 80 },
+  { ar: 'يافا', en: 'Jaffa', fee: 80 },
+  { ar: 'عكا', en: 'Acre', fee: 80 },
+  { ar: 'الناصرة', en: 'Nazareth', fee: 80 },
+  { ar: 'أم الفحم', en: 'Umm al-Fahm', fee: 80 },
+  { ar: 'الطيبة', en: 'Tayibe', fee: 80 },
+  { ar: 'الطيرة', en: 'Tira', fee: 80 },
+  { ar: 'اللد', en: 'Lod', fee: 80 },
+  { ar: 'الرملة', en: 'Ramla', fee: 80 },
+  { ar: 'سخنين', en: 'Sakhnin', fee: 80 },
+  { ar: 'شفاعمرو', en: 'Shefa-Amr', fee: 80 },
+  { ar: 'باقة الغربية', en: 'Baqa al-Gharbiyye', fee: 80 },
+  { ar: 'كفر قاسم', en: 'Kafr Qasim', fee: 80 },
+  { ar: 'رهط', en: 'Rahat', fee: 80 },
+  { ar: 'طمرة', en: 'Tamra', fee: 80 },
+  { ar: 'عرابة', en: 'Arraba', fee: 80 },
+  { ar: 'كفر كنا', en: 'Kafr Kanna', fee: 80 },
+  { ar: 'المغار', en: 'Maghar', fee: 80 },
+  // غير ذلك — يحدّده المتجر
   { ar: 'أخرى', en: 'Other', fee: 0 },
 ];
 

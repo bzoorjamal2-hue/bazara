@@ -65,7 +65,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
       <div className="absolute inset-0 bg-black/55 backdrop-blur-sm" />
 
       <motion.div
-        className="relative z-10 grid max-h-[88vh] w-full max-w-3xl overflow-hidden rounded-3xl bg-white shadow-2xl sm:grid-cols-2"
+        className="relative z-10 grid max-h-[90vh] w-full max-w-3xl overflow-y-auto overscroll-contain rounded-3xl bg-white shadow-2xl sm:grid-cols-2"
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.92, opacity: 0, y: 10 }}
@@ -83,13 +83,12 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
 
         {/* الوسائط — فيديو يشتغل تلقائياً أو صورة، بحجمها الطبيعي 9:16 (بلا قصّ) */}
         <div className="bg-[#f3ece0] p-3">
-          <div ref={imgRef} className="relative mx-auto aspect-[9/16] max-h-[68vh] w-full overflow-hidden rounded-2xl bg-[#594335]">
+          <div ref={imgRef} className="relative mx-auto aspect-[9/16] max-h-[56vh] w-full overflow-hidden rounded-2xl bg-[#594335]">
             {hasVideo ? (
               <video
                 src={product.videoUrl}
                 poster={poster}
                 autoPlay
-                muted
                 loop
                 playsInline
                 controls
@@ -124,7 +123,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
         </div>
 
         {/* التفاصيل */}
-        <div className="flex max-h-[88vh] flex-col overflow-y-auto p-5 text-[#2b2b2b] sm:max-h-none">
+        <div className="flex flex-col p-5 text-[#2b2b2b]">
           <h3 className="font-display text-xl font-bold leading-snug text-wine">{product.name}</h3>
 
           <div className="mt-2 flex items-baseline gap-2">

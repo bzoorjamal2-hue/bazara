@@ -439,11 +439,8 @@ function HeroSlider({ store }) {
 
   useEffect(() => {
     if (len <= 1 || paused) return undefined;
-    // لا نغادر شريحة الفيديو تلقائياً — نتركها تعمل وتتكرر حتى يسحب المستخدم يدوياً
-    const cur = slides[i];
-    const isVideo = cur && !cur.fixed && cur.bgType === 'video' && cur.bgValue;
-    if (isVideo) return undefined;
-    const id = setInterval(() => setI((p) => (p + 1) % len), 3500);
+    // تتحرّك الشرائح تلقائياً كل 3 ثوانٍ (بما فيها شرائح الفيديو) — منظر أحلى ومتجدّد
+    const id = setInterval(() => setI((p) => (p + 1) % len), 3000);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [len, paused, i]);

@@ -43,7 +43,8 @@ export function CartProvider({ children }) {
           imageUrl: product.imageUrl || (product.images && product.images[0]) || (product.videoUrl ? cldVideoPoster(product.videoUrl) : '') || '',
           storeName: product.storeName,
           storeSlug: product.storeSlug,
-          whatsapp: product.whatsapp || '',
+          // رقم واتساب المتجر دائماً (حتى لو أُضيف المنتج من الصفحة الرئيسية العامة)
+          whatsapp: product.whatsapp || product.storeWhatsapp || '',
           size: product.size || '',
           color: product.color || '',
           qty,

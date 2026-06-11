@@ -14,14 +14,23 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const justRegistered = location.state?.registered;
-  const [form, setForm] = useState({ email: location.state?.email || '', password: '' });
+  const savedEmail = typeof localStorage !== 'undefined' ? localStorage.getItem('bz_remember_email') || '' : '';
+  const [form, setForm] = useState({ email: location.state?.email || savedEmail, password: '' });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [needsCode, setNeedsCode] = useState(false); // اشتراك منتهٍ: يطلب كود التجديد
   const [code, setCode] = useState('');
   const [showPass, setShowPass] = useState(false);
-  const [remember, setRemember] = useState(true);
+  const [remember, setRemember] = useState(savedEmail ? true : true);
   const emailRef = useRef(null);
+
+  // حفظ/مسح الإيميل المتذكَّر (كلمة المرور لا تُحفظ أبداً لأسباب أمنية)
+  const persistRemember = (email) => {
+    try {
+      if (remember && email) localStorage.setItem('bz_remember_email', email);
+      else localStorage.removeItem('bz_remember_email');
+    } catch { /* تجاهل */ }
+  };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -31,6 +40,7 @@ export default function Login() {
       setError(t('errors.invalidEmail'));
       return;
     }
+    persistRemember(email);
     setBusy(true);
     try {
       const data = await login(email, form.password);
