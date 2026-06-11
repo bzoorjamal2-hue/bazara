@@ -23,6 +23,33 @@ function Avatar({ user, size = 'h-8 w-8' }) {
   );
 }
 
+// أيقونات خطّية أنيقة لقائمة الحساب (بديل الإيموجي)
+const I = (p) => ({ viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true, ...p });
+function GridIcon({ className = 'h-5 w-5' }) {
+  return (<svg {...I({ className })}><rect x="3" y="3" width="7.5" height="7.5" rx="1.6" /><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6" /><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6" /><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6" /></svg>);
+}
+function UserLineIcon({ className = 'h-5 w-5' }) {
+  return (<svg {...I({ className })}><circle cx="12" cy="8" r="3.6" /><path d="M4.5 20c0-3.7 3.4-5.6 7.5-5.6S19.5 16.3 19.5 20" /></svg>);
+}
+function StoreIcon({ className = 'h-5 w-5' }) {
+  return (<svg {...I({ className })}><path d="M4 9.5 5.2 5h13.6L20 9.5a2.4 2.4 0 0 1-4.8.3 2.4 2.4 0 0 1-4.8 0 2.4 2.4 0 0 1-4.8 0A2.4 2.4 0 0 1 4 9.5Z" /><path d="M5.5 11v8a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-8" /><path d="M10 20v-4.5h4V20" /></svg>);
+}
+function BagIcon({ className = 'h-5 w-5' }) {
+  return (<svg {...I({ className })}><path d="M6.5 8h11l-.9 11.2a1.6 1.6 0 0 1-1.6 1.5H9a1.6 1.6 0 0 1-1.6-1.5L6.5 8Z" /><path d="M9.3 8V6.2a2.7 2.7 0 0 1 5.4 0V8" /></svg>);
+}
+function ReceiptIcon({ className = 'h-5 w-5' }) {
+  return (<svg {...I({ className })}><path d="M6.5 3h11v18l-2.2-1.4L13 21l-2.3-1.4L8.4 21l-1.9-1.4V3Z" /><path d="M9.5 7.5h5M9.5 11h5M9.5 14.5h3" /></svg>);
+}
+function UsersIcon({ className = 'h-5 w-5' }) {
+  return (<svg {...I({ className })}><circle cx="9" cy="8" r="3.2" /><path d="M3.2 19c0-3.2 3-4.8 5.8-4.8S14.8 15.8 14.8 19" /><path d="M16.2 5.4a3.1 3.1 0 0 1 0 5.7M17 14.4c2 .6 3.6 2 3.6 4.6" /></svg>);
+}
+function ShieldCheckIcon({ className = 'h-5 w-5' }) {
+  return (<svg {...I({ className })}><path d="M12 3l7.5 2.8v5.1c0 4.4-3 7.6-7.5 9.6-4.5-2-7.5-5.2-7.5-9.6V5.8L12 3z" /><path d="M9 12l2 2 4-4" /></svg>);
+}
+function LogoutIcon({ className = 'h-5 w-5' }) {
+  return (<svg {...I({ className })}><path d="M14 4h3.5A1.5 1.5 0 0 1 19 5.5v13a1.5 1.5 0 0 1-1.5 1.5H14" /><path d="M9.5 8 5.5 12l4 4" /><path d="M5.5 12H15" /></svg>);
+}
+
 export default function Navbar() {
   const { t, i18n } = useTranslation();
   const ltr = i18n.language !== 'ar';
@@ -30,7 +57,7 @@ export default function Navbar() {
   const { count, setOpen } = useCart();
   const { count: wishCount } = useWishlist();
   const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   useScrollLock(menuOpen); // تجميد الخلفية عند فتح قائمة الحساب
@@ -70,16 +97,16 @@ export default function Navbar() {
   // أقسام لوحة التحكم (تظهر في قائمة المستخدم) — المدير: تحكّم فقط بلا بيع
   const sections = isAdmin
     ? [
-        { key: 'subscribers', label: t('admin.subscribersNav'), icon: '👥' },
-        { key: 'admin', label: t('admin.nav'), icon: '🛡️' },
-        { key: 'profile', label: t('dashboard.profile'), icon: '👤' },
+        { key: 'subscribers', label: t('admin.subscribersNav'), Icon: UsersIcon },
+        { key: 'admin', label: t('admin.nav'), Icon: ShieldCheckIcon },
+        { key: 'profile', label: t('dashboard.profile'), Icon: UserLineIcon },
       ]
     : [
-        { key: 'overview', label: t('dashboard.overview'), icon: '📊' },
-        { key: 'profile', label: t('dashboard.profile'), icon: '👤' },
-        { key: 'storeSettings', label: t('dashboard.storeSettings'), icon: '⚙️' },
-        { key: 'myProducts', label: t('dashboard.myProducts'), icon: '🧺' },
-        { key: 'myOrders', label: t('dashboard.myOrders'), icon: '🧾' },
+        { key: 'overview', label: t('dashboard.overview'), Icon: GridIcon },
+        { key: 'profile', label: t('dashboard.profile'), Icon: UserLineIcon },
+        { key: 'storeSettings', label: t('dashboard.storeSettings'), Icon: StoreIcon },
+        { key: 'myProducts', label: t('dashboard.myProducts'), Icon: BagIcon },
+        { key: 'myOrders', label: t('dashboard.myOrders'), Icon: ReceiptIcon },
       ];
 
   // أصناف ديناميكية حسب الثيم (خمري للصفحات العامة / داكن للوحة التحكم)
@@ -197,35 +224,20 @@ export default function Navbar() {
 
             {/* الروابط — تأخذ المساحة وتتمرّر داخلياً ليبقى زر الخروج ظاهراً دائماً */}
             <nav className="mt-3 min-h-0 flex-1 space-y-1 overflow-y-auto">
-              {sections.map((s) => (
-                <Link
-                  key={s.key}
-                  to={`/dashboard?tab=${s.key}`}
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-3 rounded-xl px-3 py-3 text-base text-cream/90 transition hover:bg-cream/10 hover:text-cream"
-                >
-                  <span className="w-5 text-center">{s.icon}</span> {s.label}
-                </Link>
-              ))}
-              <div className="my-2 h-px bg-cream/15" />
-              {store && !isAdmin && (
-                <a
-                  href={`/store/${store.slug}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-3 rounded-xl px-3 py-3 text-base text-cream/90 transition hover:bg-cream/10 hover:text-cream"
-                >
-                  <span className="w-5 text-center">🔗</span> {t('dashboard.viewPublicStore')}
-                </a>
-              )}
-              <Link
-                to="/"
-                onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-3 rounded-xl px-3 py-3 text-base text-cream/90 transition hover:bg-cream/10 hover:text-cream"
-              >
-                <span className="w-5 text-center">🏠</span> {t('dashboard.viewHome')}
-              </Link>
+              {sections.map((s) => {
+                const curTab = new URLSearchParams(search).get('tab') || (isAdmin ? 'subscribers' : 'overview');
+                const active = pathname.startsWith('/dashboard') && curTab === s.key;
+                return (
+                  <Link
+                    key={s.key}
+                    to={`/dashboard?tab=${s.key}`}
+                    onClick={() => setMenuOpen(false)}
+                    className={`flex items-center gap-3 rounded-xl px-3 py-3 text-base transition ${active ? 'bg-cream/15 font-bold text-cream' : 'text-cream/85 hover:bg-cream/10 hover:text-cream'}`}
+                  >
+                    <s.Icon className="h-5 w-5 shrink-0 text-cream/80" /> {s.label}
+                  </Link>
+                );
+              })}
             </nav>
 
             {/* تسجيل الخروج — ثابت بأسفل القائمة دائماً */}
@@ -233,7 +245,7 @@ export default function Navbar() {
               onClick={handleLogout}
               className="mt-3 flex shrink-0 items-center justify-center gap-2 rounded-xl border border-red-300/40 bg-red-500/15 px-3 py-3 text-base font-bold text-red-100 transition hover:bg-red-500/30"
             >
-              <span>🚪</span> {t('nav.logout')}
+              <LogoutIcon className="h-5 w-5" /> {t('nav.logout')}
             </button>
           </aside>
         </div>
