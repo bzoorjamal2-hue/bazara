@@ -244,6 +244,16 @@ html[lang='ar'] .font-display {
   box-shadow: 0 10px 28px rgba(74, 19, 34, 0.35);
 }
 
+/* ===== الشريط العلوي الفاتح الفاخر (Bazara) — كريمي ناعم ملاصق للأعلى ===== */
+.app-navbar {
+  background: #f8f3ea;
+  border-bottom: 1px solid rgba(94, 70, 54, 0.12);
+}
+html.dark .theme-pub .app-navbar {
+  background: #251c15;
+  border-bottom-color: rgba(230, 200, 120, 0.15);
+}
+
 /* ===== بطاقة الفئة الخمرية (أيقونة عاجية) ===== */
 .pub-cat {
   background: #5e4636;

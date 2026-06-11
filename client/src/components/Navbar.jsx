@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import LanguageSwitcher from './LanguageSwitcher.jsx';
-import Logo from './Logo.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { CartIcon, HeartIcon, MenuIcon } from './icons.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import { isStandalone } from '../utils/pwa.js';
+import CatThumb from './CatThumb.jsx';
 
 function Avatar({ user, size = 'h-8 w-8' }) {
   if (user?.avatarUrl) {
@@ -22,6 +22,8 @@ function Avatar({ user, size = 'h-8 w-8' }) {
     </span>
   );
 }
+
+const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench'];
 
 // أيقونات خطّية أنيقة لقائمة الحساب (بديل الإيموجي)
 const I = (p) => ({ viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true, ...p });
@@ -79,14 +81,8 @@ export default function Navbar() {
   }, []);
 
   // الشريط الخمري الفاخر على كل الموقع
-  const pub = true;
   const standalone = isStandalone(); // داخل التطبيق المثبّت: الدخول من شاشة الترحيب فقط
-  const isHome = pathname === '/'; // على الرئيسية نعرض اسم Bazara (مش اسم المتجر)
-
   const isAdmin = subscription?.isAdmin;
-  // مسجّل دخول: اسم متجره — والمدير يظهر باسمه (حساب تحكّم) — وعلى الرئيسية نعرض Bazara
-  const brandName = user && !isHome ? (isAdmin ? user.name || t('app.name') : store?.name || t('app.name')) : t('app.name');
-  const brandTo = user && !isHome ? '/dashboard' : '/';
 
   const handleLogout = async () => {
     setMenuOpen(false);
@@ -109,77 +105,48 @@ export default function Navbar() {
         { key: 'myOrders', label: t('dashboard.myOrders'), Icon: ReceiptIcon },
       ];
 
-  // أصناف ديناميكية حسب الثيم (خمري للصفحات العامة / داكن للوحة التحكم)
-  const brandCls = pub ? 'text-cream' : 'gradient-text';
-  const iconCls = pub ? 'text-cream/85 hover:text-cream' : 'text-stone-300 hover:text-gold-200';
-  const linkCls = pub ? 'text-cream/85 hover:text-cream' : 'text-stone-200 hover:text-gold-200';
-  const countCls = pub ? 'bg-red-500 text-white' : 'bg-gold-400 text-ink-950';
-
   return (
     <header className="sticky top-0 z-50">
-      <nav className={`${pub ? 'pub-navbar' : 'glass-strong'} relative flex w-full justify-center rounded-none px-3 py-3 transition-shadow duration-300 sm:px-6 ${scrolled ? 'shadow-lg' : ''}`}>
-        <div className="flex w-full max-w-6xl items-center justify-between gap-1 sm:gap-2">
-        {/* للمستخدم: زر القائمة ☰ (مكان اللوجو) + اسم متجره. للزائر: شعار Bazara */}
-        <div className="flex items-center gap-2.5">
-          {user ? (
-            <>
-              <button
-                onClick={() => setMenuOpen((o) => !o)}
-                className={`flex h-9 w-9 items-center justify-center rounded-xl border ${pub ? 'border-cream/30 text-cream hover:bg-cream/10' : 'border-gold-400/30 text-gold-200 hover:bg-gold-400/10'}`}
-                aria-label="menu"
-              >
-                <MenuIcon className="h-5 w-5" />
-              </button>
-              <Link to={brandTo} className={`font-display text-xl font-bold tracking-wide ${brandCls}`}>
-                {brandName}
-              </Link>
-            </>
-          ) : (
-            <Link to="/" className="flex items-center gap-2">
-              <Logo className="h-8 w-8 sm:h-9 sm:w-9" />
-              <span className={`font-display text-base font-bold tracking-wide sm:text-xl ${brandCls}`}>{brandName}</span>
+      <nav className={`app-navbar relative flex w-full justify-center px-3 py-2.5 transition-shadow duration-300 sm:px-6 ${scrolled ? 'shadow-md' : ''}`}>
+        <div className="relative flex h-12 w-full max-w-6xl items-center justify-between">
+          {/* أيقونات التسوّق (تبدأ من اليمين في RTL) */}
+          <div className="flex items-center gap-0.5 sm:gap-1.5">
+            <Link to="/wishlist" className="relative rounded-full p-2 text-wine transition hover:bg-wine/10" title={t('nav.wishlist')} aria-label={t('nav.wishlist')}>
+              <HeartIcon className="h-[22px] w-[22px]" />
+              {wishCount > 0 && (
+                <span className="absolute end-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-wine px-1 text-[10px] font-bold text-cream">{wishCount}</span>
+              )}
             </Link>
-          )}
-        </div>
+            <button data-cart-target onClick={() => setOpen(true)} className="relative rounded-full p-2 text-wine transition hover:bg-wine/10" title={t('nav.cart')} aria-label={t('nav.cart')}>
+              <CartIcon className="h-[22px] w-[22px]" />
+              {count > 0 && (
+                <span className="absolute end-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-wine px-1 text-[10px] font-bold text-cream">{count}</span>
+              )}
+            </button>
+            <Link to={user ? '/dashboard' : '/login'} className="rounded-full p-2 text-wine transition hover:bg-wine/10" title={t('nav.account')} aria-label={t('nav.account')}>
+              <UserLineIcon className="h-[22px] w-[22px]" />
+            </Link>
+          </div>
 
-        <div className="flex items-center gap-1 sm:gap-2">
-          {!user && (
-            <NavLink to="/" className={`hidden rounded-lg px-3 py-1.5 text-sm sm:block ${linkCls}`}>
-              {t('nav.home')}
-            </NavLink>
-          )}
-
-          <Link to="/wishlist" className={`relative hidden rounded-lg p-2 sm:block ${iconCls}`} title={t('nav.wishlist')}>
-            <HeartIcon className="h-5 w-5" />
-            {wishCount > 0 && (
-              <span className={`absolute -end-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold ${countCls}`}>{wishCount}</span>
-            )}
+          {/* الشعار بالنص (في المنتصف تماماً) */}
+          <Link to={user ? '/dashboard' : '/'} className="absolute start-1/2 flex -translate-x-1/2 flex-col items-center leading-none rtl:translate-x-1/2">
+            <span className="font-display text-2xl font-extrabold tracking-wide text-wine sm:text-[28px]">Bazara</span>
+            <span className="mt-1 flex items-center gap-1.5 text-[10px] font-bold tracking-[0.35em] text-wine/45">
+              <span className="h-px w-4 bg-wine/25" /> بازارا <span className="h-px w-4 bg-wine/25" />
+            </span>
           </Link>
 
-          <button data-cart-target onClick={() => setOpen(true)} className={`relative rounded-lg p-1.5 sm:p-2 ${iconCls}`} title={t('nav.cart')}>
-            <CartIcon className="h-5 w-5" />
-            {count > 0 && (
-              <span className={`absolute -end-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold ${countCls}`}>{count}</span>
-            )}
-          </button>
-
-          <ThemeToggle className={iconCls} />
-
-          {/* الدخول/التسجيل في المتصفّح فقط — داخل التطبيق يكون من شاشة الترحيب ليبقى التسوّق نظيفاً */}
-          {!user && !standalone && (
-            <>
-              <NavLink to="/login" className={`whitespace-nowrap rounded-lg px-1 py-1.5 text-sm ${linkCls}`}>{t('nav.login')}</NavLink>
-              {pub ? (
-                <Link to="/register" className="inline-flex shrink-0 items-center whitespace-nowrap rounded-xl bg-cream px-2.5 py-1.5 text-sm font-semibold text-wine shadow-sm transition hover:bg-white">{t('nav.register')}</Link>
-              ) : (
-                <Link to="/register" className="btn-primary !px-4 !py-1.5 text-sm">{t('nav.register')}</Link>
-              )}
-            </>
-          )}
-
-          {/* زر اللغة بالشريط العلوي للزوّار فقط — المستخدم المسجّل يبدّلها من داخل القائمة */}
-          {!user && <LanguageSwitcher />}
-        </div>
+          {/* الثيم + القائمة (تنتهي عند اليسار في RTL) */}
+          <div className="flex items-center gap-1 sm:gap-1.5">
+            <ThemeToggle className="rounded-full text-wine hover:bg-wine/10" />
+            <button
+              onClick={() => setMenuOpen(true)}
+              aria-label="menu"
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-wine shadow-sm ring-1 ring-wine/10 transition hover:bg-wine hover:text-cream"
+            >
+              <MenuIcon className="h-5 w-5" />
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -248,6 +215,43 @@ export default function Navbar() {
             >
               <LogoutIcon className="h-5 w-5" /> {t('nav.logout')}
             </button>
+          </aside>
+        </div>
+      )}
+
+      {/* قائمة الزائر — تصفّح الفئات + روابط سريعة */}
+      {!user && menuOpen && (
+        <div className="fixed inset-0 z-[70]">
+          <div className="absolute inset-0 bg-black/50 animate-fade-up" onClick={() => setMenuOpen(false)} />
+          <aside
+            onClick={(e) => e.stopPropagation()}
+            className={`absolute inset-y-0 start-0 flex w-80 max-w-[85%] flex-col bg-wine-dark px-5 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+24px)] text-cream shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}
+          >
+            <div className="flex items-center justify-between">
+              <button onClick={() => setMenuOpen(false)} aria-label="close" className="flex h-10 w-10 items-center justify-center rounded-full bg-cream text-lg font-bold text-wine transition hover:bg-white">✕</button>
+              <LanguageSwitcher onChanged={() => setMenuOpen(false)} />
+            </div>
+
+            <Link to="/" onClick={() => setMenuOpen(false)} className="mt-5 font-display text-2xl font-extrabold tracking-wide text-cream">Bazara</Link>
+
+            <nav className="mt-4 min-h-0 flex-1 space-y-1 overflow-y-auto">
+              <Link to="/shop" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-base text-cream/90 transition hover:bg-cream/10 hover:text-cream"><GridIcon className="h-5 w-5 text-cream/80" /> {t('nav.home')}</Link>
+              <div className="my-2 h-px bg-cream/15" />
+              {CATS.map((c) => (
+                <Link key={c} to={`/category/${c}`} onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-base text-cream/85 transition hover:bg-cream/10 hover:text-cream">
+                  <CatThumb cat={c} className="h-8 w-8" /> {t(`categories.${c}`)}
+                </Link>
+              ))}
+              <div className="my-2 h-px bg-cream/15" />
+              <Link to="/wishlist" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-base text-cream/90 transition hover:bg-cream/10 hover:text-cream"><HeartIcon className="h-5 w-5 text-cream/80" /> {t('nav.wishlist')}</Link>
+            </nav>
+
+            {!standalone && (
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <Link to="/login" onClick={() => setMenuOpen(false)} className="rounded-xl border border-cream/30 py-2.5 text-center font-semibold text-cream transition hover:bg-cream/10">{t('nav.login')}</Link>
+                <Link to="/register" onClick={() => setMenuOpen(false)} className="rounded-xl bg-cream py-2.5 text-center font-bold text-wine transition hover:bg-white">{t('nav.register')}</Link>
+              </div>
+            )}
           </aside>
         </div>
       )}
