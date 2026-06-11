@@ -135,13 +135,18 @@ export async function getByCategory(req, res, next) {
 export async function addReview(req, res, next) {
   const { id } = req.params;
   const { authorName, rating, comment } = req.body;
+  // تحقّق من المدخلات: اسم غير فارغ + تقييم صحيح بين 1 و5
+  const name = (authorName || '').trim();
+  const stars = Number(rating);
+  if (!name || name.length > 60) return res.status(400).json({ error: 'الاسم مطلوب.' });
+  if (!Number.isInteger(stars) || stars < 1 || stars > 5) return res.status(400).json({ error: 'تقييم غير صالح.' });
   try {
     const exists = await query('SELECT id FROM products WHERE id = $1', [id]);
     if (exists.rows.length === 0) return res.status(404).json({ error: 'المنتج غير موجود.' });
 
     const result = await query(
       'INSERT INTO reviews (product_id, author_name, rating, comment) VALUES ($1, $2, $3, $4) RETURNING id, author_name, rating, comment, created_at',
-      [id, authorName, rating, comment || '']
+      [id, name, stars, (comment || '').trim().slice(0, 500)]
     );
     const r = result.rows[0];
     res.status(201).json({

@@ -32,7 +32,8 @@
     "copied": "Copied!",
     "share": "Share store",
     "optional": "optional",
-    "ok": "OK"
+    "ok": "OK",
+    "confirmTitle": "Confirm"
   },
   "offline": {
     "message": "No internet connection — only the home page is available"

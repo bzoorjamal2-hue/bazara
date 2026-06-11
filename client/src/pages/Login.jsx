@@ -21,7 +21,7 @@ export default function Login() {
   const [needsCode, setNeedsCode] = useState(false); // اشتراك منتهٍ: يطلب كود التجديد
   const [code, setCode] = useState('');
   const [showPass, setShowPass] = useState(false);
-  const [remember, setRemember] = useState(savedEmail ? true : true);
+  const [remember, setRemember] = useState(true);
   const emailRef = useRef(null);
 
   // حفظ/مسح الإيميل المتذكَّر (كلمة المرور لا تُحفظ أبداً لأسباب أمنية)
