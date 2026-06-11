@@ -68,6 +68,73 @@ export async function checkout(req, res, next) {
   }
 }
 
+// إنشاء طلب الدفع عند الاستلام (واتساب) — يُحفظ بالنظام بحالة "جديد" (بلا دفع إلكتروني)
+export async function createCodOrder(req, res, next) {
+  const { items, customer } = req.body;
+  if (!Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ error: 'السلة فارغة.' });
+  }
+  const name = (customer?.name || '').trim();
+  const phone = (customer?.phone || '').trim();
+  if (!name || !phone) return res.status(400).json({ error: 'الاسم ورقم الهاتف مطلوبان.' });
+
+  try {
+    // نحسب الإجمالي من قاعدة البيانات (لا نثق بأسعار العميل) ونتأكد أن المنتجات من متجر واحد
+    const ids = items.map((i) => i.id);
+    const r = await query('SELECT id, name, price, store_id FROM products WHERE id = ANY($1::uuid[])', [ids]);
+    if (r.rows.length === 0) return res.status(400).json({ error: 'منتجات غير صالحة.' });
+
+    const storeId = r.rows[0].store_id;
+    if (!r.rows.every((p) => p.store_id === storeId)) {
+      return res.status(400).json({ error: 'الطلب يجب أن يكون من متجر واحد.' });
+    }
+
+    let subtotal = 0;
+    const orderItems = items
+      .map((i) => {
+        const p = r.rows.find((x) => x.id === i.id);
+        if (!p) return null;
+        const qty = Math.max(1, parseInt(i.qty, 10) || 1);
+        subtotal += Number(p.price) * qty;
+        return { id: p.id, name: p.name, price: Number(p.price), qty, size: i.size || '', color: i.color || '' };
+      })
+      .filter(Boolean);
+    if (orderItems.length === 0 || subtotal <= 0) return res.status(400).json({ error: 'طلب غير صالح.' });
+
+    const deliveryFee = Math.max(0, Number(customer?.deliveryFee) || 0);
+    const total = subtotal + deliveryFee;
+    const reference = 'BZ-' + crypto.randomBytes(5).toString('hex').toUpperCase();
+
+    const ins = await query(
+      `INSERT INTO orders (store_id, customer_name, customer_email, customer_phone, items, total, currency, status, reference, city, address, notes, delivery_fee)
+       VALUES ($1, $2, '', $3, $4, $5, 'ILS', 'new', $6, $7, $8, $9, $10) RETURNING id`,
+      [storeId, name, phone, JSON.stringify(orderItems), total, reference,
+        (customer?.city || '').trim(), (customer?.address || '').trim(), (customer?.notes || '').trim().slice(0, 500), deliveryFee]
+    );
+
+    res.status(201).json({ orderId: ins.rows[0].id, reference });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// تحديث حالة الطلب (صاحب المتجر فقط)
+const ORDER_STATUSES = ['new', 'confirmed', 'shipped', 'delivered', 'cancelled'];
+export async function updateOrderStatus(req, res, next) {
+  const { id } = req.params;
+  const status = (req.body.status || '').trim();
+  if (!ORDER_STATUSES.includes(status)) return res.status(400).json({ error: 'حالة غير صالحة.' });
+  try {
+    const store = await getUserStore(req.user.id);
+    if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
+    const r = await query('UPDATE orders SET status = $1 WHERE id = $2 AND store_id = $3 RETURNING id', [status, id, store.id]);
+    if (r.rows.length === 0) return res.status(404).json({ error: 'الطلب غير موجود.' });
+    res.json({ ok: true, status });
+  } catch (err) {
+    next(err);
+  }
+}
+
 // التحقق من حالة الدفع بعد العودة من Lahza
 export async function verify(req, res, next) {
   const { reference } = req.params;
@@ -99,7 +166,8 @@ export async function listMyOrders(req, res, next) {
     const store = await getUserStore(req.user.id);
     if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
     const r = await query(
-      `SELECT id, customer_name, customer_email, customer_phone, items, total, currency, status, created_at
+      `SELECT id, customer_name, customer_phone, items, total, currency, status, created_at,
+              city, address, notes, delivery_fee
        FROM orders WHERE store_id = $1 ORDER BY created_at DESC LIMIT 200`,
       [store.id]
     );
@@ -107,12 +175,15 @@ export async function listMyOrders(req, res, next) {
       orders: r.rows.map((o) => ({
         id: o.id,
         customerName: o.customer_name,
-        customerEmail: o.customer_email,
         customerPhone: o.customer_phone,
         items: o.items,
         total: Number(o.total),
+        deliveryFee: Number(o.delivery_fee || 0),
         currency: o.currency,
         status: o.status,
+        city: o.city || '',
+        address: o.address || '',
+        notes: o.notes || '',
         createdAt: o.created_at,
       })),
     });

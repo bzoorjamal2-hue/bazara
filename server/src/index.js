@@ -95,6 +95,11 @@ async function ensureColumns() {
     await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS banners JSONB DEFAULT '[]'::jsonb;");
     await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS facebook VARCHAR(200) DEFAULT '';");
     await pool.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS video_url TEXT DEFAULT '';");
+    // طلبات الدفع عند الاستلام (واتساب): حقول التوصيل
+    await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS city VARCHAR(80) DEFAULT '';");
+    await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS address TEXT DEFAULT '';");
+    await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT '';");
+    await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_fee NUMERIC(10,2) DEFAULT 0;");
   } catch (err) {
     console.error('⚠️ تعذّر تطبيق الترقيات:', err.message);
   }

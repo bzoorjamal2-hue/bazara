@@ -147,8 +147,12 @@ CREATE TABLE IF NOT EXISTS orders (
     items          JSONB NOT NULL DEFAULT '[]',
     total          NUMERIC(10,2) NOT NULL,
     currency       VARCHAR(10) NOT NULL DEFAULT 'ILS',
-    status         VARCHAR(20) NOT NULL DEFAULT 'pending', -- pending|paid|failed
+    status         VARCHAR(20) NOT NULL DEFAULT 'pending', -- new|confirmed|shipped|delivered|cancelled (واتساب) أو pending|paid|failed (بطاقة)
     reference      TEXT,
+    city           VARCHAR(80) DEFAULT '',
+    address        TEXT DEFAULT '',
+    notes          TEXT DEFAULT '',
+    delivery_fee   NUMERIC(10,2) DEFAULT 0,
     created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_orders_store ON orders(store_id);

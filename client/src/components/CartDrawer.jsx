@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext.jsx';
 import { buildWhatsappCheckout } from '../utils/whatsapp.js';
 import useScrollLock from '../hooks/useScrollLock.js';
 import Select from './Select.jsx';
+import api from '../api/client.js';
 
 // مناطق التوصيل ورسومها (قابلة للتعديل): مدن الضفة 20₪ · القدس 35₪ · مدن الداخل 70₪
 const AREAS = [
@@ -63,7 +64,13 @@ export default function CartDrawer() {
   const confirmOrder = () => {
     if (!cust.name.trim() || !cust.phone.trim() || !cust.city) { setErr(t('co.required')); return; }
     const wa = items[0]?.whatsapp || '';
+    // نفتح واتساب فوراً (ضمن لمسة المستخدم لتفادي حظر النوافذ)
     window.open(buildWhatsappCheckout(wa, items, { ...cust, delivery }, i18n.language), '_blank');
+    // ونحفظ الطلب بالنظام بالخلفية (لا نوقف الطلب لو فشل الحفظ)
+    api.post('/orders/cod', {
+      items: items.map((i) => ({ id: i.id, qty: i.qty, size: i.size, color: i.color })),
+      customer: { name: cust.name, phone: cust.phone, city: cust.city, address: cust.address, notes: cust.notes, deliveryFee: delivery },
+    }).catch(() => { /* تجاهل — الطلب تمّ عبر واتساب على أي حال */ });
     clear();
     close();
   };
