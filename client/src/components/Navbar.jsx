@@ -162,7 +162,7 @@ export default function Navbar() {
           <div className="absolute inset-0 bg-black/50 animate-fade-up" onClick={() => setMenuOpen(false)} />
           <aside
             onClick={(e) => e.stopPropagation()}
-            className={`absolute inset-y-0 start-0 flex w-80 max-w-[85%] flex-col bg-wine-dark px-5 pt-5 pb-[max(env(safe-area-inset-bottom),20px)] text-cream shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}
+            className={`absolute inset-y-0 start-0 flex w-80 max-w-[85%] flex-col bg-wine-dark px-5 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+92px)] text-cream shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}
           >
             {/* أعلى: إغلاق + اللغة */}
             <div className="flex items-center justify-between">
