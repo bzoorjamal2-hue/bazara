@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import api from '../api/client.js';
+import api, { setAuthToken, clearAuthToken } from '../api/client.js';
 
 const AuthContext = createContext(null);
 
@@ -31,26 +31,31 @@ export function AuthProvider({ children }) {
   }, [refresh]);
 
   const login = async (email, password) => {
-    await api.post('/auth/login', { email, password });
+    const { data } = await api.post('/auth/login', { email, password });
+    if (data?.token) setAuthToken(data.token); // بقاء الجلسة في التطبيق المثبّت
     return await refresh();
   };
 
   // دخول + تجديد بكود التفعيل (للمشترك المنتهي اشتراكه)
   const loginWithCode = async (email, password, code) => {
-    await api.post('/auth/login-with-code', { email, password, code });
+    const { data } = await api.post('/auth/login-with-code', { email, password, code });
+    if (data?.token) setAuthToken(data.token);
     return await refresh();
   };
 
   // التسجيل يُدخِل المستخدم تلقائياً ليصل مباشرةً لصفحة الاشتراك/الدفع
   const register = async (payload) => {
-    await api.post('/auth/register', payload);
+    const { data } = await api.post('/auth/register', payload);
+    if (data?.token) setAuthToken(data.token);
     return await refresh();
   };
 
   const logout = async () => {
-    await api.post('/auth/logout');
+    try { await api.post('/auth/logout'); } catch { /* تجاهل */ }
+    clearAuthToken();
     setUser(null);
     setStore(null);
+    setSubscription(null);
   };
 
   const updateProfile = async (payload) => {

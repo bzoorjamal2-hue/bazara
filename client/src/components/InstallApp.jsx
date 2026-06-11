@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import useScrollLock from '../hooks/useScrollLock.js';
 
 const isStandalone = () =>
   (typeof window !== 'undefined' &&
@@ -24,6 +25,7 @@ export default function InstallApp() {
   const [deferred, setDeferred] = useState(null);
   const [installed, setInstalled] = useState(isStandalone());
   const [help, setHelp] = useState(null); // null | 'ios' | 'desktop'
+  useScrollLock(!!help); // تجميد الخلفية عند فتح نافذة تعليمات التثبيت
   const ios = isIOS();
 
   useEffect(() => {

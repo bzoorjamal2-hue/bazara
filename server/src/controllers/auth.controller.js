@@ -61,7 +61,8 @@ export async function register(req, res, next) {
     // دخول تلقائي بعد التسجيل ليصل المستخدم مباشرةً لصفحة الدفع/الاشتراك
     const token = signToken(user);
     res.cookie('token', token, cookieOptions());
-    res.status(201).json({ user: { id: user.id, name: user.name, email: user.email } });
+    // نعيد التوكن أيضاً ليُخزَّن محلياً (بقاء الجلسة داخل تطبيق iOS المثبّت)
+    res.status(201).json({ token, user: { id: user.id, name: user.name, email: user.email } });
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
     next(err);
@@ -95,7 +96,7 @@ export async function login(req, res, next) {
 
     const token = signToken(user);
     res.cookie('token', token, cookieOptions());
-    res.json({ user: { id: user.id, name: user.name, email: user.email, avatarUrl: user.avatar_url } });
+    res.json({ token, user: { id: user.id, name: user.name, email: user.email, avatarUrl: user.avatar_url } });
   } catch (err) {
     next(err);
   }
@@ -135,7 +136,7 @@ export async function loginWithCode(req, res, next) {
 
     const token = signToken(user);
     res.cookie('token', token, cookieOptions());
-    res.json({ user: { id: user.id, name: user.name, email: user.email, avatarUrl: user.avatar_url } });
+    res.json({ token, user: { id: user.id, name: user.name, email: user.email, avatarUrl: user.avatar_url } });
   } catch (err) {
     next(err);
   }

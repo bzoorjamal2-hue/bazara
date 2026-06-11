@@ -4,6 +4,7 @@ import api, { getErrorMessage } from '../../api/client.js';
 import ImageInput from '../../components/ImageInput.jsx';
 import VideoInput from '../../components/VideoInput.jsx';
 import Select from '../../components/Select.jsx';
+import useScrollLock from '../../hooks/useScrollLock.js';
 
 const CATEGORIES = ['abaya', 'set', 'dress', 'hijab', 'trench'];
 const SIZES = ['36', '38', '40', '42', '44', '46', '48'];
@@ -30,6 +31,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [colorInput, setColorInput] = useState('');
+  useScrollLock(true); // تجميد الخلفية أثناء فتح نموذج المنتج
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 

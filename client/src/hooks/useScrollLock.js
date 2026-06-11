@@ -1,20 +1,45 @@
 import { useEffect } from 'react';
 
-// يجمّد تمرير الصفحة خلف النوافذ/الأدراج المفتوحة بدون أي قفزة:
-// يستعمل overflow:hidden على <html> و<body> (يحافظ على موضع التمرير كما هو،
-// فلا تتأثّر العناصر اللاصقة/المربوطة بالتمرير ولا تحدث قفزة عند الفتح/الإغلاق).
+// قفل تمرير الخلفية بشكل موثوق على كل الأجهزة بما فيها iOS.
+// على iOS لا يكفي overflow:hidden — لازم position:fixed على <body> لمنع
+// تمرير الصفحة خلف النوافذ/الأدراج. نحفظ موضع التمرير ونعيده عند الإغلاق.
+// عدّاد مرجعي ليعمل مع النوافذ المتداخلة (لا يُفتح القفل إلا بإغلاق آخر نافذة).
+
+let lockCount = 0;
+let savedScrollY = 0;
+
+function applyLock() {
+  savedScrollY = window.scrollY || window.pageYOffset || 0;
+  const body = document.body;
+  body.style.position = 'fixed';
+  body.style.top = `-${savedScrollY}px`;
+  body.style.left = '0';
+  body.style.right = '0';
+  body.style.width = '100%';
+  body.style.overflow = 'hidden';
+  document.documentElement.style.overflow = 'hidden';
+}
+
+function releaseLock() {
+  const body = document.body;
+  body.style.position = '';
+  body.style.top = '';
+  body.style.left = '';
+  body.style.right = '';
+  body.style.width = '';
+  body.style.overflow = '';
+  document.documentElement.style.overflow = '';
+  window.scrollTo(0, savedScrollY);
+}
+
 export default function useScrollLock(locked) {
   useEffect(() => {
     if (!locked) return undefined;
-    const html = document.documentElement;
-    const body = document.body;
-    const prevHtml = html.style.overflow;
-    const prevBody = body.style.overflow;
-    html.style.overflow = 'hidden';
-    body.style.overflow = 'hidden';
+    lockCount += 1;
+    if (lockCount === 1) applyLock();
     return () => {
-      html.style.overflow = prevHtml;
-      body.style.overflow = prevBody;
+      lockCount = Math.max(0, lockCount - 1);
+      if (lockCount === 0) releaseLock();
     };
   }, [locked]);
 }

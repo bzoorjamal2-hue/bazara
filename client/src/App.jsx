@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import Layout from './components/Layout.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
@@ -8,10 +8,18 @@ import Spinner from './components/Spinner.jsx';
 import Home from './pages/Home.jsx'; // الصفحة الرئيسية تبقى فورية (أول ما يفتح الزائر)
 import AppWelcome from './components/AppWelcome.jsx';
 import { isStandalone } from './utils/pwa.js';
+import { useAuth } from './context/AuthContext.jsx';
 
-// داخل التطبيق المثبّت: الجذر "/" يعرض شاشة افتتاح أنيقة. في المتصفح: يعرض الصفحة الرئيسية كالمعتاد.
+// داخل التطبيق المثبّت:
+// - مشترك مسجّل دخوله → يفتح مباشرة على لوحة التحكم (حسابه).
+// - زائر → شاشة افتتاح أنيقة.
+// في المتصفح: يعرض الصفحة الرئيسية العامة كالمعتاد.
 function Root() {
-  return isStandalone() ? <AppWelcome /> : <Home />;
+  const { user, loading } = useAuth();
+  if (!isStandalone()) return <Home />;
+  if (loading) return <Spinner full />; // ريثما نتحقّق من الجلسة المحفوظة
+  if (user) return <Navigate to="/dashboard" replace />;
+  return <AppWelcome />;
 }
 
 // باقي الصفحات تُحمّل عند الحاجة فقط (code-splitting) — يقلّل حجم التحميل الأولي كثيراً

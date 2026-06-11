@@ -11,6 +11,23 @@ const api = axios.create({
   withCredentials: true, // إرسال واستقبال الكوكيز (httpOnly + csrf)
 });
 
+// توكن المصادقة المخزّن محلياً — بديل موثوق للكوكيز داخل تطبيق iOS المثبّت
+// (الكوكيز قد لا تبقى بين جلسات التطبيق، أما localStorage فيبقى).
+const TOKEN_KEY = 'bz_auth_token';
+let authToken = null;
+try { authToken = localStorage.getItem(TOKEN_KEY) || null; } catch { /* ignore */ }
+
+export function setAuthToken(t) {
+  authToken = t || null;
+  try {
+    if (t) localStorage.setItem(TOKEN_KEY, t);
+    else localStorage.removeItem(TOKEN_KEY);
+  } catch { /* ignore */ }
+}
+export function clearAuthToken() {
+  setAuthToken(null);
+}
+
 // نخزّن توكن CSRF في الذاكرة (يعمل حتى عبر دومينين مختلفين)
 let csrfToken = null;
 
@@ -23,6 +40,8 @@ export async function ensureCsrf() {
 
 // إرفاق توكن CSRF في الطلبات المعدِّلة (double-submit)
 api.interceptors.request.use(async (config) => {
+  // توكن المصادقة (Bearer) — يضمن بقاء الجلسة داخل التطبيق المثبّت
+  if (authToken) config.headers['Authorization'] = `Bearer ${authToken}`;
   const method = (config.method || 'get').toLowerCase();
   if (['post', 'put', 'patch', 'delete'].includes(method)) {
     const token = await ensureCsrf();
