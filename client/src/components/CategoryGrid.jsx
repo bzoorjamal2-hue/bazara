@@ -14,29 +14,14 @@ function getPerPage() {
   return 5;
 }
 
-// بطاقة فئة: صورة الملبس (بنّي موحّد) + اسم الفئة بالنص (يبقى كاملاً ويترجم تلقائياً).
+// بطاقة فئة: بلاطة كريمية فاتحة + أيقونة الملبس البنّية + اسم الفئة (طبق المرجع).
 function CategoryCard({ c }) {
   const { t } = useTranslation();
-  const [err, setErr] = useState(false);
   const Icon = CATEGORY_ICON[c];
   return (
-    <div
-      className="flex aspect-[3/4] flex-col items-center justify-between overflow-hidden rounded-3xl px-2 pb-4 pt-3 shadow-md ring-1 ring-wine/10"
-      style={{ background: '#594335' }}
-    >
-      {err ? (
-        <Icon className="my-auto h-20 w-20 text-cream/90" />
-      ) : (
-        <img
-          src={`/categories/${c}.png`}
-          alt=""
-          aria-hidden="true"
-          loading="lazy"
-          onError={() => setErr(true)}
-          className="h-[78%] w-full object-contain transition-transform duration-500 group-hover:scale-105"
-        />
-      )}
-      <span className="font-display text-sm font-bold text-cream sm:text-base">{t(`categories.${c}`)}</span>
+    <div className="flex aspect-square flex-col items-center justify-center gap-2.5 rounded-2xl bg-white px-2 py-3 shadow-sm ring-1 ring-wine/10 transition duration-300 group-hover:-translate-y-1 group-hover:shadow-md">
+      <Icon className="h-12 w-12 text-wine transition-transform duration-500 group-hover:scale-110 sm:h-14 sm:w-14" />
+      <span className="text-xs font-bold text-wine sm:text-sm">{t(`categories.${c}`)}</span>
     </div>
   );
 }

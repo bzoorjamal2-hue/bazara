@@ -39,10 +39,13 @@ export default function Home() {
       <InstallApp />
 
       {/* تصفّح حسب الفئة */}
-      <section className="mt-14">
+      <section className="mt-12">
         <SectionTitle>{t('home.browseByCategory')}</SectionTitle>
         <CategoryGrid />
       </section>
+
+      {/* شريط ترويجي (توصيل/دفع عند الاستلام) — طبق المرجع */}
+      <PromoBanner />
 
       {/* شاهدت مؤخراً */}
       {recent.length > 0 && <ProductRail title={t('product.recentlyViewed')} products={recent} />}
@@ -249,11 +252,30 @@ function HomeHero() {
   );
 }
 
+// شريط ترويجي كريمي بأيقونة هدية + زر (طبق المرجع)
+function PromoBanner() {
+  const { t } = useTranslation();
+  return (
+    <Link to="/shop" className="mt-10 flex items-center gap-4 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-wine/10 transition hover:-translate-y-0.5 hover:shadow-md sm:p-5">
+      <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-cream text-3xl">🎁</span>
+      <div className="min-w-0 flex-1">
+        <p className="font-display text-sm font-bold text-wine sm:text-lg">{t('home.promoTitle')}</p>
+        <p className="mt-0.5 text-xs text-stone-500 sm:text-sm">{t('home.promoSub')}</p>
+      </div>
+      <span className="hidden shrink-0 rounded-full bg-wine px-4 py-2 text-sm font-bold text-cream sm:inline-block">{t('home.shopNow')} ←</span>
+    </Link>
+  );
+}
+
+// عنوان قسم مركزي بزخرفة أنيقة (طبق المرجع)
 function SectionTitle({ children }) {
   return (
-    <div className="mb-5 flex items-center gap-3">
-      <h2 className="font-display text-2xl font-bold gradient-text">{children}</h2>
-      <div className="gold-divider flex-1" />
+    <div className="mb-6 flex items-center justify-center gap-2.5 text-wine sm:gap-3">
+      <span aria-hidden className="text-sm text-wine/40">❖</span>
+      <span className="h-px w-7 bg-gradient-to-r from-transparent to-wine/30 sm:w-12" />
+      <h2 className="whitespace-nowrap font-display text-xl font-bold sm:text-2xl">{children}</h2>
+      <span className="h-px w-7 bg-gradient-to-l from-transparent to-wine/30 sm:w-12" />
+      <span aria-hidden className="text-sm text-wine/40">❖</span>
     </div>
   );
 }
