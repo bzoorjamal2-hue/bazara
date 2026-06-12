@@ -32,6 +32,7 @@ const Dashboard = lazy(() => import('./pages/Dashboard.jsx'));
 const Subscribe = lazy(() => import('./pages/Subscribe.jsx'));
 const StorePage = lazy(() => import('./pages/StorePage.jsx'));
 const CategoryPage = lazy(() => import('./pages/CategoryPage.jsx'));
+const Categories = lazy(() => import('./pages/Categories.jsx'));
 const ProductDetails = lazy(() => import('./pages/ProductDetails.jsx'));
 const Wishlist = lazy(() => import('./pages/Wishlist.jsx'));
 const PaymentCallback = lazy(() => import('./pages/PaymentCallback.jsx'));
@@ -83,6 +84,7 @@ function AnimatedRoutes() {
           />
           <Route path="/store/:slug" element={<StorePage />} />
           <Route path="/category/:cat" element={<CategoryPage />} />
+          <Route path="/categories" element={<Categories />} />
           <Route path="/product/:id" element={<ProductDetails />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

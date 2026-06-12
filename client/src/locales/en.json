@@ -10,7 +10,8 @@
     "myStore": "My store",
     "cart": "Cart",
     "wishlist": "Wishlist",
-    "account": "Account"
+    "account": "Account",
+    "categories": "Categories"
   },
   "common": {
     "search": "Search",

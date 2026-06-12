@@ -20,6 +20,16 @@ function UserIcon({ className = 'h-6 w-6', filled }) {
     </svg>
   );
 }
+function CategoriesIcon({ className = 'h-6 w-6', filled }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="3" width="7.5" height="7.5" rx="1.6" />
+      <rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6" />
+      <rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6" />
+      <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6" />
+    </svg>
+  );
+}
 
 // شريط تنقّل سفلي بأسلوب التطبيقات (يظهر داخل التطبيق المثبّت فقط).
 export default function BottomNav() {
@@ -35,10 +45,11 @@ export default function BottomNav() {
   const homeTo = user && store?.slug ? `/store/${store.slug}` : '/shop';
   const homeActive = homeTo === '/shop' ? pathname === '/shop' : pathname === homeTo;
   const items = [
-    { key: 'home', label: t('nav.home'), Icon: HomeIcon, active: homeActive, onClick: () => navigate(homeTo) },
-    { key: 'fav', label: t('nav.wishlist'), Icon: HeartIcon, active: pathname === '/wishlist', badge: wishCount, onClick: () => navigate('/wishlist') },
-    { key: 'cart', label: t('nav.cart'), Icon: CartIcon, badge: count, onClick: () => setOpen(true) },
     { key: 'account', label: t('nav.account') || 'حسابي', Icon: UserIcon, active: pathname.startsWith('/dashboard'), onClick: () => navigate(accountTo) },
+    { key: 'cart', label: t('nav.cart'), Icon: CartIcon, badge: count, onClick: () => setOpen(true) },
+    { key: 'fav', label: t('nav.wishlist'), Icon: HeartIcon, active: pathname === '/wishlist', badge: wishCount, onClick: () => navigate('/wishlist') },
+    { key: 'categories', label: t('nav.categories'), Icon: CategoriesIcon, active: pathname === '/categories', onClick: () => navigate('/categories') },
+    { key: 'home', label: t('nav.home'), Icon: HomeIcon, active: homeActive, onClick: () => navigate(homeTo) },
   ];
 
   return (
