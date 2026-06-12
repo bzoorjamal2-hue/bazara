@@ -18,7 +18,7 @@ function MenuBtn({ onOpen }) {
     <button
       onClick={onOpen}
       aria-label="menu"
-      className="flex h-11 w-11 items-center justify-center rounded-full bg-cream text-wine shadow transition hover:bg-white"
+      className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-wine shadow-sm ring-1 ring-wine/10 transition hover:bg-wine hover:text-cream"
     >
       <MenuIcon className="h-6 w-6" />
     </button>
@@ -96,7 +96,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
   const openMenu = () => setDrawer(true);
 
   return (
-    <header className="sticky top-0 z-50 -mx-4 -mt-8 mb-5 bg-wine-dark shadow-lg sm:-mx-6">
+    <header className="app-navbar sticky top-0 z-50 -mx-4 -mt-8 mb-5 shadow-sm sm:-mx-6">
       <div className="mx-auto max-w-6xl px-4 py-3 sm:px-6">
         {/* الصف الأول: اسم/شعار المتجر + زر القائمة (☰) — يتقلّص بنعومة مع التمرير */}
         <div ref={logoWrapRef} className="grid will-change-transform" style={{ gridTemplateRows: '1fr', marginBottom: '12px' }}>
@@ -104,9 +104,9 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
             <div className="flex items-center justify-between gap-3">
               <Link to={`/store/${store.slug}`} onClick={() => setCat('all')} className="flex items-center gap-2.5">
                 {store.logoUrl && (
-                  <img src={store.logoUrl} alt={store.name} className="h-10 w-10 rounded-xl border border-cream/30 object-cover" />
+                  <img src={store.logoUrl} alt={store.name} className="h-10 w-10 rounded-xl border border-wine/15 object-cover" />
                 )}
-                <span className="font-display text-2xl font-bold tracking-wide text-cream">{store.name}</span>
+                <span className="font-display text-2xl font-bold tracking-wide text-wine">{store.name}</span>
               </Link>
               <MenuBtn onOpen={openMenu} />
             </div>
@@ -158,7 +158,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
             data-cart-target
             onClick={() => setOpen(true)}
             aria-label="cart"
-            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-cream/15 text-cream transition hover:bg-cream/25 ms-2.5"
+            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-wine/10 text-wine transition hover:bg-wine/20 ms-2.5"
           >
             <CartIcon className="h-5 w-5" />
             {count > 0 && (
