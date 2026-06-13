@@ -74,12 +74,21 @@ export default function ProductDetails() {
   const gallery = [...new Set([product.imageUrl, ...(product.images || [])].filter(Boolean))];
   const hasImages = gallery.length > 0;
   if (!hasImages && !product.videoUrl) gallery.push(PH); // عنصر بديل فقط لو ما في صور ولا فيديو
-  const outOfStock = product.stock === 0;
   const hasDiscount = product.oldPrice && product.oldPrice > product.price;
   const liked = has(product.id);
 
   const sizes = (product.size || '').split(',').map((s) => s.trim()).filter(Boolean);
   const colors = (product.color || '').split(',').map((s) => s.trim()).filter(Boolean);
+
+  // كمية المخزون لكل مقاس (نمرة): قيمة عددية = الكمية المتبقّية، غير معرّفة = متوفّر بلا حدّ
+  const sizeStock = product.sizeStock && typeof product.sizeStock === 'object' ? product.sizeStock : {};
+  const hasSizeStock = sizes.length > 0 && sizes.some((s) => typeof sizeStock[s] === 'number');
+  const sizeSoldOut = (s) => sizeStock[s] === 0;
+  // نفد المنتج: المخزون العام = 0، أو كل المقاسات المُسعّرة بكميات = 0
+  const allSizesSoldOut = hasSizeStock && sizes.every((s) => sizeStock[s] === 0);
+  const outOfStock = product.stock === 0 || allSizesSoldOut;
+  // الكمية المتبقّية للمقاس المختار (إن وُجدت)
+  const selSizeQty = selSize && typeof sizeStock[selSize] === 'number' ? sizeStock[selSize] : null;
 
   const cartProduct = { ...product, whatsapp: product.storeWhatsapp, size: selSize, color: selColor };
   const orderStore = {
@@ -92,6 +101,7 @@ export default function ProductDetails() {
   // التحقق من اختيار المقاس/اللون قبل الإضافة أو الشراء
   const validatePick = () => {
     if (sizes.length && !selSize) { setPickErr(t('product.pickSize')); return false; }
+    if (selSize && sizeSoldOut(selSize)) { setPickErr(t('product.sizeSoldOut')); return false; }
     if (colors.length && !selColor) { setPickErr(t('product.pickColor')); return false; }
     setPickErr('');
     return true;
@@ -182,9 +192,15 @@ export default function ProductDetails() {
             {hasDiscount && <span className="text-lg text-stone-500 line-through">{t('common.currency')}{product.oldPrice}</span>}
           </div>
 
-          {/* حالة المخزون */}
-          <p className={`mt-2 text-sm font-semibold ${outOfStock ? 'text-red-300' : 'text-emerald-300'}`}>
-            {outOfStock ? '✕ ' + t('product.outOfStock') : '✓ ' + (product.stock > 0 ? t('product.stockLeft', { count: product.stock }) : t('product.available'))}
+          {/* حالة المخزون — تُظهر المتبقّي للمقاس المختار إن وُجدت كميات لكل نمرة */}
+          <p className={`mt-2 text-sm font-semibold ${outOfStock || selSizeQty === 0 ? 'text-red-300' : 'text-emerald-300'}`}>
+            {outOfStock
+              ? '✕ ' + t('product.outOfStock')
+              : selSizeQty != null
+                ? (selSizeQty > 0
+                    ? '✓ ' + t('product.sizeStockLeft', { size: selSize, count: selSizeQty })
+                    : '✕ ' + t('product.sizeSoldOut'))
+                : '✓ ' + (product.stock > 0 ? t('product.stockLeft', { count: product.stock }) : t('product.available'))}
           </p>
 
           {product.description && <p className="mt-5 leading-relaxed text-stone-300">{product.description}</p>}
@@ -193,10 +209,30 @@ export default function ProductDetails() {
             <div className="mt-6">
               <p className="mb-2 text-sm font-semibold text-stone-300">{t('product.selectSize')}</p>
               <div className="flex flex-wrap gap-2">
-                {sizes.map((s) => (
-                  <button key={s} onClick={() => { setSelSize(s); setPickErr(''); }} className={chipCls(selSize === s)}>{s}</button>
-                ))}
+                {sizes.map((s) => {
+                  const soldOut = sizeSoldOut(s);
+                  const qty = typeof sizeStock[s] === 'number' ? sizeStock[s] : null;
+                  return (
+                    <button
+                      key={s}
+                      type="button"
+                      disabled={soldOut}
+                      onClick={() => { setSelSize(s); setPickErr(''); }}
+                      className={`relative ${chipCls(selSize === s)} ${soldOut ? 'cursor-not-allowed !border-stone-300/40 !bg-transparent !text-stone-400 line-through opacity-60' : ''}`}
+                      title={soldOut ? t('product.sizeSoldOut') : qty != null ? t('product.sizeStockLeft', { size: s, count: qty }) : ''}
+                    >
+                      {s}
+                      {qty != null && qty > 0 && qty <= 3 && (
+                        <span className="ms-1 align-middle text-[10px] font-bold text-amber-500">({qty})</span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
+              {/* تلميح: المقاسات المشطوبة نفدت من المخزون */}
+              {hasSizeStock && sizes.some(sizeSoldOut) && (
+                <p className="mt-2 text-xs text-stone-400">{t('product.someSizesSoldOut')}</p>
+              )}
             </div>
           )}
 

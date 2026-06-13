@@ -10,7 +10,7 @@ const CATEGORIES = ['abaya', 'set', 'dress', 'hijab', 'trench'];
 const SIZES = ['36', '38', '40', '42', '44', '46', '48'];
 const EMPTY = {
   name: '', price: '', oldPrice: '', description: '', size: '', color: '',
-  category: 'abaya', imageUrl: '', images: [], videoUrl: '', stock: '', featured: false,
+  category: 'abaya', imageUrl: '', images: [], videoUrl: '', stock: '', featured: false, sizeStock: {},
 };
 
 export default function ProductForm({ initial, onClose, onSaved }) {
@@ -25,6 +25,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
           oldPrice: initial.oldPrice != null ? String(initial.oldPrice) : '',
           stock: initial.stock != null ? String(initial.stock) : '',
           images: initial.images || [],
+          sizeStock: initial.sizeStock && typeof initial.sizeStock === 'object' ? initial.sizeStock : {},
         }
       : EMPTY
   );
@@ -39,8 +40,18 @@ export default function ProductForm({ initial, onClose, onSaved }) {
   const selectedSizes = form.size ? form.size.split(',').map((s) => s.trim()).filter(Boolean) : [];
   const toggleSize = (s) => {
     const setS = new Set(selectedSizes);
-    setS.has(s) ? setS.delete(s) : setS.add(s);
-    setForm({ ...form, size: SIZES.filter((x) => setS.has(x)).join(',') });
+    const removing = setS.has(s);
+    removing ? setS.delete(s) : setS.add(s);
+    // عند إزالة مقاس نحذف كميته كذلك
+    const sizeStock = { ...form.sizeStock };
+    if (removing) delete sizeStock[s];
+    setForm({ ...form, size: SIZES.filter((x) => setS.has(x)).join(','), sizeStock });
+  };
+  const setSizeQty = (s, val) => {
+    const sizeStock = { ...form.sizeStock };
+    if (val === '') delete sizeStock[s];
+    else sizeStock[s] = Math.max(0, parseInt(val, 10) || 0);
+    setForm({ ...form, sizeStock });
   };
 
   // ألوان المنتج (متعدّدة) — يكتبها صاحب المتجر ويختارها الزبون لاحقاً
@@ -71,6 +82,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
       oldPrice: form.oldPrice === '' ? null : parseFloat(form.oldPrice),
       stock: form.stock === '' ? null : parseInt(form.stock, 10),
       images: form.images.filter(Boolean),
+      sizeStock: form.sizeStock,
     };
     try {
       if (isEdit) await api.put(`/products/${initial.id}`, payload);
@@ -175,6 +187,30 @@ export default function ProductForm({ initial, onClose, onSaved }) {
                 </button>
               ))}
             </div>
+
+            {/* كمية المخزون لكل مقاس — تظهر للزبون كم متبقّي من كل نمرة (اتركه فارغاً = متوفّر) */}
+            {selectedSizes.length > 0 && (
+              <div className="mt-3 rounded-xl border border-gold-400/15 bg-black/20 p-3">
+                <p className="mb-2 text-xs font-semibold text-stone-300">{t('dashboard.product.sizeStock')}</p>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {selectedSizes.map((s) => (
+                    <div key={s} className="flex items-center gap-2">
+                      <span className="w-10 shrink-0 text-sm font-bold text-gold-100">{s}</span>
+                      <input
+                        type="number"
+                        min="0"
+                        inputMode="numeric"
+                        className="input !py-1.5 text-sm"
+                        placeholder="∞"
+                        value={form.sizeStock[s] ?? ''}
+                        onChange={(e) => setSizeQty(s, e.target.value)}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-stone-400">{t('dashboard.product.sizeStockHint')}</p>
+              </div>
+            )}
           </div>
 
           <div>

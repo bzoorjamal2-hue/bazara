@@ -17,6 +17,17 @@ function HomeGlyph({ className = 'h-[18px] w-[18px]' }) {
   );
 }
 
+// فاصل مسار التنقّل — يشير لاتجاه التتابع (يساراً في العربية، يميناً في الإنجليزية)
+function Crumb({ className = 'h-4 w-4' }) {
+  const { i18n } = useTranslation();
+  const rtl = i18n.language !== 'en';
+  return (
+    <svg viewBox="0 0 24 24" className={`${className} shrink-0 text-wine/35`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={rtl ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6'} />
+    </svg>
+  );
+}
+
 export default function CategoryPage() {
   const { cat } = useParams();
   const { t } = useTranslation();
@@ -36,20 +47,22 @@ export default function CategoryPage() {
     <>
       <Seo title={t(`categories.${cat}`)} />
 
-      {/* مسار التنقّل مع زر العودة للرئيسية */}
-      <nav className="mb-5 mt-1 flex items-center gap-2 text-sm">
+      {/* مسار التنقّل المتتابع: الرئيسية ← التصنيفات ← الفئة (كل خطوة زر فعّال للرجوع) */}
+      <nav className="mb-5 mt-1 flex flex-wrap items-center gap-1.5 text-sm">
         <Link
-          to="/"
-          aria-label="home"
+          to="/shop"
+          aria-label={t('nav.home')}
           className="flex h-8 w-8 items-center justify-center rounded-full bg-wine/10 text-wine shadow-sm ring-1 ring-wine/15 transition hover:bg-wine hover:text-cream"
         >
           <HomeGlyph />
         </Link>
-        <span className="text-wine/40">←</span>
-        <Link to="/" className="text-wine/70 hover:text-wine">{t('nav.home')}</Link>
-        <span className="text-wine/40">←</span>
-        <span className="flex items-center gap-2 font-display text-lg font-bold text-wine">
-          <CatThumb cat={cat} className="h-8 w-8" />
+        <Crumb />
+        <Link to="/categories" className="rounded-full px-2.5 py-1 font-semibold text-wine/70 transition hover:bg-wine/10 hover:text-wine">
+          {t('nav.categories')}
+        </Link>
+        <Crumb />
+        <span className="flex items-center gap-2 rounded-full bg-wine/10 px-2.5 py-1 font-display text-base font-bold text-wine">
+          <CatThumb cat={cat} className="h-7 w-7" />
           {t(`categories.${cat}`)}
         </span>
       </nav>

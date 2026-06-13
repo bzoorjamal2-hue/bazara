@@ -119,21 +119,21 @@ export default function StorePage() {
           {searching ? (
             <nav className="mb-4 mt-2 flex items-center gap-2 text-sm">
               <button onClick={clearSearch} className="flex h-8 w-8 items-center justify-center rounded-full bg-wine/10 text-wine shadow-sm ring-1 ring-wine/15 transition hover:bg-wine hover:text-cream" aria-label="home"><HomeGlyph /></button>
-              <span className="text-wine/40">←</span>
+              <Crumb />
               <span className="font-display text-lg font-bold text-wine">{t('store.searchResults')} «{q.trim()}»</span>
             </nav>
           ) : viewAll ? (
             <nav className="mb-4 mt-2 flex items-center gap-2 text-sm">
               <button onClick={() => { setViewAll(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="flex h-8 w-8 items-center justify-center rounded-full bg-wine/10 text-wine shadow-sm ring-1 ring-wine/15 transition hover:bg-wine hover:text-cream" aria-label="home"><HomeGlyph /></button>
-              <span className="text-wine/40">←</span>
+              <Crumb />
               <span className="font-display text-lg font-bold text-wine">{t('store.allProducts')}</span>
             </nav>
           ) : (
             <nav className="mb-4 mt-2 flex items-center gap-2 text-sm">
               <button onClick={() => pickCategory('all')} className="flex h-8 w-8 items-center justify-center rounded-full bg-wine/10 text-wine shadow-sm ring-1 ring-wine/15 transition hover:bg-wine hover:text-cream" aria-label="home"><HomeGlyph /></button>
-              <span className="text-wine/40">←</span>
+              <Crumb />
               <button onClick={() => pickCategory('all')} className="text-wine/70 hover:text-wine">{t('store.storeRoot')}</button>
-              <span className="text-wine/40">←</span>
+              <Crumb />
               <span className="flex items-center gap-2 font-display text-lg font-bold text-wine">
                 <CatThumb cat={cat} className="h-8 w-8" />
                 {t(`categories.${cat}`)}
@@ -302,6 +302,17 @@ function Chip({ onClick, active, children }) {
     >
       {children} <span className="text-[9px]">▼</span>
     </button>
+  );
+}
+
+// فاصل مسار التنقّل — يشير لاتجاه التتابع (يساراً في العربية، يميناً في الإنجليزية)
+function Crumb({ className = 'h-4 w-4' }) {
+  const { i18n } = useTranslation();
+  const rtl = i18n.language !== 'en';
+  return (
+    <svg viewBox="0 0 24 24" className={`${className} shrink-0 text-wine/35`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={rtl ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6'} />
+    </svg>
   );
 }
 
@@ -561,9 +572,10 @@ function HeroSlider({ store }) {
                       className="absolute inset-0 z-0 h-full w-full object-cover"
                     />
                   )}
-                  {/* طبقة تظليل متدرّجة ثابتة فوق الصورة/الفيديو (متناسقة مع الشريحة الأولى) */}
+                  {/* طبقة تظليل ثابتة فوق الصورة/الفيديو لكل الشرائح — تبقى الشاشة معتّمة بأناقة
+                      مثل الشريحة الأولى ليظهر النص بوضوح (تنطبق على كل السلايدرات: صور وفيديو) */}
                   {(isImage || isVideo) && (
-                    <div className="absolute inset-0 z-[1] bg-gradient-to-t from-black/65 via-black/35 to-black/45" />
+                    <div className="absolute inset-0 z-[1] bg-black/35 bg-gradient-to-t from-black/75 via-black/45 to-black/55" />
                   )}
                   {!custom && <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-cream/10 blur-3xl" />}
 

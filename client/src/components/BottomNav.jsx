@@ -48,7 +48,7 @@ export default function BottomNav() {
     { key: 'account', label: t('nav.account') || 'حسابي', Icon: UserIcon, active: pathname.startsWith('/dashboard'), onClick: () => navigate(accountTo) },
     { key: 'cart', label: t('nav.cart'), Icon: CartIcon, badge: count, onClick: () => setOpen(true) },
     { key: 'fav', label: t('nav.wishlist'), Icon: HeartIcon, badge: wishCount, onClick: () => setWishOpen(true) },
-    { key: 'categories', label: t('nav.categories'), Icon: CategoriesIcon, active: pathname === '/categories', onClick: () => navigate('/categories') },
+    { key: 'categories', label: t('nav.categories'), Icon: CategoriesIcon, active: pathname === '/categories' || pathname.startsWith('/category/'), onClick: () => navigate('/categories') },
     { key: 'home', label: t('nav.home'), Icon: HomeIcon, active: homeActive, onClick: () => navigate(homeTo) },
   ];
 
@@ -60,19 +60,20 @@ export default function BottomNav() {
             key={key}
             onClick={onClick}
             data-cart-target={key === 'cart' ? '' : undefined}
-            className={`relative flex flex-1 flex-col items-center gap-1 rounded-xl py-1 text-[11px] font-medium transition ${
+            className={`relative flex flex-1 flex-col items-center gap-1 py-1 text-[11px] font-medium transition ${
               active ? 'text-wine' : 'text-stone-400'
             }`}
           >
-            <span className="relative">
+            {/* تظليل التبويب الفعّال: حبّة خمرية حول الأيقونة ليعرف المستخدم مكانه */}
+            <span className={`relative flex items-center justify-center rounded-2xl px-5 py-1 transition-colors duration-200 ${active ? 'bg-wine text-cream shadow-sm' : ''}`}>
               <Icon className="h-6 w-6" filled={active} />
               {badge > 0 && (
-                <span className="absolute -end-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-wine px-1 text-[9px] font-bold text-cream">
+                <span className={`absolute -end-0.5 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold ${active ? 'bg-cream text-wine' : 'bg-wine text-cream'}`}>
                   {badge}
                 </span>
               )}
             </span>
-            {label}
+            <span className={active ? 'font-bold' : ''}>{label}</span>
           </button>
         ))}
       </div>

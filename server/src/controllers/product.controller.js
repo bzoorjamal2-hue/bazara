@@ -29,10 +29,10 @@ export async function createProduct(req, res, next) {
 
     const result = await query(
       `INSERT INTO products
-         (store_id, name, price, old_price, description, size, color, category, image_url, images, stock, featured, video_url)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+         (store_id, name, price, old_price, description, size, color, category, image_url, images, stock, featured, video_url, size_stock)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
        RETURNING *`,
-      [store.id, p.name, p.price, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, p.videoUrl]
+      [store.id, p.name, p.price, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, p.videoUrl, JSON.stringify(p.sizeStock)]
     );
 
     const product = result.rows[0];
@@ -61,10 +61,10 @@ export async function updateProduct(req, res, next) {
     const result = await query(
       `UPDATE products SET
          name=$1, price=$2, old_price=$3, description=$4, size=$5, color=$6,
-         category=$7, image_url=$8, images=$9, stock=$10, featured=$11, video_url=$12, updated_at=now()
-       WHERE id=$13 AND store_id=$14
+         category=$7, image_url=$8, images=$9, stock=$10, featured=$11, video_url=$12, size_stock=$13, updated_at=now()
+       WHERE id=$14 AND store_id=$15
        RETURNING *`,
-      [p.name, p.price, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, p.videoUrl, id, store.id]
+      [p.name, p.price, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, p.videoUrl, JSON.stringify(p.sizeStock), id, store.id]
     );
     res.json({ product: mapProduct(result.rows[0]) });
   } catch (err) {
@@ -88,15 +88,30 @@ export async function deleteProduct(req, res, next) {
   }
 }
 
+// كمية المخزون لكل مقاس: نقبل فقط المقاسات الموجودة فعلاً ضمن size، وقيمة عددية ≥ 0
+function normalizeSizeStock(raw, sizeStr) {
+  if (!raw || typeof raw !== 'object') return {};
+  const validSizes = new Set((sizeStr || '').split(',').map((s) => s.trim()).filter(Boolean));
+  const out = {};
+  for (const [k, v] of Object.entries(raw)) {
+    const key = String(k).trim();
+    if (!validSizes.has(key)) continue; // نتجاهل مقاسات غير مختارة
+    const n = parseInt(v, 10);
+    if (Number.isFinite(n) && n >= 0) out[key] = n;
+  }
+  return out;
+}
+
 function normalizeBody(b) {
   const oldPrice = b.oldPrice === '' || b.oldPrice == null ? null : Number(b.oldPrice);
   const stock = b.stock === '' || b.stock == null ? null : parseInt(b.stock, 10);
+  const size = b.size || '';
   return {
     name: b.name,
     price: Number(b.price),
     oldPrice,
     description: b.description || '',
-    size: b.size || '',
+    size,
     color: b.color || '',
     category: b.category,
     imageUrl: b.imageUrl || '',
@@ -104,6 +119,7 @@ function normalizeBody(b) {
     stock,
     featured: Boolean(b.featured),
     videoUrl: typeof b.videoUrl === 'string' ? b.videoUrl.trim().slice(0, 2000) : '',
+    sizeStock: normalizeSizeStock(b.sizeStock, size),
   };
 }
 
@@ -121,6 +137,7 @@ export function mapProduct(p) {
     images: p.images || [],
     videoUrl: p.video_url || '',
     stock: p.stock, // null = متوفّر دائماً
+    sizeStock: p.size_stock && typeof p.size_stock === 'object' ? p.size_stock : {},
     featured: p.featured,
     ratingAvg: p.rating_avg != null ? Math.round(Number(p.rating_avg) * 10) / 10 : 0,
     ratingCount: p.rating_count != null ? Number(p.rating_count) : 0,
