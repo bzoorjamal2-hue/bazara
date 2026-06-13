@@ -9,6 +9,8 @@ const baseURL = '/api';
 const api = axios.create({
   baseURL,
   withCredentials: true, // إرسال واستقبال الكوكيز (httpOnly + csrf)
+  // مهلة قصوى — يمنع تعلّق "جاري التحميل" للأبد لو كان الخادم بطيء الاستيقاظ (Render)
+  timeout: 60000,
 });
 
 // توكن المصادقة المخزّن محلياً — بديل موثوق للكوكيز داخل تطبيق iOS المثبّت
@@ -75,6 +77,7 @@ export function getErrorMessage(err, fallback = 'حدث خطأ، حاول مجد
       err.message === 'Network Error' ||
       (typeof navigator !== 'undefined' && navigator.onLine === false));
   if (noNetwork) return 'فقدت الاتصال بالشبكة. تحقّق من اتصالك بالإنترنت وحاول مجدداً.';
+  if (err?.code === 'ECONNABORTED') return 'الخادم يستغرق وقتاً أطول من المعتاد. حاول مجدداً بعد لحظات.';
   return err?.response?.data?.error || fallback;
 }
 

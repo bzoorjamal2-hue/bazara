@@ -8,3 +8,8 @@ export function isStandalone() {
     new URLSearchParams(window.location.search).get('app') === '1'
   );
 }
+
+// هل يوجد توكن جلسة محفوظ؟ (يعني المستخدم سجّل دخوله سابقاً على هذا الجهاز)
+export function hasStoredToken() {
+  try { return !!localStorage.getItem('bz_auth_token'); } catch { return false; }
+}

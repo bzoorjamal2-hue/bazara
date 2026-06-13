@@ -395,7 +395,12 @@
   },
   "offer": {
     "endsIn": "ينتهي العرض خلال",
-    "day": "ي"
+    "dayOne": "يوم",
+    "dayTwo": "يومين",
+    "dayMany": "أيام",
+    "hours": "ساعة",
+    "minutes": "دقيقة",
+    "seconds": "ثانية"
   },
   "coupon": {
     "title": "كود الخصم",

@@ -79,6 +79,28 @@ html[lang='ar'] .font-display {
   @apply mb-1.5 block text-sm font-medium text-stone-300;
 }
 
+/* خانات التاريخ/الوقت: تتقلّص وتتناسب تلقائياً مع كل الأجهزة (تمنع تجاوزها الشاشة على iOS) */
+input[type='date'],
+input[type='datetime-local'],
+input[type='time'] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+input[type='date']::-webkit-date-and-time-value,
+input[type='datetime-local']::-webkit-date-and-time-value {
+  text-align: start;
+  min-width: 0;
+  margin: 0;
+}
+input[type='date']::-webkit-datetime-edit,
+input[type='datetime-local']::-webkit-datetime-edit {
+  padding: 0;
+  min-width: 0;
+}
+
 /* عناوين ذهبية متدرّجة */
 .gradient-text {
   background: linear-gradient(135deg, #f6edcf 0%, #e0c25f 45%, #d4af37 100%);

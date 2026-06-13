@@ -7,7 +7,8 @@ import RequireSubscription from './components/RequireSubscription.jsx';
 import Spinner from './components/Spinner.jsx';
 import Home from './pages/Home.jsx'; // الصفحة الرئيسية تبقى فورية (أول ما يفتح الزائر)
 import AppWelcome from './components/AppWelcome.jsx';
-import { isStandalone } from './utils/pwa.js';
+import Splash from './components/Splash.jsx';
+import { isStandalone, hasStoredToken } from './utils/pwa.js';
 import { useAuth } from './context/AuthContext.jsx';
 
 // داخل التطبيق المثبّت:
@@ -15,11 +16,11 @@ import { useAuth } from './context/AuthContext.jsx';
 // - زائر → شاشة افتتاح أنيقة.
 // في المتصفح: يعرض الصفحة الرئيسية العامة كالمعتاد.
 function Root() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   if (!isStandalone()) return <Home />;
-  // مسجّل دخوله → لوحة التحكم. غير ذلك → نعرض شاشة الترحيب فوراً (بحركتها) بدل
-  // الانتظار على شاشة تحميل فارغة قد تعلّق لو كان الخادم بطيئاً بالاستيقاظ.
   if (user) return <Navigate to="/dashboard" replace />;
+  // أثناء التحقق من جلسة محفوظة (يوجد توكن) نعرض سبلاش بهوية بازارا بدل وميض شاشة الترحيب
+  if (loading && hasStoredToken()) return <Splash />;
   return <AppWelcome />;
 }
 
@@ -50,6 +51,8 @@ function AnimatedRoutes() {
   // تحميل مُسبق للصفحات الشائعة بعد الإقلاع — يلغي وميض/فصل التحميل عند الانتقال
   useEffect(() => {
     const warm = () => {
+      import('./pages/Login.jsx');
+      import('./pages/Register.jsx');
       import('./pages/StorePage.jsx');
       import('./pages/ProductDetails.jsx');
       import('./pages/Categories.jsx');

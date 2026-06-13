@@ -394,8 +394,13 @@
     "freeShippingHint": "Add ₪{{amount}} to get free delivery!"
   },
   "offer": {
-    "endsIn": "Ends in",
-    "day": "d"
+    "endsIn": "Offer ends in",
+    "dayOne": "day",
+    "dayTwo": "days",
+    "dayMany": "days",
+    "hours": "hrs",
+    "minutes": "min",
+    "seconds": "sec"
   },
   "coupon": {
     "title": "Discount code",

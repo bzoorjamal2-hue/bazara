@@ -198,10 +198,10 @@ export default function ProductDetails() {
             {hasDiscount && <span className="text-lg text-stone-500 line-through">{t('common.currency')}{product.oldPrice}</span>}
           </div>
 
-          {/* عدّاد العرض المحدود */}
+          {/* عدّاد العرض المحدود — تصميم فخم */}
           {product.saleEndsAt && (
-            <div className="mt-3">
-              <Countdown endsAt={product.saleEndsAt} label className="!px-3 !py-1.5 !text-xs" />
+            <div className="mt-4">
+              <Countdown endsAt={product.saleEndsAt} variant="boxes" />
             </div>
           )}
 
