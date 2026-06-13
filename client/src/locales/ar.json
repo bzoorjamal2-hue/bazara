@@ -303,6 +303,8 @@
     "sizeStockLeft": "متبقّي {{count}} قطعة من مقاس {{size}}",
     "sizeSoldOut": "نفد هذا المقاس",
     "someSizesSoldOut": "المقاسات المشطوبة نفدت من المخزون",
+    "leftShort": "متبقّي {{count}}",
+    "soldOutShort": "نفد",
     "addToCart": "أضف للسلة",
     "buyNow": "اطلب الآن",
     "shopNow": "اشترِ الآن",

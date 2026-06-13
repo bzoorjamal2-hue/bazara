@@ -93,6 +93,8 @@ export default function ProductDetails() {
   const qtyFor = (s) => (hasColorStock ? (selColor ? colorStock[selColor]?.[s] : undefined) : sizeStock[s]);
   const sizeSoldOut = (s) => qtyFor(s) === 0;
   const hasSizeStock = hasColorStock ? true : (sizes.length > 0 && sizes.some((s) => typeof sizeStock[s] === 'number'));
+  // عند تتبّع كميات لكل نمرة نعرض المتبقّي على كل نمرة (بدل حبّة المخزون العامة) لتفادي تعدّد الصيغ
+  const perSize = hasColorStock || hasSizeStock;
   // نفد المنتج: المخزون العام = 0، أو كل الكميات = 0
   const allSoldOut = hasColorStock
     ? Object.values(colorStock).every((sz) => Object.values(sz).every((q) => q === 0))
@@ -219,16 +221,20 @@ export default function ProductDetails() {
             </div>
           )}
 
-          {/* مؤشّر المخزون — حبّة عصرية: نفد (أحمر) · آخر قطع (تدرّج ناري نابض) · متوفّر (أخضر) */}
-          <div className="mt-3">
-            <StockBadge
-              outOfStock={outOfStock}
-              selSize={selSize}
-              selSizeQty={selSizeQty}
-              stock={product.stock}
-              t={t}
-            />
-          </div>
+          {/* مؤشّر المخزون العام — يظهر فقط للمنتجات بلا كميات لكل نمرة (تفادياً لتعدّد الصيغ) */}
+          {!perSize && (
+            <div className="mt-3">
+              <StockBadge outOfStock={outOfStock} selSize={selSize} selSizeQty={selSizeQty} stock={product.stock} t={t} />
+            </div>
+          )}
+          {/* للمنتجات بكميات لكل نمرة: لو نفد كلياً نعرض تنبيهاً واحداً واضحاً */}
+          {perSize && outOfStock && (
+            <div className="mt-3">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/15 px-3 py-1.5 text-sm font-bold text-red-500 ring-1 ring-red-500/25">
+                <span className="h-2 w-2 rounded-full bg-red-500" /> {t('product.outOfStock')}
+              </span>
+            </div>
+          )}
 
           {product.description && <p className="mt-5 leading-relaxed text-stone-300">{product.description}</p>}
 
@@ -264,28 +270,28 @@ export default function ProductDetails() {
                     {availSizes.map((s) => {
                       const soldOut = sizeSoldOut(s);
                       const qty = typeof qtyFor(s) === 'number' ? qtyFor(s) : null;
+                      const on = selSize === s;
                       return (
                         <button
                           key={s}
                           type="button"
                           disabled={soldOut}
                           onClick={() => { setSelSize(s); setPickErr(''); }}
-                          className={`relative ${chipCls(selSize === s)} ${soldOut ? 'cursor-not-allowed !border-stone-300/40 !bg-transparent !text-stone-400 line-through opacity-60' : ''}`}
-                          title={soldOut ? t('product.sizeSoldOut') : qty != null ? t('product.sizeStockLeft', { size: sizeLabel(s, t), count: qty }) : ''}
+                          className={`flex min-w-[3.75rem] flex-col items-center rounded-xl border px-3 py-1.5 text-center transition ${
+                            on ? 'border-wine bg-wine text-cream' : 'border-wine/30 text-wine hover:bg-wine/10'
+                          } ${soldOut ? 'cursor-not-allowed border-stone-300/50 bg-transparent text-stone-400 opacity-60' : ''}`}
                         >
-                          {sizeLabel(s, t)}
-                          {qty != null && qty > 0 && qty <= 3 && (
-                            <span className="absolute -end-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-red-500 px-1 text-[9px] font-bold text-white shadow">
-                              {qty}
+                          <span className={`text-sm font-bold leading-none ${soldOut ? 'line-through' : ''}`}>{sizeLabel(s, t)}</span>
+                          {/* المتبقّي بنفس التنسيق لكل النمر: رمادي = متوفّر، أحمر = نفد */}
+                          {qty != null && (
+                            <span className={`mt-1 text-[10px] font-medium leading-none ${on ? 'text-cream/80' : soldOut ? 'text-red-500' : 'text-wine/55'}`}>
+                              {soldOut ? t('product.soldOutShort') : t('product.leftShort', { count: qty })}
                             </span>
                           )}
                         </button>
                       );
                     })}
                   </div>
-                  {hasSizeStock && availSizes.some(sizeSoldOut) && (
-                    <p className="mt-2 text-xs text-stone-400">{t('product.someSizesSoldOut')}</p>
-                  )}
                 </>
               )}
             </div>

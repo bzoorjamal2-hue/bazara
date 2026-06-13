@@ -303,6 +303,8 @@
     "sizeStockLeft": "{{count}} left in size {{size}}",
     "sizeSoldOut": "This size is sold out",
     "someSizesSoldOut": "Crossed-out sizes are sold out",
+    "leftShort": "{{count}} left",
+    "soldOutShort": "Sold out",
     "addToCart": "Add to cart",
     "buyNow": "Order now",
     "shopNow": "Shop now",

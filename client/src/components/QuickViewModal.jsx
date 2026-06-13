@@ -40,8 +40,10 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
   const [color, setColor] = useState('');
   const [err, setErr] = useState('');
   // النمر المتاحة وكميتها حسب اللون المختار (عند المخزون لكل لون)
+  const sizeStock = product.sizeStock && typeof product.sizeStock === 'object' ? product.sizeStock : {};
   const availSizes = hasColorStock ? (color ? Object.keys(colorStock[color] || {}) : []) : sizes;
-  const sizeSoldOut = (s) => (hasColorStock ? colorStock[color]?.[s] === 0 : false);
+  const qtyFor = (s) => (hasColorStock ? (color ? colorStock[color]?.[s] : undefined) : sizeStock[s]);
+  const sizeSoldOut = (s) => qtyFor(s) === 0;
 
   const outOfStock = product.stock === 0;
   const hasDiscount = product.oldPrice && product.oldPrice > product.price;
@@ -176,14 +178,21 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
                 <div className="flex flex-wrap gap-2">
                   {availSizes.map((s) => {
                     const soldOut = sizeSoldOut(s);
+                    const qty = typeof qtyFor(s) === 'number' ? qtyFor(s) : null;
+                    const on = size === s;
                     return (
                       <button
                         key={s}
                         disabled={soldOut}
                         onClick={() => { setSize(s); setErr(''); }}
-                        className={`min-w-10 rounded-xl border px-3 py-1.5 text-sm font-semibold transition ${size === s ? 'border-wine bg-wine text-cream' : 'border-wine/25 text-wine hover:bg-wine/5'} ${soldOut ? 'cursor-not-allowed line-through opacity-40' : ''}`}
+                        className={`flex min-w-[3.5rem] flex-col items-center rounded-xl border px-3 py-1.5 text-center transition ${on ? 'border-wine bg-wine text-cream' : 'border-wine/25 text-wine hover:bg-wine/5'} ${soldOut ? 'cursor-not-allowed border-stone-300/50 text-stone-400 opacity-60' : ''}`}
                       >
-                        {sizeLabel(s, t)}
+                        <span className={`text-sm font-bold leading-none ${soldOut ? 'line-through' : ''}`}>{sizeLabel(s, t)}</span>
+                        {qty != null && (
+                          <span className={`mt-1 text-[10px] font-medium leading-none ${on ? 'text-cream/80' : soldOut ? 'text-red-500' : 'text-wine/55'}`}>
+                            {soldOut ? t('product.soldOutShort') : t('product.leftShort', { count: qty })}
+                          </span>
+                        )}
                       </button>
                     );
                   })}
