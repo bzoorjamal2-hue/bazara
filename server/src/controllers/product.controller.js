@@ -29,10 +29,10 @@ export async function createProduct(req, res, next) {
 
     const result = await query(
       `INSERT INTO products
-         (store_id, name, price, old_price, description, size, color, category, image_url, images, stock, featured, video_url, size_stock, sale_ends_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+         (store_id, name, price, old_price, description, size, color, category, image_url, images, stock, featured, video_url, size_stock, sale_ends_at, color_stock)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
        RETURNING *`,
-      [store.id, p.name, p.price, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, p.videoUrl, JSON.stringify(p.sizeStock), p.saleEndsAt]
+      [store.id, p.name, p.price, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, p.videoUrl, JSON.stringify(p.sizeStock), p.saleEndsAt, JSON.stringify(p.colorStock)]
     );
 
     const product = result.rows[0];
@@ -61,10 +61,10 @@ export async function updateProduct(req, res, next) {
     const result = await query(
       `UPDATE products SET
          name=$1, price=$2, old_price=$3, description=$4, size=$5, color=$6,
-         category=$7, image_url=$8, images=$9, stock=$10, featured=$11, video_url=$12, size_stock=$13, sale_ends_at=$14, updated_at=now()
-       WHERE id=$15 AND store_id=$16
+         category=$7, image_url=$8, images=$9, stock=$10, featured=$11, video_url=$12, size_stock=$13, sale_ends_at=$14, color_stock=$15, updated_at=now()
+       WHERE id=$16 AND store_id=$17
        RETURNING *`,
-      [p.name, p.price, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, p.videoUrl, JSON.stringify(p.sizeStock), p.saleEndsAt, id, store.id]
+      [p.name, p.price, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, p.videoUrl, JSON.stringify(p.sizeStock), p.saleEndsAt, JSON.stringify(p.colorStock), id, store.id]
     );
     res.json({ product: mapProduct(result.rows[0]) });
   } catch (err) {
@@ -102,24 +102,66 @@ function normalizeSizeStock(raw, sizeStr) {
   return out;
 }
 
+// مخزون لكل لون ثم نمرة: { "أسود": {"38": 3}, ... } — قيم عددية ≥ 0
+function normalizeColorStock(raw) {
+  if (!raw || typeof raw !== 'object') return {};
+  const out = {};
+  for (const [color, sizes] of Object.entries(raw)) {
+    const cname = String(color).trim().slice(0, 50);
+    if (!cname || !sizes || typeof sizes !== 'object') continue;
+    const inner = {};
+    for (const [sz, qty] of Object.entries(sizes)) {
+      const sname = String(sz).trim().slice(0, 20);
+      const n = parseInt(qty, 10);
+      if (sname && Number.isFinite(n) && n >= 0) inner[sname] = n;
+    }
+    if (Object.keys(inner).length) out[cname] = inner;
+  }
+  return out;
+}
+
 function normalizeBody(b) {
   const oldPrice = b.oldPrice === '' || b.oldPrice == null ? null : Number(b.oldPrice);
   const stock = b.stock === '' || b.stock == null ? null : parseInt(b.stock, 10);
-  const size = b.size || '';
+  const colorStock = normalizeColorStock(b.colorStock);
+  const usingColorStock = Object.keys(colorStock).length > 0;
+
+  // عند استخدام المخزون لكل لون: نشتقّ الألوان والمقاسات والمخزون المجمّع لكل مقاس
+  // (للحفاظ على عمل الفلاتر والبحث والمؤشّرات القديمة)
+  let size = b.size || '';
+  let color = b.color || '';
+  let sizeStock;
+  if (usingColorStock) {
+    color = Object.keys(colorStock).join(',');
+    const sizeSet = new Set();
+    const agg = {};
+    for (const sizes of Object.values(colorStock)) {
+      for (const [sz, qty] of Object.entries(sizes)) {
+        sizeSet.add(sz);
+        agg[sz] = (agg[sz] || 0) + qty;
+      }
+    }
+    size = [...sizeSet].join(',');
+    sizeStock = agg;
+  } else {
+    sizeStock = normalizeSizeStock(b.sizeStock, size);
+  }
+
   return {
     name: b.name,
     price: Number(b.price),
     oldPrice,
     description: b.description || '',
     size,
-    color: b.color || '',
+    color,
     category: b.category,
     imageUrl: b.imageUrl || '',
     images: Array.isArray(b.images) ? b.images.filter(Boolean).slice(0, 6) : [],
     stock,
     featured: Boolean(b.featured),
     videoUrl: typeof b.videoUrl === 'string' ? b.videoUrl.trim().slice(0, 2000) : '',
-    sizeStock: normalizeSizeStock(b.sizeStock, size),
+    sizeStock,
+    colorStock,
     saleEndsAt: (() => { const d = b.saleEndsAt ? new Date(b.saleEndsAt) : null; return d && !isNaN(d) ? d : null; })(),
   };
 }
@@ -149,6 +191,7 @@ export function mapProduct(p) {
     videoUrl: p.video_url || '',
     stock: p.stock, // null = متوفّر دائماً
     sizeStock: p.size_stock && typeof p.size_stock === 'object' ? p.size_stock : {},
+    colorStock: p.color_stock && typeof p.color_stock === 'object' ? p.color_stock : {},
     featured: p.featured,
     ratingAvg: p.rating_avg != null ? Math.round(Number(p.rating_avg) * 10) / 10 : 0,
     ratingCount: p.rating_count != null ? Number(p.rating_count) : 0,

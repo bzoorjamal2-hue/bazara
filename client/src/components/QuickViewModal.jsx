@@ -32,11 +32,16 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
 
   const [active, setActive] = useState(0);
   const [qty, setQty] = useState(1);
+  const colorStock = product.colorStock && typeof product.colorStock === 'object' ? product.colorStock : {};
+  const hasColorStock = Object.keys(colorStock).length > 0;
   const sizes = (product.size || '').split(',').map((s) => s.trim()).filter(Boolean);
-  const colors = (product.color || '').split(',').map((s) => s.trim()).filter(Boolean);
+  const colors = hasColorStock ? Object.keys(colorStock) : (product.color || '').split(',').map((s) => s.trim()).filter(Boolean);
   const [size, setSize] = useState('');
   const [color, setColor] = useState('');
   const [err, setErr] = useState('');
+  // النمر المتاحة وكميتها حسب اللون المختار (عند المخزون لكل لون)
+  const availSizes = hasColorStock ? (color ? Object.keys(colorStock[color] || {}) : []) : sizes;
+  const sizeSoldOut = (s) => (hasColorStock ? colorStock[color]?.[s] === 0 : false);
 
   const outOfStock = product.stock === 0;
   const hasDiscount = product.oldPrice && product.oldPrice > product.price;
@@ -47,8 +52,14 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
 
   const onAdd = () => {
     if (outOfStock) return;
-    if (sizes.length && !size) { setErr(t('product.pickSize')); return; }
-    if (colors.length && !color) { setErr(t('product.pickColor')); return; }
+    if (hasColorStock) {
+      if (!color) { setErr(t('product.pickColorFirst')); return; }
+      if (!size) { setErr(t('product.pickSize')); return; }
+      if (sizeSoldOut(size)) { setErr(t('product.sizeSoldOut')); return; }
+    } else {
+      if (sizes.length && !size) { setErr(t('product.pickSize')); return; }
+      if (colors.length && !color) { setErr(t('product.pickColor')); return; }
+    }
     flyToCart(imgRef.current, hasVideo ? (poster || gallery[active]) : gallery[active]);
     add({ ...product, whatsapp, size, color }, qty);
     onClose();
@@ -136,23 +147,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
             <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-stone-600">{product.description}</p>
           )}
 
-          {sizes.length > 0 && (
-            <div className="mt-4">
-              <p className="mb-1.5 text-sm font-semibold text-stone-700">{t('store.sizeLabel')}</p>
-              <div className="flex flex-wrap gap-2">
-                {sizes.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => { setSize(s); setErr(''); }}
-                    className={`min-w-10 rounded-xl border px-3 py-1.5 text-sm font-semibold transition ${size === s ? 'border-wine bg-wine text-cream' : 'border-wine/25 text-wine hover:bg-wine/5'}`}
-                  >
-                    {sizeLabel(s, t)}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
+          {/* اللون أولاً */}
           {colors.length > 0 && (
             <div className="mt-4">
               <p className="mb-1.5 text-sm font-semibold text-stone-700">{t('dashboard.product.color')}</p>
@@ -160,13 +155,40 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
                 {colors.map((c) => (
                   <button
                     key={c}
-                    onClick={() => { setColor(c); setErr(''); }}
-                    className={`rounded-xl border px-3 py-1.5 text-sm font-semibold transition ${color === c ? 'border-wine bg-wine text-cream' : 'border-wine/25 text-wine hover:bg-wine/5'}`}
+                    onClick={() => { setColor(c); if (hasColorStock) setSize(''); setErr(''); }}
+                    className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-semibold transition ${color === c ? 'border-wine bg-wine text-cream' : 'border-wine/25 text-wine hover:bg-wine/5'}`}
                   >
+                    <span className="h-3 w-3 rounded-full border border-current/40" style={{ background: c }} />
                     {c}
                   </button>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* المقاس (حسب اللون عند المخزون لكل لون) */}
+          {(hasColorStock ? colors.length > 0 : sizes.length > 0) && (
+            <div className="mt-4">
+              <p className="mb-1.5 text-sm font-semibold text-stone-700">{t('store.sizeLabel')}</p>
+              {hasColorStock && !color ? (
+                <p className="rounded-xl bg-wine/5 px-3 py-2 text-sm font-medium text-wine/70">👆 {t('product.pickColorFirst')}</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {availSizes.map((s) => {
+                    const soldOut = sizeSoldOut(s);
+                    return (
+                      <button
+                        key={s}
+                        disabled={soldOut}
+                        onClick={() => { setSize(s); setErr(''); }}
+                        className={`min-w-10 rounded-xl border px-3 py-1.5 text-sm font-semibold transition ${size === s ? 'border-wine bg-wine text-cream' : 'border-wine/25 text-wine hover:bg-wine/5'} ${soldOut ? 'cursor-not-allowed line-through opacity-40' : ''}`}
+                      >
+                        {sizeLabel(s, t)}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 

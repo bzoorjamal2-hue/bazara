@@ -10,7 +10,7 @@ import { SIZES, sizeLabel } from '../../utils/sizes.js';
 const CATEGORIES = ['abaya', 'set', 'dress', 'hijab', 'trench'];
 const EMPTY = {
   name: '', price: '', oldPrice: '', description: '', size: '', color: '',
-  category: 'abaya', imageUrl: '', images: [], videoUrl: '', stock: '', featured: false, sizeStock: {}, saleEndsAt: '',
+  category: 'abaya', imageUrl: '', images: [], videoUrl: '', stock: '', featured: false, sizeStock: {}, colorStock: {}, saleEndsAt: '',
 };
 
 // تحويل ISO إلى صيغة خانة التاريخ المحلّية (YYYY-MM-DD)
@@ -34,6 +34,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
           stock: initial.stock != null ? String(initial.stock) : '',
           images: initial.images || [],
           sizeStock: initial.sizeStock && typeof initial.sizeStock === 'object' ? initial.sizeStock : {},
+          colorStock: initial.colorStock && typeof initial.colorStock === 'object' ? initial.colorStock : {},
           saleEndsAt: toDateInput(initial.saleEndsAt),
         }
       : EMPTY
@@ -45,33 +46,30 @@ export default function ProductForm({ initial, onClose, onSaved }) {
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
-  // مقاسات المنتج (متعدّدة) — مخزّنة كنص مفصول بفواصل
-  const selectedSizes = form.size ? form.size.split(',').map((s) => s.trim()).filter(Boolean) : [];
-  const toggleSize = (s) => {
-    const setS = new Set(selectedSizes);
-    const removing = setS.has(s);
-    removing ? setS.delete(s) : setS.add(s);
-    // عند إزالة مقاس نحذف كميته كذلك
-    const sizeStock = { ...form.sizeStock };
-    if (removing) delete sizeStock[s];
-    setForm({ ...form, size: SIZES.filter((x) => setS.has(x)).join(','), sizeStock });
-  };
-  const setSizeQty = (s, val) => {
-    const sizeStock = { ...form.sizeStock };
-    if (val === '') delete sizeStock[s];
-    else sizeStock[s] = Math.max(0, parseInt(val, 10) || 0);
-    setForm({ ...form, sizeStock });
-  };
-
-  // ألوان المنتج (متعدّدة) — يكتبها صاحب المتجر ويختارها الزبون لاحقاً
-  const selectedColors = form.color ? form.color.split(',').map((s) => s.trim()).filter(Boolean) : [];
-  const addColor = (val) => {
+  // المخزون لكل لون ثم نمرة: { "أسود": {"38": 3}, ... }
+  const colors = Object.keys(form.colorStock);
+  const addColorVariant = (val) => {
     const v = (val || '').trim();
-    if (!v || selectedColors.includes(v)) { setColorInput(''); return; }
-    setForm({ ...form, color: [...selectedColors, v].join(',') });
+    if (!v || form.colorStock[v]) { setColorInput(''); return; }
+    setForm({ ...form, colorStock: { ...form.colorStock, [v]: {} } });
     setColorInput('');
   };
-  const removeColor = (c) => setForm({ ...form, color: selectedColors.filter((x) => x !== c).join(',') });
+  const removeColorVariant = (c) => {
+    const colorStock = { ...form.colorStock };
+    delete colorStock[c];
+    setForm({ ...form, colorStock });
+  };
+  const toggleColorSize = (c, s) => {
+    const sizes = { ...(form.colorStock[c] || {}) };
+    if (s in sizes) delete sizes[s];
+    else sizes[s] = '';
+    setForm({ ...form, colorStock: { ...form.colorStock, [c]: sizes } });
+  };
+  const setColorSizeQty = (c, s, val) => {
+    const sizes = { ...(form.colorStock[c] || {}) };
+    sizes[s] = val === '' ? '' : Math.max(0, parseInt(val, 10) || 0);
+    setForm({ ...form, colorStock: { ...form.colorStock, [c]: sizes } });
+  };
 
   const setGalleryAt = (idx, val) => {
     const images = [...form.images];
@@ -189,72 +187,73 @@ export default function ProductForm({ initial, onClose, onSaved }) {
             </div>
           </div>
 
+          {/* المتغيّرات: لكل لون نختار النمر المتوفّرة وكميتها — الزبون يختار اللون أولاً ثم النمرة */}
           <div>
-            <label className="label">{t('dashboard.product.size')} <span className="text-stone-500">({t('common.optional')})</span></label>
-            <div className="flex flex-wrap gap-2">
-              {SIZES.map((s) => (
-                <button
-                  type="button"
-                  key={s}
-                  onClick={() => toggleSize(s)}
-                  className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition ${
-                    selectedSizes.includes(s)
-                      ? 'border-gold-400 bg-gold-400/20 text-gold-100'
-                      : 'border-gold-400/20 text-stone-300 hover:bg-white/5'
-                  }`}
-                >
-                  {sizeLabel(s, t)}
-                </button>
-              ))}
-            </div>
+            <label className="label">🎨 {t('dashboard.product.variants')} <span className="text-stone-500">({t('common.optional')})</span></label>
+            <p className="mb-2 text-xs text-stone-400">{t('dashboard.product.variantsHint')}</p>
 
-            {/* كمية المخزون لكل مقاس — تظهر للزبون كم متبقّي من كل نمرة (اتركه فارغاً = متوفّر) */}
-            {selectedSizes.length > 0 && (
-              <div className="mt-3 rounded-xl border border-gold-400/15 bg-black/20 p-3">
-                <p className="mb-2 text-xs font-semibold text-stone-300">{t('dashboard.product.sizeStock')}</p>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {selectedSizes.map((s) => (
-                    <div key={s} className="flex items-center gap-2">
-                      <span className="w-14 shrink-0 text-sm font-bold text-gold-100">{sizeLabel(s, t)}</span>
-                      <input
-                        type="number"
-                        min="0"
-                        inputMode="numeric"
-                        className="input !py-1.5 text-sm"
-                        placeholder="∞"
-                        value={form.sizeStock[s] ?? ''}
-                        onChange={(e) => setSizeQty(s, e.target.value)}
-                      />
+            {colors.length > 0 && (
+              <div className="space-y-3">
+                {colors.map((c) => {
+                  const sizes = form.colorStock[c] || {};
+                  return (
+                    <div key={c} className="rounded-xl border border-gold-400/15 bg-black/20 p-3">
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="flex items-center gap-2 font-bold text-gold-100">
+                          <span className="h-3.5 w-3.5 rounded-full border border-cream/40" style={{ background: c }} />
+                          {c}
+                        </span>
+                        <button type="button" onClick={() => removeColorVariant(c)} className="rounded-lg px-2 py-1 text-xs text-stone-400 hover:text-red-300">✕ {t('common.delete')}</button>
+                      </div>
+                      {/* اختيار النمر المتوفّرة لهذا اللون */}
+                      <div className="flex flex-wrap gap-1.5">
+                        {SIZES.map((s) => (
+                          <button
+                            type="button"
+                            key={s}
+                            onClick={() => toggleColorSize(c, s)}
+                            className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                              s in sizes ? 'border-gold-400 bg-gold-400/20 text-gold-100' : 'border-gold-400/20 text-stone-300 hover:bg-white/5'
+                            }`}
+                          >
+                            {sizeLabel(s, t)}
+                          </button>
+                        ))}
+                      </div>
+                      {/* كمية كل نمرة مختارة لهذا اللون */}
+                      {Object.keys(sizes).length > 0 && (
+                        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                          {Object.keys(sizes).map((s) => (
+                            <div key={s} className="flex items-center gap-2">
+                              <span className="w-12 shrink-0 text-xs font-bold text-gold-100">{sizeLabel(s, t)}</span>
+                              <input
+                                type="number" min="0" inputMode="numeric"
+                                className="input !py-1.5 text-sm"
+                                placeholder={t('dashboard.product.qty')}
+                                value={sizes[s] ?? ''}
+                                onChange={(e) => setColorSizeQty(c, s, e.target.value)}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  ))}
-                </div>
-                <p className="mt-2 text-xs text-stone-400">{t('dashboard.product.sizeStockHint')}</p>
+                  );
+                })}
               </div>
             )}
-          </div>
 
-          <div>
-            <label className="label">{t('dashboard.product.color')} <span className="text-stone-500">({t('common.optional')})</span></label>
-            {selectedColors.length > 0 && (
-              <div className="mb-2 flex flex-wrap gap-2">
-                {selectedColors.map((c) => (
-                  <span key={c} className="flex items-center gap-1.5 rounded-full border border-gold-400/30 bg-gold-400/15 px-3 py-1 text-sm text-gold-100">
-                    {c}
-                    <button type="button" onClick={() => removeColor(c)} aria-label="remove" className="text-gold-200 transition hover:text-white">×</button>
-                  </span>
-                ))}
-              </div>
-            )}
-            <div className="flex gap-2">
+            {/* إضافة لون جديد */}
+            <div className="mt-2 flex gap-2">
               <input
                 type="text"
                 className="input flex-1"
-                placeholder={t('dashboard.product.colorHint')}
+                placeholder={t('dashboard.product.addColorPlaceholder')}
                 value={colorInput}
                 onChange={(e) => setColorInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addColor(colorInput); } }}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addColorVariant(colorInput); } }}
               />
-              <button type="button" onClick={() => addColor(colorInput)} className="btn-ghost shrink-0 !px-4">＋</button>
+              <button type="button" onClick={() => addColorVariant(colorInput)} className="btn-ghost shrink-0 !px-4">＋ {t('dashboard.product.addColor')}</button>
             </div>
           </div>
 

@@ -3,19 +3,28 @@ import { query } from '../config/db.js';
 import { isLahzaConfigured, initializeTransaction, verifyTransaction, PAY_CURRENCY } from '../config/lahza.js';
 import { evaluateCoupon } from './coupon.controller.js';
 
-// يخصم الكمية المطلوبة من مخزون المنتج العام ومن مخزون المقاس (إن وُجد) — لا يقل عن صفر
+// يخصم الكمية المطلوبة من مخزون المنتج العام ومن مخزون المقاس/اللون (إن وُجد) — لا يقل عن صفر
 async function decrementStock(orderItems) {
   for (const it of orderItems) {
     const qty = it.qty;
     // المخزون العام (NULL = متوفّر دائماً → لا يُلمس)
     await query('UPDATE products SET stock = GREATEST(0, stock - $2) WHERE id = $1 AND stock IS NOT NULL', [it.id, qty]);
-    // مخزون المقاس (نمرة) إن كان المنتج يتتبّع كميات لكل مقاس
+    // مخزون المقاس المجمّع (نمرة) إن كان المنتج يتتبّع كميات لكل مقاس
     if (it.size) {
       await query(
         `UPDATE products
          SET size_stock = jsonb_set(size_stock, ARRAY[$2::text], to_jsonb(GREATEST(0, COALESCE((size_stock->>$2)::int, 0) - $3)))
          WHERE id = $1 AND size_stock ? $2`,
         [it.id, it.size, qty]
+      );
+    }
+    // مخزون اللون ثم النمرة إن كان المنتج يتتبّع المخزون لكل لون
+    if (it.color && it.size) {
+      await query(
+        `UPDATE products
+         SET color_stock = jsonb_set(color_stock, ARRAY[$2::text, $3::text], to_jsonb(GREATEST(0, COALESCE((color_stock->$2->>$3)::int, 0) - $4)))
+         WHERE id = $1 AND color_stock ? $2 AND (color_stock->$2) ? $3`,
+        [it.id, it.color, it.size, qty]
       );
     }
   }

@@ -80,18 +80,26 @@ export default function ProductDetails() {
   const hasDiscount = product.oldPrice && product.oldPrice > product.price;
   const liked = has(product.id);
 
-  const sizes = (product.size || '').split(',').map((s) => s.trim()).filter(Boolean);
-  const colors = (product.color || '').split(',').map((s) => s.trim()).filter(Boolean);
+  // المخزون لكل لون ثم نمرة (النموذج الجديد): { "أسود": {"38": 3}, ... }
+  const colorStock = product.colorStock && typeof product.colorStock === 'object' ? product.colorStock : {};
+  const hasColorStock = Object.keys(colorStock).length > 0;
 
-  // كمية المخزون لكل مقاس (نمرة): قيمة عددية = الكمية المتبقّية، غير معرّفة = متوفّر بلا حدّ
   const sizeStock = product.sizeStock && typeof product.sizeStock === 'object' ? product.sizeStock : {};
-  const hasSizeStock = sizes.length > 0 && sizes.some((s) => typeof sizeStock[s] === 'number');
-  const sizeSoldOut = (s) => sizeStock[s] === 0;
-  // نفد المنتج: المخزون العام = 0، أو كل المقاسات المُسعّرة بكميات = 0
-  const allSizesSoldOut = hasSizeStock && sizes.every((s) => sizeStock[s] === 0);
-  const outOfStock = product.stock === 0 || allSizesSoldOut;
+  const sizes = (product.size || '').split(',').map((s) => s.trim()).filter(Boolean);
+  const colors = hasColorStock ? Object.keys(colorStock) : (product.color || '').split(',').map((s) => s.trim()).filter(Boolean);
+
+  // النمر المتاحة وكميتها — عند المخزون لكل لون تعتمد على اللون المختار
+  const availSizes = hasColorStock ? (selColor ? Object.keys(colorStock[selColor] || {}) : []) : sizes;
+  const qtyFor = (s) => (hasColorStock ? (selColor ? colorStock[selColor]?.[s] : undefined) : sizeStock[s]);
+  const sizeSoldOut = (s) => qtyFor(s) === 0;
+  const hasSizeStock = hasColorStock ? true : (sizes.length > 0 && sizes.some((s) => typeof sizeStock[s] === 'number'));
+  // نفد المنتج: المخزون العام = 0، أو كل الكميات = 0
+  const allSoldOut = hasColorStock
+    ? Object.values(colorStock).every((sz) => Object.values(sz).every((q) => q === 0))
+    : (hasSizeStock && sizes.every((s) => sizeStock[s] === 0));
+  const outOfStock = product.stock === 0 || allSoldOut;
   // الكمية المتبقّية للمقاس المختار (إن وُجدت)
-  const selSizeQty = selSize && typeof sizeStock[selSize] === 'number' ? sizeStock[selSize] : null;
+  const selSizeQty = (() => { const q = qtyFor(selSize); return typeof q === 'number' ? q : null; })();
 
   const cartProduct = { ...product, whatsapp: product.storeWhatsapp, size: selSize, color: selColor };
   const orderStore = {
@@ -101,11 +109,17 @@ export default function ProductDetails() {
   };
   const orderItems = [{ name: `${product.name}${selSize ? ` (${selSize})` : ''}${selColor ? ` - ${selColor}` : ''}`, price: product.price, qty: 1 }];
 
-  // التحقق من اختيار المقاس/اللون قبل الإضافة أو الشراء
+  // التحقق من اختيار اللون/المقاس قبل الإضافة أو الشراء
   const validatePick = () => {
-    if (sizes.length && !selSize) { setPickErr(t('product.pickSize')); return false; }
-    if (selSize && sizeSoldOut(selSize)) { setPickErr(t('product.sizeSoldOut')); return false; }
-    if (colors.length && !selColor) { setPickErr(t('product.pickColor')); return false; }
+    if (hasColorStock) {
+      if (!selColor) { setPickErr(t('product.pickColorFirst')); return false; }
+      if (!selSize) { setPickErr(t('product.pickSize')); return false; }
+      if (sizeSoldOut(selSize)) { setPickErr(t('product.sizeSoldOut')); return false; }
+    } else {
+      if (sizes.length && !selSize) { setPickErr(t('product.pickSize')); return false; }
+      if (selSize && sizeSoldOut(selSize)) { setPickErr(t('product.sizeSoldOut')); return false; }
+      if (colors.length && !selColor) { setPickErr(t('product.pickColor')); return false; }
+    }
     setPickErr('');
     return true;
   };
@@ -218,48 +232,62 @@ export default function ProductDetails() {
 
           {product.description && <p className="mt-5 leading-relaxed text-stone-300">{product.description}</p>}
 
-          {sizes.length > 0 && (
-            <div className="mt-6">
-              <p className="mb-2 text-sm font-semibold text-stone-300">{t('product.selectSize')}</p>
-              <div className="flex flex-wrap gap-2">
-                {sizes.map((s) => {
-                  const soldOut = sizeSoldOut(s);
-                  const qty = typeof sizeStock[s] === 'number' ? sizeStock[s] : null;
-                  return (
-                    <button
-                      key={s}
-                      type="button"
-                      disabled={soldOut}
-                      onClick={() => { setSelSize(s); setPickErr(''); }}
-                      className={`relative ${chipCls(selSize === s)} ${soldOut ? 'cursor-not-allowed !border-stone-300/40 !bg-transparent !text-stone-400 line-through opacity-60' : ''}`}
-                      title={soldOut ? t('product.sizeSoldOut') : qty != null ? t('product.sizeStockLeft', { size: sizeLabel(s, t), count: qty }) : ''}
-                    >
-                      {sizeLabel(s, t)}
-                      {/* شارة كمية منخفضة بزاوية النمرة — لافتة بلون نبضي */}
-                      {qty != null && qty > 0 && qty <= 3 && (
-                        <span className="absolute -end-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-red-500 px-1 text-[9px] font-bold text-white shadow">
-                          {qty}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-              {/* تلميح: المقاسات المشطوبة نفدت من المخزون */}
-              {hasSizeStock && sizes.some(sizeSoldOut) && (
-                <p className="mt-2 text-xs text-stone-400">{t('product.someSizesSoldOut')}</p>
-              )}
-            </div>
-          )}
-
+          {/* اللون — يُختار أولاً عند تتبّع المخزون لكل لون */}
           {colors.length > 0 && (
-            <div className="mt-5">
+            <div className="mt-6">
               <p className="mb-2 text-sm font-semibold text-stone-300">{t('product.selectColor')}</p>
               <div className="flex flex-wrap gap-2">
                 {colors.map((c) => (
-                  <button key={c} onClick={() => { setSelColor(c); setPickErr(''); }} className={chipCls(selColor === c)}>{c}</button>
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => { setSelColor(c); if (hasColorStock) setSelSize(''); setPickErr(''); }}
+                    className={`flex items-center gap-2 ${chipCls(selColor === c)}`}
+                  >
+                    <span className="h-3.5 w-3.5 rounded-full border border-current/40" style={{ background: c }} />
+                    {c}
+                  </button>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* المقاس (النمرة) — عند المخزون لكل لون تظهر نمر اللون المختار فقط */}
+          {(hasColorStock ? colors.length > 0 : sizes.length > 0) && (
+            <div className="mt-5">
+              <p className="mb-2 text-sm font-semibold text-stone-300">{t('product.selectSize')}</p>
+              {hasColorStock && !selColor ? (
+                <p className="rounded-xl bg-wine/5 px-3 py-2 text-sm font-medium text-wine/70">👆 {t('product.pickColorFirst')}</p>
+              ) : (
+                <>
+                  <div className="flex flex-wrap gap-2">
+                    {availSizes.map((s) => {
+                      const soldOut = sizeSoldOut(s);
+                      const qty = typeof qtyFor(s) === 'number' ? qtyFor(s) : null;
+                      return (
+                        <button
+                          key={s}
+                          type="button"
+                          disabled={soldOut}
+                          onClick={() => { setSelSize(s); setPickErr(''); }}
+                          className={`relative ${chipCls(selSize === s)} ${soldOut ? 'cursor-not-allowed !border-stone-300/40 !bg-transparent !text-stone-400 line-through opacity-60' : ''}`}
+                          title={soldOut ? t('product.sizeSoldOut') : qty != null ? t('product.sizeStockLeft', { size: sizeLabel(s, t), count: qty }) : ''}
+                        >
+                          {sizeLabel(s, t)}
+                          {qty != null && qty > 0 && qty <= 3 && (
+                            <span className="absolute -end-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-red-500 px-1 text-[9px] font-bold text-white shadow">
+                              {qty}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {hasSizeStock && availSizes.some(sizeSoldOut) && (
+                    <p className="mt-2 text-xs text-stone-400">{t('product.someSizesSoldOut')}</p>
+                  )}
+                </>
+              )}
             </div>
           )}
 
