@@ -54,6 +54,10 @@ export default function CartDrawer() {
   const [view, setView] = useState('cart'); // 'cart' | 'checkout'
   const [cust, setCust] = useState({ name: '', phone: '', city: '', address: '', notes: '' });
   const [err, setErr] = useState('');
+  const [couponInput, setCouponInput] = useState('');
+  const [coupon, setCoupon] = useState(null); // { code, discount } بعد التحقّق
+  const [couponMsg, setCouponMsg] = useState('');
+  const [couponBusy, setCouponBusy] = useState(false);
   useScrollLock(open);
 
   if (!open) return null;
@@ -61,17 +65,46 @@ export default function CartDrawer() {
   const close = () => { setOpen(false); setView('cart'); setErr(''); };
   const cityOpt = AREAS.find((a) => (ar ? a.ar : a.en) === cust.city);
   const delivery = cityOpt ? cityOpt.fee : 0;
-  const grand = total + delivery;
+  const discount = coupon ? coupon.discount : 0;
+  const grand = Math.max(0, total - discount) + delivery;
+  const storeSlug = items[0]?.storeSlug || '';
+
+  // التحقّق من كوبون الخصم مع الخادم
+  const applyCoupon = async () => {
+    const code = couponInput.trim();
+    if (!code) return;
+    setCouponBusy(true); setCouponMsg('');
+    try {
+      const r = await api.post('/public/coupon/validate', { slug: storeSlug, code, subtotal: total });
+      if (r.data.valid) {
+        setCoupon({ code: r.data.code, discount: r.data.discount });
+        setCouponMsg('');
+      } else {
+        setCoupon(null);
+        const reason = r.data.reason === 'min' ? t('coupon.min', { total: r.data.minTotal })
+          : r.data.reason === 'expired' ? t('coupon.expired')
+          : r.data.reason === 'maxed' ? t('coupon.maxed')
+          : t('coupon.invalid');
+        setCouponMsg(reason);
+      }
+    } catch {
+      setCouponMsg(t('coupon.invalid'));
+    } finally {
+      setCouponBusy(false);
+    }
+  };
+  const removeCoupon = () => { setCoupon(null); setCouponInput(''); setCouponMsg(''); };
 
   const confirmOrder = () => {
     if (!cust.name.trim() || !cust.phone.trim() || !cust.city) { setErr(t('co.required')); return; }
     const wa = items[0]?.whatsapp || '';
     // نفتح واتساب فوراً (ضمن لمسة المستخدم لتفادي حظر النوافذ)
-    window.open(buildWhatsappCheckout(wa, items, { ...cust, delivery }, i18n.language), '_blank');
+    window.open(buildWhatsappCheckout(wa, items, { ...cust, delivery, discount, couponCode: coupon?.code || '' }, i18n.language), '_blank');
     // ونحفظ الطلب بالنظام بالخلفية (لا نوقف الطلب لو فشل الحفظ)
     api.post('/orders/cod', {
       items: items.map((i) => ({ id: i.id, qty: i.qty, size: i.size, color: i.color })),
       customer: { name: cust.name, phone: cust.phone, city: cust.city, address: cust.address, notes: cust.notes, deliveryFee: delivery },
+      coupon: coupon ? { code: coupon.code } : undefined,
     }).catch(() => { /* تجاهل — الطلب تمّ عبر واتساب على أي حال */ });
     clear();
     close();
@@ -164,6 +197,31 @@ export default function CartDrawer() {
                     </div>
                   </div>
 
+                  {/* كوبون الخصم */}
+                  <div>
+                    <h3 className="mb-2 text-sm font-bold text-wine">🎟️ {t('coupon.title')}</h3>
+                    {coupon ? (
+                      <div className="flex items-center justify-between rounded-2xl border border-emerald-500/30 bg-emerald-500/5 px-3.5 py-2.5">
+                        <span className="text-sm font-semibold text-emerald-700">✓ {coupon.code} — −{t('common.currency')}{discount.toFixed(2)}</span>
+                        <button onClick={removeCoupon} className="text-xs text-stone-400 hover:text-red-400">{t('coupon.remove')}</button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input
+                          className="input !rounded-2xl flex-1 uppercase"
+                          placeholder={t('coupon.placeholder')}
+                          value={couponInput}
+                          onChange={(e) => setCouponInput(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); } }}
+                        />
+                        <button onClick={applyCoupon} disabled={couponBusy || !couponInput.trim()} className="shrink-0 rounded-2xl bg-wine px-4 text-sm font-bold text-cream transition hover:bg-wine-dark disabled:opacity-40">
+                          {couponBusy ? '…' : t('coupon.apply')}
+                        </button>
+                      </div>
+                    )}
+                    {couponMsg && <p className="mt-1.5 text-xs font-medium text-red-500">{couponMsg}</p>}
+                  </div>
+
                   {/* ملخّص الطلب */}
                   <div className="glass p-3.5">
                     <h3 className="mb-2 text-sm font-bold text-wine">🧾 {t('co.summary')}</h3>
@@ -176,6 +234,9 @@ export default function CartDrawer() {
                       ))}
                       <div className="my-2 h-px bg-wine/10" />
                       <div className="flex justify-between text-stone-400"><span>{t('co.subtotal')}</span><span>{t('common.currency')}{total.toFixed(2)}</span></div>
+                      {discount > 0 && (
+                        <div className="flex justify-between text-emerald-600"><span>{t('coupon.discount')} ({coupon.code})</span><span>−{t('common.currency')}{discount.toFixed(2)}</span></div>
+                      )}
                       <div className="flex justify-between text-stone-400"><span>{t('co.delivery')}</span><span>{t('common.currency')}{delivery.toFixed(2)}</span></div>
                       <div className="mt-1 flex justify-between font-bold text-wine"><span>{t('co.grandTotal')}</span><span className="font-display text-lg">{t('common.currency')}{grand.toFixed(2)}</span></div>
                     </div>

@@ -51,6 +51,9 @@ function ShieldCheckIcon({ className = 'h-5 w-5' }) {
 function LogoutIcon({ className = 'h-5 w-5' }) {
   return (<svg {...I({ className })}><path d="M14 4h3.5A1.5 1.5 0 0 1 19 5.5v13a1.5 1.5 0 0 1-1.5 1.5H14" /><path d="M9.5 8 5.5 12l4 4" /><path d="M5.5 12H15" /></svg>);
 }
+function TicketIcon({ className = 'h-5 w-5' }) {
+  return (<svg {...I({ className })}><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h13A1.5 1.5 0 0 1 20 8.5v2a2 2 0 0 0 0 4v2a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 16.5v-2a2 2 0 0 0 0-4Z" /><path d="M13 7v10" strokeDasharray="2 2" /></svg>);
+}
 
 export default function Navbar() {
   const { t, i18n } = useTranslation();
@@ -103,6 +106,7 @@ export default function Navbar() {
         { key: 'storeSettings', label: t('dashboard.storeSettings'), Icon: StoreIcon },
         { key: 'myProducts', label: t('dashboard.myProducts'), Icon: BagIcon },
         { key: 'myOrders', label: t('dashboard.myOrders'), Icon: ReceiptIcon },
+        { key: 'coupons', label: t('dashboard.coupons.title'), Icon: TicketIcon },
       ];
 
   return (

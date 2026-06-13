@@ -1,6 +1,25 @@
 import crypto from 'crypto';
 import { query } from '../config/db.js';
 import { isLahzaConfigured, initializeTransaction, verifyTransaction, PAY_CURRENCY } from '../config/lahza.js';
+import { evaluateCoupon } from './coupon.controller.js';
+
+// يخصم الكمية المطلوبة من مخزون المنتج العام ومن مخزون المقاس (إن وُجد) — لا يقل عن صفر
+async function decrementStock(orderItems) {
+  for (const it of orderItems) {
+    const qty = it.qty;
+    // المخزون العام (NULL = متوفّر دائماً → لا يُلمس)
+    await query('UPDATE products SET stock = GREATEST(0, stock - $2) WHERE id = $1 AND stock IS NOT NULL', [it.id, qty]);
+    // مخزون المقاس (نمرة) إن كان المنتج يتتبّع كميات لكل مقاس
+    if (it.size) {
+      await query(
+        `UPDATE products
+         SET size_stock = jsonb_set(size_stock, ARRAY[$2::text], to_jsonb(GREATEST(0, COALESCE((size_stock->>$2)::int, 0) - $3)))
+         WHERE id = $1 AND size_stock ? $2`,
+        [it.id, it.size, qty]
+      );
+    }
+  }
+}
 
 const SITE = () => (process.env.PUBLIC_SITE_URL || process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '');
 
@@ -102,17 +121,36 @@ export async function createCodOrder(req, res, next) {
     if (orderItems.length === 0 || subtotal <= 0) return res.status(400).json({ error: 'طلب غير صالح.' });
 
     const deliveryFee = Math.max(0, Number(customer?.deliveryFee) || 0);
-    const total = subtotal + deliveryFee;
+
+    // كوبون الخصم (إن وُجد): نتحقّق منه من قاعدة البيانات ونحسب الخصم على المجموع الفرعي
+    const couponCode = String(req.body?.coupon?.code || customer?.couponCode || '').trim().toUpperCase();
+    let discount = 0;
+    let appliedCoupon = '';
+    if (couponCode) {
+      const cr = await query('SELECT * FROM coupons WHERE store_id = $1 AND code = $2', [storeId, couponCode]);
+      const ev = evaluateCoupon(cr.rows[0], subtotal);
+      if (ev.ok) { discount = ev.discount; appliedCoupon = cr.rows[0].code; }
+    }
+
+    const total = Math.max(0, subtotal - discount) + deliveryFee;
     const reference = 'BZ-' + crypto.randomBytes(5).toString('hex').toUpperCase();
 
     const ins = await query(
-      `INSERT INTO orders (store_id, customer_name, customer_email, customer_phone, items, total, currency, status, reference, city, address, notes, delivery_fee)
-       VALUES ($1, $2, '', $3, $4, $5, 'ILS', 'new', $6, $7, $8, $9, $10) RETURNING id`,
+      `INSERT INTO orders (store_id, customer_name, customer_email, customer_phone, items, total, currency, status, reference, city, address, notes, delivery_fee, coupon_code, discount)
+       VALUES ($1, $2, '', $3, $4, $5, 'ILS', 'new', $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
       [storeId, name, phone, JSON.stringify(orderItems), total, reference,
-        (customer?.city || '').trim(), (customer?.address || '').trim(), (customer?.notes || '').trim().slice(0, 500), deliveryFee]
+        (customer?.city || '').trim(), (customer?.address || '').trim(), (customer?.notes || '').trim().slice(0, 500), deliveryFee,
+        appliedCoupon, discount]
     );
 
-    res.status(201).json({ orderId: ins.rows[0].id, reference });
+    // نخصم المخزون ونرفع عدّاد استخدام الكوبون (بالخلفية — لا نُفشل الطلب لو تعثّر أحدها)
+    decrementStock(orderItems).catch((e) => console.error('decrementStock:', e.message));
+    if (appliedCoupon) {
+      query('UPDATE coupons SET used_count = used_count + 1 WHERE store_id = $1 AND code = $2', [storeId, appliedCoupon])
+        .catch((e) => console.error('coupon usedCount:', e.message));
+    }
+
+    res.status(201).json({ orderId: ins.rows[0].id, reference, discount, total });
   } catch (err) {
     next(err);
   }
@@ -167,7 +205,7 @@ export async function listMyOrders(req, res, next) {
     if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
     const r = await query(
       `SELECT id, customer_name, customer_phone, items, total, currency, status, created_at,
-              city, address, notes, delivery_fee
+              city, address, notes, delivery_fee, coupon_code, discount
        FROM orders WHERE store_id = $1 ORDER BY created_at DESC LIMIT 200`,
       [store.id]
     );
@@ -179,6 +217,8 @@ export async function listMyOrders(req, res, next) {
         items: o.items,
         total: Number(o.total),
         deliveryFee: Number(o.delivery_fee || 0),
+        couponCode: o.coupon_code || '',
+        discount: Number(o.discount || 0),
         currency: o.currency,
         status: o.status,
         city: o.city || '',

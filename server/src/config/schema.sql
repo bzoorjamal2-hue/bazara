@@ -155,5 +155,24 @@ CREATE TABLE IF NOT EXISTS orders (
     delivery_fee   NUMERIC(10,2) DEFAULT 0,
     created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS coupon_code VARCHAR(40) DEFAULT '';
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount NUMERIC(10,2) DEFAULT 0;
 CREATE INDEX IF NOT EXISTS idx_orders_store ON orders(store_id);
 CREATE INDEX IF NOT EXISTS idx_orders_reference ON orders(reference);
+
+-- كوبونات الخصم (كود لكل متجر: نسبة % أو مبلغ ثابت)
+CREATE TABLE IF NOT EXISTS coupons (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    store_id    UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+    code        VARCHAR(40) NOT NULL,
+    type        VARCHAR(10) NOT NULL DEFAULT 'percent',   -- percent|fixed
+    value       NUMERIC(10,2) NOT NULL DEFAULT 0,
+    min_total   NUMERIC(10,2) NOT NULL DEFAULT 0,
+    max_uses    INTEGER,                                  -- NULL = غير محدود
+    used_count  INTEGER NOT NULL DEFAULT 0,
+    expires_at  TIMESTAMPTZ,                              -- NULL = بلا انتهاء
+    active      BOOLEAN NOT NULL DEFAULT true,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (store_id, code)
+);
+CREATE INDEX IF NOT EXISTS idx_coupons_store ON coupons(store_id);

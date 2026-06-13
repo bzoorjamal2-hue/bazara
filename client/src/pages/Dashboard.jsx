@@ -9,6 +9,7 @@ import Profile from './dashboard/Profile.jsx';
 import StoreSettings from './dashboard/StoreSettings.jsx';
 import ProductsManager from './dashboard/ProductsManager.jsx';
 import OrdersManager from './dashboard/OrdersManager.jsx';
+import CouponsManager from './dashboard/CouponsManager.jsx';
 import AdminRequests from './dashboard/AdminRequests.jsx';
 import SubscribersManager from './dashboard/SubscribersManager.jsx';
 
@@ -19,6 +20,7 @@ const SECTIONS = [
   { key: 'storeSettings', icon: '⚙️' },
   { key: 'myProducts', icon: '🧺' },
   { key: 'myOrders', icon: '🧾' },
+  { key: 'coupons', icon: '🎟️' },
 ];
 
 // أقسام المدير (تحكّم فقط — بلا بيع/منتجات)
@@ -63,6 +65,7 @@ export default function Dashboard() {
         {section === 'storeSettings' && !isAdmin && <StoreSettings />}
         {section === 'myProducts' && !isAdmin && <ProductsManager onCount={setProductsCount} />}
         {section === 'myOrders' && !isAdmin && <OrdersManager />}
+        {section === 'coupons' && !isAdmin && <CouponsManager />}
         {section === 'subscribers' && isAdmin && <SubscribersManager />}
         {section === 'admin' && isAdmin && <AdminRequests />}
       </div>

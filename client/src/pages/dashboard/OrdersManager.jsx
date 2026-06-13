@@ -51,7 +51,7 @@ export default function OrdersManager() {
       ) : (
         <div className="space-y-3">
           {orders?.map((o) => {
-            const subtotal = (o.total - (o.deliveryFee || 0)).toFixed(2);
+            const subtotal = (o.total - (o.deliveryFee || 0) + (o.discount || 0)).toFixed(2);
             const wa = o.customerPhone ? buildWhatsappLink(o.customerPhone) : '';
             return (
               <div key={o.id} className="glass p-4">
@@ -86,8 +86,9 @@ export default function OrdersManager() {
                 {/* المبالغ */}
                 <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-white/5 pt-2 text-sm">
                   <span className="text-xs text-stone-500">{new Date(o.createdAt).toLocaleString()}</span>
-                  <div className="flex items-center gap-3 text-stone-400">
+                  <div className="flex flex-wrap items-center gap-3 text-stone-400">
                     <span>{t('dashboard.ordersSection.subtotal')}: {t('common.currency')}{subtotal}</span>
+                    {o.discount > 0 && <span className="text-emerald-300">🎟️ {o.couponCode}: −{t('common.currency')}{o.discount.toFixed(2)}</span>}
                     <span>{t('dashboard.ordersSection.delivery')}: {t('common.currency')}{(o.deliveryFee || 0).toFixed(2)}</span>
                     <span className="font-display text-base font-bold text-gold-300">{t('common.currency')}{o.total.toFixed(2)}</span>
                   </div>

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { param } from 'express-validator';
 import { getHomeData, getStoreBySlug, getProductById, getByCategory, addReview } from '../controllers/public.controller.js';
+import { validateCoupon } from '../controllers/coupon.controller.js';
 import { handleValidation, reviewRules } from '../middleware/validate.js';
 import rateLimit from 'express-rate-limit';
 
@@ -21,5 +22,6 @@ router.get('/category/:cat', getByCategory);
 router.get('/store/:slug', getStoreBySlug);
 router.get('/product/:id', idParam, handleValidation, getProductById);
 router.post('/product/:id/reviews', reviewLimiter, idParam, reviewRules, handleValidation, addReview);
+router.post('/coupon/validate', validateCoupon);
 
 export default router;

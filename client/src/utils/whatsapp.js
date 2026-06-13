@@ -29,7 +29,8 @@ export function buildWhatsappCheckout(number, items, customer, lang = 'ar') {
   const digits = (number || '').replace(/[^\d]/g, '');
   const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
   const delivery = Number(customer.delivery) || 0;
-  const total = subtotal + delivery;
+  const discount = Number(customer.discount) || 0;
+  const total = Math.max(0, subtotal - discount) + delivery;
   const ar = lang === 'ar';
 
   const line = (i, n) =>
@@ -45,6 +46,7 @@ export function buildWhatsappCheckout(number, items, customer, lang = 'ar') {
         ...items.map(line),
         '',
         `المجموع الفرعي: ₪${subtotal.toFixed(2)}`,
+        ...(discount > 0 ? [`الخصم${customer.couponCode ? ` (${customer.couponCode})` : ''}: −₪${discount.toFixed(2)}`] : []),
         `رسوم التوصيل: ₪${delivery.toFixed(2)}`,
         `*الإجمالي: ₪${total.toFixed(2)}*`,
         `طريقة الدفع: الدفع عند الاستلام`,
@@ -63,6 +65,7 @@ export function buildWhatsappCheckout(number, items, customer, lang = 'ar') {
         ...items.map(line),
         '',
         `Subtotal: ₪${subtotal.toFixed(2)}`,
+        ...(discount > 0 ? [`Discount${customer.couponCode ? ` (${customer.couponCode})` : ''}: −₪${discount.toFixed(2)}`] : []),
         `Delivery: ₪${delivery.toFixed(2)}`,
         `*Total: ₪${total.toFixed(2)}*`,
         `Payment: Cash on delivery`,

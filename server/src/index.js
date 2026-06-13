@@ -13,6 +13,7 @@ import productRoutes from './routes/product.routes.js';
 import publicRoutes from './routes/public.routes.js';
 import subscriptionRoutes from './routes/subscription.routes.js';
 import orderRoutes from './routes/order.routes.js';
+import couponRoutes from './routes/coupon.routes.js';
 import { robots, sitemap, indexNowKey } from './controllers/seo.controller.js';
 import { issueCsrfToken, verifyCsrf, getCsrfToken } from './middleware/csrf.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
@@ -79,6 +80,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/coupons', couponRoutes);
 
 // مسارات SEO (على الجذر)
 app.get('/robots.txt', robots);
@@ -102,6 +104,25 @@ async function ensureColumns() {
     await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS address TEXT DEFAULT '';");
     await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT '';");
     await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_fee NUMERIC(10,2) DEFAULT 0;");
+    // الكوبونات: كود الخصم وقيمته المطبّقة على الطلب
+    await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS coupon_code VARCHAR(40) DEFAULT '';");
+    await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount NUMERIC(10,2) DEFAULT 0;");
+    // جدول الكوبونات (كود خصم لكل متجر)
+    await pool.query(`CREATE TABLE IF NOT EXISTS coupons (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+      code VARCHAR(40) NOT NULL,
+      type VARCHAR(10) NOT NULL DEFAULT 'percent',
+      value NUMERIC(10,2) NOT NULL DEFAULT 0,
+      min_total NUMERIC(10,2) NOT NULL DEFAULT 0,
+      max_uses INTEGER,
+      used_count INTEGER NOT NULL DEFAULT 0,
+      expires_at TIMESTAMPTZ,
+      active BOOLEAN NOT NULL DEFAULT true,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      UNIQUE (store_id, code)
+    );`);
+    await pool.query('CREATE INDEX IF NOT EXISTS idx_coupons_store ON coupons(store_id);');
   } catch (err) {
     console.error('⚠️ تعذّر تطبيق الترقيات:', err.message);
   }
