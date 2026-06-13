@@ -7,6 +7,7 @@ import useScrollLock from '../hooks/useScrollLock.js';
 import Select from './Select.jsx';
 import api from '../api/client.js';
 import { isStandalone } from '../utils/pwa.js';
+import { sizeLabel } from '../utils/sizes.js';
 
 // مناطق التوصيل ورسومها (قابلة للتعديل): مدن الضفة 20₪ · القدس 35₪ · مدن الداخل 70₪
 const AREAS = [
@@ -113,7 +114,7 @@ export default function CartDrawer() {
                         <p className="truncate text-sm font-semibold text-stone-100">{i.name}</p>
                         {(i.size || i.color) && (
                           <p className="mt-0.5 flex flex-wrap gap-1.5 text-[11px] text-stone-400">
-                            {i.size && <span className="rounded bg-wine/10 px-1.5 py-0.5 text-wine">{t('store.sizeLabel')}: {i.size}</span>}
+                            {i.size && <span className="rounded bg-wine/10 px-1.5 py-0.5 text-wine">{t('store.sizeLabel')}: {sizeLabel(i.size, t)}</span>}
                             {i.color && <span className="rounded bg-wine/10 px-1.5 py-0.5 text-wine">{i.color}</span>}
                           </p>
                         )}
@@ -169,7 +170,7 @@ export default function CartDrawer() {
                     <div className="space-y-1.5 text-sm">
                       {items.map((i) => (
                         <div key={i.key} className="flex items-center justify-between text-stone-300">
-                          <span className="truncate pe-2">{i.name}{i.size ? ` (${i.size})` : ''}{i.color ? ` - ${i.color}` : ''} ×{i.qty}</span>
+                          <span className="truncate pe-2">{i.name}{i.size ? ` (${sizeLabel(i.size, t)})` : ''}{i.color ? ` - ${i.color}` : ''} ×{i.qty}</span>
                           <span className="shrink-0">{t('common.currency')}{(i.price * i.qty).toFixed(2)}</span>
                         </div>
                       ))}

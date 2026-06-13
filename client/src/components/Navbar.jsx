@@ -109,7 +109,27 @@ export default function Navbar() {
     <header className="sticky top-0 z-50">
       <nav className={`app-navbar relative flex w-full justify-center px-3 py-2.5 transition-shadow duration-300 sm:px-6 ${scrolled ? 'shadow-md' : ''}`}>
         <div className="relative flex h-12 w-full max-w-6xl items-center justify-between">
-          {/* أيقونات التسوّق (تبدأ من اليمين في RTL) */}
+          {/* القائمة + الوضع الليلي — جهة البداية (اليمين في العربية، اليسار في الإنجليزية) */}
+          <div className="flex items-center gap-1 sm:gap-1.5">
+            <button
+              onClick={() => setMenuOpen(true)}
+              aria-label="menu"
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-wine shadow-sm ring-1 ring-wine/10 transition hover:bg-wine hover:text-cream"
+            >
+              <MenuIcon className="h-5 w-5" />
+            </button>
+            <ThemeToggle className="rounded-full text-wine hover:bg-wine/10" />
+          </div>
+
+          {/* الشعار بالنص (في المنتصف تماماً) */}
+          <Link to={user ? '/dashboard' : '/'} className="absolute start-1/2 flex -translate-x-1/2 flex-col items-center leading-none rtl:translate-x-1/2">
+            <span className="font-display text-2xl font-extrabold tracking-wide text-wine sm:text-[28px]">Bazara</span>
+            <span className="mt-1 flex items-center gap-1.5 text-[10px] font-bold tracking-[0.35em] text-wine/45">
+              <span className="h-px w-4 bg-wine/25" /> بازارا <span className="h-px w-4 bg-wine/25" />
+            </span>
+          </Link>
+
+          {/* أيقونات التسوّق — جهة النهاية (اليسار في العربية، اليمين في الإنجليزية) */}
           <div className="flex items-center gap-0.5 sm:gap-1.5">
             <button onClick={() => setWishOpen(true)} className="relative rounded-full p-2 text-wine transition hover:bg-wine/10" title={t('nav.wishlist')} aria-label={t('nav.wishlist')}>
               <HeartIcon className="h-[22px] w-[22px]" />
@@ -126,26 +146,6 @@ export default function Navbar() {
             <Link to={user ? '/dashboard' : '/login'} className="rounded-full p-2 text-wine transition hover:bg-wine/10" title={t('nav.account')} aria-label={t('nav.account')}>
               <UserLineIcon className="h-[22px] w-[22px]" />
             </Link>
-          </div>
-
-          {/* الشعار بالنص (في المنتصف تماماً) */}
-          <Link to={user ? '/dashboard' : '/'} className="absolute start-1/2 flex -translate-x-1/2 flex-col items-center leading-none rtl:translate-x-1/2">
-            <span className="font-display text-2xl font-extrabold tracking-wide text-wine sm:text-[28px]">Bazara</span>
-            <span className="mt-1 flex items-center gap-1.5 text-[10px] font-bold tracking-[0.35em] text-wine/45">
-              <span className="h-px w-4 bg-wine/25" /> بازارا <span className="h-px w-4 bg-wine/25" />
-            </span>
-          </Link>
-
-          {/* الثيم + القائمة (تنتهي عند اليسار في RTL) */}
-          <div className="flex items-center gap-1 sm:gap-1.5">
-            <ThemeToggle className="rounded-full text-wine hover:bg-wine/10" />
-            <button
-              onClick={() => setMenuOpen(true)}
-              aria-label="menu"
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-wine shadow-sm ring-1 ring-wine/10 transition hover:bg-wine hover:text-cream"
-            >
-              <MenuIcon className="h-5 w-5" />
-            </button>
           </div>
         </div>
       </nav>

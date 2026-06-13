@@ -5,9 +5,9 @@ import ImageInput from '../../components/ImageInput.jsx';
 import VideoInput from '../../components/VideoInput.jsx';
 import Select from '../../components/Select.jsx';
 import useScrollLock from '../../hooks/useScrollLock.js';
+import { SIZES, sizeLabel } from '../../utils/sizes.js';
 
 const CATEGORIES = ['abaya', 'set', 'dress', 'hijab', 'trench'];
-const SIZES = ['36', '38', '40', '42', '44', '46', '48'];
 const EMPTY = {
   name: '', price: '', oldPrice: '', description: '', size: '', color: '',
   category: 'abaya', imageUrl: '', images: [], videoUrl: '', stock: '', featured: false, sizeStock: {},
@@ -183,7 +183,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
                       : 'border-gold-400/20 text-stone-300 hover:bg-white/5'
                   }`}
                 >
-                  {s}
+                  {sizeLabel(s, t)}
                 </button>
               ))}
             </div>
@@ -195,7 +195,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {selectedSizes.map((s) => (
                     <div key={s} className="flex items-center gap-2">
-                      <span className="w-10 shrink-0 text-sm font-bold text-gold-100">{s}</span>
+                      <span className="w-14 shrink-0 text-sm font-bold text-gold-100">{sizeLabel(s, t)}</span>
                       <input
                         type="number"
                         min="0"

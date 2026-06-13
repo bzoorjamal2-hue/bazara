@@ -259,6 +259,8 @@
     "inStock": "متوفّر",
     "available": "متوفّر",
     "stockLeft": "متبقّي {{count}} قطعة",
+    "oneSize": "ون سايز",
+    "lastFew": "آخر {{count}} قطع!",
     "sizeStockLeft": "متبقّي {{count}} قطعة من مقاس {{size}}",
     "sizeSoldOut": "نفد هذا المقاس",
     "someSizesSoldOut": "المقاسات المشطوبة نفدت من المخزون",

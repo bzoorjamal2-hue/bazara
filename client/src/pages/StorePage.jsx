@@ -15,10 +15,10 @@ import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { cldVideoPoster } from '../utils/cloudinary.js';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
+import { SIZES, sizeLabel } from '../utils/sizes.js';
 
 const PAGE_SIZE = 8;
 const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench'];
-const SIZES = ['36', '38', '40', '42', '44', '46', '48'];
 
 export default function StorePage() {
   const { slug } = useParams();
@@ -425,7 +425,7 @@ function SizeSheet({ sizes, value, onClose, onApply }) {
       <div className="space-y-1">
         {list.map((s) => (
           <button key={s} onClick={() => toggle(s)} className="flex w-full items-center justify-between rounded-xl px-2 py-3 text-[#2b2b2b] hover:bg-wine/5">
-            <span>{s}</span>
+            <span>{sizeLabel(s, t)}</span>
             <Check on={sel.includes(s)} />
           </button>
         ))}
@@ -549,17 +549,25 @@ function HeroSlider({ store }) {
             const isImage = !s.fixed && s.bgType === 'image' && s.bgValue;
             const isVideo = !s.fixed && s.bgType === 'video' && s.bgValue;
             const custom = isColor || isImage || isVideo;
-            const style = isColor
-              ? { background: s.bgValue }
-              : isImage
-                ? { backgroundImage: `url("${s.bgValue}")`, backgroundSize: 'cover', backgroundPosition: 'center' }
-                : undefined;
+            // الصورة والفيديو يُعرضان كعنصر وسائط بنفس درجة التعتيم (brightness) تماماً —
+            // فيبقى التعتيم موحّداً بين كل الشرائح بلا فرق عند الانتقال.
+            const style = isColor ? { background: s.bgValue } : undefined;
             return (
               <div key={idx} className="w-full shrink-0" dir="rtl">
                 <div
                   className={`relative isolate flex h-[260px] flex-col items-center justify-center overflow-hidden bg-wine-dark px-6 text-center sm:h-[340px] ${custom ? '' : 'pub-hero'}`}
                   style={style}
                 >
+                  {/* وسائط الشريحة (صورة أو فيديو) بنفس التعتيم تماماً — معتّمة من أول لحظة بلا وميض */}
+                  {isImage && (
+                    <img
+                      src={s.bgValue}
+                      alt=""
+                      aria-hidden="true"
+                      style={{ filter: 'brightness(0.6)' }}
+                      className="absolute inset-0 z-0 h-full w-full object-cover"
+                    />
+                  )}
                   {isVideo && (
                     <video
                       src={s.bgValue}
@@ -569,17 +577,12 @@ function HeroSlider({ store }) {
                       loop
                       playsInline
                       preload="auto"
-                      // التعتيم مطبّق على الفيديو نفسه (وبوستره) ليكون معتّماً من أول لحظة بلا وميض ساطع
-                      style={{ filter: 'brightness(0.62)' }}
+                      style={{ filter: 'brightness(0.6)' }}
                       className="absolute inset-0 z-0 h-full w-full object-cover"
                     />
                   )}
-                  {/* طبقة تظليل ثابتة فوق الصورة/الفيديو لكل الشرائح — تبقى الشاشة معتّمة بأناقة
-                      مثل الشريحة الأولى ليظهر النص بوضوح (تنطبق على كل السلايدرات: صور وفيديو) */}
-                  {isImage && (
-                    <div className="absolute inset-0 z-[1] bg-black/35 bg-gradient-to-t from-black/75 via-black/45 to-black/55" />
-                  )}
-                  {isVideo && (
+                  {/* طبقة تظليل موحّدة فوق الصورة/الفيديو — نفس الدرجة لكل الشرائح ليظهر النص بوضوح */}
+                  {(isImage || isVideo) && (
                     <div className="absolute inset-0 z-[1] bg-gradient-to-t from-black/55 via-black/25 to-black/40" />
                   )}
                   {!custom && <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-cream/10 blur-3xl" />}

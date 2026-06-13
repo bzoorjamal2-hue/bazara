@@ -96,7 +96,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
   const openMenu = () => setDrawer(true);
 
   return (
-    <header className="app-navbar sticky top-0 z-50 -mx-4 -mt-8 mb-5 shadow-sm sm:-mx-6">
+    <header className="app-navbar sticky top-0 z-50 -mx-4 -mt-5 mb-5 shadow-sm sm:-mx-6">
       <div className="mx-auto max-w-6xl px-4 py-3 sm:px-6">
         {/* الصف الأول: اسم/شعار المتجر + زر القائمة (☰) — يتقلّص بنعومة مع التمرير */}
         <div ref={logoWrapRef} className="grid will-change-transform" style={{ gridTemplateRows: '1fr', marginBottom: '12px' }}>

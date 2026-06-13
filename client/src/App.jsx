@@ -47,6 +47,20 @@ function AnimatedRoutes() {
     window.scrollTo({ top: 0, behavior: 'auto' });
   }, [location.pathname]);
 
+  // تحميل مُسبق للصفحات الشائعة بعد الإقلاع — يلغي وميض/فصل التحميل عند الانتقال
+  useEffect(() => {
+    const warm = () => {
+      import('./pages/StorePage.jsx');
+      import('./pages/ProductDetails.jsx');
+      import('./pages/Categories.jsx');
+      import('./pages/CategoryPage.jsx');
+      import('./pages/Wishlist.jsx');
+    };
+    const ric = window.requestIdleCallback;
+    const id = ric ? ric(warm) : setTimeout(warm, 1200);
+    return () => { if (ric && window.cancelIdleCallback) window.cancelIdleCallback(id); else clearTimeout(id); };
+  }, []);
+
   // انتقال فوري بلا انتظار: الصفحة الجديدة تظهر مباشرة بحركة تلاشٍ سريعة (بلا
   // حركة خروج تُبقي الشاشة كريمية فارغة لحظة) — يلغي إحساس "التعليق" بين الصفحات.
   return (

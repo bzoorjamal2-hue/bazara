@@ -302,6 +302,24 @@ html.dark .theme-pub .app-navbar {
 }
 .animate-toast-top { animation: toast-top 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
 
+/* زر واتساب: ترنّح لطيف يجذب الانتباه + حلقة نابضة ثانية */
+@keyframes wa-bob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-4px) rotate(-3deg); }
+  50% { transform: translateY(0) rotate(0deg); }
+  75% { transform: translateY(-2px) rotate(3deg); }
+}
+.wa-bob { animation: wa-bob 2.6s ease-in-out infinite; }
+@keyframes wa-pulse {
+  0% { transform: scale(1); opacity: 0.5; }
+  70% { transform: scale(1.9); opacity: 0; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+.wa-pulse { animation: wa-pulse 2.6s ease-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .wa-bob, .wa-pulse { animation: none; }
+}
+
 /* ============================================================= */
 /*  الوضع الليلي (Dark Mode) — يقلب الأسطح الكريمية إلى بنّي عميق   */
 /*  مفعّل عبر إضافة .dark على <html>. هوية بازارا محفوظة (ذهبي/بنّي) */

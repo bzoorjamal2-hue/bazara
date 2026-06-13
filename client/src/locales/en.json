@@ -259,6 +259,8 @@
     "inStock": "In stock",
     "available": "Available",
     "stockLeft": "{{count}} left",
+    "oneSize": "One Size",
+    "lastFew": "Only {{count}} left!",
     "sizeStockLeft": "{{count}} left in size {{size}}",
     "sizeSoldOut": "This size is sold out",
     "someSizesSoldOut": "Crossed-out sizes are sold out",

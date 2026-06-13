@@ -36,8 +36,8 @@ export default function BottomNav() {
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { count, setOpen } = useCart();
-  const { count: wishCount, setOpen: setWishOpen } = useWishlist();
+  const { count, setOpen, open: cartOpen } = useCart();
+  const { count: wishCount, setOpen: setWishOpen, open: wishOpen } = useWishlist();
   const { user, store } = useAuth();
 
   const accountTo = user ? '/dashboard' : '/login';
@@ -48,11 +48,11 @@ export default function BottomNav() {
   const closeDrawers = () => { setOpen(false); setWishOpen(false); };
   const goto = (to) => { closeDrawers(); navigate(to); };
   const items = [
-    { key: 'account', label: t('nav.account') || 'حسابي', Icon: UserIcon, active: pathname.startsWith('/dashboard'), onClick: () => goto(accountTo) },
-    { key: 'cart', label: t('nav.cart'), Icon: CartIcon, badge: count, onClick: () => { setWishOpen(false); setOpen(true); } },
-    { key: 'fav', label: t('nav.wishlist'), Icon: HeartIcon, badge: wishCount, onClick: () => { setOpen(false); setWishOpen(true); } },
-    { key: 'categories', label: t('nav.categories'), Icon: CategoriesIcon, active: pathname === '/categories' || pathname.startsWith('/category/'), onClick: () => goto('/categories') },
-    { key: 'home', label: t('nav.home'), Icon: HomeIcon, active: homeActive, onClick: () => goto(homeTo) },
+    { key: 'account', label: t('nav.account') || 'حسابي', Icon: UserIcon, active: !cartOpen && !wishOpen && pathname.startsWith('/dashboard'), onClick: () => goto(accountTo) },
+    { key: 'cart', label: t('nav.cart'), Icon: CartIcon, badge: count, active: cartOpen, onClick: () => { setWishOpen(false); setOpen(true); } },
+    { key: 'fav', label: t('nav.wishlist'), Icon: HeartIcon, badge: wishCount, active: wishOpen, onClick: () => { setOpen(false); setWishOpen(true); } },
+    { key: 'categories', label: t('nav.categories'), Icon: CategoriesIcon, active: !cartOpen && !wishOpen && (pathname === '/categories' || pathname.startsWith('/category/')), onClick: () => goto('/categories') },
+    { key: 'home', label: t('nav.home'), Icon: HomeIcon, active: !cartOpen && !wishOpen && homeActive, onClick: () => goto(homeTo) },
   ];
 
   return (

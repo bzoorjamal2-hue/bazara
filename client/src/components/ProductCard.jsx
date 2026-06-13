@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -24,6 +25,10 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
   const { has, toggle } = useWishlist();
   const imgRef = useRef(null);
   const [quickOpen, setQuickOpen] = useState(false);
+  const [hovering, setHovering] = useState(false); // كمبيوتر: معاينة فيديو عند مرور الماوس
+  const [showVideo, setShowVideo] = useState(false); // جوال: ضغطة مطوّلة → فيديو بالصوت
+  const pressTimer = useRef(null);
+  const longPressed = useRef(false);
 
   const hasImage = product.imageUrl || (product.images && product.images[0]);
   const videoPoster = product.videoUrl ? cldVideoPoster(product.videoUrl) : '';
@@ -57,6 +62,24 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
     setQuickOpen(true);
   };
 
+  // ضغطة مطوّلة على الجوال (≈0.45s) → تشغيل الفيديو بالصوت دون مغادرة الصفحة
+  const startPress = () => {
+    if (!product.videoUrl) return;
+    longPressed.current = false;
+    clearTimeout(pressTimer.current);
+    pressTimer.current = setTimeout(() => {
+      longPressed.current = true;
+      setShowVideo(true);
+      if (navigator.vibrate) navigator.vibrate(15);
+    }, 450);
+  };
+  const cancelPress = () => clearTimeout(pressTimer.current);
+  // إن كانت ضغطة مطوّلة، نمنع الانتقال للصفحة بعد رفع الإصبع
+  const onClickCapture = (e) => {
+    if (longPressed.current) { e.preventDefault(); e.stopPropagation(); longPressed.current = false; }
+  };
+  const closeVideo = (e) => { if (e) e.stopPropagation(); setShowVideo(false); };
+
   return (
     <>
     <MotionLink
@@ -66,6 +89,12 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
       whileHover={{ y: -6 }}
       whileTap={{ scale: 0.985 }}
       transition={{ type: 'spring', stiffness: 320, damping: 22 }}
+      onMouseEnter={() => product.videoUrl && setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
+      onTouchStart={startPress}
+      onTouchEnd={cancelPress}
+      onTouchMove={cancelPress}
+      onClickCapture={onClickCapture}
     >
       {/* شارات */}
       <div className="absolute start-2 top-2 z-10 flex flex-col gap-1">
@@ -113,9 +142,21 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
           onError={(e) => (e.currentTarget.src = PLACEHOLDER)}
           className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-110 ${outOfStock ? 'opacity-50' : ''}`}
         />
+        {/* معاينة الفيديو عند مرور الماوس (كمبيوتر) — صامتة وناعمة */}
+        {product.videoUrl && hovering && (
+          <video
+            src={product.videoUrl}
+            poster={videoPoster}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="absolute inset-0 z-[1] h-full w-full animate-fade-in object-cover"
+          />
+        )}
         {product.videoUrl && (
-          <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-black/45 ring-1 ring-white/50 backdrop-blur-sm">
+          <span className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-center">
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-black/45 ring-1 ring-white/50 backdrop-blur-sm transition group-hover:scale-110">
               <svg viewBox="0 0 24 24" className="h-6 w-6 translate-x-[1px] fill-white drop-shadow" aria-hidden="true">
                 <path d="M8 5v14l11-7z" />
               </svg>
@@ -149,6 +190,24 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
         <QuickViewModal product={product} whatsapp={whatsapp} onClose={() => setQuickOpen(false)} />
       )}
     </AnimatePresence>
+
+    {/* ضغطة مطوّلة (جوال) → الفيديو بالصوت في عارض ملء الشاشة */}
+    {showVideo && product.videoUrl && createPortal(
+      <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/85 p-4 animate-fade-in" onClick={closeVideo}>
+        <button onClick={closeVideo} aria-label="close" className="absolute end-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-xl text-white backdrop-blur transition hover:bg-white/25">✕</button>
+        <video
+          src={product.videoUrl}
+          poster={videoPoster}
+          autoPlay
+          loop
+          playsInline
+          controls
+          onClick={(e) => e.stopPropagation()}
+          className="max-h-[85vh] w-auto max-w-full rounded-2xl shadow-2xl"
+        />
+      </div>,
+      document.body
+    )}
     </>
   );
 }

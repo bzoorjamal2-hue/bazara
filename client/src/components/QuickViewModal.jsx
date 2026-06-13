@@ -9,6 +9,7 @@ import { HeartIcon, CartIcon } from './icons.jsx';
 import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
 import { flyToCart } from '../utils/flyToCart.js';
 import useScrollLock from '../hooks/useScrollLock.js';
+import { sizeLabel } from '../utils/sizes.js';
 
 const PLACEHOLDER =
   'data:image/svg+xml;utf8,' +
@@ -145,7 +146,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
                     onClick={() => { setSize(s); setErr(''); }}
                     className={`min-w-10 rounded-xl border px-3 py-1.5 text-sm font-semibold transition ${size === s ? 'border-wine bg-wine text-cream' : 'border-wine/25 text-wine hover:bg-wine/5'}`}
                   >
-                    {s}
+                    {sizeLabel(s, t)}
                   </button>
                 ))}
               </div>

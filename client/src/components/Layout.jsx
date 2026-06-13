@@ -25,7 +25,7 @@ export default function Layout({ children }) {
   return (
     <div className="app-bg theme-pub flex min-h-screen flex-col">
       {!hideChrome && <Navbar />}
-      <main className={`mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 ${showBottomNav ? 'pb-24' : ''}`}>{children}</main>
+      <main className={`mx-auto w-full max-w-6xl flex-1 px-4 pb-8 pt-5 sm:px-6 ${showBottomNav ? 'pb-24' : ''}`}>{children}</main>
       {!hideChrome && !showBottomNav && <PublicFooter />}
       <CartDrawer />
       <WishlistDrawer />

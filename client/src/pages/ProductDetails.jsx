@@ -12,6 +12,7 @@ import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import { cldVideoPoster } from '../utils/cloudinary.js';
 import { pushRecent, getRecent } from '../utils/recentlyViewed.js';
+import { sizeLabel } from '../utils/sizes.js';
 
 const PH = 'https://placehold.co/600x600/121214/d4af37?text=%F0%9F%91%97';
 
@@ -196,16 +197,16 @@ export default function ProductDetails() {
             {hasDiscount && <span className="text-lg text-stone-500 line-through">{t('common.currency')}{product.oldPrice}</span>}
           </div>
 
-          {/* حالة المخزون — تُظهر المتبقّي للمقاس المختار إن وُجدت كميات لكل نمرة */}
-          <p className={`mt-2 text-sm font-semibold ${outOfStock || selSizeQty === 0 ? 'text-red-300' : 'text-emerald-300'}`}>
-            {outOfStock
-              ? '✕ ' + t('product.outOfStock')
-              : selSizeQty != null
-                ? (selSizeQty > 0
-                    ? '✓ ' + t('product.sizeStockLeft', { size: selSize, count: selSizeQty })
-                    : '✕ ' + t('product.sizeSoldOut'))
-                : '✓ ' + (product.stock > 0 ? t('product.stockLeft', { count: product.stock }) : t('product.available'))}
-          </p>
+          {/* مؤشّر المخزون — حبّة عصرية: نفد (أحمر) · آخر قطع (تدرّج ناري نابض) · متوفّر (أخضر) */}
+          <div className="mt-3">
+            <StockBadge
+              outOfStock={outOfStock}
+              selSize={selSize}
+              selSizeQty={selSizeQty}
+              stock={product.stock}
+              t={t}
+            />
+          </div>
 
           {product.description && <p className="mt-5 leading-relaxed text-stone-300">{product.description}</p>}
 
@@ -223,11 +224,14 @@ export default function ProductDetails() {
                       disabled={soldOut}
                       onClick={() => { setSelSize(s); setPickErr(''); }}
                       className={`relative ${chipCls(selSize === s)} ${soldOut ? 'cursor-not-allowed !border-stone-300/40 !bg-transparent !text-stone-400 line-through opacity-60' : ''}`}
-                      title={soldOut ? t('product.sizeSoldOut') : qty != null ? t('product.sizeStockLeft', { size: s, count: qty }) : ''}
+                      title={soldOut ? t('product.sizeSoldOut') : qty != null ? t('product.sizeStockLeft', { size: sizeLabel(s, t), count: qty }) : ''}
                     >
-                      {s}
+                      {sizeLabel(s, t)}
+                      {/* شارة كمية منخفضة بزاوية النمرة — لافتة بلون نبضي */}
                       {qty != null && qty > 0 && qty <= 3 && (
-                        <span className="ms-1 align-middle text-[10px] font-bold text-amber-500">({qty})</span>
+                        <span className="absolute -end-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-red-500 px-1 text-[9px] font-bold text-white shadow">
+                          {qty}
+                        </span>
                       )}
                     </button>
                   );
@@ -278,6 +282,37 @@ export default function ProductDetails() {
       {/* شاهدت مؤخراً */}
       <ProductRail title={t('product.recentlyViewed')} products={recent} currentId={product.id} />
     </>
+  );
+}
+
+// مؤشّر مخزون عصري: نفد (أحمر) · كمية منخفضة (تدرّج ناري + نبضة) · متوفّر (أخضر)
+function StockBadge({ outOfStock, selSize, selSizeQty, stock, t }) {
+  const remaining = selSizeQty != null ? selSizeQty : (typeof stock === 'number' ? stock : null);
+
+  if (outOfStock || remaining === 0) {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/15 px-3 py-1.5 text-sm font-bold text-red-500 ring-1 ring-red-500/25">
+        <span className="h-2 w-2 rounded-full bg-red-500" />
+        {selSize ? t('product.sizeSoldOut') : t('product.outOfStock')}
+      </span>
+    );
+  }
+  if (remaining != null && remaining <= 5) {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-400 to-red-500 px-3.5 py-1.5 text-sm font-extrabold text-white shadow-sm">
+        <span className="relative flex h-2.5 w-2.5">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/80" />
+          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-white" />
+        </span>
+        🔥 {t('product.lastFew', { count: remaining })}
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1.5 text-sm font-bold text-emerald-600 ring-1 ring-emerald-500/25">
+      <span className="h-2 w-2 rounded-full bg-emerald-500" />
+      {remaining != null ? t('product.stockLeft', { count: remaining }) : t('product.available')}
+    </span>
   );
 }
 
