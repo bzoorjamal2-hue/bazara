@@ -152,6 +152,7 @@
     "addProduct": "Add new product",
     "ordersSection": {
       "title": "Orders",
+      "stockHint": "All customer orders appear here automatically. Setting status to “Confirmed” deducts the ordered sizes from stock; “Cancelled” restores them.",
       "empty": "No orders yet.",
       "customer": "Customer",
       "total": "Total",

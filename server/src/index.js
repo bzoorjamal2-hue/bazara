@@ -114,6 +114,8 @@ async function ensureColumns() {
     // الكوبونات: كود الخصم وقيمته المطبّقة على الطلب
     await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS coupon_code VARCHAR(40) DEFAULT '';");
     await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount NUMERIC(10,2) DEFAULT 0;");
+    // هل خُصم المخزون لهذا الطلب؟ (يُخصم عند التأكيد ويُعاد عند الإلغاء)
+    await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS stock_applied BOOLEAN NOT NULL DEFAULT false;");
     // جدول الكوبونات (كود خصم لكل متجر)
     await pool.query(`CREATE TABLE IF NOT EXISTS coupons (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

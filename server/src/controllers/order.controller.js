@@ -30,6 +30,30 @@ async function decrementStock(orderItems) {
   }
 }
 
+// يعيد الكميات للمخزون (عند إلغاء طلب سبق أن خُصم)
+async function restoreStock(orderItems) {
+  for (const it of orderItems || []) {
+    const qty = it.qty;
+    await query('UPDATE products SET stock = stock + $2 WHERE id = $1 AND stock IS NOT NULL', [it.id, qty]);
+    if (it.size) {
+      await query(
+        `UPDATE products
+         SET size_stock = jsonb_set(size_stock, ARRAY[$2::text], to_jsonb(COALESCE((size_stock->>$2)::int, 0) + $3))
+         WHERE id = $1 AND size_stock ? $2`,
+        [it.id, it.size, qty]
+      );
+    }
+    if (it.color && it.size) {
+      await query(
+        `UPDATE products
+         SET color_stock = jsonb_set(color_stock, ARRAY[$2::text, $3::text], to_jsonb(COALESCE((color_stock->$2->>$3)::int, 0) + $4))
+         WHERE id = $1 AND color_stock ? $2 AND (color_stock->$2) ? $3`,
+        [it.id, it.color, it.size, qty]
+      );
+    }
+  }
+}
+
 const SITE = () => (process.env.PUBLIC_SITE_URL || process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '');
 
 async function getUserStore(userId) {
@@ -152,12 +176,8 @@ export async function createCodOrder(req, res, next) {
         appliedCoupon, discount]
     );
 
-    // نخصم المخزون ونرفع عدّاد استخدام الكوبون (بالخلفية — لا نُفشل الطلب لو تعثّر أحدها)
-    decrementStock(orderItems).catch((e) => console.error('decrementStock:', e.message));
-    if (appliedCoupon) {
-      query('UPDATE coupons SET used_count = used_count + 1 WHERE store_id = $1 AND code = $2', [storeId, appliedCoupon])
-        .catch((e) => console.error('coupon usedCount:', e.message));
-    }
+    // ملاحظة: لا نخصم المخزون ولا نرفع عدّاد الكوبون عند الإنشاء —
+    // يتمّ ذلك عند تأكيد صاحب المتجر للطلب، ويُعاد عند الإلغاء (تحكّم أدق).
 
     res.status(201).json({ orderId: ins.rows[0].id, reference, discount, total });
   } catch (err) {
@@ -167,6 +187,8 @@ export async function createCodOrder(req, res, next) {
 
 // تحديث حالة الطلب (صاحب المتجر فقط)
 const ORDER_STATUSES = ['new', 'confirmed', 'shipped', 'delivered', 'cancelled'];
+// الحالات التي تعني أن الطلب مؤكّد ويجب خصم مخزونه
+const APPLY_STATUSES = ['confirmed', 'shipped', 'delivered'];
 export async function updateOrderStatus(req, res, next) {
   const { id } = req.params;
   const status = (req.body.status || '').trim();
@@ -174,8 +196,35 @@ export async function updateOrderStatus(req, res, next) {
   try {
     const store = await getUserStore(req.user.id);
     if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
-    const r = await query('UPDATE orders SET status = $1 WHERE id = $2 AND store_id = $3 RETURNING id', [status, id, store.id]);
-    if (r.rows.length === 0) return res.status(404).json({ error: 'الطلب غير موجود.' });
+
+    const cur = await query(
+      'SELECT items, stock_applied, coupon_code FROM orders WHERE id = $1 AND store_id = $2',
+      [id, store.id]
+    );
+    const order = cur.rows[0];
+    if (!order) return res.status(404).json({ error: 'الطلب غير موجود.' });
+
+    const shouldApply = APPLY_STATUSES.includes(status);
+    let stockApplied = order.stock_applied;
+
+    // تأكيد الطلب لأول مرة → نخصم المخزون ونرفع عدّاد الكوبون
+    if (shouldApply && !order.stock_applied) {
+      await decrementStock(order.items);
+      if (order.coupon_code) {
+        await query('UPDATE coupons SET used_count = used_count + 1 WHERE store_id = $1 AND code = $2', [store.id, order.coupon_code]);
+      }
+      stockApplied = true;
+    }
+    // إلغاء/إرجاع طلب سبق خصمه → نعيد المخزون وعدّاد الكوبون
+    else if (!shouldApply && order.stock_applied) {
+      await restoreStock(order.items);
+      if (order.coupon_code) {
+        await query('UPDATE coupons SET used_count = GREATEST(0, used_count - 1) WHERE store_id = $1 AND code = $2', [store.id, order.coupon_code]);
+      }
+      stockApplied = false;
+    }
+
+    await query('UPDATE orders SET status = $1, stock_applied = $2 WHERE id = $3 AND store_id = $4', [status, stockApplied, id, store.id]);
     res.json({ ok: true, status });
   } catch (err) {
     next(err);
