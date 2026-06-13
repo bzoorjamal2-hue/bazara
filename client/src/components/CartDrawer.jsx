@@ -58,6 +58,7 @@ export default function CartDrawer() {
   const [coupon, setCoupon] = useState(null); // { code, discount } بعد التحقّق
   const [couponMsg, setCouponMsg] = useState('');
   const [couponBusy, setCouponBusy] = useState(false);
+  const [placing, setPlacing] = useState(false); // جارٍ حفظ الطلب
   const [storeZones, setStoreZones] = useState(null); // مناطق المتجر المخصّصة (إن وُجدت)
   const [freeOver, setFreeOver] = useState(0); // شحن مجاني فوق هذا المبلغ (0 = معطّل)
   useScrollLock(open);
@@ -114,18 +115,32 @@ export default function CartDrawer() {
   };
   const removeCoupon = () => { setCoupon(null); setCouponInput(''); setCouponMsg(''); };
 
-  const confirmOrder = () => {
+  const confirmOrder = async () => {
     if (!cust.name.trim() || !cust.phone.trim() || !cust.city) { setErr(t('co.required')); return; }
+    if (placing) return;
+    setErr('');
     const wa = items[0]?.whatsapp || '';
-    // نفتح واتساب فوراً (ضمن لمسة المستخدم لتفادي حظر النوافذ)
-    window.open(buildWhatsappCheckout(wa, items, { ...cust, delivery, discount, couponCode: coupon?.code || '' }, i18n.language), '_blank');
-    // ونحفظ الطلب بالنظام بالخلفية (لا نوقف الطلب لو فشل الحفظ)
-    api.post('/orders/cod', {
-      items: items.map((i) => ({ id: i.id, qty: i.qty, size: i.size, color: i.color })),
-      customer: { name: cust.name, phone: cust.phone, city: cust.city, address: cust.address, notes: cust.notes, deliveryFee: delivery },
-      coupon: coupon ? { code: coupon.code } : undefined,
-    }).catch(() => { /* تجاهل — الطلب تمّ عبر واتساب على أي حال */ });
+    const waLink = buildWhatsappCheckout(wa, items, { ...cust, delivery, discount, couponCode: coupon?.code || '' }, i18n.language);
+    // نفتح نافذة فارغة فوراً (ضمن لمسة المستخدم) كي لا تُحجب بعد الانتظار
+    let waWin = null;
+    try { waWin = window.open('', '_blank'); } catch { waWin = null; }
+    setPlacing(true);
+    // نحفظ الطلب أولاً ونتأكّد من اكتماله — هنا يُخصم المخزون من اللون/النمرة
+    try {
+      await api.post('/orders/cod', {
+        items: items.map((i) => ({ id: i.id, qty: i.qty, size: i.size, color: i.color })),
+        customer: { name: cust.name, phone: cust.phone, city: cust.city, address: cust.address, notes: cust.notes, deliveryFee: delivery },
+        coupon: coupon ? { code: coupon.code } : undefined,
+      });
+    } catch { /* تجاهل — نكمل لواتساب على أي حال */ }
+    setPlacing(false);
     clear();
+    // ثم نفتح واتساب (نوجّه النافذة المفتوحة، أو ننتقل إن تعذّر فتحها)
+    if (waWin && !waWin.closed) {
+      try { waWin.location.href = waLink; } catch { window.location.href = waLink; }
+    } else {
+      window.location.href = waLink;
+    }
     close();
   };
 
@@ -280,7 +295,9 @@ export default function CartDrawer() {
 
                 <div className="border-t border-gold-400/15 p-4">
                   {err && <p className="mb-2 text-center text-xs text-red-500">{err}</p>}
-                  <button onClick={confirmOrder} className="btn-whatsapp w-full">💬 {t('co.confirm')}</button>
+                  <button onClick={confirmOrder} disabled={placing} className="btn-whatsapp w-full disabled:opacity-60">
+                    {placing ? t('common.loading') : `💬 ${t('co.confirm')}`}
+                  </button>
                 </div>
               </motion.div>
             )}
