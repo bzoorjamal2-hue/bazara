@@ -87,7 +87,7 @@ export default function CouponsManager() {
       {/* نموذج إضافة/تعديل كوبون */}
       <form onSubmit={submit} className="glass space-y-3 p-5">
         <h2 className="font-display text-lg font-bold text-gold-200">{editId ? t('dashboard.coupons.editTitle') : t('dashboard.coupons.newTitle')}</h2>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2 [&>div]:min-w-0">
           <div>
             <label className="label">{t('dashboard.coupons.code')}</label>
             <input className="input uppercase" required placeholder="SUMMER25" value={form.code} onChange={set('code')} />
@@ -117,7 +117,7 @@ export default function CouponsManager() {
           </div>
           <div>
             <label className="label">{t('dashboard.coupons.expiresAt')} <span className="text-stone-500">({t('common.optional')})</span></label>
-            <input className="input" type="date" value={form.expiresAt} onChange={set('expiresAt')} />
+            <input className="input w-full max-w-full [color-scheme:dark]" type="date" value={form.expiresAt} onChange={set('expiresAt')} />
           </div>
         </div>
         <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-gold-400/15 bg-black/20 px-4 py-2.5">

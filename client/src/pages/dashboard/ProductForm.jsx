@@ -167,7 +167,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
           {form.oldPrice !== '' && (
             <div>
               <label className="label">⏱️ {t('dashboard.product.saleEndsAt')} <span className="text-stone-500">({t('common.optional')})</span></label>
-              <input type="datetime-local" className="input" value={form.saleEndsAt} onChange={set('saleEndsAt')} />
+              <input type="datetime-local" className="input w-full max-w-full min-w-0 [color-scheme:dark]" value={form.saleEndsAt} onChange={set('saleEndsAt')} />
               <p className="mt-1 text-xs text-stone-400">{t('dashboard.product.saleEndsHint')}</p>
             </div>
           )}
