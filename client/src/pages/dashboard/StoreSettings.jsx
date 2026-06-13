@@ -38,6 +38,8 @@ export default function StoreSettings() {
           facebook: s.facebook || '', tiktok: s.tiktok || '', themeColor: s.themeColor || '#d4af37',
           deliveryInfo: s.deliveryInfo || '', paymentInfo: s.paymentInfo || '',
           banners: Array.isArray(s.banners) && s.banners.length ? s.banners : DEFAULT_BANNERS,
+          deliveryZones: Array.isArray(s.deliveryZones) ? s.deliveryZones : [],
+          freeShippingOver: s.freeShippingOver ? String(s.freeShippingOver) : '',
         });
       })
       .catch((err) => setError(getErrorMessage(err)));
@@ -84,6 +86,12 @@ export default function StoreSettings() {
   // تغيير نوع الخلفية يصفّر القيمة السابقة
   const setBannerBg = (idx, bgType) =>
     setForm((f) => ({ ...f, banners: f.banners.map((b, i) => (i === idx ? { ...b, bgType, bgValue: '' } : b)) }));
+
+  // التحكم بمناطق التوصيل [{name, fee}]
+  const setZone = (idx, key, val) =>
+    setForm((f) => ({ ...f, deliveryZones: f.deliveryZones.map((z, i) => (i === idx ? { ...z, [key]: val } : z)) }));
+  const addZone = () => setForm((f) => ({ ...f, deliveryZones: [...f.deliveryZones, { name: '', fee: '' }] }));
+  const removeZone = (idx) => setForm((f) => ({ ...f, deliveryZones: f.deliveryZones.filter((_, i) => i !== idx) }));
 
   return (
     <div className="space-y-6">
@@ -230,6 +238,50 @@ export default function StoreSettings() {
               ))}
             </div>
           )}
+        </div>
+
+        {/* مناطق التوصيل ورسومها */}
+        <div className="glass space-y-3 p-6">
+          <div>
+            <h2 className="font-display text-lg font-bold text-stone-100">🚚 {t('dashboard.store.zones')}</h2>
+            <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.zonesHint')}</p>
+          </div>
+
+          {form.deliveryZones.length > 0 && (
+            <div className="space-y-2">
+              {form.deliveryZones.map((z, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <input
+                    className="input flex-1"
+                    placeholder={t('dashboard.store.zoneName')}
+                    value={z.name}
+                    onChange={(e) => setZone(idx, 'name', e.target.value)}
+                  />
+                  <div className="relative w-28 shrink-0">
+                    <input
+                      className="input pe-8"
+                      type="number" min="0" step="1"
+                      placeholder={t('dashboard.store.zoneFee')}
+                      value={z.fee}
+                      onChange={(e) => setZone(idx, 'fee', e.target.value)}
+                    />
+                    <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-stone-400">₪</span>
+                  </div>
+                  <button type="button" onClick={() => removeZone(idx)} className="rounded-lg p-2 text-stone-400 hover:text-red-300" aria-label="remove">✕</button>
+                </div>
+              ))}
+            </div>
+          )}
+          <button type="button" onClick={addZone} className="btn-ghost w-full text-sm">＋ {t('dashboard.store.addZone')}</button>
+
+          <div className="border-t border-white/5 pt-3">
+            <label className="label">{t('dashboard.store.freeShippingOver')}</label>
+            <div className="relative w-40">
+              <input className="input pe-8" type="number" min="0" step="1" placeholder="0" value={form.freeShippingOver} onChange={set('freeShippingOver')} />
+              <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-stone-400">₪</span>
+            </div>
+            <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.freeShippingHint')}</p>
+          </div>
         </div>
 
         {/* التوصيل والدفع */}

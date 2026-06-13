@@ -29,10 +29,10 @@ export async function createProduct(req, res, next) {
 
     const result = await query(
       `INSERT INTO products
-         (store_id, name, price, old_price, description, size, color, category, image_url, images, stock, featured, video_url, size_stock)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+         (store_id, name, price, old_price, description, size, color, category, image_url, images, stock, featured, video_url, size_stock, sale_ends_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
        RETURNING *`,
-      [store.id, p.name, p.price, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, p.videoUrl, JSON.stringify(p.sizeStock)]
+      [store.id, p.name, p.price, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, p.videoUrl, JSON.stringify(p.sizeStock), p.saleEndsAt]
     );
 
     const product = result.rows[0];
@@ -61,10 +61,10 @@ export async function updateProduct(req, res, next) {
     const result = await query(
       `UPDATE products SET
          name=$1, price=$2, old_price=$3, description=$4, size=$5, color=$6,
-         category=$7, image_url=$8, images=$9, stock=$10, featured=$11, video_url=$12, size_stock=$13, updated_at=now()
-       WHERE id=$14 AND store_id=$15
+         category=$7, image_url=$8, images=$9, stock=$10, featured=$11, video_url=$12, size_stock=$13, sale_ends_at=$14, updated_at=now()
+       WHERE id=$15 AND store_id=$16
        RETURNING *`,
-      [p.name, p.price, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, p.videoUrl, JSON.stringify(p.sizeStock), id, store.id]
+      [p.name, p.price, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, p.videoUrl, JSON.stringify(p.sizeStock), p.saleEndsAt, id, store.id]
     );
     res.json({ product: mapProduct(result.rows[0]) });
   } catch (err) {
@@ -120,15 +120,26 @@ function normalizeBody(b) {
     featured: Boolean(b.featured),
     videoUrl: typeof b.videoUrl === 'string' ? b.videoUrl.trim().slice(0, 2000) : '',
     sizeStock: normalizeSizeStock(b.sizeStock, size),
+    saleEndsAt: (() => { const d = b.saleEndsAt ? new Date(b.saleEndsAt) : null; return d && !isNaN(d) ? d : null; })(),
   };
 }
 
 export function mapProduct(p) {
+  // العرض المؤقّت: إن انتهى وقته يعود السعر الأصلي تلقائياً (بلا خصم)
+  let price = Number(p.price);
+  let oldPrice = p.old_price != null ? Number(p.old_price) : null;
+  const saleEnds = p.sale_ends_at ? new Date(p.sale_ends_at) : null;
+  const saleActive = saleEnds && saleEnds > new Date();
+  if (saleEnds && !saleActive && oldPrice && oldPrice > price) {
+    price = oldPrice; // انتهى العرض → السعر الأصلي
+    oldPrice = null;
+  }
   return {
     id: p.id,
     name: p.name,
-    price: Number(p.price),
-    oldPrice: p.old_price != null ? Number(p.old_price) : null,
+    price,
+    oldPrice,
+    saleEndsAt: saleActive ? p.sale_ends_at : null,
     description: p.description,
     size: p.size,
     color: p.color,

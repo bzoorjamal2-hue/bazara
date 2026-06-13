@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext.jsx';
@@ -58,16 +58,35 @@ export default function CartDrawer() {
   const [coupon, setCoupon] = useState(null); // { code, discount } بعد التحقّق
   const [couponMsg, setCouponMsg] = useState('');
   const [couponBusy, setCouponBusy] = useState(false);
+  const [storeZones, setStoreZones] = useState(null); // مناطق المتجر المخصّصة (إن وُجدت)
+  const [freeOver, setFreeOver] = useState(0); // شحن مجاني فوق هذا المبلغ (0 = معطّل)
   useScrollLock(open);
+
+  const storeSlug = items[0]?.storeSlug || '';
+  // نجلب إعدادات التوصيل الخاصة بالمتجر عند فتح السلة
+  useEffect(() => {
+    if (!open || !storeSlug) return;
+    api.get(`/public/store/${storeSlug}/checkout`)
+      .then((r) => {
+        setStoreZones(Array.isArray(r.data.deliveryZones) ? r.data.deliveryZones : []);
+        setFreeOver(Number(r.data.freeShippingOver) || 0);
+      })
+      .catch(() => { setStoreZones([]); setFreeOver(0); });
+  }, [open, storeSlug]);
 
   if (!open) return null;
 
   const close = () => { setOpen(false); setView('cart'); setErr(''); };
-  const cityOpt = AREAS.find((a) => (ar ? a.ar : a.en) === cust.city);
-  const delivery = cityOpt ? cityOpt.fee : 0;
+  // قائمة المناطق: مناطق المتجر المخصّصة إن وُجدت، وإلا القائمة الافتراضية
+  const areaList = (storeZones && storeZones.length)
+    ? storeZones.map((z) => ({ name: z.name, fee: Number(z.fee) || 0 }))
+    : AREAS.map((a) => ({ name: ar ? a.ar : a.en, fee: a.fee }));
+  const cityOpt = areaList.find((z) => z.name === cust.city);
   const discount = coupon ? coupon.discount : 0;
-  const grand = Math.max(0, total - discount) + delivery;
-  const storeSlug = items[0]?.storeSlug || '';
+  const afterDiscount = Math.max(0, total - discount);
+  const freeShip = freeOver > 0 && afterDiscount >= freeOver;
+  const delivery = freeShip ? 0 : (cityOpt ? cityOpt.fee : 0);
+  const grand = afterDiscount + delivery;
 
   // التحقّق من كوبون الخصم مع الخادم
   const applyCoupon = async () => {
@@ -190,7 +209,7 @@ export default function CartDrawer() {
                         onChange={(v) => setCust({ ...cust, city: v })}
                         placeholder={t('co.selectCity')}
                         className="!rounded-2xl"
-                        options={AREAS.map((a) => ({ value: ar ? a.ar : a.en, label: `${ar ? a.ar : a.en}${a.fee ? ` — ₪${a.fee}` : ''}` }))}
+                        options={areaList.map((z) => ({ value: z.name, label: `${z.name}${z.fee ? ` — ₪${z.fee}` : ''}` }))}
                       />
                       <input className="input !rounded-2xl" placeholder={t('co.address')} value={cust.address} onChange={(e) => setCust({ ...cust, address: e.target.value })} />
                       <textarea className="input !rounded-2xl" rows={2} placeholder={t('co.notes')} value={cust.notes} onChange={(e) => setCust({ ...cust, notes: e.target.value })} />
@@ -237,9 +256,20 @@ export default function CartDrawer() {
                       {discount > 0 && (
                         <div className="flex justify-between text-emerald-600"><span>{t('coupon.discount')} ({coupon.code})</span><span>−{t('common.currency')}{discount.toFixed(2)}</span></div>
                       )}
-                      <div className="flex justify-between text-stone-400"><span>{t('co.delivery')}</span><span>{t('common.currency')}{delivery.toFixed(2)}</span></div>
+                      <div className="flex justify-between text-stone-400">
+                        <span>{t('co.delivery')}</span>
+                        {freeShip
+                          ? <span className="font-bold text-emerald-600">{t('co.freeShipping')} 🎉</span>
+                          : <span>{t('common.currency')}{delivery.toFixed(2)}</span>}
+                      </div>
                       <div className="mt-1 flex justify-between font-bold text-wine"><span>{t('co.grandTotal')}</span><span className="font-display text-lg">{t('common.currency')}{grand.toFixed(2)}</span></div>
                     </div>
+                    {/* تحفيز للشحن المجاني: كم باقي ليصير التوصيل مجاناً */}
+                    {freeOver > 0 && !freeShip && (
+                      <p className="mt-2 rounded-xl bg-wine/5 px-3 py-2 text-center text-xs font-semibold text-wine">
+                        🚚 {t('co.freeShippingHint', { amount: (freeOver - afterDiscount).toFixed(2) })}
+                      </p>
+                    )}
                     <p className="mt-2 text-[11px] text-stone-400">* {t('co.deliveryNote')}</p>
                   </div>
 

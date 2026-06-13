@@ -99,6 +99,11 @@ async function ensureColumns() {
     await pool.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS video_url TEXT DEFAULT '';");
     // كمية المخزون لكل مقاس (نمرة): {"38": 5, "40": 2, ...}
     await pool.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS size_stock JSONB DEFAULT '{}'::jsonb;");
+    // نهاية العرض (عدّاد تنازلي) — عند انتهائه يعود السعر الأصلي تلقائياً
+    await pool.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS sale_ends_at TIMESTAMPTZ;");
+    // مناطق التوصيل القابلة للتخصيص + شحن مجاني فوق مبلغ
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS delivery_zones JSONB DEFAULT '[]'::jsonb;");
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS free_shipping_over NUMERIC(10,2) DEFAULT 0;");
     // طلبات الدفع عند الاستلام (واتساب): حقول التوصيل
     await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS city VARCHAR(80) DEFAULT '';");
     await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS address TEXT DEFAULT '';");

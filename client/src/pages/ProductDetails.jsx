@@ -13,6 +13,7 @@ import { useWishlist } from '../context/WishlistContext.jsx';
 import { cldVideoPoster } from '../utils/cloudinary.js';
 import { pushRecent, getRecent } from '../utils/recentlyViewed.js';
 import { sizeLabel } from '../utils/sizes.js';
+import Countdown from '../components/Countdown.jsx';
 
 const PH = 'https://placehold.co/600x600/121214/d4af37?text=%F0%9F%91%97';
 
@@ -196,6 +197,13 @@ export default function ProductDetails() {
             <span className="font-display text-3xl font-bold gradient-text">{t('common.currency')}{product.price}</span>
             {hasDiscount && <span className="text-lg text-stone-500 line-through">{t('common.currency')}{product.oldPrice}</span>}
           </div>
+
+          {/* عدّاد العرض المحدود */}
+          {product.saleEndsAt && (
+            <div className="mt-3">
+              <Countdown endsAt={product.saleEndsAt} label className="!px-3 !py-1.5 !text-xs" />
+            </div>
+          )}
 
           {/* مؤشّر المخزون — حبّة عصرية: نفد (أحمر) · آخر قطع (تدرّج ناري نابض) · متوفّر (أخضر) */}
           <div className="mt-3">

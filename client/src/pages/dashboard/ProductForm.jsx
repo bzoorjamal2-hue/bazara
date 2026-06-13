@@ -10,8 +10,16 @@ import { SIZES, sizeLabel } from '../../utils/sizes.js';
 const CATEGORIES = ['abaya', 'set', 'dress', 'hijab', 'trench'];
 const EMPTY = {
   name: '', price: '', oldPrice: '', description: '', size: '', color: '',
-  category: 'abaya', imageUrl: '', images: [], videoUrl: '', stock: '', featured: false, sizeStock: {},
+  category: 'abaya', imageUrl: '', images: [], videoUrl: '', stock: '', featured: false, sizeStock: {}, saleEndsAt: '',
 };
+
+// تحويل ISO إلى صيغة datetime-local المحلّية (YYYY-MM-DDTHH:mm)
+function toLocalInput(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+}
 
 export default function ProductForm({ initial, onClose, onSaved }) {
   const { t } = useTranslation();
@@ -26,6 +34,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
           stock: initial.stock != null ? String(initial.stock) : '',
           images: initial.images || [],
           sizeStock: initial.sizeStock && typeof initial.sizeStock === 'object' ? initial.sizeStock : {},
+          saleEndsAt: toLocalInput(initial.saleEndsAt),
         }
       : EMPTY
   );
@@ -83,6 +92,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
       stock: form.stock === '' ? null : parseInt(form.stock, 10),
       images: form.images.filter(Boolean),
       sizeStock: form.sizeStock,
+      saleEndsAt: form.saleEndsAt ? new Date(form.saleEndsAt).toISOString() : null,
     };
     try {
       if (isEdit) await api.put(`/products/${initial.id}`, payload);
@@ -152,6 +162,15 @@ export default function ProductForm({ initial, onClose, onSaved }) {
               <input type="number" step="0.01" min="0" className="input" value={form.oldPrice} onChange={set('oldPrice')} />
             </div>
           </div>
+
+          {/* عرض بوقت محدود: عدّاد تنازلي — يظهر للزبون، وعند انتهائه يعود السعر الأصلي تلقائياً */}
+          {form.oldPrice !== '' && (
+            <div>
+              <label className="label">⏱️ {t('dashboard.product.saleEndsAt')} <span className="text-stone-500">({t('common.optional')})</span></label>
+              <input type="datetime-local" className="input" value={form.saleEndsAt} onChange={set('saleEndsAt')} />
+              <p className="mt-1 text-xs text-stone-400">{t('dashboard.product.saleEndsHint')}</p>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>

@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import StarRating from './StarRating.jsx';
+import Countdown from './Countdown.jsx';
 import { HeartIcon, CartIcon } from './icons.jsx';
 import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
 import { flyToCart } from '../utils/flyToCart.js';
@@ -153,6 +154,12 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
             playsInline
             className="absolute inset-0 z-[1] h-full w-full animate-fade-in object-cover"
           />
+        )}
+        {/* عدّاد العرض المحدود */}
+        {product.saleEndsAt && (
+          <span className="absolute bottom-2 start-2 z-[3]">
+            <Countdown endsAt={product.saleEndsAt} />
+          </span>
         )}
         {product.videoUrl && (
           <span className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-center">

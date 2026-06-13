@@ -246,7 +246,14 @@
       "bgTheme": "Default (maroon)",
       "bgColor": "Color",
       "bgImage": "Image",
-      "bgVideo": "Video"
+      "bgVideo": "Video",
+      "zones": "Delivery zones & fees",
+      "zonesHint": "Set your zones and delivery fee for each. Leave empty to use the default zones.",
+      "zoneName": "Zone name",
+      "zoneFee": "Fee",
+      "addZone": "Add zone",
+      "freeShippingOver": "Free shipping over",
+      "freeShippingHint": "Orders above this amount get free delivery (0 = off)."
     },
     "product": {
       "name": "Item name",
@@ -266,6 +273,8 @@
       "stockHint": "Leave empty for always available, or 0 for out of stock",
       "sizeStock": "Available quantity per size",
       "sizeStockHint": "Shows customers how many of each size remain · empty = available · 0 = sold out",
+      "saleEndsAt": "Offer ends at",
+      "saleEndsHint": "Shows a countdown to customers; when it ends the original price returns automatically.",
       "featured": "Featured product (shown on top)",
       "newTitle": "Add product",
       "editTitle": "Edit product",
@@ -380,7 +389,13 @@
     "confirm": "Confirm order via WhatsApp",
     "back": "Back to cart",
     "required": "Please enter your name, phone and city",
-    "deliveryNote": "Delivery fee is an estimate, confirmed by the store"
+    "deliveryNote": "Delivery fee is an estimate, confirmed by the store",
+    "freeShipping": "Free",
+    "freeShippingHint": "Add ₪{{amount}} to get free delivery!"
+  },
+  "offer": {
+    "endsIn": "Ends in",
+    "day": "d"
   },
   "coupon": {
     "title": "Discount code",

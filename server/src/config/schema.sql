@@ -48,6 +48,9 @@ ALTER TABLE stores ADD COLUMN IF NOT EXISTS delivery_info TEXT DEFAULT '';
 ALTER TABLE stores ADD COLUMN IF NOT EXISTS payment_info  TEXT DEFAULT '';
 -- شرايح السلايدر (بانرات العرض) القابلة للتخصيص من صاحب المتجر
 ALTER TABLE stores ADD COLUMN IF NOT EXISTS banners       JSONB DEFAULT '[]'::jsonb;
+-- مناطق التوصيل المخصّصة [{name, fee}] + شحن مجاني فوق مبلغ (0 = معطّل)
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS delivery_zones     JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS free_shipping_over NUMERIC(10,2) DEFAULT 0;
 
 CREATE INDEX IF NOT EXISTS idx_stores_slug ON stores(slug);
 
@@ -78,6 +81,8 @@ ALTER TABLE products ADD COLUMN IF NOT EXISTS old_price NUMERIC(10,2);
 ALTER TABLE products ADD COLUMN IF NOT EXISTS stock     INTEGER; -- NULL = متوفّر دائماً، 0 = نفد
 ALTER TABLE products ADD COLUMN IF NOT EXISTS featured  BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS video_url TEXT DEFAULT ''; -- رابط فيديو المنتج (اختياري)
+ALTER TABLE products ADD COLUMN IF NOT EXISTS size_stock JSONB DEFAULT '{}'::jsonb; -- مخزون لكل مقاس
+ALTER TABLE products ADD COLUMN IF NOT EXISTS sale_ends_at TIMESTAMPTZ; -- نهاية العرض (عدّاد)
 
 -- تحويل الفئة إلى نص حر (فئات أزياء مخصّصة) + إعادة تعيين القيم القديمة
 ALTER TABLE products ALTER COLUMN category TYPE TEXT USING category::text;

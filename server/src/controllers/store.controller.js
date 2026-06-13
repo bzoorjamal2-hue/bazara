@@ -18,8 +18,19 @@ function mapStore(s) {
     deliveryInfo: s.delivery_info,
     paymentInfo: s.payment_info,
     banners: Array.isArray(s.banners) ? s.banners : [],
+    deliveryZones: Array.isArray(s.delivery_zones) ? s.delivery_zones : [],
+    freeShippingOver: Number(s.free_shipping_over || 0),
     createdAt: s.created_at,
   };
+}
+
+// تنقية مناطق التوصيل [{name, fee}] — حد أقصى 60 منطقة
+function sanitizeZones(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .slice(0, 60)
+    .map((z) => ({ name: String(z?.name || '').trim().slice(0, 60), fee: Math.max(0, Number(z?.fee) || 0) }))
+    .filter((z) => z.name);
 }
 
 // تنقية شرايح البانر القادمة من النموذج (حد أقصى 5، نص آمن + خلفية مخصّصة)
@@ -59,6 +70,8 @@ export async function getMyStore(req, res, next) {
 export async function updateMyStore(req, res, next) {
   const { name, description, logoUrl, phone, whatsapp, instagram, facebook, tiktok, themeColor, deliveryInfo, paymentInfo } = req.body;
   const banners = sanitizeBanners(req.body.banners);
+  const deliveryZones = sanitizeZones(req.body.deliveryZones);
+  const freeShippingOver = Math.max(0, Number(req.body.freeShippingOver) || 0);
   try {
     const current = await query('SELECT id, name, slug FROM stores WHERE user_id = $1', [req.user.id]);
     const store = current.rows[0];
@@ -74,8 +87,8 @@ export async function updateMyStore(req, res, next) {
          name = $1, description = $2, logo_url = $3, slug = $4,
          phone = $5, whatsapp = $6, instagram = $7, facebook = $8, tiktok = $9,
          theme_color = $10, delivery_info = $11, payment_info = $12,
-         banners = $13::jsonb, updated_at = now()
-       WHERE id = $14
+         banners = $13::jsonb, delivery_zones = $14::jsonb, free_shipping_over = $15, updated_at = now()
+       WHERE id = $16
        RETURNING *`,
       [
         name,
@@ -91,6 +104,8 @@ export async function updateMyStore(req, res, next) {
         deliveryInfo || '',
         paymentInfo || '',
         JSON.stringify(banners),
+        JSON.stringify(deliveryZones),
+        freeShippingOver,
         store.id,
       ]
     );

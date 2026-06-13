@@ -32,6 +32,8 @@ function mapStorePublic(s) {
     deliveryInfo: s.delivery_info,
     paymentInfo: s.payment_info,
     banners: Array.isArray(s.banners) ? s.banners : [],
+    deliveryZones: Array.isArray(s.delivery_zones) ? s.delivery_zones : [],
+    freeShippingOver: Number(s.free_shipping_over || 0),
     ownerPhone: s.owner_phone || '', // رقم المالك من التسجيل (احتياطي للواتساب)
     createdAt: s.created_at,
   };
@@ -81,6 +83,26 @@ export async function getStoreBySlug(req, res, next) {
     res.json({
       store: mapStorePublic(store),
       products: productsResult.rows.map(mapProduct),
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// بيانات خفيفة للسلة: مناطق التوصيل + شحن مجاني + واتساب (بلا تحميل المنتجات)
+export async function getStoreCheckout(req, res, next) {
+  const { slug } = req.params;
+  try {
+    const r = await query(
+      'SELECT whatsapp, delivery_zones, free_shipping_over FROM stores WHERE slug = $1',
+      [slug]
+    );
+    const s = r.rows[0];
+    if (!s) return res.status(404).json({ error: 'المتجر غير موجود.' });
+    res.json({
+      whatsapp: s.whatsapp || '',
+      deliveryZones: Array.isArray(s.delivery_zones) ? s.delivery_zones : [],
+      freeShippingOver: Number(s.free_shipping_over || 0),
     });
   } catch (err) {
     next(err);
