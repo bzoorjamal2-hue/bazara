@@ -31,7 +31,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
   const { t, i18n } = useTranslation();
   const ltr = i18n.language !== 'ar';
   const { count, setOpen } = useCart();
-  const { count: wishCount } = useWishlist();
+  const { count: wishCount, setOpen: setWishOpen } = useWishlist();
   const { user } = useAuth();
   const [drawer, setDrawer] = useState(false);
   const [focus, setFocus] = useState(false);
@@ -192,14 +192,13 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
               >
                 <UserGlyph /> {user ? t('nav.dashboard') : t('nav.login')}
               </Link>
-              <Link
-                to="/wishlist"
-                onClick={() => setDrawer(false)}
+              <button
+                onClick={() => { setDrawer(false); setWishOpen(true); }}
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-cream/15 text-cream"
                 aria-label="wishlist"
               >
                 <HeartIcon className="h-5 w-5" filled={wishCount > 0} />
-              </Link>
+              </button>
               <ThemeToggle className="bg-cream/15 text-cream hover:bg-cream/25" />
               <button
                 onClick={() => setDrawer(false)}

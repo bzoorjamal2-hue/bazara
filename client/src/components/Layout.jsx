@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router-dom';
 import Navbar from './Navbar.jsx';
 import CartDrawer from './CartDrawer.jsx';
+import WishlistDrawer from './WishlistDrawer.jsx';
 import OfflineBanner from './OfflineBanner.jsx';
 import BottomNav from './BottomNav.jsx';
 import { isStandalone } from '../utils/pwa.js';
@@ -18,8 +19,8 @@ export default function Layout({ children }) {
   // صفحات الحساب — تصميم بملء الشاشة (هيرو + نموذج) بلا شريط/فوتر
   const isAuthFull = ['/login', '/register', '/forgot-password', '/reset'].includes(pathname);
   const hideChrome = isStorePage || isAppWelcome || isAuthFull;
-  // شريط التنقّل السفلي يظهر داخل التطبيق المثبّت فقط (وليس على شاشة الترحيب أو المتجر أو الدخول)
-  const showBottomNav = isStandalone() && !isAppWelcome && !isStorePage && !isAuthFull;
+  // شريط التنقّل السفلي يظهر داخل التطبيق المثبّت على كل الصفحات (بما فيها المتجر) عدا الترحيب/الدخول
+  const showBottomNav = isStandalone() && !isAppWelcome && !isAuthFull;
 
   return (
     <div className="app-bg theme-pub flex min-h-screen flex-col">
@@ -27,6 +28,7 @@ export default function Layout({ children }) {
       <main className={`mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 ${showBottomNav ? 'pb-24' : ''}`}>{children}</main>
       {!hideChrome && !showBottomNav && <PublicFooter />}
       <CartDrawer />
+      <WishlistDrawer />
       <OfflineBanner />
       {showBottomNav && <BottomNav />}
     </div>

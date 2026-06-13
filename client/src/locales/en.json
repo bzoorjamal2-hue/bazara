@@ -365,7 +365,9 @@
   },
   "wishlist": {
     "title": "Wishlist",
-    "empty": "No products in your wishlist yet."
+    "empty": "No products in your wishlist yet.",
+    "addAllToCart": "Add all to cart",
+    "viewAll": "View full wishlist"
   },
   "subscription": {
     "title": "Activate your store",

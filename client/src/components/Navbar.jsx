@@ -57,7 +57,7 @@ export default function Navbar() {
   const ltr = i18n.language !== 'ar';
   const { user, store, subscription, logout } = useAuth();
   const { count, setOpen } = useCart();
-  const { count: wishCount } = useWishlist();
+  const { count: wishCount, setOpen: setWishOpen } = useWishlist();
   const navigate = useNavigate();
   const { pathname, search } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -111,12 +111,12 @@ export default function Navbar() {
         <div className="relative flex h-12 w-full max-w-6xl items-center justify-between">
           {/* أيقونات التسوّق (تبدأ من اليمين في RTL) */}
           <div className="flex items-center gap-0.5 sm:gap-1.5">
-            <Link to="/wishlist" className="relative rounded-full p-2 text-wine transition hover:bg-wine/10" title={t('nav.wishlist')} aria-label={t('nav.wishlist')}>
+            <button onClick={() => setWishOpen(true)} className="relative rounded-full p-2 text-wine transition hover:bg-wine/10" title={t('nav.wishlist')} aria-label={t('nav.wishlist')}>
               <HeartIcon className="h-[22px] w-[22px]" />
               {wishCount > 0 && (
                 <span className="absolute end-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-wine px-1 text-[10px] font-bold text-cream">{wishCount}</span>
               )}
-            </Link>
+            </button>
             <button data-cart-target onClick={() => setOpen(true)} className="relative rounded-full p-2 text-wine transition hover:bg-wine/10" title={t('nav.cart')} aria-label={t('nav.cart')}>
               <CartIcon className="h-[22px] w-[22px]" />
               {count > 0 && (
@@ -243,7 +243,7 @@ export default function Navbar() {
                 </Link>
               ))}
               <div className="my-2 h-px bg-cream/15" />
-              <Link to="/wishlist" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-base text-cream/90 transition hover:bg-cream/10 hover:text-cream"><HeartIcon className="h-5 w-5 text-cream/80" /> {t('nav.wishlist')}</Link>
+              <button onClick={() => { setMenuOpen(false); setWishOpen(true); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-start text-base text-cream/90 transition hover:bg-cream/10 hover:text-cream"><HeartIcon className="h-5 w-5 text-cream/80" /> {t('nav.wishlist')}</button>
             </nav>
 
             {!standalone && (

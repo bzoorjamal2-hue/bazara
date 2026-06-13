@@ -1,15 +1,12 @@
-import { useLocation } from 'react-router-dom';
 import { WhatsAppIcon } from './icons.jsx';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
 import { isStandalone } from '../utils/pwa.js';
 
 // زر واتساب عائم (يظهر في صفحات المتجر العامة)
 export default function FloatingWhatsApp({ number, message = '' }) {
-  const { pathname } = useLocation();
   if (!number) return null;
-  // داخل التطبيق المثبّت يظهر شريط تنقّل سفلي على الصفحات غير المتجر → نرفع الزر فوقه كي لا يُقصّ
-  const isStore = /^\/store\//.test(pathname);
-  const raised = isStandalone() && !isStore;
+  // داخل التطبيق المثبّت يظهر شريط تنقّل سفلي على كل الصفحات (بما فيها المتجر) → نرفع الزر فوقه كي لا يُقصّ
+  const raised = isStandalone();
   return (
     <a
       href={buildWhatsappLink(number, message)}

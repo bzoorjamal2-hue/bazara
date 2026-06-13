@@ -177,7 +177,7 @@ export default function StorePage() {
           <HeroSlider store={store} />
 
           <section className="mb-9 mt-7">
-            <h2 className="mb-4 text-center font-display text-2xl font-bold text-wine">{t('store.browseByCategory')}</h2>
+            <SectionTitle>{t('store.browseByCategory')}</SectionTitle>
             <CategoryGrid onSelect={pickCategory} active={cat} images={catImages} />
           </section>
 
@@ -316,12 +316,25 @@ function HomeGlyph({ className = 'h-[18px] w-[18px]' }) {
   );
 }
 
+// عنوان قسم مركزي بزخرفة أنيقة (طبق المرجع — مطابق للصفحة الرئيسية)
+function SectionTitle({ children }) {
+  return (
+    <div className="mb-6 flex items-center justify-center gap-2.5 text-wine sm:gap-3">
+      <span aria-hidden className="text-sm text-wine/40">❖</span>
+      <span className="h-px w-7 bg-gradient-to-r from-transparent to-wine/30 sm:w-12" />
+      <h2 className="whitespace-nowrap font-display text-xl font-bold sm:text-2xl">{children}</h2>
+      <span className="h-px w-7 bg-gradient-to-l from-transparent to-wine/30 sm:w-12" />
+      <span aria-hidden className="text-sm text-wine/40">❖</span>
+    </div>
+  );
+}
+
 // قسم منتجات بعنوان مركزي (جديدنا / الأكثر مبيعاً)
 function ProductSection({ title, products, wa }) {
   if (!products || products.length === 0) return null;
   return (
     <section className="mb-10">
-      <h2 className="mb-5 text-center font-display text-2xl font-bold text-wine">{title}</h2>
+      <SectionTitle>{title}</SectionTitle>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {products.map((p, i) => <ProductCard key={p.id} product={p} index={i} whatsapp={wa} />)}
       </div>

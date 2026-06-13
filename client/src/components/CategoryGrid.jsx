@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { CATEGORY_ICON } from './icons.jsx';
 
 const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench'];
 
@@ -14,14 +13,22 @@ function getPerPage() {
   return 5;
 }
 
-// بطاقة فئة: بلاطة كريمية فاتحة + أيقونة الملبس البنّية + اسم الفئة (طبق المرجع).
+// بطاقة فئة: صورة الفئة المصمّمة (/categories/{cat}.png) + اسم الفئة بالأسفل.
 function CategoryCard({ c }) {
   const { t } = useTranslation();
-  const Icon = CATEGORY_ICON[c];
   return (
-    <div className="flex aspect-square flex-col items-center justify-center gap-2.5 rounded-2xl bg-white px-2 py-3 shadow-sm ring-1 ring-wine/10 transition duration-300 group-hover:-translate-y-1 group-hover:shadow-md">
-      <Icon className="h-12 w-12 text-wine transition-transform duration-500 group-hover:scale-110 sm:h-14 sm:w-14" />
-      <span className="text-xs font-bold text-wine sm:text-sm">{t(`categories.${c}`)}</span>
+    <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-wine/10 transition duration-300 group-hover:-translate-y-1 group-hover:shadow-md">
+      <div className="aspect-square overflow-hidden bg-[#594335]">
+        <img
+          src={`/categories/${c}.png`}
+          alt={t(`categories.${c}`)}
+          loading="lazy"
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+        />
+      </div>
+      <div className="py-2.5 text-center">
+        <span className="text-xs font-bold text-wine sm:text-sm">{t(`categories.${c}`)}</span>
+      </div>
     </div>
   );
 }

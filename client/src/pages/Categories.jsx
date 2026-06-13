@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Seo from '../components/Seo.jsx';
-import { CATEGORY_ICON } from '../components/icons.jsx';
 
 const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench'];
 
@@ -20,19 +19,25 @@ export default function Categories() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        {CATS.map((c) => {
-          const Icon = CATEGORY_ICON[c];
-          return (
-            <Link
-              key={c}
-              to={`/category/${c}`}
-              className="group flex aspect-square flex-col items-center justify-center gap-2.5 rounded-2xl bg-white shadow-sm ring-1 ring-wine/10 transition duration-300 hover:-translate-y-1 hover:shadow-md"
-            >
-              <Icon className="h-14 w-14 text-wine transition-transform duration-500 group-hover:scale-110" />
+        {CATS.map((c) => (
+          <Link
+            key={c}
+            to={`/category/${c}`}
+            className="group overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-wine/10 transition duration-300 hover:-translate-y-1 hover:shadow-md"
+          >
+            <div className="aspect-square overflow-hidden bg-[#594335]">
+              <img
+                src={`/categories/${c}.png`}
+                alt={t(`categories.${c}`)}
+                loading="lazy"
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+              />
+            </div>
+            <div className="py-3 text-center">
               <span className="text-sm font-bold text-wine">{t(`categories.${c}`)}</span>
-            </Link>
-          );
-        })}
+            </div>
+          </Link>
+        ))}
       </div>
     </>
   );

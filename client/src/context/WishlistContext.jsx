@@ -13,6 +13,8 @@ export function WishlistProvider({ children }) {
     }
   });
 
+  const [open, setOpen] = useState(false);
+
   useEffect(() => {
     localStorage.setItem(KEY, JSON.stringify(items));
   }, [items]);
@@ -41,7 +43,7 @@ export function WishlistProvider({ children }) {
   const remove = (id) => setItems((prev) => prev.filter((i) => i.id !== id));
 
   return (
-    <WishlistContext.Provider value={{ items, has, toggle, remove, count: items.length }}>
+    <WishlistContext.Provider value={{ items, has, toggle, remove, count: items.length, open, setOpen }}>
       {children}
     </WishlistContext.Provider>
   );

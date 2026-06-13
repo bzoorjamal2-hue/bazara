@@ -37,7 +37,7 @@ export default function BottomNav() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { count, setOpen } = useCart();
-  const { count: wishCount } = useWishlist();
+  const { count: wishCount, setOpen: setWishOpen } = useWishlist();
   const { user, store } = useAuth();
 
   const accountTo = user ? '/dashboard' : '/login';
@@ -47,7 +47,7 @@ export default function BottomNav() {
   const items = [
     { key: 'account', label: t('nav.account') || 'حسابي', Icon: UserIcon, active: pathname.startsWith('/dashboard'), onClick: () => navigate(accountTo) },
     { key: 'cart', label: t('nav.cart'), Icon: CartIcon, badge: count, onClick: () => setOpen(true) },
-    { key: 'fav', label: t('nav.wishlist'), Icon: HeartIcon, active: pathname === '/wishlist', badge: wishCount, onClick: () => navigate('/wishlist') },
+    { key: 'fav', label: t('nav.wishlist'), Icon: HeartIcon, badge: wishCount, onClick: () => setWishOpen(true) },
     { key: 'categories', label: t('nav.categories'), Icon: CategoriesIcon, active: pathname === '/categories', onClick: () => navigate('/categories') },
     { key: 'home', label: t('nav.home'), Icon: HomeIcon, active: homeActive, onClick: () => navigate(homeTo) },
   ];
