@@ -569,13 +569,18 @@ function HeroSlider({ store }) {
                       loop
                       playsInline
                       preload="auto"
+                      // التعتيم مطبّق على الفيديو نفسه (وبوستره) ليكون معتّماً من أول لحظة بلا وميض ساطع
+                      style={{ filter: 'brightness(0.62)' }}
                       className="absolute inset-0 z-0 h-full w-full object-cover"
                     />
                   )}
                   {/* طبقة تظليل ثابتة فوق الصورة/الفيديو لكل الشرائح — تبقى الشاشة معتّمة بأناقة
                       مثل الشريحة الأولى ليظهر النص بوضوح (تنطبق على كل السلايدرات: صور وفيديو) */}
-                  {(isImage || isVideo) && (
+                  {isImage && (
                     <div className="absolute inset-0 z-[1] bg-black/35 bg-gradient-to-t from-black/75 via-black/45 to-black/55" />
+                  )}
+                  {isVideo && (
+                    <div className="absolute inset-0 z-[1] bg-gradient-to-t from-black/55 via-black/25 to-black/40" />
                   )}
                   {!custom && <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-cream/10 blur-3xl" />}
 

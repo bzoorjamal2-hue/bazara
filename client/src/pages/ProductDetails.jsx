@@ -17,7 +17,8 @@ const PH = 'https://placehold.co/600x600/121214/d4af37?text=%F0%9F%91%97';
 
 export default function ProductDetails() {
   const { id } = useParams();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const rtl = i18n.language !== 'en';
   const { add } = useCart();
   const { has, toggle } = useWishlist();
   const [product, setProduct] = useState(null);
@@ -116,8 +117,11 @@ export default function ProductDetails() {
     <>
       <Seo title={product.name} description={product.description || product.name} image={gallery[0]} type="product" />
 
-      <Link to={`/store/${product.storeSlug}`} className="mb-4 inline-block text-sm text-gold-300 hover:text-gold-200">
-        ← {product.storeName}
+      <Link to={`/store/${product.storeSlug}`} className="mb-4 inline-flex items-center gap-1.5 text-sm text-gold-300 hover:text-gold-200">
+        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d={rtl ? 'M9 6l6 6-6 6' : 'M15 6l-6 6 6 6'} />
+        </svg>
+        {product.storeName}
       </Link>
 
       <div className="glass-strong grid gap-8 overflow-hidden p-6 md:grid-cols-2">

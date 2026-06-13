@@ -5,6 +5,7 @@ import { useWishlist } from '../context/WishlistContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { cldThumb } from '../utils/cloudinary.js';
+import { isStandalone } from '../utils/pwa.js';
 
 const PH = 'https://placehold.co/120x120/f1e9dd/5e4636?text=%F0%9F%91%97';
 
@@ -31,7 +32,11 @@ export default function WishlistDrawer() {
 
   return (
     <div className="fixed inset-0 z-[70] flex justify-end bg-black/60 backdrop-blur-sm" onClick={close}>
-      <aside onClick={(e) => e.stopPropagation()} className="flex h-full w-full max-w-md animate-slide-in flex-col border-s border-gold-400/20 bg-ink-900">
+      <aside
+        onClick={(e) => e.stopPropagation()}
+        className="flex h-full w-full max-w-md animate-slide-in flex-col border-s border-gold-400/20 bg-ink-900"
+        style={isStandalone() ? { paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 62px)' } : undefined}
+      >
         {/* الرأس */}
         <div className="flex items-center justify-between border-b border-gold-400/15 p-4">
           <h2 className="flex items-center gap-2 font-display text-xl font-bold gradient-text">

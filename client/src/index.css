@@ -15,6 +15,8 @@ body {
   background-color: #F4EDE2;
   color: #2b2b2b;
   min-height: 100vh;
+  /* يمنع ارتداد التمرير (bounce) الذي يكشف صفحة كريمية فارغة معلّقة على iOS */
+  overscroll-behavior-y: none;
 }
 
 /* خلفية فاخرة سوداء بلمسات ذهبية ناعمة (غير مزدحمة) */

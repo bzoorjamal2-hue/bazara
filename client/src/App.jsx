@@ -1,6 +1,6 @@
 import { Suspense, lazy, useEffect } from 'react';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import Layout from './components/Layout.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import RequireSubscription from './components/RequireSubscription.jsx';
@@ -47,16 +47,16 @@ function AnimatedRoutes() {
     window.scrollTo({ top: 0, behavior: 'auto' });
   }, [location.pathname]);
 
+  // انتقال فوري بلا انتظار: الصفحة الجديدة تظهر مباشرة بحركة تلاشٍ سريعة (بلا
+  // حركة خروج تُبقي الشاشة كريمية فارغة لحظة) — يلغي إحساس "التعليق" بين الصفحات.
   return (
-    <AnimatePresence mode="wait">
+    <Suspense fallback={<Spinner full />}>
       <motion.div
         key={location.pathname}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -8 }}
-        transition={{ duration: 0.26, ease: [0.22, 0.61, 0.36, 1] }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.14, ease: 'easeOut' }}
       >
-        <Suspense fallback={<Spinner full />}>
         <Routes location={location}>
           <Route path="/" element={<Root />} />
           <Route path="/shop" element={<Home />} />
@@ -88,9 +88,8 @@ function AnimatedRoutes() {
           <Route path="/product/:id" element={<ProductDetails />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
-        </Suspense>
       </motion.div>
-    </AnimatePresence>
+    </Suspense>
   );
 }
 

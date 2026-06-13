@@ -44,16 +44,19 @@ export default function BottomNav() {
   // "الرئيسية" للمشترك المسجّل → صفحة متجره العام؛ للزائر → بازارا العام (كل المتاجر)
   const homeTo = user && store?.slug ? `/store/${store.slug}` : '/shop';
   const homeActive = homeTo === '/shop' ? pathname === '/shop' : pathname === homeTo;
+  // إغلاق أدراج السلة/المفضلة قبل الانتقال (الشريط يبقى ظاهراً فوق الأدراج)
+  const closeDrawers = () => { setOpen(false); setWishOpen(false); };
+  const goto = (to) => { closeDrawers(); navigate(to); };
   const items = [
-    { key: 'account', label: t('nav.account') || 'حسابي', Icon: UserIcon, active: pathname.startsWith('/dashboard'), onClick: () => navigate(accountTo) },
-    { key: 'cart', label: t('nav.cart'), Icon: CartIcon, badge: count, onClick: () => setOpen(true) },
-    { key: 'fav', label: t('nav.wishlist'), Icon: HeartIcon, badge: wishCount, onClick: () => setWishOpen(true) },
-    { key: 'categories', label: t('nav.categories'), Icon: CategoriesIcon, active: pathname === '/categories' || pathname.startsWith('/category/'), onClick: () => navigate('/categories') },
-    { key: 'home', label: t('nav.home'), Icon: HomeIcon, active: homeActive, onClick: () => navigate(homeTo) },
+    { key: 'account', label: t('nav.account') || 'حسابي', Icon: UserIcon, active: pathname.startsWith('/dashboard'), onClick: () => goto(accountTo) },
+    { key: 'cart', label: t('nav.cart'), Icon: CartIcon, badge: count, onClick: () => { setWishOpen(false); setOpen(true); } },
+    { key: 'fav', label: t('nav.wishlist'), Icon: HeartIcon, badge: wishCount, onClick: () => { setOpen(false); setWishOpen(true); } },
+    { key: 'categories', label: t('nav.categories'), Icon: CategoriesIcon, active: pathname === '/categories' || pathname.startsWith('/category/'), onClick: () => goto('/categories') },
+    { key: 'home', label: t('nav.home'), Icon: HomeIcon, active: homeActive, onClick: () => goto(homeTo) },
   ];
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-[55] border-t border-wine/10 bg-white/95 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 shadow-[0_-6px_20px_rgba(94,70,54,0.08)] backdrop-blur">
+    <nav className="fixed inset-x-0 bottom-0 z-[78] border-t border-wine/10 bg-white/95 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 shadow-[0_-6px_20px_rgba(94,70,54,0.08)] backdrop-blur">
       <div className="mx-auto flex max-w-md items-stretch justify-around px-2">
         {items.map(({ key, label, Icon, active, badge, onClick }) => (
           <button
