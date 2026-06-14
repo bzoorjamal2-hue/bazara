@@ -10,11 +10,12 @@ import LanguageSwitcher from './LanguageSwitcher.jsx';
 // تنسيق الحركة: دخول متدرّج للعناصر من الأسفل للأعلى
 const container = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.14, delayChildren: 0.15 } },
+  show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
 };
+// صعود وتلاشٍ ناعم بدون ارتداد (tween بدل spring) — يتفادى إحساس "القفز/الفصل"
 const rise = {
-  hidden: { opacity: 0, y: 26 },
-  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 90, damping: 16 } },
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 0.61, 0.36, 1] } },
 };
 
 const MLink = motion.create(Link);

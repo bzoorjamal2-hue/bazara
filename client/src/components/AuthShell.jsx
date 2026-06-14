@@ -81,9 +81,10 @@ export const Field = forwardRef(function Field({ icon, trailing, className = '',
   );
 });
 
+// صعود وتلاشٍ ناعم بدون ارتداد (tween بدل spring) — يتفادى إحساس "القفز/الفصل"
 const rise = {
-  hidden: { opacity: 0, y: 18 },
-  show: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: 0.06 * i, type: 'spring', stiffness: 110, damping: 18 } }),
+  hidden: { opacity: 0, y: 12 },
+  show: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: 0.04 * i, duration: 0.34, ease: [0.22, 0.61, 0.36, 1] } }),
 };
 export { rise };
 
