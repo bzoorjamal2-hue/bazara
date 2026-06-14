@@ -3,17 +3,26 @@ import { query } from '../config/db.js';
 import { isLahzaConfigured, initializeTransaction, verifyTransaction, PAY_CURRENCY } from '../config/lahza.js';
 import { evaluateCoupon } from './coupon.controller.js';
 import { sendMail, isMailConfigured } from '../utils/mail.js';
+import { sendPushToUser } from '../config/push.js';
 
-// إشعار صاحب المتجر بالبريد عند وصول طلب جديد (بالخلفية — لا يُعطّل الطلب)
+// إشعار صاحب المتجر (بريد + إشعار دفع على الجوال) عند وصول طلب جديد — بالخلفية
 async function notifyOwnerNewOrder(storeId, info) {
-  if (!isMailConfigured()) return;
   try {
     const r = await query(
-      'SELECT u.email, s.name AS store_name FROM stores s JOIN users u ON u.id = s.user_id WHERE s.id = $1',
+      'SELECT u.id AS user_id, u.email, s.name AS store_name FROM stores s JOIN users u ON u.id = s.user_id WHERE s.id = $1',
       [storeId]
     );
     const row = r.rows[0];
-    if (!row?.email) return;
+    if (!row) return;
+
+    // إشعار دفع على الجوال
+    sendPushToUser(row.user_id, {
+      title: `🛍️ طلب جديد — ${row.store_name}`,
+      body: `${info.name} · ₪${Number(info.total).toFixed(2)}`,
+      url: '/dashboard?tab=myOrders',
+    });
+
+    if (!isMailConfigured() || !row.email) return;
     const rows = (info.items || [])
       .map((i) => `<li>${i.name}${i.color ? ` - ${i.color}` : ''}${i.size ? ` (${i.size})` : ''} ×${i.qty} — ₪${(i.price * i.qty).toFixed(2)}</li>`)
       .join('');

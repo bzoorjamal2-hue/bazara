@@ -436,6 +436,16 @@
     "search": "Search",
     "notFound": "No orders found for this number. Check it and try again."
   },
+  "push": {
+    "title": "Order push notifications",
+    "desc": "Enable notifications to get an instant alert on your phone for every new order.",
+    "onDesc": "Notifications are on — you'll get an alert for every new order.",
+    "enable": "Enable notifications",
+    "on": "Enabled",
+    "denied": "Permission denied. Enable notifications for Bazara in your phone settings.",
+    "notConfigured": "Notifications aren't set up on the server yet.",
+    "error": "Couldn't enable, please try again."
+  },
   "offer": {
     "endsIn": "Offer ends in",
     "dayOne": "day",

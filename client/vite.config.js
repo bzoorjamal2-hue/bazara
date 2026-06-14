@@ -33,6 +33,8 @@ export default defineConfig({
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api/, /^\/sitemap\.xml/, /^\/robots\.txt/],
         cleanupOutdatedCaches: true,
+        // حقن معالج إشعارات الدفع داخل الـ Service Worker
+        importScripts: ['/push-sw.js'],
       },
     }),
   ],

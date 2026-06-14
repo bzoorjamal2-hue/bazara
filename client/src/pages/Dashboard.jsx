@@ -5,6 +5,7 @@ import { QRCodeCanvas } from 'qrcode.react';
 import { useAuth } from '../context/AuthContext.jsx';
 import Seo from '../components/Seo.jsx';
 import SubscriptionBanner from '../components/SubscriptionBanner.jsx';
+import PushToggle from '../components/PushToggle.jsx';
 import Profile from './dashboard/Profile.jsx';
 import StoreSettings from './dashboard/StoreSettings.jsx';
 import ProductsManager from './dashboard/ProductsManager.jsx';
@@ -106,6 +107,8 @@ function Overview({ productsCount }) {
       <h1 className="font-display text-2xl font-bold gradient-text">{t('dashboard.overview')}</h1>
 
       <SubscriptionBanner />
+
+      <PushToggle />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="glass p-6">

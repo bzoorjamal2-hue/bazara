@@ -15,6 +15,7 @@ import subscriptionRoutes from './routes/subscription.routes.js';
 import orderRoutes from './routes/order.routes.js';
 import couponRoutes from './routes/coupon.routes.js';
 import stockRequestRoutes from './routes/stockRequest.routes.js';
+import pushRoutes from './routes/push.routes.js';
 import { robots, sitemap, indexNowKey } from './controllers/seo.controller.js';
 import { issueCsrfToken, verifyCsrf, getCsrfToken } from './middleware/csrf.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
@@ -83,6 +84,7 @@ app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/stock-requests', stockRequestRoutes);
+app.use('/api/push', pushRoutes);
 
 // مسارات SEO (على الجذر)
 app.get('/robots.txt', robots);
@@ -146,6 +148,16 @@ async function ensureColumns() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );`);
     await pool.query('CREATE INDEX IF NOT EXISTS idx_stockreq_store ON stock_requests(store_id);');
+    // اشتراكات إشعارات الدفع (Web Push) لكل مستخدم/جهاز
+    await pool.query(`CREATE TABLE IF NOT EXISTS push_subscriptions (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      endpoint TEXT NOT NULL UNIQUE,
+      p256dh TEXT NOT NULL,
+      auth TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );`);
+    await pool.query('CREATE INDEX IF NOT EXISTS idx_push_user ON push_subscriptions(user_id);');
   } catch (err) {
     console.error('⚠️ تعذّر تطبيق الترقيات:', err.message);
   }
