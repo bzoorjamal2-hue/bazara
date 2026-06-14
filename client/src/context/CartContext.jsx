@@ -18,6 +18,7 @@ export function CartProvider({ children }) {
     }
   });
   const [open, setOpen] = useState(false);
+  const [checkoutIntent, setCheckoutIntent] = useState(false); // فتح السلة مباشرة على شاشة إتمام الطلب (شراء فوري)
 
   useEffect(() => {
     localStorage.setItem(KEY, JSON.stringify(items));
@@ -54,6 +55,12 @@ export function CartProvider({ children }) {
     setOpen(true);
   };
 
+  // شراء فوري: يضيف المنتج ويطلب فتح شاشة إتمام الطلب مباشرةً
+  const buyNow = (product, qty = 1) => {
+    add(product, qty);
+    setCheckoutIntent(true);
+  };
+
   const remove = (key) => setItems((prev) => prev.filter((i) => i.key !== key));
   const setQty = (key, qty) =>
     setItems((prev) => prev.map((i) => (i.key === key ? { ...i, qty: Math.max(1, qty) } : i)));
@@ -69,7 +76,7 @@ export function CartProvider({ children }) {
   const total = useMemo(() => items.reduce((s, i) => s + i.price * i.qty, 0), [items]);
 
   return (
-    <CartContext.Provider value={{ items, add, remove, setQty, clear, ensureStore, count, total, open, setOpen }}>
+    <CartContext.Provider value={{ items, add, buyNow, remove, setQty, clear, ensureStore, count, total, open, setOpen, checkoutIntent, setCheckoutIntent }}>
       {children}
     </CartContext.Provider>
   );

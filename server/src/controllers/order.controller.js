@@ -205,10 +205,13 @@ export async function updateOrderStatus(req, res, next) {
     if (!order) return res.status(404).json({ error: 'الطلب غير موجود.' });
 
     const shouldApply = APPLY_STATUSES.includes(status);
-    let stockApplied = order.stock_applied;
+    // الطلب يُعتبر "مخصوماً" إن كان العلم مضبوطاً، أو كانت حالته الحالية مؤكّدة
+    // (طلبات قديمة أُكّدت قبل تحديث المنطق — كان يُخصم مخزونها عند الإنشاء بلا علم)
+    const wasApplied = order.stock_applied || APPLY_STATUSES.includes(order.status);
+    let stockApplied = wasApplied;
 
     // تأكيد الطلب لأول مرة → نخصم المخزون ونرفع عدّاد الكوبون
-    if (shouldApply && !order.stock_applied) {
+    if (shouldApply && !wasApplied) {
       await decrementStock(order.items);
       if (order.coupon_code) {
         await query('UPDATE coupons SET used_count = used_count + 1 WHERE store_id = $1 AND code = $2', [store.id, order.coupon_code]);
@@ -216,7 +219,7 @@ export async function updateOrderStatus(req, res, next) {
       stockApplied = true;
     }
     // إلغاء/إرجاع طلب سبق خصمه → نعيد المخزون وعدّاد الكوبون
-    else if (!shouldApply && order.stock_applied) {
+    else if (!shouldApply && wasApplied) {
       await restoreStock(order.items);
       if (order.coupon_code) {
         await query('UPDATE coupons SET used_count = GREATEST(0, used_count - 1) WHERE store_id = $1 AND code = $2', [store.id, order.coupon_code]);

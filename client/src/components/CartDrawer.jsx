@@ -50,7 +50,7 @@ const AREAS = [
 export default function CartDrawer() {
   const { t, i18n } = useTranslation();
   const ar = i18n.language !== 'en';
-  const { items, open, setOpen, remove, setQty, total, clear } = useCart();
+  const { items, open, setOpen, remove, setQty, total, clear, checkoutIntent, setCheckoutIntent } = useCart();
   const [view, setView] = useState('cart'); // 'cart' | 'checkout'
   const [cust, setCust] = useState({ name: '', phone: '', city: '', address: '', notes: '' });
   const [err, setErr] = useState('');
@@ -64,6 +64,10 @@ export default function CartDrawer() {
   useScrollLock(open);
 
   const storeSlug = items[0]?.storeSlug || '';
+  // الشراء الفوري: افتح السلة مباشرة على شاشة إتمام الطلب
+  useEffect(() => {
+    if (open && checkoutIntent) { setView('checkout'); setCheckoutIntent(false); }
+  }, [open, checkoutIntent, setCheckoutIntent]);
   // نجلب إعدادات التوصيل الخاصة بالمتجر عند فتح السلة
   useEffect(() => {
     if (!open || !storeSlug) return;

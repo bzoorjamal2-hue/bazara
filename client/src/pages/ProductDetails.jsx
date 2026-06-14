@@ -5,7 +5,6 @@ import api, { getErrorMessage } from '../api/client.js';
 import Seo from '../components/Seo.jsx';
 import { ProductDetailsSkeleton } from '../components/Skeleton.jsx';
 import StarRating from '../components/StarRating.jsx';
-import OrderOptions from '../components/OrderOptions.jsx';
 import Lightbox from '../components/Lightbox.jsx';
 import ProductRail from '../components/ProductRail.jsx';
 import { useCart } from '../context/CartContext.jsx';
@@ -21,7 +20,7 @@ export default function ProductDetails() {
   const { id } = useParams();
   const { t, i18n } = useTranslation();
   const rtl = i18n.language !== 'en';
-  const { add } = useCart();
+  const { add, buyNow } = useCart();
   const { has, toggle } = useWishlist();
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
@@ -29,7 +28,6 @@ export default function ProductDetails() {
   const [recent, setRecent] = useState([]);
   const [error, setError] = useState('');
   const [active, setActive] = useState(0);
-  const [orderOpen, setOrderOpen] = useState(false);
   const [selSize, setSelSize] = useState('');
   const [selColor, setSelColor] = useState('');
   const [pickErr, setPickErr] = useState('');
@@ -104,12 +102,6 @@ export default function ProductDetails() {
   const selSizeQty = (() => { const q = qtyFor(selSize); return typeof q === 'number' ? q : null; })();
 
   const cartProduct = { ...product, whatsapp: product.storeWhatsapp, size: selSize, color: selColor };
-  const orderStore = {
-    whatsapp: product.storeWhatsapp,
-    instagram: product.storeInstagram,
-    phone: product.storePhone,
-  };
-  const orderItems = [{ name: `${product.name}${selSize ? ` (${selSize})` : ''}${selColor ? ` - ${selColor}` : ''}`, price: product.price, qty: 1 }];
 
   // التحقق من اختيار اللون/المقاس قبل الإضافة أو الشراء
   const validatePick = () => {
@@ -126,7 +118,7 @@ export default function ProductDetails() {
     return true;
   };
   const handleAdd = () => { if (outOfStock || !validatePick()) return; add(cartProduct); };
-  const handleBuy = () => { if (outOfStock || !validatePick()) return; setOrderOpen(true); };
+  const handleBuy = () => { if (outOfStock || !validatePick()) return; buyNow(cartProduct); };
 
   const chipCls = (on) =>
     `min-w-11 rounded-xl border px-3.5 py-1.5 text-sm font-semibold transition ${on ? 'border-wine bg-wine text-cream' : 'border-wine/30 text-wine hover:bg-wine/10'}`;
@@ -299,19 +291,25 @@ export default function ProductDetails() {
 
           {pickErr && <p className="mt-4 text-sm font-medium text-red-500">{pickErr}</p>}
 
-          {/* أزرار الشراء */}
+          {/* أزرار الشراء — "اطلب الآن" شراء فوري (يفتح إتمام الطلب مباشرةً) */}
           <div className="mt-auto flex flex-col gap-3 pt-6 sm:flex-row">
-            <button onClick={handleAdd} disabled={outOfStock} className="btn-primary flex-1">
-              🛒 {t('product.addToCart')}
-            </button>
-            <button onClick={handleBuy} disabled={outOfStock} className="btn-ghost flex-1">
+            <button
+              onClick={handleBuy}
+              disabled={outOfStock}
+              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-wine to-wine-dark py-3.5 font-bold text-cream shadow-lg transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
+            >
               🛍️ {t('product.buyNow')}
+            </button>
+            <button
+              onClick={handleAdd}
+              disabled={outOfStock}
+              className="flex flex-1 items-center justify-center gap-2 rounded-2xl border-2 border-wine/40 py-3.5 font-bold text-wine transition hover:bg-wine/10 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              🛒 {t('product.addToCart')}
             </button>
           </div>
         </div>
       </div>
-
-      {orderOpen && <OrderOptions store={orderStore} items={orderItems} onClose={() => setOrderOpen(false)} />}
 
       {lightbox && hasImages && <Lightbox images={gallery} index={active} onClose={() => setLightbox(false)} />}
 

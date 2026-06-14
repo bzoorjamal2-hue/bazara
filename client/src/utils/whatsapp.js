@@ -1,6 +1,17 @@
+// تحويل الرقم لصيغة دولية يقبلها واتساب (يعالج الأرقام المحلّية بصفر بادئ)
+// الافتراضي رمز فلسطين 970 — يناسب أرقام الضفة/القدس المحلّية (05x…)
+export function waDigits(number, defaultCc = '970') {
+  let d = (number || '').replace(/\D/g, '');
+  if (!d) return '';
+  if (d.startsWith('00')) d = d.slice(2);          // 00970… → 970…
+  if (d.startsWith('0')) d = defaultCc + d.slice(1); // 059… → 970 59…
+  else if (d.length === 9) d = defaultCc + d;        // 59… (محلي بلا صفر) → 97059…
+  return d;
+}
+
 // يبني رابط واتساب لإرسال طلب جاهز لصاحب المتجر
 export function buildWhatsappOrder(number, items, lang = 'ar') {
-  const digits = (number || '').replace(/[^\d]/g, '');
+  const digits = waDigits(number);
   const total = items.reduce((s, i) => s + i.price * i.qty, 0);
 
   const lines =
@@ -26,7 +37,7 @@ export function buildWhatsappOrder(number, items, lang = 'ar') {
 
 // طلب كامل مع بيانات التوصيل ورسوم الشحن (Checkout احترافي)
 export function buildWhatsappCheckout(number, items, customer, lang = 'ar') {
-  const digits = (number || '').replace(/[^\d]/g, '');
+  const digits = waDigits(number);
   const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
   const delivery = Number(customer.delivery) || 0;
   const discount = Number(customer.discount) || 0;
@@ -83,7 +94,7 @@ export function buildWhatsappCheckout(number, items, customer, lang = 'ar') {
 }
 
 export function buildWhatsappLink(number, text = '') {
-  const digits = (number || '').replace(/[^\d]/g, '');
+  const digits = waDigits(number);
   const t = text ? `?text=${encodeURIComponent(text)}` : '';
   return `https://wa.me/${digits}${t}`;
 }
