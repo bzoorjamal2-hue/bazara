@@ -30,10 +30,10 @@ export default function WishlistDrawer() {
   const goFull = () => { close(); navigate('/wishlist'); };
 
   return (
-    <div className="fixed inset-0 z-[85] flex justify-end bg-black/60 backdrop-blur-sm sm:p-4" onClick={close}>
+    <div className="fixed inset-0 z-[85] flex justify-end bg-black/60 p-3 backdrop-blur-sm sm:p-4" onClick={close}>
       <aside
         onClick={(e) => e.stopPropagation()}
-        className="flex h-full w-full max-w-md animate-slide-in flex-col overflow-hidden border-s border-gold-400/20 bg-ink-900 sm:rounded-3xl sm:border sm:shadow-2xl"
+        className="flex h-full w-full max-w-md animate-slide-in flex-col overflow-hidden rounded-3xl border border-gold-400/20 bg-ink-900 shadow-2xl"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         {/* الرأس */}
