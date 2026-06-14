@@ -2,6 +2,35 @@ import crypto from 'crypto';
 import { query } from '../config/db.js';
 import { isLahzaConfigured, initializeTransaction, verifyTransaction, PAY_CURRENCY } from '../config/lahza.js';
 import { evaluateCoupon } from './coupon.controller.js';
+import { sendMail, isMailConfigured } from '../utils/mail.js';
+
+// إشعار صاحب المتجر بالبريد عند وصول طلب جديد (بالخلفية — لا يُعطّل الطلب)
+async function notifyOwnerNewOrder(storeId, info) {
+  if (!isMailConfigured()) return;
+  try {
+    const r = await query(
+      'SELECT u.email, s.name AS store_name FROM stores s JOIN users u ON u.id = s.user_id WHERE s.id = $1',
+      [storeId]
+    );
+    const row = r.rows[0];
+    if (!row?.email) return;
+    const rows = (info.items || [])
+      .map((i) => `<li>${i.name}${i.color ? ` - ${i.color}` : ''}${i.size ? ` (${i.size})` : ''} ×${i.qty} — ₪${(i.price * i.qty).toFixed(2)}</li>`)
+      .join('');
+    const html = `
+      <div style="font-family:Tahoma,Arial,sans-serif;direction:rtl;text-align:right;color:#2b2b2b">
+        <h2 style="color:#5e4636">🛍️ طلب جديد في متجرك ${row.store_name}</h2>
+        <p><b>الزبون:</b> ${info.name} — <span dir="ltr">${info.phone}</span></p>
+        ${info.city ? `<p><b>المدينة:</b> ${info.city}</p>` : ''}
+        <ul>${rows}</ul>
+        <p style="font-size:18px"><b>الإجمالي: ₪${Number(info.total).toFixed(2)}</b></p>
+        <p style="color:#8a6a4f">ادخلي لوحة التحكم → الطلبات لتأكيد الطلب ومتابعته.</p>
+      </div>`;
+    await sendMail({ to: row.email, subject: `🛍️ طلب جديد — ${row.store_name}`, html });
+  } catch (err) {
+    console.error('notifyOwnerNewOrder:', err.message);
+  }
+}
 
 // يخصم الكمية المطلوبة من مخزون المنتج العام ومن مخزون المقاس/اللون (إن وُجد) — لا يقل عن صفر
 async function decrementStock(orderItems) {
@@ -180,6 +209,10 @@ export async function createCodOrder(req, res, next) {
     // يتمّ ذلك عند تأكيد صاحب المتجر للطلب، ويُعاد عند الإلغاء (تحكّم أدق).
 
     res.status(201).json({ orderId: ins.rows[0].id, reference, discount, total });
+
+    // إشعار صاحب المتجر بالبريد (بالخلفية)
+    notifyOwnerNewOrder(storeId, { name, phone, city: (customer?.city || '').trim(), items: orderItems, total })
+      .catch((e) => console.error('notify:', e.message));
   } catch (err) {
     next(err);
   }
@@ -229,6 +262,18 @@ export async function updateOrderStatus(req, res, next) {
 
     await query('UPDATE orders SET status = $1, stock_applied = $2 WHERE id = $3 AND store_id = $4', [status, stockApplied, id, store.id]);
     res.json({ ok: true, status });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// عدد الطلبات الجديدة (غير المؤكّدة) — للشارة في التطبيق
+export async function getNewOrdersCount(req, res, next) {
+  try {
+    const store = await getUserStore(req.user.id);
+    if (!store) return res.json({ count: 0 });
+    const r = await query("SELECT COUNT(*)::int AS c FROM orders WHERE store_id = $1 AND status = 'new'", [store.id]);
+    res.json({ count: r.rows[0].c });
   } catch (err) {
     next(err);
   }

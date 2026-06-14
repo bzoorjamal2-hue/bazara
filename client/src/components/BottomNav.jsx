@@ -1,8 +1,10 @@
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
+import api from '../api/client.js';
 import { HeartIcon, CartIcon } from './icons.jsx';
 
 function HomeIcon({ className = 'h-6 w-6', filled }) {
@@ -40,6 +42,19 @@ export default function BottomNav() {
   const { count: wishCount, setOpen: setWishOpen, open: wishOpen } = useWishlist();
   const { user, store } = useAuth();
 
+  // عدّاد الطلبات الجديدة لصاحب المتجر — شارة على تبويب "حسابي"
+  const [newOrders, setNewOrders] = useState(0);
+  useEffect(() => {
+    if (!user || !store?.slug) { setNewOrders(0); return undefined; }
+    let alive = true;
+    const load = () => api.get('/orders/new-count').then((r) => { if (alive) setNewOrders(r.data.count || 0); }).catch(() => {});
+    load();
+    const id = setInterval(load, 60000);
+    const onFocus = () => load();
+    window.addEventListener('focus', onFocus);
+    return () => { alive = false; clearInterval(id); window.removeEventListener('focus', onFocus); };
+  }, [user, store?.slug]);
+
   const accountTo = user ? '/dashboard' : '/login';
   // "الرئيسية" للمشترك المسجّل → صفحة متجره العام؛ للزائر → بازارا العام (كل المتاجر)
   const homeTo = user && store?.slug ? `/store/${store.slug}` : '/shop';
@@ -48,7 +63,7 @@ export default function BottomNav() {
   const closeDrawers = () => { setOpen(false); setWishOpen(false); };
   const goto = (to) => { closeDrawers(); navigate(to); };
   const items = [
-    { key: 'account', label: t('nav.account') || 'حسابي', Icon: UserIcon, active: !cartOpen && !wishOpen && pathname.startsWith('/dashboard'), onClick: () => goto(accountTo) },
+    { key: 'account', label: t('nav.account') || 'حسابي', Icon: UserIcon, active: !cartOpen && !wishOpen && pathname.startsWith('/dashboard'), badge: newOrders, onClick: () => goto(accountTo) },
     { key: 'cart', label: t('nav.cart'), Icon: CartIcon, badge: count, active: cartOpen, onClick: () => { setWishOpen(false); setOpen(true); } },
     { key: 'fav', label: t('nav.wishlist'), Icon: HeartIcon, badge: wishCount, active: wishOpen, onClick: () => { setOpen(false); setWishOpen(true); } },
     { key: 'categories', label: t('nav.categories'), Icon: CategoriesIcon, active: !cartOpen && !wishOpen && (pathname === '/categories' || pathname.startsWith('/category/')), onClick: () => goto('/categories') },

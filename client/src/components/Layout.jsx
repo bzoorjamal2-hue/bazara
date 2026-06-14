@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import Navbar from './Navbar.jsx';
 import CartDrawer from './CartDrawer.jsx';
 import WishlistDrawer from './WishlistDrawer.jsx';
+import CartReminder from './CartReminder.jsx';
 import OfflineBanner from './OfflineBanner.jsx';
 import BottomNav from './BottomNav.jsx';
 import { isStandalone } from '../utils/pwa.js';
@@ -29,6 +30,7 @@ export default function Layout({ children }) {
       {!hideChrome && !showBottomNav && <PublicFooter />}
       <CartDrawer />
       <WishlistDrawer />
+      <CartReminder />
       <OfflineBanner />
       {showBottomNav && <BottomNav />}
     </div>

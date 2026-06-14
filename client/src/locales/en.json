@@ -389,7 +389,10 @@
     "orderWhatsapp": "Order via WhatsApp",
     "payCard": "Pay by card 💳",
     "clear": "Clear cart",
-    "proceed": "Proceed to order"
+    "proceed": "Proceed to order",
+    "reminderTitle": "Your cart is waiting 💜",
+    "reminderText": "You have {{count}} item(s) in your cart — complete your order before they sell out!",
+    "reminderCta": "Complete order"
   },
   "co": {
     "title": "Complete your order",

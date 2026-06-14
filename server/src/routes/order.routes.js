@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { checkout, createCodOrder, updateOrderStatus, verify, listMyOrders, getStats } from '../controllers/order.controller.js';
+import { checkout, createCodOrder, updateOrderStatus, verify, listMyOrders, getStats, getNewOrdersCount } from '../controllers/order.controller.js';
 import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
@@ -18,6 +18,7 @@ router.post('/cod', checkoutLimiter, createCodOrder); // طلب الدفع عن�
 router.get('/verify/:reference', verify);
 router.get('/mine', requireAuth, listMyOrders);
 router.get('/stats', requireAuth, getStats); // إحصائيات المتجر — للمشترك
+router.get('/new-count', requireAuth, getNewOrdersCount); // عدد الطلبات الجديدة — للشارة
 router.patch('/:id/status', requireAuth, updateOrderStatus); // تحديث حالة الطلب — للمشترك
 
 export default router;
