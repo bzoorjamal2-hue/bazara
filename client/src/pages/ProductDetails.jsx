@@ -25,6 +25,7 @@ export default function ProductDetails() {
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [related, setRelated] = useState([]);
+  const [complementary, setComplementary] = useState([]);
   const [recent, setRecent] = useState([]);
   const [error, setError] = useState('');
   const [active, setActive] = useState(0);
@@ -51,19 +52,19 @@ export default function ProductDetails() {
       .catch((err) => setError(getErrorMessage(err, t('errors.notFound'))));
   };
 
-  // "قد يعجبك أيضاً": منتجات من نفس المتجر ونفس الفئة (عدا الحالي)
+  // منتجات من نفس المتجر: "قد يعجبك" (نفس الفئة) + "أكملي إطلالتك" (فئة مختلفة)
   const fetchRelated = (p) => {
     if (!p?.storeSlug) return;
     api
       .get(`/public/store/${p.storeSlug}`)
       .then((res) => {
-        const list = (res.data.products || [])
-          .filter((x) => x.id !== p.id && x.category === p.category)
-          .slice(0, 10)
+        const all = (res.data.products || [])
+          .filter((x) => x.id !== p.id)
           .map((x) => ({ ...x, storeSlug: p.storeSlug }));
-        setRelated(list);
+        setRelated(all.filter((x) => x.category === p.category).slice(0, 10));
+        setComplementary(all.filter((x) => x.category !== p.category).slice(0, 10));
       })
-      .catch(() => setRelated([]));
+      .catch(() => { setRelated([]); setComplementary([]); });
   };
 
   useEffect(() => {
@@ -356,6 +357,9 @@ export default function ProductDetails() {
       </div>
 
       {lightbox && hasImages && <Lightbox images={gallery} index={active} onClose={() => setLightbox(false)} />}
+
+      {/* أكملي إطلالتك — قطع مكمّلة من المتجر (فئة مختلفة) */}
+      <ProductRail title={`✨ ${t('product.completeLook')}`} products={complementary} currentId={product.id} />
 
       {/* قد يعجبك أيضاً */}
       <ProductRail title={t('product.youMayLike')} products={related} currentId={product.id} />
