@@ -81,10 +81,11 @@ export const Field = forwardRef(function Field({ icon, trailing, className = '',
   );
 });
 
-// صعود وتلاشٍ ناعم بدون ارتداد (tween بدل spring) — يتفادى إحساس "القفز/الفصل"
+// تلاشٍ ناعم بمكانه بلا أي حركة عمودية — يتفادى تماماً إحساس "القفز/الفصل"
+// (الصفحة نفسها تتلاشى عند الدخول، فلا داعي لحركة إضافية تتعارض معها)
 const rise = {
-  hidden: { opacity: 0, y: 12 },
-  show: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: 0.04 * i, duration: 0.34, ease: [0.22, 0.61, 0.36, 1] } }),
+  hidden: { opacity: 0 },
+  show: () => ({ opacity: 1, transition: { duration: 0.3, ease: 'easeOut' } }),
 };
 export { rise };
 
