@@ -31,10 +31,10 @@ export default function WishlistDrawer() {
   const goFull = () => { close(); navigate('/wishlist'); };
 
   return (
-    <div className="fixed inset-0 z-[70] flex justify-end bg-black/60 backdrop-blur-sm" onClick={close}>
+    <div className="fixed inset-0 z-[70] flex justify-end bg-black/60 backdrop-blur-sm sm:p-4" onClick={close}>
       <aside
         onClick={(e) => e.stopPropagation()}
-        className="flex h-full w-full max-w-md animate-slide-in flex-col border-s border-gold-400/20 bg-ink-900"
+        className="flex h-full w-full max-w-md animate-slide-in flex-col overflow-hidden border-s border-gold-400/20 bg-ink-900 sm:rounded-3xl sm:border sm:shadow-2xl"
         style={isStandalone() ? { paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 62px)' } : undefined}
       >
         {/* الرأس */}
