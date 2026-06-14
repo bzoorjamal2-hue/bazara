@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from './components/Layout.jsx';
@@ -17,10 +17,15 @@ import { useAuth } from './context/AuthContext.jsx';
 // في المتصفح: يعرض الصفحة الرئيسية العامة كالمعتاد.
 function Root() {
   const { user, loading } = useAuth();
+  // مهلة قصوى للسبلاش: لو تأخّر الخادم (Render نائم) لا نعلّق — نعرض شاشة الترحيب بعد 6 ثوانٍ
+  const [waited, setWaited] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => setWaited(true), 6000);
+    return () => clearTimeout(id);
+  }, []);
   if (!isStandalone()) return <Home />;
   if (user) return <Navigate to="/dashboard" replace />;
-  // أثناء التحقق من جلسة محفوظة (يوجد توكن) نعرض سبلاش بهوية بازارا بدل وميض شاشة الترحيب
-  if (loading && hasStoredToken()) return <Splash />;
+  if (loading && hasStoredToken() && !waited) return <Splash />;
   return <AppWelcome />;
 }
 
@@ -48,6 +53,9 @@ function AnimatedRoutes() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' });
   }, [location.pathname]);
+
+  // التطبيق أقلع بنجاح → نصفّر علم إعادة التحميل (ليعمل التعافي مجدداً عند أي فشل لاحق)
+  useEffect(() => { try { sessionStorage.removeItem('bz_chunk_reload'); } catch { /* ignore */ } }, []);
 
   // تحميل مُسبق للصفحات الشائعة بعد الإقلاع — يلغي وميض/فصل التحميل عند الانتقال
   useEffect(() => {
