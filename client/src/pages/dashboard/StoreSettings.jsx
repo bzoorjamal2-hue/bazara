@@ -115,23 +115,6 @@ export default function StoreSettings() {
             <label className="label">{t('dashboard.store.description')}</label>
             <textarea rows={3} className="input resize-none" value={form.description} onChange={set('description')} />
           </div>
-          <div>
-            <label className="label">{t('dashboard.store.themeColor')}</label>
-            <div className="flex flex-wrap items-center gap-2">
-              {['#d4af37', '#7a1f2b', '#1f3a5f', '#3e2b5e', '#2e5d4b', '#b76e79', '#0b0b0d'].map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setForm({ ...form, themeColor: c })}
-                  className={`h-9 w-9 rounded-full border-2 transition ${form.themeColor === c ? 'border-white scale-110' : 'border-white/20'}`}
-                  style={{ background: c }}
-                  aria-label={c}
-                />
-              ))}
-              <input type="color" className="h-9 w-12 cursor-pointer rounded-lg border border-gold-400/20 bg-black/30" value={form.themeColor} onChange={set('themeColor')} title={t('dashboard.store.themeColor')} />
-              <span className="text-xs text-stone-400" dir="ltr">{form.themeColor}</span>
-            </div>
-          </div>
         </div>
 
         {/* التواصل */}
