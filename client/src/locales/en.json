@@ -199,6 +199,12 @@
       "empty": "No coupons yet. Create your first one to attract customers!",
       "deleteConfirm": "Delete this coupon?"
     },
+    "stockRequests": {
+      "title": "Restock requests",
+      "hint": "Customers who left their number for sold-out items — reach out when you restock.",
+      "empty": "No restock requests yet.",
+      "notify": "WhatsApp"
+    },
     "analytics": {
       "title": "Analytics",
       "hint": "A quick look at your sales, orders and best-selling products.",
@@ -318,6 +324,11 @@
     "someSizesSoldOut": "Crossed-out sizes are sold out",
     "leftShort": "{{count}} left",
     "soldOutShort": "Sold out",
+    "notifyTitle": "Sold out? Leave your number and we'll alert you when it's back",
+    "notifyPhonePlaceholder": "Your phone number",
+    "notifySend": "Notify me",
+    "notifySent": "Done! 💜 We'll alert you when it's back",
+    "notifyInvalid": "Enter a valid phone number",
     "addToCart": "Add to cart",
     "buyNow": "Order now",
     "shopNow": "Shop now",

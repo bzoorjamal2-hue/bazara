@@ -1,0 +1,56 @@
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import api, { getErrorMessage } from '../../api/client.js';
+import Spinner from '../../components/Spinner.jsx';
+import { buildWhatsappLink } from '../../utils/whatsapp.js';
+import { sizeLabel } from '../../utils/sizes.js';
+
+export default function StockRequestsManager() {
+  const { t } = useTranslation();
+  const [reqs, setReqs] = useState(null);
+  const [error, setError] = useState('');
+
+  const load = () => api.get('/stock-requests').then((r) => setReqs(r.data.requests)).catch((e) => setError(getErrorMessage(e)));
+  useEffect(() => { load(); }, []);
+
+  const remove = async (id) => {
+    setReqs((prev) => prev.filter((x) => x.id !== id));
+    try { await api.delete(`/stock-requests/${id}`); } catch (e) { setError(getErrorMessage(e)); load(); }
+  };
+
+  if (reqs === null && !error) return <Spinner />;
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <h1 className="font-display text-2xl font-bold gradient-text">🔔 {t('dashboard.stockRequests.title')}</h1>
+        <p className="mt-1 text-sm text-stone-400">{t('dashboard.stockRequests.hint')}</p>
+      </div>
+
+      {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
+
+      {reqs && reqs.length === 0 ? (
+        <div className="glass p-10 text-center text-stone-400">{t('dashboard.stockRequests.empty')}</div>
+      ) : (
+        <div className="space-y-3">
+          {reqs?.map((r) => {
+            const variant = [r.color, r.size ? sizeLabel(r.size, t) : ''].filter(Boolean).join(' · ');
+            return (
+              <div key={r.id} className="glass flex flex-wrap items-center justify-between gap-3 p-4">
+                <div className="min-w-0">
+                  <p className="font-semibold text-stone-100">{r.productName}</p>
+                  {variant && <p className="text-xs text-gold-200">{variant}</p>}
+                  <p className="mt-0.5 text-xs text-stone-400" dir="ltr">{r.phone} · {new Date(r.createdAt).toLocaleDateString()}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <a href={buildWhatsappLink(r.phone)} target="_blank" rel="noreferrer" className="btn-whatsapp !px-3 !py-1.5 text-xs">💬 {t('dashboard.stockRequests.notify')}</a>
+                  <button onClick={() => remove(r.id)} aria-label="remove" className="rounded-lg p-2 text-stone-400 hover:text-red-300">🗑️</button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}

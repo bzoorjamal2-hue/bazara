@@ -57,6 +57,9 @@ function TicketIcon({ className = 'h-5 w-5' }) {
 function ChartIcon({ className = 'h-5 w-5' }) {
   return (<svg {...I({ className })}><path d="M4 20V4" /><path d="M4 20h16" /><rect x="7" y="12" width="3" height="5" rx="0.6" /><rect x="12" y="8" width="3" height="9" rx="0.6" /><rect x="17" y="14" width="3" height="3" rx="0.6" /></svg>);
 }
+function BellIcon({ className = 'h-5 w-5' }) {
+  return (<svg {...I({ className })}><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 0 1-3.4 0" /></svg>);
+}
 
 export default function Navbar() {
   const { t, i18n } = useTranslation();
@@ -111,6 +114,7 @@ export default function Navbar() {
         { key: 'myProducts', label: t('dashboard.myProducts'), Icon: BagIcon },
         { key: 'myOrders', label: t('dashboard.myOrders'), Icon: ReceiptIcon },
         { key: 'coupons', label: t('dashboard.coupons.title'), Icon: TicketIcon },
+        { key: 'stockRequests', label: t('dashboard.stockRequests.title'), Icon: BellIcon },
       ];
 
   return (

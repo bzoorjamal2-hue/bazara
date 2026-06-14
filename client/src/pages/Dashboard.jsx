@@ -11,6 +11,7 @@ import ProductsManager from './dashboard/ProductsManager.jsx';
 import OrdersManager from './dashboard/OrdersManager.jsx';
 import CouponsManager from './dashboard/CouponsManager.jsx';
 import AnalyticsManager from './dashboard/AnalyticsManager.jsx';
+import StockRequestsManager from './dashboard/StockRequestsManager.jsx';
 import AdminRequests from './dashboard/AdminRequests.jsx';
 import SubscribersManager from './dashboard/SubscribersManager.jsx';
 
@@ -23,6 +24,7 @@ const SECTIONS = [
   { key: 'myProducts', icon: '🧺' },
   { key: 'myOrders', icon: '🧾' },
   { key: 'coupons', icon: '🎟️' },
+  { key: 'stockRequests', icon: '🔔' },
 ];
 
 // أقسام المدير (تحكّم فقط — بلا بيع/منتجات)
@@ -69,6 +71,7 @@ export default function Dashboard() {
         {section === 'myProducts' && !isAdmin && <ProductsManager onCount={setProductsCount} />}
         {section === 'myOrders' && !isAdmin && <OrdersManager />}
         {section === 'coupons' && !isAdmin && <CouponsManager />}
+        {section === 'stockRequests' && !isAdmin && <StockRequestsManager />}
         {section === 'subscribers' && isAdmin && <SubscribersManager />}
         {section === 'admin' && isAdmin && <AdminRequests />}
       </div>

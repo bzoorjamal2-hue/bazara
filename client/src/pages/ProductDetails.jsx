@@ -32,6 +32,9 @@ export default function ProductDetails() {
   const [selColor, setSelColor] = useState('');
   const [pickErr, setPickErr] = useState('');
   const [lightbox, setLightbox] = useState(false);
+  const [notifyPhone, setNotifyPhone] = useState('');
+  const [notifyBusy, setNotifyBusy] = useState(false);
+  const [notifySent, setNotifySent] = useState(false);
 
   const fetchData = () => {
     api
@@ -119,6 +122,21 @@ export default function ProductDetails() {
   };
   const handleAdd = () => { if (outOfStock || !validatePick()) return; add(cartProduct); };
   const handleBuy = () => { if (outOfStock || !validatePick()) return; buyNow(cartProduct); };
+
+  // تنبيه التوفّر: يظهر عند نفاد المنتج كلياً أو نفاد المقاس المختار
+  const showNotify = outOfStock || (selSize && sizeSoldOut(selSize));
+  const submitNotify = async () => {
+    if (notifyPhone.replace(/\D/g, '').length < 6) { setPickErr(t('product.notifyInvalid')); return; }
+    setNotifyBusy(true); setPickErr('');
+    try {
+      await api.post('/public/stock-request', { productId: product.id, color: selColor, size: selSize, phone: notifyPhone.trim() });
+      setNotifySent(true);
+    } catch (err) {
+      setPickErr(getErrorMessage(err, t('errors.generic')));
+    } finally {
+      setNotifyBusy(false);
+    }
+  };
 
   const chipCls = (on) =>
     `min-w-11 rounded-xl border px-3.5 py-1.5 text-sm font-semibold transition ${on ? 'border-wine bg-wine text-cream' : 'border-wine/30 text-wine hover:bg-wine/10'}`;
@@ -291,8 +309,34 @@ export default function ProductDetails() {
 
           {pickErr && <p className="mt-4 text-sm font-medium text-red-500">{pickErr}</p>}
 
+          {/* تنبيه التوفّر عند نفاد المنتج/المقاس */}
+          {showNotify && (
+            <div className="mt-6 rounded-2xl border border-wine/15 bg-wine/5 p-4">
+              {notifySent ? (
+                <p className="text-center text-sm font-semibold text-emerald-600">{t('product.notifySent')}</p>
+              ) : (
+                <>
+                  <p className="mb-2 text-sm font-bold text-wine">🔔 {t('product.notifyTitle')}</p>
+                  <div className="flex gap-2">
+                    <input
+                      dir="ltr"
+                      inputMode="tel"
+                      className="input flex-1 !rounded-xl text-end"
+                      placeholder={t('product.notifyPhonePlaceholder')}
+                      value={notifyPhone}
+                      onChange={(e) => setNotifyPhone(e.target.value)}
+                    />
+                    <button onClick={submitNotify} disabled={notifyBusy} className="shrink-0 rounded-xl bg-wine px-5 font-bold text-cream transition hover:bg-wine-dark disabled:opacity-60">
+                      {notifyBusy ? '…' : t('product.notifySend')}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
           {/* أزرار الشراء — "اطلب الآن" شراء فوري (يفتح إتمام الطلب مباشرةً) */}
-          <div className="mt-auto flex flex-col gap-3 pt-6 sm:flex-row">
+          <div className={`mt-auto flex flex-col gap-3 pt-6 sm:flex-row ${showNotify ? 'hidden' : ''}`}>
             <button
               onClick={handleBuy}
               disabled={outOfStock}
