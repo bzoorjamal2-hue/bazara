@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { cldThumb } from '../utils/cloudinary.js';
+import { productThumb } from '../utils/recentlyViewed.js';
 
 const PH =
   'data:image/svg+xml;utf8,' +
@@ -20,7 +21,8 @@ export default function ProductRail({ title, products, currentId }) {
       <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
         {list.map((p) => {
           const hasDiscount = p.oldPrice && p.oldPrice > p.price;
-          const img = cldThumb(p.imageUrl || PH, 300);
+          const thumb = productThumb(p);
+          const img = thumb ? cldThumb(thumb, 300) : PH;
           return (
             <Link key={p.id} to={`/product/${p.id}`} className="glass w-36 shrink-0 overflow-hidden transition hover:-translate-y-1 hover:shadow-glow sm:w-40">
               <div className="aspect-[3/4] overflow-hidden bg-ink-800">

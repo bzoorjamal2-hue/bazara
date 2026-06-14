@@ -8,6 +8,7 @@ import LanguageSwitcher from './LanguageSwitcher.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { CartIcon, HeartIcon, MenuIcon } from './icons.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
+import NavBell from './NavBell.jsx';
 import { isStandalone } from '../utils/pwa.js';
 import CatThumb from './CatThumb.jsx';
 
@@ -134,6 +135,7 @@ export default function Navbar() {
               <MenuIcon className="h-5 w-5" />
             </button>
             <ThemeToggle className="rounded-full text-wine hover:bg-wine/10" />
+            <NavBell />
           </div>
 
           {/* الشعار بالنص (في المنتصف تماماً) */}

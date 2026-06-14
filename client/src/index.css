@@ -448,9 +448,18 @@ html.dark .theme-pub .text-\[\#6b6b6b\] { color: #ab9f90; }
 html.dark .theme-pub .bg-\[\#f3ece0\] { background-color: #2b211a; }
 /* placeholder النصوص في حقول البحث المخصّصة */
 html.dark .theme-pub .placeholder\:text-stone-400::placeholder { color: #9b8f80; }
-/* نصوص خضراء/حمراء داكنة (تأكيدات/أخطاء) → فاتحة قليلاً */
-html.dark .theme-pub .text-emerald-700 { color: #6ee7b7; }
-html.dark .theme-pub .text-red-600 { color: #fca5a5; }
+/* نصوص خضراء/حمراء داكنة (تأكيدات/أخطاء) → فاتحة قليلاً ومرئية بوضوح */
+html.dark .theme-pub .text-emerald-700,
+html.dark .theme-pub .text-emerald-600,
+html.dark .theme-pub .text-emerald-500 { color: #6ee7b7; }
+html.dark .theme-pub .text-red-600,
+html.dark .theme-pub .text-red-500 { color: #fca5a5; }
+/* شبكة أمان: نصوص داكنة إضافية قد تختفي في الوضع الليلي → فاتحة */
+html.dark .theme-pub .text-stone-800,
+html.dark .theme-pub .text-stone-900,
+html.dark .theme-pub .text-\[\#2b2b2b\],
+html.dark .theme-pub .text-wine-dark { color: #ece3d6; }
+html.dark .theme-pub .text-\[\#594335\] { color: #cabdab; }
 /* حدود/فواصل بنّية شفافة → ذهبية خفيفة */
 html.dark .theme-pub .bg-wine\/10,
 html.dark .theme-pub .bg-wine\/15 { background-color: rgba(230, 200, 120, 0.12); }

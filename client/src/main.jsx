@@ -12,6 +12,9 @@ import { ThemeProvider } from './context/ThemeContext.jsx';
 
 // تعافٍ تلقائي من فشل تحميل أجزاء الموقع (يحدث بكاش قديم بعد تحديث) — يمنع التعليق
 // على شاشة كريمية بإعادة التحميل مرة واحدة لجلب أحدث الملفات.
+// نتحكّم باستعادة موضع التمرير يدوياً (عبر الراوتر) بدل سلوك المتصفّح
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+
 window.addEventListener('vite:preloadError', () => {
   if (!sessionStorage.getItem('bz_chunk_reload')) {
     sessionStorage.setItem('bz_chunk_reload', '1');

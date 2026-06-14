@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
-import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { Routes, Route, useLocation, useNavigationType, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from './components/Layout.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
@@ -45,14 +45,37 @@ const Track = lazy(() => import('./pages/Track.jsx'));
 const PaymentCallback = lazy(() => import('./pages/PaymentCallback.jsx'));
 const NotFound = lazy(() => import('./pages/NotFound.jsx'));
 
-// انتقالات ناعمة بين الصفحات (إحساس تطبيق Native) + التمرير لأعلى عند تغيّر الصفحة
+// مواضع التمرير المحفوظة لكل صفحة (لاستعادتها عند الرجوع)
+const scrollPositions = new Map();
+
+// انتقالات ناعمة بين الصفحات + استعادة موضع التمرير عند الرجوع، والتمرير لأعلى عند صفحة جديدة
 function AnimatedRoutes() {
   const location = useLocation();
+  const navType = useNavigationType(); // POP عند الرجوع/التقدّم
 
-  // التمرير لأعلى عند الانتقال لصفحة جديدة (لا يتأثّر بتنقّل الفئات داخل نفس الرابط)
+  // نحفظ موضع التمرير الحالي باستمرار لمفتاح هذه الصفحة
   useEffect(() => {
+    const onScroll = () => { scrollPositions.set(location.key, window.scrollY); };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [location.key]);
+
+  // عند الرجوع (POP) نستعيد الموضع (مع إعادة محاولة لأنّ المحتوى قد يُحمّل لاحقاً)؛ غير ذلك لأعلى
+  useEffect(() => {
+    if (navType === 'POP') {
+      const y = scrollPositions.get(location.key) || 0;
+      if (y > 0) {
+        let n = 0;
+        const id = setInterval(() => {
+          window.scrollTo({ top: y, behavior: 'auto' });
+          if (++n >= 25 || Math.abs(window.scrollY - y) < 4) clearInterval(id);
+        }, 60);
+        return () => clearInterval(id);
+      }
+    }
     window.scrollTo({ top: 0, behavior: 'auto' });
-  }, [location.pathname]);
+    return undefined;
+  }, [location.key, navType]);
 
   // التطبيق أقلع بنجاح → نصفّر علم إعادة التحميل (ليعمل التعافي مجدداً عند أي فشل لاحق)
   useEffect(() => { try { sessionStorage.removeItem('bz_chunk_reload'); } catch { /* ignore */ } }, []);

@@ -30,6 +30,19 @@ export async function enablePush() {
   return true;
 }
 
+// إيقاف الإشعارات: إلغاء الاشتراك من المتصفّح والخادم
+export async function disablePush() {
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    const sub = reg && (await reg.pushManager.getSubscription());
+    if (sub) {
+      await api.post('/push/unsubscribe', { endpoint: sub.endpoint }).catch(() => {});
+      await sub.unsubscribe().catch(() => {});
+    }
+  } catch { /* تجاهل */ }
+  return true;
+}
+
 export async function pushStatus() {
   if (!pushSupported()) return 'unsupported';
   if (Notification.permission === 'denied') return 'denied';
