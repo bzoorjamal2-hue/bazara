@@ -6,7 +6,6 @@ import { buildWhatsappCheckout } from '../utils/whatsapp.js';
 import useScrollLock from '../hooks/useScrollLock.js';
 import Select from './Select.jsx';
 import api from '../api/client.js';
-import { isStandalone } from '../utils/pwa.js';
 import { sizeLabel } from '../utils/sizes.js';
 
 // مناطق التوصيل ورسومها (قابلة للتعديل): مدن الضفة 20₪ · القدس 35₪ · مدن الداخل 70₪
@@ -149,11 +148,11 @@ export default function CartDrawer() {
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex justify-end bg-black/60 backdrop-blur-sm sm:p-4" onClick={close}>
+    <div className="fixed inset-0 z-[85] flex justify-end bg-black/60 backdrop-blur-sm sm:p-4" onClick={close}>
       <aside
         onClick={(e) => e.stopPropagation()}
         className="flex h-full w-full max-w-md animate-slide-in flex-col overflow-hidden border-s border-gold-400/20 bg-ink-900 sm:rounded-3xl sm:border sm:shadow-2xl"
-        style={isStandalone() ? { paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 62px)' } : undefined}
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         {/* الرأس */}
         <div className="flex items-center justify-between border-b border-gold-400/15 p-4">

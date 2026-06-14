@@ -8,15 +8,9 @@ import LanguageSwitcher from './LanguageSwitcher.jsx';
 // تظهر فقط داخل التطبيق؛ الموقع في المتصفح يبقى كما هو.
 
 // تنسيق الحركة: دخول متدرّج للعناصر من الأسفل للأعلى
-const container = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.05 } },
-};
-// تلاشٍ ناعم بمكانه بلا حركة عمودية — يتفادى تماماً إحساس "القفز/الفصل"
-const rise = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { duration: 0.35, ease: 'easeOut' } },
-};
+// بلا حركة دخول للعناصر — تظهر مع تلاشي الصفحة الواحد (لا قفز ولا فصل)
+const container = { hidden: {}, show: {} };
+const rise = { hidden: { opacity: 1 }, show: { opacity: 1 } };
 
 const MLink = motion.create(Link);
 

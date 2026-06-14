@@ -5,7 +5,6 @@ import { useWishlist } from '../context/WishlistContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { cldThumb } from '../utils/cloudinary.js';
-import { isStandalone } from '../utils/pwa.js';
 
 const PH = 'https://placehold.co/120x120/f1e9dd/5e4636?text=%F0%9F%91%97';
 
@@ -31,11 +30,11 @@ export default function WishlistDrawer() {
   const goFull = () => { close(); navigate('/wishlist'); };
 
   return (
-    <div className="fixed inset-0 z-[70] flex justify-end bg-black/60 backdrop-blur-sm sm:p-4" onClick={close}>
+    <div className="fixed inset-0 z-[85] flex justify-end bg-black/60 backdrop-blur-sm sm:p-4" onClick={close}>
       <aside
         onClick={(e) => e.stopPropagation()}
         className="flex h-full w-full max-w-md animate-slide-in flex-col overflow-hidden border-s border-gold-400/20 bg-ink-900 sm:rounded-3xl sm:border sm:shadow-2xl"
-        style={isStandalone() ? { paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 62px)' } : undefined}
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         {/* الرأس */}
         <div className="flex items-center justify-between border-b border-gold-400/15 p-4">

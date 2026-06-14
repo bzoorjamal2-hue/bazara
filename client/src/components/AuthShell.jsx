@@ -81,11 +81,11 @@ export const Field = forwardRef(function Field({ icon, trailing, className = '',
   );
 });
 
-// تلاشٍ ناعم بمكانه بلا أي حركة عمودية — يتفادى تماماً إحساس "القفز/الفصل"
-// (الصفحة نفسها تتلاشى عند الدخول، فلا داعي لحركة إضافية تتعارض معها)
+// بلا حركة دخول للعناصر — الصفحة كلها تظهر بتلاشٍ واحد ناعم عبر انتقال المسار،
+// فلا يوجد أي حركة لكل عنصر قد تتعارض وتسبب "القفز/الفصل".
 const rise = {
-  hidden: { opacity: 0 },
-  show: () => ({ opacity: 1, transition: { duration: 0.3, ease: 'easeOut' } }),
+  hidden: { opacity: 1 },
+  show: { opacity: 1 },
 };
 export { rise };
 

@@ -132,6 +132,18 @@ async function ensureColumns() {
       UNIQUE (store_id, code)
     );`);
     await pool.query('CREATE INDEX IF NOT EXISTS idx_coupons_store ON coupons(store_id);');
+    // طلبات التنبيه عند توفّر المنتج (نمرة/لون نفد)
+    await pool.query(`CREATE TABLE IF NOT EXISTS stock_requests (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+      product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+      product_name VARCHAR(150) DEFAULT '',
+      color VARCHAR(50) DEFAULT '',
+      size VARCHAR(20) DEFAULT '',
+      phone VARCHAR(40) NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );`);
+    await pool.query('CREATE INDEX IF NOT EXISTS idx_stockreq_store ON stock_requests(store_id);');
   } catch (err) {
     console.error('⚠️ تعذّر تطبيق الترقيات:', err.message);
   }
