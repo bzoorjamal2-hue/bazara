@@ -119,7 +119,10 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50">
-      <nav className={`app-navbar relative flex w-full justify-center px-3 py-2.5 transition-shadow duration-300 sm:px-6 ${scrolled ? 'shadow-md' : ''}`}>
+      <nav
+        className={`app-navbar relative flex w-full justify-center px-3 py-2.5 transition-shadow duration-300 sm:px-6 ${scrolled ? 'shadow-md' : ''}`}
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.625rem)' }}
+      >
         <div className="relative flex h-12 w-full max-w-6xl items-center justify-between">
           {/* القائمة + الوضع الليلي — جهة البداية (اليمين في العربية، اليسار في الإنجليزية) */}
           <div className="flex items-center gap-1 sm:gap-1.5">

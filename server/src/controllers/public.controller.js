@@ -168,17 +168,27 @@ export async function getProductById(req, res, next) {
   }
 }
 
-// منتجات فئة معيّنة عبر كل المتاجر الفعّالة (تصفّح حسب الفئة)
+// منتجات فئة معيّنة. مع ?store=slug تُحصر بمتجر واحد (تفادي خلط منتجات المتاجر)،
+// وبدونه تشمل كل المتاجر الفعّالة (تصفّح ماركت بازارا).
 export async function getByCategory(req, res, next) {
   const { cat } = req.params;
+  const storeSlug = (req.query.store || '').trim();
   const valid = ['abaya', 'set', 'dress', 'hijab', 'trench'];
   if (!valid.includes(cat)) return res.status(400).json({ error: 'فئة غير صالحة.' });
   try {
     const active = activeStoreSql('u');
-    const r = await query(
-      `${PRODUCT_SELECT} WHERE p.category = $1 AND ${active} ORDER BY p.featured DESC, p.created_at DESC LIMIT 60`,
-      [cat]
-    );
+    let r;
+    if (storeSlug) {
+      r = await query(
+        `${PRODUCT_SELECT} WHERE p.category = $1 AND s.slug = $2 AND ${active} ORDER BY p.featured DESC, p.created_at DESC LIMIT 60`,
+        [cat, storeSlug]
+      );
+    } else {
+      r = await query(
+        `${PRODUCT_SELECT} WHERE p.category = $1 AND ${active} ORDER BY p.featured DESC, p.created_at DESC LIMIT 60`,
+        [cat]
+      );
+    }
     res.json({ category: cat, products: r.rows.map(mapProduct) });
   } catch (err) {
     next(err);

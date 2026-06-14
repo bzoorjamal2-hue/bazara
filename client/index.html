@@ -40,7 +40,14 @@
     <link rel="canonical" href="https://bazara-alpha.vercel.app/" />
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- شاشة تحميل كريمية فورية (تظهر قبل تحميل التطبيق بدل الشاشة السوداء) -->
+      <div id="boot-splash" style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#F4EDE2;gap:20px;">
+        <div style="font-family:'El Messiri','Cairo',serif;font-size:42px;font-weight:800;color:#5e4636;letter-spacing:1px;">Bazara</div>
+        <div style="width:30px;height:30px;border:3px solid rgba(94,70,54,0.2);border-top-color:#5e4636;border-radius:50%;animation:bz-spin 0.8s linear infinite;"></div>
+      </div>
+    </div>
+    <style>@keyframes bz-spin{to{transform:rotate(360deg)}}</style>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

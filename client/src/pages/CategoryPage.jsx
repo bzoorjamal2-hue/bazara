@@ -50,14 +50,16 @@ export default function CategoryPage() {
   const [products, setProducts] = useState(null);
   const [error, setError] = useState('');
 
+  // المشترك المسجّل يرى منتجات متجره فقط (بلا خلط مع متاجر أخرى)
+  const scopeSlug = user && store?.slug ? store.slug : '';
   useEffect(() => {
     setProducts(null);
     setError('');
     api
-      .get(`/public/category/${cat}`)
+      .get(`/public/category/${cat}${scopeSlug ? `?store=${scopeSlug}` : ''}`)
       .then((r) => setProducts(r.data.products))
       .catch((err) => setError(getErrorMessage(err)));
-  }, [cat]);
+  }, [cat, scopeSlug]);
 
   return (
     <>

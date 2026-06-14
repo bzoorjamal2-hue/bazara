@@ -10,6 +10,7 @@ import useScrollLock from '../hooks/useScrollLock.js';
 import { MenuIcon, SearchIcon, CartIcon, HeartIcon } from './icons.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import { cldThumb } from '../utils/cloudinary.js';
+import { productThumb } from '../utils/recentlyViewed.js';
 
 const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench'];
 
@@ -132,7 +133,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
             {focus && suggestions.length > 0 && (
               <div className="absolute inset-x-0 top-full z-[60] mt-2 overflow-hidden rounded-2xl border border-wine/10 bg-white shadow-2xl">
                 {suggestions.map((p) => {
-                  const img = cldThumb(p.imageUrl || (p.images && p.images[0]) || '', 120);
+                  const img = cldThumb(productThumb(p), 120);
                   return (
                     <Link
                       key={p.id}
