@@ -19,6 +19,16 @@ body {
   overscroll-behavior-y: none;
 }
 
+/* منع تكبير الشاشة عند النقر المزدوج/السريع على الأزرار (سلوك iOS المزعج) */
+button, a, [role='button'], label, select, summary {
+  touch-action: manipulation;
+}
+
+/* هامش سفلي موثوق يضمن عدم تغطية الشريط السفلي للمحتوى (يشمل منطقة الأمان) */
+.pb-bottomnav {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 6.5rem);
+}
+
 /* خلفية فاخرة سوداء بلمسات ذهبية ناعمة (غير مزدحمة) */
 .app-bg {
   position: relative;

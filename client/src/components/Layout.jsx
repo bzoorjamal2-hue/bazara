@@ -26,7 +26,7 @@ export default function Layout({ children }) {
   return (
     <div className="app-bg theme-pub flex min-h-screen flex-col">
       {!hideChrome && <Navbar />}
-      <main className={`mx-auto w-full max-w-6xl flex-1 px-4 pt-5 sm:px-6 ${showBottomNav ? 'pb-[calc(env(safe-area-inset-bottom,0px)+6.5rem)]' : 'pb-8'}`}>{children}</main>
+      <main className={`mx-auto w-full max-w-6xl flex-1 px-4 pt-5 sm:px-6 ${showBottomNav ? 'pb-bottomnav' : 'pb-8'}`}>{children}</main>
       {!hideChrome && !showBottomNav && <PublicFooter />}
       <CartDrawer />
       <WishlistDrawer />
