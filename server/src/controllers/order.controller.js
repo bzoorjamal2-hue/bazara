@@ -234,6 +234,62 @@ export async function updateOrderStatus(req, res, next) {
   }
 }
 
+// إحصائيات متجر المشترك (مبيعات/طلبات/أكثر المنتجات/نشاط آخر 7 أيام)
+export async function getStats(req, res, next) {
+  try {
+    const store = await getUserStore(req.user.id);
+    if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
+    const sid = store.id;
+    const PAID = "status IN ('confirmed','shipped','delivered')"; // الطلبات المؤكّدة = مبيعات فعلية
+
+    const totals = await query(
+      `SELECT
+         COUNT(*)::int AS total_orders,
+         COUNT(*) FILTER (WHERE status='new')::int AS new_orders,
+         COUNT(*) FILTER (WHERE ${PAID})::int AS confirmed_orders,
+         COUNT(*) FILTER (WHERE status='cancelled')::int AS cancelled_orders,
+         COALESCE(SUM(total) FILTER (WHERE ${PAID}), 0) AS revenue
+       FROM orders WHERE store_id = $1`,
+      [sid]
+    );
+
+    const top = await query(
+      `SELECT it->>'name' AS name, SUM((it->>'qty')::int)::int AS qty
+       FROM orders o, jsonb_array_elements(o.items) it
+       WHERE o.store_id = $1 AND o.${PAID}
+       GROUP BY it->>'name' ORDER BY qty DESC LIMIT 5`,
+      [sid]
+    );
+
+    const daily = await query(
+      `SELECT to_char(d, 'YYYY-MM-DD') AS day, COALESCE(c.orders, 0)::int AS orders
+       FROM generate_series((now() - interval '6 days')::date, now()::date, '1 day') d
+       LEFT JOIN (
+         SELECT created_at::date AS day, COUNT(*) AS orders
+         FROM orders WHERE store_id = $1 AND created_at >= (now() - interval '6 days')::date
+         GROUP BY created_at::date
+       ) c ON c.day = d::date
+       ORDER BY day`,
+      [sid]
+    );
+
+    const prod = await query('SELECT COUNT(*)::int AS c FROM products WHERE store_id = $1', [sid]);
+    const t = totals.rows[0];
+    res.json({
+      revenue: Number(t.revenue),
+      totalOrders: t.total_orders,
+      newOrders: t.new_orders,
+      confirmedOrders: t.confirmed_orders,
+      cancelledOrders: t.cancelled_orders,
+      productsCount: prod.rows[0].c,
+      topProducts: top.rows.map((r) => ({ name: r.name, qty: r.qty })),
+      daily: daily.rows.map((r) => ({ day: r.day, orders: r.orders })),
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 // التحقق من حالة الدفع بعد العودة من Lahza
 export async function verify(req, res, next) {
   const { reference } = req.params;

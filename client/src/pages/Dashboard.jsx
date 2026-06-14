@@ -10,12 +10,14 @@ import StoreSettings from './dashboard/StoreSettings.jsx';
 import ProductsManager from './dashboard/ProductsManager.jsx';
 import OrdersManager from './dashboard/OrdersManager.jsx';
 import CouponsManager from './dashboard/CouponsManager.jsx';
+import AnalyticsManager from './dashboard/AnalyticsManager.jsx';
 import AdminRequests from './dashboard/AdminRequests.jsx';
 import SubscribersManager from './dashboard/SubscribersManager.jsx';
 
 // أقسام البائع (المشترك العادي)
 const SECTIONS = [
-  { key: 'overview', icon: '📊' },
+  { key: 'overview', icon: '🏠' },
+  { key: 'analytics', icon: '📊' },
   { key: 'profile', icon: '👤' },
   { key: 'storeSettings', icon: '⚙️' },
   { key: 'myProducts', icon: '🧺' },
@@ -61,6 +63,7 @@ export default function Dashboard() {
       {/* التنقّل عبر القائمة المنسدلة (☰) بالأعلى */}
       <div className="min-w-0">
         {section === 'overview' && !isAdmin && <Overview productsCount={productsCount} />}
+        {section === 'analytics' && !isAdmin && <AnalyticsManager />}
         {section === 'profile' && <Profile />}
         {section === 'storeSettings' && !isAdmin && <StoreSettings />}
         {section === 'myProducts' && !isAdmin && <ProductsManager onCount={setProductsCount} />}

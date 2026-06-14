@@ -36,6 +36,7 @@ const CategoryPage = lazy(() => import('./pages/CategoryPage.jsx'));
 const Categories = lazy(() => import('./pages/Categories.jsx'));
 const ProductDetails = lazy(() => import('./pages/ProductDetails.jsx'));
 const Wishlist = lazy(() => import('./pages/Wishlist.jsx'));
+const Track = lazy(() => import('./pages/Track.jsx'));
 const PaymentCallback = lazy(() => import('./pages/PaymentCallback.jsx'));
 const NotFound = lazy(() => import('./pages/NotFound.jsx'));
 
@@ -82,6 +83,7 @@ function AnimatedRoutes() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset" element={<ResetPassword />} />
           <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/track" element={<Track />} />
           <Route path="/payment/callback" element={<PaymentCallback />} />
           <Route
             path="/dashboard"

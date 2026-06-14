@@ -54,6 +54,9 @@ function LogoutIcon({ className = 'h-5 w-5' }) {
 function TicketIcon({ className = 'h-5 w-5' }) {
   return (<svg {...I({ className })}><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h13A1.5 1.5 0 0 1 20 8.5v2a2 2 0 0 0 0 4v2a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 16.5v-2a2 2 0 0 0 0-4Z" /><path d="M13 7v10" strokeDasharray="2 2" /></svg>);
 }
+function ChartIcon({ className = 'h-5 w-5' }) {
+  return (<svg {...I({ className })}><path d="M4 20V4" /><path d="M4 20h16" /><rect x="7" y="12" width="3" height="5" rx="0.6" /><rect x="12" y="8" width="3" height="9" rx="0.6" /><rect x="17" y="14" width="3" height="3" rx="0.6" /></svg>);
+}
 
 export default function Navbar() {
   const { t, i18n } = useTranslation();
@@ -102,6 +105,7 @@ export default function Navbar() {
       ]
     : [
         { key: 'overview', label: t('dashboard.overview'), Icon: GridIcon },
+        { key: 'analytics', label: t('dashboard.analytics.title'), Icon: ChartIcon },
         { key: 'profile', label: t('dashboard.profile'), Icon: UserLineIcon },
         { key: 'storeSettings', label: t('dashboard.storeSettings'), Icon: StoreIcon },
         { key: 'myProducts', label: t('dashboard.myProducts'), Icon: BagIcon },

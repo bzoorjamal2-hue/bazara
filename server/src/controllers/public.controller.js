@@ -89,6 +89,37 @@ export async function getStoreBySlug(req, res, next) {
   }
 }
 
+// تتبّع الطلبات: الزبون يُدخل رقم هاتفه فيرى حالة طلباته (مطابقة بآخر 9 أرقام لتفادي اختلاف الصيغة)
+export async function trackOrders(req, res, next) {
+  const phone = String(req.body.phone || '').replace(/\D/g, '');
+  if (phone.length < 6) return res.status(400).json({ error: 'أدخل رقم هاتف صحيح.' });
+  const last9 = phone.slice(-9);
+  try {
+    const r = await query(
+      `SELECT o.reference, o.status, o.items, o.total, o.delivery_fee, o.discount, o.created_at, o.city, s.name AS store_name
+       FROM orders o JOIN stores s ON s.id = o.store_id
+       WHERE regexp_replace(o.customer_phone, '\\D', '', 'g') LIKE $1
+       ORDER BY o.created_at DESC LIMIT 20`,
+      ['%' + last9]
+    );
+    res.json({
+      orders: r.rows.map((o) => ({
+        reference: o.reference,
+        status: o.status,
+        items: o.items,
+        total: Number(o.total),
+        deliveryFee: Number(o.delivery_fee || 0),
+        discount: Number(o.discount || 0),
+        city: o.city || '',
+        storeName: o.store_name,
+        createdAt: o.created_at,
+      })),
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 // بيانات خفيفة للسلة: مناطق التوصيل + شحن مجاني + واتساب (بلا تحميل المنتجات)
 export async function getStoreCheckout(req, res, next) {
   const { slug } = req.params;

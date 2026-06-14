@@ -11,7 +11,8 @@
     "cart": "Cart",
     "wishlist": "Wishlist",
     "account": "Account",
-    "categories": "Categories"
+    "categories": "Categories",
+    "track": "Track your order"
   },
   "common": {
     "search": "Search",
@@ -197,6 +198,17 @@
       "maxed": "Limit reached",
       "empty": "No coupons yet. Create your first one to attract customers!",
       "deleteConfirm": "Delete this coupon?"
+    },
+    "analytics": {
+      "title": "Analytics",
+      "hint": "A quick look at your sales, orders and best-selling products.",
+      "revenue": "Revenue",
+      "confirmed": "Confirmed orders",
+      "newOrders": "New orders",
+      "last7": "Last 7 days",
+      "topProducts": "Best sellers",
+      "empty": "No orders yet — your stats will appear here once the first order arrives.",
+      "noSales": "No confirmed sales yet."
     },
     "productsCount": "Products",
     "viewPublicStore": "View public store",
@@ -401,6 +413,13 @@
     "deliveryNote": "Delivery fee is an estimate, confirmed by the store",
     "freeShipping": "Free",
     "freeShippingHint": "Add ₪{{amount}} to get free delivery!"
+  },
+  "track": {
+    "title": "Track your order",
+    "hint": "Enter the phone number you ordered with to see your order status.",
+    "phonePlaceholder": "Phone number",
+    "search": "Search",
+    "notFound": "No orders found for this number. Check it and try again."
   },
   "offer": {
     "endsIn": "Offer ends in",

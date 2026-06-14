@@ -259,6 +259,11 @@ function StoreFooter({ store, wa }) {
             ))}
           </div>
         )}
+        <div className="mt-6">
+          <Link to="/track" className="inline-flex items-center gap-1.5 rounded-full border border-cream/25 px-4 py-2 text-sm text-cream/90 transition hover:bg-cream/10">
+            📦 {t('nav.track')}
+          </Link>
+        </div>
         <div className="mx-auto mt-7 h-px max-w-md bg-cream/15" />
         <p className="mt-5 text-xs text-cream/60">© {new Date().getFullYear()} {store.name} — {t('footer.rights')}</p>
       </div>
