@@ -228,6 +228,15 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
                   {t(`categories.${c}`)}
                 </button>
               ))}
+              <div className="my-2 h-px bg-cream/15" />
+              {/* تتبّع الطلب — يلاحظه الزبون بسهولة */}
+              <Link
+                to="/track"
+                onClick={() => setDrawer(false)}
+                className="flex w-full items-center gap-3 rounded-xl border border-cream/25 bg-cream/10 px-3 py-3 text-start text-base font-bold text-cream transition hover:bg-cream/20"
+              >
+                <span className="text-xl">📦</span> {t('nav.track')}
+              </Link>
             </nav>
 
             <div className="mt-auto flex items-center justify-between pt-4">

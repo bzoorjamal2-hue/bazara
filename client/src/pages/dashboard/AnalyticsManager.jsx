@@ -3,11 +3,23 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 
-function StatCard({ label, value, accent = 'text-gold-300', icon }) {
+const ic = (p) => ({ viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true, ...p });
+const I = {
+  revenue: (c) => (<svg {...ic({ className: c })}><path d="M12 1v22" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>),
+  confirmed: (c) => (<svg {...ic({ className: c })}><path d="M21 11.5V12a9 9 0 1 1-5.3-8.2" /><path d="m9 11 3 3L22 4" /></svg>),
+  newOrders: (c) => (<svg {...ic({ className: c })}><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" /><path d="M3 6h18" /><path d="M12 11v5M9.5 13.5h5" /></svg>),
+  products: (c) => (<svg {...ic({ className: c })}><path d="M16 8.5 8 4 3.3 6.6 12 11.6l8.7-5L16 8.5Z" /><path d="M3.3 6.6V17l8.7 5 8.7-5V6.6" /><path d="M12 11.6V22" /></svg>),
+};
+
+function StatCard({ label, value, accent = 'text-gold-300', tint = 'bg-gold-400/10 text-gold-300', icon }) {
+  const Icon = I[icon];
   return (
     <div className="glass p-5">
-      <p className="flex items-center gap-1.5 text-sm text-stone-400">{icon} {label}</p>
-      <p className={`mt-2 font-display text-3xl font-extrabold ${accent}`}>{value}</p>
+      <div className="flex items-center gap-2">
+        <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${tint}`}>{Icon && Icon('h-5 w-5')}</span>
+        <p className="text-sm text-stone-400">{label}</p>
+      </div>
+      <p className={`mt-3 font-display text-3xl font-extrabold ${accent}`}>{value}</p>
     </div>
   );
 }
@@ -38,10 +50,10 @@ export default function AnalyticsManager() {
 
       {/* البطاقات الرئيسية */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard icon="💰" label={t('dashboard.analytics.revenue')} value={`${cur}${data.revenue.toFixed(0)}`} accent="text-emerald-300" />
-        <StatCard icon="✅" label={t('dashboard.analytics.confirmed')} value={data.confirmedOrders} />
-        <StatCard icon="🆕" label={t('dashboard.analytics.newOrders')} value={data.newOrders} accent="text-sky-300" />
-        <StatCard icon="🧺" label={t('dashboard.productsCount')} value={data.productsCount} />
+        <StatCard icon="revenue" tint="bg-emerald-500/15 text-emerald-300" accent="text-emerald-300" label={t('dashboard.analytics.revenue')} value={`${cur}${data.revenue.toFixed(0)}`} />
+        <StatCard icon="confirmed" tint="bg-gold-400/15 text-gold-300" accent="text-gold-300" label={t('dashboard.analytics.confirmed')} value={data.confirmedOrders} />
+        <StatCard icon="newOrders" tint="bg-sky-500/15 text-sky-300" accent="text-sky-300" label={t('dashboard.analytics.newOrders')} value={data.newOrders} />
+        <StatCard icon="products" tint="bg-wine/15 text-wine" accent="text-stone-100" label={t('dashboard.productsCount')} value={data.productsCount} />
       </div>
 
       {/* نشاط آخر 7 أيام */}
