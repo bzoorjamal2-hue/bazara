@@ -4,8 +4,20 @@ import { useEffect, useRef, useState } from 'react';
 // options: [{ value, label }] — onChange يُمرّر القيمة المختارة.
 export default function Select({ value, onChange, options, className = '', placeholder = '' }) {
   const [open, setOpen] = useState(false);
+  const [dropUp, setDropUp] = useState(false); // تفتح للأعلى إن لم تكفِ المساحة بالأسفل
   const ref = useRef(null);
   const selected = options.find((o) => o.value === value);
+
+  const toggle = () => {
+    setOpen((o) => {
+      const next = !o;
+      if (next && ref.current) {
+        const rect = ref.current.getBoundingClientRect();
+        setDropUp(window.innerHeight - rect.bottom < 280);
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (!open) return undefined;
@@ -25,7 +37,7 @@ export default function Select({ value, onChange, options, className = '', place
     <div ref={ref} className="relative">
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={toggle}
         className={`input flex items-center justify-between gap-2 ${className}`}
       >
         <span className={selected ? '' : 'text-stone-400'}>{selected ? selected.label : placeholder}</span>
@@ -38,7 +50,7 @@ export default function Select({ value, onChange, options, className = '', place
       </button>
 
       {open && (
-        <div className="animate-pop absolute z-[60] mt-1.5 max-h-64 w-full min-w-max overflow-auto rounded-2xl border border-wine/15 bg-white p-1.5 shadow-2xl">
+        <div className={`animate-pop absolute z-[80] max-h-64 w-full min-w-max overflow-auto rounded-2xl border border-wine/15 bg-white p-1.5 shadow-2xl ${dropUp ? 'bottom-full mb-1.5' : 'top-full mt-1.5'}`}>
           {options.map((o) => {
             const active = o.value === value;
             return (
