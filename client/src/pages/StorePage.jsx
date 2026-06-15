@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -31,13 +31,19 @@ export default function StorePage() {
   const [data, setData] = useState(() => getCache(`storepage:${slug}`) || null);
   const [error, setError] = useState('');
   const [q, setQ] = useState('');
-  const [cat, setCat] = useState('all'); // 'all' = الصفحة الرئيسية للمتجر
   const [sort, setSort] = useState('default');
   const [sizesSel, setSizesSel] = useState([]); // مقاسات مختارة (متعدّد)
   const [offersOnly, setOffersOnly] = useState(false);
   const [openSheet, setOpenSheet] = useState(null); // 'sort' | 'size' | 'offers'
-  const [viewAll, setViewAll] = useState(false); // "عرض جميع المنتجات" من الصفحة الرئيسية
   const [page, setPage] = useState(1);
+
+  // الفئة و"عرض الكل" جزء من الرابط (search params) كي يحفظهما زرّ الرجوع:
+  // تختار فئة ← تدخل منتج ← ترجع → ترجع لنفس الفئة وموضعها (بدل القفز للرئيسية).
+  const [searchParams, setSearchParams] = useSearchParams();
+  const cat = searchParams.get('cat') || 'all';
+  const viewAll = searchParams.get('view') === 'all';
+  const setCat = (c) => setSearchParams(c && c !== 'all' ? { cat: c } : {});
+  const setViewAll = (v) => setSearchParams(v ? { view: 'all' } : {});
 
   useEffect(() => {
     const cached = getCache(`storepage:${slug}`);
@@ -101,8 +107,9 @@ export default function StorePage() {
   const searching = q.trim().length > 0;
   // أحدث المنتجات (لقسم "جديدنا")
   const newest = [...data.products].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 8);
-  const pickCategory = (c) => { setViewAll(false); setCat(c); window.scrollTo({ top: 0, behavior: 'smooth' }); };
-  const clearSearch = () => { setQ(''); setCat('all'); setViewAll(false); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  // تحديث الرابط بنداء واحد (سجلّ تاريخ واحد) — حتى يرجع زرّ الرجوع خطوة واحدة بالضبط
+  const pickCategory = (c) => { setSearchParams(c && c !== 'all' ? { cat: c } : {}); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const clearSearch = () => { setQ(''); setSearchParams({}); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
   return (
     <>
@@ -295,20 +302,36 @@ function StoreFooter({ store, wa }) {
   );
 }
 
-// شريط إعلانات متحرّك (Marquee) — يكرّر النص لحركة متصلة، خمري بنص عاجي
+// شريط إعلانات متحرّك (Marquee) عصري — تدرّج خمري بنص عاجي، نجمة ذهبية فاصلة،
+// والنص يتكرّر كفايةً ويلتفّ بسلاسة فيبقى ظاهراً دائماً بلا فراغات.
 function AnnouncementBar({ text }) {
   return (
-    <div className="-mx-4 mb-5 overflow-hidden bg-wine py-2 text-cream sm:-mx-6">
-      <div className="flex w-max animate-marquee whitespace-nowrap">
-        {[0, 1].map((half) => (
-          <span key={half} className="flex items-center text-sm font-semibold tracking-wide">
-            {[0, 1, 2].map((k) => (
-              <span key={k} className="flex items-center gap-2 pe-10"><span aria-hidden>✦</span> {text}</span>
+    <div className="relative -mx-4 mb-5 overflow-hidden border-y border-gold-400/25 bg-gradient-to-r from-wine-dark via-wine to-wine-dark py-2.5 text-cream shadow-sm sm:-mx-6">
+      {/* تلاشٍ ناعم عند الحوافّ ليبدو أكثر أناقة */}
+      <span className="pointer-events-none absolute inset-y-0 start-0 z-10 w-10 bg-gradient-to-e from-wine-dark to-transparent" />
+      <span className="pointer-events-none absolute inset-y-0 end-0 z-10 w-10 bg-gradient-to-s from-wine-dark to-transparent" />
+      <div className="flex w-max animate-marquee" dir="ltr">
+        {[0, 1].map((group) => (
+          <div key={group} className="flex shrink-0 items-center" aria-hidden={group === 1}>
+            {Array.from({ length: 5 }).map((_, k) => (
+              <span key={k} className="flex items-center gap-2.5 whitespace-nowrap px-6 text-sm font-semibold tracking-wide" dir="auto">
+                <SparkleIcon className="h-3.5 w-3.5 shrink-0 text-gold-300" />
+                {text}
+              </span>
             ))}
-          </span>
+          </div>
         ))}
       </div>
     </div>
+  );
+}
+
+// نجمة لامعة أنيقة (فاصل الشريط)
+function SparkleIcon({ className = 'h-4 w-4' }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M12 2c.5 3.8 2.2 5.5 6 6-3.8.5-5.5 2.2-6 6-.5-3.8-2.2-5.5-6-6 3.8-.5 5.5-2.2 6-6Z" />
+    </svg>
   );
 }
 
@@ -669,6 +692,9 @@ function HeroSlider({ store }) {
                       loop
                       playsInline
                       preload="auto"
+                      // ضمان التكرار حتى لو أوقفه النظام: نعيده من البداية ونشغّله
+                      onEnded={(e) => { e.currentTarget.currentTime = 0; e.currentTarget.play().catch(() => {}); }}
+                      onPause={(e) => { if (!document.hidden) e.currentTarget.play().catch(() => {}); }}
                       style={{ filter: 'brightness(0.6)' }}
                       className="absolute inset-0 z-0 h-full w-full object-cover"
                     />
