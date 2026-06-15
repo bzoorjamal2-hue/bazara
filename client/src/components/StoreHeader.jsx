@@ -6,6 +6,7 @@ import { useWishlist } from '../context/WishlistContext.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import LanguageSwitcher from './LanguageSwitcher.jsx';
 import CatThumb from './CatThumb.jsx';
+import CloseButton from './CloseButton.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { MenuIcon, SearchIcon, CartIcon, HeartIcon } from './icons.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
@@ -201,13 +202,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
                 <HeartIcon className="h-5 w-5" filled={wishCount > 0} />
               </button>
               <ThemeToggle className="bg-cream/15 text-cream hover:bg-cream/25" />
-              <button
-                onClick={() => setDrawer(false)}
-                aria-label="close"
-                className="ms-auto flex h-10 w-10 items-center justify-center rounded-full bg-cream text-lg font-bold text-wine transition hover:bg-white"
-              >
-                ✕
-              </button>
+              <CloseButton onClick={() => setDrawer(false)} variant="cream" size="h-10 w-10" className="ms-auto" />
             </div>
 
             <nav className="mt-6 space-y-1">

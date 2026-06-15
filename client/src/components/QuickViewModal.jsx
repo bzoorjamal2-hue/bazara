@@ -11,6 +11,7 @@ import { flyToCart } from '../utils/flyToCart.js';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { sizeLabel } from '../utils/sizes.js';
 import SizeGuideModal from './SizeGuideModal.jsx';
+import CloseButton from './CloseButton.jsx';
 
 const PLACEHOLDER =
   'data:image/svg+xml;utf8,' +
@@ -89,13 +90,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         {/* زر الإغلاق */}
-        <button
-          onClick={onClose}
-          aria-label="close"
-          className="absolute end-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white transition hover:bg-black/60"
-        >
-          ✕
-        </button>
+        <CloseButton onClick={onClose} variant="dark" className="absolute end-3 top-3 z-20" />
 
         {/* الوسائط — فيديو يشتغل تلقائياً أو صورة، بحجمها الطبيعي 9:16 (بلا قصّ) */}
         <div className="bg-[#f3ece0] p-3">

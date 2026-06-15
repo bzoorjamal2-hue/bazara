@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useLayoutEffect, useState } from 'react';
 import { Routes, Route, useLocation, useNavigationType, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from './components/Layout.jsx';
@@ -47,6 +47,10 @@ const NotFound = lazy(() => import('./pages/NotFound.jsx'));
 
 // مواضع التمرير المحفوظة لكل صفحة (لاستعادتها عند الرجوع)
 const scrollPositions = new Map();
+// نتولّى استعادة التمرير بأنفسنا — نوقف استعادة المتصفّح التلقائية كي لا تتعارض
+if (typeof history !== 'undefined' && 'scrollRestoration' in history) {
+  history.scrollRestoration = 'manual';
+}
 
 // انتقالات ناعمة بين الصفحات + استعادة موضع التمرير عند الرجوع، والتمرير لأعلى عند صفحة جديدة
 function AnimatedRoutes() {
@@ -61,9 +65,9 @@ function AnimatedRoutes() {
   }, [location.key]);
 
   // عند الرجوع (POP) نستعيد الموضع بقفزة واحدة فورية بالضبط (بلا تدرّج ولا رجوع للأعلى).
-  // المحتوى قد يُحمّل بعد لحظات، فننتظر حتى يطول المستند كفايةً ليصل للموضع، ثم نقفز
-  // مرّة واحدة فقط (لا نقفز لمواضع جزئية كي لا يظهر "زحف" تدريجي). مهلة أمان 3 ثوانٍ.
-  useEffect(() => {
+  // useLayoutEffect: نقفز قبل أن يرسم المتصفّح الإطار، فلا تظهر الصفحة من الأعلى لحظةً
+  // عندما يكون المحتوى جاهزاً (مخزّن). وإن كان المحتوى يُحمّل، ننتظر طول المستند ثم نقفز.
+  useLayoutEffect(() => {
     if (navType === 'POP') {
       const target = scrollPositions.get(location.key) || 0;
       if (target > 0) {

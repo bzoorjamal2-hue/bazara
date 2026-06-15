@@ -9,6 +9,7 @@ import useScrollLock from '../hooks/useScrollLock.js';
 import { CartIcon, HeartIcon, MenuIcon } from './icons.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import NavBell from './NavBell.jsx';
+import CloseButton from './CloseButton.jsx';
 import { isStandalone } from '../utils/pwa.js';
 import CatThumb from './CatThumb.jsx';
 
@@ -177,13 +178,7 @@ export default function Navbar() {
           >
             {/* أعلى: إغلاق + اللغة */}
             <div className="flex items-center justify-between">
-              <button
-                onClick={() => setMenuOpen(false)}
-                aria-label="close"
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-cream text-lg font-bold text-wine transition hover:bg-white"
-              >
-                ✕
-              </button>
+              <CloseButton onClick={() => setMenuOpen(false)} variant="cream" size="h-10 w-10" />
               {/* جرس الإشعارات + تبديل اللغة — جهة النهاية */}
               <div className="flex items-center gap-2">
                 <NavBell variant="drawer" />
@@ -248,7 +243,7 @@ export default function Navbar() {
             className={`absolute inset-y-0 start-0 flex w-80 max-w-[85%] flex-col bg-wine-dark px-5 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+24px)] text-cream shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}
           >
             <div className="flex items-center justify-between">
-              <button onClick={() => setMenuOpen(false)} aria-label="close" className="flex h-10 w-10 items-center justify-center rounded-full bg-cream text-lg font-bold text-wine transition hover:bg-white">✕</button>
+              <CloseButton onClick={() => setMenuOpen(false)} variant="cream" size="h-10 w-10" />
               <LanguageSwitcher onChanged={() => setMenuOpen(false)} />
             </div>
 

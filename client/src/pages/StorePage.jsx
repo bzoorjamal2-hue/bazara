@@ -12,6 +12,7 @@ import StoreHeader from '../components/StoreHeader.jsx';
 import FeaturesBar from '../components/FeaturesBar.jsx';
 import CatThumb from '../components/CatThumb.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
+import CloseButton from '../components/CloseButton.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { cldVideoPoster } from '../utils/cloudinary.js';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
@@ -394,7 +395,7 @@ function FilterSheet({ title, onClose, onReset, onApply, children }) {
         <div className="mb-4 flex items-center justify-between">
           <button onClick={onReset} className="w-16 text-start text-sm font-medium text-wine/70 hover:text-wine">Reset</button>
           <h3 className="flex-1 text-center font-display text-lg font-bold text-[#2b2b2b]">{title}</h3>
-          <button onClick={onClose} aria-label="close" className="w-16 text-end text-lg text-[#2b2b2b]">✕</button>
+          <span className="flex w-16 justify-end"><CloseButton onClick={onClose} variant="wine" /></span>
         </div>
         {children}
         <button onClick={onApply} className="mt-5 w-full rounded-xl bg-wine py-3 font-semibold text-cream transition hover:bg-wine-dark">

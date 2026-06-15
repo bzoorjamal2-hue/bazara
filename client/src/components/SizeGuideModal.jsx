@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import useScrollLock from '../hooks/useScrollLock.js';
+import CloseButton from './CloseButton.jsx';
 import { SIZE_CHART, sizeLabel } from '../utils/sizes.js';
 
 // نافذة دليل المقاسات — جدول قياسات (صدر/خصر/أرداف) + مرشد "اعرفي مقاسك".
@@ -50,13 +51,7 @@ export default function SizeGuideModal({ sizes = [], chart = null, onClose }) {
           <h3 className="flex items-center gap-2 font-display text-lg font-bold text-wine">
             <RulerGlyph /> {t('product.sizeGuide')}
           </h3>
-          <button
-            onClick={onClose}
-            aria-label="close"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-wine/10 text-lg text-wine transition hover:bg-wine hover:text-cream"
-          >
-            ✕
-          </button>
+          <CloseButton onClick={onClose} variant="wine" />
         </div>
 
         <p className="mb-4 text-sm text-wine/70">{t('product.sizeGuideIntro')}</p>

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import useScrollLock from '../hooks/useScrollLock.js';
+import CloseButton from './CloseButton.jsx';
 
 // عارض صور بملء الشاشة مع تكبير (Zoom) — نقر للتكبير، سحب للتنقّل بين الصور.
 export default function Lightbox({ images, index = 0, onClose }) {
@@ -35,7 +36,7 @@ export default function Lightbox({ images, index = 0, onClose }) {
       {/* شريط علوي */}
       <div className="flex items-center justify-between p-4 text-white/90" onClick={(e) => e.stopPropagation()}>
         <span dir="ltr" className="text-sm">{i + 1} / {images.length}</span>
-        <button onClick={onClose} aria-label="close" className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-xl transition hover:bg-white/20">✕</button>
+        <CloseButton onClick={onClose} variant="ghost" size="h-10 w-10" />
       </div>
 
       {/* الصورة */}

@@ -29,6 +29,17 @@ img, video, canvas {
   max-width: 100%;
   height: auto;
 }
+
+/* منع تكبير iOS التلقائي عند التركيز على أي حقل إدخال (الشاشة تبقى ثابتة، لا تكبير
+   ولا تحرّك يمين/شمال). شرط ذلك أن يكون خط الحقل ≥ 16px على الجوال — نفرضه على كل
+   حقول الإدخال بالموقع. على الشاشات الأكبر يبقى التصميم كما هو. */
+@media (max-width: 767px) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
 /* الجداول لا تتجاوز الحاوية؛ والكلمات الطويلة تلتفّ بدل أن تدفع التخطيط */
 table { max-width: 100%; }
 .break-anywhere { overflow-wrap: anywhere; word-break: break-word; }

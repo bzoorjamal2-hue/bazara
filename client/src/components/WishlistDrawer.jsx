@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
+import CloseButton from './CloseButton.jsx';
 import { cldThumb } from '../utils/cloudinary.js';
 
 const PH = 'https://placehold.co/120x120/f1e9dd/5e4636?text=%F0%9F%91%97';
@@ -42,7 +43,7 @@ export default function WishlistDrawer() {
             ❤️ {t('wishlist.title')}
             {items.length > 0 && <span className="text-sm font-normal text-stone-400">({items.length})</span>}
           </h2>
-          <button onClick={close} aria-label={ar ? 'إغلاق' : 'close'} className="rounded-lg p-2 text-stone-400 hover:text-gold-200">✕</button>
+          <CloseButton onClick={close} variant="wine" label={ar ? 'إغلاق' : 'close'} />
         </div>
 
         {items.length === 0 ? (

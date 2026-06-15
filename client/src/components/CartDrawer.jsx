@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext.jsx';
 import { buildWhatsappCheckout } from '../utils/whatsapp.js';
 import useScrollLock from '../hooks/useScrollLock.js';
 import Select from './Select.jsx';
+import CloseButton from './CloseButton.jsx';
 import api from '../api/client.js';
 import { sizeLabel } from '../utils/sizes.js';
 
@@ -164,7 +165,7 @@ export default function CartDrawer() {
             )}
             {view === 'cart' ? `🛒 ${t('cart.title')}` : t('co.title')}
           </h2>
-          <button onClick={close} className="rounded-lg p-2 text-stone-400 hover:text-gold-200">✕</button>
+          <CloseButton onClick={close} variant="wine" />
         </div>
 
         {items.length === 0 ? (
