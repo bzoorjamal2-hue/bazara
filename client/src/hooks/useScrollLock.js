@@ -22,14 +22,19 @@ function applyLock() {
 
 function releaseLock() {
   const body = document.body;
+  const root = document.documentElement;
+  // نفرض تمريراً فورياً أثناء الاستعادة كي لا "ينزل" المحتوى ببطء أمام المستخدم
+  const prevBehavior = root.style.scrollBehavior;
+  root.style.scrollBehavior = 'auto';
   body.style.position = '';
   body.style.top = '';
   body.style.left = '';
   body.style.right = '';
   body.style.width = '';
   body.style.overflow = '';
-  document.documentElement.style.overflow = '';
+  root.style.overflow = '';
   window.scrollTo(0, savedScrollY);
+  root.style.scrollBehavior = prevBehavior;
 }
 
 export default function useScrollLock(locked) {

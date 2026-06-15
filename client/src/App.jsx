@@ -77,7 +77,7 @@ function AnimatedRoutes() {
         const finish = () => {
           if (done) return;
           done = true;
-          window.scrollTo({ top: target, behavior: 'auto' });
+          window.scrollTo({ top: target, behavior: 'instant' });
           if (ro) ro.disconnect();
           if (cap) clearTimeout(cap);
         };
@@ -95,7 +95,7 @@ function AnimatedRoutes() {
         return () => { done = true; if (ro) ro.disconnect(); if (cap) clearTimeout(cap); };
       }
     }
-    window.scrollTo({ top: 0, behavior: 'auto' });
+    window.scrollTo({ top: 0, behavior: 'instant' });
     return undefined;
   }, [location.key, navType]);
 
@@ -126,7 +126,7 @@ function AnimatedRoutes() {
         key={location.pathname}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.14, ease: 'easeOut' }}
+        transition={{ duration: 0.2, ease: [0.22, 0.61, 0.36, 1] }}
       >
         <Routes location={location}>
           <Route path="/" element={<Root />} />
