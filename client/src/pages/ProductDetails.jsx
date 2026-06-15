@@ -11,6 +11,7 @@ import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import { cldVideoPoster } from '../utils/cloudinary.js';
 import { pushRecent, getRecent } from '../utils/recentlyViewed.js';
+import { getCache, setCache } from '../utils/apiCache.js';
 import { sizeLabel } from '../utils/sizes.js';
 import Countdown from '../components/Countdown.jsx';
 import SizeGuideModal from '../components/SizeGuideModal.jsx';
@@ -25,8 +26,8 @@ export default function ProductDetails() {
   const rtl = i18n.language !== 'en';
   const { add, buyNow } = useCart();
   const { has, toggle } = useWishlist();
-  const [product, setProduct] = useState(null);
-  const [reviews, setReviews] = useState([]);
+  const [product, setProduct] = useState(() => getCache(`product:${id}`)?.product || null);
+  const [reviews, setReviews] = useState(() => getCache(`product:${id}`)?.reviews || []);
   const [related, setRelated] = useState([]);
   const [complementary, setComplementary] = useState([]);
   const [recent, setRecent] = useState([]);
@@ -51,6 +52,7 @@ export default function ProductDetails() {
         setActive(0);
         pushRecent(p);
         setRecent(getRecent());
+        setCache(`product:${id}`, res.data); // للرجوع الفوري لاحقاً
         fetchRelated(p);
       })
       .catch((err) => setError(getErrorMessage(err, t('errors.notFound'))));
@@ -59,21 +61,33 @@ export default function ProductDetails() {
   // منتجات من نفس المتجر: "قد يعجبك" (نفس الفئة) + "أكملي إطلالتك" (فئة مختلفة)
   const fetchRelated = (p) => {
     if (!p?.storeSlug) return;
+    const apply = (data) => {
+      const all = (data.products || [])
+        .filter((x) => x.id !== p.id)
+        .map((x) => ({ ...x, storeSlug: p.storeSlug }));
+      setRelated(all.filter((x) => x.category === p.category).slice(0, 10));
+      setComplementary(all.filter((x) => x.category !== p.category).slice(0, 10));
+    };
+    const cached = getCache(`store:${p.storeSlug}`);
+    if (cached) apply(cached); // عرض فوري من المخزّن ثم تحديث بالخلفية
     api
       .get(`/public/store/${p.storeSlug}`)
-      .then((res) => {
-        const all = (res.data.products || [])
-          .filter((x) => x.id !== p.id)
-          .map((x) => ({ ...x, storeSlug: p.storeSlug }));
-        setRelated(all.filter((x) => x.category === p.category).slice(0, 10));
-        setComplementary(all.filter((x) => x.category !== p.category).slice(0, 10));
-      })
-      .catch(() => { setRelated([]); setComplementary([]); });
+      .then((res) => { setCache(`store:${p.storeSlug}`, res.data); apply(res.data); })
+      .catch(() => { if (!cached) { setRelated([]); setComplementary([]); } });
   };
 
   useEffect(() => {
-    setProduct(null);
-    fetchData();
+    const cached = getCache(`product:${id}`);
+    if (cached) {
+      setProduct(cached.product);
+      setReviews(cached.reviews || []);
+      pushRecent(cached.product);
+      setRecent(getRecent());
+      fetchRelated(cached.product);
+    } else {
+      setProduct(null);
+    }
+    fetchData(); // تحديث بالخلفية دائماً
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 

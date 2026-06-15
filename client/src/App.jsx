@@ -57,11 +57,14 @@ function AnimatedRoutes() {
   const location = useLocation();
   const navType = useNavigationType(); // POP عند الرجوع/التقدّم
 
-  // نحفظ موضع التمرير الحالي باستمرار لمفتاح هذه الصفحة
+  // نحفظ موضع التمرير الحالي باستمرار لمفتاح هذه الصفحة، ونلتقطه أيضاً لحظة المغادرة
+  // (في التنظيف) كي يبقى الموضع مضموناً حتى لو لم يُطلق حدث تمرير قبل الانتقال — هذا
+  // يمنع "الرجوع لأعلى الصفحة" عند تكرار التنقّل.
   useEffect(() => {
-    const onScroll = () => { scrollPositions.set(location.key, window.scrollY); };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    const key = location.key;
+    const save = () => { scrollPositions.set(key, window.scrollY); };
+    window.addEventListener('scroll', save, { passive: true });
+    return () => { save(); window.removeEventListener('scroll', save); };
   }, [location.key]);
 
   // عند الرجوع (POP) نستعيد الموضع بقفزة واحدة فورية بالضبط (بلا تدرّج ولا رجوع للأعلى).

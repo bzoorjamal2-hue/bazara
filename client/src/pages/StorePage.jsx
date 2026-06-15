@@ -17,6 +17,7 @@ import useScrollLock from '../hooks/useScrollLock.js';
 import { cldVideoPoster } from '../utils/cloudinary.js';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
 import { SIZES, sizeLabel } from '../utils/sizes.js';
+import { getCache, setCache } from '../utils/apiCache.js';
 
 const PAGE_SIZE = 8;
 const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench'];
@@ -27,7 +28,7 @@ export default function StorePage() {
   const { store: myStore } = useAuth();
   const { ensureStore } = useCart();
   const isOwner = myStore?.slug === slug;
-  const [data, setData] = useState(null);
+  const [data, setData] = useState(() => getCache(`storepage:${slug}`) || null);
   const [error, setError] = useState('');
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('all'); // 'all' = الصفحة الرئيسية للمتجر
@@ -39,18 +40,22 @@ export default function StorePage() {
   const [page, setPage] = useState(1);
 
   useEffect(() => {
-    setData(null);
+    const cached = getCache(`storepage:${slug}`);
+    setData(cached || null); // عرض فوري من المخزّن عند الرجوع، ثم تحديث بالخلفية
     setError('');
+    if (cached) ensureStore(cached.store.slug);
     api
       .get(`/public/store/${slug}`)
       .then((res) => {
         const s = res.data.store;
         // نحقن معرّف/اسم المتجر بكل منتج، وننادي ensureStore لتفريغ السلة إن كانت من متجر مختلف
         const products = (res.data.products || []).map((p) => ({ ...p, storeSlug: s.slug, storeName: s.name }));
-        setData({ ...res.data, products });
+        const mapped = { ...res.data, products };
+        setData(mapped);
+        setCache(`storepage:${slug}`, mapped);
         ensureStore(s.slug);
       })
-      .catch((err) => setError(getErrorMessage(err, t('errors.storeNotFound'))));
+      .catch((err) => { if (!cached) setError(getErrorMessage(err, t('errors.storeNotFound'))); });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, t]);
 
