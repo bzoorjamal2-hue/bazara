@@ -155,7 +155,8 @@ export async function me(req, res, next) {
               u.subscription_status, u.subscription_plan, u.current_period_end, u.subscriber_code,
               EXISTS(SELECT 1 FROM subscription_requests sr WHERE sr.user_id = u.id AND sr.status = 'pending') AS has_pending,
               s.id AS store_id, s.name AS store_name, s.slug AS store_slug,
-              s.description AS store_description, s.logo_url AS store_logo_url
+              s.description AS store_description, s.logo_url AS store_logo_url,
+              s.custom_categories AS store_custom_categories
        FROM users u
        LEFT JOIN stores s ON s.user_id = u.id
        WHERE u.id = $1`,
@@ -183,6 +184,7 @@ export async function me(req, res, next) {
             slug: row.store_slug,
             description: row.store_description,
             logoUrl: row.store_logo_url,
+            customCategories: Array.isArray(row.store_custom_categories) ? row.store_custom_categories : [],
           }
         : null,
     });

@@ -25,6 +25,7 @@ function mapStore(s) {
     announcement: s.announcement || '',
     welcomeOffer: s.welcome_offer || '',
     categoryMeta: s.category_meta && typeof s.category_meta === 'object' ? s.category_meta : {},
+    customCategories: Array.isArray(s.custom_categories) ? s.custom_categories : [],
     createdAt: s.created_at,
   };
 }
@@ -34,6 +35,24 @@ const CHART_SIZES = ['36', '38', '40', '42', '44', '46', '48'];
 
 // الفئات الثابتة بالنظام (قابلة للتخصيص بصورة/اسم لكل متجر)
 const CATEGORY_KEYS = ['abaya', 'set', 'dress', 'hijab', 'trench'];
+
+// تنقية الفئات الإضافية المخصّصة: [{key, name, image}] — اسم مطلوب، مفتاح آمن وفريد
+function sanitizeCustomCategories(raw) {
+  if (!Array.isArray(raw)) return [];
+  const seen = new Set(CATEGORY_KEYS); // تفادي التصادم مع الفئات الأصلية
+  const out = [];
+  for (const c of raw.slice(0, 20)) {
+    const name = typeof c?.name === 'string' ? c.name.trim().slice(0, 40) : '';
+    if (!name) continue;
+    let key = typeof c?.key === 'string' ? c.key.trim().toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 30) : '';
+    if (!key) key = 'c_' + Math.random().toString(36).slice(2, 9);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const image = typeof c?.image === 'string' ? c.image.trim().slice(0, 2000) : '';
+    out.push({ key, name, image });
+  }
+  return out;
+}
 
 // تنقية تخصيص الفئات: {"dress": {image, name}} — مفاتيح معروفة فقط، نصوص آمنة
 function sanitizeCategoryMeta(raw) {
@@ -116,6 +135,7 @@ export async function updateMyStore(req, res, next) {
   const announcement = String(req.body.announcement || '').slice(0, 200);
   const welcomeOffer = String(req.body.welcomeOffer || '').slice(0, 300);
   const categoryMeta = sanitizeCategoryMeta(req.body.categoryMeta);
+  const customCategories = sanitizeCustomCategories(req.body.customCategories);
   try {
     const current = await query('SELECT id, name, slug FROM stores WHERE user_id = $1', [req.user.id]);
     const store = current.rows[0];
@@ -133,8 +153,8 @@ export async function updateMyStore(req, res, next) {
          theme_color = $10, delivery_info = $11, payment_info = $12,
          banners = $13::jsonb, delivery_zones = $14::jsonb, free_shipping_over = $15,
          size_chart = $16::jsonb, return_policy = $17, announcement = $18, welcome_offer = $19,
-         category_meta = $20::jsonb, updated_at = now()
-       WHERE id = $21
+         category_meta = $20::jsonb, custom_categories = $21::jsonb, updated_at = now()
+       WHERE id = $22
        RETURNING *`,
       [
         name,
@@ -157,6 +177,7 @@ export async function updateMyStore(req, res, next) {
         announcement,
         welcomeOffer,
         JSON.stringify(categoryMeta),
+        JSON.stringify(customCategories),
         store.id,
       ]
     );

@@ -286,7 +286,12 @@
       "welcomeHint": "Shows once to a visitor on their first entry to your store. Leave empty to hide.",
       "categories": "Customize categories",
       "categoriesHint": "Add a real photo and a name for each category (like the slider). The photo shows in the modern frameless look. Leave empty to use the default.",
-      "categoryNamePlaceholder": "Category name (default: {{name}})"
+      "categoryNamePlaceholder": "Category name (default: {{name}})",
+      "customCategories": "Your own extra categories",
+      "addCategory": "Add category",
+      "noCustomCategories": "No extra categories yet. Add your own with names and photos.",
+      "newCategory": "New category",
+      "categoryNameField": "Category name (e.g. Kaftan, Pants...)"
     },
     "product": {
       "name": "Item name",

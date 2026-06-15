@@ -40,6 +40,7 @@ function mapStorePublic(s) {
     announcement: s.announcement || '',
     welcomeOffer: s.welcome_offer || '',
     categoryMeta: s.category_meta && typeof s.category_meta === 'object' ? s.category_meta : {},
+    customCategories: Array.isArray(s.custom_categories) ? s.custom_categories : [],
     ownerPhone: s.owner_phone || '', // رقم المالك من التسجيل (احتياطي للواتساب)
     createdAt: s.created_at,
   };

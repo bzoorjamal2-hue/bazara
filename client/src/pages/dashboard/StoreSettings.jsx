@@ -49,6 +49,7 @@ export default function StoreSettings() {
           announcement: s.announcement || '',
           welcomeOffer: s.welcomeOffer || '',
           categoryMeta: s.categoryMeta && typeof s.categoryMeta === 'object' ? s.categoryMeta : {},
+          customCategories: Array.isArray(s.customCategories) ? s.customCategories : [],
         });
       })
       .catch((err) => setError(getErrorMessage(err)));
@@ -109,6 +110,14 @@ export default function StoreSettings() {
   // التحكم بتخصيص الفئات: {"dress": {image, name}}
   const setCatMeta = (cat, key, val) =>
     setForm((f) => ({ ...f, categoryMeta: { ...f.categoryMeta, [cat]: { ...(f.categoryMeta?.[cat] || {}), [key]: val } } }));
+
+  // الفئات الإضافية المخصّصة: [{key, name, image}]
+  const addCustomCat = () =>
+    setForm((f) => ({ ...f, customCategories: [...(f.customCategories || []), { key: 'c_' + Math.random().toString(36).slice(2, 9), name: '', image: '' }] }));
+  const setCustomCat = (idx, key, val) =>
+    setForm((f) => ({ ...f, customCategories: f.customCategories.map((c, i) => (i === idx ? { ...c, [key]: val } : c)) }));
+  const removeCustomCat = (idx) =>
+    setForm((f) => ({ ...f, customCategories: f.customCategories.filter((_, i) => i !== idx) }));
 
   return (
     <div className="space-y-6">
@@ -308,6 +317,30 @@ export default function StoreSettings() {
                 </div>
               );
             })}
+          </div>
+
+          {/* فئات إضافية مخصّصة — يضيفها المشترك بلا حدود */}
+          <div className="border-t border-gold-400/10 pt-4">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h3 className="font-display text-base font-bold text-stone-100">＋ {t('dashboard.store.customCategories')}</h3>
+              <button type="button" onClick={addCustomCat} className="btn-ghost !py-1.5 text-sm">＋ {t('dashboard.store.addCategory')}</button>
+            </div>
+            {(form.customCategories || []).length === 0 ? (
+              <p className="rounded-xl border border-gold-400/15 bg-black/20 p-3 text-center text-xs text-stone-400">{t('dashboard.store.noCustomCategories')}</p>
+            ) : (
+              <div className="space-y-3">
+                {form.customCategories.map((cc, idx) => (
+                  <div key={cc.key || idx} className="rounded-xl border border-gold-400/15 bg-black/20 p-3">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-sm font-semibold text-gold-200">{cc.name || t('dashboard.store.newCategory')}</span>
+                      <button type="button" onClick={() => removeCustomCat(idx)} className="rounded-lg px-2 py-1 text-xs text-stone-400 hover:text-red-300">🗑 {t('common.delete')}</button>
+                    </div>
+                    <input type="text" maxLength={40} className="input mb-2" placeholder={t('dashboard.store.categoryNameField')} value={cc.name} onChange={(e) => setCustomCat(idx, 'name', e.target.value)} />
+                    <ImageInput value={cc.image || ''} onChange={(v) => setCustomCat(idx, 'image', v)} />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

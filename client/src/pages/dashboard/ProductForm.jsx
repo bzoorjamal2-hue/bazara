@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
+import { useAuth } from '../../context/AuthContext.jsx';
 import ImageInput from '../../components/ImageInput.jsx';
 import VideoInput from '../../components/VideoInput.jsx';
 import Select from '../../components/Select.jsx';
@@ -23,7 +24,13 @@ function toDateInput(iso) {
 
 export default function ProductForm({ initial, onClose, onSaved }) {
   const { t } = useTranslation();
+  const { store } = useAuth();
   const isEdit = Boolean(initial?.id);
+  // خيارات الفئة: الأصلية الخمس + الفئات المخصّصة للمتجر
+  const categoryOptions = [
+    ...CATEGORIES.map((c) => ({ value: c, label: t(`categories.${c}`) })),
+    ...(Array.isArray(store?.customCategories) ? store.customCategories : []).map((cc) => ({ value: cc.key, label: cc.name })),
+  ];
   const [form, setForm] = useState(
     initial
       ? {
@@ -188,7 +195,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
               <Select
                 value={form.category}
                 onChange={(v) => setForm((f) => ({ ...f, category: v }))}
-                options={CATEGORIES.map((c) => ({ value: c, label: t(`categories.${c}`) }))}
+                options={categoryOptions}
               />
             </div>
             <div>

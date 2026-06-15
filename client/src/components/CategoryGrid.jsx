@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
-const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench'];
+const BUILTIN = ['abaya', 'set', 'dress', 'hijab', 'trench'];
 
 // عدد البطاقات المعروضة حسب عرض الشاشة (جوال 2 · آيباد 3 · كمبيوتر 5)
 function getPerPage() {
@@ -13,24 +13,41 @@ function getPerPage() {
   return 5;
 }
 
-// بطاقة فئة عصرية: صورة الفئة (صورة المالكة الحقيقية إن وُجدت، وإلا أيقونة مصمّمة)
-// بزوايا دائرية ناعمة بلا إطار بنّي، والاسم بالأسفل مباشرة.
-function CategoryCard({ c, image, name }) {
+// بطاقة فئة عصرية: صورة (صورة المالكة الحقيقية إن وُجدت، وإلا أيقونة) بزوايا دائرية
+// ناعمة بلا إطار بنّي، والاسم بالأسفل مباشرة. تدعم الفئات الأصلية والمخصّصة.
+function CategoryCard({ cat }) {
   const { t } = useTranslation();
-  const label = name || t(`categories.${c}`);
+  const label = cat.name || (cat.builtin ? t(`categories.${cat.key}`) : cat.key);
   return (
     <div className="transition duration-300 group-hover:-translate-y-1">
       <div
         className={`aspect-square overflow-hidden rounded-3xl shadow-sm ring-1 ring-wine/10 transition group-hover:shadow-md ${
-          image ? 'bg-cream' : 'bg-gradient-to-br from-[#6e5340] via-[#5e4636] to-[#4a3527]'
+          cat.image ? 'bg-cream' : 'bg-gradient-to-br from-[#6e5340] via-[#5e4636] to-[#4a3527]'
         }`}
       >
-        <img
-          src={image || `/categories/${c}.png`}
-          alt={label}
-          loading="lazy"
-          className={`h-full w-full transition-transform duration-500 group-hover:scale-110 ${image ? 'object-cover' : 'object-contain p-4'}`}
-        />
+        {cat.image ? (
+          <img
+            src={cat.image}
+            alt={label}
+            loading="lazy"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+          />
+        ) : cat.builtin ? (
+          <img
+            src={`/categories/${cat.key}.png`}
+            alt={label}
+            loading="lazy"
+            className="h-full w-full object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          // فئة مخصّصة بلا صورة → أيقونة ملبس أنيقة على التدرّج الخمري
+          <div className="flex h-full w-full items-center justify-center text-cream/90 transition-transform duration-500 group-hover:scale-105">
+            <svg viewBox="0 0 24 24" className="h-1/2 w-1/2" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M9 4a3 3 0 0 0 6 0" />
+              <path d="M12 4 4.5 9v3l3-1.5V20h9V10.5l3 1.5V9L12 4Z" />
+            </svg>
+          </div>
+        )}
       </div>
       <div className="py-2.5 text-center">
         <span className="text-xs font-bold text-wine sm:text-sm">{label}</span>
@@ -59,10 +76,13 @@ function Arrow({ dir, rtl, onClick }) {
 }
 
 // شبكة/كاروسيل الفئات — تظهر بعدد متجاوب مع الشاشة، مع أسهم ونقاط عند الحاجة.
-// images/names: تخصيص المالكة لكل فئة (صورة واقعية + اسم) إن وُجد.
-export default function CategoryGrid({ onSelect, active, images = {}, names = {} }) {
+// cats: قائمة كائنات {key, name, image, builtin}. إن لم تُمرَّر، نبني من الفئات الأصلية الخمس.
+export default function CategoryGrid({ onSelect, active, images = {}, names = {}, cats }) {
   const { i18n } = useTranslation();
   const rtl = i18n.language !== 'en';
+  const list = cats && cats.length
+    ? cats
+    : BUILTIN.map((k) => ({ key: k, name: names[k], image: images[k], builtin: true }));
   const [perPage, setPerPage] = useState(getPerPage());
   const [page, setPage] = useState(0);
 
@@ -72,25 +92,25 @@ export default function CategoryGrid({ onSelect, active, images = {}, names = {}
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  const pages = Math.ceil(CATS.length / perPage);
+  const pages = Math.ceil(list.length / perPage);
   useEffect(() => { setPage((p) => Math.min(p, pages - 1)); }, [pages]);
 
-  const hasNav = CATS.length > perPage;
+  const hasNav = list.length > perPage;
   // صفحات غير متداخلة: كل فئة تظهر مرة واحدة فقط (آخر صفحة قد تكون أقل عدداً)
   const start = page * perPage;
-  const shown = CATS.slice(start, start + perPage);
+  const shown = list.slice(start, start + perPage);
   const go = (d) => setPage((p) => (p + d + pages) % pages);
 
-  const Item = ({ c }) => {
-    const isActive = active === c;
+  const Item = ({ cat }) => {
+    const isActive = active === cat.key;
     const cls = `group block animate-fade-up transition-all duration-300 hover:-translate-y-1.5 ${isActive ? 'ring-2 ring-wine ring-offset-2 ring-offset-cream rounded-3xl' : ''}`;
     return onSelect ? (
-      <button type="button" onClick={() => onSelect(isActive ? 'all' : c)} className={cls}>
-        <CategoryCard c={c} image={images[c]} name={names[c]} />
+      <button type="button" onClick={() => onSelect(isActive ? 'all' : cat.key)} className={cls}>
+        <CategoryCard cat={cat} />
       </button>
     ) : (
-      <Link to={`/category/${c}`} className={cls}>
-        <CategoryCard c={c} image={images[c]} name={names[c]} />
+      <Link to={`/category/${cat.key}`} className={cls}>
+        <CategoryCard cat={cat} />
       </Link>
     );
   };
@@ -103,7 +123,7 @@ export default function CategoryGrid({ onSelect, active, images = {}, names = {}
           className="grid flex-1 gap-3 sm:gap-4"
           style={{ gridTemplateColumns: `repeat(${perPage}, minmax(0,1fr))` }}
         >
-          {shown.map((c) => <Item key={c} c={c} />)}
+          {shown.map((cat) => <Item key={cat.key} cat={cat} />)}
         </div>
         {hasNav && <Arrow dir="next" rtl={rtl} onClick={() => go(1)} />}
       </div>

@@ -121,6 +121,8 @@ async function ensureColumns() {
     await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS welcome_offer VARCHAR(300) DEFAULT '';");
     // تخصيص الفئات لكل متجر: {"dress": {"image": "...", "name": "..."}, ...}
     await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS category_meta JSONB DEFAULT '{}'::jsonb;");
+    // فئات إضافية مخصّصة لكل متجر: [{"key":"c_xxx","name":"...","image":"..."}]
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS custom_categories JSONB DEFAULT '[]'::jsonb;");
     // صورة مرفقة مع تقييم الزبون
     await pool.query("ALTER TABLE reviews ADD COLUMN IF NOT EXISTS image_url TEXT DEFAULT '';");
     // طلبات الدفع عند الاستلام (واتساب): حقول التوصيل
