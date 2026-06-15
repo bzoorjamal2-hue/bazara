@@ -218,6 +218,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
           {sizeGuide && (
             <SizeGuideModal
               sizes={hasColorStock ? [...new Set(Object.values(colorStock).flatMap((sz) => Object.keys(sz)))] : sizes}
+              chart={product.storeSizeChart}
               onClose={() => setSizeGuide(false)}
             />
           )}

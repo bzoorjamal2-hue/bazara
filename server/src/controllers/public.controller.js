@@ -6,6 +6,7 @@ import { activeStoreSql } from '../utils/subscription.js';
 const PRODUCT_SELECT = `
   SELECT p.*, s.slug AS store_slug, s.name AS store_name,
          s.whatsapp AS store_whatsapp, s.instagram AS store_instagram, s.phone AS store_phone,
+         s.size_chart AS store_size_chart, s.return_policy AS store_return_policy,
          COALESCE(r.avg, 0) AS rating_avg, COALESCE(r.cnt, 0) AS rating_count
   FROM products p
   JOIN stores s ON s.id = p.store_id
@@ -34,6 +35,8 @@ function mapStorePublic(s) {
     banners: Array.isArray(s.banners) ? s.banners : [],
     deliveryZones: Array.isArray(s.delivery_zones) ? s.delivery_zones : [],
     freeShippingOver: Number(s.free_shipping_over || 0),
+    sizeChart: s.size_chart && typeof s.size_chart === 'object' ? s.size_chart : {},
+    returnPolicy: s.return_policy || '',
     ownerPhone: s.owner_phone || '', // رقم المالك من التسجيل (احتياطي للواتساب)
     createdAt: s.created_at,
   };
@@ -149,7 +152,7 @@ export async function getProductById(req, res, next) {
     if (!product) return res.status(404).json({ error: 'المنتج غير موجود.' });
 
     const reviews = await query(
-      'SELECT id, author_name, rating, comment, created_at FROM reviews WHERE product_id = $1 ORDER BY created_at DESC',
+      'SELECT id, author_name, rating, comment, image_url, created_at FROM reviews WHERE product_id = $1 ORDER BY created_at DESC',
       [id]
     );
 
@@ -160,6 +163,7 @@ export async function getProductById(req, res, next) {
         authorName: r.author_name,
         rating: r.rating,
         comment: r.comment,
+        imageUrl: r.image_url || '',
         createdAt: r.created_at,
       })),
     });
@@ -203,17 +207,21 @@ export async function addReview(req, res, next) {
   const stars = Number(rating);
   if (!name || name.length > 60) return res.status(400).json({ error: 'الاسم مطلوب.' });
   if (!Number.isInteger(stars) || stars < 1 || stars > 5) return res.status(400).json({ error: 'تقييم غير صالح.' });
+  // صورة اختيارية: رابط http(s) أو data URL لصورة فقط، بحدّ معقول للطول
+  let imageUrl = typeof req.body.imageUrl === 'string' ? req.body.imageUrl.trim() : '';
+  if (imageUrl && !/^(https?:\/\/|data:image\/)/i.test(imageUrl)) imageUrl = '';
+  imageUrl = imageUrl.slice(0, 2000);
   try {
     const exists = await query('SELECT id FROM products WHERE id = $1', [id]);
     if (exists.rows.length === 0) return res.status(404).json({ error: 'المنتج غير موجود.' });
 
     const result = await query(
-      'INSERT INTO reviews (product_id, author_name, rating, comment) VALUES ($1, $2, $3, $4) RETURNING id, author_name, rating, comment, created_at',
-      [id, name, stars, (comment || '').trim().slice(0, 500)]
+      'INSERT INTO reviews (product_id, author_name, rating, comment, image_url) VALUES ($1, $2, $3, $4, $5) RETURNING id, author_name, rating, comment, image_url, created_at',
+      [id, name, stars, (comment || '').trim().slice(0, 500), imageUrl]
     );
     const r = result.rows[0];
     res.status(201).json({
-      review: { id: r.id, authorName: r.author_name, rating: r.rating, comment: r.comment, createdAt: r.created_at },
+      review: { id: r.id, authorName: r.author_name, rating: r.rating, comment: r.comment, imageUrl: r.image_url || '', createdAt: r.created_at },
     });
   } catch (err) {
     next(err);

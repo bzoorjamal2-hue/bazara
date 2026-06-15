@@ -14,6 +14,7 @@ import { pushRecent, getRecent } from '../utils/recentlyViewed.js';
 import { sizeLabel } from '../utils/sizes.js';
 import Countdown from '../components/Countdown.jsx';
 import SizeGuideModal from '../components/SizeGuideModal.jsx';
+import ImageInput from '../components/ImageInput.jsx';
 
 const PH = 'https://placehold.co/600x600/121214/d4af37?text=%F0%9F%91%97';
 
@@ -375,12 +376,16 @@ export default function ProductDetails() {
         </div>
       </div>
 
+      {/* سياسة الإرجاع والتبديل — تطمئن الزبونة قبل الشراء */}
+      <ReturnPolicy policy={product.storeReturnPolicy} />
+
       {lightbox && hasImages && <Lightbox images={gallery} index={active} onClose={() => setLightbox(false)} />}
 
       {/* دليل المقاسات — نمر هذا المنتج فقط */}
       {sizeGuide && (
         <SizeGuideModal
           sizes={hasColorStock ? [...new Set(Object.values(colorStock).flatMap((sz) => Object.keys(sz)))] : sizes}
+          chart={product.storeSizeChart}
           onClose={() => setSizeGuide(false)}
         />
       )}
@@ -431,12 +436,36 @@ function StockBadge({ outOfStock, selSize, selSizeQty, stock, t }) {
   );
 }
 
+// سياسة الإرجاع والتبديل — بطاقة قابلة للطيّ. نص المتجر إن وُجد، وإلا نص افتراضي مطمئن.
+function ReturnPolicy({ policy }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const text = (policy && policy.trim()) || t('product.returnPolicyDefault');
+  return (
+    <div className="mt-6 overflow-hidden rounded-2xl border border-wine/15 bg-wine/[0.03]">
+      <button onClick={() => setOpen((o) => !o)} className="flex w-full items-center gap-3 px-4 py-3.5 text-start">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-wine/10 text-wine">
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M12 3l7.5 2.8v5.1c0 4.4-3 7.6-7.5 9.6-4.5-2-7.5-5.2-7.5-9.6V5.8L12 3z" /><path d="M9 12l2 2 4-4" />
+          </svg>
+        </span>
+        <span className="flex-1 font-display text-base font-bold text-wine">{t('product.returnPolicy')}</span>
+        <svg viewBox="0 0 24 24" className={`h-5 w-5 text-wine/50 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+      {open && <p className="whitespace-pre-line px-4 pb-4 text-sm leading-relaxed text-wine/75">{text}</p>}
+    </div>
+  );
+}
+
 function Reviews({ productId, reviews, onAdded }) {
   const { t } = useTranslation();
-  const [form, setForm] = useState({ authorName: '', rating: 0, comment: '' });
+  const [form, setForm] = useState({ authorName: '', rating: 0, comment: '', imageUrl: '' });
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
+  const [zoom, setZoom] = useState(''); // صورة تقييم مُكبّرة
 
   const submit = async (e) => {
     e.preventDefault();
@@ -445,7 +474,7 @@ function Reviews({ productId, reviews, onAdded }) {
     setBusy(true);
     try {
       await api.post(`/public/product/${productId}/reviews`, form);
-      setForm({ authorName: '', rating: 0, comment: '' });
+      setForm({ authorName: '', rating: 0, comment: '', imageUrl: '' });
       setMsg(t('product.reviewAdded'));
       onAdded();
     } catch (err) {
@@ -471,6 +500,11 @@ function Reviews({ productId, reviews, onAdded }) {
                   <StarRating value={r.rating} size="text-sm" />
                 </div>
                 {r.comment && <p className="mt-1 text-sm text-stone-300">{r.comment}</p>}
+                {r.imageUrl && (
+                  <button type="button" onClick={() => setZoom(r.imageUrl)} className="mt-2 block overflow-hidden rounded-xl border border-wine/15">
+                    <img src={r.imageUrl} alt="" loading="lazy" className="h-24 w-24 object-cover transition hover:opacity-90" />
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -495,11 +529,14 @@ function Reviews({ productId, reviews, onAdded }) {
             <label className="label">{t('product.yourComment')}</label>
             <textarea rows={3} className="input resize-none" value={form.comment} onChange={(e) => setForm({ ...form, comment: e.target.value })} />
           </div>
+          <ImageInput label={t('product.reviewPhoto')} value={form.imageUrl} onChange={(v) => setForm({ ...form, imageUrl: v })} />
           <button type="submit" disabled={busy} className="btn-primary w-full">
             {busy ? t('common.loading') : t('product.submitReview')}
           </button>
         </form>
       </div>
+
+      {zoom && <Lightbox images={[zoom]} index={0} onClose={() => setZoom('')} />}
     </section>
   );
 }

@@ -20,8 +20,27 @@ function mapStore(s) {
     banners: Array.isArray(s.banners) ? s.banners : [],
     deliveryZones: Array.isArray(s.delivery_zones) ? s.delivery_zones : [],
     freeShippingOver: Number(s.free_shipping_over || 0),
+    sizeChart: s.size_chart && typeof s.size_chart === 'object' ? s.size_chart : {},
+    returnPolicy: s.return_policy || '',
     createdAt: s.created_at,
   };
+}
+
+// المقاسات المسموح بها بدليل المقاسات المخصّص
+const CHART_SIZES = ['36', '38', '40', '42', '44', '46', '48'];
+
+// تنقية دليل المقاسات: {"38": {bust,waist,hips}, ...} — أرقام بين 0 و300، مقاسات معروفة فقط
+function sanitizeSizeChart(raw) {
+  if (!raw || typeof raw !== 'object') return {};
+  const out = {};
+  for (const s of CHART_SIZES) {
+    const m = raw[s];
+    if (!m || typeof m !== 'object') continue;
+    const num = (v) => { const n = Math.round(Number(v)); return Number.isFinite(n) && n > 0 && n <= 300 ? n : 0; };
+    const bust = num(m.bust), waist = num(m.waist), hips = num(m.hips);
+    if (bust || waist || hips) out[s] = { bust, waist, hips };
+  }
+  return out;
 }
 
 // تنقية مناطق التوصيل [{name, fee}] — حد أقصى 60 منطقة
@@ -72,6 +91,8 @@ export async function updateMyStore(req, res, next) {
   const banners = sanitizeBanners(req.body.banners);
   const deliveryZones = sanitizeZones(req.body.deliveryZones);
   const freeShippingOver = Math.max(0, Number(req.body.freeShippingOver) || 0);
+  const sizeChart = sanitizeSizeChart(req.body.sizeChart);
+  const returnPolicy = String(req.body.returnPolicy || '').slice(0, 2000);
   try {
     const current = await query('SELECT id, name, slug FROM stores WHERE user_id = $1', [req.user.id]);
     const store = current.rows[0];
@@ -87,8 +108,9 @@ export async function updateMyStore(req, res, next) {
          name = $1, description = $2, logo_url = $3, slug = $4,
          phone = $5, whatsapp = $6, instagram = $7, facebook = $8, tiktok = $9,
          theme_color = $10, delivery_info = $11, payment_info = $12,
-         banners = $13::jsonb, delivery_zones = $14::jsonb, free_shipping_over = $15, updated_at = now()
-       WHERE id = $16
+         banners = $13::jsonb, delivery_zones = $14::jsonb, free_shipping_over = $15,
+         size_chart = $16::jsonb, return_policy = $17, updated_at = now()
+       WHERE id = $18
        RETURNING *`,
       [
         name,
@@ -106,6 +128,8 @@ export async function updateMyStore(req, res, next) {
         JSON.stringify(banners),
         JSON.stringify(deliveryZones),
         freeShippingOver,
+        JSON.stringify(sizeChart),
+        returnPolicy,
         store.id,
       ]
     );

@@ -200,6 +200,8 @@ export function mapProduct(p) {
     storeWhatsapp: p.store_whatsapp || '',
     storeInstagram: p.store_instagram || '',
     storePhone: p.store_phone || '',
+    storeSizeChart: p.store_size_chart && typeof p.store_size_chart === 'object' ? p.store_size_chart : {},
+    storeReturnPolicy: p.store_return_policy || '',
     createdAt: p.created_at,
   };
 }

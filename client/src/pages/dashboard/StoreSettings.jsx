@@ -18,6 +18,8 @@ const DEFAULT_BANNERS = [
 ];
 const BG_TYPES = [['', 'bgTheme'], ['color', 'bgColor'], ['image', 'bgImage'], ['video', 'bgVideo']];
 const MAX_BANNERS = 5;
+// نمر دليل المقاسات القابل للتخصيص
+const CHART_SIZES = ['36', '38', '40', '42', '44', '46', '48'];
 
 export default function StoreSettings() {
   const { t } = useTranslation();
@@ -40,6 +42,8 @@ export default function StoreSettings() {
           banners: Array.isArray(s.banners) && s.banners.length ? s.banners : DEFAULT_BANNERS,
           deliveryZones: Array.isArray(s.deliveryZones) ? s.deliveryZones : [],
           freeShippingOver: s.freeShippingOver ? String(s.freeShippingOver) : '',
+          sizeChart: s.sizeChart && typeof s.sizeChart === 'object' ? s.sizeChart : {},
+          returnPolicy: s.returnPolicy || '',
         });
       })
       .catch((err) => setError(getErrorMessage(err)));
@@ -92,6 +96,10 @@ export default function StoreSettings() {
     setForm((f) => ({ ...f, deliveryZones: f.deliveryZones.map((z, i) => (i === idx ? { ...z, [key]: val } : z)) }));
   const addZone = () => setForm((f) => ({ ...f, deliveryZones: [...f.deliveryZones, { name: '', fee: '' }] }));
   const removeZone = (idx) => setForm((f) => ({ ...f, deliveryZones: f.deliveryZones.filter((_, i) => i !== idx) }));
+
+  // التحكم بدليل المقاسات المخصّص: {"38": {bust, waist, hips}}
+  const setChartCell = (size, key, val) =>
+    setForm((f) => ({ ...f, sizeChart: { ...f.sizeChart, [size]: { ...(f.sizeChart?.[size] || {}), [key]: val.replace(/\D/g, '') } } }));
 
   return (
     <div className="space-y-6">
@@ -265,6 +273,53 @@ export default function StoreSettings() {
             </div>
             <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.freeShippingHint')}</p>
           </div>
+        </div>
+
+        {/* دليل المقاسات المخصّص */}
+        <div className="glass space-y-3 p-6">
+          <div>
+            <h2 className="font-display text-lg font-bold text-stone-100">📏 {t('dashboard.store.sizeChart')}</h2>
+            <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.sizeChartHint')}</p>
+          </div>
+          <div className="-mx-2 overflow-x-auto px-2">
+            <table className="w-full min-w-[360px] border-collapse text-center text-sm">
+              <thead>
+                <tr className="text-stone-400">
+                  <th className="pb-2 font-semibold">{t('product.sizeCol')}</th>
+                  <th className="pb-2 font-semibold">{t('product.bustCol')}</th>
+                  <th className="pb-2 font-semibold">{t('product.waistCol')}</th>
+                  <th className="pb-2 font-semibold">{t('product.hipsCol')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {CHART_SIZES.map((s) => {
+                  const row = form.sizeChart?.[s] || {};
+                  return (
+                    <tr key={s}>
+                      <td className="py-1 pe-2 font-bold text-gold-200">{s}</td>
+                      {['bust', 'waist', 'hips'].map((k) => (
+                        <td key={k} className="p-1">
+                          <input
+                            dir="ltr" inputMode="numeric" placeholder="—"
+                            value={row[k] ?? ''}
+                            onChange={(e) => setChartCell(s, k, e.target.value)}
+                            className="input !py-1.5 text-center"
+                          />
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* سياسة الإرجاع والتبديل */}
+        <div className="glass space-y-2 p-6">
+          <label className="label">🛡️ {t('dashboard.store.returnPolicy')}</label>
+          <p className="text-xs text-stone-400">{t('dashboard.store.returnPolicyHint')}</p>
+          <textarea rows={3} className="input resize-none" maxLength={2000} placeholder={t('product.returnPolicyDefault')} value={form.returnPolicy} onChange={set('returnPolicy')} />
         </div>
 
         {/* التوصيل والدفع */}
