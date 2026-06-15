@@ -24,12 +24,30 @@ function mapStore(s) {
     returnPolicy: s.return_policy || '',
     announcement: s.announcement || '',
     welcomeOffer: s.welcome_offer || '',
+    categoryMeta: s.category_meta && typeof s.category_meta === 'object' ? s.category_meta : {},
     createdAt: s.created_at,
   };
 }
 
 // المقاسات المسموح بها بدليل المقاسات المخصّص
 const CHART_SIZES = ['36', '38', '40', '42', '44', '46', '48'];
+
+// الفئات الثابتة بالنظام (قابلة للتخصيص بصورة/اسم لكل متجر)
+const CATEGORY_KEYS = ['abaya', 'set', 'dress', 'hijab', 'trench'];
+
+// تنقية تخصيص الفئات: {"dress": {image, name}} — مفاتيح معروفة فقط، نصوص آمنة
+function sanitizeCategoryMeta(raw) {
+  if (!raw || typeof raw !== 'object') return {};
+  const out = {};
+  for (const c of CATEGORY_KEYS) {
+    const m = raw[c];
+    if (!m || typeof m !== 'object') continue;
+    const image = typeof m.image === 'string' ? m.image.trim().slice(0, 2000) : '';
+    const name = typeof m.name === 'string' ? m.name.trim().slice(0, 40) : '';
+    if (image || name) out[c] = { image, name };
+  }
+  return out;
+}
 
 // تنقية دليل المقاسات: {"38": {bust,waist,hips}, ...} — أرقام بين 0 و300، مقاسات معروفة فقط
 function sanitizeSizeChart(raw) {
@@ -97,6 +115,7 @@ export async function updateMyStore(req, res, next) {
   const returnPolicy = String(req.body.returnPolicy || '').slice(0, 2000);
   const announcement = String(req.body.announcement || '').slice(0, 200);
   const welcomeOffer = String(req.body.welcomeOffer || '').slice(0, 300);
+  const categoryMeta = sanitizeCategoryMeta(req.body.categoryMeta);
   try {
     const current = await query('SELECT id, name, slug FROM stores WHERE user_id = $1', [req.user.id]);
     const store = current.rows[0];
@@ -113,8 +132,9 @@ export async function updateMyStore(req, res, next) {
          phone = $5, whatsapp = $6, instagram = $7, facebook = $8, tiktok = $9,
          theme_color = $10, delivery_info = $11, payment_info = $12,
          banners = $13::jsonb, delivery_zones = $14::jsonb, free_shipping_over = $15,
-         size_chart = $16::jsonb, return_policy = $17, announcement = $18, welcome_offer = $19, updated_at = now()
-       WHERE id = $20
+         size_chart = $16::jsonb, return_policy = $17, announcement = $18, welcome_offer = $19,
+         category_meta = $20::jsonb, updated_at = now()
+       WHERE id = $21
        RETURNING *`,
       [
         name,
@@ -136,6 +156,7 @@ export async function updateMyStore(req, res, next) {
         returnPolicy,
         announcement,
         welcomeOffer,
+        JSON.stringify(categoryMeta),
         store.id,
       ]
     );

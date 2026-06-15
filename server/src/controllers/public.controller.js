@@ -39,6 +39,7 @@ function mapStorePublic(s) {
     returnPolicy: s.return_policy || '',
     announcement: s.announcement || '',
     welcomeOffer: s.welcome_offer || '',
+    categoryMeta: s.category_meta && typeof s.category_meta === 'object' ? s.category_meta : {},
     ownerPhone: s.owner_phone || '', // رقم المالك من التسجيل (احتياطي للواتساب)
     createdAt: s.created_at,
   };

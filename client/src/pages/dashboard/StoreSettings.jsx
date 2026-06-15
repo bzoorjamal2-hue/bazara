@@ -20,6 +20,8 @@ const BG_TYPES = [['', 'bgTheme'], ['color', 'bgColor'], ['image', 'bgImage'], [
 const MAX_BANNERS = 5;
 // نمر دليل المقاسات القابل للتخصيص
 const CHART_SIZES = ['36', '38', '40', '42', '44', '46', '48'];
+// الفئات الثابتة (قابلة للتخصيص بصورة/اسم)
+const STORE_CATS = ['abaya', 'set', 'dress', 'hijab', 'trench'];
 
 export default function StoreSettings() {
   const { t } = useTranslation();
@@ -46,6 +48,7 @@ export default function StoreSettings() {
           returnPolicy: s.returnPolicy || '',
           announcement: s.announcement || '',
           welcomeOffer: s.welcomeOffer || '',
+          categoryMeta: s.categoryMeta && typeof s.categoryMeta === 'object' ? s.categoryMeta : {},
         });
       })
       .catch((err) => setError(getErrorMessage(err)));
@@ -102,6 +105,10 @@ export default function StoreSettings() {
   // التحكم بدليل المقاسات المخصّص: {"38": {bust, waist, hips}}
   const setChartCell = (size, key, val) =>
     setForm((f) => ({ ...f, sizeChart: { ...f.sizeChart, [size]: { ...(f.sizeChart?.[size] || {}), [key]: val.replace(/\D/g, '') } } }));
+
+  // التحكم بتخصيص الفئات: {"dress": {image, name}}
+  const setCatMeta = (cat, key, val) =>
+    setForm((f) => ({ ...f, categoryMeta: { ...f.categoryMeta, [cat]: { ...(f.categoryMeta?.[cat] || {}), [key]: val } } }));
 
   return (
     <div className="space-y-6">
@@ -274,6 +281,33 @@ export default function StoreSettings() {
               <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-stone-400">₪</span>
             </div>
             <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.freeShippingHint')}</p>
+          </div>
+        </div>
+
+        {/* تخصيص الفئات — صورة واقعية + اسم لكل فئة */}
+        <div className="glass space-y-4 p-6">
+          <div>
+            <h2 className="font-display text-lg font-bold text-stone-100">🗂️ {t('dashboard.store.categories')}</h2>
+            <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.categoriesHint')}</p>
+          </div>
+          <div className="space-y-3">
+            {STORE_CATS.map((c) => {
+              const meta = form.categoryMeta?.[c] || {};
+              return (
+                <div key={c} className="rounded-xl border border-gold-400/15 bg-black/20 p-3">
+                  <p className="mb-2 text-sm font-semibold text-gold-200">{t(`categories.${c}`)}</p>
+                  <ImageInput value={meta.image || ''} onChange={(v) => setCatMeta(c, 'image', v)} />
+                  <input
+                    type="text"
+                    maxLength={40}
+                    className="input mt-2"
+                    placeholder={t('dashboard.store.categoryNamePlaceholder', { name: t(`categories.${c}`) })}
+                    value={meta.name || ''}
+                    onChange={(e) => setCatMeta(c, 'name', e.target.value)}
+                  />
+                </div>
+              );
+            })}
           </div>
         </div>
 

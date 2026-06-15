@@ -97,8 +97,14 @@ export default function StorePage() {
   // واتساب المتجر: رقم الإعدادات إن وُجد، وإلا رقم المالك المُدخل عند التسجيل
   const wa = store.whatsapp || store.ownerPhone || '';
   const featured = data.products.filter((p) => p.featured);
-  // صورة تمثيلية لكل فئة من أول منتج فيها (لعرض الفئات بصور حقيقية)
+  // تخصيص المالكة للفئات (صورة/اسم) — يطغى على الافتراضي
+  const catMeta = store.categoryMeta || {};
+  const catNames = {};
+  for (const c of CATS) catNames[c] = (catMeta[c]?.name || '').trim();
+  const catLabel = (c) => catNames[c] || t(`categories.${c}`);
+  // صورة كل فئة: صورة المالكة المخصّصة أولاً، وإلا أول صورة منتج في الفئة
   const catImages = {};
+  for (const c of CATS) { if (catMeta[c]?.image) catImages[c] = catMeta[c].image; }
   for (const p of data.products) {
     if (catImages[p.category]) continue;
     const im = p.imageUrl || (p.images && p.images[0]) || (p.videoUrl && cldVideoPoster(p.videoUrl));
@@ -155,7 +161,7 @@ export default function StorePage() {
               <Crumb />
               <span className="flex items-center gap-2 font-display text-lg font-bold text-wine">
                 <CatThumb cat={cat} className="h-8 w-8" />
-                {t(`categories.${cat}`)}
+                {catLabel(cat)}
               </span>
             </nav>
           )}
@@ -197,7 +203,7 @@ export default function StorePage() {
 
           <section className="mb-9 mt-7">
             <SectionTitle>{t('store.browseByCategory')}</SectionTitle>
-            <CategoryGrid onSelect={pickCategory} active={cat} images={catImages} />
+            <CategoryGrid onSelect={pickCategory} active={cat} images={catImages} names={catNames} />
           </section>
 
           <ProductSection title={`${t('store.newArrivals')} ❤️`} products={newest} wa={wa} />

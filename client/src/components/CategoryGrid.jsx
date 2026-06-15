@@ -13,21 +13,27 @@ function getPerPage() {
   return 5;
 }
 
-// بطاقة فئة: صورة الفئة المصمّمة (/categories/{cat}.png) + اسم الفئة بالأسفل.
-function CategoryCard({ c }) {
+// بطاقة فئة عصرية: صورة الفئة (صورة المالكة الحقيقية إن وُجدت، وإلا أيقونة مصمّمة)
+// بزوايا دائرية ناعمة بلا إطار بنّي، والاسم بالأسفل مباشرة.
+function CategoryCard({ c, image, name }) {
   const { t } = useTranslation();
+  const label = name || t(`categories.${c}`);
   return (
-    <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-wine/10 transition duration-300 group-hover:-translate-y-1 group-hover:shadow-md">
-      <div className="aspect-square overflow-hidden bg-[#594335]">
+    <div className="transition duration-300 group-hover:-translate-y-1">
+      <div
+        className={`aspect-square overflow-hidden rounded-3xl shadow-sm ring-1 ring-wine/10 transition group-hover:shadow-md ${
+          image ? 'bg-cream' : 'bg-gradient-to-br from-[#6e5340] via-[#5e4636] to-[#4a3527]'
+        }`}
+      >
         <img
-          src={`/categories/${c}.png`}
-          alt={t(`categories.${c}`)}
+          src={image || `/categories/${c}.png`}
+          alt={label}
           loading="lazy"
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+          className={`h-full w-full transition-transform duration-500 group-hover:scale-110 ${image ? 'object-cover' : 'object-contain p-4'}`}
         />
       </div>
       <div className="py-2.5 text-center">
-        <span className="text-xs font-bold text-wine sm:text-sm">{t(`categories.${c}`)}</span>
+        <span className="text-xs font-bold text-wine sm:text-sm">{label}</span>
       </div>
     </div>
   );
@@ -53,7 +59,8 @@ function Arrow({ dir, rtl, onClick }) {
 }
 
 // شبكة/كاروسيل الفئات — تظهر بعدد متجاوب مع الشاشة، مع أسهم ونقاط عند الحاجة.
-export default function CategoryGrid({ onSelect, active }) {
+// images/names: تخصيص المالكة لكل فئة (صورة واقعية + اسم) إن وُجد.
+export default function CategoryGrid({ onSelect, active, images = {}, names = {} }) {
   const { i18n } = useTranslation();
   const rtl = i18n.language !== 'en';
   const [perPage, setPerPage] = useState(getPerPage());
@@ -79,11 +86,11 @@ export default function CategoryGrid({ onSelect, active }) {
     const cls = `group block animate-fade-up transition-all duration-300 hover:-translate-y-1.5 ${isActive ? 'ring-2 ring-wine ring-offset-2 ring-offset-cream rounded-3xl' : ''}`;
     return onSelect ? (
       <button type="button" onClick={() => onSelect(isActive ? 'all' : c)} className={cls}>
-        <CategoryCard c={c} />
+        <CategoryCard c={c} image={images[c]} name={names[c]} />
       </button>
     ) : (
       <Link to={`/category/${c}`} className={cls}>
-        <CategoryCard c={c} />
+        <CategoryCard c={c} image={images[c]} name={names[c]} />
       </Link>
     );
   };
