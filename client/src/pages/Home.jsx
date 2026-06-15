@@ -7,6 +7,7 @@ import { ProductGridSkeleton } from '../components/Skeleton.jsx';
 import ProductCard from '../components/ProductCard.jsx';
 import ProductRail from '../components/ProductRail.jsx';
 import { getRecent } from '../utils/recentlyViewed.js';
+import { getCache, setCache } from '../utils/apiCache.js';
 import CategoryGrid from '../components/CategoryGrid.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
 import InstallApp from '../components/InstallApp.jsx';
@@ -15,16 +16,17 @@ import { BAZARA_WHATSAPP } from '../config/site.js';
 
 export default function Home() {
   const { t } = useTranslation();
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState(() => getCache('home') || null);
+  const [loading, setLoading] = useState(() => !getCache('home'));
   const recent = getRecent();
 
   // الصفحة الرئيسية متاحة دائماً على الرابط / للجميع (بدون أي تحويل)
+  // تبدأ من المخزّن المؤقّت (إن وُجد) فتظهر فوراً عند الرجوع، ثم تُحدَّث بالخلفية.
   useEffect(() => {
     api
       .get('/public/home')
-      .then((res) => setData(res.data))
-      .catch(() => setData({ stores: [], featured: [], products: [] }))
+      .then((res) => { setData(res.data); setCache('home', res.data); })
+      .catch(() => setData((d) => d || { stores: [], featured: [], products: [] }))
       .finally(() => setLoading(false));
   }, []);
 

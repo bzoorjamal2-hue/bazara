@@ -7,6 +7,7 @@ import Seo from '../components/Seo.jsx';
 import { ProductGridSkeleton } from '../components/Skeleton.jsx';
 import ProductCard from '../components/ProductCard.jsx';
 import CatThumb from '../components/CatThumb.jsx';
+import { getCache, setCache } from '../utils/apiCache.js';
 
 // لوقو بيت أنيق (زر العودة للصفحة الرئيسية)
 function HomeGlyph({ className = 'h-[18px] w-[18px]' }) {
@@ -47,18 +48,21 @@ export default function CategoryPage() {
   const { user, store } = useAuth();
   // "الرئيسية": المشترك المسجّل يعود لمتجره العام (صفحته بحسابه)؛ الزائر لبازارا العام
   const homeTo = user && store?.slug ? `/store/${store.slug}` : '/shop';
-  const [products, setProducts] = useState(null);
-  const [error, setError] = useState('');
-
   // المشترك المسجّل يرى منتجات متجره فقط (بلا خلط مع متاجر أخرى)
   const scopeSlug = user && store?.slug ? store.slug : '';
+  const cacheKey = `cat:${cat}:${scopeSlug}`;
+  const [products, setProducts] = useState(() => getCache(cacheKey) || null);
+  const [error, setError] = useState('');
+
   useEffect(() => {
-    setProducts(null);
+    const cached = getCache(cacheKey);
+    setProducts(cached || null); // عرض فوري من المخزّن عند الرجوع، ثم تحديث بالخلفية
     setError('');
     api
       .get(`/public/category/${cat}${scopeSlug ? `?store=${scopeSlug}` : ''}`)
-      .then((r) => setProducts(r.data.products))
-      .catch((err) => setError(getErrorMessage(err)));
+      .then((r) => { setProducts(r.data.products); setCache(cacheKey, r.data.products); })
+      .catch((err) => { if (!cached) setError(getErrorMessage(err)); });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cat, scopeSlug]);
 
   return (
