@@ -10,6 +10,7 @@ import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
 import { flyToCart } from '../utils/flyToCart.js';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { sizeLabel } from '../utils/sizes.js';
+import SizeGuideModal from './SizeGuideModal.jsx';
 
 const PLACEHOLDER =
   'data:image/svg+xml;utf8,' +
@@ -39,6 +40,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
   const [size, setSize] = useState('');
   const [color, setColor] = useState('');
   const [err, setErr] = useState('');
+  const [sizeGuide, setSizeGuide] = useState(false);
   // النمر المتاحة وكميتها حسب اللون المختار (عند المخزون لكل لون)
   const sizeStock = product.sizeStock && typeof product.sizeStock === 'object' ? product.sizeStock : {};
   const availSizes = hasColorStock ? (color ? Object.keys(colorStock[color] || {}) : []) : sizes;
@@ -171,7 +173,19 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
           {/* المقاس (حسب اللون عند المخزون لكل لون) */}
           {(hasColorStock ? colors.length > 0 : sizes.length > 0) && (
             <div className="mt-4">
-              <p className="mb-1.5 text-sm font-semibold text-stone-700">{t('store.sizeLabel')}</p>
+              <div className="mb-1.5 flex items-center justify-between gap-2">
+                <p className="text-sm font-semibold text-stone-700">{t('store.sizeLabel')}</p>
+                <button
+                  type="button"
+                  onClick={() => setSizeGuide(true)}
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-wine/30 px-3 py-1 text-xs font-bold text-wine transition hover:bg-wine hover:text-cream"
+                >
+                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="2.5" y="8" width="19" height="8" rx="1.6" /><path d="M7 8v3M12 8v4M17 8v3" />
+                  </svg>
+                  {t('product.sizeGuide')}
+                </button>
+              </div>
               {hasColorStock && !color ? (
                 <p className="rounded-xl bg-wine/5 px-3 py-2 text-sm font-medium text-wine/70">👆 {t('product.pickColorFirst')}</p>
               ) : (
@@ -199,6 +213,13 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
                 </div>
               )}
             </div>
+          )}
+
+          {sizeGuide && (
+            <SizeGuideModal
+              sizes={hasColorStock ? [...new Set(Object.values(colorStock).flatMap((sz) => Object.keys(sz)))] : sizes}
+              onClose={() => setSizeGuide(false)}
+            />
           )}
 
           {/* الكمية */}

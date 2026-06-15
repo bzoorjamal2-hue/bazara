@@ -13,6 +13,7 @@ import { cldVideoPoster } from '../utils/cloudinary.js';
 import { pushRecent, getRecent } from '../utils/recentlyViewed.js';
 import { sizeLabel } from '../utils/sizes.js';
 import Countdown from '../components/Countdown.jsx';
+import SizeGuideModal from '../components/SizeGuideModal.jsx';
 
 const PH = 'https://placehold.co/600x600/121214/d4af37?text=%F0%9F%91%97';
 
@@ -34,6 +35,7 @@ export default function ProductDetails() {
   const [selColor, setSelColor] = useState('');
   const [pickErr, setPickErr] = useState('');
   const [lightbox, setLightbox] = useState(false);
+  const [sizeGuide, setSizeGuide] = useState(false);
   const [notifyPhone, setNotifyPhone] = useState('');
   const [notifyBusy, setNotifyBusy] = useState(false);
   const [notifySent, setNotifySent] = useState(false);
@@ -277,7 +279,19 @@ export default function ProductDetails() {
           {/* المقاس (النمرة) — عند المخزون لكل لون تظهر نمر اللون المختار فقط */}
           {(hasColorStock ? colors.length > 0 : sizes.length > 0) && (
             <div className="mt-5">
-              <p className="mb-2 text-sm font-semibold text-stone-300">{t('product.selectSize')}</p>
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="text-sm font-semibold text-stone-300">{t('product.selectSize')}</p>
+                <button
+                  type="button"
+                  onClick={() => setSizeGuide(true)}
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-wine/30 px-3 py-1 text-xs font-bold text-wine transition hover:bg-wine hover:text-cream"
+                >
+                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="2.5" y="8" width="19" height="8" rx="1.6" /><path d="M7 8v3M12 8v4M17 8v3" />
+                  </svg>
+                  {t('product.sizeGuide')}
+                </button>
+              </div>
               {hasColorStock && !selColor ? (
                 <p className="rounded-xl bg-wine/5 px-3 py-2 text-sm font-medium text-wine/70">👆 {t('product.pickColorFirst')}</p>
               ) : (
@@ -362,6 +376,14 @@ export default function ProductDetails() {
       </div>
 
       {lightbox && hasImages && <Lightbox images={gallery} index={active} onClose={() => setLightbox(false)} />}
+
+      {/* دليل المقاسات — نمر هذا المنتج فقط */}
+      {sizeGuide && (
+        <SizeGuideModal
+          sizes={hasColorStock ? [...new Set(Object.values(colorStock).flatMap((sz) => Object.keys(sz)))] : sizes}
+          onClose={() => setSizeGuide(false)}
+        />
+      )}
 
       {/* أكملي إطلالتك — قطع مكمّلة من المتجر (فئة مختلفة) */}
       <ProductRail title={`✨ ${t('product.completeLook')}`} products={complementary} currentId={product.id} />
