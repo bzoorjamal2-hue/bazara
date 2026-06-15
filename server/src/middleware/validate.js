@@ -87,7 +87,7 @@ export const storeUpdateRules = [
   body('paymentInfo').optional({ nullable: true }).trim().isLength({ max: 1000 }),
 ];
 
-const CATEGORIES = ['abaya', 'set', 'dress', 'hijab', 'trench'];
+const CATEGORIES = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
 
 export const productRules = [
   body('name').trim().isLength({ min: 2, max: 150 }).withMessage('اسم المنتج مطلوب (2-150 حرف).'),

@@ -62,7 +62,9 @@
     "set": "Two-piece sets",
     "dress": "Dresses",
     "hijab": "Hijabs",
-    "trench": "Trench coats"
+    "trench": "Trench coats",
+    "jacket": "Wool jackets",
+    "shirt": "Shirts"
   },
   "image": {
     "upload": "Upload",

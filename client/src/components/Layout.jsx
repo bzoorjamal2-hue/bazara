@@ -6,6 +6,7 @@ import WishlistDrawer from './WishlistDrawer.jsx';
 import CartReminder from './CartReminder.jsx';
 import OfflineBanner from './OfflineBanner.jsx';
 import BottomNav from './BottomNav.jsx';
+import PullToRefresh from './PullToRefresh.jsx';
 import { isStandalone } from '../utils/pwa.js';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
 import { BAZARA_WHATSAPP, BAZARA_INSTAGRAM, BAZARA_FACEBOOK } from '../config/site.js';
@@ -25,6 +26,7 @@ export default function Layout({ children }) {
 
   return (
     <div className="app-bg theme-pub flex min-h-screen flex-col">
+      <PullToRefresh />
       {!hideChrome && <Navbar />}
       <main className={`mx-auto w-full max-w-6xl flex-1 px-4 pt-5 sm:px-6 ${showBottomNav ? 'pb-bottomnav' : 'pb-8'}`}>{children}</main>
       {!hideChrome && !showBottomNav && <PublicFooter />}

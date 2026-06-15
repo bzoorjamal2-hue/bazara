@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
-const BUILTIN = ['abaya', 'set', 'dress', 'hijab', 'trench'];
+const BUILTIN = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
 
 // عدد البطاقات المعروضة حسب عرض الشاشة (جوال 2 · آيباد 3 · كمبيوتر 5)
 function getPerPage() {
@@ -18,38 +18,27 @@ function getPerPage() {
 function CategoryCard({ cat }) {
   const { t } = useTranslation();
   const label = cat.name || (cat.builtin ? t(`categories.${cat.key}`) : cat.key);
+  const src = cat.image || (cat.builtin ? `/categories/${cat.key}.jpg` : '');
   return (
     <div className="transition duration-300 group-hover:-translate-y-1">
-      <div
-        className={`aspect-square overflow-hidden rounded-3xl shadow-sm ring-1 ring-wine/10 transition group-hover:shadow-md ${
-          cat.image ? 'bg-cream' : 'bg-gradient-to-br from-[#6e5340] via-[#5e4636] to-[#4a3527]'
-        }`}
-      >
-        {cat.image ? (
+      {/* بلا إطار/خلفية — يظهر شكل الأيقونة فقط (الصور بلا خلفية)، بحجم موحّد */}
+      <div className="flex aspect-square items-center justify-center overflow-hidden">
+        {src ? (
           <img
-            src={cat.image}
+            src={src}
             alt={label}
             loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-          />
-        ) : cat.builtin ? (
-          <img
-            src={`/categories/${cat.key}.png`}
-            alt={label}
-            loading="lazy"
-            className="h-full w-full object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+            className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          // فئة مخصّصة بلا صورة → أيقونة ملبس أنيقة على التدرّج الخمري
-          <div className="flex h-full w-full items-center justify-center text-cream/90 transition-transform duration-500 group-hover:scale-105">
-            <svg viewBox="0 0 24 24" className="h-1/2 w-1/2" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M9 4a3 3 0 0 0 6 0" />
-              <path d="M12 4 4.5 9v3l3-1.5V20h9V10.5l3 1.5V9L12 4Z" />
-            </svg>
-          </div>
+          // فئة مخصّصة بلا صورة → أيقونة ملبس خطّية أنيقة بلون خمري
+          <svg viewBox="0 0 24 24" className="h-1/2 w-1/2 text-wine/70" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M9 4a3 3 0 0 0 6 0" />
+            <path d="M12 4 4.5 9v3l3-1.5V20h9V10.5l3 1.5V9L12 4Z" />
+          </svg>
         )}
       </div>
-      <div className="py-2.5 text-center">
+      <div className="pt-1 text-center">
         <span className="text-xs font-bold text-wine sm:text-sm">{label}</span>
       </div>
     </div>
@@ -66,7 +55,8 @@ function Arrow({ dir, rtl, onClick }) {
       type="button"
       onClick={onClick}
       aria-label={dir === 'next' ? 'next' : 'prev'}
-      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-wine/20 bg-white text-wine shadow-sm transition hover:bg-wine hover:text-cream"
+      // mb-6 يرفع السهم ليتوسّط مع الصورة (يعوّض ارتفاع اسم الفئة أسفل البطاقة)
+      className="mb-6 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-wine/20 bg-white text-wine shadow-sm transition hover:bg-wine hover:text-cream"
     >
       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d={path} />

@@ -20,7 +20,7 @@ import { SIZES, sizeLabel } from '../utils/sizes.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 
 const PAGE_SIZE = 8;
-const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench'];
+const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
 
 export default function StorePage() {
   const { slug } = useParams();
@@ -104,12 +104,13 @@ export default function StorePage() {
   for (const c of CATS) catNames[c] = (catMeta[c]?.name || '').trim();
   for (const cc of customCats) catNames[cc.key] = cc.name;
   const catLabel = (c) => catNames[c] || t(`categories.${c}`);
-  // صورة كل فئة: صورة المالكة المخصّصة أولاً، وإلا أول صورة منتج في الفئة
+  // صورة كل فئة: الأصلية تستخدم أيقونتها الثابتة (إلا لو غيّرتها المالكة)؛
+  // المخصّصة تستخدم صورة المالكة وإلا أول صورة منتج فيها.
   const catImages = {};
   for (const c of CATS) { if (catMeta[c]?.image) catImages[c] = catMeta[c].image; }
   for (const cc of customCats) { if (cc.image) catImages[cc.key] = cc.image; }
   for (const p of data.products) {
-    if (catImages[p.category]) continue;
+    if (CATS.includes(p.category) || catImages[p.category]) continue; // الأصلية لها أيقونتها الثابتة
     const im = p.imageUrl || (p.images && p.images[0]) || (p.videoUrl && cldVideoPoster(p.videoUrl));
     if (im) catImages[p.category] = im;
   }
@@ -316,26 +317,29 @@ function StoreFooter({ store, wa }) {
   );
 }
 
-// شريط إعلانات متحرّك (Marquee) عصري — تدرّج خمري بنص عاجي، نجمة ذهبية فاصلة،
-// والنص يتكرّر كفايةً ويلتفّ بسلاسة فيبقى ظاهراً دائماً بلا فراغات.
+// شريط إعلانات متحرّك (Marquee) عصري متصل فعلاً — نسختان متطابقتان للنص (كلٌّ مكرّرة
+// عدّة مرّات) تتحرّكان بانسياب: ما إن تخرج جملة من جهة حتى تدخل التالية من الجهة الأخرى،
+// بلا تقطّع ولا فراغ. تدرّج خمري بنص عاجي ونجمة ذهبية فاصلة + تلاشٍ ناعم عند الحوافّ.
 function AnnouncementBar({ text }) {
+  const Track = ({ hidden }) => (
+    <div className="flex shrink-0 items-center" aria-hidden={hidden}>
+      {Array.from({ length: 6 }).map((_, k) => (
+        <span key={k} className="flex items-center gap-2.5 whitespace-nowrap px-6 text-sm font-semibold tracking-wide" dir="auto">
+          <SparkleIcon className="h-3.5 w-3.5 shrink-0 text-gold-300" />
+          {text}
+        </span>
+      ))}
+    </div>
+  );
   return (
     <div className="relative -mx-4 mb-5 overflow-hidden border-y border-gold-400/25 bg-gradient-to-r from-wine-dark via-wine to-wine-dark py-2.5 text-cream shadow-sm sm:-mx-6">
-      {/* تلاشٍ ناعم عند الحوافّ ليبدو أكثر أناقة */}
-      <span className="pointer-events-none absolute inset-y-0 start-0 z-10 w-10 bg-gradient-to-e from-wine-dark to-transparent" />
-      <span className="pointer-events-none absolute inset-y-0 end-0 z-10 w-10 bg-gradient-to-s from-wine-dark to-transparent" />
       <div className="flex w-max animate-marquee" dir="ltr">
-        {[0, 1].map((group) => (
-          <div key={group} className="flex shrink-0 items-center" aria-hidden={group === 1}>
-            {Array.from({ length: 5 }).map((_, k) => (
-              <span key={k} className="flex items-center gap-2.5 whitespace-nowrap px-6 text-sm font-semibold tracking-wide" dir="auto">
-                <SparkleIcon className="h-3.5 w-3.5 shrink-0 text-gold-300" />
-                {text}
-              </span>
-            ))}
-          </div>
-        ))}
+        <Track />
+        <Track hidden />
       </div>
+      {/* تلاشٍ ناعم عند الحوافّ (يسار/يمين فيزيائيًا) */}
+      <span className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-wine-dark to-transparent" />
+      <span className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-wine-dark to-transparent" />
     </div>
   );
 }

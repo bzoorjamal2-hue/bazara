@@ -13,7 +13,7 @@ import ThemeToggle from './ThemeToggle.jsx';
 import { cldThumb } from '../utils/cloudinary.js';
 import { productThumb } from '../utils/recentlyViewed.js';
 
-const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench'];
+const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
 
 function MenuBtn({ onOpen }) {
   return (

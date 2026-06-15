@@ -21,7 +21,7 @@ const MAX_BANNERS = 5;
 // نمر دليل المقاسات القابل للتخصيص
 const CHART_SIZES = ['36', '38', '40', '42', '44', '46', '48'];
 // الفئات الثابتة (قابلة للتخصيص بصورة/اسم)
-const STORE_CATS = ['abaya', 'set', 'dress', 'hijab', 'trench'];
+const STORE_CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
 
 export default function StoreSettings() {
   const { t } = useTranslation();

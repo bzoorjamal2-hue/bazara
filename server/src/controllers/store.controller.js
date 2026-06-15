@@ -34,7 +34,7 @@ function mapStore(s) {
 const CHART_SIZES = ['36', '38', '40', '42', '44', '46', '48'];
 
 // الفئات الثابتة بالنظام (قابلة للتخصيص بصورة/اسم لكل متجر)
-const CATEGORY_KEYS = ['abaya', 'set', 'dress', 'hijab', 'trench'];
+const CATEGORY_KEYS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
 
 // تنقية الفئات الإضافية المخصّصة: [{key, name, image}] — اسم مطلوب، مفتاح آمن وفريد
 function sanitizeCustomCategories(raw) {

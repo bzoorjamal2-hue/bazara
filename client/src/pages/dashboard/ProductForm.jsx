@@ -8,7 +8,7 @@ import Select from '../../components/Select.jsx';
 import useScrollLock from '../../hooks/useScrollLock.js';
 import { SIZES, sizeLabel } from '../../utils/sizes.js';
 
-const CATEGORIES = ['abaya', 'set', 'dress', 'hijab', 'trench'];
+const CATEGORIES = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
 const EMPTY = {
   name: '', price: '', oldPrice: '', description: '', size: '', color: '',
   category: 'abaya', imageUrl: '', images: [], videoUrl: '', stock: '', featured: false, sizeStock: {}, colorStock: {}, colorImages: {}, saleEndsAt: '',

@@ -25,7 +25,7 @@ function Avatar({ user, size = 'h-8 w-8' }) {
   );
 }
 
-const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench'];
+const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
 
 // أيقونات خطّية أنيقة لقائمة الحساب (بديل الإيموجي)
 const I = (p) => ({ viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true, ...p });

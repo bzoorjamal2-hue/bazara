@@ -181,7 +181,7 @@ export async function getProductById(req, res, next) {
 export async function getByCategory(req, res, next) {
   const { cat } = req.params;
   const storeSlug = (req.query.store || '').trim();
-  const valid = ['abaya', 'set', 'dress', 'hijab', 'trench'];
+  const valid = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
   if (!valid.includes(cat)) return res.status(400).json({ error: 'فئة غير صالحة.' });
   try {
     const active = activeStoreSql('u');
