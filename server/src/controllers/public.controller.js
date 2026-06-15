@@ -37,6 +37,8 @@ function mapStorePublic(s) {
     freeShippingOver: Number(s.free_shipping_over || 0),
     sizeChart: s.size_chart && typeof s.size_chart === 'object' ? s.size_chart : {},
     returnPolicy: s.return_policy || '',
+    announcement: s.announcement || '',
+    welcomeOffer: s.welcome_offer || '',
     ownerPhone: s.owner_phone || '', // رقم المالك من التسجيل (احتياطي للواتساب)
     createdAt: s.created_at,
   };

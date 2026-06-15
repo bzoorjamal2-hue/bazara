@@ -111,6 +111,12 @@ export default function StorePage() {
       {/* الهيدر الخاص بالمتجر: قائمة + اسم + بحث */}
       <StoreHeader store={store} q={q} setQ={setQ} cat={cat} setCat={setCat} products={data.products} />
 
+      {/* شريط إعلانات متحرّك (إن فعّلته المالكة) */}
+      {store.announcement && <AnnouncementBar text={store.announcement} />}
+
+      {/* نافذة ترحيب لأول زيارة (إن فعّلتها المالكة) */}
+      <WelcomePopup store={store} />
+
       {/* شريط المالك */}
       {isOwner && (
         <div className="mb-5 flex flex-col items-center justify-between gap-3 rounded-2xl border border-gold-400/30 bg-gold-400/5 p-4 sm:flex-row">
@@ -286,6 +292,56 @@ function StoreFooter({ store, wa }) {
         <p className="mt-5 text-xs text-cream/60">© {new Date().getFullYear()} {store.name} — {t('footer.rights')}</p>
       </div>
     </footer>
+  );
+}
+
+// شريط إعلانات متحرّك (Marquee) — يكرّر النص لحركة متصلة، خمري بنص عاجي
+function AnnouncementBar({ text }) {
+  return (
+    <div className="-mx-4 mb-5 overflow-hidden bg-wine py-2 text-cream sm:-mx-6">
+      <div className="flex w-max animate-marquee whitespace-nowrap">
+        {[0, 1].map((half) => (
+          <span key={half} className="flex items-center text-sm font-semibold tracking-wide">
+            {[0, 1, 2].map((k) => (
+              <span key={k} className="flex items-center gap-2 pe-10"><span aria-hidden>✦</span> {text}</span>
+            ))}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// نافذة ترحيب لأول زيارة — تعرض عرض/كوبون المالكة مرّة واحدة لكل زائرة (لكل متجر)
+function WelcomePopup({ store }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  useScrollLock(open);
+  useEffect(() => {
+    if (!store?.welcomeOffer) return undefined;
+    const key = `bz_welcome_${store.slug}`;
+    try { if (localStorage.getItem(key)) return undefined; } catch { /* تجاهل */ }
+    const id = setTimeout(() => {
+      setOpen(true);
+      try { localStorage.setItem(key, '1'); } catch { /* تجاهل */ }
+    }, 1200);
+    return () => clearTimeout(id);
+  }, [store?.welcomeOffer, store?.slug]);
+
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-[90] flex items-center justify-center p-4" onClick={() => setOpen(false)}>
+      <div className="absolute inset-0 bg-black/55 animate-fade-up" />
+      <div onClick={(e) => e.stopPropagation()} className="animate-pop relative w-full max-w-sm overflow-hidden rounded-3xl bg-white p-6 text-center shadow-2xl">
+        <CloseButton onClick={() => setOpen(false)} variant="wine" className="absolute end-3 top-3" />
+        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-wine/10 text-3xl">🎁</div>
+        <h3 className="font-display text-xl font-bold text-wine">{t('store.welcomeTitle')}</h3>
+        <p className="mt-3 whitespace-pre-line text-[15px] leading-relaxed text-wine/80">{store.welcomeOffer}</p>
+        <button onClick={() => setOpen(false)} className="mt-5 w-full rounded-2xl bg-gradient-to-r from-wine to-wine-dark py-3 font-bold text-cream shadow-lg transition hover:brightness-110">
+          {t('store.welcomeCta')}
+        </button>
+      </div>
+    </div>
   );
 }
 

@@ -114,6 +114,9 @@ async function ensureColumns() {
     await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS size_chart JSONB DEFAULT '{}'::jsonb;");
     // سياسة الإرجاع والتبديل (نص يظهر للزبون بصفحة المنتج)
     await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS return_policy TEXT DEFAULT '';");
+    // شريط إعلانات علوي + عرض/كوبون ترحيبي (نافذة أول زيارة)
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS announcement VARCHAR(200) DEFAULT '';");
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS welcome_offer VARCHAR(300) DEFAULT '';");
     // صورة مرفقة مع تقييم الزبون
     await pool.query("ALTER TABLE reviews ADD COLUMN IF NOT EXISTS image_url TEXT DEFAULT '';");
     // طلبات الدفع عند الاستلام (واتساب): حقول التوصيل

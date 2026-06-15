@@ -22,6 +22,8 @@ function mapStore(s) {
     freeShippingOver: Number(s.free_shipping_over || 0),
     sizeChart: s.size_chart && typeof s.size_chart === 'object' ? s.size_chart : {},
     returnPolicy: s.return_policy || '',
+    announcement: s.announcement || '',
+    welcomeOffer: s.welcome_offer || '',
     createdAt: s.created_at,
   };
 }
@@ -93,6 +95,8 @@ export async function updateMyStore(req, res, next) {
   const freeShippingOver = Math.max(0, Number(req.body.freeShippingOver) || 0);
   const sizeChart = sanitizeSizeChart(req.body.sizeChart);
   const returnPolicy = String(req.body.returnPolicy || '').slice(0, 2000);
+  const announcement = String(req.body.announcement || '').slice(0, 200);
+  const welcomeOffer = String(req.body.welcomeOffer || '').slice(0, 300);
   try {
     const current = await query('SELECT id, name, slug FROM stores WHERE user_id = $1', [req.user.id]);
     const store = current.rows[0];
@@ -109,8 +113,8 @@ export async function updateMyStore(req, res, next) {
          phone = $5, whatsapp = $6, instagram = $7, facebook = $8, tiktok = $9,
          theme_color = $10, delivery_info = $11, payment_info = $12,
          banners = $13::jsonb, delivery_zones = $14::jsonb, free_shipping_over = $15,
-         size_chart = $16::jsonb, return_policy = $17, updated_at = now()
-       WHERE id = $18
+         size_chart = $16::jsonb, return_policy = $17, announcement = $18, welcome_offer = $19, updated_at = now()
+       WHERE id = $20
        RETURNING *`,
       [
         name,
@@ -130,6 +134,8 @@ export async function updateMyStore(req, res, next) {
         freeShippingOver,
         JSON.stringify(sizeChart),
         returnPolicy,
+        announcement,
+        welcomeOffer,
         store.id,
       ]
     );

@@ -44,6 +44,8 @@ export default function StoreSettings() {
           freeShippingOver: s.freeShippingOver ? String(s.freeShippingOver) : '',
           sizeChart: s.sizeChart && typeof s.sizeChart === 'object' ? s.sizeChart : {},
           returnPolicy: s.returnPolicy || '',
+          announcement: s.announcement || '',
+          welcomeOffer: s.welcomeOffer || '',
         });
       })
       .catch((err) => setError(getErrorMessage(err)));
@@ -272,6 +274,21 @@ export default function StoreSettings() {
               <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-stone-400">₪</span>
             </div>
             <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.freeShippingHint')}</p>
+          </div>
+        </div>
+
+        {/* تسويق: شريط إعلانات + نافذة ترحيب */}
+        <div className="glass space-y-4 p-6">
+          <h2 className="font-display text-lg font-bold text-stone-100">📣 {t('dashboard.store.marketing')}</h2>
+          <div>
+            <label className="label">{t('dashboard.store.announcement')}</label>
+            <input type="text" maxLength={200} className="input" placeholder={t('dashboard.store.announcementPlaceholder')} value={form.announcement} onChange={set('announcement')} />
+            <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.announcementHint')}</p>
+          </div>
+          <div>
+            <label className="label">{t('dashboard.store.welcomeOffer')}</label>
+            <input type="text" maxLength={300} className="input" placeholder={t('dashboard.store.welcomePlaceholder')} value={form.welcomeOffer} onChange={set('welcomeOffer')} />
+            <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.welcomeHint')}</p>
           </div>
         </div>
 

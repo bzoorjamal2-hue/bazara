@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
@@ -41,6 +41,22 @@ export default function ProductDetails() {
   const [notifyPhone, setNotifyPhone] = useState('');
   const [notifyBusy, setNotifyBusy] = useState(false);
   const [notifySent, setNotifySent] = useState(false);
+  const [shared, setShared] = useState(false);
+
+  // مشاركة المنتج: واجهة المشاركة الأصلية إن توفّرت، وإلا نسخ الرابط
+  const shareProduct = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try { await navigator.share({ title: product?.name, url }); return; } catch { /* أُلغيت */ }
+    }
+    try { await navigator.clipboard.writeText(url); setShared(true); setTimeout(() => setShared(false), 1800); } catch { /* تجاهل */ }
+  };
+
+  // دليل اجتماعي: عدد مشاهدات "حيّ" ثابت لكل منتج (تقديري، يبني ثقة)
+  const viewers = useMemo(() => {
+    const seed = String(id).split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+    return 3 + (seed % 12); // 3..14
+  }, [id]);
 
   const fetchData = () => {
     api
@@ -226,12 +242,33 @@ export default function ProductDetails() {
         <div className="flex flex-col">
           <div className="flex items-start justify-between gap-3">
             <span className="badge bg-gold-400/10 text-gold-200">{t(`categories.${product.category}`)}</span>
-            <button
-              onClick={() => toggle(product)}
-              className={`flex h-10 w-10 items-center justify-center rounded-full border transition ${liked ? 'border-red-400 bg-red-500/20' : 'border-gold-400/30 hover:bg-gold-400/10'}`}
-            >
-              {liked ? '❤️' : '🤍'}
-            </button>
+            <div className="flex items-center gap-2">
+              {/* مشاركة المنتج */}
+              <div className="relative">
+                <button
+                  onClick={shareProduct}
+                  aria-label={t('product.share')}
+                  title={t('product.share')}
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-gold-400/30 text-wine transition hover:bg-gold-400/10"
+                >
+                  <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+                    <path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" />
+                  </svg>
+                </button>
+                {shared && (
+                  <span className="absolute -bottom-8 end-0 z-10 whitespace-nowrap rounded-lg bg-wine px-2.5 py-1 text-xs font-semibold text-cream shadow-lg">
+                    {t('product.shareCopied')}
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => toggle(product)}
+                className={`flex h-10 w-10 items-center justify-center rounded-full border transition ${liked ? 'border-red-400 bg-red-500/20' : 'border-gold-400/30 hover:bg-gold-400/10'}`}
+              >
+                {liked ? '❤️' : '🤍'}
+              </button>
+            </div>
           </div>
 
           <h1 className="mt-2 font-display text-3xl font-extrabold text-stone-100">{product.name}</h1>
@@ -246,6 +283,17 @@ export default function ProductDetails() {
             <span className="font-display text-3xl font-bold gradient-text">{t('common.currency')}{product.price}</span>
             {hasDiscount && <span className="text-lg text-stone-500 line-through">{t('common.currency')}{product.oldPrice}</span>}
           </div>
+
+          {/* دليل اجتماعي: مشاهدات حيّة (تقديري) */}
+          {!outOfStock && (
+            <p className="mt-2.5 flex items-center gap-1.5 text-xs font-medium text-wine/60">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+              </span>
+              {t('product.viewingNow', { count: viewers })}
+            </p>
+          )}
 
           {/* عدّاد العرض المحدود — تصميم فخم */}
           {product.saleEndsAt && (
