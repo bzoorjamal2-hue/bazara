@@ -29,10 +29,10 @@ export async function createProduct(req, res, next) {
 
     const result = await query(
       `INSERT INTO products
-         (store_id, name, price, old_price, description, size, color, category, image_url, images, stock, featured, video_url, size_stock, sale_ends_at, color_stock)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+         (store_id, name, price, old_price, description, size, color, category, image_url, images, stock, featured, video_url, size_stock, sale_ends_at, color_stock, color_images)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
        RETURNING *`,
-      [store.id, p.name, p.price, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, p.videoUrl, JSON.stringify(p.sizeStock), p.saleEndsAt, JSON.stringify(p.colorStock)]
+      [store.id, p.name, p.price, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, p.videoUrl, JSON.stringify(p.sizeStock), p.saleEndsAt, JSON.stringify(p.colorStock), JSON.stringify(p.colorImages)]
     );
 
     const product = result.rows[0];
@@ -61,10 +61,10 @@ export async function updateProduct(req, res, next) {
     const result = await query(
       `UPDATE products SET
          name=$1, price=$2, old_price=$3, description=$4, size=$5, color=$6,
-         category=$7, image_url=$8, images=$9, stock=$10, featured=$11, video_url=$12, size_stock=$13, sale_ends_at=$14, color_stock=$15, updated_at=now()
-       WHERE id=$16 AND store_id=$17
+         category=$7, image_url=$8, images=$9, stock=$10, featured=$11, video_url=$12, size_stock=$13, sale_ends_at=$14, color_stock=$15, color_images=$16, updated_at=now()
+       WHERE id=$17 AND store_id=$18
        RETURNING *`,
-      [p.name, p.price, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, p.videoUrl, JSON.stringify(p.sizeStock), p.saleEndsAt, JSON.stringify(p.colorStock), id, store.id]
+      [p.name, p.price, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, p.videoUrl, JSON.stringify(p.sizeStock), p.saleEndsAt, JSON.stringify(p.colorStock), JSON.stringify(p.colorImages), id, store.id]
     );
     res.json({ product: mapProduct(result.rows[0]) });
   } catch (err) {
@@ -162,8 +162,21 @@ function normalizeBody(b) {
     videoUrl: typeof b.videoUrl === 'string' ? b.videoUrl.trim().slice(0, 2000) : '',
     sizeStock,
     colorStock,
+    colorImages: sanitizeColorImages(b.colorImages),
     saleEndsAt: (() => { const d = b.saleEndsAt ? new Date(b.saleEndsAt) : null; return d && !isNaN(d) ? d : null; })(),
   };
+}
+
+// تنقية صور الألوان: {"أسود": ["url1","url2"], ...} — حتى 4 صور لكل لون
+function sanitizeColorImages(raw) {
+  if (!raw || typeof raw !== 'object') return {};
+  const out = {};
+  for (const [color, arr] of Object.entries(raw)) {
+    if (!Array.isArray(arr)) continue;
+    const imgs = arr.filter((u) => typeof u === 'string' && u.trim()).map((u) => u.trim().slice(0, 2000)).slice(0, 4);
+    if (imgs.length) out[String(color).slice(0, 50)] = imgs;
+  }
+  return out;
 }
 
 export function mapProduct(p) {
@@ -192,6 +205,7 @@ export function mapProduct(p) {
     stock: p.stock, // null = متوفّر دائماً
     sizeStock: p.size_stock && typeof p.size_stock === 'object' ? p.size_stock : {},
     colorStock: p.color_stock && typeof p.color_stock === 'object' ? p.color_stock : {},
+    colorImages: p.color_images && typeof p.color_images === 'object' ? p.color_images : {},
     featured: p.featured,
     ratingAvg: p.rating_avg != null ? Math.round(Number(p.rating_avg) * 10) / 10 : 0,
     ratingCount: p.rating_count != null ? Number(p.rating_count) : 0,

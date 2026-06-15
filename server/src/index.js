@@ -105,6 +105,8 @@ async function ensureColumns() {
     await pool.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS size_stock JSONB DEFAULT '{}'::jsonb;");
     // مخزون لكل لون ثم لكل نمرة: {"أسود": {"38": 3, "40": 2}, "أبيض": {"38": 1}}
     await pool.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS color_stock JSONB DEFAULT '{}'::jsonb;");
+    // صور لكل لون (Color Swatches): {"أسود": ["url1","url2"], ...}
+    await pool.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS color_images JSONB DEFAULT '{}'::jsonb;");
     // نهاية العرض (عدّاد تنازلي) — عند انتهائه يعود السعر الأصلي تلقائياً
     await pool.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS sale_ends_at TIMESTAMPTZ;");
     // مناطق التوصيل القابلة للتخصيص + شحن مجاني فوق مبلغ

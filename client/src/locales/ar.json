@@ -301,6 +301,8 @@
       "qty": "الكمية",
       "addColor": "إضافة لون",
       "addColorPlaceholder": "اكتب اسم اللون (مثل: أسود) واضغط ＋",
+      "colorImages": "صور هذا اللون",
+      "addColorImage": "إضافة صورة للون",
       "category": "الفئة",
       "image": "الصورة الرئيسية",
       "gallery": "صور إضافية (معرض)",

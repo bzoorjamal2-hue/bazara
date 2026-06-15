@@ -301,6 +301,8 @@
       "qty": "Qty",
       "addColor": "Add color",
       "addColorPlaceholder": "Type a color name (e.g. Black) and press ＋",
+      "colorImages": "Photos for this color",
+      "addColorImage": "Add color photo",
       "category": "Category",
       "image": "Main image",
       "gallery": "Additional images (gallery)",

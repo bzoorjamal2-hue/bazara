@@ -110,7 +110,12 @@ export default function ProductDetails() {
   if (error) return <div className="glass p-10 text-center text-stone-300">{error}</div>;
   if (!product) return <ProductDetailsSkeleton />;
 
-  const gallery = [...new Set([product.imageUrl, ...(product.images || [])].filter(Boolean))];
+  // صور اللون المختار (Color Swatches) تطغى على المعرض العام عند اختيار لون له صور
+  const colorImages = product.colorImages && typeof product.colorImages === 'object' ? product.colorImages : {};
+  const activeColorImgs = selColor && Array.isArray(colorImages[selColor]) ? colorImages[selColor].filter(Boolean) : [];
+  const gallery = activeColorImgs.length
+    ? activeColorImgs
+    : [...new Set([product.imageUrl, ...(product.images || [])].filter(Boolean))];
   const hasImages = gallery.length > 0;
   if (!hasImages && !product.videoUrl) gallery.push(PH); // عنصر بديل فقط لو ما في صور ولا فيديو
   const hasDiscount = product.oldPrice && product.oldPrice > product.price;
@@ -328,7 +333,7 @@ export default function ProductDetails() {
                   <button
                     key={c}
                     type="button"
-                    onClick={() => { setSelColor(c); if (hasColorStock) setSelSize(''); setPickErr(''); }}
+                    onClick={() => { setSelColor(c); if (hasColorStock) setSelSize(''); setPickErr(''); setActive(0); }}
                     className={`flex items-center gap-2 ${chipCls(selColor === c)}`}
                   >
                     <span className="h-3.5 w-3.5 rounded-full border border-current/40" style={{ background: c }} />

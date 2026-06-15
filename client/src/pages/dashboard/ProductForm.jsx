@@ -10,7 +10,7 @@ import { SIZES, sizeLabel } from '../../utils/sizes.js';
 const CATEGORIES = ['abaya', 'set', 'dress', 'hijab', 'trench'];
 const EMPTY = {
   name: '', price: '', oldPrice: '', description: '', size: '', color: '',
-  category: 'abaya', imageUrl: '', images: [], videoUrl: '', stock: '', featured: false, sizeStock: {}, colorStock: {}, saleEndsAt: '',
+  category: 'abaya', imageUrl: '', images: [], videoUrl: '', stock: '', featured: false, sizeStock: {}, colorStock: {}, colorImages: {}, saleEndsAt: '',
 };
 
 // تحويل ISO إلى صيغة خانة التاريخ المحلّية (YYYY-MM-DD)
@@ -35,6 +35,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
           images: initial.images || [],
           sizeStock: initial.sizeStock && typeof initial.sizeStock === 'object' ? initial.sizeStock : {},
           colorStock: initial.colorStock && typeof initial.colorStock === 'object' ? initial.colorStock : {},
+          colorImages: initial.colorImages && typeof initial.colorImages === 'object' ? initial.colorImages : {},
           saleEndsAt: toDateInput(initial.saleEndsAt),
         }
       : EMPTY
@@ -57,8 +58,18 @@ export default function ProductForm({ initial, onClose, onSaved }) {
   const removeColorVariant = (c) => {
     const colorStock = { ...form.colorStock };
     delete colorStock[c];
-    setForm({ ...form, colorStock });
+    const colorImages = { ...form.colorImages };
+    delete colorImages[c];
+    setForm({ ...form, colorStock, colorImages });
   };
+
+  // صور كل لون (Color Swatches) — حتى 4 صور لكل لون
+  const addColorImage = (c) =>
+    setForm((f) => { const arr = f.colorImages?.[c] || []; return arr.length >= 4 ? f : { ...f, colorImages: { ...f.colorImages, [c]: [...arr, ''] } }; });
+  const setColorImageAt = (c, idx, val) =>
+    setForm((f) => { const arr = [...(f.colorImages?.[c] || [])]; arr[idx] = val; return { ...f, colorImages: { ...f.colorImages, [c]: arr } }; });
+  const removeColorImage = (c, idx) =>
+    setForm((f) => ({ ...f, colorImages: { ...f.colorImages, [c]: (f.colorImages?.[c] || []).filter((_, i) => i !== idx) } }));
   const toggleColorSize = (c, s) => {
     const sizes = { ...(form.colorStock[c] || {}) };
     if (s in sizes) delete sizes[s];
@@ -237,6 +248,22 @@ export default function ProductForm({ initial, onClose, onSaved }) {
                           ))}
                         </div>
                       )}
+
+                      {/* صور هذا اللون — تظهر للزبونة عند اختياره (Color Swatches) */}
+                      <div className="mt-3 border-t border-gold-400/10 pt-3">
+                        <p className="mb-2 text-xs font-semibold text-stone-300">📷 {t('dashboard.product.colorImages')}</p>
+                        <div className="space-y-2">
+                          {(form.colorImages?.[c] || []).map((img, idx) => (
+                            <div key={idx} className="flex items-start gap-2">
+                              <div className="flex-1"><ImageInput value={img} onChange={(v) => setColorImageAt(c, idx, v)} /></div>
+                              <button type="button" onClick={() => removeColorImage(c, idx)} className="mt-1 rounded-lg p-2 text-stone-400 hover:text-red-300" aria-label={t('common.delete')}>✕</button>
+                            </div>
+                          ))}
+                          {(form.colorImages?.[c] || []).length < 4 && (
+                            <button type="button" onClick={() => addColorImage(c)} className="btn-ghost w-full text-sm">＋ {t('dashboard.product.addColorImage')}</button>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   );
                 })}
