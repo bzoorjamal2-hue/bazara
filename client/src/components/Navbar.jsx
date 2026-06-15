@@ -135,7 +135,6 @@ export default function Navbar() {
               <MenuIcon className="h-5 w-5" />
             </button>
             <ThemeToggle className="rounded-full text-wine hover:bg-wine/10" />
-            <NavBell />
           </div>
 
           {/* الشعار بالنص (في المنتصف تماماً) */}
@@ -185,7 +184,11 @@ export default function Navbar() {
               >
                 ✕
               </button>
-              <LanguageSwitcher onChanged={() => setMenuOpen(false)} />
+              {/* جرس الإشعارات + تبديل اللغة — جهة النهاية */}
+              <div className="flex items-center gap-2">
+                <NavBell variant="drawer" />
+                <LanguageSwitcher onChanged={() => setMenuOpen(false)} />
+              </div>
             </div>
 
             {/* الهوية — المدير يظهر باسمه وصورته (حساب تحكّم) */}

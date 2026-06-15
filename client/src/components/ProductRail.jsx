@@ -23,10 +23,24 @@ export default function ProductRail({ title, products, currentId }) {
           const hasDiscount = p.oldPrice && p.oldPrice > p.price;
           const thumb = productThumb(p);
           const img = thumb ? cldThumb(thumb, 300) : PH;
+          const isVideo = Boolean(p.videoUrl);
           return (
             <Link key={p.id} to={`/product/${p.id}`} className="glass w-36 shrink-0 overflow-hidden transition hover:-translate-y-1 hover:shadow-glow sm:w-40">
-              <div className="aspect-[3/4] overflow-hidden bg-ink-800">
+              <div className="relative aspect-[3/4] overflow-hidden bg-ink-800">
                 <img src={img} alt={p.name} loading="lazy" decoding="async" onError={(e) => (e.currentTarget.src = PH)} className="h-full w-full object-cover" />
+                {/* مؤشّر الفيديو — زر تشغيل واضح ليُعرف أنه منتج فيديو (مثل البطاقات) */}
+                {isVideo && (
+                  <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/45 ring-1 ring-white/50 backdrop-blur-sm">
+                      <svg viewBox="0 0 24 24" className="h-5 w-5 translate-x-[1px] fill-white drop-shadow" aria-hidden="true">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </span>
+                  </span>
+                )}
+                {hasDiscount && (
+                  <span className="badge absolute start-2 top-2 bg-red-500 text-white">-{Math.round((1 - p.price / p.oldPrice) * 100)}%</span>
+                )}
               </div>
               <div className="p-2.5 text-center">
                 <p className="line-clamp-1 text-sm font-semibold text-stone-100">{p.name}</p>

@@ -60,17 +60,26 @@ function AnimatedRoutes() {
     return () => window.removeEventListener('scroll', onScroll);
   }, [location.key]);
 
-  // عند الرجوع (POP) نستعيد الموضع (مع إعادة محاولة لأنّ المحتوى قد يُحمّل لاحقاً)؛ غير ذلك لأعلى
+  // عند الرجوع (POP) نستعيد الموضع بدقّة. المحتوى (ومنه القوائم/الصور) قد يُحمّل
+  // بعد لحظات (خاصةً عند نوم خادم Render)، فنواصل المحاولة حتى يطول المستند كفايةً
+  // ليصل للموضع المطلوب — أو حتى انقضاء مهلة قصوى. هكذا لا يرجع لأعلى الصفحة.
   useEffect(() => {
     if (navType === 'POP') {
       const y = scrollPositions.get(location.key) || 0;
       if (y > 0) {
-        let n = 0;
-        const id = setInterval(() => {
+        let raf = 0;
+        const start = performance.now();
+        const tryScroll = () => {
           window.scrollTo({ top: y, behavior: 'auto' });
-          if (++n >= 25 || Math.abs(window.scrollY - y) < 4) clearInterval(id);
-        }, 60);
-        return () => clearInterval(id);
+          const reached = Math.abs(window.scrollY - y) < 4;
+          const maxScrollable =
+            document.documentElement.scrollHeight - window.innerHeight >= y - 4;
+          // نتوقّف عند الوصول (وكان المستند طويلاً كفايةً) أو بعد 4 ثوانٍ كحدّ أقصى
+          if ((reached && maxScrollable) || performance.now() - start > 4000) return;
+          raf = requestAnimationFrame(tryScroll);
+        };
+        raf = requestAnimationFrame(tryScroll);
+        return () => cancelAnimationFrame(raf);
       }
     }
     window.scrollTo({ top: 0, behavior: 'auto' });

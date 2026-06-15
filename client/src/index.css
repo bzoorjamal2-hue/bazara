@@ -493,3 +493,35 @@ html.dark .theme-pub .border-wine\/10 { border-color: rgba(230, 200, 120, 0.18);
     rgba(255, 255, 255, 0) 100%
   );
 }
+
+/* ============================================================= */
+/*  شبكة أمان شاملة للنصوص — تضمن ظهور كل الكلمات في الوضعين      */
+/* ============================================================= */
+/* متغيّرات شفافية اللون الخمري (text-wine/XX) لم تكن مغطّاة في الوضع
+   الليلي فتبقى خمرية داكنة وتختفي على الخلفية الداكنة. نحوّلها لكريمي
+   فاتح بنفس تدرّج الوضوح ليظهر كل النص. */
+html.dark .theme-pub .text-wine\/80 { color: rgba(236, 227, 214, 0.92); }
+html.dark .theme-pub .text-wine\/70 { color: rgba(236, 227, 214, 0.85); }
+html.dark .theme-pub .text-wine\/60 { color: rgba(236, 227, 214, 0.78); }
+html.dark .theme-pub .text-wine\/55 { color: rgba(236, 227, 214, 0.72); }
+html.dark .theme-pub .text-wine\/50 { color: rgba(236, 227, 214, 0.66); }
+html.dark .theme-pub .text-wine\/45 { color: rgba(236, 227, 214, 0.62); }
+html.dark .theme-pub .text-wine\/40 { color: rgba(236, 227, 214, 0.55); }
+html.dark .theme-pub .text-wine\/35 { color: rgba(236, 227, 214, 0.50); }
+html.dark .theme-pub .text-wine\/30 { color: rgba(236, 227, 214, 0.45); }
+html.dark .theme-pub .hover\:text-wine:hover { color: #f0d896; }
+
+/* رسائل التأكيد الخضراء الفاتحة كانت تختفي على الخلفية الكريمية الفاتحة →
+   نجعلها خضراء واضحة في الوضع النهاري، وفاتحة في الوضع الليلي. */
+.theme-pub .text-emerald-200,
+.theme-pub .text-emerald-300,
+.theme-pub .text-emerald-400 { color: #059669; }
+.theme-pub .text-red-200,
+.theme-pub .text-red-300,
+.theme-pub .text-red-400 { color: #dc2626; }
+html.dark .theme-pub .text-emerald-200,
+html.dark .theme-pub .text-emerald-300,
+html.dark .theme-pub .text-emerald-400 { color: #6ee7b7; }
+html.dark .theme-pub .text-red-200,
+html.dark .theme-pub .text-red-300,
+html.dark .theme-pub .text-red-400 { color: #fca5a5; }

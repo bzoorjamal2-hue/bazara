@@ -228,7 +228,8 @@ const SORT_LABEL = {
 
 // فوتر المتجر: أيقونات تواصل مربوطة بحسابات المشترك
 function StoreFooter({ store, wa }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const ltr = i18n.language === 'en';
   const ig = store.instagram ? `https://instagram.com/${store.instagram.replace(/^@/, '')}` : '';
   const fb = store.facebook ? (/^https?:\/\//.test(store.facebook) ? store.facebook : `https://facebook.com/${store.facebook.replace(/^@/, '')}`) : '';
   const waLink = wa ? buildWhatsappLink(wa) : '';
@@ -259,15 +260,39 @@ function StoreFooter({ store, wa }) {
             ))}
           </div>
         )}
-        <div className="mt-6">
-          <Link to="/track" className="inline-flex items-center gap-1.5 rounded-full border border-cream/25 px-4 py-2 text-sm text-cream/90 transition hover:bg-cream/10">
-            📦 {t('nav.track')}
-          </Link>
-        </div>
+        {/* تتبّع الطلب — زر بارز يلاحظه الزبون بسهولة */}
+        <Link
+          to="/track"
+          className="group mx-auto mt-7 flex w-full max-w-sm items-center gap-3 rounded-2xl bg-cream px-5 py-3.5 text-start text-wine shadow-lg ring-1 ring-cream/40 transition hover:-translate-y-0.5 hover:bg-white"
+        >
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-wine/10 text-wine">
+            <TruckGlyph />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-display text-base font-bold leading-tight">{t('nav.track')}</span>
+            <span className="block truncate text-xs text-wine/60">{t('track.hint')}</span>
+          </span>
+          <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0 text-wine/50 transition group-hover:text-wine" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d={ltr ? 'M9 6l6 6-6 6' : 'M15 6l-6 6 6 6'} />
+          </svg>
+        </Link>
         <div className="mx-auto mt-7 h-px max-w-md bg-cream/15" />
         <p className="mt-5 text-xs text-cream/60">© {new Date().getFullYear()} {store.name} — {t('footer.rights')}</p>
       </div>
     </footer>
+  );
+}
+
+// شاحنة توصيل أنيقة (لزر تتبّع الطلب)
+function TruckGlyph({ className = 'h-6 w-6' }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H14a1 1 0 0 1 1 1v9H3.5A.5.5 0 0 1 3 14.5Z" />
+      <path d="M15 8h3.2a1 1 0 0 1 .8.4l2 2.7a1 1 0 0 1 .2.6V15h-6Z" />
+      <circle cx="7.5" cy="17.5" r="1.9" />
+      <circle cx="17" cy="17.5" r="1.9" />
+      <path d="M9.4 17.5h5.7" />
+    </svg>
   );
 }
 

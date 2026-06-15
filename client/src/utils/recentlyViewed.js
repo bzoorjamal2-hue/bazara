@@ -26,6 +26,7 @@ export function pushRecent(product) {
       price: product.price,
       oldPrice: product.oldPrice || null,
       imageUrl: productThumb(product),
+      videoUrl: product.videoUrl || '', // ليظهر مؤشّر التشغيل في شريط "شاهدت مؤخراً"
       storeSlug: product.storeSlug || '',
     };
     const list = getRecent().filter((p) => p.id !== product.id);
