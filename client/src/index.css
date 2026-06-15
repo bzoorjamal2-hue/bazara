@@ -8,6 +8,8 @@
 
 html {
   scroll-behavior: smooth;
+  /* لا تمرير أفقي عرَضي على أي جهاز (clip لا يكسر التثبيت اللاصق sticky) */
+  overflow-x: clip;
 }
 
 body {
@@ -15,8 +17,9 @@ body {
   background-color: #F4EDE2;
   color: #2b2b2b;
   min-height: 100vh;
-  /* يمنع ارتداد التمرير (bounce) الذي يكشف صفحة كريمية فارغة معلّقة على iOS */
-  overscroll-behavior-y: none;
+  /* يمنع ارتداد التمرير (bounce) عمودياً وأفقياً — الشاشة تبقى ثابتة بلا تحرّك يمين/شمال */
+  overscroll-behavior: none;
+  overflow-x: clip;
 }
 
 /* منع تكبير الشاشة عند النقر المزدوج/السريع على الأزرار (سلوك iOS المزعج) */

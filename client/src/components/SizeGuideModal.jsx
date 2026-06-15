@@ -44,7 +44,7 @@ export default function SizeGuideModal({ sizes = [], chart = null, onClose }) {
       <div className="absolute inset-0 bg-black/55 animate-fade-up" />
       <div
         onClick={(e) => e.stopPropagation()}
-        className="animate-sheet relative max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl"
+        className="animate-sheet relative max-h-[88vh] w-full max-w-lg overflow-y-auto overflow-x-hidden overscroll-contain rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl"
       >
         {/* الرأس */}
         <div className="mb-3 flex items-center justify-between">

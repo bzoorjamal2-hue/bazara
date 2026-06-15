@@ -82,7 +82,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
       <div className="absolute inset-0 bg-black/55 backdrop-blur-sm" />
 
       <motion.div
-        className="relative z-10 grid max-h-[90vh] w-full max-w-3xl overflow-y-auto overscroll-contain rounded-3xl bg-white shadow-2xl sm:grid-cols-2"
+        className="relative z-10 grid max-h-[90vh] w-full max-w-3xl overflow-y-auto overflow-x-hidden overscroll-contain rounded-3xl bg-white shadow-2xl sm:grid-cols-2"
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.92, opacity: 0, y: 10 }}
