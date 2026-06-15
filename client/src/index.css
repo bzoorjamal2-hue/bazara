@@ -528,9 +528,26 @@ html.dark .theme-pub .hover\:text-wine:hover { color: #f0d896; }
 .theme-pub .text-red-200,
 .theme-pub .text-red-300,
 .theme-pub .text-red-400 { color: #dc2626; }
+.theme-pub .text-orange-200,
+.theme-pub .text-orange-300,
+.theme-pub .text-orange-400 { color: #ea580c; }
+.theme-pub .text-amber-200,
+.theme-pub .text-amber-300,
+.theme-pub .text-amber-400 { color: #b45309; }
 html.dark .theme-pub .text-emerald-200,
 html.dark .theme-pub .text-emerald-300,
 html.dark .theme-pub .text-emerald-400 { color: #6ee7b7; }
 html.dark .theme-pub .text-red-200,
 html.dark .theme-pub .text-red-300,
-html.dark .theme-pub .text-red-400 { color: #fca5a5; }
+html.dark .theme-pub .text-red-400,
+html.dark .theme-pub .text-red-700 { color: #fca5a5; }
+/* البرتقالي/الكهرماني الداكن → فاتح ليُقرأ على الخلفية الداكنة */
+html.dark .theme-pub .text-orange-200,
+html.dark .theme-pub .text-orange-300,
+html.dark .theme-pub .text-orange-400,
+html.dark .theme-pub .text-orange-500,
+html.dark .theme-pub .text-orange-600,
+html.dark .theme-pub .text-orange-700 { color: #fdba74; }
+html.dark .theme-pub .text-amber-500,
+html.dark .theme-pub .text-amber-600,
+html.dark .theme-pub .text-amber-700 { color: #fcd34d; }
