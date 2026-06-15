@@ -68,13 +68,13 @@ export default function SizeGuideModal({ sizes = [], chart = null, onClose }) {
         ) : (
           <>
             <div className="overflow-hidden rounded-2xl border border-wine/10">
-              <table className="w-full border-collapse text-center text-sm">
+              <table className="w-full table-fixed border-collapse text-center text-[clamp(0.72rem,3.4vw,0.875rem)]">
                 <thead>
                   <tr className="bg-wine text-cream">
-                    <th className="px-2 py-2.5 font-semibold">{t('product.sizeCol')}</th>
-                    <th className="px-2 py-2.5 font-semibold">{t('product.bustCol')}</th>
-                    <th className="px-2 py-2.5 font-semibold">{t('product.waistCol')}</th>
-                    <th className="px-2 py-2.5 font-semibold">{t('product.hipsCol')}</th>
+                    <th className="w-[28%] px-1.5 py-2.5 font-semibold">{t('product.sizeCol')}</th>
+                    <th className="px-1 py-2.5 font-semibold">{t('product.bustCol')}</th>
+                    <th className="px-1 py-2.5 font-semibold">{t('product.waistCol')}</th>
+                    <th className="px-1 py-2.5 font-semibold">{t('product.hipsCol')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -83,13 +83,13 @@ export default function SizeGuideModal({ sizes = [], chart = null, onClose }) {
                     const isSug = suggested === s;
                     return (
                       <tr key={s} className={isSug ? 'bg-emerald-500/15' : i % 2 ? 'bg-wine/[0.04]' : 'bg-white'}>
-                        <td className="px-2 py-2.5 font-bold text-wine">
-                          {isSug && <span className="me-1">✓</span>}
-                          {sizeLabel(s, t)} <span className="text-xs font-medium text-wine/50">· {SIZE_CHART[s].intl}</span>
+                        <td className="px-1.5 py-2.5 font-bold text-wine">
+                          {isSug && <span className="me-0.5">✓</span>}
+                          {sizeLabel(s, t)}<span className="text-[0.85em] font-medium text-wine/50"> · {SIZE_CHART[s].intl}</span>
                         </td>
-                        <td className="px-2 py-2.5 text-[#2b2b2b]">{m.bust || '—'}</td>
-                        <td className="px-2 py-2.5 text-[#2b2b2b]">{m.waist || '—'}</td>
-                        <td className="px-2 py-2.5 text-[#2b2b2b]">{m.hips || '—'}</td>
+                        <td className="px-1 py-2.5 text-[#2b2b2b]">{m.bust || '—'}</td>
+                        <td className="px-1 py-2.5 text-[#2b2b2b]">{m.waist || '—'}</td>
+                        <td className="px-1 py-2.5 text-[#2b2b2b]">{m.hips || '—'}</td>
                       </tr>
                     );
                   })}
@@ -101,19 +101,19 @@ export default function SizeGuideModal({ sizes = [], chart = null, onClose }) {
             <div className="mt-4 rounded-2xl border border-wine/15 bg-wine/[0.04] p-4">
               <p className="mb-1 flex items-center gap-1.5 text-sm font-bold text-wine">✨ {t('product.findMySize')}</p>
               <p className="mb-3 text-xs text-wine/60">{t('product.findMySizeHint')}</p>
-              <div className="flex flex-wrap items-end gap-2">
-                <label className="flex-1 text-xs font-medium text-wine/70">
+              <div className="grid grid-cols-2 gap-2">
+                <label className="block min-w-0 text-xs font-medium text-wine/70">
                   {t('product.yourBust')}
-                  <input dir="ltr" inputMode="numeric" value={bust} onChange={(e) => setBust(e.target.value.replace(/\D/g, ''))} className="input mt-1 !py-2 text-center" placeholder="cm" />
+                  <input dir="ltr" inputMode="numeric" value={bust} onChange={(e) => setBust(e.target.value.replace(/\D/g, ''))} className="input mt-1 w-full !py-2 text-center" placeholder="cm" />
                 </label>
-                <label className="flex-1 text-xs font-medium text-wine/70">
+                <label className="block min-w-0 text-xs font-medium text-wine/70">
                   {t('product.yourWaist')}
-                  <input dir="ltr" inputMode="numeric" value={waist} onChange={(e) => setWaist(e.target.value.replace(/\D/g, ''))} className="input mt-1 !py-2 text-center" placeholder="cm" />
+                  <input dir="ltr" inputMode="numeric" value={waist} onChange={(e) => setWaist(e.target.value.replace(/\D/g, ''))} className="input mt-1 w-full !py-2 text-center" placeholder="cm" />
                 </label>
-                <button type="button" onClick={suggest} className="shrink-0 rounded-xl bg-wine px-4 py-2.5 text-sm font-bold text-cream transition hover:bg-wine-dark">
-                  {t('product.suggestSize')}
-                </button>
               </div>
+              <button type="button" onClick={suggest} className="mt-2 w-full rounded-xl bg-wine py-2.5 text-sm font-bold text-cream transition hover:bg-wine-dark">
+                {t('product.suggestSize')}
+              </button>
               {suggested === '__err' ? (
                 <p className="mt-2 text-sm font-medium text-red-500">{t('product.suggestEnter')}</p>
               ) : suggested ? (

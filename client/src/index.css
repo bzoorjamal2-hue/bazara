@@ -24,6 +24,15 @@ button, a, [role='button'], label, select, summary {
   touch-action: manipulation;
 }
 
+/* تأقلم تلقائي مع كل الأجهزة: لا وسائط تتجاوز عرض حاضنها (آيفون/أندرويد/آيباد/لابتوب) */
+img, video, canvas {
+  max-width: 100%;
+  height: auto;
+}
+/* الجداول لا تتجاوز الحاوية؛ والكلمات الطويلة تلتفّ بدل أن تدفع التخطيط */
+table { max-width: 100%; }
+.break-anywhere { overflow-wrap: anywhere; word-break: break-word; }
+
 /* هامش سفلي موثوق يضمن عدم تغطية الشريط السفلي للمحتوى (يشمل منطقة الأمان) */
 .pb-bottomnav {
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 6.5rem);
