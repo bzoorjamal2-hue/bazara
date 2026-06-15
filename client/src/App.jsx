@@ -60,26 +60,35 @@ function AnimatedRoutes() {
     return () => window.removeEventListener('scroll', onScroll);
   }, [location.key]);
 
-  // عند الرجوع (POP) نستعيد الموضع بدقّة. المحتوى (ومنه القوائم/الصور) قد يُحمّل
-  // بعد لحظات (خاصةً عند نوم خادم Render)، فنواصل المحاولة حتى يطول المستند كفايةً
-  // ليصل للموضع المطلوب — أو حتى انقضاء مهلة قصوى. هكذا لا يرجع لأعلى الصفحة.
+  // عند الرجوع (POP) نستعيد الموضع بقفزة واحدة فورية بالضبط (بلا تدرّج ولا رجوع للأعلى).
+  // المحتوى قد يُحمّل بعد لحظات، فننتظر حتى يطول المستند كفايةً ليصل للموضع، ثم نقفز
+  // مرّة واحدة فقط (لا نقفز لمواضع جزئية كي لا يظهر "زحف" تدريجي). مهلة أمان 3 ثوانٍ.
   useEffect(() => {
     if (navType === 'POP') {
-      const y = scrollPositions.get(location.key) || 0;
-      if (y > 0) {
-        let raf = 0;
-        const start = performance.now();
-        const tryScroll = () => {
-          window.scrollTo({ top: y, behavior: 'auto' });
-          const reached = Math.abs(window.scrollY - y) < 4;
-          const maxScrollable =
-            document.documentElement.scrollHeight - window.innerHeight >= y - 4;
-          // نتوقّف عند الوصول (وكان المستند طويلاً كفايةً) أو بعد 4 ثوانٍ كحدّ أقصى
-          if ((reached && maxScrollable) || performance.now() - start > 4000) return;
-          raf = requestAnimationFrame(tryScroll);
+      const target = scrollPositions.get(location.key) || 0;
+      if (target > 0) {
+        let done = false;
+        let ro = null;
+        let cap = null;
+        const finish = () => {
+          if (done) return;
+          done = true;
+          window.scrollTo({ top: target, behavior: 'auto' });
+          if (ro) ro.disconnect();
+          if (cap) clearTimeout(cap);
         };
-        raf = requestAnimationFrame(tryScroll);
-        return () => cancelAnimationFrame(raf);
+        // نقفز فقط عندما يصبح المستند طويلاً كفايةً ليبلغ الموضع المطلوب
+        const tryJump = () => {
+          if (done) return;
+          if (document.documentElement.scrollHeight - window.innerHeight >= target - 2) finish();
+        };
+        tryJump(); // فوري إن كان المحتوى جاهزاً (من الكاش) → قفزة لحظية بلا أي زحف
+        if (!done) {
+          ro = new ResizeObserver(tryJump); // نراقب نمو الصفحة ونقفز عند جهوزها
+          ro.observe(document.body);
+          cap = setTimeout(finish, 3000); // مهلة أمان: أقرب موضع متاح
+        }
+        return () => { done = true; if (ro) ro.disconnect(); if (cap) clearTimeout(cap); };
       }
     }
     window.scrollTo({ top: 0, behavior: 'auto' });
