@@ -5,10 +5,24 @@ import { HelmetProvider } from 'react-helmet-async';
 import './i18n.js';
 import './index.css';
 import App from './App.jsx';
+import { registerSW } from 'virtual:pwa-register';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { CartProvider } from './context/CartContext.jsx';
 import { WishlistProvider } from './context/WishlistContext.jsx';
 import { ThemeProvider } from './context/ThemeContext.jsx';
+
+// تسجيل الـ Service Worker مع فحص تحديث تلقائي متكرّر — حتى يلتقط التطبيق المثبّت
+// أحدث نسخة بسرعة بعد كل نشر (لا ينتظر إعادة فتح التطبيق). autoUpdate يطبّق التحديث
+// ويعيد التحميل تلقائياً عند توفّر نسخة جديدة.
+registerSW({
+  immediate: true,
+  onRegisteredSW(_swUrl, r) {
+    if (!r) return;
+    const check = () => { r.update().catch(() => {}); };
+    setInterval(check, 60 * 1000); // كل دقيقة
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
+  },
+});
 
 // تعافٍ تلقائي من فشل تحميل أجزاء الموقع (يحدث بكاش قديم بعد تحديث) — يمنع التعليق
 // على شاشة كريمية بإعادة التحميل مرة واحدة لجلب أحدث الملفات.
