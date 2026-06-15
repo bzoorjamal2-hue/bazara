@@ -18,7 +18,7 @@ function getPerPage() {
 function CategoryCard({ cat }) {
   const { t } = useTranslation();
   const label = cat.name || (cat.builtin ? t(`categories.${cat.key}`) : cat.key);
-  const src = cat.image || (cat.builtin ? `/categories/${cat.key}.jpg` : '');
+  const src = cat.image || (cat.builtin ? `/categories/${cat.key}.png` : '');
   return (
     <div className="transition duration-300 group-hover:-translate-y-1">
       {/* بلا إطار/خلفية — يظهر شكل الأيقونة فقط (الصور بلا خلفية)، بحجم موحّد */}
@@ -27,7 +27,8 @@ function CategoryCard({ cat }) {
           <img
             src={src}
             alt={label}
-            loading="lazy"
+            loading="eager"
+            decoding="async"
             className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
           />
         ) : (

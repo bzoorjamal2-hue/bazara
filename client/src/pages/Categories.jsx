@@ -27,9 +27,10 @@ export default function Categories() {
           >
             <div className="flex aspect-square items-center justify-center overflow-hidden">
               <img
-                src={`/categories/${c}.jpg`}
+                src={`/categories/${c}.png`}
                 alt={t(`categories.${c}`)}
-                loading="lazy"
+                loading="eager"
+                decoding="async"
                 className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
               />
             </div>
