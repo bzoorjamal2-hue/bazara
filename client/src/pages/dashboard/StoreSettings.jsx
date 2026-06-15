@@ -281,38 +281,36 @@ export default function StoreSettings() {
             <h2 className="font-display text-lg font-bold text-stone-100">📏 {t('dashboard.store.sizeChart')}</h2>
             <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.sizeChartHint')}</p>
           </div>
-          <div className="-mx-2 overflow-x-auto px-2">
-            <table className="w-full min-w-[360px] border-collapse text-center text-sm">
-              <thead>
-                <tr className="text-stone-400">
-                  <th className="pb-2 font-semibold">{t('product.sizeCol')}</th>
-                  <th className="pb-2 font-semibold">{t('product.bustCol')}</th>
-                  <th className="pb-2 font-semibold">{t('product.waistCol')}</th>
-                  <th className="pb-2 font-semibold">{t('product.hipsCol')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {CHART_SIZES.map((s) => {
-                  const row = form.sizeChart?.[s] || {};
-                  return (
-                    <tr key={s}>
-                      <td className="py-1 pe-2 font-bold text-gold-200">{s}</td>
-                      {['bust', 'waist', 'hips'].map((k) => (
-                        <td key={k} className="p-1">
-                          <input
-                            dir="ltr" inputMode="numeric" placeholder="—"
-                            value={row[k] ?? ''}
-                            onChange={(e) => setChartCell(s, k, e.target.value)}
-                            className="input !py-1.5 text-center"
-                          />
-                        </td>
-                      ))}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <table className="w-full table-fixed border-collapse text-center text-[clamp(0.72rem,3.2vw,0.875rem)]">
+            <thead>
+              <tr className="text-stone-400">
+                <th className="w-12 pb-2 font-semibold">{t('product.sizeCol')}</th>
+                <th className="pb-2 font-semibold">{t('product.bustCol')}</th>
+                <th className="pb-2 font-semibold">{t('product.waistCol')}</th>
+                <th className="pb-2 font-semibold">{t('product.hipsCol')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {CHART_SIZES.map((s) => {
+                const row = form.sizeChart?.[s] || {};
+                return (
+                  <tr key={s}>
+                    <td className="py-1 pe-1 font-bold text-gold-200">{s}</td>
+                    {['bust', 'waist', 'hips'].map((k) => (
+                      <td key={k} className="p-0.5">
+                        <input
+                          dir="ltr" inputMode="numeric" placeholder="—"
+                          value={row[k] ?? ''}
+                          onChange={(e) => setChartCell(s, k, e.target.value)}
+                          className="input w-full !min-w-0 !px-1 !py-1.5 text-center"
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
 
         {/* سياسة الإرجاع والتبديل */}
