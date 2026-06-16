@@ -12,7 +12,9 @@
     "wishlist": "المفضّلة",
     "account": "حسابي",
     "categories": "التصنيفات",
-    "track": "تتبّعي طلبك"
+    "track": "تتبّعي طلبك",
+    "openStore": "افتح متجري",
+    "adminRole": "مدير الموقع"
   },
   "common": {
     "search": "بحث",

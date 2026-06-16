@@ -25,35 +25,67 @@ function Avatar({ user, size = 'h-8 w-8' }) {
   );
 }
 
-// قائمة الحساب المنبثقة من الأفاتار — هوية + روابط سريعة + تسجيل الخروج
-function AccountMenu({ user, onClose, onLogout }) {
+// صفّ رابط داخل قائمة الحساب — بلاطة أيقونة ملوّنة أنيقة
+function MenuRow({ to, onClick, tint, Icon, label }) {
+  return (
+    <Link to={to} onClick={onClick} className="flex items-center gap-3 rounded-xl px-2.5 py-2.5 text-sm font-medium text-wine transition hover:bg-wine/5">
+      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${tint}`}><Icon className="h-[18px] w-[18px]" /></span>
+      {label}
+    </Link>
+  );
+}
+
+// قائمة الحساب المنبثقة من الأفاتار — رأس فخم + حالة الاشتراك + روابط + خروج
+function AccountMenu({ user, store, subscription, isAdmin, onClose, onLogout }) {
   const { t } = useTranslation();
+  const active = subscription?.active;
+  const days = subscription?.daysRemaining;
+  const pill = isAdmin
+    ? { cls: 'bg-gold-400/20 text-gold-200', text: t('nav.adminRole') }
+    : active
+      ? days != null && days <= 5
+        ? { cls: 'bg-orange-400/25 text-orange-100', text: t('subscription.daysLeft', { count: days }) }
+        : { cls: 'bg-emerald-400/25 text-emerald-100', text: t('subscription.active') }
+      : { cls: 'bg-red-400/25 text-red-100', text: t('subscription.expired') };
+
   return (
     <>
       {/* خلفية شفافة تُغلق القائمة بالضغط خارجها */}
       <div className="fixed inset-0 z-[55]" onClick={onClose} />
-      <div className="absolute end-0 top-[calc(100%+10px)] z-[60] w-64 max-w-[80vw] origin-top-end animate-pop rounded-2xl border border-wine/10 bg-white p-2 text-wine shadow-xl">
-        <div className="flex items-center gap-3 rounded-xl bg-wine/5 p-3">
-          <Avatar user={user} size="h-11 w-11" />
-          <div className="min-w-0">
-            <p className="truncate font-display font-bold text-wine">{user.name}</p>
-            <p className="truncate text-xs text-wine/55" dir="ltr">{user.email}</p>
+      <div className="absolute end-0 top-[calc(100%+10px)] z-[60] w-72 max-w-[84vw] origin-top-end animate-pop overflow-hidden rounded-2xl border border-wine/10 bg-white text-wine shadow-2xl">
+        {/* رأس فخم بتدرّج خمري */}
+        <div className="bg-gradient-to-br from-wine to-wine-dark p-4 text-cream">
+          <div className="flex items-center gap-3">
+            <span className="rounded-full ring-2 ring-cream/40"><Avatar user={user} size="h-12 w-12" /></span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-display text-base font-bold text-cream">{user.name}</p>
+              <p className="truncate text-xs text-cream/65">{isAdmin ? t('nav.adminRole') : store?.name || user.email}</p>
+            </div>
           </div>
+          <span className={`mt-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${pill.cls}`}>
+            <span className="h-1.5 w-1.5 rounded-full bg-current" /> {pill.text}
+          </span>
         </div>
-        <div className="my-1.5 h-px bg-wine/10" />
-        <Link to="/dashboard" onClick={onClose} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-wine transition hover:bg-wine/5">
-          <GridIcon className="h-5 w-5 text-wine/70" /> {t('dashboard.title')}
-        </Link>
-        <Link to="/dashboard?tab=profile" onClick={onClose} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-wine transition hover:bg-wine/5">
-          <UserLineIcon className="h-5 w-5 text-wine/70" /> {t('dashboard.profile')}
-        </Link>
-        <div className="my-1.5 h-px bg-wine/10" />
-        <button
-          onClick={() => { onClose(); onLogout(); }}
-          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold text-red-600 transition hover:bg-red-500/10"
-        >
-          <LogoutIcon className="h-5 w-5" /> {t('nav.logout')}
-        </button>
+
+        {/* روابط */}
+        <div className="p-2">
+          {!isAdmin && store?.slug && (
+            <MenuRow to={`/store/${store.slug}`} onClick={onClose} tint="bg-wine/10 text-wine" Icon={StoreIcon} label={t('nav.openStore')} />
+          )}
+          {isAdmin && (
+            <MenuRow to="/shop" onClick={onClose} tint="bg-wine/10 text-wine" Icon={StoreIcon} label={t('nav.home')} />
+          )}
+          <MenuRow to="/dashboard" onClick={onClose} tint="bg-gold-400/15 text-gold-300" Icon={GridIcon} label={t('dashboard.title')} />
+          <MenuRow to="/dashboard?tab=profile" onClick={onClose} tint="bg-sky-500/15 text-sky-500" Icon={UserLineIcon} label={t('dashboard.profile')} />
+          <div className="my-1.5 h-px bg-wine/10" />
+          <button
+            onClick={() => { onClose(); onLogout(); }}
+            className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-sm font-bold text-red-600 transition hover:bg-red-500/10"
+          >
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-500/15"><LogoutIcon className="h-[18px] w-[18px]" /></span>
+            {t('nav.logout')}
+          </button>
+        </div>
       </div>
     </>
   );
@@ -216,6 +248,8 @@ export default function Navbar() {
                 {acctOpen && (
                   <AccountMenu
                     user={user}
+                    store={store}
+                    subscription={subscription}
                     isAdmin={isAdmin}
                     onClose={() => setAcctOpen(false)}
                     onLogout={handleLogout}

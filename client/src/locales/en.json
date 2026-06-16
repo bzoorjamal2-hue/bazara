@@ -12,7 +12,9 @@
     "wishlist": "Wishlist",
     "account": "Account",
     "categories": "Categories",
-    "track": "Track your order"
+    "track": "Track your order",
+    "openStore": "Open my store",
+    "adminRole": "Site admin"
   },
   "common": {
     "search": "Search",
