@@ -210,6 +210,21 @@ export async function getByCategory(req, res, next) {
   }
 }
 
+// كل القطع المخفّضة عبر المتاجر الفعّالة (لصفحة "العروض")
+export async function getOffers(_req, res, next) {
+  try {
+    const active = activeStoreSql('u');
+    const r = await query(
+      `${PRODUCT_SELECT} WHERE p.old_price IS NOT NULL AND p.old_price > p.price AND ${active} ORDER BY p.created_at DESC LIMIT 60`
+    );
+    // mapProduct يلغي الخصم المنتهي زمنياً → نُبقي ما يزال مخفّضاً فعلاً
+    const products = r.rows.map(mapProduct).filter((p) => p.oldPrice && p.oldPrice > p.price);
+    res.json({ products });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function addReview(req, res, next) {
   const { id } = req.params;
   const { authorName, rating, comment } = req.body;

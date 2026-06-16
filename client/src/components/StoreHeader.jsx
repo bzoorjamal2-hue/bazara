@@ -110,7 +110,11 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
                 )}
                 <span className="font-display text-2xl font-bold tracking-wide text-wine">{store.name}</span>
               </Link>
-              <MenuBtn onOpen={openMenu} />
+              {/* زر تحويل اللغة ظاهر بالشريط (بلا فتح الدرج) + القائمة */}
+              <div className="flex shrink-0 items-center gap-2">
+                <LanguageSwitcher />
+                <MenuBtn onOpen={openMenu} />
+              </div>
             </div>
           </div>
         </div>

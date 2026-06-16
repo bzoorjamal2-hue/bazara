@@ -31,6 +31,14 @@ function CategoriesIcon({ className = 'h-6 w-6', filled }) {
     </svg>
   );
 }
+function OffersIcon({ className = 'h-6 w-6', filled }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20.5 13.3 13.3 20.5a1.5 1.5 0 0 1-2.1 0l-7.7-7.7V4.5a1 1 0 0 1 1-1h8.3l7.7 7.7a1.5 1.5 0 0 1 0 2.1Z" />
+      <circle cx="7.5" cy="7.5" r="1.3" fill={filled ? 'none' : 'currentColor'} />
+    </svg>
+  );
+}
 function TrackIcon({ className = 'h-6 w-6', filled }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -77,6 +85,7 @@ export default function BottomNav() {
   const items = [
     { key: 'account', label: t('nav.account') || 'حسابي', Icon: UserIcon, active: !cartOpen && !wishOpen && pathname.startsWith('/dashboard'), badge: newOrders, onClick: () => goto(accountTo) },
     { key: 'track', label: t('nav.track'), Icon: TrackIcon, active: !cartOpen && !wishOpen && pathname === '/track', onClick: () => goto('/track') },
+    { key: 'offers', label: t('nav.offers'), Icon: OffersIcon, active: !cartOpen && !wishOpen && pathname === '/offers', onClick: () => goto('/offers') },
     { key: 'categories', label: t('nav.categories'), Icon: CategoriesIcon, active: !cartOpen && !wishOpen && (pathname === '/categories' || pathname.startsWith('/category/')), onClick: () => goto('/categories') },
     { key: 'home', label: t('nav.home'), Icon: HomeIcon, active: !cartOpen && !wishOpen && homeActive, onClick: () => goto(homeTo) },
   ];

@@ -45,10 +45,10 @@ export default function Home() {
 
       {/* Hero — سلايدر يتحكّم به المدير. نعرض هيكل تحميل ريثما نعرف البانرات (بدل وميض
           السلايدر الافتراضي القديم)، ونستخدم البانرات المحفوظة محلياً لظهورٍ فوري. */}
-      {loading && !data && !persistedBanners ? (
+      {loading && !data && !(persistedBanners?.length) ? (
         <div className="skeleton h-[340px] rounded-3xl sm:h-[420px]" />
       ) : (
-        <HomeHero banners={data?.homeBanners ?? persistedBanners ?? []} />
+        <HomeHero banners={data ? data.homeBanners : persistedBanners || []} />
       )}
 
       {/* بطاقة تنزيل التطبيق (تظهر إن كان قابلاً للتثبيت وغير مثبّت) */}
@@ -237,16 +237,16 @@ function HomeHero({ banners = [] }) {
           }}
         >
           {slides.map((s, idx) => {
-            // شريحة المدير: خلفية صورة/فيديو/لون معتّمة + عنوان ووصف
+            // شريحة المدير: خلفية صورة/فيديو/لون معتّمة (نص عاجي)، أو بلا وسائط (كريمي فخم بنص خمري)
             if (useAdmin) {
               const isColor = s.bgType === 'color' && s.bgValue;
               const isImage = s.bgType === 'image' && s.bgValue;
               const isVideo = s.bgType === 'video' && s.bgValue;
-              const custom = isColor || isImage || isVideo;
+              const onMedia = isColor || isImage || isVideo; // وسائط داكنة → نص عاجي
               return (
                 <div key={idx} className="w-full shrink-0" dir="rtl">
                   <div
-                    className={`relative isolate flex h-[340px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[420px] ${custom ? 'bg-wine-dark' : 'pub-hero'}`}
+                    className={`relative isolate flex h-[340px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[420px] ${onMedia ? 'bg-wine-dark' : 'bg-gradient-to-br from-[#f6ecd9] via-[#efe1c6] to-[#f6ecd9]'}`}
                     style={isColor ? { background: s.bgValue } : undefined}
                   >
                     {isImage && (
@@ -263,29 +263,29 @@ function HomeHero({ banners = [] }) {
                         className="absolute inset-0 -z-10 h-full w-full object-cover"
                       />
                     )}
-                    {s.title && <h1 className="font-display text-3xl font-extrabold leading-tight text-cream drop-shadow-lg sm:text-5xl">{s.title}</h1>}
-                    {s.subtitle && <p className="mx-auto mt-4 max-w-2xl text-cream/85 drop-shadow sm:text-lg">{s.subtitle}</p>}
-                    {s.btnLabel && s.btnHref && <SlideButton href={s.btnHref} label={s.btnLabel} />}
+                    {s.title && <h1 className={`font-display text-3xl font-extrabold leading-tight sm:text-5xl ${onMedia ? 'text-cream drop-shadow-lg' : 'text-[#5e4636]'}`}>{s.title}</h1>}
+                    {s.subtitle && <p className={`mx-auto mt-4 max-w-2xl sm:text-lg ${onMedia ? 'text-cream/85 drop-shadow' : 'text-[#6e5340]'}`}>{s.subtitle}</p>}
+                    {s.btnLabel && s.btnHref && <SlideButton href={s.btnHref} label={s.btnLabel} onLight={!onMedia} />}
                   </div>
                 </div>
               );
             }
-            // الشريحة الافتراضية (نصّية)
+            // الشريحة الافتراضية (نصّية) — كريمي فخم بنص خمري (بلا البني)
             return (
               <div key={idx} className="w-full shrink-0" dir="rtl">
-                <div className="pub-hero relative flex h-[340px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[420px]">
-                  <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-cream/10 blur-3xl" />
-                  <p className="mb-3 text-sm font-semibold tracking-[0.3em] text-cream/70">{s.eyebrow}</p>
-                  <h1 className="font-display text-3xl font-extrabold leading-tight text-cream sm:text-5xl">
+                <div className="relative flex h-[340px] flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#f6ecd9] via-[#efe1c6] to-[#f6ecd9] px-6 text-center sm:h-[420px]">
+                  <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-wine/5 blur-3xl" />
+                  <p className="mb-3 text-sm font-semibold tracking-[0.3em] text-[#6e5340]">{s.eyebrow}</p>
+                  <h1 className="font-display text-3xl font-extrabold leading-tight text-[#5e4636] sm:text-5xl">
                     {s.title}
-                    {s.highlight && <> <span className="underline decoration-cream/30 decoration-2 underline-offset-8">{s.highlight}</span></>}
+                    {s.highlight && <> <span className="underline decoration-[#c79a3a] decoration-2 underline-offset-8">{s.highlight}</span></>}
                   </h1>
-                  <p className="mx-auto mt-4 max-w-2xl text-cream/80 sm:text-lg">{s.desc}</p>
+                  <p className="mx-auto mt-4 max-w-2xl text-[#6e5340] sm:text-lg">{s.desc}</p>
                   <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-                    <Link to="/register" className="inline-flex items-center rounded-xl bg-cream px-6 py-2.5 text-base font-semibold text-wine shadow-lg transition hover:-translate-y-0.5 hover:bg-white">
+                    <Link to="/register" className="inline-flex items-center rounded-xl bg-wine px-6 py-2.5 text-base font-semibold text-cream shadow-lg transition hover:-translate-y-0.5 hover:bg-wine-dark">
                       {t('home.ctaStart')}
                     </Link>
-                    <a href="#stores" className="inline-flex items-center rounded-xl border border-cream/40 px-6 py-2.5 text-base font-semibold text-cream transition hover:bg-cream/10">
+                    <a href="#stores" className="inline-flex items-center rounded-xl border-2 border-wine/30 px-6 py-2.5 text-base font-semibold text-wine transition hover:bg-wine/5">
                       {t('home.ctaExplore')}
                     </a>
                   </div>
@@ -311,8 +311,10 @@ function HomeHero({ banners = [] }) {
 }
 
 // زر شريحة السلايدر — يفتح رابطاً خارجياً (http) أو ينتقل لمسار داخلي بالموقع
-function SlideButton({ href, label }) {
-  const cls = 'mt-6 inline-flex items-center rounded-xl bg-cream px-6 py-2.5 text-base font-semibold text-wine shadow-lg transition hover:-translate-y-0.5 hover:bg-white';
+function SlideButton({ href, label, onLight }) {
+  const cls = onLight
+    ? 'mt-6 inline-flex items-center rounded-xl bg-wine px-6 py-2.5 text-base font-semibold text-cream shadow-lg transition hover:-translate-y-0.5 hover:bg-wine-dark'
+    : 'mt-6 inline-flex items-center rounded-xl bg-cream px-6 py-2.5 text-base font-semibold text-wine shadow-lg transition hover:-translate-y-0.5 hover:bg-white';
   if (/^https?:\/\//i.test(href)) {
     return <a href={href} target="_blank" rel="noreferrer" className={cls}>{label}</a>;
   }

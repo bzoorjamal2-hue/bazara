@@ -14,7 +14,13 @@
     "categories": "Categories",
     "track": "Track your order",
     "openStore": "Open my store",
-    "adminRole": "Site admin"
+    "adminRole": "Site admin",
+    "offers": "Offers"
+  },
+  "offers": {
+    "title": "Offers & deals",
+    "subtitle": "All discounted pieces in one place ✨",
+    "empty": "No offers right now. Check back soon!"
   },
   "common": {
     "search": "Search",
