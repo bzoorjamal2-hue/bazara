@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client.js';
@@ -20,13 +20,21 @@ export default function Home() {
   const [data, setData] = useState(() => getCache('home') || null);
   const [loading, setLoading] = useState(() => !getCache('home'));
   const recent = getRecent();
+  // بانرات الصفحة الرئيسية محفوظة محلياً → تظهر فوراً عند الفتح (لا وميض للسلايدر القديم)
+  const persistedBanners = useMemo(() => {
+    try { return JSON.parse(localStorage.getItem('bz_home_banners') || 'null'); } catch { return null; }
+  }, []);
 
   // الصفحة الرئيسية متاحة دائماً على الرابط / للجميع (بدون أي تحويل)
   // تبدأ من المخزّن المؤقّت (إن وُجد) فتظهر فوراً عند الرجوع، ثم تُحدَّث بالخلفية.
   useEffect(() => {
     api
       .get('/public/home')
-      .then((res) => { setData(res.data); setCache('home', res.data); })
+      .then((res) => {
+        setData(res.data);
+        setCache('home', res.data);
+        try { localStorage.setItem('bz_home_banners', JSON.stringify(res.data.homeBanners || [])); } catch { /* تجاهل */ }
+      })
       .catch(() => setData((d) => d || { stores: [], featured: [], products: [] }))
       .finally(() => setLoading(false));
   }, []);
@@ -35,8 +43,13 @@ export default function Home() {
     <>
       <Seo title={t('app.name')} description={t('home.heroDesc')} />
 
-      {/* Hero — سلايدر يتحكّم به المدير (بانرات الموقع) أو الشرائح الافتراضية */}
-      <HomeHero banners={data?.homeBanners} />
+      {/* Hero — سلايدر يتحكّم به المدير. نعرض هيكل تحميل ريثما نعرف البانرات (بدل وميض
+          السلايدر الافتراضي القديم)، ونستخدم البانرات المحفوظة محلياً لظهورٍ فوري. */}
+      {loading && !data && !persistedBanners ? (
+        <div className="skeleton h-[340px] rounded-3xl sm:h-[420px]" />
+      ) : (
+        <HomeHero banners={data?.homeBanners ?? persistedBanners ?? []} />
+      )}
 
       {/* بطاقة تنزيل التطبيق (تظهر إن كان قابلاً للتثبيت وغير مثبّت) */}
       <InstallApp />

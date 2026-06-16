@@ -321,6 +321,8 @@ function StoreFooter({ store, wa }) {
 // ذهبية فاصلة. يقبل عدّة إعلانات (كل سطر إعلان) ويعرضها بتتابع متّصل سلس بلا تقطّع
 // (نسختان متطابقتان من القائمة + سرعة تتناسب تلقائياً مع عدد الإعلانات).
 function AnnouncementBar({ text }) {
+  const { i18n } = useTranslation();
+  const rtl = i18n.language !== 'en';
   const items = String(text || '').split('\n').map((s) => s.trim()).filter(Boolean);
   const wrapRef = useRef(null);
   const measureRef = useRef(null);
@@ -367,7 +369,11 @@ function AnnouncementBar({ text }) {
       <div ref={measureRef} className="pointer-events-none invisible absolute flex items-center" aria-hidden>
         {items.map((_, k) => <Item key={k} k={k} />)}
       </div>
-      <div className="flex w-max animate-marquee" dir="ltr" style={{ animationDuration: `${dur}s` }}>
+      <div
+        className="flex w-max animate-marquee"
+        dir="ltr"
+        style={{ animationDuration: `${dur}s`, animationDirection: rtl ? 'reverse' : 'normal' }}
+      >
         <Group />
         <Group hidden />
       </div>

@@ -5,7 +5,6 @@ import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import api from '../api/client.js';
-import { HeartIcon, CartIcon } from './icons.jsx';
 
 function HomeIcon({ className = 'h-6 w-6', filled }) {
   return (
@@ -29,6 +28,16 @@ function CategoriesIcon({ className = 'h-6 w-6', filled }) {
       <rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6" />
       <rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6" />
       <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6" />
+    </svg>
+  );
+}
+function TrackIcon({ className = 'h-6 w-6', filled }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H14a1 1 0 0 1 1 1v9H3.5A.5.5 0 0 1 3 14.5Z" />
+      <path d="M15 8h3.2a1 1 0 0 1 .8.4l2 2.7a1 1 0 0 1 .2.6V15h-6Z" />
+      <circle cx="7.5" cy="17.5" r="1.7" fill="none" />
+      <circle cx="17" cy="17.5" r="1.7" fill="none" />
     </svg>
   );
 }
@@ -63,12 +72,12 @@ export default function BottomNav() {
   // إغلاق أدراج السلة/المفضلة قبل الانتقال (الشريط يبقى ظاهراً فوق الأدراج)
   const closeDrawers = () => { setOpen(false); setWishOpen(false); };
   const goto = (to) => { closeDrawers(); navigate(to); };
+  // السلة والمفضّلة موجودتان بالشريط العلوي بحد الأفاتار، فنستبدلهما بوجهات أنفع
   const items = [
-    { key: 'account', label: t('nav.account') || 'حسابي', Icon: UserIcon, active: !cartOpen && !wishOpen && pathname.startsWith('/dashboard'), badge: newOrders, onClick: () => goto(accountTo) },
-    { key: 'cart', label: t('nav.cart'), Icon: CartIcon, badge: count, active: cartOpen, onClick: () => { setWishOpen(false); setOpen(true); } },
-    { key: 'fav', label: t('nav.wishlist'), Icon: HeartIcon, badge: wishCount, active: wishOpen, onClick: () => { setOpen(false); setWishOpen(true); } },
-    { key: 'categories', label: t('nav.categories'), Icon: CategoriesIcon, active: !cartOpen && !wishOpen && (pathname === '/categories' || pathname.startsWith('/category/')), onClick: () => goto('/categories') },
     { key: 'home', label: t('nav.home'), Icon: HomeIcon, active: !cartOpen && !wishOpen && homeActive, onClick: () => goto(homeTo) },
+    { key: 'categories', label: t('nav.categories'), Icon: CategoriesIcon, active: !cartOpen && !wishOpen && (pathname === '/categories' || pathname.startsWith('/category/')), onClick: () => goto('/categories') },
+    { key: 'track', label: t('nav.track'), Icon: TrackIcon, active: !cartOpen && !wishOpen && pathname === '/track', onClick: () => goto('/track') },
+    { key: 'account', label: t('nav.account') || 'حسابي', Icon: UserIcon, active: !cartOpen && !wishOpen && pathname.startsWith('/dashboard'), badge: newOrders, onClick: () => goto(accountTo) },
   ];
 
   return (
