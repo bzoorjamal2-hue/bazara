@@ -14,6 +14,7 @@ import AnalyticsManager from './dashboard/AnalyticsManager.jsx';
 import StockRequestsManager from './dashboard/StockRequestsManager.jsx';
 import AdminRequests from './dashboard/AdminRequests.jsx';
 import SubscribersManager from './dashboard/SubscribersManager.jsx';
+import SiteSliders from './dashboard/SiteSliders.jsx';
 
 // أقسام البائع (المشترك العادي)
 const SECTIONS = [
@@ -31,6 +32,7 @@ const SECTIONS = [
 const ADMIN_SECTIONS = [
   { key: 'subscribers', icon: '👥' },
   { key: 'admin', icon: '🛡️' },
+  { key: 'siteSliders', icon: '🖼️' },
   { key: 'profile', icon: '👤' },
 ];
 
@@ -48,7 +50,7 @@ export default function Dashboard() {
   const section = allowed.includes(raw) ? raw : defaultTab;
   const setSection = (key) => setParams(key === defaultTab ? {} : { tab: key });
   const labelFor = (key) =>
-    key === 'admin' ? t('admin.nav') : key === 'subscribers' ? t('admin.subscribersNav') : t(`dashboard.${key}`);
+    key === 'admin' ? t('admin.nav') : key === 'subscribers' ? t('admin.subscribersNav') : key === 'siteSliders' ? t('admin.siteSliders') : t(`dashboard.${key}`);
 
   const avatar = user?.avatarUrl ? (
     <img src={user.avatarUrl} alt={user.name} className="h-12 w-12 rounded-full border border-gold-400/40 object-cover" />
@@ -74,6 +76,7 @@ export default function Dashboard() {
         {section === 'stockRequests' && !isAdmin && <StockRequestsManager />}
         {section === 'subscribers' && isAdmin && <SubscribersManager />}
         {section === 'admin' && isAdmin && <AdminRequests />}
+        {section === 'siteSliders' && isAdmin && <SiteSliders />}
       </div>
     </div>
   );

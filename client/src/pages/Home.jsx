@@ -8,6 +8,7 @@ import ProductCard from '../components/ProductCard.jsx';
 import ProductRail from '../components/ProductRail.jsx';
 import { getRecent } from '../utils/recentlyViewed.js';
 import { getCache, setCache } from '../utils/apiCache.js';
+import { cldVideoPoster } from '../utils/cloudinary.js';
 import CategoryGrid from '../components/CategoryGrid.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
 import InstallApp from '../components/InstallApp.jsx';
@@ -34,8 +35,8 @@ export default function Home() {
     <>
       <Seo title={t('app.name')} description={t('home.heroDesc')} />
 
-      {/* Hero — سلايدر بانرات (شريحة ثابتة + شريحتين) */}
-      <HomeHero />
+      {/* Hero — سلايدر يتحكّم به المدير (بانرات الموقع) أو الشرائح الافتراضية */}
+      <HomeHero banners={data?.homeBanners} />
 
       {/* بطاقة تنزيل التطبيق (تظهر إن كان قابلاً للتثبيت وغير مثبّت) */}
       <InstallApp />
@@ -124,13 +125,18 @@ export default function Home() {
 }
 
 // سلايدر الـ Hero للصفحة الرئيسية: شريحة ثابتة + شريحتين، تحريك تلقائي + سحب باللمس
-function HomeHero() {
+function HomeHero({ banners = [] }) {
   const { t } = useTranslation();
-  const slides = [
-    { eyebrow: 'LUXURY FASHION', title: t('home.heroTitle'), highlight: t('home.heroHighlight'), desc: t('home.heroDesc') },
-    { eyebrow: 'BAZARA', title: t('home.s2Title'), desc: t('home.s2Desc') },
-    { eyebrow: 'SEO • سيو', title: t('home.s3Title'), desc: t('home.s3Desc') },
-  ];
+  // بانرات المدير (إن وُجدت) تطغى على الشرائح الافتراضية
+  const adminSlides = (banners || []).filter((b) => b && (b.title || b.subtitle || b.bgValue));
+  const useAdmin = adminSlides.length > 0;
+  const slides = useAdmin
+    ? adminSlides
+    : [
+        { eyebrow: 'LUXURY FASHION', title: t('home.heroTitle'), highlight: t('home.heroHighlight'), desc: t('home.heroDesc') },
+        { eyebrow: 'BAZARA', title: t('home.s2Title'), desc: t('home.s2Desc') },
+        { eyebrow: 'SEO • سيو', title: t('home.s3Title'), desc: t('home.s3Desc') },
+      ];
   const len = slides.length;
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -139,9 +145,10 @@ function HomeHero() {
   const draggingRef = useRef(false);
   const touch = useRef({ x: 0, y: 0, active: false, horiz: false });
 
+  useEffect(() => { setI((p) => Math.min(p, len - 1)); }, [len]);
   useEffect(() => {
-    if (paused) return undefined;
-    const id = setInterval(() => setI((p) => (p + 1) % len), 4000);
+    if (len <= 1 || paused) return undefined;
+    const id = setInterval(() => setI((p) => (p + 1) % len), 5000);
     return () => clearInterval(id);
   }, [len, paused]);
 
@@ -216,27 +223,62 @@ function HomeHero() {
             willChange: 'transform',
           }}
         >
-          {slides.map((s, idx) => (
-            <div key={idx} className="w-full shrink-0" dir="rtl">
-              <div className="pub-hero relative flex h-[340px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[420px]">
-                <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-cream/10 blur-3xl" />
-                <p className="mb-3 text-sm font-semibold tracking-[0.3em] text-cream/70">{s.eyebrow}</p>
-                <h1 className="font-display text-3xl font-extrabold leading-tight text-cream sm:text-5xl">
-                  {s.title}
-                  {s.highlight && <> <span className="underline decoration-cream/30 decoration-2 underline-offset-8">{s.highlight}</span></>}
-                </h1>
-                <p className="mx-auto mt-4 max-w-2xl text-cream/80 sm:text-lg">{s.desc}</p>
-                <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-                  <Link to="/register" className="inline-flex items-center rounded-xl bg-cream px-6 py-2.5 text-base font-semibold text-wine shadow-lg transition hover:-translate-y-0.5 hover:bg-white">
-                    {t('home.ctaStart')}
-                  </Link>
-                  <a href="#stores" className="inline-flex items-center rounded-xl border border-cream/40 px-6 py-2.5 text-base font-semibold text-cream transition hover:bg-cream/10">
-                    {t('home.ctaExplore')}
-                  </a>
+          {slides.map((s, idx) => {
+            // شريحة المدير: خلفية صورة/فيديو/لون معتّمة + عنوان ووصف
+            if (useAdmin) {
+              const isColor = s.bgType === 'color' && s.bgValue;
+              const isImage = s.bgType === 'image' && s.bgValue;
+              const isVideo = s.bgType === 'video' && s.bgValue;
+              const custom = isColor || isImage || isVideo;
+              return (
+                <div key={idx} className="w-full shrink-0" dir="rtl">
+                  <div
+                    className={`relative isolate flex h-[340px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[420px] ${custom ? 'bg-wine-dark' : 'pub-hero'}`}
+                    style={isColor ? { background: s.bgValue } : undefined}
+                  >
+                    {isImage && (
+                      <img src={s.bgValue} alt="" loading={idx === 0 ? 'eager' : 'lazy'} style={{ filter: 'brightness(0.6)' }} className="absolute inset-0 -z-10 h-full w-full object-cover" />
+                    )}
+                    {isVideo && (
+                      <video
+                        src={s.bgValue}
+                        poster={cldVideoPoster(s.bgValue)}
+                        autoPlay muted loop playsInline preload="auto"
+                        onEnded={(e) => { e.currentTarget.currentTime = 0; e.currentTarget.play().catch(() => {}); }}
+                        onPause={(e) => { if (!document.hidden) e.currentTarget.play().catch(() => {}); }}
+                        style={{ filter: 'brightness(0.6)' }}
+                        className="absolute inset-0 -z-10 h-full w-full object-cover"
+                      />
+                    )}
+                    {s.title && <h1 className="font-display text-3xl font-extrabold leading-tight text-cream drop-shadow-lg sm:text-5xl">{s.title}</h1>}
+                    {s.subtitle && <p className="mx-auto mt-4 max-w-2xl text-cream/85 drop-shadow sm:text-lg">{s.subtitle}</p>}
+                  </div>
+                </div>
+              );
+            }
+            // الشريحة الافتراضية (نصّية)
+            return (
+              <div key={idx} className="w-full shrink-0" dir="rtl">
+                <div className="pub-hero relative flex h-[340px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[420px]">
+                  <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-cream/10 blur-3xl" />
+                  <p className="mb-3 text-sm font-semibold tracking-[0.3em] text-cream/70">{s.eyebrow}</p>
+                  <h1 className="font-display text-3xl font-extrabold leading-tight text-cream sm:text-5xl">
+                    {s.title}
+                    {s.highlight && <> <span className="underline decoration-cream/30 decoration-2 underline-offset-8">{s.highlight}</span></>}
+                  </h1>
+                  <p className="mx-auto mt-4 max-w-2xl text-cream/80 sm:text-lg">{s.desc}</p>
+                  <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+                    <Link to="/register" className="inline-flex items-center rounded-xl bg-cream px-6 py-2.5 text-base font-semibold text-wine shadow-lg transition hover:-translate-y-0.5 hover:bg-white">
+                      {t('home.ctaStart')}
+                    </Link>
+                    <a href="#stores" className="inline-flex items-center rounded-xl border border-cream/40 px-6 py-2.5 text-base font-semibold text-cream transition hover:bg-cream/10">
+                      {t('home.ctaExplore')}
+                    </a>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

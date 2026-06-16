@@ -607,6 +607,8 @@
     "available": "Available",
     "usedBadge": "Used",
     "subscribersNav": "Subscribers",
+    "siteSliders": "Site slider",
+    "siteSlidersHint": "Control the public home page slider (image/video, dimmed background, continuous loop, 5s rotation) — same settings as store sliders.",
     "subscribersTitle": "Your subscribers",
     "subscribersHint": "Everyone who registered and subscribed. Send the activation code straight to their email.",
     "subName": "Name",

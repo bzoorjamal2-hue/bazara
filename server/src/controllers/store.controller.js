@@ -92,7 +92,7 @@ function sanitizeZones(raw) {
 }
 
 // تنقية شرايح البانر القادمة من النموذج (حد أقصى 5، نص آمن + خلفية مخصّصة)
-function sanitizeBanners(raw) {
+export function sanitizeBanners(raw) {
   if (!Array.isArray(raw)) return [];
   const bgTypes = ['color', 'image', 'video'];
   return raw

@@ -60,11 +60,18 @@ export async function getHomeData(_req, res, next) {
 
     const featured = await query(`${PRODUCT_SELECT} WHERE p.featured = true AND ${active} ORDER BY p.created_at DESC LIMIT 8`);
     const latest = await query(`${PRODUCT_SELECT} WHERE ${active} ORDER BY p.created_at DESC LIMIT 12`);
+    // بانرات الصفحة الرئيسية (يتحكّم بها المدير) — قد لا يوجد الجدول بعد على نسخ قديمة
+    let homeBanners = [];
+    try {
+      const sb = await query('SELECT home_banners FROM site_settings WHERE id = 1');
+      homeBanners = Array.isArray(sb.rows[0]?.home_banners) ? sb.rows[0].home_banners : [];
+    } catch { /* الجدول غير موجود بعد */ }
 
     res.json({
       stores: stores.rows.map((s) => ({ ...mapStorePublic(s), productsCount: s.products_count })),
       featured: featured.rows.map(mapProduct),
       products: latest.rows.map(mapProduct),
+      homeBanners,
     });
   } catch (err) {
     next(err);

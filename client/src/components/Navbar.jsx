@@ -106,6 +106,7 @@ export default function Navbar() {
     ? [
         { key: 'subscribers', label: t('admin.subscribersNav'), Icon: UsersIcon },
         { key: 'admin', label: t('admin.nav'), Icon: ShieldCheckIcon },
+        { key: 'siteSliders', label: t('admin.siteSliders'), Icon: GridIcon },
         { key: 'profile', label: t('dashboard.profile'), Icon: UserLineIcon },
       ]
     : [
