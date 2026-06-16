@@ -132,7 +132,7 @@ export async function updateMyStore(req, res, next) {
   const freeShippingOver = Math.max(0, Number(req.body.freeShippingOver) || 0);
   const sizeChart = sanitizeSizeChart(req.body.sizeChart);
   const returnPolicy = String(req.body.returnPolicy || '').slice(0, 2000);
-  const announcement = String(req.body.announcement || '').slice(0, 200);
+  const announcement = String(req.body.announcement || '').slice(0, 500);
   const welcomeOffer = String(req.body.welcomeOffer || '').slice(0, 300);
   const categoryMeta = sanitizeCategoryMeta(req.body.categoryMeta);
   const customCategories = sanitizeCustomCategories(req.body.customCategories);

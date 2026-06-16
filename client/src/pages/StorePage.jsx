@@ -317,29 +317,34 @@ function StoreFooter({ store, wa }) {
   );
 }
 
-// شريط إعلانات متحرّك (Marquee) عصري متصل فعلاً — نسختان متطابقتان للنص (كلٌّ مكرّرة
-// عدّة مرّات) تتحرّكان بانسياب: ما إن تخرج جملة من جهة حتى تدخل التالية من الجهة الأخرى،
-// بلا تقطّع ولا فراغ. تدرّج خمري بنص عاجي ونجمة ذهبية فاصلة + تلاشٍ ناعم عند الحوافّ.
+// شريط إعلانات متحرّك (News Ticker) فخم وهادئ — خلفية شامبين/كريمية بنص خمري ونجمة
+// ذهبية فاصلة. يقبل عدّة إعلانات (كل سطر إعلان) ويعرضها بتتابع متّصل سلس بلا تقطّع
+// (نسختان متطابقتان من القائمة + سرعة تتناسب تلقائياً مع عدد الإعلانات).
 function AnnouncementBar({ text }) {
+  const items = String(text || '').split('\n').map((s) => s.trim()).filter(Boolean);
+  if (items.length === 0) return null;
+  // نكرّر القائمة حتى تملأ العرض دائماً (للإعلان الواحد القصير لا يظهر فراغ)
+  const base = items.length >= 3 ? items : Array.from({ length: Math.ceil(3 / items.length) }).flatMap(() => items);
   const Track = ({ hidden }) => (
     <div className="flex shrink-0 items-center" aria-hidden={hidden}>
-      {Array.from({ length: 6 }).map((_, k) => (
-        <span key={k} className="flex items-center gap-2.5 whitespace-nowrap px-6 text-sm font-semibold tracking-wide" dir="auto">
-          <SparkleIcon className="h-3.5 w-3.5 shrink-0 text-gold-300" />
-          {text}
+      {base.map((it, k) => (
+        <span key={k} className="flex items-center gap-2.5 whitespace-nowrap px-6 text-sm font-semibold tracking-wide text-[#5e4636]" dir="auto">
+          <SparkleIcon className="h-3.5 w-3.5 shrink-0 text-[#c79a3a]" />
+          {it}
         </span>
       ))}
     </div>
   );
+  const duration = Math.max(18, base.length * 7); // ثوانٍ — سرعة ثابتة مهما كثُرت الإعلانات
   return (
-    <div className="relative -mx-4 mb-5 overflow-hidden border-y border-gold-400/25 bg-gradient-to-r from-wine-dark via-wine to-wine-dark py-2.5 text-cream shadow-sm sm:-mx-6">
-      <div className="flex w-max animate-marquee" dir="ltr">
+    <div className="relative -mx-4 mb-5 overflow-hidden border-y border-gold-400/40 bg-gradient-to-r from-[#f5ead6] via-[#efe1c6] to-[#f5ead6] py-2.5 shadow-sm sm:-mx-6">
+      <div className="flex w-max animate-marquee" dir="ltr" style={{ animationDuration: `${duration}s` }}>
         <Track />
         <Track hidden />
       </div>
-      {/* تلاشٍ ناعم عند الحوافّ (يسار/يمين فيزيائيًا) */}
-      <span className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-wine-dark to-transparent" />
-      <span className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-wine-dark to-transparent" />
+      {/* تلاشٍ ناعم عند الحوافّ ليبدو أكثر أناقة */}
+      <span className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-[#f5ead6] to-transparent" />
+      <span className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-[#f5ead6] to-transparent" />
     </div>
   );
 }
@@ -596,8 +601,8 @@ function HeroSlider({ store }) {
 
   useEffect(() => {
     if (len <= 1 || paused) return undefined;
-    // تتحرّك الشرائح تلقائياً كل 3 ثوانٍ (بما فيها شرائح الفيديو) — منظر أحلى ومتجدّد
-    const id = setInterval(() => setI((p) => (p + 1) % len), 3000);
+    // تتحرّك الشرائح تلقائياً كل 5 ثوانٍ (بما فيها شرائح الفيديو) — وقت كافٍ لمشاهدة كل شريحة
+    const id = setInterval(() => setI((p) => (p + 1) % len), 5000);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [len, paused, i]);

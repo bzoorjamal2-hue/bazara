@@ -349,7 +349,7 @@ export default function StoreSettings() {
           <h2 className="font-display text-lg font-bold text-stone-100">📣 {t('dashboard.store.marketing')}</h2>
           <div>
             <label className="label">{t('dashboard.store.announcement')}</label>
-            <input type="text" maxLength={200} className="input" placeholder={t('dashboard.store.announcementPlaceholder')} value={form.announcement} onChange={set('announcement')} />
+            <textarea rows={3} maxLength={500} className="input resize-none" placeholder={t('dashboard.store.announcementPlaceholder')} value={form.announcement} onChange={set('announcement')} />
             <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.announcementHint')}</p>
           </div>
           <div>
