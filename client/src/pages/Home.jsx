@@ -252,6 +252,7 @@ function HomeHero({ banners = [] }) {
                     )}
                     {s.title && <h1 className="font-display text-3xl font-extrabold leading-tight text-cream drop-shadow-lg sm:text-5xl">{s.title}</h1>}
                     {s.subtitle && <p className="mx-auto mt-4 max-w-2xl text-cream/85 drop-shadow sm:text-lg">{s.subtitle}</p>}
+                    {s.btnLabel && s.btnHref && <SlideButton href={s.btnHref} label={s.btnLabel} />}
                   </div>
                 </div>
               );
@@ -294,6 +295,15 @@ function HomeHero({ banners = [] }) {
       </div>
     </section>
   );
+}
+
+// زر شريحة السلايدر — يفتح رابطاً خارجياً (http) أو ينتقل لمسار داخلي بالموقع
+function SlideButton({ href, label }) {
+  const cls = 'mt-6 inline-flex items-center rounded-xl bg-cream px-6 py-2.5 text-base font-semibold text-wine shadow-lg transition hover:-translate-y-0.5 hover:bg-white';
+  if (/^https?:\/\//i.test(href)) {
+    return <a href={href} target="_blank" rel="noreferrer" className={cls}>{label}</a>;
+  }
+  return <Link to={href.startsWith('/') ? href : `/${href}`} className={cls}>{label}</Link>;
 }
 
 // شريط ترويجي كريمي بأيقونة هدية + زر (طبق المرجع)

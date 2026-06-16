@@ -40,7 +40,8 @@ export default function BottomNav() {
   const navigate = useNavigate();
   const { count, setOpen, open: cartOpen } = useCart();
   const { count: wishCount, setOpen: setWishOpen, open: wishOpen } = useWishlist();
-  const { user, store } = useAuth();
+  const { user, store, subscription } = useAuth();
+  const isAdmin = subscription?.isAdmin;
 
   // عدّاد الطلبات الجديدة لصاحب المتجر — شارة على تبويب "حسابي"
   const [newOrders, setNewOrders] = useState(0);
@@ -56,8 +57,8 @@ export default function BottomNav() {
   }, [user, store?.slug]);
 
   const accountTo = user ? '/dashboard' : '/login';
-  // "الرئيسية" للمشترك المسجّل → صفحة متجره العام؛ للزائر → بازارا العام (كل المتاجر)
-  const homeTo = user && store?.slug ? `/store/${store.slug}` : '/shop';
+  // "الرئيسية": المدير العام → الصفحة الرئيسية للموقع (ليعاين تعديلاته)؛ المشترك → متجره؛ الزائر → بازارا العام
+  const homeTo = isAdmin ? '/shop' : user && store?.slug ? `/store/${store.slug}` : '/shop';
   const homeActive = homeTo === '/shop' ? pathname === '/shop' : pathname === homeTo;
   // إغلاق أدراج السلة/المفضلة قبل الانتقال (الشريط يبقى ظاهراً فوق الأدراج)
   const closeDrawers = () => { setOpen(false); setWishOpen(false); };

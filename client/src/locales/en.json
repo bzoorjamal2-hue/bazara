@@ -294,7 +294,11 @@
       "noCustomCategories": "No extra categories yet. Add your own with names and photos.",
       "newCategory": "New category",
       "categoryNameField": "Category name (e.g. Kaftan, Pants...)",
-      "settingsHint": "Customize your store: logo, contact, slider, categories, delivery and more."
+      "settingsHint": "Customize your store: logo, contact, slider, categories, delivery and more.",
+      "slideButton": "Slide button (optional)",
+      "btnLabel": "Button text (e.g. Shop now)",
+      "btnHref": "Button destination (link or path)",
+      "btnHrefHint": "Put a full URL (https://...) to open an external site, or an internal path like /shop, /category/dress, or /store/store-name."
     },
     "product": {
       "name": "Item name",

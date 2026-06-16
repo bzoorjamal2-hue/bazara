@@ -6,7 +6,7 @@ const BG_TYPES = [['', 'bgTheme'], ['color', 'bgColor'], ['image', 'bgImage'], [
 const MAX_BANNERS = 5;
 
 // محرّر شرايح السلايدر — مشترك بين إعدادات المتجر وتحكّم المدير بالصفحة الرئيسية.
-export default function BannerEditor({ banners = [], onChange }) {
+export default function BannerEditor({ banners = [], onChange, withButtons = false }) {
   const { t } = useTranslation();
   const setBanner = (idx, key, val) => onChange(banners.map((b, i) => (i === idx ? { ...b, [key]: val } : b)));
   const addBanner = () => onChange([...banners, { title: '', subtitle: '', bgType: '', bgValue: '' }]);
@@ -80,6 +80,31 @@ export default function BannerEditor({ banners = [], onChange }) {
                   <div className="mt-2"><VideoInput value={b.bgValue} onChange={(v) => setBanner(idx, 'bgValue', v)} /></div>
                 )}
               </div>
+
+              {/* زر الشريحة (للمدير) — نص + وجهة عند الضغط */}
+              {withButtons && (
+                <div className="mt-3 border-t border-gold-400/10 pt-3">
+                  <p className="mb-2 text-xs font-semibold text-stone-300">🔘 {t('dashboard.store.slideButton')}</p>
+                  <input
+                    type="text"
+                    className="input mb-2"
+                    placeholder={t('dashboard.store.btnLabel')}
+                    value={b.btnLabel || ''}
+                    maxLength={40}
+                    onChange={(e) => setBanner(idx, 'btnLabel', e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    dir="ltr"
+                    className="input"
+                    placeholder={t('dashboard.store.btnHref')}
+                    value={b.btnHref || ''}
+                    maxLength={500}
+                    onChange={(e) => setBanner(idx, 'btnHref', e.target.value)}
+                  />
+                  <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.btnHrefHint')}</p>
+                </div>
+              )}
             </div>
           ))}
         </div>

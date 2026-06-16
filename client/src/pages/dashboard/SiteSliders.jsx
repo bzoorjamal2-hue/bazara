@@ -4,7 +4,14 @@ import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import BannerEditor from '../../components/BannerEditor.jsx';
 
-// تحكّم المدير العام بسلايدر الصفحة الرئيسية للموقع — نفس محرّر بانرات المشتركين.
+// الشرائح الافتراضية الموجودة حالياً بالصفحة الرئيسية — تظهر للمدير ليعدّلها/يحذفها
+const DEFAULT_SITE_SLIDES = [
+  { title: 'تشكيلة جديدة وصلت', subtitle: 'تصفّحوا أحدث القطع لدينا', bgType: '', bgValue: '', btnLabel: '', btnHref: '' },
+  { title: 'عروض خاصة', subtitle: 'تابعونا لكل جديد وحصري', bgType: '', bgValue: '', btnLabel: '', btnHref: '' },
+  { title: 'بازارا', subtitle: 'وجهتك للأزياء الفاخرة', bgType: '', bgValue: '', btnLabel: '', btnHref: '' },
+];
+
+// تحكّم المدير العام بسلايدر الصفحة الرئيسية للموقع — نفس محرّر بانرات المشتركين + أزرار.
 export default function SiteSliders() {
   const { t } = useTranslation();
   const [banners, setBanners] = useState(null);
@@ -13,7 +20,9 @@ export default function SiteSliders() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    api.get('/site/banners').then((r) => setBanners(r.data.banners || [])).catch((e) => setError(getErrorMessage(e)));
+    api.get('/site/banners')
+      .then((r) => setBanners(r.data.banners?.length ? r.data.banners : DEFAULT_SITE_SLIDES))
+      .catch((e) => setError(getErrorMessage(e)));
   }, []);
 
   const save = async () => {
@@ -39,7 +48,7 @@ export default function SiteSliders() {
       {msg && <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-200">{msg}</div>}
       {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
       <div className="glass p-6">
-        <BannerEditor banners={banners} onChange={setBanners} />
+        <BannerEditor banners={banners} onChange={setBanners} withButtons />
       </div>
       <button onClick={save} disabled={busy} className="btn-primary">{busy ? t('common.loading') : t('common.save')}</button>
     </div>

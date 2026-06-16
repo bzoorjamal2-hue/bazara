@@ -102,6 +102,9 @@ export function sanitizeBanners(raw) {
       subtitle: String(b?.subtitle || '').trim().slice(0, 160),
       bgType: bgTypes.includes(b?.bgType) ? b.bgType : '',
       bgValue: String(b?.bgValue || '').slice(0, 900000), // يسمح بصورة base64 مضغوطة أو رابط
+      // زر اختياري على الشريحة: نص + وجهة (رابط خارجي أو مسار داخلي)
+      btnLabel: String(b?.btnLabel || '').trim().slice(0, 40),
+      btnHref: String(b?.btnHref || '').trim().slice(0, 500),
     }))
     .filter((b) => b.title || b.subtitle || b.bgValue);
 }
