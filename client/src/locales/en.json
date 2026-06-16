@@ -293,7 +293,8 @@
       "addCategory": "Add category",
       "noCustomCategories": "No extra categories yet. Add your own with names and photos.",
       "newCategory": "New category",
-      "categoryNameField": "Category name (e.g. Kaftan, Pants...)"
+      "categoryNameField": "Category name (e.g. Kaftan, Pants...)",
+      "settingsHint": "Customize your store: logo, contact, slider, categories, delivery and more."
     },
     "product": {
       "name": "Item name",

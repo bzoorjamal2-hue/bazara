@@ -109,7 +109,18 @@ export default function StoreSettings() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-2xl font-bold gradient-text">{t('dashboard.storeSettings')}</h1>
+      {/* رأس فخم */}
+      <div className="flex items-center gap-3">
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-400 to-amber-500 text-white shadow-md">
+          <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M4 9.5 5.2 5h13.6L20 9.5a2.4 2.4 0 0 1-4.8.3 2.4 2.4 0 0 1-4.8 0 2.4 2.4 0 0 1-4.8 0A2.4 2.4 0 0 1 4 9.5Z" /><path d="M5.5 11v8a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-8" />
+          </svg>
+        </span>
+        <div className="min-w-0">
+          <h1 className="font-display text-2xl font-bold leading-tight gradient-text">{t('dashboard.storeSettings')}</h1>
+          <p className="text-xs text-stone-400">{t('dashboard.store.settingsHint')}</p>
+        </div>
+      </div>
 
       {msg && <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-200">{msg}</div>}
       {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
@@ -332,8 +343,12 @@ export default function StoreSettings() {
           </div>
         </div>
 
-        <button type="submit" disabled={busy} className="btn-primary">
-          {busy ? t('common.loading') : t('common.save')}
+        <button
+          type="submit"
+          disabled={busy}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-wine to-wine-dark py-3.5 font-bold text-cream shadow-lg transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {busy ? t('common.loading') : `💾 ${t('common.save')}`}
         </button>
       </form>
     </div>
