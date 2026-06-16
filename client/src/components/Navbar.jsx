@@ -25,6 +25,40 @@ function Avatar({ user, size = 'h-8 w-8' }) {
   );
 }
 
+// قائمة الحساب المنبثقة من الأفاتار — هوية + روابط سريعة + تسجيل الخروج
+function AccountMenu({ user, onClose, onLogout }) {
+  const { t } = useTranslation();
+  return (
+    <>
+      {/* خلفية شفافة تُغلق القائمة بالضغط خارجها */}
+      <div className="fixed inset-0 z-[55]" onClick={onClose} />
+      <div className="absolute end-0 top-[calc(100%+10px)] z-[60] w-64 max-w-[80vw] origin-top-end animate-pop rounded-2xl border border-wine/10 bg-white p-2 text-wine shadow-xl">
+        <div className="flex items-center gap-3 rounded-xl bg-wine/5 p-3">
+          <Avatar user={user} size="h-11 w-11" />
+          <div className="min-w-0">
+            <p className="truncate font-display font-bold text-wine">{user.name}</p>
+            <p className="truncate text-xs text-wine/55" dir="ltr">{user.email}</p>
+          </div>
+        </div>
+        <div className="my-1.5 h-px bg-wine/10" />
+        <Link to="/dashboard" onClick={onClose} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-wine transition hover:bg-wine/5">
+          <GridIcon className="h-5 w-5 text-wine/70" /> {t('dashboard.title')}
+        </Link>
+        <Link to="/dashboard?tab=profile" onClick={onClose} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-wine transition hover:bg-wine/5">
+          <UserLineIcon className="h-5 w-5 text-wine/70" /> {t('dashboard.profile')}
+        </Link>
+        <div className="my-1.5 h-px bg-wine/10" />
+        <button
+          onClick={() => { onClose(); onLogout(); }}
+          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold text-red-600 transition hover:bg-red-500/10"
+        >
+          <LogoutIcon className="h-5 w-5" /> {t('nav.logout')}
+        </button>
+      </div>
+    </>
+  );
+}
+
 const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
 
 // أيقونات خطّية أنيقة لقائمة الحساب (بديل الإيموجي)
@@ -72,6 +106,7 @@ export default function Navbar() {
   const navigate = useNavigate();
   const { pathname, search } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [acctOpen, setAcctOpen] = useState(false); // قائمة الحساب المنبثقة (من الأفاتار)
   const [scrolled, setScrolled] = useState(false);
   useScrollLock(menuOpen); // تجميد الخلفية عند فتح قائمة الحساب
 
@@ -147,23 +182,51 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* أيقونات التسوّق — جهة النهاية (اليسار في العربية، اليمين في الإنجليزية) */}
+          {/* أيقونات التسوّق — جهة النهاية. المدير لا يحتاج السلة/المفضلة */}
           <div className="flex items-center gap-0.5 sm:gap-1.5">
-            <button onClick={() => setWishOpen(true)} className="relative rounded-full p-2 text-wine transition hover:bg-wine/10" title={t('nav.wishlist')} aria-label={t('nav.wishlist')}>
-              <HeartIcon className="h-[22px] w-[22px]" />
-              {wishCount > 0 && (
-                <span className="absolute end-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-wine px-1 text-[10px] font-bold text-cream">{wishCount}</span>
-              )}
-            </button>
-            <button data-cart-target onClick={() => setOpen(true)} className="relative rounded-full p-2 text-wine transition hover:bg-wine/10" title={t('nav.cart')} aria-label={t('nav.cart')}>
-              <CartIcon className="h-[22px] w-[22px]" />
-              {count > 0 && (
-                <span className="absolute end-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-wine px-1 text-[10px] font-bold text-cream">{count}</span>
-              )}
-            </button>
-            <Link to={user ? '/dashboard' : '/login'} className="rounded-full p-2 text-wine transition hover:bg-wine/10" title={t('nav.account')} aria-label={t('nav.account')}>
-              <UserLineIcon className="h-[22px] w-[22px]" />
-            </Link>
+            {!isAdmin && (
+              <>
+                <button onClick={() => setWishOpen(true)} className="relative rounded-full p-2 text-wine transition hover:bg-wine/10" title={t('nav.wishlist')} aria-label={t('nav.wishlist')}>
+                  <HeartIcon className="h-[22px] w-[22px]" />
+                  {wishCount > 0 && (
+                    <span className="absolute end-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-wine px-1 text-[10px] font-bold text-cream">{wishCount}</span>
+                  )}
+                </button>
+                <button data-cart-target onClick={() => setOpen(true)} className="relative rounded-full p-2 text-wine transition hover:bg-wine/10" title={t('nav.cart')} aria-label={t('nav.cart')}>
+                  <CartIcon className="h-[22px] w-[22px]" />
+                  {count > 0 && (
+                    <span className="absolute end-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-wine px-1 text-[10px] font-bold text-cream">{count}</span>
+                  )}
+                </button>
+              </>
+            )}
+
+            {/* الحساب: أفاتار شخصي بقائمة منبثقة (للمسجّل) أو رابط دخول (للزائر) */}
+            {user ? (
+              <div className="relative">
+                <button
+                  onClick={() => setAcctOpen((o) => !o)}
+                  className="flex items-center justify-center rounded-full ring-2 ring-transparent transition hover:ring-wine/20"
+                  title={t('nav.account')}
+                  aria-label={t('nav.account')}
+                  aria-expanded={acctOpen}
+                >
+                  <Avatar user={user} size="h-9 w-9" />
+                </button>
+                {acctOpen && (
+                  <AccountMenu
+                    user={user}
+                    isAdmin={isAdmin}
+                    onClose={() => setAcctOpen(false)}
+                    onLogout={handleLogout}
+                  />
+                )}
+              </div>
+            ) : (
+              <Link to="/login" className="rounded-full p-2 text-wine transition hover:bg-wine/10" title={t('nav.account')} aria-label={t('nav.account')}>
+                <UserLineIcon className="h-[22px] w-[22px]" />
+              </Link>
+            )}
           </div>
         </div>
       </nav>
@@ -175,7 +238,7 @@ export default function Navbar() {
           <div className="absolute inset-0 bg-black/50 animate-fade-up" onClick={() => setMenuOpen(false)} />
           <aside
             onClick={(e) => e.stopPropagation()}
-            className={`absolute inset-y-0 start-0 flex w-80 max-w-[85%] flex-col bg-wine-dark px-5 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+92px)] text-cream shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}
+            className={`absolute inset-y-0 start-0 flex w-80 max-w-[85%] flex-col bg-wine-dark px-5 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+24px)] text-cream shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}
           >
             {/* أعلى: إغلاق + اللغة */}
             <div className="flex items-center justify-between">
@@ -223,14 +286,6 @@ export default function Navbar() {
                 );
               })}
             </nav>
-
-            {/* تسجيل الخروج — ثابت بأسفل القائمة دائماً */}
-            <button
-              onClick={handleLogout}
-              className="mt-3 flex shrink-0 items-center justify-center gap-2 rounded-xl border border-red-300/40 bg-red-500/15 px-3 py-3 text-base font-bold text-red-100 transition hover:bg-red-500/30"
-            >
-              <LogoutIcon className="h-5 w-5" /> {t('nav.logout')}
-            </button>
           </aside>
         </div>
       )}
