@@ -50,6 +50,9 @@ export default function CategoryPage() {
   const homeTo = user && store?.slug ? `/store/${store.slug}` : '/shop';
   // المشترك المسجّل يرى منتجات متجره فقط (بلا خلط مع متاجر أخرى)
   const scopeSlug = user && store?.slug ? store.slug : '';
+  // فئة مخصّصة؟ نأخذ اسمها وصورتها من إعدادات المتجر (نفس تجربة الفئات الأصلية)
+  const customCat = (store?.customCategories || []).find((c) => c.key === cat);
+  const label = customCat?.name || t(`categories.${cat}`);
   const cacheKey = `cat:${cat}:${scopeSlug}`;
   const [products, setProducts] = useState(() => getCache(cacheKey) || null);
   const [error, setError] = useState('');
@@ -67,7 +70,7 @@ export default function CategoryPage() {
 
   return (
     <>
-      <Seo title={t(`categories.${cat}`)} />
+      <Seo title={label} />
 
       {/* مسار التنقّل المتتابع: الرئيسية ← التصنيفات ← الفئة (أزرار فعّالة بأيقونات للرجوع) */}
       <nav className="mb-5 mt-1 flex flex-wrap items-center gap-1.5 text-sm">
@@ -90,8 +93,12 @@ export default function CategoryPage() {
         </Link>
         <Crumb />
         <span className="flex items-center gap-2 rounded-full bg-wine/10 px-2.5 py-1 font-display text-base font-bold text-wine">
-          <CatThumb cat={cat} className="h-7 w-7" />
-          {t(`categories.${cat}`)}
+          {customCat ? (
+            customCat.image ? <img src={customCat.image} alt="" className="h-7 w-7 shrink-0 rounded object-contain" /> : null
+          ) : (
+            <CatThumb cat={cat} className="h-7 w-7" />
+          )}
+          {label}
         </span>
       </nav>
 

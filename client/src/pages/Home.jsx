@@ -8,7 +8,7 @@ import ProductCard from '../components/ProductCard.jsx';
 import ProductRail from '../components/ProductRail.jsx';
 import { getRecent } from '../utils/recentlyViewed.js';
 import { getCache, setCache } from '../utils/apiCache.js';
-import { cldVideoPoster } from '../utils/cloudinary.js';
+import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
 import CategoryGrid from '../components/CategoryGrid.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
 import InstallApp from '../components/InstallApp.jsx';
@@ -250,7 +250,7 @@ function HomeHero({ banners = [] }) {
                     style={isColor ? { background: s.bgValue } : undefined}
                   >
                     {isImage && (
-                      <img src={s.bgValue} alt="" loading={idx === 0 ? 'eager' : 'lazy'} style={{ filter: 'brightness(0.6)' }} className="absolute inset-0 -z-10 h-full w-full object-cover" />
+                      <img src={cldThumb(s.bgValue, 1280)} alt="" loading={idx === 0 ? 'eager' : 'lazy'} decoding="async" style={{ filter: 'brightness(0.6)' }} className="absolute inset-0 -z-10 h-full w-full object-cover" />
                     )}
                     {isVideo && (
                       <video

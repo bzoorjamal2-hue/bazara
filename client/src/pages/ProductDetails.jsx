@@ -9,7 +9,7 @@ import Lightbox from '../components/Lightbox.jsx';
 import ProductRail from '../components/ProductRail.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
-import { cldVideoPoster } from '../utils/cloudinary.js';
+import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
 import { pushRecent, getRecent } from '../utils/recentlyViewed.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { sizeLabel } from '../utils/sizes.js';
@@ -203,8 +203,9 @@ export default function ProductDetails() {
           <div className="relative mx-auto w-fit">
             {/* الصورة تظهر بحجمها الطبيعي (مثل الفيديو) بلا قص — نقر للتكبير */}
             <img
-              src={gallery[active]}
+              src={cldThumb(gallery[active], 900)}
               alt={product.name}
+              decoding="async"
               onClick={() => setLightbox(true)}
               className="block max-h-[75vh] w-auto max-w-full cursor-zoom-in rounded-2xl bg-ink-800 object-contain"
               onError={(e) => (e.currentTarget.src = PH)}

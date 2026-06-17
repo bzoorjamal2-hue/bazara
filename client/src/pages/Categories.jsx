@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Seo from '../components/Seo.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
+import { cldThumb } from '../utils/cloudinary.js';
 
 const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
 
@@ -12,8 +13,8 @@ export default function Categories() {
   const customCats = Array.isArray(store?.customCategories) ? store.customCategories : [];
   const items = [
     ...CATS.map((c) => ({ key: c, name: t(`categories.${c}`), to: `/category/${c}`, img: `/categories/${c}.png` })),
-    // الفئات المخصّصة تعمل داخل متجر صاحبها (تصفية بالرابط)
-    ...(store?.slug ? customCats.map((cc) => ({ key: cc.key, name: cc.name, to: `/store/${store.slug}?cat=${cc.key}`, img: cc.image || '' })) : []),
+    // الفئات المخصّصة: نفس صفحة الفئة (CategoryPage) — بالـbreadcrumbs والرجوع والأيقونة
+    ...(store?.slug ? customCats.map((cc) => ({ key: cc.key, name: cc.name, to: `/category/${cc.key}`, img: cc.image || '' })) : []),
   ];
 
   return (
@@ -33,7 +34,7 @@ export default function Categories() {
             <div className="flex aspect-square items-center justify-center overflow-hidden">
               {it.img ? (
                 <img
-                  src={it.img}
+                  src={it.img.startsWith('/') ? it.img : cldThumb(it.img, 400)}
                   alt={it.name}
                   loading="eager"
                   decoding="async"

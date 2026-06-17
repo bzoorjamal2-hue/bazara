@@ -12,10 +12,11 @@ import NavBell from './NavBell.jsx';
 import CloseButton from './CloseButton.jsx';
 import { isStandalone } from '../utils/pwa.js';
 import CatThumb from './CatThumb.jsx';
+import { cldThumb } from '../utils/cloudinary.js';
 
 function Avatar({ user, size = 'h-8 w-8' }) {
   if (user?.avatarUrl) {
-    return <img src={user.avatarUrl} alt={user.name} className={`${size} rounded-full border border-gold-400/40 object-cover`} />;
+    return <img src={cldThumb(user.avatarUrl, 140)} alt={user.name} loading="eager" decoding="async" className={`${size} rounded-full border border-gold-400/40 object-cover`} />;
   }
   const initial = user?.name?.trim()?.[0] || '👤';
   return (

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { cldThumb } from '../utils/cloudinary.js';
 
 const BUILTIN = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
 
@@ -18,7 +19,8 @@ function getPerPage() {
 function CategoryCard({ cat }) {
   const { t } = useTranslation();
   const label = cat.name || (cat.builtin ? t(`categories.${cat.key}`) : cat.key);
-  const src = cat.image || (cat.builtin ? `/categories/${cat.key}.png` : '');
+  // صورة المالكة المخصّصة تُحسَّن بحجم أصغر وصيغة تلقائية لظهور أسرع؛ والأيقونة الثابتة كما هي
+  const src = cat.image ? cldThumb(cat.image, 400) : cat.builtin ? `/categories/${cat.key}.png` : '';
   return (
     <div className="transition duration-300 group-hover:-translate-y-1">
       {/* بلا إطار/خلفية — يظهر شكل الأيقونة فقط (الصور بلا خلفية)، بحجم موحّد */}

@@ -14,7 +14,7 @@ import CatThumb from '../components/CatThumb.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
 import CloseButton from '../components/CloseButton.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
-import { cldVideoPoster } from '../utils/cloudinary.js';
+import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
 import { SIZES, sizeLabel } from '../utils/sizes.js';
 import { getCache, setCache } from '../utils/apiCache.js';
@@ -734,9 +734,10 @@ function HeroSlider({ store }) {
                   {/* وسائط الشريحة (صورة أو فيديو) بنفس التعتيم تماماً — معتّمة من أول لحظة بلا وميض */}
                   {isImage && (
                     <img
-                      src={s.bgValue}
+                      src={cldThumb(s.bgValue, 1280)}
                       alt=""
                       aria-hidden="true"
+                      decoding="async"
                       style={{ filter: 'brightness(0.6)' }}
                       className="absolute inset-0 z-0 h-full w-full object-cover"
                     />
