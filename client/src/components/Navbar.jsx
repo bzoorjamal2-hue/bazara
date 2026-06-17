@@ -52,7 +52,7 @@ function AccountMenu({ user, store, subscription, isAdmin, onClose, onLogout }) 
     <>
       {/* خلفية شفافة تُغلق القائمة بالضغط خارجها */}
       <div className="fixed inset-0 z-[55]" onClick={onClose} />
-      <div className="absolute end-0 top-[calc(100%+8px)] z-[60] w-56 max-w-[78vw] origin-top-end animate-pop overflow-hidden rounded-xl border border-wine/10 bg-white p-1.5 text-wine shadow-xl">
+      <div className="absolute end-0 top-[calc(100%+8px)] z-[60] w-[12.5rem] max-w-[70vw] origin-top-end animate-pop overflow-hidden rounded-xl border border-gold-400/30 bg-white p-1.5 text-wine shadow-[0_12px_32px_-8px_rgba(94,70,54,0.35)] ring-1 ring-wine/5">
         {/* الهوية — مدمجة */}
         <div className="flex items-center gap-2.5 rounded-lg bg-wine/[0.04] p-2">
           <Avatar user={user} size="h-9 w-9" />
