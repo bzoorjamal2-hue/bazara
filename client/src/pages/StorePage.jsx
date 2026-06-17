@@ -754,13 +754,12 @@ function HeroSlider({ store }) {
                       // ضمان التكرار حتى لو أوقفه النظام: نعيده من البداية ونشغّله
                       onEnded={(e) => { e.currentTarget.currentTime = 0; e.currentTarget.play().catch(() => {}); }}
                       onPause={(e) => { if (!document.hidden) e.currentTarget.play().catch(() => {}); }}
-                      style={{ filter: 'brightness(0.6)' }}
                       className="absolute inset-0 z-0 h-full w-full object-cover"
                     />
                   )}
                   {/* طبقة تظليل موحّدة فوق الصورة/الفيديو — نفس الدرجة لكل الشرائح ليظهر النص بوضوح */}
                   {(isImage || isVideo) && (
-                    <div className="absolute inset-0 z-[1] bg-black/45" />
+                    <div className="absolute inset-0 z-[1] bg-black/55" />
                   )}
                   {!custom && <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-cream/10 blur-3xl" />}
 
