@@ -1,15 +1,43 @@
-// مخزّن مؤقّت بسيط لاستجابات الصفحات (منتج/متجر) — يجعل الرجوع فورياً بلا إعادة تحميل،
-// ويثبّت استعادة موضع التمرير لأن المحتوى يجهز لحظياً. نُحدّث في الخلفية (stale-while-revalidate).
+// مخزّن صفحات (منتج/متجر/فئة/رئيسية) — يجعل الفتح/الرجوع فورياً وثابتاً بلا وميض،
+// ويثبّت استعادة موضع التمرير لأن المحتوى يجهز لحظياً. (stale-while-revalidate)
+// نحفظ في الذاكرة + localStorage فيبقى المحتوى فورياً حتى بعد إعادة تحميل التطبيق.
 const mem = new Map();
 const TTL = 5 * 60 * 1000; // 5 دقائق
+const LS_PREFIX = 'bzc_';
+const LS_MAX = 350000; // حد حجم العنصر الواحد بالـ localStorage (~350KB) لتفادي امتلاء التخزين
 
 export function getCache(key) {
   const e = mem.get(key);
-  if (!e) return null;
-  if (Date.now() - e.t > TTL) { mem.delete(key); return null; }
-  return e.v;
+  if (e) {
+    if (Date.now() - e.t <= TTL) return e.v;
+    mem.delete(key);
+  }
+  // محاولة من التخزين الدائم (يبقى بعد إعادة التحميل)
+  try {
+    const raw = localStorage.getItem(LS_PREFIX + key);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Date.now() - parsed.t <= TTL) { mem.set(key, parsed); return parsed.v; }
+      localStorage.removeItem(LS_PREFIX + key);
+    }
+  } catch { /* تجاهل */ }
+  return null;
 }
 
 export function setCache(key, value) {
-  mem.set(key, { v: value, t: Date.now() });
+  const entry = { v: value, t: Date.now() };
+  mem.set(key, entry);
+  try {
+    const s = JSON.stringify(entry);
+    if (s.length <= LS_MAX) localStorage.setItem(LS_PREFIX + key, s);
+    else localStorage.removeItem(LS_PREFIX + key); // كبير جداً → لا نحفظه دائماً (تبقى نسخة الذاكرة)
+  } catch {
+    // امتلأ التخزين → ننظّف كل عناصر الكاش القديمة ونحاول مرة أخرى بهدوء
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith(LS_PREFIX)) localStorage.removeItem(k);
+      }
+    } catch { /* تجاهل */ }
+  }
 }
