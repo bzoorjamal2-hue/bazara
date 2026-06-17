@@ -141,7 +141,10 @@ export default function Home() {
 function HomeHero({ banners = [] }) {
   const { t } = useTranslation();
   // بانرات المدير (إن وُجدت) تطغى على الشرائح الافتراضية
-  const adminSlides = (banners || []).filter((b) => b && (b.title || b.subtitle || b.bgValue));
+  // الشرائح ذات الوسائط (فيديو/صورة/لون) تظهر أولاً → الفيديو أول ما يُرى
+  const adminSlides = (banners || [])
+    .filter((b) => b && (b.title || b.subtitle || b.bgValue))
+    .sort((a, b) => (b.bgType && b.bgValue ? 1 : 0) - (a.bgType && a.bgValue ? 1 : 0));
   const useAdmin = adminSlides.length > 0;
   const slides = useAdmin
     ? adminSlides
