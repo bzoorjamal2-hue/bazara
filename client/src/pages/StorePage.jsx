@@ -760,7 +760,7 @@ function HeroSlider({ store }) {
                   )}
                   {/* طبقة تظليل موحّدة فوق الصورة/الفيديو — نفس الدرجة لكل الشرائح ليظهر النص بوضوح */}
                   {(isImage || isVideo) && (
-                    <div className="absolute inset-0 z-[1] bg-gradient-to-t from-black/55 via-black/25 to-black/40" />
+                    <div className="absolute inset-0 z-[1] bg-black/45" />
                   )}
                   {!custom && <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-cream/10 blur-3xl" />}
 
