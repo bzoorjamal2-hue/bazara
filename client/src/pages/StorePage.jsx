@@ -324,51 +324,26 @@ function AnnouncementBar({ text }) {
   const { i18n } = useTranslation();
   const rtl = i18n.language !== 'en';
   const items = String(text || '').split('\n').map((s) => s.trim()).filter(Boolean);
-  const wrapRef = useRef(null);
-  const measureRef = useRef(null);
-  const [copies, setCopies] = useState(1);
-  const [dur, setDur] = useState(20);
-
-  // نقيس عرض مجموعة عناصر واحدة وعرض الشريط، ثم نكرّر بما يضمن أن المسار أعرض من
-  // الشاشة دائماً (فلا يظهر فراغ)، ونحسب المدة لسرعة ثابتة (~60px/ث) على أي شاشة.
-  useLayoutEffect(() => {
-    const measure = () => {
-      const wrapW = wrapRef.current?.offsetWidth || 0;
-      const oneW = measureRef.current?.scrollWidth || 0;
-      if (oneW > 0 && wrapW > 0) {
-        const need = Math.max(2, Math.ceil((wrapW * 1.5) / oneW) + 1);
-        setCopies(need);
-        setDur(Math.max(12, (oneW * need) / 60));
-      }
-    };
-    measure();
-    const id = setTimeout(measure, 350); // إعادة قياس بعد تحميل الخط
-    window.addEventListener('resize', measure);
-    return () => { clearTimeout(id); window.removeEventListener('resize', measure); };
-  }, [text]);
-
   if (items.length === 0) return null;
 
-  const Item = ({ k }) => (
-    <span key={k} className="flex items-center gap-2.5 whitespace-nowrap px-6 text-sm font-semibold tracking-wide text-[#5e4636]" dir="auto">
-      <SparkleIcon className="h-3.5 w-3.5 shrink-0 text-[#c79a3a]" />
-      {items[k % items.length]}
-    </span>
-  );
-  // مجموعة = (عدد التكرارات × عدد الإعلانات). المسار = مجموعتان متطابقتان → التفاف سلس.
-  const groupCount = copies * items.length;
+  // نكرّر بعدد كافٍ ثابت (≥12 عنصر بكل مجموعة) فيتجاوز المسار أي شاشة دائماً → بلا
+  // قياس وبلا فراغ/اختفاء. مجموعتان متطابقتان + translateX(-50%) = التفاف سلس متصل.
+  const reps = Math.max(1, Math.ceil(12 / items.length));
+  const groupCount = reps * items.length;
+  const dur = Math.max(18, groupCount * 2); // ثوانٍ — سرعة شبه ثابتة
   const Group = ({ hidden }) => (
     <div className="flex shrink-0 items-center" aria-hidden={hidden}>
-      {Array.from({ length: groupCount }).map((_, k) => <Item key={k} k={k} />)}
+      {Array.from({ length: groupCount }).map((_, k) => (
+        <span key={k} className="flex items-center gap-2.5 whitespace-nowrap px-6 text-sm font-semibold tracking-wide text-[#5e4636]" dir="auto">
+          <SparkleIcon className="h-3.5 w-3.5 shrink-0 text-[#c79a3a]" />
+          {items[k % items.length]}
+        </span>
+      ))}
     </div>
   );
 
   return (
-    <div ref={wrapRef} className="relative -mx-4 mb-5 overflow-hidden border-y border-gold-400/40 bg-gradient-to-r from-[#f5ead6] via-[#efe1c6] to-[#f5ead6] py-2.5 shadow-sm sm:-mx-6">
-      {/* عنصر قياس مخفي (مجموعة عناصر واحدة) — لقياس العرض الحقيقي */}
-      <div ref={measureRef} className="pointer-events-none invisible absolute flex items-center" aria-hidden>
-        {items.map((_, k) => <Item key={k} k={k} />)}
-      </div>
+    <div className="relative -mx-4 mb-5 overflow-hidden border-y border-gold-400/40 bg-gradient-to-r from-[#f5ead6] via-[#efe1c6] to-[#f5ead6] py-2.5 shadow-sm sm:-mx-6">
       <div
         className="flex w-max animate-marquee"
         dir="ltr"
