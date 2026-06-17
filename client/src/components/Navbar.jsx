@@ -52,30 +52,35 @@ function AccountMenu({ user, store, subscription, isAdmin, onClose, onLogout }) 
     <>
       {/* خلفية شفافة تُغلق القائمة بالضغط خارجها */}
       <div className="fixed inset-0 z-[55]" onClick={onClose} />
-      <div className="absolute end-0 top-[calc(100%+8px)] z-[60] w-[12.5rem] max-w-[70vw] origin-top-end animate-pop overflow-hidden rounded-xl border border-gold-400/30 bg-white p-1.5 text-wine shadow-[0_12px_32px_-8px_rgba(94,70,54,0.35)] ring-1 ring-wine/5">
-        {/* الهوية — مدمجة */}
-        <div className="flex items-center gap-2.5 rounded-lg bg-wine/[0.04] p-2">
-          <Avatar user={user} size="h-9 w-9" />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-bold leading-tight text-wine">{user.name}</p>
-            <span className={`mt-0.5 inline-flex items-center gap-1 rounded-full px-1.5 py-px text-[10px] font-bold ${pill.cls}`}>
-              <span className="h-1 w-1 rounded-full bg-current" /> {pill.text}
-            </span>
+      <div className="absolute end-0 top-[calc(100%+8px)] z-[60] w-[13rem] max-w-[72vw] origin-top-end animate-pop overflow-hidden rounded-2xl border border-gold-400/30 bg-white text-wine shadow-[0_16px_40px_-10px_rgba(94,70,54,0.45)]">
+        {/* رأس فخم بتدرّج خمري + لمعة ذهبية */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-wine to-wine-dark px-3 py-3 text-cream">
+          <span aria-hidden className="pointer-events-none absolute -end-5 -top-6 h-16 w-16 rounded-full bg-gold-400/25 blur-2xl" />
+          <div className="relative flex items-center gap-2.5">
+            <span className="shrink-0 rounded-full p-[2px] ring-1 ring-gold-300/60"><Avatar user={user} size="h-9 w-9" /></span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[13px] font-bold leading-tight text-cream">{user.name}</p>
+              <span className={`mt-1 inline-flex items-center gap-1 rounded-full px-1.5 py-px text-[10px] font-bold ${pill.cls}`}>
+                <span className="h-1 w-1 rounded-full bg-current" /> {pill.text}
+              </span>
+            </div>
           </div>
         </div>
+        <div className="h-px bg-gradient-to-r from-transparent via-gold-400/45 to-transparent" />
 
-        <div className="my-1 h-px bg-wine/10" />
-        {!isAdmin && store?.slug && <MenuRow to={`/store/${store.slug}`} onClick={onClose} Icon={StoreIcon} label={t('nav.openStore')} />}
-        {isAdmin && <MenuRow to="/shop" onClick={onClose} Icon={StoreIcon} label={t('nav.home')} />}
-        <MenuRow to="/dashboard" onClick={onClose} Icon={GridIcon} label={t('dashboard.title')} />
-        <MenuRow to="/dashboard?tab=profile" onClick={onClose} Icon={UserLineIcon} label={t('dashboard.profile')} />
-        <div className="my-1 h-px bg-wine/10" />
-        <button
-          onClick={() => { onClose(); onLogout(); }}
-          className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-[13px] font-bold text-red-600 transition hover:bg-red-500/10"
-        >
-          <LogoutIcon className="h-[17px] w-[17px] shrink-0" /> {t('nav.logout')}
-        </button>
+        <div className="p-1.5">
+          {!isAdmin && store?.slug && <MenuRow to={`/store/${store.slug}`} onClick={onClose} Icon={StoreIcon} label={t('nav.openStore')} />}
+          {isAdmin && <MenuRow to="/shop" onClick={onClose} Icon={StoreIcon} label={t('nav.home')} />}
+          <MenuRow to="/dashboard" onClick={onClose} Icon={GridIcon} label={t('dashboard.title')} />
+          <MenuRow to="/dashboard?tab=profile" onClick={onClose} Icon={UserLineIcon} label={t('dashboard.profile')} />
+          <div className="my-1 h-px bg-wine/10" />
+          <button
+            onClick={() => { onClose(); onLogout(); }}
+            className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-[13px] font-bold text-red-600 transition hover:bg-red-500/10"
+          >
+            <LogoutIcon className="h-[17px] w-[17px] shrink-0" /> {t('nav.logout')}
+          </button>
+        </div>
       </div>
     </>
   );
