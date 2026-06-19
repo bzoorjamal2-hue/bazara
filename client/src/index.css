@@ -343,8 +343,8 @@ html.dark .theme-pub .app-navbar {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
 }
+/* شريط الإعلانات يمشي دائماً — لا نوقفه مع "تقليل الحركة" بـiOS وإلا يختفي بالجوال */
 .animate-marquee { animation: marquee 20s linear infinite; }
-@media (prefers-reduced-motion: reduce) { .animate-marquee { animation: none; } }
 
 /* انزلاق درج من اليسار (للوضع الإنجليزي LTR) */
 @keyframes slide-in-left {
