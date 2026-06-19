@@ -22,7 +22,9 @@ export default function Layout({ children }) {
   const isAuthFull = ['/login', '/register', '/forgot-password', '/reset'].includes(pathname);
   const hideChrome = isStorePage || isAppWelcome || isAuthFull;
   // شريط التنقّل السفلي يظهر داخل التطبيق المثبّت على كل الصفحات (بما فيها المتجر) عدا الترحيب/الدخول
-  const showBottomNav = isStandalone() && !isAppWelcome && !isAuthFull;
+  // الشريط السفلي: داخل التطبيق المثبّت + متصفّح الجوال (شاشة صغيرة) — لا يظهر على الكمبيوتر
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const showBottomNav = (isStandalone() || isMobile) && !isAppWelcome && !isAuthFull;
 
   return (
     <div className="app-bg theme-pub flex min-h-screen flex-col">
