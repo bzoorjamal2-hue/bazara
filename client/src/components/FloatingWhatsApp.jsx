@@ -1,16 +1,13 @@
 import { WhatsAppIcon } from './icons.jsx';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
-import { isStandalone } from '../utils/pwa.js';
 
-// زر واتساب عائم (يظهر في صفحات المتجر العامة)
+// زر واتساب عائم (يظهر في صفحات المتجر العامة) — مرفوع فوق الشريط السفلي دائماً
 export default function FloatingWhatsApp({ number, message = '' }) {
   if (!number) return null;
-  // داخل التطبيق المثبّت يظهر شريط تنقّل سفلي → نرفع الزر فوقه بمسافة مريحة كي لا يبدو لاصقاً به
-  const raised = isStandalone();
   return (
     <div
       className="fixed end-5 z-40 h-14 w-14 wa-bob"
-      style={{ bottom: raised ? 'calc(env(safe-area-inset-bottom, 0px) + 96px)' : 'calc(env(safe-area-inset-bottom, 0px) + 22px)' }}
+      style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 96px)' }}
     >
       {/* حلقتان نابضتان تجذبان الانتباه */}
       <span className="absolute inset-0 rounded-full bg-[#25d366] opacity-60 animate-ping" />
