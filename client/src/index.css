@@ -49,6 +49,29 @@ img, video, canvas {
 table { max-width: 100%; }
 .break-anywhere { overflow-wrap: anywhere; word-break: break-word; }
 
+/* ===== لمسات فخامة عامة (Luxury polish) — تنطبق على كل الموقع ===== */
+/* 1+4: لمعان ذهبي يمرّ على الأزرار الأساسية عند المرور */
+.btn-primary, .theme-pub .btn-primary { position: relative; overflow: hidden; }
+.btn-primary::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.45) 50%, transparent 65%);
+  transform: translateX(-160%); transition: transform 0.8s ease;
+}
+.btn-primary:hover::after { transform: translateX(160%); }
+/* 3: عناوين أرقى بتباعد حروف خفيف */
+.font-display { letter-spacing: 0.012em; }
+/* 5: بطاقات أنعم — ارتفاع وظل لطيف عند المرور (إحساس راقٍ) */
+.theme-pub .glass { transition: box-shadow 0.35s ease, transform 0.35s ease; }
+.theme-pub a.glass:hover, .theme-pub button.glass:hover { transform: translateY(-3px); box-shadow: 0 16px 38px -14px rgba(94, 70, 54, 0.26); }
+/* 1: حركة ظهور أنعم للعناصر */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-fade-up { animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1); }
+}
+/* 4: حدّ ذهبي رفيع فاخر تحت الشريط العلوي */
+.app-navbar { border-bottom: 1px solid rgba(199, 154, 58, 0.22); }
+/* 6: تلميع الوضع الليلي — تباين أدفأ للبطاقات */
+html.dark .theme-pub .glass { box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5); }
+
 /* هامش سفلي موثوق يضمن عدم تغطية الشريط السفلي للمحتوى (يشمل منطقة الأمان) */
 .pb-bottomnav {
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 6.5rem);
