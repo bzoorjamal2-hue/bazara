@@ -330,7 +330,9 @@ function AnnouncementBar({ text }) {
   // قياس وبلا فراغ/اختفاء. مجموعتان متطابقتان + translateX(-50%) = التفاف سلس متصل.
   const reps = Math.max(1, Math.ceil(12 / items.length));
   const groupCount = reps * items.length;
-  const dur = Math.max(18, groupCount * 2); // ثوانٍ — سرعة شبه ثابتة
+  // المدة تتناسب مع طول النص الكلي → سرعة طبيعية ثابتة مهما طال الإعلان أو قصُر
+  const charLen = items.join('  ').length || 8;
+  const dur = Math.min(140, Math.max(28, reps * charLen * 0.5));
   const Group = ({ hidden }) => (
     <div className="flex shrink-0 items-center" aria-hidden={hidden}>
       {Array.from({ length: groupCount }).map((_, k) => (
