@@ -19,19 +19,40 @@ function SparkleIcon({ className = '' }) {
   );
 }
 
+// حفظ محادثة منفصلة لكل متجر (عزل تام + استرجاع فوري) — بمفتاح السلَگ
+const HKEY = (slug) => `bz_stylist_${slug}`;
+const MAX_SENT = 8; // آخر رسائل تُرسل للخادم (توفير توكن)
+function loadHistory(slug) {
+  if (!slug) return [];
+  try { const r = JSON.parse(localStorage.getItem(HKEY(slug)) || '[]'); return Array.isArray(r) ? r : []; }
+  catch { return []; }
+}
+function saveHistory(slug, msgs) {
+  if (!slug) return;
+  try { localStorage.setItem(HKEY(slug), JSON.stringify(msgs.slice(-20))); } catch { /* تجاوز الحصّة */ }
+}
+
 export default function StylistChat({ store, whatsapp = '' }) {
   const { t, i18n } = useTranslation();
   const rtl = i18n.language !== 'en';
   const [open, setOpen] = useState(false);
-  const [disabled, setDisabled] = useState(false); // أُطفئت الميزة على الخادم (لا مفتاح)
+  const [disabled, setDisabled] = useState(false); // أُطفئت الميزة على الخادم (نادر)
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [messages, setMessages] = useState([]); // {role, content, products?}
+  const [messages, setMessages] = useState(() => loadHistory(store?.slug)); // {role, content, products?}
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
+  const slugRef = useRef(store?.slug);
 
   useScrollLock(open);
+
+  // تبديل المتجر → نحمّل محادثة هذا المتجر فقط (لا تشابك بين المتاجر)
+  useEffect(() => {
+    slugRef.current = store?.slug;
+    setMessages(loadHistory(store?.slug));
+    setError(''); setInput('');
+  }, [store?.slug]);
 
   // تمرير لأسفل عند كل رسالة جديدة أو أثناء التفكير
   useEffect(() => {
@@ -41,28 +62,36 @@ export default function StylistChat({ store, whatsapp = '' }) {
   if (disabled || !store?.slug) return null;
 
   const send = async (text) => {
+    const slug = store.slug; // نثبّت المتجر الحالي لهذا الطلب
     const content = (text ?? input).trim();
     if (!content || busy) return;
     setError('');
     setInput('');
     const next = [...messages, { role: 'user', content }];
     setMessages(next);
+    saveHistory(slug, next);
     setBusy(true);
     try {
-      const payload = next.map((m) => ({ role: m.role, content: m.content }));
-      const { data } = await api.post('/public/assistant', { store: store.slug, messages: payload });
-      setMessages((cur) => [...cur, { role: 'assistant', content: data.reply, products: data.products || [] }]);
+      const payload = next.slice(-MAX_SENT).map((m) => ({ role: m.role, content: m.content }));
+      const { data } = await api.post('/public/assistant', { store: slug, messages: payload });
+      if (slugRef.current !== slug) return; // غادرت لمتجر آخر أثناء الطلب → نتجاهل
+      setMessages((cur) => {
+        const m = [...cur, { role: 'assistant', content: data.reply, products: data.products || [] }];
+        saveHistory(slug, m);
+        return m;
+      });
     } catch (e) {
+      if (slugRef.current !== slug) return;
       if (e?.response?.status === 503 && e.response.data?.disabled) {
-        setDisabled(true); // أُطفئت — نخفي الميزة بهدوء
-        setOpen(false);
-        return;
+        setDisabled(true); setOpen(false); return;
       }
       setError(getErrorMessage(e, t('assistant.error')));
     } finally {
-      setBusy(false);
+      if (slugRef.current === slug) setBusy(false);
     }
   };
+
+  const clearChat = () => { setMessages([]); saveHistory(store.slug, []); setError(''); };
 
   const chips = ['occasion', 'everyday', 'gift', 'trending'];
 
@@ -100,6 +129,19 @@ export default function StylistChat({ store, whatsapp = '' }) {
                 <p className="truncate font-display text-base font-bold leading-tight">{t('assistant.title')}</p>
                 <p className="truncate text-xs text-cream/70">{t('assistant.subtitle')}</p>
               </div>
+              {messages.length > 0 && (
+                <button
+                  type="button"
+                  onClick={clearChat}
+                  aria-label={t('assistant.newChat')}
+                  title={t('assistant.newChat')}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cream/15 text-cream transition hover:bg-cream/25"
+                >
+                  <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" />
+                  </svg>
+                </button>
+              )}
               <CloseButton variant="cream" size="h-10 w-10" onClick={() => setOpen(false)} />
             </header>
 

@@ -9,9 +9,15 @@ import { activeStoreSql } from '../utils/subscription.js';
 //   3) ANTHROPIC_API_KEY → Claude (أرقى جودة).
 // المفاتيح تبقى على الخادم ولا تصل المتصفّح. لو فشل مزوّد الذكاء نسقط للقواعد تلقائياً.
 
-const MAX_PRODUCTS = 60; // سقف الكتالوج (يوازن الجودة/التكلفة)
-const MAX_MESSAGES = 12;  // سقف رسائل المحادثة
-const TOP_N = 6;          // عدد القطع المقترحة كحدّ أقصى
+const MAX_PRODUCTS = 60;   // سقف الكتالوج الكامل (للمحرّك المجاني — بلا توكنات)
+const AI_CATALOG = 40;     // سقف الكتالوج المُمرَّر للذكاء (أقل توكنات)
+const MAX_MESSAGES = 10;   // سقف رسائل المحادثة المخزّنة
+const AI_HISTORY = 6;      // آخر رسائل تُرسل للذكاء (توفير توكن)
+const TOP_N = 6;           // عدد القطع المقترحة كحدّ أقصى
+const CATALOG_TTL = 3 * 60 * 1000; // كاش الكتالوج لكل متجر (يقلّل ضغط القاعدة)
+
+// كاش كتالوج بالذاكرة لكل متجر — معزول تماماً بمفتاح السلَگ (لا تشابك بين المتاجر)
+const catalogCache = new Map(); // slug -> { rows, ts }
 
 const CATALOG_SELECT = `
   SELECT p.id, p.name, p.description, p.category, p.price, p.old_price, p.sale_ends_at,
@@ -74,6 +80,41 @@ const COLOR_WORDS = {
   بني: ['بني', 'brown'], رمادي: ['رمادي', 'gray', 'grey'],
   بنفسجي: ['بنفسجي', 'موف', 'purple', 'lilac'], اصفر: ['اصفر', 'yellow'],
 };
+
+// كلمات التحية والشكر (دردشة بلا نيّة شراء)
+const GREET_WORDS = ['مرحبا', 'مرحبتين', 'هلا', 'اهلا', 'اهلين', 'السلام', 'سلام', 'صباح', 'مساء', 'هاي', 'هلو', 'كيفك', 'شلونك', 'شخبارك', 'وينك', 'hi', 'hello', 'hey', 'yo'];
+const THANKS_WORDS = ['شكرا', 'شكرن', 'مشكوره', 'مشكور', 'يسلمو', 'تسلمي', 'يعطيك', 'ثانكس', 'thanks', 'thank', 'thx'];
+const INTENT_WORDS = ['رخيص', 'ارخص', 'اقتصادي', 'ميزانيه', 'فخم', 'فخامه', 'راقي', 'غالي', 'فاخر', 'عرض', 'عروض', 'خصم', 'تخفيض', 'تنزيلات', 'مقاس', 'نمره', 'لون', 'cheap', 'budget', 'affordable', 'luxury', 'elegant', 'sale', 'offer', 'discount', 'size', 'color', 'colour'];
+
+// هل في النصّ أي إشارة شراء (فئة/مناسبة/لون/سعر/مقاس)؟
+function hasShoppingIntent(q) {
+  const all = [
+    ...Object.values(CAT_WORDS).flat(),
+    ...Object.values(OCCASION_CAT).flatMap((o) => o.words),
+    ...Object.values(COLOR_WORDS).flat(),
+    ...INTENT_WORDS,
+  ];
+  return all.some((w) => q.includes(normalizeAr(w)));
+}
+
+// تصنيف الدردشة: تحية/شكر فقط إن لم تتضمّن أي نيّة شراء
+function smalltalkType(text) {
+  const q = normalizeAr(text);
+  if (hasShoppingIntent(q)) return null;
+  if (GREET_WORDS.some((w) => q.includes(normalizeAr(w)))) return 'greet';
+  if (THANKS_WORDS.some((w) => q.includes(normalizeAr(w)))) return 'thanks';
+  return null;
+}
+
+function smalltalkReply(type, lang) {
+  const en = lang === 'en';
+  if (type === 'thanks') {
+    return en ? "You're most welcome 🌷 Happy to help anytime. Want me to suggest something else?"
+              : 'العفو حبيبتي 🌷 دايماً بالخدمة. بتحبي أرشّحلك شي ثاني؟';
+  }
+  return en ? "Hello and welcome 🌷 I'm your style assistant — tell me the occasion or the kind of piece you're after and I'll find the best options for you."
+            : 'أهلاً وسهلاً فيكِ 🌷 أنا مساعِدة الأناقة — قوليلي عن أي مناسبة أو نوع قطعة بتدوّري عليها وأرشّحلك أحلى الخيارات.';
+}
 
 export function ruleBasedRecommend(rows, lastUserMsg, lang) {
   const q = normalizeAr(lastUserMsg);
@@ -152,7 +193,7 @@ export function ruleBasedRecommend(rows, lastUserMsg, lang) {
 // ───────────────────── الطبقة الذكية (اختيارية) ─────────────────────
 function catalogLine(p) {
   const price = Number(p.price);
-  const desc = (p.description || '').replace(/\s+/g, ' ').trim().slice(0, 120);
+  const desc = (p.description || '').replace(/\s+/g, ' ').trim().slice(0, 80);
   const parts = [`id:${p.id}`, `الاسم:${p.name}`, `الفئة:${p.category}`,
     onSale(p) ? `السعر:${price} (كان ${Number(p.old_price)} — عرض)` : `السعر:${price}`];
   if (p.color) parts.push(`الألوان:${p.color}`);
@@ -177,7 +218,7 @@ ${rows.map(catalogLine).join('\n')}`;
 
 async function callClaude(system, messages, validIds) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 45000);
+  const timer = setTimeout(() => controller.abort(), 15000);
   try {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -216,7 +257,7 @@ async function callGemini(system, messages, validIds) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`;
   const contents = messages.map((m) => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] }));
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 45000);
+  const timer = setTimeout(() => controller.abort(), 15000);
   try {
     const r = await fetch(url, {
       method: 'POST',
@@ -267,38 +308,53 @@ export async function chatAssistant(req, res, next) {
     return res.status(400).json({ error: 'أرسلي رسالة أولاً.' });
   }
 
+  const lastUser = messages[messages.length - 1].content;
+  const lang = hasArabic(lastUser) ? 'ar' : 'en';
+
+  // تحية/شكر بلا نيّة شراء → ردّ ودّي فوري بلا منتجات (بلا قاعدة بيانات ولا توكنات)
+  const chat = smalltalkType(lastUser);
+  if (chat) return res.json({ reply: smalltalkReply(chat, lang), products: [] });
+
   try {
     const active = activeStoreSql('u');
     const storeRes = await query(`SELECT s.id, s.name FROM stores s JOIN users u ON u.id = s.user_id WHERE s.slug = $1 AND ${active}`, [slug]);
     const store = storeRes.rows[0];
     if (!store) return res.status(404).json({ error: 'المتجر غير موجود.' });
 
-    const prodRes = await query(
-      `${CATALOG_SELECT} WHERE p.store_id = $1 ORDER BY p.featured DESC, p.created_at DESC LIMIT ${MAX_PRODUCTS}`,
-      [store.id]
-    );
-    const rows = prodRes.rows;
+    // كتالوج المتجر من الكاش (معزول بالسلَگ) — يقلّل ضغط القاعدة
+    let cached = catalogCache.get(slug);
+    if (!cached || Date.now() - cached.ts > CATALOG_TTL) {
+      const prodRes = await query(
+        `${CATALOG_SELECT} WHERE p.store_id = $1 ORDER BY p.featured DESC, p.created_at DESC LIMIT ${MAX_PRODUCTS}`,
+        [store.id]
+      );
+      cached = { rows: prodRes.rows, ts: Date.now() };
+      catalogCache.set(slug, cached);
+    }
+    const rows = cached.rows;
     if (rows.length === 0) {
       return res.json({ reply: 'لسّا ما في قطع معروضة بهالمتجر. تابعينا قريباً 🌷', products: [] });
     }
 
     const validIds = new Set(rows.map((p) => String(p.id)));
-    const lastUser = [...messages].reverse().find((m) => m.role === 'user')?.content || '';
-    const lang = hasArabic(lastUser) ? 'ar' : 'en';
+    // سياق المحرّك المجاني: آخر رسالتين للزبونة (يحافظ على الفئة عند متابعة بلون/مقاس)
+    const recentUserText = messages.filter((m) => m.role === 'user').slice(-2).map((m) => m.content).join(' ');
 
     // اختيار المزوّد حسب المتوفّر، مع السقوط للقواعد عند أي فشل
     let result;
     try {
+      const aiRows = rows.slice(0, AI_CATALOG);            // كتالوج أصغر للذكاء = توكنات أقل
+      const aiMessages = messages.slice(-AI_HISTORY);       // آخر رسائل فقط = توكنات أقل
       if (process.env.ANTHROPIC_API_KEY) {
-        result = await callClaude(systemPrompt(store.name, rows), messages, validIds);
+        result = await callClaude(systemPrompt(store.name, aiRows), aiMessages, validIds);
       } else if (process.env.GEMINI_API_KEY) {
-        result = await callGemini(systemPrompt(store.name, rows), messages, validIds);
+        result = await callGemini(systemPrompt(store.name, aiRows), aiMessages, validIds);
       } else {
-        result = ruleBasedRecommend(rows, lastUser, lang);
+        result = ruleBasedRecommend(rows, recentUserText, lang);
       }
     } catch (aiErr) {
       console.error('⚠️ مزوّد الذكاء فشل، نسقط للقواعد:', aiErr.message);
-      result = ruleBasedRecommend(rows, lastUser, lang);
+      result = ruleBasedRecommend(rows, recentUserText, lang);
     }
 
     const { reply, ids } = result;
