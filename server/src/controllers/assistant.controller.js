@@ -168,24 +168,47 @@ export function ruleBasedRecommend(rows, lastUserMsg, lang) {
     return { p, score };
   });
 
+  // دوال مطابقة دقيقة للون/الفئة على مستوى القطعة
+  const itemColor = (p) => {
+    if (!wantedColors.length) return false;
+    const col = normalizeAr(p.color);
+    return wantedColors.some((c) => col.includes(c) || COLOR_WORDS[c].some((w) => col.includes(normalizeAr(w))));
+  };
+  const itemCat = (p) => wantedCats.has(p.category);
+
+  const askedColor = wantedColors.length > 0;
+  const askedCat = wantedCats.size > 0;
+
   let picks = scored.filter((s) => s.score > 0).sort((a, b) => b.score - a.score);
-  // لا شيء طابق → أبرز القطع (مميّزة ثم الأحدث، المتوفّر أولاً)
+
+  // أولوية صارمة: نطابق اللون و/أو الفئة المطلوبة فعلياً، فلا نعرض لوناً/نوعاً غلط كأنه مطابق
+  const both = picks.filter((s) => itemColor(s.p) && itemCat(s.p));
+  const colorOnly = picks.filter((s) => itemColor(s.p));
+  const catOnly = picks.filter((s) => itemCat(s.p));
+  if (askedColor && askedCat && both.length) picks = both;
+  else if (askedColor && colorOnly.length) picks = colorOnly;
+  else if (askedCat && catOnly.length) picks = catOnly;
+
+  // لا شيء طابق إطلاقاً → أبرز القطع (مميّزة ثم المتوفّر أولاً)
   if (picks.length === 0) {
-    picks = scored.sort((a, b) => (b.p.featured - a.p.featured) || (a.p.stock === 0 ? 1 : -1));
+    picks = [...scored].sort((a, b) => (b.p.featured - a.p.featured) || (a.p.stock === 0 ? 1 : -1));
   }
   const ids = picks.slice(0, TOP_N).map((s) => String(s.p.id));
 
-  // رسالة دافئة بحسب ما فُهم
-  const matched = wantedCats.size || occasionCats.size || wantedColors.length || wantSale;
+  // رسالة صادقة بحسب ما أمكن تلبيته فعلاً (لا ندّعي مطابقة غير موجودة)
+  const colorMissing = askedColor && colorOnly.length === 0;
+  const catMissing = askedCat && catOnly.length === 0;
   let reply;
   if (en) {
-    reply = matched
-      ? 'Here are pieces I think suit what you described 🌷 Want me to refine by color, size or budget?'
-      : "Here are some of our standout pieces 🌷 Tell me the occasion, a color, or your budget and I'll narrow it down.";
+    if (colorMissing) reply = "I couldn't find that exact color 🌷 here are the closest pieces — or try another color, or message the store.";
+    else if (catMissing) reply = "We don't have that exact type right now 🌷 here are the closest pieces you might like.";
+    else if (askedColor || askedCat || occasionCats.size || wantSale) reply = 'Here are pieces that match what you asked for 🌷 want me to refine by size or budget?';
+    else reply = "Here are some of our standout pieces 🌷 tell me the occasion, a color, or your budget and I'll narrow it down.";
   } else {
-    reply = matched
-      ? 'اخترتلك هالقطع اللي بتناسب طلبك 🌷 إذا بتحبي حدّديلي اللون أو المقاس أو ميزانيتك وبضبّطلك أكثر.'
-      : 'تفضّلي أبرز القطع عنا 🌷 قوليلي المناسبة أو لون أو ميزانيتك وبرشّحلك بدقة أكبر.';
+    if (colorMissing) reply = 'ما لقيت قطع باللون اللي طلبتيه بالضبط 🌷 بس هاي أقرب الخيارات — جرّبي لون ثاني أو راسلي المتجر.';
+    else if (catMissing) reply = 'ما عندنا قطع من هالنوع حالياً 🌷 بس هاي أقرب القطع اللي ممكن تعجبك.';
+    else if (askedColor || askedCat || occasionCats.size || wantSale) reply = 'اخترتلك هالقطع اللي بتناسب طلبك 🌷 إذا بتحبي حدّديلي المقاس أو ميزانيتك وبضبّطلك أكثر.';
+    else reply = 'تفضّلي أبرز القطع عنا 🌷 قوليلي المناسبة أو لون أو ميزانيتك وبرشّحلك بدقة أكبر.';
   }
   return { reply, ids };
 }
