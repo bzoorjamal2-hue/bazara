@@ -15,6 +15,7 @@ import subscriptionRoutes from './routes/subscription.routes.js';
 import orderRoutes from './routes/order.routes.js';
 import couponRoutes from './routes/coupon.routes.js';
 import stockRequestRoutes from './routes/stockRequest.routes.js';
+import referralRoutes from './routes/referral.routes.js';
 import pushRoutes from './routes/push.routes.js';
 import siteRoutes from './routes/site.routes.js';
 import { robots, sitemap, indexNowKey } from './controllers/seo.controller.js';
@@ -85,6 +86,7 @@ app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/stock-requests', stockRequestRoutes);
+app.use('/api/referrals', referralRoutes);
 app.use('/api/push', pushRoutes);
 app.use('/api/site', siteRoutes);
 
@@ -166,6 +168,21 @@ async function ensureColumns() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );`);
     await pool.query('CREATE INDEX IF NOT EXISTS idx_stockreq_store ON stock_requests(store_id);');
+    // نظام الإحالة: نسبة خصم الزبونة الجديدة لكل متجر + جدول أكواد الإحالة + ربط الطلب بالكود
+    await pool.query('ALTER TABLE stores ADD COLUMN IF NOT EXISTS referral_percent NUMERIC(5,2) DEFAULT 0;');
+    await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS referral_code VARCHAR(20) DEFAULT '';");
+    await pool.query(`CREATE TABLE IF NOT EXISTS referrals (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+      code VARCHAR(20) NOT NULL,
+      phone VARCHAR(40) NOT NULL,
+      name VARCHAR(80) DEFAULT '',
+      uses INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      UNIQUE (store_id, code),
+      UNIQUE (store_id, phone)
+    );`);
+    await pool.query('CREATE INDEX IF NOT EXISTS idx_referrals_store ON referrals(store_id);');
     // اشتراكات إشعارات الدفع (Web Push) لكل مستخدم/جهاز
     await pool.query(`CREATE TABLE IF NOT EXISTS push_subscriptions (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

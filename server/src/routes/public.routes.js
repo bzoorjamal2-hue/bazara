@@ -4,6 +4,7 @@ import { getHomeData, getStoreBySlug, getStoreCheckout, getProductById, getByCat
 import { validateCoupon } from '../controllers/coupon.controller.js';
 import { createStockRequest } from '../controllers/stockRequest.controller.js';
 import { chatAssistant } from '../controllers/assistant.controller.js';
+import { createReferral, validateReferral } from '../controllers/referral.controller.js';
 import { handleValidation, reviewRules } from '../middleware/validate.js';
 import rateLimit from 'express-rate-limit';
 
@@ -39,5 +40,7 @@ router.post('/coupon/validate', validateCoupon);
 router.post('/track', trackOrders);
 router.post('/stock-request', reviewLimiter, createStockRequest);
 router.post('/assistant', assistantLimiter, chatAssistant);
+router.post('/referral', reviewLimiter, createReferral);
+router.get('/referral/:code', validateReferral);
 
 export default router;

@@ -622,3 +622,10 @@ html.dark .theme-pub .text-orange-700 { color: #fdba74; }
 html.dark .theme-pub .text-amber-500,
 html.dark .theme-pub .text-amber-600,
 html.dark .theme-pub .text-amber-700 { color: #fcd34d; }
+/* الأزرق السماوي/النيلي (شارات حالة الطلب بصفحة تتبّعي طلبك) → فاتح ليُقرأ ليلاً */
+html.dark .theme-pub .text-sky-500,
+html.dark .theme-pub .text-sky-600,
+html.dark .theme-pub .text-sky-700 { color: #7dd3fc; }
+html.dark .theme-pub .text-indigo-500,
+html.dark .theme-pub .text-indigo-600,
+html.dark .theme-pub .text-indigo-700 { color: #a5b4fc; }
