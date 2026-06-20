@@ -14,12 +14,15 @@ export default function PullToRefresh() {
 
   useEffect(() => {
     if (!isStandalone()) return undefined;
+    // قفل التمرير (نافذة/درج مفتوح) يجعل body ثابتاً position:fixed — عندها نعطّل
+    // سحب-التحديث كي لا ينطلق أثناء التمرير داخل المنبثقة فيغلقها بإعادة التحميل.
+    const isLocked = () => document.body.style.position === 'fixed';
     const onStart = (e) => {
-      if (window.scrollY > 0 || refreshing) { startY.current = null; return; }
+      if (window.scrollY > 0 || refreshing || isLocked()) { startY.current = null; return; }
       startY.current = e.touches[0].clientY;
     };
     const onMove = (e) => {
-      if (startY.current == null || refreshing) return;
+      if (startY.current == null || refreshing || isLocked()) return;
       const dy = e.touches[0].clientY - startY.current;
       if (dy > 0 && window.scrollY <= 0) {
         const d = Math.min(MAX, dy * 0.5); // مقاومة لطيفة

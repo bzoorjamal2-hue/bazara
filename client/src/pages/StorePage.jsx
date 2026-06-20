@@ -380,10 +380,9 @@ function AnnouncementBar({ text }) {
   );
 
   return (
-    <div className="relative -mx-4 mb-5 overflow-hidden border-y border-gold-400/40 bg-gradient-to-r from-[#f5ead6] via-[#efe1c6] to-[#f5ead6] py-2.5 shadow-sm sm:-mx-6">
+    <div dir="ltr" className="relative -mx-4 mb-5 overflow-hidden border-y border-gold-400/40 bg-gradient-to-r from-[#f5ead6] via-[#efe1c6] to-[#f5ead6] py-2.5 shadow-sm sm:-mx-6">
       <div
         className="flex w-max animate-marquee"
-        dir="ltr"
         style={{ animationDuration: `${dur}s`, animationDirection: rtl ? 'reverse' : 'normal' }}
       >
         <Group />
