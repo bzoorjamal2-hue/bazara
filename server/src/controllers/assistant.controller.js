@@ -72,13 +72,16 @@ const OCCASION_CAT = {
 
 // ألوان (مرادفات) → كلمة قياسية تُطابَق مع نص لون المنتج
 const COLOR_WORDS = {
-  اسود: ['اسود', 'سوداء', 'black'], ابيض: ['ابيض', 'بيضاء', 'white'],
-  احمر: ['احمر', 'حمراء', 'red'], وردي: ['وردي', 'زهري', 'روز', 'pink', 'rose'],
-  ازرق: ['ازرق', 'زرقاء', 'blue'], كحلي: ['كحلي', 'نيلي', 'navy'],
-  اخضر: ['اخضر', 'خضراء', 'green', 'زيتي', 'olive'], بيج: ['بيج', 'جملي', 'beige', 'nude'],
+  اسود: ['اسود', 'سوداء', 'black'], ابيض: ['ابيض', 'بيضاء', 'white', 'اوف وايت', 'off white'],
+  احمر: ['احمر', 'حمراء', 'red'], وردي: ['وردي', 'زهري', 'روز', 'بينك', 'pink', 'rose'],
+  ازرق: ['ازرق', 'زرقاء', 'blue', 'سماوي', 'لبني', 'sky'], كحلي: ['كحلي', 'نيلي', 'navy'],
+  اخضر: ['اخضر', 'خضراء', 'green', 'زيتي', 'olive'], بيج: ['بيج', 'جملي', 'beige', 'nude', 'نهدي', 'نود'],
   ذهبي: ['ذهبي', 'gold', 'golden'], فضي: ['فضي', 'silver'],
-  بني: ['بني', 'brown'], رمادي: ['رمادي', 'gray', 'grey'],
-  بنفسجي: ['بنفسجي', 'موف', 'purple', 'lilac'], اصفر: ['اصفر', 'yellow'],
+  بني: ['بني', 'brown', 'كافيه', 'بنّي'], رمادي: ['رمادي', 'gray', 'grey', 'شاركول', 'charcoal', 'رصاصي'],
+  بنفسجي: ['بنفسجي', 'موف', 'purple', 'lilac', 'ليلكي'], اصفر: ['اصفر', 'yellow'],
+  خمري: ['خمري', 'عنابي', 'نبيتي', 'maroon', 'burgundy', 'wine'],
+  برتقالي: ['برتقالي', 'orange', 'مشمشي'], تركوازي: ['تركواز', 'تركوازي', 'turquoise', 'teal'],
+  كريمي: ['كريمي', 'عاجي', 'cream', 'ivory'], فوشي: ['فوشي', 'فوشيا', 'fuchsia', 'magenta'],
 };
 
 // كلمات التحية والشكر (دردشة بلا نيّة شراء)
@@ -150,7 +153,7 @@ export function ruleBasedRecommend(rows, lastUserMsg, lang) {
     if (occasionCats.has(cat)) score += 3;
 
     if (wantedColors.length) {
-      const col = normalizeAr(p.color);
+      const col = normalizeAr(`${p.color} ${p.name} ${p.description || ''}`);
       if (wantedColors.some((c) => col.includes(c) || COLOR_WORDS[c].some((w) => col.includes(normalizeAr(w))))) score += 5;
     }
     if (wantSale && onSale(p)) score += 5;
@@ -169,9 +172,10 @@ export function ruleBasedRecommend(rows, lastUserMsg, lang) {
   });
 
   // دوال مطابقة دقيقة للون/الفئة على مستوى القطعة
+  // نقرأ اللون من حقل اللون + اسم المنتج + وصفه (مثل "ترانش كوت خمري")
   const itemColor = (p) => {
     if (!wantedColors.length) return false;
-    const col = normalizeAr(p.color);
+    const col = normalizeAr(`${p.color} ${p.name} ${p.description || ''}`);
     return wantedColors.some((c) => col.includes(c) || COLOR_WORDS[c].some((w) => col.includes(normalizeAr(w))));
   };
   const itemCat = (p) => wantedCats.has(p.category);
