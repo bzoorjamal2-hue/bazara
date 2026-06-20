@@ -345,8 +345,18 @@ export async function chatAssistant(req, res, next) {
   const lastUser = messages[messages.length - 1].content;
   const lang = hasArabic(lastUser) ? 'ar' : 'en';
 
-  // تحية/شكر بلا نيّة شراء → ردّ ودّي فوري بلا منتجات (بلا قاعدة بيانات ولا توكنات)
-  const chat = smalltalkType(lastUser);
+  // البحث بالصورة (اختياري) — تُصغَّر بالمتصفح قبل الإرسال لتوفير التوكن
+  const image = typeof req.body.image === 'string' ? req.body.image.trim() : '';
+  let imgMatch = null;
+  if (image) {
+    imgMatch = image.match(/^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/);
+    if (!imgMatch || image.length > 700000) {
+      return res.status(400).json({ error: 'الصورة غير صالحة أو كبيرة. جرّبي صورة أصغر.' });
+    }
+  }
+
+  // تحية/شكر بلا نيّة شراء (وبلا صورة) → ردّ ودّي فوري بلا منتجات (بلا قاعدة بيانات ولا توكنات)
+  const chat = !image && smalltalkType(lastUser);
   if (chat) return res.json({ reply: smalltalkReply(chat, lang), products: [] });
 
   try {
@@ -378,17 +388,36 @@ export async function chatAssistant(req, res, next) {
     let result;
     try {
       const aiRows = rows.slice(0, AI_CATALOG);            // كتالوج أصغر للذكاء = توكنات أقل
-      const aiMessages = messages.slice(-AI_HISTORY);       // آخر رسائل فقط = توكنات أقل
+      let aiMessages = messages.slice(-AI_HISTORY);         // آخر رسائل فقط = توكنات أقل
+      let sys = systemPrompt(store.name, aiRows);
+
+      if (image) {
+        // البحث بالصورة (Claude vision): نرفق الصورة بآخر رسالة + تعليمات تحليل
+        sys += '\n\nالزبونة أرسلت صورة لقطعة تريد شبيهها. حلّلي الصورة (القصّة، النوع، الستايل، اللون) واقترحي أقرب القطع تشابهاً من الكتالوج، واذكري باختصار لماذا تشبهها.';
+        const lastIdx = aiMessages.length - 1;
+        aiMessages = aiMessages.map((m, i) => (i === lastIdx
+          ? { role: 'user', content: [
+              { type: 'image', source: { type: 'base64', media_type: imgMatch[1], data: imgMatch[2] } },
+              { type: 'text', text: m.content || 'دوّريلي على أقرب قطعة شبيهة لهالصورة من منتجات هذا المتجر.' },
+            ] }
+          : m));
+      }
+
       if (process.env.ANTHROPIC_API_KEY) {
-        result = await callClaude(systemPrompt(store.name, aiRows), aiMessages, validIds);
-      } else if (process.env.GEMINI_API_KEY) {
-        result = await callGemini(systemPrompt(store.name, aiRows), aiMessages, validIds);
+        result = await callClaude(sys, aiMessages, validIds);
+      } else if (process.env.GEMINI_API_KEY && !image) {
+        result = await callGemini(sys, aiMessages, validIds);
+      } else if (image) {
+        // لا مزوّد يدعم الرؤية متاح → نطلب وصفاً نصّياً بدل الصورة
+        result = { reply: 'ميزة البحث بالصورة بحاجة لتفعيل الذكاء. بالوقت الحالي اوصفيلي القطعة (نوعها/لونها) وأرشّحلك 🌷', ids: [] };
       } else {
         result = ruleBasedRecommend(rows, recentUserText, lang);
       }
     } catch (aiErr) {
       console.error('⚠️ مزوّد الذكاء فشل، نسقط للقواعد:', aiErr.message);
-      result = ruleBasedRecommend(rows, recentUserText, lang);
+      result = image
+        ? { reply: 'تعذّر تحليل الصورة الآن، اوصفيلي القطعة وأرشّحلك 🌷', ids: [] }
+        : ruleBasedRecommend(rows, recentUserText, lang);
     }
 
     const { reply, ids } = result;

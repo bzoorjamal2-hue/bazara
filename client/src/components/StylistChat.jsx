@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { useTheme } from '../context/ThemeContext.jsx';
+import { resizeImageFile } from '../utils/image.js';
 import CloseButton from './CloseButton.jsx';
 import ProductCard from './ProductCard.jsx';
 
@@ -30,7 +31,11 @@ function loadHistory(slug) {
 }
 function saveHistory(slug, msgs) {
   if (!slug) return;
-  try { localStorage.setItem(HKEY(slug), JSON.stringify(msgs.slice(-20))); } catch { /* تجاوز الحصّة */ }
+  // نُسقط الصور من التخزين (كبيرة) — تبقى للعرض في الجلسة الحالية فقط
+  try {
+    const slim = msgs.slice(-20).map(({ image, ...m }) => m); // eslint-disable-line no-unused-vars
+    localStorage.setItem(HKEY(slug), JSON.stringify(slim));
+  } catch { /* تجاوز الحصّة */ }
 }
 
 export default function StylistChat({ store, whatsapp = '' }) {
@@ -42,9 +47,11 @@ export default function StylistChat({ store, whatsapp = '' }) {
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [messages, setMessages] = useState(() => loadHistory(store?.slug)); // {role, content, products?}
+  const [messages, setMessages] = useState(() => loadHistory(store?.slug)); // {role, content, products?, image?}
+  const [pendingImage, setPendingImage] = useState(''); // صورة مختارة للبحث بالصورة
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
+  const fileRef = useRef(null);
   const slugRef = useRef(store?.slug);
 
   useScrollLock(open);
@@ -63,19 +70,24 @@ export default function StylistChat({ store, whatsapp = '' }) {
 
   if (disabled || !store?.slug) return null;
 
-  const send = async (text) => {
+  const send = async (text, imgArg) => {
     const slug = store.slug; // نثبّت المتجر الحالي لهذا الطلب
+    const img = imgArg ?? pendingImage;
     const content = (text ?? input).trim();
-    if (!content || busy) return;
+    if ((!content && !img) || busy) return;
     setError('');
     setInput('');
-    const next = [...messages, { role: 'user', content }];
+    setPendingImage('');
+    const shownText = content || t('assistant.photoQuery');
+    const next = [...messages, { role: 'user', content: shownText, image: img || undefined }];
     setMessages(next);
     saveHistory(slug, next);
     setBusy(true);
     try {
       const payload = next.slice(-MAX_SENT).map((m) => ({ role: m.role, content: m.content }));
-      const { data } = await api.post('/public/assistant', { store: slug, messages: payload });
+      const body = { store: slug, messages: payload };
+      if (img) body.image = img;
+      const { data } = await api.post('/public/assistant', body);
       if (slugRef.current !== slug) return; // غادرت لمتجر آخر أثناء الطلب → نتجاهل
       setMessages((cur) => {
         const m = [...cur, { role: 'assistant', content: data.reply, products: data.products || [] }];
@@ -90,6 +102,18 @@ export default function StylistChat({ store, whatsapp = '' }) {
       setError(getErrorMessage(e, t('assistant.error')));
     } finally {
       if (slugRef.current === slug) setBusy(false);
+    }
+  };
+
+  // اختيار صورة للبحث بالصورة — تُصغَّر إلى 512px لتوفير التوكن
+  const pickImage = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      setPendingImage(await resizeImageFile(file, { maxSize: 512, quality: 0.7 }));
+    } catch {
+      setError(t('assistant.error'));
     }
   };
 
@@ -161,7 +185,7 @@ export default function StylistChat({ store, whatsapp = '' }) {
 
               {messages.map((m, i) => (
                 <div key={i} className="space-y-3">
-                  <Bubble role={m.role}>{m.content}</Bubble>
+                  <Bubble role={m.role} image={m.image}>{m.content}</Bubble>
                   {m.role === 'assistant' && m.products && m.products.length > 0 && (
                     <div>
                       <p className="sc-muted mb-2 px-1 text-xs font-semibold">{t('assistant.suggestions')}</p>
@@ -205,27 +229,61 @@ export default function StylistChat({ store, whatsapp = '' }) {
             {/* صف الإدخال — مثبّت أسفل اللوحة مع هامش آمن */}
             <form
               onSubmit={(e) => { e.preventDefault(); send(); }}
-              className="sc-row flex shrink-0 items-center gap-2 border-t px-3 py-3"
+              className="sc-row flex shrink-0 flex-col gap-2 border-t px-3 py-3"
               style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.75rem)' }}
             >
-              <input
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder={t('assistant.placeholder')}
-                className="sc-input min-w-0 flex-1 rounded-full border px-4 py-2.5 outline-none transition focus:border-gold-400 focus:ring-2 focus:ring-gold-300/40"
-                disabled={busy}
-              />
-              <button
-                type="submit"
-                disabled={busy || !input.trim()}
-                aria-label={t('assistant.send')}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-wine text-cream shadow-md transition hover:bg-[#7a2540] disabled:opacity-40"
-              >
-                <svg viewBox="0 0 24 24" className={`h-5 w-5 ${rtl ? 'scale-x-[-1]' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z" />
-                </svg>
-              </button>
+              {/* معاينة الصورة المختارة للبحث بالصورة */}
+              {pendingImage && (
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <img src={pendingImage} alt="" className="h-14 w-14 rounded-lg object-cover ring-1 ring-gold-400/40" />
+                    <button
+                      type="button"
+                      onClick={() => setPendingImage('')}
+                      aria-label={t('image.remove')}
+                      className="absolute -end-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-wine text-cream shadow"
+                    >
+                      <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
+                    </button>
+                  </div>
+                  <span className="sc-muted text-xs">{t('assistant.photoReady')}</span>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2">
+                <input ref={fileRef} type="file" accept="image/*" onChange={pickImage} className="hidden" />
+                {/* زر البحث بالصورة */}
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  aria-label={t('assistant.photo')}
+                  title={t('assistant.photo')}
+                  className="sc-chip flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition disabled:opacity-40"
+                  disabled={busy}
+                >
+                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M3 8.5A1.5 1.5 0 0 1 4.5 7h2l1.2-1.8A1 1 0 0 1 8.5 4.7h7a1 1 0 0 1 .8.5L17.5 7h2A1.5 1.5 0 0 1 21 8.5v9A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5z" /><circle cx="12" cy="12.5" r="3.2" />
+                  </svg>
+                </button>
+                <input
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder={t('assistant.placeholder')}
+                  className="sc-input min-w-0 flex-1 rounded-full border px-4 py-2.5 outline-none transition focus:border-gold-400 focus:ring-2 focus:ring-gold-300/40"
+                  disabled={busy}
+                />
+                <button
+                  type="submit"
+                  disabled={busy || (!input.trim() && !pendingImage)}
+                  aria-label={t('assistant.send')}
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-wine text-cream shadow-md transition hover:bg-[#7a2540] disabled:opacity-40"
+                >
+                  <svg viewBox="0 0 24 24" className={`h-5 w-5 ${rtl ? 'scale-x-[-1]' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z" />
+                  </svg>
+                </button>
+              </div>
             </form>
           </div>
         </div>,
@@ -235,8 +293,8 @@ export default function StylistChat({ store, whatsapp = '' }) {
   );
 }
 
-// فقاعة رسالة — الزبونة خمرية بالجهة، المساعِدة بطاقة بيضاء
-function Bubble({ role, children }) {
+// فقاعة رسالة — الزبونة خمرية بالجهة، المساعِدة بطاقة بيضاء. تعرض صورة البحث إن وُجدت.
+function Bubble({ role, image, children }) {
   const isUser = role === 'user';
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
@@ -247,6 +305,7 @@ function Bubble({ role, children }) {
             : 'sc-bubble-ai rounded-es-md border shadow-sm'
         }`}
       >
+        {image && <img src={image} alt="" className="mb-2 max-h-40 w-full rounded-lg object-cover" />}
         {children}
       </div>
     </div>
