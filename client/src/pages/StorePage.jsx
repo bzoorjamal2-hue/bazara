@@ -395,7 +395,7 @@ function WelcomePopup({ store }) {
         <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-wine/10 text-3xl">🎁</div>
         <h3 className="font-display text-xl font-bold text-wine">{t('store.welcomeTitle')}</h3>
         <p className="mt-3 whitespace-pre-line text-[15px] leading-relaxed text-wine/80">{store.welcomeOffer}</p>
-        <button onClick={() => setOpen(false)} className="mt-5 w-full rounded-2xl bg-gradient-to-r from-wine to-wine-dark py-3 font-bold text-cream shadow-lg transition hover:brightness-110">
+        <button onClick={() => setOpen(false)} className="mt-5 w-full rounded-2xl bg-gradient-to-r from-[#e6c878] via-[#d4af37] to-[#c79a3a] py-3 font-bold text-[#3f2e22] shadow-lg transition hover:brightness-105">
           {t('store.welcomeCta')}
         </button>
       </div>
