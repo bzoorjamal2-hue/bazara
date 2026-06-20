@@ -26,6 +26,7 @@ const SECTIONS = [
   { key: 'myProducts', icon: '🧺' },
   { key: 'myOrders', icon: '🧾' },
   { key: 'coupons', icon: '🎟️' },
+  { key: 'referrals', icon: '🎁' },
   { key: 'stockRequests', icon: '🔔' },
 ];
 
