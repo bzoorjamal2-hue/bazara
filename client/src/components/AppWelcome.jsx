@@ -125,8 +125,8 @@ export default function AppWelcome() {
           variants={rise}
           to="/shop"
           whileTap={{ scale: 0.97 }}
-          className="block w-full rounded-2xl py-4 text-center font-bold text-wine-dark shadow-xl"
-          style={{ background: 'linear-gradient(135deg, #f7ecd2 0%, #F4EDE2 50%, #e6c878 100%)' }}
+          className="block w-full rounded-2xl py-4 text-center font-bold shadow-xl"
+          style={{ background: 'linear-gradient(135deg, #f7ecd2 0%, #F4EDE2 50%, #e6c878 100%)', color: '#3f2e22' }}
         >
           🛍️ {t('appWelcome.browse')}
         </MLink>

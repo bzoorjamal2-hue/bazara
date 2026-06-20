@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import useScrollLock from '../hooks/useScrollLock.js';
+import { useTheme } from '../context/ThemeContext.jsx';
 import CloseButton from './CloseButton.jsx';
 import ProductCard from './ProductCard.jsx';
 
@@ -34,6 +35,7 @@ function saveHistory(slug, msgs) {
 
 export default function StylistChat({ store, whatsapp = '' }) {
   const { t, i18n } = useTranslation();
+  const { dark } = useTheme();
   const rtl = i18n.language !== 'en';
   const [open, setOpen] = useState(false);
   const [disabled, setDisabled] = useState(false); // أُطفئت الميزة على الخادم (نادر)
@@ -116,10 +118,10 @@ export default function StylistChat({ store, whatsapp = '' }) {
       </div>
 
       {open && createPortal(
-        <div className="fixed inset-0 z-[80] flex items-end justify-center" role="dialog" aria-modal="true" aria-label={t('assistant.title')}>
+        <div className={`sc fixed inset-0 z-[80] flex items-end justify-center ${dark ? 'sc-dark' : ''}`} role="dialog" aria-modal="true" aria-label={t('assistant.title')}>
           <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={() => setOpen(false)} />
 
-          <div className="relative mx-auto flex max-h-[88vh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl bg-cream shadow-2xl sm:mb-4 sm:rounded-3xl">
+          <div className="sc-panel relative mx-auto flex max-h-[88vh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl shadow-2xl sm:mb-4 sm:rounded-3xl">
             {/* رأس أنيق: أيقونة ذهبية + عنوان + إغلاق */}
             <header className="flex shrink-0 items-center gap-3 border-b border-gold-400/25 bg-gradient-to-l from-wine to-[#7a2540] px-4 py-3 text-cream">
               <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gold-300/20 text-gold-200 ring-1 ring-gold-300/40">
@@ -155,7 +157,7 @@ export default function StylistChat({ store, whatsapp = '' }) {
                   <Bubble role={m.role}>{m.content}</Bubble>
                   {m.role === 'assistant' && m.products && m.products.length > 0 && (
                     <div>
-                      <p className="mb-2 px-1 text-xs font-semibold text-wine/70">{t('assistant.suggestions')}</p>
+                      <p className="sc-muted mb-2 px-1 text-xs font-semibold">{t('assistant.suggestions')}</p>
                       <div className="grid grid-cols-2 gap-3">
                         {m.products.map((p, j) => (
                           <ProductCard key={p.id} product={p} index={j} whatsapp={whatsapp} />
@@ -167,7 +169,7 @@ export default function StylistChat({ store, whatsapp = '' }) {
               ))}
 
               {busy && (
-                <div className="flex items-center gap-2 px-1 text-sm text-wine/70">
+                <div className="sc-muted flex items-center gap-2 px-1 text-sm">
                   <Dots /> {t('assistant.thinking')}
                 </div>
               )}
@@ -184,7 +186,7 @@ export default function StylistChat({ store, whatsapp = '' }) {
                       key={c}
                       type="button"
                       onClick={() => send(t(`assistant.chips.${c}`))}
-                      className="rounded-full border border-wine/25 bg-white/70 px-3.5 py-1.5 text-sm text-wine transition hover:bg-wine hover:text-cream"
+                      className="sc-chip rounded-full border px-3.5 py-1.5 text-sm transition"
                     >
                       {t(`assistant.chips.${c}`)}
                     </button>
@@ -196,7 +198,7 @@ export default function StylistChat({ store, whatsapp = '' }) {
             {/* صف الإدخال — مثبّت أسفل اللوحة مع هامش آمن */}
             <form
               onSubmit={(e) => { e.preventDefault(); send(); }}
-              className="flex shrink-0 items-center gap-2 border-t border-wine/10 bg-cream px-3 py-3"
+              className="sc-row flex shrink-0 items-center gap-2 border-t px-3 py-3"
               style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.75rem)' }}
             >
               <input
@@ -204,7 +206,7 @@ export default function StylistChat({ store, whatsapp = '' }) {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={t('assistant.placeholder')}
-                className="min-w-0 flex-1 rounded-full border border-wine/20 bg-white px-4 py-2.5 text-wine outline-none transition focus:border-gold-400 focus:ring-2 focus:ring-gold-300/40"
+                className="sc-input min-w-0 flex-1 rounded-full border px-4 py-2.5 outline-none transition focus:border-gold-400 focus:ring-2 focus:ring-gold-300/40"
                 disabled={busy}
               />
               <button
@@ -235,7 +237,7 @@ function Bubble({ role, children }) {
         className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
           isUser
             ? 'rounded-ee-md bg-wine text-cream'
-            : 'rounded-es-md border border-wine/10 bg-white text-stone-700 shadow-sm'
+            : 'sc-bubble-ai rounded-es-md border shadow-sm'
         }`}
       >
         {children}
