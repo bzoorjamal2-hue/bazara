@@ -13,12 +13,14 @@ import FeaturesBar from '../components/FeaturesBar.jsx';
 import CatThumb from '../components/CatThumb.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
 import StylistChat from '../components/StylistChat.jsx';
+import ShareEarnModal from '../components/ShareEarnModal.jsx';
 import CloseButton from '../components/CloseButton.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
 import { SIZES, sizeLabel } from '../utils/sizes.js';
 import { getCache, setCache } from '../utils/apiCache.js';
+import { saveRef } from '../utils/referral.js';
 
 const PAGE_SIZE = 8;
 const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
@@ -37,6 +39,7 @@ export default function StorePage() {
   const [offersOnly, setOffersOnly] = useState(false);
   const [openSheet, setOpenSheet] = useState(null); // 'sort' | 'size' | 'offers'
   const [page, setPage] = useState(1);
+  const [shareOpen, setShareOpen] = useState(false); // نافذة شاركي واربحي
 
   // الفئة و"عرض الكل" جزء من الرابط (search params) كي يحفظهما زرّ الرجوع:
   // تختار فئة ← تدخل منتج ← ترجع → ترجع لنفس الفئة وموضعها (بدل القفز للرئيسية).
@@ -67,6 +70,18 @@ export default function StorePage() {
   }, [slug, t]);
 
   useEffect(() => setPage(1), [cat, q, sort, sizesSel, offersOnly]);
+
+  // التقاط كود الإحالة من الرابط (?ref=CODE) وحفظه للمتجر، ثم تنظيف الرابط
+  useEffect(() => {
+    const ref = searchParams.get('ref');
+    if (ref && slug) {
+      saveRef(slug, ref);
+      const sp = new URLSearchParams(searchParams);
+      sp.delete('ref');
+      setSearchParams(sp, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug]);
 
   const filtered = useMemo(() => {
     if (!data) return [];
@@ -236,7 +251,7 @@ export default function StorePage() {
       <FeaturesBar />
 
       {/* فوتر المتجر بأيقونات تواصل مربوطة بحسابات المشترك */}
-      <StoreFooter store={store} wa={wa} />
+      <StoreFooter store={store} wa={wa} onShare={() => setShareOpen(true)} />
 
       {/* النوافذ السفلية للفلاتر */}
       {openSheet === 'sort' && (
@@ -251,6 +266,7 @@ export default function StorePage() {
 
       <FloatingWhatsApp number={wa} />
       <StylistChat store={store} whatsapp={wa} />
+      {shareOpen && <ShareEarnModal store={store} onClose={() => setShareOpen(false)} />}
     </>
   );
 }
@@ -263,7 +279,7 @@ const SORT_LABEL = {
 };
 
 // فوتر المتجر: أيقونات تواصل مربوطة بحسابات المشترك
-function StoreFooter({ store, wa }) {
+function StoreFooter({ store, wa, onShare }) {
   const { t, i18n } = useTranslation();
   const ltr = i18n.language === 'en';
   const ig = store.instagram ? `https://instagram.com/${store.instagram.replace(/^@/, '')}` : '';
@@ -312,6 +328,23 @@ function StoreFooter({ store, wa }) {
             <path d={ltr ? 'M9 6l6 6-6 6' : 'M15 6l-6 6 6 6'} />
           </svg>
         </Link>
+        {/* شاركي واربحي — يظهر فقط إن فعّل المتجر برنامج الإحالة */}
+        {Number(store.referralPercent) > 0 && (
+          <button
+            type="button"
+            onClick={onShare}
+            className="group mx-auto mt-3 flex w-full max-w-sm items-center gap-3 rounded-2xl border border-cream/30 px-5 py-3.5 text-start text-cream transition hover:-translate-y-0.5 hover:bg-cream/10"
+          >
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-cream/15 text-xl" aria-hidden="true">🎁</span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-display text-base font-bold leading-tight">{t('referral.shareTitle')}</span>
+              <span className="block truncate text-xs text-cream/70">{t('referral.shareDesc', { percent: Number(store.referralPercent) })}</span>
+            </span>
+            <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0 text-cream/60 transition group-hover:text-cream" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d={ltr ? 'M9 6l6 6-6 6' : 'M15 6l-6 6 6 6'} />
+            </svg>
+          </button>
+        )}
         <div className="mx-auto mt-7 h-px max-w-md bg-cream/15" />
         <p className="mt-5 text-xs text-cream/60">© {new Date().getFullYear()} {store.name} — {t('footer.rights')}</p>
       </div>

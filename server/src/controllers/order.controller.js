@@ -203,15 +203,32 @@ export async function createCodOrder(req, res, next) {
       if (ev.ok) { discount = ev.discount; appliedCoupon = cr.rows[0].code; }
     }
 
+    // خصم الإحالة (فقط إن لم يُطبَّق كوبون — لا نجمع خصمين): يُحسب على الخادم من نسبة المتجر
+    let referralCode = '';
+    if (!appliedCoupon) {
+      const refIn = String(req.body?.referralCode || '').trim().toUpperCase().slice(0, 20);
+      if (refIn) {
+        const sr = await query('SELECT referral_percent FROM stores WHERE id = $1', [storeId]);
+        const percent = Number(sr.rows[0]?.referral_percent || 0);
+        if (percent > 0) {
+          const rf = await query('SELECT code FROM referrals WHERE store_id = $1 AND code = $2', [storeId, refIn]);
+          if (rf.rows.length) {
+            discount = Math.min(subtotal, Math.round((subtotal * percent) / 100 * 100) / 100);
+            referralCode = rf.rows[0].code;
+          }
+        }
+      }
+    }
+
     const total = Math.max(0, subtotal - discount) + deliveryFee;
     const reference = 'BZ-' + crypto.randomBytes(5).toString('hex').toUpperCase();
 
     const ins = await query(
-      `INSERT INTO orders (store_id, customer_name, customer_email, customer_phone, items, total, currency, status, reference, city, address, notes, delivery_fee, coupon_code, discount)
-       VALUES ($1, $2, '', $3, $4, $5, 'ILS', 'new', $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
+      `INSERT INTO orders (store_id, customer_name, customer_email, customer_phone, items, total, currency, status, reference, city, address, notes, delivery_fee, coupon_code, discount, referral_code)
+       VALUES ($1, $2, '', $3, $4, $5, 'ILS', 'new', $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`,
       [storeId, name, phone, JSON.stringify(orderItems), total, reference,
         (customer?.city || '').trim(), (customer?.address || '').trim(), (customer?.notes || '').trim().slice(0, 500), deliveryFee,
-        appliedCoupon, discount]
+        appliedCoupon, discount, referralCode]
     );
 
     // ملاحظة: لا نخصم المخزون ولا نرفع عدّاد الكوبون عند الإنشاء —
@@ -240,7 +257,7 @@ export async function updateOrderStatus(req, res, next) {
     if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
 
     const cur = await query(
-      'SELECT items, stock_applied, coupon_code FROM orders WHERE id = $1 AND store_id = $2',
+      'SELECT items, stock_applied, coupon_code, referral_code FROM orders WHERE id = $1 AND store_id = $2',
       [id, store.id]
     );
     const order = cur.rows[0];
@@ -258,13 +275,19 @@ export async function updateOrderStatus(req, res, next) {
       if (order.coupon_code) {
         await query('UPDATE coupons SET used_count = used_count + 1 WHERE store_id = $1 AND code = $2', [store.id, order.coupon_code]);
       }
+      if (order.referral_code) {
+        await query('UPDATE referrals SET uses = uses + 1 WHERE store_id = $1 AND code = $2', [store.id, order.referral_code]);
+      }
       stockApplied = true;
     }
-    // إلغاء/إرجاع طلب سبق خصمه → نعيد المخزون وعدّاد الكوبون
+    // إلغاء/إرجاع طلب سبق خصمه → نعيد المخزون وعدّاد الكوبون/الإحالة
     else if (!shouldApply && wasApplied) {
       await restoreStock(order.items);
       if (order.coupon_code) {
         await query('UPDATE coupons SET used_count = GREATEST(0, used_count - 1) WHERE store_id = $1 AND code = $2', [store.id, order.coupon_code]);
+      }
+      if (order.referral_code) {
+        await query('UPDATE referrals SET uses = GREATEST(0, uses - 1) WHERE store_id = $1 AND code = $2', [store.id, order.referral_code]);
       }
       stockApplied = false;
     }

@@ -10,6 +10,7 @@ import StoreSettings from './dashboard/StoreSettings.jsx';
 import ProductsManager from './dashboard/ProductsManager.jsx';
 import OrdersManager from './dashboard/OrdersManager.jsx';
 import CouponsManager from './dashboard/CouponsManager.jsx';
+import ReferralsManager from './dashboard/ReferralsManager.jsx';
 import AnalyticsManager from './dashboard/AnalyticsManager.jsx';
 import StockRequestsManager from './dashboard/StockRequestsManager.jsx';
 import AdminRequests from './dashboard/AdminRequests.jsx';
@@ -73,6 +74,7 @@ export default function Dashboard() {
         {section === 'myProducts' && !isAdmin && <ProductsManager onCount={setProductsCount} />}
         {section === 'myOrders' && !isAdmin && <OrdersManager />}
         {section === 'coupons' && !isAdmin && <CouponsManager />}
+        {section === 'referrals' && !isAdmin && <ReferralsManager />}
         {section === 'stockRequests' && !isAdmin && <StockRequestsManager />}
         {section === 'subscribers' && isAdmin && <SubscribersManager />}
         {section === 'admin' && isAdmin && <AdminRequests />}

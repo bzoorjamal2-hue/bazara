@@ -42,6 +42,7 @@ export default function StoreSettings() {
           banners: Array.isArray(s.banners) && s.banners.length ? s.banners : DEFAULT_BANNERS,
           deliveryZones: Array.isArray(s.deliveryZones) ? s.deliveryZones : [],
           freeShippingOver: s.freeShippingOver ? String(s.freeShippingOver) : '',
+          referralPercent: s.referralPercent ? String(s.referralPercent) : '',
           sizeChart: s.sizeChart && typeof s.sizeChart === 'object' ? s.sizeChart : {},
           returnPolicy: s.returnPolicy || '',
           announcement: s.announcement || '',
@@ -217,6 +218,16 @@ export default function StoreSettings() {
               <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-stone-400">₪</span>
             </div>
             <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.freeShippingHint')}</p>
+          </div>
+
+          {/* برنامج الإحالة: نسبة خصم الزبونة الجديدة (0 = معطّل) */}
+          <div className="border-t border-white/5 pt-3">
+            <label className="label">🎁 {t('dashboard.store.referralPercent')}</label>
+            <div className="relative w-40">
+              <input className="input pe-8" type="number" min="0" max="90" step="1" placeholder="0" value={form.referralPercent} onChange={set('referralPercent')} />
+              <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-stone-400">%</span>
+            </div>
+            <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.referralHint')}</p>
           </div>
         </div>
 

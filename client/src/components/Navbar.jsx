@@ -179,6 +179,7 @@ export default function Navbar() {
         { key: 'myProducts', label: t('dashboard.myProducts'), Icon: BagIcon },
         { key: 'myOrders', label: t('dashboard.myOrders'), Icon: ReceiptIcon },
         { key: 'coupons', label: t('dashboard.coupons.title'), Icon: TicketIcon },
+        { key: 'referrals', label: t('dashboard.referrals.title'), Icon: UserLineIcon },
         { key: 'stockRequests', label: t('dashboard.stockRequests.title'), Icon: BellIcon },
       ];
 

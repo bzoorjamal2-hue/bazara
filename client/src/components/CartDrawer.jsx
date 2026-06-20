@@ -8,6 +8,7 @@ import Select from './Select.jsx';
 import CloseButton from './CloseButton.jsx';
 import api from '../api/client.js';
 import { sizeLabel } from '../utils/sizes.js';
+import { getRef, clearRef } from '../utils/referral.js';
 
 // مناطق التوصيل ورسومها (قابلة للتعديل): مدن الضفة 20₪ · القدس 35₪ · مدن الداخل 70₪
 const AREAS = [
@@ -61,6 +62,7 @@ export default function CartDrawer() {
   const [placing, setPlacing] = useState(false); // جارٍ حفظ الطلب
   const [storeZones, setStoreZones] = useState(null); // مناطق المتجر المخصّصة (إن وُجدت)
   const [freeOver, setFreeOver] = useState(0); // شحن مجاني فوق هذا المبلغ (0 = معطّل)
+  const [referral, setReferral] = useState(null); // { code, percent, referrerName } خصم إحالة تلقائي
   useScrollLock(open);
 
   const storeSlug = items[0]?.storeSlug || '';
@@ -79,6 +81,19 @@ export default function CartDrawer() {
       .catch(() => { setStoreZones([]); setFreeOver(0); });
   }, [open, storeSlug]);
 
+  // خصم الإحالة التلقائي: إن وصلت الزبونة عبر رابط إحالة محفوظ لهذا المتجر
+  useEffect(() => {
+    if (!open || !storeSlug) { return; }
+    const code = getRef(storeSlug);
+    if (!code) { setReferral(null); return; }
+    api.get(`/public/referral/${encodeURIComponent(code)}?store=${encodeURIComponent(storeSlug)}`)
+      .then((r) => {
+        if (r.data.valid) setReferral({ code: r.data.code, percent: Number(r.data.percent) || 0, referrerName: r.data.referrerName || '' });
+        else { setReferral(null); clearRef(storeSlug); }
+      })
+      .catch(() => setReferral(null));
+  }, [open, storeSlug]);
+
   if (!open) return null;
 
   const close = () => { setOpen(false); setView('cart'); setErr(''); };
@@ -87,7 +102,11 @@ export default function CartDrawer() {
     ? storeZones.map((z) => ({ name: z.name, fee: Number(z.fee) || 0 }))
     : AREAS.map((a) => ({ name: ar ? a.ar : a.en, fee: a.fee }));
   const cityOpt = areaList.find((z) => z.name === cust.city);
-  const discount = coupon ? coupon.discount : 0;
+  // خصم الإحالة (يُحسب من نسبة المتجر) — يُطبَّق فقط إن لم يُستخدم كوبون (لا نجمع خصمين)
+  const refDiscount = (!coupon && referral && referral.percent > 0)
+    ? Math.round((total * referral.percent) / 100 * 100) / 100
+    : 0;
+  const discount = coupon ? coupon.discount : refDiscount;
   const afterDiscount = Math.max(0, total - discount);
   const freeShip = freeOver > 0 && afterDiscount >= freeOver;
   const delivery = freeShip ? 0 : (cityOpt ? cityOpt.fee : 0);
@@ -124,7 +143,8 @@ export default function CartDrawer() {
     if (placing) return;
     setErr('');
     const wa = items[0]?.whatsapp || '';
-    const waLink = buildWhatsappCheckout(wa, items, { ...cust, delivery, discount, couponCode: coupon?.code || '' }, i18n.language);
+    const activeCode = coupon?.code || (refDiscount > 0 ? referral?.code : '') || '';
+    const waLink = buildWhatsappCheckout(wa, items, { ...cust, delivery, discount, couponCode: activeCode }, i18n.language);
     // نفتح نافذة فارغة فوراً (ضمن لمسة المستخدم) كي لا تُحجب بعد الانتظار
     let waWin = null;
     try { waWin = window.open('', '_blank'); } catch { waWin = null; }
@@ -135,6 +155,7 @@ export default function CartDrawer() {
         items: items.map((i) => ({ id: i.id, qty: i.qty, size: i.size, color: i.color })),
         customer: { name: cust.name, phone: cust.phone, city: cust.city, address: cust.address, notes: cust.notes, deliveryFee: delivery },
         coupon: coupon ? { code: coupon.code } : undefined,
+        referralCode: (!coupon && refDiscount > 0) ? referral?.code : undefined,
       });
     } catch { /* تجاهل — نكمل لواتساب على أي حال */ }
     setPlacing(false);
@@ -235,6 +256,15 @@ export default function CartDrawer() {
                     </div>
                   </div>
 
+                  {/* خصم الإحالة التلقائي (إن وصلت عبر رابط إحالة ولم تستخدم كوبوناً) */}
+                  {!coupon && refDiscount > 0 && (
+                    <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 px-3.5 py-2.5 text-sm font-semibold text-emerald-700">
+                      🎁 {referral?.referrerName
+                        ? t('referral.welcomeFrom', { name: referral.referrerName, percent: referral.percent })
+                        : t('referral.welcome', { percent: referral.percent })}
+                    </div>
+                  )}
+
                   {/* كوبون الخصم */}
                   <div>
                     <h3 className="mb-2 text-sm font-bold text-wine">🎟️ {t('coupon.title')}</h3>
@@ -273,7 +303,10 @@ export default function CartDrawer() {
                       <div className="my-2 h-px bg-wine/10" />
                       <div className="flex justify-between text-stone-400"><span>{t('co.subtotal')}</span><span>{t('common.currency')}{total.toFixed(2)}</span></div>
                       {discount > 0 && (
-                        <div className="flex justify-between text-emerald-600"><span>{t('coupon.discount')} ({coupon.code})</span><span>−{t('common.currency')}{discount.toFixed(2)}</span></div>
+                        <div className="flex justify-between text-emerald-600">
+                          <span>{coupon ? `${t('coupon.discount')} (${coupon.code})` : t('referral.discountLine')}</span>
+                          <span>−{t('common.currency')}{discount.toFixed(2)}</span>
+                        </div>
                       )}
                       <div className="flex justify-between text-stone-400">
                         <span>{t('co.delivery')}</span>

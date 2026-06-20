@@ -35,6 +35,7 @@ function mapStorePublic(s) {
     banners: Array.isArray(s.banners) ? s.banners : [],
     deliveryZones: Array.isArray(s.delivery_zones) ? s.delivery_zones : [],
     freeShippingOver: Number(s.free_shipping_over || 0),
+    referralPercent: Number(s.referral_percent || 0),
     sizeChart: s.size_chart && typeof s.size_chart === 'object' ? s.size_chart : {},
     returnPolicy: s.return_policy || '',
     announcement: s.announcement || '',

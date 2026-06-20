@@ -23,6 +23,24 @@
     }
   },
   "footer": { "rights": "All rights reserved" },
+  "referral": {
+    "discountLine": "Referral discount",
+    "welcome": "Your {{percent}}% welcome discount is applied 🌷",
+    "welcomeFrom": "{{name}} invited you! Your {{percent}}% welcome discount is applied 🌷",
+    "fabLabel": "Share & earn",
+    "shareTitle": "Share & earn",
+    "shareDesc": "Share your personal link with friends — each friend who orders through it gets {{percent}}% off, and your referral count grows.",
+    "yourPhone": "Your number (to create your link)",
+    "yourName": "Your name (optional)",
+    "getLink": "Get my link",
+    "yourLink": "Your personal link",
+    "copy": "Copy",
+    "copied": "Copied ✓",
+    "shareWhatsapp": "Share on WhatsApp",
+    "shareMsg": "Shop at {{store}} and get a special discount 🌷 My link: {{link}}",
+    "disabled": "This store hasn't enabled the referral program yet.",
+    "uses": "successful referrals"
+  },
   "nav": {
     "home": "Home",
     "dashboard": "Dashboard",
@@ -231,6 +249,13 @@
       "empty": "No coupons yet. Create your first one to attract customers!",
       "deleteConfirm": "Delete this coupon?"
     },
+    "referrals": {
+      "title": "Referrals",
+      "subtitle": "Who brought new customers to your store — sorted by most referrals, so you can reward them.",
+      "totalReferred": "Total customers via referral",
+      "empty": "No referrals yet. Set a discount percentage in store settings so customers start sharing.",
+      "noName": "No name"
+    },
     "stockRequests": {
       "title": "Restock requests",
       "hint": "Customers who left their number for sold-out items — reach out when you restock.",
@@ -305,6 +330,8 @@
       "addZone": "Add zone",
       "freeShippingOver": "Free shipping over",
       "freeShippingHint": "Orders above this amount get free delivery (0 = off).",
+      "referralPercent": "New-customer referral discount",
+      "referralHint": "Discount a new customer gets when ordering via a referral link (0 = referral program off). A \"Share & earn\" button appears in your store when enabled.",
       "sizeChart": "Size guide",
       "sizeChartHint": "Enter bust/waist/hips (cm) per size. Leave empty to use the standard chart automatically.",
       "returnPolicy": "Returns & exchange policy",
