@@ -390,22 +390,23 @@ html.dark .theme-pub .app-navbar {
 }
 .animate-toast-top { animation: toast-top 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
 
-/* زر واتساب: ترنّح لطيف يجذب الانتباه + حلقة نابضة ثانية */
-@keyframes wa-bob {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  25% { transform: translateY(-4px) rotate(-3deg); }
-  50% { transform: translateY(0) rotate(0deg); }
-  75% { transform: translateY(-2px) rotate(3deg); }
+/* أزرار عائمة عصرية: طفو ناعم جداً + هالة ضوئية تتنفّس (بلا أشعة حادّة) */
+@keyframes fab-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
 }
-.wa-bob { animation: wa-bob 2.6s ease-in-out infinite; }
-@keyframes wa-pulse {
-  0% { transform: scale(1); opacity: 0.5; }
-  70% { transform: scale(1.9); opacity: 0; }
-  100% { transform: scale(1.9); opacity: 0; }
+.fab-float { animation: fab-float 4.5s ease-in-out infinite; }
+
+/* هالة ضوئية مموّهة خلف الزر تتنفّس بهدوء — مظهر فخم بدل الحلقات المتطايرة */
+@keyframes fab-aura {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.12); }
 }
-.wa-pulse { animation: wa-pulse 2.6s ease-out infinite; }
+.fab-aura { animation: fab-aura 4s ease-in-out infinite; }
+
 @media (prefers-reduced-motion: reduce) {
-  .wa-bob, .wa-pulse { animation: none; }
+  .fab-float, .fab-aura { animation: none; }
+  .fab-aura { opacity: 0.4; }
 }
 
 /* ============================================================= */

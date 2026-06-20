@@ -69,16 +69,22 @@ export default function StylistChat({ store, whatsapp = '' }) {
   return (
     <>
       {/* الزر العائم — على الجهة المقابلة للواتساب كي لا يتداخلا */}
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label={t('assistant.fab')}
-        className="fixed start-5 z-40 flex h-14 w-14 items-center justify-center rounded-full text-wine shadow-lg ring-2 ring-gold-300/60 transition-transform hover:scale-110 wa-bob"
-        style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 96px)', background: 'linear-gradient(135deg,#f7e7b8,#e9c66a)' }}
+      <div
+        className="fixed start-5 z-40 h-14 w-14 fab-float"
+        style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 96px)' }}
       >
-        <span className="absolute inset-0 rounded-full bg-gold-300/40 wa-pulse" />
-        <SparkleIcon className="relative h-7 w-7" />
-      </button>
+        {/* هالة ذهبية ناعمة تتنفّس خلف الزر */}
+        <span className="fab-aura pointer-events-none absolute -inset-1.5 rounded-full bg-gold-300 blur-lg" />
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label={t('assistant.fab')}
+          className="group relative flex h-14 w-14 items-center justify-center rounded-full text-wine ring-1 ring-white/40 transition-all duration-300 hover:scale-105 active:scale-95"
+          style={{ background: 'linear-gradient(150deg,#f9ecc4,#e3b94f)', boxShadow: '0 10px 26px -8px rgba(201,162,77,0.8)' }}
+        >
+          <SparkleIcon className="relative h-7 w-7 transition-transform duration-500 group-hover:rotate-[18deg] group-hover:scale-110" />
+        </button>
+      </div>
 
       {open && createPortal(
         <div className="fixed inset-0 z-[80] flex items-end justify-center" role="dialog" aria-modal="true" aria-label={t('assistant.title')}>
