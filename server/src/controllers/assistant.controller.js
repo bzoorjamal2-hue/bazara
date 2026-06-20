@@ -2,15 +2,17 @@ import { query } from '../config/db.js';
 import { mapProduct } from './product.controller.js';
 import { activeStoreSql } from '../utils/subscription.js';
 
-// مساعِدة التسوّق الذكية (Claude): تتكلّم مع الزبونة وترشّح لها قطعاً من منتجات
-// هذا المتجر فقط (grounding). المفتاح يبقى على الخادم ولا يصل المتصفّح أبداً.
+// مساعِدة التسوّق الذكية — ترشّح للزبونة قطعاً من منتجات هذا المتجر فقط (grounding).
+// تعمل بثلاث طبقات حسب المتوفّر، فلا تتعطّل أبداً وتشتغل مجاناً افتراضياً:
+//   1) بلا أي مفتاح → محرّك ترشيح بقواعد ذكية (مجاني للأبد، بلا حدود).
+//   2) GEMINI_API_KEY → ذكاء اصطناعي مجاني من Google.
+//   3) ANTHROPIC_API_KEY → Claude (أرقى جودة).
+// المفاتيح تبقى على الخادم ولا تصل المتصفّح. لو فشل مزوّد الذكاء نسقط للقواعد تلقائياً.
 
-const MODEL = process.env.ASSISTANT_MODEL || 'claude-sonnet-4-6';
-const API_URL = 'https://api.anthropic.com/v1/messages';
-const MAX_PRODUCTS = 60; // سقف الكتالوج المُمرَّر للنموذج (يوازن الجودة والتكلفة)
+const MAX_PRODUCTS = 60; // سقف الكتالوج (يوازن الجودة/التكلفة)
 const MAX_MESSAGES = 12;  // سقف رسائل المحادثة
+const TOP_N = 6;          // عدد القطع المقترحة كحدّ أقصى
 
-// أعمدة مختصرة كفاية لترشيح ذكي بلا تضخيم التوكنات
 const CATALOG_SELECT = `
   SELECT p.id, p.name, p.description, p.category, p.price, p.old_price, p.sale_ends_at,
          p.size, p.color, p.stock, p.featured,
@@ -20,19 +22,139 @@ const CATALOG_SELECT = `
   JOIN users u ON u.id = s.user_id
 `;
 
-// نص كتالوج مضغوط يقرأه النموذج — معرّف + اسم + فئة + سعر + لون/مقاس + توفّر + وصف مقتطع
+function onSale(p) {
+  const old = p.old_price != null ? Number(p.old_price) : null;
+  const ends = p.sale_ends_at ? new Date(p.sale_ends_at) : null;
+  return Boolean(ends && ends > new Date() && old && old > Number(p.price));
+}
+
+// ───────────────────── أدوات نصّية عربية ─────────────────────
+function normalizeAr(s) {
+  return String(s || '')
+    .toLowerCase()
+    .replace(/[ً-ْ]/g, '')       // إزالة التشكيل
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/ة/g, 'ه')
+    .replace(/ى/g, 'ي')
+    .replace(/ـ/g, '')                      // التطويل
+    .trim();
+}
+function hasArabic(s) { return /[؀-ۿ]/.test(String(s || '')); }
+
+// ───────────────────── محرّك القواعد (الطبقة المجانية) ─────────────────────
+const BUILTIN = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
+
+// مرادفات الفئات (عربي/إنجليزي) → مفتاح الفئة
+const CAT_WORDS = {
+  abaya: ['عبايه', 'عباءه', 'عباية', 'abaya', 'abayas'],
+  set: ['طقم', 'سيت', 'تنوره وبلوزه', 'set', 'co-ord', 'twopiece', 'two-piece'],
+  dress: ['فستان', 'فساتين', 'سهره', 'dress', 'dresses', 'gown'],
+  hijab: ['حجاب', 'طرحه', 'شيله', 'اسدال', 'خمار', 'hijab', 'scarf', 'veil'],
+  trench: ['ترنش', 'معطف', 'كوت', 'بالطو', 'trench', 'coat'],
+  jacket: ['جاكيت', 'جاكت', 'جكيت', 'بليزر', 'jacket', 'blazer'],
+  shirt: ['قميص', 'بلوزه', 'توب', 'shirt', 'blouse', 'top'],
+};
+
+// مناسبات → فئات مرجّحة
+const OCCASION_CAT = {
+  wedding: { words: ['عرس', 'زفاف', 'خطوبه', 'سهره', 'حفله', 'مناسبه', 'عيد', 'wedding', 'party', 'evening', 'engagement', 'gala'], cats: ['dress', 'abaya', 'set'] },
+  everyday: { words: ['يومي', 'كاجوال', 'مريح', 'بيت', 'casual', 'everyday', 'comfy', 'daily'], cats: ['shirt', 'set', 'jacket'] },
+  work: { words: ['شغل', 'دوام', 'عمل', 'مكتب', 'رسمي', 'work', 'office', 'formal'], cats: ['set', 'shirt', 'trench'] },
+  winter: { words: ['شتا', 'شتاء', 'برد', 'دفا', 'winter', 'cold'], cats: ['trench', 'jacket', 'abaya'] },
+  summer: { words: ['صيف', 'صيفي', 'حر', 'summer'], cats: ['dress', 'shirt', 'set'] },
+};
+
+// ألوان (مرادفات) → كلمة قياسية تُطابَق مع نص لون المنتج
+const COLOR_WORDS = {
+  اسود: ['اسود', 'سوداء', 'black'], ابيض: ['ابيض', 'بيضاء', 'white'],
+  احمر: ['احمر', 'حمراء', 'red'], وردي: ['وردي', 'زهري', 'روز', 'pink', 'rose'],
+  ازرق: ['ازرق', 'زرقاء', 'blue'], كحلي: ['كحلي', 'نيلي', 'navy'],
+  اخضر: ['اخضر', 'خضراء', 'green', 'زيتي', 'olive'], بيج: ['بيج', 'جملي', 'beige', 'nude'],
+  ذهبي: ['ذهبي', 'gold', 'golden'], فضي: ['فضي', 'silver'],
+  بني: ['بني', 'brown'], رمادي: ['رمادي', 'gray', 'grey'],
+  بنفسجي: ['بنفسجي', 'موف', 'purple', 'lilac'], اصفر: ['اصفر', 'yellow'],
+};
+
+export function ruleBasedRecommend(rows, lastUserMsg, lang) {
+  const q = normalizeAr(lastUserMsg);
+  const en = lang === 'en';
+
+  // كشف النيّة
+  const wantedCats = new Set();
+  for (const [cat, words] of Object.entries(CAT_WORDS)) {
+    if (words.some((w) => q.includes(normalizeAr(w)))) wantedCats.add(cat);
+  }
+  const occasionCats = new Set();
+  let occasionLabel = '';
+  for (const o of Object.values(OCCASION_CAT)) {
+    if (o.words.some((w) => q.includes(normalizeAr(w)))) {
+      o.cats.forEach((c) => occasionCats.add(c));
+      if (!occasionLabel) occasionLabel = o.words[0];
+    }
+  }
+  const wantedColors = [];
+  for (const [canon, words] of Object.entries(COLOR_WORDS)) {
+    if (words.some((w) => q.includes(normalizeAr(w)))) wantedColors.push(canon);
+  }
+  const wantCheap = ['رخيص', 'ارخص', 'اقتصادي', 'ميزانيه', 'بسيط', 'cheap', 'budget', 'affordable'].some((w) => q.includes(normalizeAr(w)));
+  const wantLux = ['فخم', 'فخامه', 'راقي', 'غالي', 'فاخر', 'luxury', 'elegant', 'premium'].some((w) => q.includes(normalizeAr(w)));
+  const wantSale = ['عرض', 'عروض', 'خصم', 'تخفيض', 'تنزيلات', 'sale', 'offer', 'discount'].some((w) => q.includes(normalizeAr(w)));
+
+  const maxPrice = Math.max(1, ...rows.map((p) => Number(p.price)));
+
+  const scored = rows.map((p) => {
+    let score = 0;
+    const cat = p.category;
+    if (wantedCats.has(cat)) score += 6;
+    if (occasionCats.has(cat)) score += 3;
+
+    if (wantedColors.length) {
+      const col = normalizeAr(p.color);
+      if (wantedColors.some((c) => col.includes(c) || COLOR_WORDS[c].some((w) => col.includes(normalizeAr(w))))) score += 5;
+    }
+    if (wantSale && onSale(p)) score += 5;
+    if (p.featured) score += 1;
+
+    // مطابقة كلمات حرّة من الاسم/الوصف
+    const hay = normalizeAr(`${p.name} ${p.description || ''}`);
+    q.split(/\s+/).filter((w) => w.length >= 3).forEach((w) => { if (hay.includes(w)) score += 1; });
+
+    // نيّة السعر
+    if (wantCheap) score += (1 - Number(p.price) / maxPrice) * 3;
+    if (wantLux) score += (Number(p.price) / maxPrice) * 2 + (p.featured ? 1 : 0);
+
+    if (p.stock === 0) score -= 8; // المتوفّر أولاً
+    return { p, score };
+  });
+
+  let picks = scored.filter((s) => s.score > 0).sort((a, b) => b.score - a.score);
+  // لا شيء طابق → أبرز القطع (مميّزة ثم الأحدث، المتوفّر أولاً)
+  if (picks.length === 0) {
+    picks = scored.sort((a, b) => (b.p.featured - a.p.featured) || (a.p.stock === 0 ? 1 : -1));
+  }
+  const ids = picks.slice(0, TOP_N).map((s) => String(s.p.id));
+
+  // رسالة دافئة بحسب ما فُهم
+  const matched = wantedCats.size || occasionCats.size || wantedColors.length || wantSale;
+  let reply;
+  if (en) {
+    reply = matched
+      ? 'Here are pieces I think suit what you described 🌷 Want me to refine by color, size or budget?'
+      : "Here are some of our standout pieces 🌷 Tell me the occasion, a color, or your budget and I'll narrow it down.";
+  } else {
+    reply = matched
+      ? 'اخترتلك هالقطع اللي بتناسب طلبك 🌷 إذا بتحبي حدّديلي اللون أو المقاس أو ميزانيتك وبضبّطلك أكثر.'
+      : 'تفضّلي أبرز القطع عنا 🌷 قوليلي المناسبة أو لون أو ميزانيتك وبرشّحلك بدقة أكبر.';
+  }
+  return { reply, ids };
+}
+
+// ───────────────────── الطبقة الذكية (اختيارية) ─────────────────────
 function catalogLine(p) {
-  let price = Number(p.price);
-  let old = p.old_price != null ? Number(p.old_price) : null;
-  const saleEnds = p.sale_ends_at ? new Date(p.sale_ends_at) : null;
-  const onSale = saleEnds && saleEnds > new Date() && old && old > price;
+  const price = Number(p.price);
   const desc = (p.description || '').replace(/\s+/g, ' ').trim().slice(0, 120);
-  const parts = [
-    `id:${p.id}`,
-    `الاسم:${p.name}`,
-    `الفئة:${p.category}`,
-    onSale ? `السعر:${price} (كان ${old} — عرض)` : `السعر:${price}`,
-  ];
+  const parts = [`id:${p.id}`, `الاسم:${p.name}`, `الفئة:${p.category}`,
+    onSale(p) ? `السعر:${price} (كان ${Number(p.old_price)} — عرض)` : `السعر:${price}`];
   if (p.color) parts.push(`الألوان:${p.color}`);
   if (p.size) parts.push(`المقاسات:${p.size}`);
   parts.push(p.stock === 0 ? 'التوفّر:نفد' : 'التوفّر:متوفّر');
@@ -40,28 +162,101 @@ function catalogLine(p) {
   return '- ' + parts.join(' | ');
 }
 
-const SYSTEM_PROMPT = `أنتِ "مساعِدة بازارا"، خبيرة أناقة وتسوّق في متجر أزياء نسائي فاخر. جمهورك سيّدات، فخاطبيهنّ بصيغة المؤنّث بلطف ودفء وذوق راقٍ.
-
-مهمّتك: تفهمين ما تبحث عنه الزبونة (مناسبة، ستايل، لون، مقاس، ميزانية) وترشّحين لها قطعاً مناسبة من كتالوج هذا المتجر فقط.
-
+function systemPrompt(storeName, rows) {
+  return `أنتِ "مساعِدة بازارا"، خبيرة أناقة في متجر أزياء نسائي فاخر. جمهورك سيّدات فخاطبيهنّ بصيغة المؤنّث بلطف وذوق راقٍ.
+مهمّتك: تفهمين طلب الزبونة (مناسبة، ستايل، لون، مقاس، ميزانية) وترشّحين قطعاً من كتالوج هذا المتجر فقط.
 قواعد صارمة:
-- لا ترشّحي إلا منتجات موجودة في الكتالوج أدناه، وبمعرّفها (id) الحرفي تماماً. لا تخترعي منتجات أو أسعاراً أو معرّفات.
-- اذكري في productIds معرّفات القطع التي تقترحينها فعلاً (٦ كحدّ أقصى، الأنسب أولاً). إن لم يناسب شيء، اتركيها فارغة وردّي بلطف واقترحي بديلاً أو اسألي سؤالاً يوضّح طلبها.
-- ردّك في reply قصير ودافئ (جملتان أو ثلاث)، يشرح لماذا تناسب هذه القطع أو يكمّل الإطلالة. لا تكرري أسعاراً أو تفاصيل ستظهر تلقائياً على الكروت.
-- جاوبي بنفس لغة الزبونة (عربية افتراضياً، وإن كتبت بالإنجليزية فبالإنجليزية).
-- إن سألت عن مقاس استرشدي بالمقاسات المتاحة، وإن سألت عن التوصيل/الدفع/الإرجاع فاطلبي منها مراسلة المتجر عبر واتساب (لا تخترعي سياسات).
-- كوني موجزة، أنيقة، وبلا مبالغة تسويقية فجّة.`;
+- لا ترشّحي إلا منتجات موجودة في الكتالوج وبمعرّفها (id) الحرفي. لا تخترعي منتجات أو أسعاراً أو معرّفات.
+- ضعي في productIds معرّفات القطع المقترحة فعلاً (${TOP_N} كحدّ أقصى، الأنسب أولاً). إن لم يناسب شيء فاتركيها فارغة وردّي بلطف أو اسألي سؤالاً يوضّح الطلب.
+- reply رسالة قصيرة دافئة (جملتان أو ثلاث) بنفس لغة الزبونة. لا تكرري الأسعار (تظهر تلقائياً على الكروت).
+- للتوصيل/الدفع/الإرجاع اطلبي مراسلة المتجر عبر واتساب؛ لا تخترعي سياسات.
+اسم المتجر: ${storeName}
+كتالوج المتجر (المصدر الوحيد المسموح):
+${rows.map(catalogLine).join('\n')}`;
+}
 
+async function callClaude(system, messages, validIds) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 45000);
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      signal: controller.signal,
+      headers: { 'content-type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: process.env.ASSISTANT_MODEL || 'claude-sonnet-4-6',
+        max_tokens: 700,
+        system,
+        tools: [{
+          name: 'suggest',
+          description: 'ترشيح قطع للزبونة مع رسالة ودّية.',
+          input_schema: {
+            type: 'object',
+            properties: {
+              reply: { type: 'string' },
+              productIds: { type: 'array', items: { type: 'string' } },
+            },
+            required: ['reply', 'productIds'],
+          },
+        }],
+        tool_choice: { type: 'tool', name: 'suggest' },
+        messages,
+      }),
+    });
+    if (!r.ok) throw new Error(`claude ${r.status}: ${(await r.text().catch(() => '')).slice(0, 200)}`);
+    const data = await r.json();
+    const tool = Array.isArray(data.content) ? data.content.find((b) => b.type === 'tool_use') : null;
+    const out = tool?.input || {};
+    return cleanAi(out, validIds);
+  } finally { clearTimeout(timer); }
+}
+
+async function callGemini(system, messages, validIds) {
+  const model = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`;
+  const contents = messages.map((m) => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] }));
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 45000);
+  try {
+    const r = await fetch(url, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: system }] },
+        contents,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 700,
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: 'object',
+            properties: { reply: { type: 'string' }, productIds: { type: 'array', items: { type: 'string' } } },
+            required: ['reply', 'productIds'],
+          },
+        },
+      }),
+    });
+    if (!r.ok) throw new Error(`gemini ${r.status}: ${(await r.text().catch(() => '')).slice(0, 200)}`);
+    const data = await r.json();
+    const txt = data?.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+    let out = {};
+    try { out = JSON.parse(txt); } catch { out = {}; }
+    return cleanAi(out, validIds);
+  } finally { clearTimeout(timer); }
+}
+
+function cleanAi(out, validIds) {
+  const reply = typeof out.reply === 'string' && out.reply.trim() ? out.reply.trim() : 'تفضّلي بعض الاقتراحات 🌷';
+  const ids = Array.isArray(out.productIds) ? out.productIds.map(String).filter((id) => validIds.has(id)).slice(0, TOP_N) : [];
+  return { reply, ids };
+}
+
+// ───────────────────── المعالج الرئيسي ─────────────────────
 export async function chatAssistant(req, res, next) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    return res.status(503).json({ error: 'المساعِدة الذكية غير مفعّلة حالياً.', disabled: true });
-  }
-
   const slug = String(req.body.store || '').trim();
   if (!slug) return res.status(400).json({ error: 'المتجر مطلوب.' });
 
-  // تنظيف رسائل المحادثة القادمة من العميل
   const raw = Array.isArray(req.body.messages) ? req.body.messages : [];
   const messages = raw
     .filter((m) => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
@@ -82,89 +277,47 @@ export async function chatAssistant(req, res, next) {
       `${CATALOG_SELECT} WHERE p.store_id = $1 ORDER BY p.featured DESC, p.created_at DESC LIMIT ${MAX_PRODUCTS}`,
       [store.id]
     );
-    if (prodRes.rows.length === 0) {
+    const rows = prodRes.rows;
+    if (rows.length === 0) {
       return res.json({ reply: 'لسّا ما في قطع معروضة بهالمتجر. تابعينا قريباً 🌷', products: [] });
     }
 
-    const catalog = prodRes.rows.map(catalogLine).join('\n');
-    const validIds = new Set(prodRes.rows.map((p) => String(p.id)));
+    const validIds = new Set(rows.map((p) => String(p.id)));
+    const lastUser = [...messages].reverse().find((m) => m.role === 'user')?.content || '';
+    const lang = hasArabic(lastUser) ? 'ar' : 'en';
 
-    const system = `${SYSTEM_PROMPT}\n\nاسم المتجر: ${store.name}\n\nكتالوج المتجر (المصدر الوحيد المسموح للترشيح):\n${catalog}`;
-
-    // أداة مُلزِمة لمخرجات منظّمة: رسالة + معرّفات القطع المقترحة
-    const tools = [{
-      name: 'suggest',
-      description: 'ترشيح قطع للزبونة مع رسالة ودّية.',
-      input_schema: {
-        type: 'object',
-        properties: {
-          reply: { type: 'string', description: 'رسالة قصيرة دافئة للزبونة بلغتها.' },
-          productIds: { type: 'array', items: { type: 'string' }, description: 'معرّفات القطع المقترحة من الكتالوج، الأنسب أولاً (٦ كحدّ أقصى).' },
-        },
-        required: ['reply', 'productIds'],
-      },
-    }];
-
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 45000);
-    let apiRes;
+    // اختيار المزوّد حسب المتوفّر، مع السقوط للقواعد عند أي فشل
+    let result;
     try {
-      apiRes = await fetch(API_URL, {
-        method: 'POST',
-        signal: controller.signal,
-        headers: {
-          'content-type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify({
-          model: MODEL,
-          max_tokens: 700,
-          system,
-          tools,
-          tool_choice: { type: 'tool', name: 'suggest' },
-          messages,
-        }),
-      });
-    } finally {
-      clearTimeout(timer);
+      if (process.env.ANTHROPIC_API_KEY) {
+        result = await callClaude(systemPrompt(store.name, rows), messages, validIds);
+      } else if (process.env.GEMINI_API_KEY) {
+        result = await callGemini(systemPrompt(store.name, rows), messages, validIds);
+      } else {
+        result = ruleBasedRecommend(rows, lastUser, lang);
+      }
+    } catch (aiErr) {
+      console.error('⚠️ مزوّد الذكاء فشل، نسقط للقواعد:', aiErr.message);
+      result = ruleBasedRecommend(rows, lastUser, lang);
     }
 
-    if (!apiRes.ok) {
-      const detail = await apiRes.text().catch(() => '');
-      console.error('⚠️ فشل استدعاء Claude:', apiRes.status, detail.slice(0, 300));
-      return res.status(502).json({ error: 'تعذّر الوصول للمساعِدة الآن. حاولي بعد لحظات.' });
-    }
-
-    const data = await apiRes.json();
-    const toolUse = Array.isArray(data.content) ? data.content.find((b) => b.type === 'tool_use') : null;
-    const out = toolUse?.input || {};
-    const reply = typeof out.reply === 'string' && out.reply.trim()
-      ? out.reply.trim()
-      : 'تفضّلي بعض الاقتراحات 🌷';
-    const ids = Array.isArray(out.productIds) ? out.productIds.map(String).filter((id) => validIds.has(id)).slice(0, 6) : [];
-
-    // نُرجع المنتجات الحقيقية كاملة لتُعرض ككروت (نفس شكل بقية الصفحات)
+    const { reply, ids } = result;
     let products = [];
     if (ids.length) {
       const r = await query(
         `SELECT p.*, s.slug AS store_slug, s.name AS store_name, s.whatsapp AS store_whatsapp,
                 s.instagram AS store_instagram, s.phone AS store_phone, s.size_chart AS store_size_chart,
-                s.return_policy AS store_return_policy,
-                0 AS rating_avg, 0 AS rating_count
+                s.return_policy AS store_return_policy, 0 AS rating_avg, 0 AS rating_count
          FROM products p JOIN stores s ON s.id = p.store_id
          WHERE p.id = ANY($1::uuid[])`,
         [ids]
       );
       const byId = new Map(r.rows.map((row) => [String(row.id), mapProduct(row)]));
-      products = ids.map((id) => byId.get(id)).filter(Boolean); // نحافظ على ترتيب النموذج
+      products = ids.map((id) => byId.get(id)).filter(Boolean); // نحافظ على ترتيب الترشيح
     }
 
     res.json({ reply, products });
   } catch (err) {
-    if (err.name === 'AbortError') {
-      return res.status(504).json({ error: 'المساعِدة استغرقت وقتاً أطول من المعتاد. حاولي مجدداً.' });
-    }
     next(err);
   }
 }
