@@ -269,7 +269,7 @@ export async function chatAssistant(req, res, next) {
 
   try {
     const active = activeStoreSql('u');
-    const storeRes = await query(`SELECT id, name FROM stores s JOIN users u ON u.id = s.user_id WHERE s.slug = $1 AND ${active}`, [slug]);
+    const storeRes = await query(`SELECT s.id, s.name FROM stores s JOIN users u ON u.id = s.user_id WHERE s.slug = $1 AND ${active}`, [slug]);
     const store = storeRes.rows[0];
     if (!store) return res.status(404).json({ error: 'المتجر غير موجود.' });
 
