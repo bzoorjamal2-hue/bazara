@@ -12,6 +12,7 @@ import StoreHeader from '../components/StoreHeader.jsx';
 import FeaturesBar from '../components/FeaturesBar.jsx';
 import CatThumb from '../components/CatThumb.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
+import StylistChat from '../components/StylistChat.jsx';
 import CloseButton from '../components/CloseButton.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
@@ -249,6 +250,7 @@ export default function StorePage() {
       )}
 
       <FloatingWhatsApp number={wa} />
+      <StylistChat store={store} whatsapp={wa} />
     </>
   );
 }

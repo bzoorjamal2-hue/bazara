@@ -1,5 +1,23 @@
 {
   "app": { "name": "Bazara", "tagline": "Your destination for luxury fashion" },
+  "assistant": {
+    "fab": "Style assistant",
+    "title": "Style assistant",
+    "subtitle": "Ask me about your look",
+    "greeting": "Hi 🌷 I'm your style assistant. Tell me the occasion or style you're after, and I'll pick the best pieces from this store for you.",
+    "placeholder": "e.g. an outfit for a summer wedding…",
+    "send": "Send",
+    "thinking": "Finding the best picks…",
+    "suggestions": "Here are my picks:",
+    "error": "Something went wrong. Please try again.",
+    "retry": "Try again",
+    "chips": {
+      "occasion": "Outfit for an occasion",
+      "everyday": "Comfy everyday style",
+      "gift": "Gift for a friend",
+      "trending": "What's trending?"
+    }
+  },
   "footer": { "rights": "All rights reserved" },
   "nav": {
     "home": "Home",
