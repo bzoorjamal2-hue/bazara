@@ -46,6 +46,7 @@ export default function StoreSettings() {
           sizeChart: s.sizeChart && typeof s.sizeChart === 'object' ? s.sizeChart : {},
           returnPolicy: s.returnPolicy || '',
           announcement: s.announcement || '',
+          announcementEn: s.announcementEn || '',
           welcomeOffer: s.welcomeOffer || '',
           categoryMeta: s.categoryMeta && typeof s.categoryMeta === 'object' ? s.categoryMeta : {},
           customCategories: Array.isArray(s.customCategories) ? s.customCategories : [],
@@ -289,6 +290,11 @@ export default function StoreSettings() {
             <label className="label">{t('dashboard.store.announcement')}</label>
             <textarea rows={3} maxLength={500} className="input resize-none" placeholder={t('dashboard.store.announcementPlaceholder')} value={form.announcement} onChange={set('announcement')} />
             <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.announcementHint')}</p>
+          </div>
+          <div>
+            <label className="label">{t('dashboard.store.announcementEn')}</label>
+            <textarea rows={3} maxLength={500} dir="ltr" className="input resize-none text-start" placeholder={t('dashboard.store.announcementEnPlaceholder')} value={form.announcementEn} onChange={set('announcementEn')} />
+            <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.announcementEnHint')}</p>
           </div>
           <div>
             <label className="label">{t('dashboard.store.welcomeOffer')}</label>

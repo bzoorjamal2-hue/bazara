@@ -150,7 +150,7 @@ export default function StorePage() {
       <StoreHeader store={store} q={q} setQ={setQ} cat={cat} setCat={setCat} products={data.products} />
 
       {/* شريط إعلانات متحرّك (إن فعّلته المالكة) */}
-      {store.announcement && <AnnouncementBar text={store.announcement} />}
+      {(store.announcement || store.announcementEn) && <AnnouncementBar ar={store.announcement} en={store.announcementEn} />}
 
       {/* نافذة ترحيب لأول زيارة (إن فعّلتها المالكة) */}
       <WelcomePopup store={store} />
@@ -355,10 +355,13 @@ function StoreFooter({ store, wa, onShare }) {
 // شريط إعلانات متحرّك (News Ticker) فخم وهادئ — خلفية شامبين/كريمية بنص خمري ونجمة
 // ذهبية فاصلة. يقبل عدّة إعلانات (كل سطر إعلان) ويعرضها بتتابع متّصل سلس بلا تقطّع
 // (نسختان متطابقتان من القائمة + سرعة تتناسب تلقائياً مع عدد الإعلانات).
-function AnnouncementBar({ text }) {
+function AnnouncementBar({ ar, en }) {
   const { i18n } = useTranslation();
-  const rtl = i18n.language !== 'en';
-  const items = String(text || '').split('\n').map((s) => s.trim()).filter(Boolean);
+  const isEn = i18n.language === 'en';
+  const rtl = !isEn;
+  // نص الشريط يتبع اللغة: إنجليزي عند en (مع رجوع للعربي إن كان فارغاً) والعكس
+  const text = (isEn ? (en || ar) : (ar || en)) || '';
+  const items = String(text).split('\n').map((s) => s.trim()).filter(Boolean);
   if (items.length === 0) return null;
 
   // نكرّر بعدد كافٍ ثابت (≥12 عنصر بكل مجموعة) فيتجاوز المسار أي شاشة دائماً → بلا
@@ -383,7 +386,7 @@ function AnnouncementBar({ text }) {
     <div dir="ltr" className="relative -mx-4 mb-5 overflow-hidden border-y border-gold-400/40 bg-gradient-to-r from-[#f5ead6] via-[#efe1c6] to-[#f5ead6] py-2.5 shadow-sm sm:-mx-6">
       <div
         className="flex w-max animate-marquee"
-        style={{ animationDuration: `${dur}s`, animationDirection: rtl ? 'reverse' : 'normal' }}
+        style={{ animationDuration: `${dur}s`, animationDirection: rtl ? 'normal' : 'reverse' }}
       >
         <Group />
         <Group hidden />

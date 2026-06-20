@@ -24,6 +24,7 @@ function mapStore(s) {
     sizeChart: s.size_chart && typeof s.size_chart === 'object' ? s.size_chart : {},
     returnPolicy: s.return_policy || '',
     announcement: s.announcement || '',
+    announcementEn: s.announcement_en || '',
     welcomeOffer: s.welcome_offer || '',
     categoryMeta: s.category_meta && typeof s.category_meta === 'object' ? s.category_meta : {},
     customCategories: Array.isArray(s.custom_categories) ? s.custom_categories : [],
@@ -138,6 +139,7 @@ export async function updateMyStore(req, res, next) {
   const sizeChart = sanitizeSizeChart(req.body.sizeChart);
   const returnPolicy = String(req.body.returnPolicy || '').slice(0, 2000);
   const announcement = String(req.body.announcement || '').slice(0, 500);
+  const announcementEn = String(req.body.announcementEn || '').slice(0, 500);
   const welcomeOffer = String(req.body.welcomeOffer || '').slice(0, 300);
   const categoryMeta = sanitizeCategoryMeta(req.body.categoryMeta);
   const customCategories = sanitizeCustomCategories(req.body.customCategories);
@@ -158,7 +160,8 @@ export async function updateMyStore(req, res, next) {
          theme_color = $10, delivery_info = $11, payment_info = $12,
          banners = $13::jsonb, delivery_zones = $14::jsonb, free_shipping_over = $15,
          size_chart = $16::jsonb, return_policy = $17, announcement = $18, welcome_offer = $19,
-         category_meta = $20::jsonb, custom_categories = $21::jsonb, referral_percent = $23, updated_at = now()
+         category_meta = $20::jsonb, custom_categories = $21::jsonb, referral_percent = $23,
+         announcement_en = $24, updated_at = now()
        WHERE id = $22
        RETURNING *`,
       [
@@ -185,6 +188,7 @@ export async function updateMyStore(req, res, next) {
         JSON.stringify(customCategories),
         store.id,
         referralPercent,
+        announcementEn,
       ]
     );
 
