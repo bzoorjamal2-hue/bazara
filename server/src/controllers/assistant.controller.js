@@ -220,7 +220,7 @@ export function ruleBasedRecommend(rows, lastUserMsg, lang) {
 // ───────────────────── الطبقة الذكية (اختيارية) ─────────────────────
 function catalogLine(p) {
   const price = Number(p.price);
-  const desc = (p.description || '').replace(/\s+/g, ' ').trim().slice(0, 80);
+  const desc = (p.description || '').replace(/\s+/g, ' ').trim().slice(0, 55);
   const parts = [`id:${p.id}`, `الاسم:${p.name}`, `الفئة:${p.category}`,
     onSale(p) ? `السعر:${price} (كان ${Number(p.old_price)} — عرض)` : `السعر:${price}`];
   if (p.color) parts.push(`الألوان:${p.color}`);

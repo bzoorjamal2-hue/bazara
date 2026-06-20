@@ -99,19 +99,26 @@ export default function StylistChat({ store, whatsapp = '' }) {
 
   return (
     <>
-      {/* الزر العائم — على الجهة المقابلة للواتساب كي لا يتداخلا */}
+      {/* الزر العائم — على الجهة المقابلة للواتساب كي لا يتداخلا.
+          ذهبي شمبانيا هادئ فخم يتأقلم مع الليلي والنهاري، والأيقونة داكنة دائماً للتباين */}
       <div
         className="fixed start-5 z-40 h-14 w-14 fab-float"
         style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 96px)' }}
       >
-        {/* هالة ذهبية ناعمة تتنفّس خلف الزر */}
-        <span className="fab-aura pointer-events-none absolute -inset-1.5 rounded-full bg-gold-300 blur-lg" />
+        <span
+          className="fab-aura pointer-events-none absolute -inset-1.5 rounded-full blur-lg"
+          style={{ backgroundColor: dark ? '#b89a52' : '#f0cd6a', opacity: dark ? 0.5 : 1 }}
+        />
         <button
           type="button"
           onClick={() => setOpen(true)}
           aria-label={t('assistant.fab')}
-          className="group relative flex h-14 w-14 items-center justify-center rounded-full text-wine ring-1 ring-white/40 transition-all duration-300 hover:scale-105 active:scale-95"
-          style={{ background: 'linear-gradient(150deg,#f9ecc4,#e3b94f)', boxShadow: '0 10px 26px -8px rgba(201,162,77,0.8)' }}
+          className="group relative flex h-14 w-14 items-center justify-center rounded-full ring-1 ring-white/30 transition-all duration-300 hover:scale-105 active:scale-95"
+          style={{
+            background: dark ? 'linear-gradient(150deg,#d4bd80,#a8863f)' : 'linear-gradient(150deg,#f9ecc4,#e3b94f)',
+            boxShadow: dark ? '0 8px 22px -10px rgba(168,134,63,0.5)' : '0 10px 26px -8px rgba(201,162,77,0.75)',
+            color: '#3f2e22',
+          }}
         >
           <SparkleIcon className="relative h-7 w-7 transition-transform duration-500 group-hover:rotate-[18deg] group-hover:scale-110" />
         </button>
