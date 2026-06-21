@@ -18,5 +18,8 @@
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="android:background">@drawable/splash</item>
+        <!-- خلفية سبلاش النظام (أندرويد 12+) كريمية مثل شاشة بازارا، بدل الخمري القديم -->
+        <item name="android:windowSplashScreenBackground">#F4EDE2</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
     </style>
 </resources>
