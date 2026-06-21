@@ -187,7 +187,8 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
           <div className="absolute inset-0 bg-black/50 animate-fade-up" onClick={() => setDrawer(false)} />
           <aside
             onClick={(e) => e.stopPropagation()}
-            className={`absolute inset-y-0 start-0 flex w-80 max-w-[85%] flex-col bg-wine-dark p-5 text-cream shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}
+            className={`absolute inset-y-0 start-0 flex w-[17.5rem] max-w-[80%] flex-col bg-wine-dark px-5 pt-5 text-cream shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}
+            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 88px)' }}
           >
             {/* رأس الدرج: إغلاق + أدوات متراصّة بنفس الحجم (40px) — بلا تخبيص */}
             <div className="flex items-center justify-between gap-2">
@@ -213,7 +214,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
               <UserGlyph /> {user ? t('nav.dashboard') : t('nav.login')}
             </Link>
 
-            <nav className="mt-6 space-y-1">
+            <nav className="mt-6 min-h-0 flex-1 space-y-1 overflow-y-auto overflow-x-hidden overscroll-contain">
               <button
                 onClick={() => pick('all')}
                 className={`block w-full rounded-xl px-3 py-3 text-start text-lg font-bold transition hover:bg-cream/10 ${cat === 'all' ? 'text-cream' : 'text-cream/90'}`}
@@ -251,7 +252,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
               )}
             </nav>
 
-            <div className="mt-auto flex items-center justify-between pt-4">
+            <div className="flex shrink-0 items-center justify-between pt-4">
               <LanguageSwitcher onChanged={() => setDrawer(false)} />
               <Link to="/" onClick={() => setDrawer(false)} className="font-display text-xs text-cream/60 hover:text-cream">
                 Bazara
