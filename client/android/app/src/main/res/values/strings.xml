@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">Bazara Store</string>
-    <string name="title_activity_main">Bazara Store</string>
-    <string name="package_name">com.bazara.store</string>
-    <string name="custom_url_scheme">com.bazara.store</string>
-</resources>
