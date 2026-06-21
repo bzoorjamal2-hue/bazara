@@ -678,6 +678,7 @@
     "subscribersHint": "Everyone who registered and subscribed. Send the activation code straight to their email.",
     "subName": "Name",
     "subPlan": "Plan",
+    "requested": "User requested",
     "subStarted": "Subscribed on",
     "subExpires": "Expires",
     "subActive": "Active ✓",

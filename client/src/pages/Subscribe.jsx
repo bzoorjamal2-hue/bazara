@@ -7,7 +7,7 @@ import Seo from '../components/Seo.jsx';
 import Spinner from '../components/Spinner.jsx';
 
 const PLANS = [
-  { key: 'monthly', price: 20, per: 'perMonth' },
+  { key: 'monthly', price: 25, per: 'perMonth' },
   { key: 'yearly', price: 250, per: 'perYear' },
 ];
 

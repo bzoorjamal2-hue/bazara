@@ -10,7 +10,8 @@ function fmt(d) {
 
 function SubRow({ s, onDeleted, onUpdated }) {
   const { t } = useTranslation();
-  const [plan, setPlan] = useState(s.plan || 'monthly');
+  // نبدأ بالخطة التي طلبها المستخدم (إن وُجدت) ليفعّلها المدير مباشرة، وإلا الخطة الحالية
+  const [plan, setPlan] = useState(s.requestedPlan || s.plan || 'monthly');
   const [days, setDays] = useState('');
   const [busy, setBusy] = useState(false);
   const [saveBusy, setSaveBusy] = useState(false);
@@ -121,6 +122,12 @@ function SubRow({ s, onDeleted, onUpdated }) {
         <div>
           <span className="text-stone-500">{t('admin.subPlan')}:</span>{' '}
           {s.lifetime ? t('admin.lifetime') : s.plan ? t(`subscription.${s.plan}`) : t('admin.subNone')}
+          {/* الخطة التي اختارها المستخدم عند التسجيل — ليفعّلها المدير مباشرة */}
+          {!s.isAdmin && s.requestedPlan && (
+            <span className="ms-2 inline-flex items-center rounded-full bg-gold-400/15 px-2 py-0.5 text-[11px] font-bold text-gold-300 ring-1 ring-gold-400/30">
+              🛎️ {t('admin.requested')}: {t(`subscription.${s.requestedPlan}`)}
+            </span>
+          )}
         </div>
         <div><span className="text-stone-500">{t('admin.subStarted')}:</span> {fmt(s.startedAt)}</div>
         <div>
@@ -141,7 +148,7 @@ function SubRow({ s, onDeleted, onUpdated }) {
               onChange={setPlan}
               className="!w-auto !py-1.5 text-sm"
               options={[
-                { value: 'monthly', label: `${t('subscription.monthly')} ($20)` },
+                { value: 'monthly', label: `${t('subscription.monthly')} ($25)` },
                 { value: 'yearly', label: `${t('subscription.yearly')} ($250)` },
               ]}
             />

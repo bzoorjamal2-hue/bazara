@@ -205,8 +205,13 @@ export async function listSubscribers(req, res, next) {
     const r = await query(
       `SELECT u.name, u.email, u.subscription_plan, u.subscription_status,
               u.subscription_started_at, u.current_period_end, u.created_at,
-              s.name AS store_name, s.slug AS store_slug
+              s.name AS store_name, s.slug AS store_slug,
+              lr.plan AS requested_plan, lr.status AS requested_status
        FROM users u JOIN stores s ON s.user_id = u.id
+       LEFT JOIN LATERAL (
+         SELECT plan, status FROM subscription_requests sr
+         WHERE sr.user_id = u.id ORDER BY created_at DESC LIMIT 1
+       ) lr ON true
        ORDER BY u.created_at DESC LIMIT 300`
     );
     res.json({
@@ -214,6 +219,9 @@ export async function listSubscribers(req, res, next) {
         name: x.name,
         email: x.email,
         plan: x.subscription_plan,
+        // الخطة التي طلبها المستخدم فعلاً (شهري/سنوي) + حالة الطلب — ليفعّل المدير ما اختاره
+        requestedPlan: x.requested_plan || null,
+        requestedStatus: x.requested_status || null,
         status: x.subscription_status,
         // المدير: تاريخ اشتراك = تاريخ إنشاء حسابه، واشتراكه مدى الحياة بلا انتهاء
         startedAt: x.subscription_started_at || (isAdminEmail(x.email) ? x.created_at : null),

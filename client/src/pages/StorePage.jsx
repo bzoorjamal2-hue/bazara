@@ -312,19 +312,19 @@ function StoreFooter({ store, wa, onShare }) {
             ))}
           </div>
         )}
-        {/* تتبّع الطلب — زر بارز يلاحظه الزبون بسهولة */}
+        {/* تتبّع الطلب — بنفس نمط "شاركي واربحي" (شفّاف بنص كريمي واضح بالوضعين) */}
         <Link
           to="/track"
-          className="group mx-auto mt-7 flex w-full max-w-sm items-center gap-3 rounded-2xl bg-cream px-5 py-3.5 text-start text-wine shadow-lg ring-1 ring-cream/40 transition hover:-translate-y-0.5 hover:bg-white"
+          className="group mx-auto mt-7 flex w-full max-w-sm items-center gap-3 rounded-2xl border border-cream/30 px-5 py-3.5 text-start text-cream transition hover:-translate-y-0.5 hover:bg-cream/10"
         >
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-wine/10 text-wine">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-cream/15 text-cream">
             <TruckGlyph />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block font-display text-base font-bold leading-tight">{t('nav.track')}</span>
-            <span className="block truncate text-xs text-wine/60">{t('track.hint')}</span>
+            <span className="block truncate text-xs text-cream/70">{t('track.hint')}</span>
           </span>
-          <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0 text-wine/50 transition group-hover:text-wine" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0 text-cream/60 transition group-hover:text-cream" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d={ltr ? 'M9 6l6 6-6 6' : 'M15 6l-6 6 6 6'} />
           </svg>
         </Link>
