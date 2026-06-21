@@ -123,7 +123,9 @@ export async function shareProduct(req, res, next) {
 
 export async function shareStore(req, res, next) {
   const { slug } = req.params;
-  const url = `${site()}/store/${slug}`;
+  // نحافظ على كود الإحالة (ref) في التوجيه ليبقى الخصم فعّالاً للزبونة الجديدة
+  const ref = String(req.query.ref || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 20);
+  const url = `${site()}/store/${slug}${ref ? `?ref=${ref}` : ''}`;
   try {
     const active = activeStoreSql('u');
     const r = await query(

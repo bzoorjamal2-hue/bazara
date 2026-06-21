@@ -29,7 +29,8 @@ export default function ShareEarnModal({ store, onClose }) {
     setBusy(true); setError('');
     try {
       const { data } = await api.post('/public/referral', { store: store.slug, phone: phone.trim(), name: name.trim() });
-      setLink(`${origin}/store/${store.slug}?ref=${data.referral.code}`);
+      // رابط /share/ يعرض شعار المتجر بمعاينة واتساب ثم يحوّل لصفحة المتجر (مع الإحالة)
+      setLink(`${origin}/share/store/${store.slug}?ref=${data.referral.code}`);
     } catch (err) {
       setError(getErrorMessage(err, t('referral.disabled')));
     } finally {
@@ -43,6 +44,14 @@ export default function ShareEarnModal({ store, onClose }) {
   const waShare = () => {
     const msg = t('referral.shareMsg', { store: store.name, link });
     window.open(buildWhatsappLink('', msg), '_blank');
+  };
+  // واجهة المشاركة الأصلية (تختاري أي تطبيق) — وإلا نسخ الرابط
+  const nativeShare = async () => {
+    const msg = t('referral.shareMsg', { store: store.name, link });
+    if (navigator.share) {
+      try { await navigator.share({ title: store.name, text: msg, url: link }); return; } catch { /* أُلغيت */ }
+    }
+    copy();
   };
 
   return createPortal(
@@ -86,6 +95,9 @@ export default function ShareEarnModal({ store, onClose }) {
                   </button>
                 </div>
               </div>
+              <button type="button" onClick={nativeShare} className="w-full rounded-2xl bg-wine py-3 font-bold text-cream shadow-md transition hover:bg-[#7a2540]">
+                📤 {t('referral.shareNow')}
+              </button>
               <button type="button" onClick={waShare} className="btn-whatsapp w-full">💬 {t('referral.shareWhatsapp')}</button>
             </div>
           )}
