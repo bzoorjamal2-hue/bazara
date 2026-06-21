@@ -330,11 +330,9 @@ input[type='datetime-local']::-webkit-datetime-edit {
 .app-navbar {
   background: #f8f3ea;
   border-bottom: 1px solid rgba(94, 70, 54, 0.12);
-  /* رفعه لطبقة GPU مستقلّة → تمرير سلس بلا إعادة رسم/تقطيع على أندرويد */
-  transform: translateZ(0);
-  will-change: transform;
-  backface-visibility: hidden;
 }
+/* ملاحظة: لا تضع transform/will-change على .app-navbar — يكسر تموضع الدرج (fixed)
+   داخل هيدر المتجر فيصير شفافاً محصوراً بالهيدر. حسّن التمرير بطرق لا تنشئ containing block. */
 html.dark .theme-pub .app-navbar {
   background: #251c15;
   border-bottom-color: rgba(230, 200, 120, 0.15);
