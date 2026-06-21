@@ -218,11 +218,12 @@ export function ruleBasedRecommend(rows, lastUserMsg, lang) {
 }
 
 // ───────────────────── الطبقة الذكية (اختيارية) ─────────────────────
-function catalogLine(p) {
+function catalogLine(p, withStore = false) {
   const price = Number(p.price);
   const desc = (p.description || '').replace(/\s+/g, ' ').trim().slice(0, 55);
   const parts = [`id:${p.id}`, `الاسم:${p.name}`, `الفئة:${p.category}`,
     onSale(p) ? `السعر:${price} (كان ${Number(p.old_price)} — عرض)` : `السعر:${price}`];
+  if (withStore && p.store_name) parts.push(`المتجر:${p.store_name}`);
   if (p.color) parts.push(`الألوان:${p.color}`);
   if (p.size) parts.push(`المقاسات:${p.size}`);
   parts.push(p.stock === 0 ? 'التوفّر:نفد' : 'التوفّر:متوفّر');
@@ -230,9 +231,13 @@ function catalogLine(p) {
   return '- ' + parts.join(' | ');
 }
 
-function systemPrompt(storeName, rows) {
-  return `أنتِ "مساعِدة الأناقة" في متجر "${storeName}" — خبيرة أزياء نسائية ذكية ودودة وراقية. جمهورك سيّدات، فخاطبيهنّ بصيغة المؤنّث بدفء وذوق.
-مهمّتك: افهمي مقصد الزبونة بأي صياغة كتبتها (مناسبة، ستايل، لون، مقاس، ميزانية، أو حتى سؤال عام)، وساعديها بقطع من كتالوج هذا المتجر فقط.
+function systemPrompt(storeName, rows, marketplace = false) {
+  const who = marketplace
+    ? `أنتِ "مساعِدة بازارا" — خبيرة أزياء في سوق "بازارا" الذي يضمّ عدّة متاجر أزياء نسائية فاخرة. ترشّحين أنسب القطع من أي متجر داخل السوق.`
+    : `أنتِ "مساعِدة الأناقة" في متجر "${storeName}" — خبيرة أزياء نسائية ذكية ودودة وراقية.`;
+  const catTitle = marketplace ? 'كتالوج السوق (قطع من متاجر متعدّدة — المصدر الوحيد المسموح):' : 'كتالوج المتجر (المصدر الوحيد المسموح):';
+  return `${who} جمهورك سيّدات، فخاطبيهنّ بصيغة المؤنّث بدفء وذوق.
+مهمّتك: افهمي مقصد الزبونة بأي صياغة كتبتها (مناسبة، ستايل، لون، مقاس، ميزانية، أو حتى سؤال عام)، وساعديها بقطع من الكتالوج أدناه فقط.
 
 كوني ذكية ومرنة:
 - جاوبي على أي كلام طبيعي: تحية، شكر، أسئلة عامة مثل "شو عندكم؟" أو "بدي شي حلو" — ردّي بطبيعية واعرضي تشكيلة متنوّعة مناسبة.
@@ -246,8 +251,8 @@ function systemPrompt(storeName, rows) {
 - reply رسالة قصيرة دافئة (جملة إلى ثلاث) بنفس لغة الزبونة. لا تذكري الأسعار (تظهر تلقائياً على الكروت).
 - للتوصيل/الدفع/الإرجاع اطلبي مراسلة المتجر عبر واتساب؛ لا تخترعي سياسات.
 
-كتالوج المتجر (المصدر الوحيد المسموح):
-${rows.map(catalogLine).join('\n')}`;
+${catTitle}
+${rows.map((r) => catalogLine(r, marketplace)).join('\n')}`;
 }
 
 async function callClaude(system, messages, validIds) {
@@ -329,8 +334,9 @@ function cleanAi(out, validIds) {
 
 // ───────────────────── المعالج الرئيسي ─────────────────────
 export async function chatAssistant(req, res, next) {
+  const marketplace = req.body.marketplace === true; // وضع السوق: ترشيح من كل المتاجر (الصفحة العامة)
   const slug = String(req.body.store || '').trim();
-  if (!slug) return res.status(400).json({ error: 'المتجر مطلوب.' });
+  if (!marketplace && !slug) return res.status(400).json({ error: 'المتجر مطلوب.' });
 
   const raw = Array.isArray(req.body.messages) ? req.body.messages : [];
   const messages = raw
@@ -361,23 +367,38 @@ export async function chatAssistant(req, res, next) {
 
   try {
     const active = activeStoreSql('u');
-    const storeRes = await query(`SELECT s.id, s.name FROM stores s JOIN users u ON u.id = s.user_id WHERE s.slug = $1 AND ${active}`, [slug]);
-    const store = storeRes.rows[0];
-    if (!store) return res.status(404).json({ error: 'المتجر غير موجود.' });
+    let storeName = 'بازارا';
+    let rows;
 
-    // كتالوج المتجر من الكاش (معزول بالسلَگ) — يقلّل ضغط القاعدة
-    let cached = catalogCache.get(slug);
-    if (!cached || Date.now() - cached.ts > CATALOG_TTL) {
-      const prodRes = await query(
-        `${CATALOG_SELECT} WHERE p.store_id = $1 ORDER BY p.featured DESC, p.created_at DESC LIMIT ${MAX_PRODUCTS}`,
-        [store.id]
-      );
-      cached = { rows: prodRes.rows, ts: Date.now() };
-      catalogCache.set(slug, cached);
+    if (marketplace) {
+      // كتالوج السوق: قطع من كل المتاجر الفعّالة (مميّزة ثم الأحدث) — كاش بمفتاح خاص
+      const cacheKey = '__market__';
+      let cached = catalogCache.get(cacheKey);
+      if (!cached || Date.now() - cached.ts > CATALOG_TTL) {
+        const prodRes = await query(`${CATALOG_SELECT} WHERE ${active} ORDER BY p.featured DESC, p.created_at DESC LIMIT ${MAX_PRODUCTS}`);
+        cached = { rows: prodRes.rows, ts: Date.now() };
+        catalogCache.set(cacheKey, cached);
+      }
+      rows = cached.rows;
+    } else {
+      const storeRes = await query(`SELECT s.id, s.name FROM stores s JOIN users u ON u.id = s.user_id WHERE s.slug = $1 AND ${active}`, [slug]);
+      const store = storeRes.rows[0];
+      if (!store) return res.status(404).json({ error: 'المتجر غير موجود.' });
+      storeName = store.name;
+      // كتالوج المتجر من الكاش (معزول بالسلَگ)
+      let cached = catalogCache.get(slug);
+      if (!cached || Date.now() - cached.ts > CATALOG_TTL) {
+        const prodRes = await query(
+          `${CATALOG_SELECT} WHERE p.store_id = $1 ORDER BY p.featured DESC, p.created_at DESC LIMIT ${MAX_PRODUCTS}`,
+          [store.id]
+        );
+        cached = { rows: prodRes.rows, ts: Date.now() };
+        catalogCache.set(slug, cached);
+      }
+      rows = cached.rows;
     }
-    const rows = cached.rows;
     if (rows.length === 0) {
-      return res.json({ reply: 'لسّا ما في قطع معروضة بهالمتجر. تابعينا قريباً 🌷', products: [] });
+      return res.json({ reply: marketplace ? 'لسّا ما في قطع معروضة بالسوق. تابعونا قريباً 🌷' : 'لسّا ما في قطع معروضة بهالمتجر. تابعينا قريباً 🌷', products: [] });
     }
 
     const validIds = new Set(rows.map((p) => String(p.id)));
@@ -389,7 +410,7 @@ export async function chatAssistant(req, res, next) {
     try {
       const aiRows = rows.slice(0, AI_CATALOG);            // كتالوج أصغر للذكاء = توكنات أقل
       let aiMessages = messages.slice(-AI_HISTORY);         // آخر رسائل فقط = توكنات أقل
-      let sys = systemPrompt(store.name, aiRows);
+      let sys = systemPrompt(storeName, aiRows, marketplace);
 
       if (image) {
         // البحث بالصورة (Claude vision): نرفق الصورة بآخر رسالة + تعليمات تحليل
@@ -398,7 +419,7 @@ export async function chatAssistant(req, res, next) {
         aiMessages = aiMessages.map((m, i) => (i === lastIdx
           ? { role: 'user', content: [
               { type: 'image', source: { type: 'base64', media_type: imgMatch[1], data: imgMatch[2] } },
-              { type: 'text', text: m.content || 'دوّريلي على أقرب قطعة شبيهة لهالصورة من منتجات هذا المتجر.' },
+              { type: 'text', text: m.content || (marketplace ? 'دوّريلي على أقرب قطعة شبيهة لهالصورة من متاجر بازارا.' : 'دوّريلي على أقرب قطعة شبيهة لهالصورة من منتجات هذا المتجر.') },
             ] }
           : m));
       }

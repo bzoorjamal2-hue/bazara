@@ -38,40 +38,42 @@ function saveHistory(slug, msgs) {
   } catch { /* تجاوز الحصّة */ }
 }
 
-export default function StylistChat({ store, whatsapp = '' }) {
+export default function StylistChat({ store, whatsapp = '', marketplace = false }) {
   const { t, i18n } = useTranslation();
   const { dark } = useTheme();
   const rtl = i18n.language !== 'en';
+  // مفتاح المحادثة: السوق العام له مفتاح ثابت، والمتجر له سلَگه (عزل تام)
+  const convKey = marketplace ? '__market' : store?.slug;
   const [open, setOpen] = useState(false);
   const [disabled, setDisabled] = useState(false); // أُطفئت الميزة على الخادم (نادر)
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [messages, setMessages] = useState(() => loadHistory(store?.slug)); // {role, content, products?, image?}
+  const [messages, setMessages] = useState(() => loadHistory(convKey)); // {role, content, products?, image?}
   const [pendingImage, setPendingImage] = useState(''); // صورة مختارة للبحث بالصورة
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
   const fileRef = useRef(null);
-  const slugRef = useRef(store?.slug);
+  const slugRef = useRef(convKey);
 
   useScrollLock(open);
 
-  // تبديل المتجر → نحمّل محادثة هذا المتجر فقط (لا تشابك بين المتاجر)
+  // تبديل المتجر/السوق → نحمّل المحادثة الصحيحة (لا تشابك بين السياقات)
   useEffect(() => {
-    slugRef.current = store?.slug;
-    setMessages(loadHistory(store?.slug));
+    slugRef.current = convKey;
+    setMessages(loadHistory(convKey));
     setError(''); setInput('');
-  }, [store?.slug]);
+  }, [convKey]);
 
   // تمرير لأسفل عند كل رسالة جديدة أو أثناء التفكير
   useEffect(() => {
     if (open && scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, busy, open]);
 
-  if (disabled || !store?.slug) return null;
+  if (disabled || !convKey) return null;
 
   const send = async (text, imgArg) => {
-    const slug = store.slug; // نثبّت المتجر الحالي لهذا الطلب
+    const key = convKey; // نثبّت السياق الحالي (متجر/سوق) لهذا الطلب
     const img = imgArg ?? pendingImage;
     const content = (text ?? input).trim();
     if ((!content && !img) || busy) return;
@@ -81,27 +83,27 @@ export default function StylistChat({ store, whatsapp = '' }) {
     const shownText = content || t('assistant.photoQuery');
     const next = [...messages, { role: 'user', content: shownText, image: img || undefined }];
     setMessages(next);
-    saveHistory(slug, next);
+    saveHistory(key, next);
     setBusy(true);
     try {
       const payload = next.slice(-MAX_SENT).map((m) => ({ role: m.role, content: m.content }));
-      const body = { store: slug, messages: payload };
+      const body = marketplace ? { marketplace: true, messages: payload } : { store: key, messages: payload };
       if (img) body.image = img;
       const { data } = await api.post('/public/assistant', body);
-      if (slugRef.current !== slug) return; // غادرت لمتجر آخر أثناء الطلب → نتجاهل
+      if (slugRef.current !== key) return; // غادرت لسياق آخر أثناء الطلب → نتجاهل
       setMessages((cur) => {
         const m = [...cur, { role: 'assistant', content: data.reply, products: data.products || [] }];
-        saveHistory(slug, m);
+        saveHistory(key, m);
         return m;
       });
     } catch (e) {
-      if (slugRef.current !== slug) return;
+      if (slugRef.current !== key) return;
       if (e?.response?.status === 503 && e.response.data?.disabled) {
         setDisabled(true); setOpen(false); return;
       }
       setError(getErrorMessage(e, t('assistant.error')));
     } finally {
-      if (slugRef.current === slug) setBusy(false);
+      if (slugRef.current === key) setBusy(false);
     }
   };
 
@@ -117,7 +119,7 @@ export default function StylistChat({ store, whatsapp = '' }) {
     }
   };
 
-  const clearChat = () => { setMessages([]); saveHistory(store.slug, []); setError(''); };
+  const clearChat = () => { setMessages([]); saveHistory(convKey, []); setError(''); };
 
   const chips = ['occasion', 'everyday', 'gift', 'trending'];
 

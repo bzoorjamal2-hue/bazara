@@ -11,6 +11,7 @@ import { getCache, setCache } from '../utils/apiCache.js';
 import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
 import CategoryGrid from '../components/CategoryGrid.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
+import StylistChat from '../components/StylistChat.jsx';
 import InstallApp from '../components/InstallApp.jsx';
 import FeaturesBar from '../components/FeaturesBar.jsx';
 import { BAZARA_WHATSAPP } from '../config/site.js';
@@ -133,6 +134,7 @@ export default function Home() {
       <FeaturesBar />
 
       <FloatingWhatsApp number={BAZARA_WHATSAPP} />
+      <StylistChat marketplace />
     </>
   );
 }
