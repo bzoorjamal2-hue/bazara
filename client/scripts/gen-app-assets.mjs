@@ -22,11 +22,9 @@ const run = async () => {
     .composite([{ input: fg, gravity: 'center' }]).png().toFile(p('icon-foreground.png'));
   await sharp({ create: { width: 1024, height: 1024, channels: 4, background: BROWN } }).png().toFile(p('icon-background.png'));
 
-  const logoBig = await sharp(Buffer.from(logoOnly)).resize(820, 820).png().toBuffer();
-  await sharp({ create: { width: 2732, height: 2732, channels: 4, background: CREAM } })
-    .composite([{ input: logoBig, gravity: 'center' }]).png().toFile(p('splash.png'));
-  await sharp({ create: { width: 2732, height: 2732, channels: 4, background: CREAM } })
-    .composite([{ input: logoBig, gravity: 'center' }]).png().toFile(p('splash-dark.png'));
+  // السبلاش الأصلي كريمي صافٍ بلا شعار، كي يندمج مع شاشة Bazara الويب (شاشة واحدة)
+  await sharp({ create: { width: 2732, height: 2732, channels: 4, background: CREAM } }).png().toFile(p('splash.png'));
+  await sharp({ create: { width: 2732, height: 2732, channels: 4, background: CREAM } }).png().toFile(p('splash-dark.png'));
 
   console.log('OK gen-app-assets');
 };
