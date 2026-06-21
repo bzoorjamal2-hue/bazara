@@ -73,7 +73,8 @@ export default function BottomNav() {
     return () => { alive = false; clearInterval(id); window.removeEventListener('focus', onFocus); };
   }, [user, store?.slug]);
 
-  const accountTo = user ? '/dashboard' : '/login';
+  // عند وجود طلب جديد، يفتح تبويب "الطلبات" مباشرة (الإشعار يوصلك لمصدره)
+  const accountTo = user ? (newOrders > 0 ? '/dashboard?tab=myOrders' : '/dashboard') : '/login';
   // "الرئيسية": المدير العام → الصفحة الرئيسية للموقع (ليعاين تعديلاته)؛ المشترك → متجره؛ الزائر → بازارا العام
   const homeTo = isAdmin ? '/shop' : user && store?.slug ? `/store/${store.slug}` : '/shop';
   const homeActive = homeTo === '/shop' ? pathname === '/shop' : pathname === homeTo;

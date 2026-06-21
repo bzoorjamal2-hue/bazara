@@ -21,6 +21,10 @@
       "source": "/api/:path*",
       "destination": "https://bazara-hwux.onrender.com/api/:path*"
     },
+    {
+      "source": "/share/:path*",
+      "destination": "https://bazara-hwux.onrender.com/share/:path*"
+    },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

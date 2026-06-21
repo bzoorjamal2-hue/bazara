@@ -135,6 +135,13 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [acctOpen, setAcctOpen] = useState(false); // قائمة الحساب المنبثقة (من الأفاتار)
   const [scrolled, setScrolled] = useState(false);
+  const [newOrders, setNewOrders] = useState(0); // شارة الطلبات الجديدة داخل قائمة الحساب
+
+  // نجلب عدد الطلبات الجديدة عند فتح القائمة → نُظهر شارة على "الطلبات" ليعرف المالك مصدر الإشعار
+  useEffect(() => {
+    if (!menuOpen || !user || !store?.slug || subscription?.isAdmin) return;
+    api.get('/orders/new-count').then((r) => setNewOrders(r.data.count || 0)).catch(() => {});
+  }, [menuOpen, user, store?.slug, subscription?.isAdmin]);
   useScrollLock(menuOpen); // تجميد الخلفية عند فتح قائمة الحساب
 
   // عند التمرير: الشريط يلتصق بالأعلى بعرض كامل (بلا فراغ علوي) — وفوق يبقى طافياً
@@ -311,7 +318,11 @@ export default function Navbar() {
                     onClick={() => setMenuOpen(false)}
                     className={`flex items-center gap-3 rounded-xl px-3 py-3 text-base transition ${active ? 'bg-cream/15 font-bold text-cream' : 'text-cream/85 hover:bg-cream/10 hover:text-cream'}`}
                   >
-                    <s.Icon className="h-5 w-5 shrink-0 text-cream/80" /> {s.label}
+                    <s.Icon className="h-5 w-5 shrink-0 text-cream/80" />
+                    <span className="flex-1">{s.label}</span>
+                    {s.key === 'myOrders' && newOrders > 0 && (
+                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-gold-400 px-1.5 text-xs font-bold text-wine-dark">{newOrders}</span>
+                    )}
                   </Link>
                 );
               })}

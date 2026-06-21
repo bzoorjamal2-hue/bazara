@@ -43,9 +43,10 @@ export default function ProductDetails() {
   const [notifySent, setNotifySent] = useState(false);
   const [shared, setShared] = useState(false);
 
-  // مشاركة المنتج: واجهة المشاركة الأصلية إن توفّرت، وإلا نسخ الرابط
+  // مشاركة المنتج: نشارك رابط /share/ الذي يعرض صورة المنتج الحقيقية بمعاينة واتساب
+  // (يحوّل تلقائياً لصفحة المنتج عند الفتح). واجهة المشاركة الأصلية إن توفّرت، وإلا نسخ الرابط.
   const shareProduct = async () => {
-    const url = window.location.href;
+    const url = product?.id ? `${window.location.origin}/share/product/${product.id}` : window.location.href;
     if (navigator.share) {
       try { await navigator.share({ title: product?.name, url }); return; } catch { /* أُلغيت */ }
     }
