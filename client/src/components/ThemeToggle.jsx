@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext.jsx';
 
 // زر تبديل الوضع الليلي/النهاري — شمس/قمر مع انتقال ناعم.
-export default function ThemeToggle({ className = '' }) {
+export default function ThemeToggle({ className = '', size = 'h-9 w-9' }) {
   const { dark, toggle } = useTheme();
   return (
     <motion.button
@@ -10,7 +10,7 @@ export default function ThemeToggle({ className = '' }) {
       whileTap={{ scale: 0.85, rotate: -20 }}
       aria-label={dark ? 'الوضع النهاري' : 'الوضع الليلي'}
       title={dark ? 'الوضع النهاري' : 'الوضع الليلي'}
-      className={`flex h-9 w-9 items-center justify-center rounded-full transition ${className}`}
+      className={`flex ${size} items-center justify-center rounded-full transition ${className}`}
     >
       {dark ? (
         // شمس

@@ -29,7 +29,7 @@ function MenuBtn({ onOpen }) {
 
 // هيدر صفحة المتجر — صف 1: شعار/اسم المتجر + قائمة (☰). صف 2: بحث + سلة (تحت زر القائمة تماماً).
 // عند التمرير: الشعار يتقلّص بنعومة، ويظهر زر قائمة مُصغّر بحركة scale ناعمة (بلا قصّ ولا قفز).
-export default function StoreHeader({ store, q, setQ, cat, setCat, products = [] }) {
+export default function StoreHeader({ store, q, setQ, cat, setCat, products = [], onShare }) {
   const { t, i18n } = useTranslation();
   const ltr = i18n.language !== 'ar';
   const { count, setOpen } = useCart();
@@ -189,25 +189,29 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
             onClick={(e) => e.stopPropagation()}
             className={`absolute inset-y-0 start-0 flex w-80 max-w-[85%] flex-col bg-wine-dark p-5 text-cream shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}
           >
-            <div className="flex items-center gap-2">
-              {/* مسجّل الدخول (صاحب متجر) → لوحة التحكم. زائر → تسجيل الدخول. لا يوجد زر خروج داخل المتجر. */}
-              <Link
-                to={user ? '/dashboard' : '/login'}
-                onClick={() => setDrawer(false)}
-                className="flex items-center gap-2 rounded-full bg-cream px-4 py-2 text-sm font-semibold text-wine"
-              >
-                <UserGlyph /> {user ? t('nav.dashboard') : t('nav.login')}
-              </Link>
-              <button
-                onClick={() => { setDrawer(false); setWishOpen(true); }}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-cream/15 text-cream"
-                aria-label="wishlist"
-              >
-                <HeartIcon className="h-5 w-5" filled={wishCount > 0} />
-              </button>
-              <ThemeToggle className="bg-cream/15 text-cream hover:bg-cream/25" />
-              <CloseButton onClick={() => setDrawer(false)} variant="cream" size="h-10 w-10" className="ms-auto" />
+            {/* رأس الدرج: إغلاق + أدوات متراصّة بنفس الحجم (40px) — بلا تخبيص */}
+            <div className="flex items-center justify-between gap-2">
+              <CloseButton onClick={() => setDrawer(false)} variant="cream" size="h-10 w-10" />
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => { setDrawer(false); setWishOpen(true); }}
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-cream/15 text-cream transition hover:bg-cream/25"
+                  aria-label="wishlist"
+                >
+                  <HeartIcon className="h-5 w-5" filled={wishCount > 0} />
+                </button>
+                <ThemeToggle size="h-10 w-10" className="bg-cream/15 text-cream hover:bg-cream/25" />
+              </div>
             </div>
+
+            {/* لوحة التحكم / دخول — زر بارز عريض (صاحب متجر → لوحة التحكم، زائر → دخول) */}
+            <Link
+              to={user ? '/dashboard' : '/login'}
+              onClick={() => setDrawer(false)}
+              className="mt-4 flex items-center justify-center gap-2 rounded-2xl bg-cream px-4 py-3 text-sm font-bold text-wine shadow-sm transition hover:bg-white"
+            >
+              <UserGlyph /> {user ? t('nav.dashboard') : t('nav.login')}
+            </Link>
 
             <nav className="mt-6 space-y-1">
               <button
@@ -228,7 +232,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
                 </button>
               ))}
               <div className="my-2 h-px bg-cream/15" />
-              {/* تتبّع الطلب — يلاحظه الزبون بسهولة */}
+              {/* تتبّع الطلب */}
               <Link
                 to="/track"
                 onClick={() => setDrawer(false)}
@@ -236,6 +240,15 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
               >
                 <span className="text-xl">📦</span> {t('nav.track')}
               </Link>
+              {/* شاركي واربحي — يظهر فقط إن فعّل المتجر برنامج الإحالة */}
+              {Number(store.referralPercent) > 0 && onShare && (
+                <button
+                  onClick={() => { setDrawer(false); onShare(); }}
+                  className="flex w-full items-center gap-3 rounded-xl border border-cream/25 bg-cream/10 px-3 py-3 text-start text-base font-bold text-cream transition hover:bg-cream/20"
+                >
+                  <span className="text-xl">🎁</span> {t('referral.shareTitle')}
+                </button>
+              )}
             </nav>
 
             <div className="mt-auto flex items-center justify-between pt-4">

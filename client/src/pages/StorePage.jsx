@@ -147,7 +147,7 @@ export default function StorePage() {
       <Seo title={store.name} description={store.description || `${store.name}`} image={store.logoUrl} />
 
       {/* الهيدر الخاص بالمتجر: قائمة + اسم + بحث */}
-      <StoreHeader store={store} q={q} setQ={setQ} cat={cat} setCat={setCat} products={data.products} />
+      <StoreHeader store={store} q={q} setQ={setQ} cat={cat} setCat={setCat} products={data.products} onShare={() => setShareOpen(true)} />
 
       {/* شريط إعلانات متحرّك (إن فعّلته المالكة) */}
       {(store.announcement || store.announcementEn) && <AnnouncementBar ar={store.announcement} en={store.announcementEn} />}
