@@ -70,7 +70,9 @@
     "empty": "No videos yet — check back soon!",
     "swipeHint": "Swipe up",
     "entry": "Watch Reels",
-    "entrySub": "Browse product videos, reel-style"
+    "entrySub": "Browse product videos, reel-style",
+    "copied": "Link copied ✓",
+    "copyPrompt": "Copy the product link:"
   },
   "common": {
     "search": "Search",

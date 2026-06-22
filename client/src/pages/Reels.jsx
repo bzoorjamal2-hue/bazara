@@ -61,7 +61,7 @@ export default function Reels() {
       ) : (
         <div
           className="h-[100dvh] w-full snap-y snap-mandatory overflow-y-scroll overscroll-y-contain [&::-webkit-scrollbar]:hidden"
-          style={{ scrollbarWidth: 'none' }}
+          style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
         >
           {items.map((p, i) => (
             <ReelSlide key={p.id} p={p} muted={muted} rtl={rtl} t={t} hint={i === 0} onUnmute={() => setMuted(false)} />
@@ -75,6 +75,7 @@ export default function Reels() {
 function ReelSlide({ p, muted, rtl, t, hint, onUnmute }) {
   const { has, toggle } = useWishlist();
   const liked = has(p.id);
+  const [copied, setCopied] = useState(false);
   const secRef = useRef(null);
   const vidRef = useRef(null);
   const poster = cldVideoPoster(p.videoUrl) || p.imageUrl || '';
@@ -98,12 +99,23 @@ function ReelSlide({ p, muted, rtl, t, hint, onUnmute }) {
   // مزامنة حالة الكتم العامة
   useEffect(() => { if (vidRef.current) vidRef.current.muted = muted; }, [muted]);
 
-  const share = async () => {
+  // مشاركة قوية: لوحة المشاركة الأصلية إن توفّرت (واتساب/إنستغرام...)،
+  // وإلا نسخ رابط المنتج (بمعاينة OG) مع تأكيد بصري، وإلا نافذة نسخ يدوي.
+  const share = async (e) => {
+    e?.stopPropagation?.();
     const url = `${window.location.origin}/share/product/${p.id}`;
+    const data = { title: p.name, text: `${p.name} — ${t('common.currency')}${p.price}`, url };
+    if (navigator.share) {
+      try { await navigator.share(data); return; }
+      catch (err) { if (err && err.name === 'AbortError') return; } // أُلغيت يدوياً
+    }
     try {
-      if (navigator.share) await navigator.share({ title: p.name, url });
-      else { await navigator.clipboard.writeText(url); }
-    } catch { /* أُلغيت */ }
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      window.prompt(t('reels.copyPrompt'), url);
+    }
   };
 
   return (
@@ -118,6 +130,7 @@ function ReelSlide({ p, muted, rtl, t, hint, onUnmute }) {
           playsInline
           preload="metadata"
           onClick={() => muted && onUnmute()}
+          style={{ touchAction: 'pan-y' }}
           className="h-full w-full object-cover"
         />
 
@@ -131,8 +144,15 @@ function ReelSlide({ p, muted, rtl, t, hint, onUnmute }) {
           </div>
         )}
 
-        {/* شريط الإجراءات الجانبي (المفضّلة + مشاركة) */}
-        <div className="absolute bottom-28 end-3 z-10 flex flex-col items-center gap-4">
+        {/* تأكيد نسخ الرابط (عند تعذّر لوحة المشاركة الأصلية) */}
+        {copied && (
+          <div className="pointer-events-none absolute inset-x-0 top-20 z-30 flex justify-center">
+            <span className="rounded-full bg-black/75 px-4 py-2 text-xs font-semibold text-white backdrop-blur">{t('reels.copied')}</span>
+          </div>
+        )}
+
+        {/* شريط الإجراءات الجانبي (المفضّلة + مشاركة) — z-20 ليبقى فوق قسم المعلومات فيُضغط */}
+        <div className="absolute bottom-32 end-3 z-20 flex flex-col items-center gap-4">
           <button
             type="button"
             onClick={() => toggle(p)}
