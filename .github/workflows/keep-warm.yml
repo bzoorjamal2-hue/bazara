@@ -1,0 +1,28 @@
+# نبضة تُبقي خادم Render "صاحياً" فلا ينام بعد ١٥ دقيقة خمول.
+# الهدف: أول زبون يفتح المتجر يلقى استجابة فورية بدل انتظار ٣٠–٥٠ ثانية.
+# مجانية بالكامل (الريبو عام → دقائق GitHub Actions بلا حدود).
+name: إبقاء الخادم صاحياً (Keep server warm)
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'   # كل ١٠ دقائق
+  workflow_dispatch:          # زر تشغيل يدوي للتجربة من تبويب Actions
+
+# لو بدأت نبضة جديدة قبل ما تخلص القديمة، ألغِ القديمة (ما نكدّس تشغيلات)
+concurrency:
+  group: keep-warm
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: نبض خادم الـ API
+        run: |
+          URL="https://bazara-hwux.onrender.com/api/health"
+          # ٣ نبضات متباعدة ٩٠ ثانية لتغطية أي تأخير في جدولة GitHub
+          for i in 1 2 3; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 "$URL" || echo 000)
+            echo "نبضة $i → HTTP $code"
+            if [ "$i" -lt 3 ]; then sleep 90; fi
+          done
