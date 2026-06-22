@@ -6,7 +6,11 @@ export default function Seo({ title, description, image, url, type = 'website', 
   // نتجنّب تكرار الاسم (Bazara — Bazara) على الصفحة الرئيسية
   const fullTitle = !title || title === 'Bazara' ? 'Bazara — وجهتك للأزياء الفاخرة' : `${title} — Bazara`;
   const desc = description || 'Bazara: منصة المتاجر الإلكترونية للأزياء الفاخرة.';
-  const canonical = url || (typeof window !== 'undefined' ? window.location.href : '');
+  // النطاق الرسمي (canonical) — نوحّد كل الصفحات عليه حتى لو فُتحت من النطاق القديم،
+  // فيركّز Google على bazarastore.site ولا يكرّر الفهرسة.
+  const CANON_HOST = 'https://bazarastore.site';
+  const here = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/';
+  const canonical = url || `${CANON_HOST}${here}`;
 
   return (
     <Helmet>

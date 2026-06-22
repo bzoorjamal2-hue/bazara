@@ -4,7 +4,7 @@
   "webDir": "dist",
   "backgroundColor": "#F4EDE2",
   "server": {
-    "url": "https://bazara-alpha.vercel.app",
+    "url": "https://bazarastore.site",
     "cleartext": false
   },
   "android": {

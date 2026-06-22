@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://bazara-alpha.vercel.app/sitemap.xml
+Sitemap: https://bazarastore.site/sitemap.xml

@@ -5,7 +5,7 @@
 import { writeFileSync } from 'node:fs';
 
 const OUT = 'public/sitemap.xml';
-const HOME = 'https://bazara-alpha.vercel.app/';
+const HOME = 'https://bazarastore.site/';
 const API_SITEMAP = 'https://bazara-hwux.onrender.com/sitemap.xml';
 
 const fallback = `<?xml version="1.0" encoding="UTF-8"?>
