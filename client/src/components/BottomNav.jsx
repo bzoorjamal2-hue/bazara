@@ -73,6 +73,18 @@ export default function BottomNav() {
     return () => { alive = false; clearInterval(id); window.removeEventListener('focus', onFocus); };
   }, [user, store?.slug]);
 
+  // إخفاء الشريط أثناء فتح أي نافذة/درج (قفل التمرير يجعل body ثابتاً position:fixed —
+  // وعلى iOS يجعل الشريط fixed يتموضع نسبةً لـ body فيطفو لنص الشاشة). نخفيه فيرجع
+  // محلّه بالأسفل تماماً بعد الإغلاق. النوافذ تغطّي الشاشة فلا حاجة له أثناءها.
+  const [locked, setLocked] = useState(false);
+  useEffect(() => {
+    const check = () => setLocked(document.body.style.position === 'fixed');
+    check();
+    const obs = new MutationObserver(check);
+    obs.observe(document.body, { attributes: true, attributeFilter: ['style'] });
+    return () => obs.disconnect();
+  }, []);
+
   // عند وجود طلب جديد، يفتح تبويب "الطلبات" مباشرة (الإشعار يوصلك لمصدره)
   const accountTo = user ? (newOrders > 0 ? '/dashboard?tab=myOrders' : '/dashboard') : '/login';
   // "الرئيسية": المدير العام → الصفحة الرئيسية للموقع (ليعاين تعديلاته)؛ المشترك → متجره؛ الزائر → بازارا العام
@@ -90,6 +102,8 @@ export default function BottomNav() {
     { key: 'categories', label: t('nav.categories'), Icon: CategoriesIcon, active: !cartOpen && !wishOpen && (pathname === '/categories' || pathname.startsWith('/category/')), onClick: () => goto('/categories') },
     { key: 'home', label: t('nav.home'), Icon: HomeIcon, active: !cartOpen && !wishOpen && homeActive, onClick: () => goto(homeTo) },
   ];
+
+  if (locked) return null; // نافذة/درج مفتوح → نخفي الشريط (يرجع تلقائياً عند الإغلاق)
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-[78] border-t border-wine/10 bg-white/95 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 shadow-[0_-6px_20px_rgba(94,70,54,0.08)] backdrop-blur">
