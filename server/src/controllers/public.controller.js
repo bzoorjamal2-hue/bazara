@@ -238,6 +238,20 @@ export async function getOffers(_req, res, next) {
   }
 }
 
+// ريلز: منتجات الفيديو من كل المتاجر الفعّالة (تصفّح عمودي بأسلوب عصري)
+export async function getReels(_req, res, next) {
+  try {
+    const active = activeStoreSql('u');
+    const r = await query(
+      `${PRODUCT_SELECT} WHERE p.video_url IS NOT NULL AND p.video_url <> '' AND ${active}
+       ORDER BY p.featured DESC, p.created_at DESC LIMIT 40`
+    );
+    res.json({ products: r.rows.map(mapProduct) });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function addReview(req, res, next) {
   const { id } = req.params;
   const { authorName, rating, comment } = req.body;

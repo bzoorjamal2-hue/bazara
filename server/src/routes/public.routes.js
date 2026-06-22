@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { param } from 'express-validator';
-import { getHomeData, getStoreBySlug, getStoreCheckout, getProductById, getByCategory, getOffers, addReview, trackOrders } from '../controllers/public.controller.js';
+import { getHomeData, getStoreBySlug, getStoreCheckout, getProductById, getByCategory, getOffers, getReels, addReview, trackOrders } from '../controllers/public.controller.js';
 import { validateCoupon } from '../controllers/coupon.controller.js';
 import { createStockRequest } from '../controllers/stockRequest.controller.js';
 import { chatAssistant } from '../controllers/assistant.controller.js';
@@ -32,6 +32,7 @@ const assistantLimiter = rateLimit({
 router.get('/home', getHomeData);
 router.get('/category/:cat', getByCategory);
 router.get('/offers', getOffers);
+router.get('/reels', getReels);
 router.get('/store/:slug', getStoreBySlug);
 router.get('/store/:slug/checkout', getStoreCheckout);
 router.get('/product/:id', idParam, handleValidation, getProductById);

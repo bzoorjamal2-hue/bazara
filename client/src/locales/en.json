@@ -63,6 +63,15 @@
     "subtitle": "All discounted pieces in one place ✨",
     "empty": "No offers right now. Check back soon!"
   },
+  "reels": {
+    "title": "Reels",
+    "view": "View product",
+    "back": "Back",
+    "empty": "No videos yet — check back soon!",
+    "swipeHint": "Swipe up",
+    "entry": "Watch Reels",
+    "entrySub": "Browse product videos, reel-style"
+  },
   "common": {
     "search": "Search",
     "all": "All",
