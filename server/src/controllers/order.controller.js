@@ -358,6 +358,31 @@ export async function getStats(req, res, next) {
     );
 
     const prod = await query('SELECT COUNT(*)::int AS c FROM products WHERE store_id = $1', [sid]);
+
+    // المنتجات قاربة النفاد (المتبقّي ≤ 3) — تنبيه للمالكة لإعادة التوفير قبل انتهائها.
+    // نحسب المتبقّي: المخزون العام إن وُجد، وإلا مجموع كميات اللون/المقاس. (NULL = غير محدود → نتجاهله)
+    const LOW = 3;
+    const stockRows = await query(
+      'SELECT id, name, stock, size_stock, color_stock FROM products WHERE store_id = $1',
+      [sid]
+    );
+    const sumObj = (o) => Object.values(o || {}).reduce((a, b) => a + (Number(b) || 0), 0);
+    const lowStock = stockRows.rows
+      .map((p) => {
+        let remaining = null;
+        if (p.stock !== null && p.stock !== undefined) remaining = Number(p.stock);
+        else {
+          const cs = p.color_stock && typeof p.color_stock === 'object' ? p.color_stock : {};
+          const ss = p.size_stock && typeof p.size_stock === 'object' ? p.size_stock : {};
+          if (Object.keys(cs).length) remaining = Object.values(cs).reduce((sum, sizes) => sum + sumObj(sizes), 0);
+          else if (Object.keys(ss).length) remaining = sumObj(ss);
+        }
+        return { id: p.id, name: p.name, remaining };
+      })
+      .filter((p) => p.remaining !== null && p.remaining <= LOW)
+      .sort((a, b) => a.remaining - b.remaining)
+      .slice(0, 12);
+
     const t = totals.rows[0];
     res.json({
       revenue: Number(t.revenue),
@@ -368,6 +393,7 @@ export async function getStats(req, res, next) {
       productsCount: prod.rows[0].c,
       topProducts: top.rows.map((r) => ({ name: r.name, qty: r.qty })),
       daily: daily.rows.map((r) => ({ day: r.day, orders: r.orders })),
+      lowStock,
     });
   } catch (err) {
     next(err);

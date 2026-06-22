@@ -63,6 +63,29 @@ export default function AnalyticsManager() {
         <StatCard icon="products" grad="from-wine to-rose-700" accent="text-stone-100" label={t('dashboard.productsCount')} value={data.productsCount} />
       </div>
 
+      {/* قاربت على النفاد — تنبيه لإعادة التوفير */}
+      {data.lowStock?.length > 0 && (
+        <div className="glass border border-amber-400/25 p-5">
+          <h2 className="font-display text-lg font-bold text-stone-100">⚠️ {t('dashboard.analytics.lowStock')}</h2>
+          <p className="mb-3 mt-0.5 text-xs text-stone-400">{t('dashboard.analytics.lowStockHint')}</p>
+          <div className="flex flex-wrap gap-2">
+            {data.lowStock.map((p) => (
+              <span
+                key={p.id}
+                className={`inline-flex max-w-full items-center gap-2 rounded-full px-3 py-1.5 text-sm ring-1 ${
+                  p.remaining <= 0 ? 'bg-red-500/15 text-red-300 ring-red-500/30' : 'bg-amber-500/15 text-amber-300 ring-amber-500/30'
+                }`}
+              >
+                <span className="min-w-0 truncate font-medium text-stone-100">{p.name}</span>
+                <span className="shrink-0 font-bold">
+                  {p.remaining <= 0 ? t('dashboard.analytics.soldOut') : t('dashboard.analytics.remaining', { count: p.remaining })}
+                </span>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* نشاط آخر 7 أيام */}
       <div className="glass p-5">
         <h2 className="mb-4 font-display text-lg font-bold text-stone-100">{t('dashboard.analytics.last7')}</h2>

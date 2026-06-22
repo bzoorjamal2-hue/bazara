@@ -142,9 +142,21 @@ export default function StorePage() {
   const pickCategory = (c) => { setSearchParams(c && c !== 'all' ? { cat: c } : {}); window.scrollTo({ top: 0, behavior: 'smooth' }); };
   const clearSearch = () => { setQ(''); setSearchParams({}); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
+  // بيانات Schema.org للمتجر → Google يعرضه كمتجر (اسم/شعار/تواصل/روابط) بنتائج البحث
+  const storeLd = {
+    '@context': 'https://schema.org/',
+    '@type': 'Store',
+    name: store.name,
+    ...(store.description ? { description: store.description } : {}),
+    ...(store.logoUrl ? { image: store.logoUrl, logo: store.logoUrl } : {}),
+    ...(typeof window !== 'undefined' ? { url: window.location.href } : {}),
+    ...(store.instagram ? { sameAs: [store.instagram].filter(Boolean) } : {}),
+    ...(wa ? { telephone: wa } : {}),
+  };
+
   return (
     <>
-      <Seo title={store.name} description={store.description || `${store.name}`} image={store.logoUrl} />
+      <Seo title={store.name} description={store.description || `${store.name}`} image={store.logoUrl} jsonLd={storeLd} />
 
       {/* الهيدر الخاص بالمتجر: قائمة + اسم + بحث */}
       <StoreHeader store={store} q={q} setQ={setQ} cat={cat} setCat={setCat} products={data.products} onShare={() => setShareOpen(true)} />

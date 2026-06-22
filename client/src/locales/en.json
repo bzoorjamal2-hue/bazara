@@ -276,7 +276,11 @@
       "last7": "Last 7 days",
       "topProducts": "Best sellers",
       "empty": "No orders yet — your stats will appear here once the first order arrives.",
-      "noSales": "No confirmed sales yet."
+      "noSales": "No confirmed sales yet.",
+      "lowStock": "Running low",
+      "lowStockHint": "Restock before they sell out.",
+      "remaining": "{{count}} left",
+      "soldOut": "Sold out"
     },
     "productsCount": "Products",
     "viewPublicStore": "View public store",
