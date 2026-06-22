@@ -261,7 +261,11 @@
       "title": "Restock requests",
       "hint": "Customers who left their number for sold-out items — reach out when you restock.",
       "empty": "No restock requests yet.",
-      "notify": "WhatsApp"
+      "notify": "WhatsApp",
+      "notifyReady": "Notify 💬",
+      "inStockNow": "In stock now ✅",
+      "stillOut": "Still out",
+      "waMsg": "Hello 🌸 Good news! «{{name}}»{{variant}} you asked to be notified about is back in stock. Order it before it runs out:\n{{link}}"
     },
     "analytics": {
       "title": "Analytics",

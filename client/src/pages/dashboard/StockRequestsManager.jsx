@@ -35,15 +35,37 @@ export default function StockRequestsManager() {
         <div className="space-y-3">
           {reqs?.map((r) => {
             const variant = [r.color, r.size ? sizeLabel(r.size, t) : ''].filter(Boolean).join(' · ');
+            // رسالة واتساب جاهزة + رابط المنتج (يظهر بمعاينة عند المشاركة)
+            const link = `${window.location.origin}/share/product/${r.productId}`;
+            const waMsg = t('dashboard.stockRequests.waMsg', { name: r.productName, variant: variant ? ` (${variant})` : '', link });
             return (
-              <div key={r.id} className="glass flex flex-wrap items-center justify-between gap-3 p-4">
+              <div
+                key={r.id}
+                className={`glass flex flex-wrap items-center justify-between gap-3 p-4 ${r.inStock ? 'ring-1 ring-emerald-400/40' : ''}`}
+              >
                 <div className="min-w-0">
-                  <p className="font-semibold text-stone-100">{r.productName}</p>
-                  {variant && <p className="text-xs text-gold-200">{variant}</p>}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-semibold text-stone-100">{r.productName}</p>
+                    <span
+                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                        r.inStock ? 'bg-emerald-500/15 text-emerald-700 ring-1 ring-emerald-500/25' : 'bg-stone-500/10 text-stone-400'
+                      }`}
+                    >
+                      {r.inStock ? t('dashboard.stockRequests.inStockNow') : t('dashboard.stockRequests.stillOut')}
+                    </span>
+                  </div>
+                  {variant && <p className="mt-0.5 text-xs text-gold-200">{variant}</p>}
                   <p className="mt-0.5 text-xs text-stone-400" dir="ltr">{r.phone} · {new Date(r.createdAt).toLocaleDateString()}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <a href={buildWhatsappLink(r.phone)} target="_blank" rel="noreferrer" className="btn-whatsapp !px-3 !py-1.5 text-xs">💬 {t('dashboard.stockRequests.notify')}</a>
+                  <a
+                    href={buildWhatsappLink(r.phone, waMsg)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={`btn-whatsapp !px-3 !py-1.5 text-xs ${r.inStock ? 'ring-2 ring-emerald-400/50' : ''}`}
+                  >
+                    💬 {r.inStock ? t('dashboard.stockRequests.notifyReady') : t('dashboard.stockRequests.notify')}
+                  </a>
                   <button onClick={() => remove(r.id)} aria-label="remove" className="rounded-lg p-2 text-stone-400 hover:text-red-300">🗑️</button>
                 </div>
               </div>

@@ -37,26 +37,50 @@ export async function createStockRequest(req, res, next) {
 }
 
 // قائمة طلبات التوفّر لمتجر المشترك
+// هل المتغيّر المطلوب (لون/نمرة) متوفّر الآن؟ نطابق منطق صفحة المنتج للزبون.
+function variantInStock(p, color, size) {
+  if (!p) return false; // المنتج محذوف
+  const sizeStock = p.size_stock && typeof p.size_stock === 'object' ? p.size_stock : {};
+  const colorStock = p.color_stock && typeof p.color_stock === 'object' ? p.color_stock : {};
+  const hasColorStock = Object.keys(colorStock).length > 0;
+  if (color && size && hasColorStock) {
+    const q = colorStock?.[color]?.[size];
+    if (typeof q === 'number') return q > 0;
+  }
+  if (size) {
+    const q = sizeStock?.[size];
+    if (typeof q === 'number') return q > 0;
+  }
+  if (p.stock === null || p.stock === undefined) return true; // مخزون عام غير محدود
+  return Number(p.stock) > 0;
+}
+
+// قائمة طلبات التوفّر لمتجر المشترك — مع تمييز ما رجع للمخزون فعلاً (inStock)
 export async function listMyStockRequests(req, res, next) {
   try {
     const store = await getUserStore(req.user.id);
     if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
     const r = await query(
-      `SELECT id, product_id, product_name, color, size, phone, created_at
-       FROM stock_requests WHERE store_id = $1 ORDER BY created_at DESC LIMIT 300`,
+      `SELECT sr.id, sr.product_id, sr.product_name, sr.color, sr.size, sr.phone, sr.created_at,
+              p.stock, p.size_stock, p.color_stock
+       FROM stock_requests sr
+       LEFT JOIN products p ON p.id = sr.product_id
+       WHERE sr.store_id = $1 ORDER BY sr.created_at DESC LIMIT 300`,
       [store.id]
     );
-    res.json({
-      requests: r.rows.map((x) => ({
-        id: x.id,
-        productId: x.product_id,
-        productName: x.product_name,
-        color: x.color || '',
-        size: x.size || '',
-        phone: x.phone,
-        createdAt: x.created_at,
-      })),
-    });
+    const mapped = r.rows.map((x) => ({
+      id: x.id,
+      productId: x.product_id,
+      productName: x.product_name,
+      color: x.color || '',
+      size: x.size || '',
+      phone: x.phone,
+      createdAt: x.created_at,
+      inStock: variantInStock(x, x.color, x.size), // رجع متوفّراً → نبّهي الزبونة
+    }));
+    // المتوفّر الآن أولاً (الأهم للمالكة)، ثم الأحدث
+    mapped.sort((a, b) => (b.inStock - a.inStock) || (new Date(b.createdAt) - new Date(a.createdAt)));
+    res.json({ requests: mapped });
   } catch (err) {
     next(err);
   }
