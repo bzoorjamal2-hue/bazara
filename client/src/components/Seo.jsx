@@ -1,7 +1,8 @@
 import { Helmet } from 'react-helmet-async';
 
-// مكوّن SEO ديناميكي: يضبط العنوان والوصف ووسوم Open Graph لكل صفحة/متجر.
-export default function Seo({ title, description, image, url, type = 'website' }) {
+// مكوّن SEO ديناميكي: يضبط العنوان والوصف ووسوم Open Graph + بيانات Schema.org لكل صفحة/متجر.
+// jsonLd (اختياري): كائن بيانات منظّمة (Product/Store...) يظهر بنتائج Google الغنية (سعر/صورة/تقييم).
+export default function Seo({ title, description, image, url, type = 'website', jsonLd }) {
   // نتجنّب تكرار الاسم (Bazara — Bazara) على الصفحة الرئيسية
   const fullTitle = !title || title === 'Bazara' ? 'Bazara — وجهتك للأزياء الفاخرة' : `${title} — Bazara`;
   const desc = description || 'Bazara: منصة المتاجر الإلكترونية للأزياء الفاخرة.';
@@ -23,6 +24,9 @@ export default function Seo({ title, description, image, url, type = 'website' }
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={desc} />
       {image && <meta name="twitter:image" content={image} />}
+
+      {/* بيانات منظّمة Schema.org — نتائج Google الغنية */}
+      {jsonLd && <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>}
     </Helmet>
   );
 }

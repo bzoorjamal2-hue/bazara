@@ -180,6 +180,11 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
           {hasDiscount && <span className="text-xs text-stone-500 line-through">{t('common.currency')}{product.oldPrice}</span>}
         </div>
 
+        {/* عدّاد المبيعات — دليل اجتماعي خفيف (يظهر فقط عند وجود مبيعات) */}
+        {product.soldCount > 0 && (
+          <p className="mt-1 text-[11px] font-medium text-emerald-700">{t('product.soldCount', { count: product.soldCount })}</p>
+        )}
+
         <motion.button
           onClick={onAdd}
           disabled={outOfStock}

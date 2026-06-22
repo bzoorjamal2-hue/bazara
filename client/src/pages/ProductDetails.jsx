@@ -182,9 +182,29 @@ export default function ProductDetails() {
   const chipCls = (on) =>
     `min-w-11 rounded-xl border px-3.5 py-1.5 text-sm font-semibold transition ${on ? 'border-wine bg-wine text-cream' : 'border-wine/30 text-wine hover:bg-wine/10'}`;
 
+  // بيانات Schema.org للمنتج → نتائج Google الغنية (سعر/توفّر/تقييم/علامة المتجر)
+  const productLd = {
+    '@context': 'https://schema.org/',
+    '@type': 'Product',
+    name: product.name,
+    ...(gallery.length ? { image: gallery } : {}),
+    description: product.description || product.name,
+    ...(product.storeName ? { brand: { '@type': 'Brand', name: product.storeName } } : {}),
+    offers: {
+      '@type': 'Offer',
+      price: product.price,
+      priceCurrency: 'ILS',
+      availability: outOfStock ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+      ...(typeof window !== 'undefined' ? { url: window.location.href } : {}),
+    },
+    ...(product.ratingCount > 0
+      ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: product.ratingAvg, reviewCount: product.ratingCount } }
+      : {}),
+  };
+
   return (
     <>
-      <Seo title={product.name} description={product.description || product.name} image={gallery[0]} type="product" />
+      <Seo title={product.name} description={product.description || product.name} image={gallery[0]} type="product" jsonLd={productLd} />
 
       {/* رجوع للصفحة السابقة (الفئة/المتجر/البحث) — وإن لم يوجد سجلّ نرجع للمتجر */}
       <button
@@ -284,6 +304,16 @@ export default function ProductDetails() {
             <div className="mt-2 flex items-center gap-2 text-sm text-stone-400">
               <StarRating value={Math.round(product.ratingAvg)} /> {product.ratingAvg} ({product.ratingCount})
             </div>
+          )}
+
+          {/* عدّاد المبيعات الحقيقي — دليل اجتماعي يطمئن الزبونة (يزيد عند تأكيد كل طلب) */}
+          {product.soldCount > 0 && (
+            <p className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-emerald-700">
+              <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" />
+              </svg>
+              {t('product.soldCount', { count: product.soldCount })}
+            </p>
           )}
 
           <div className="mt-3 flex items-baseline gap-3">

@@ -116,6 +116,8 @@ async function ensureColumns() {
     await pool.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS color_images JSONB DEFAULT '{}'::jsonb;");
     // نهاية العرض (عدّاد تنازلي) — عند انتهائه يعود السعر الأصلي تلقائياً
     await pool.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS sale_ends_at TIMESTAMPTZ;");
+    // عدّاد المبيعات الحقيقي — يزيد عند تأكيد الطلب (دليل اجتماعي "تم بيع X قطعة")
+    await pool.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS sold_count INTEGER NOT NULL DEFAULT 0;");
     // مناطق التوصيل القابلة للتخصيص + شحن مجاني فوق مبلغ
     await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS delivery_zones JSONB DEFAULT '[]'::jsonb;");
     await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS free_shipping_over NUMERIC(10,2) DEFAULT 0;");

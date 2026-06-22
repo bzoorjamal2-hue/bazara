@@ -203,6 +203,7 @@ export function mapProduct(p) {
     images: p.images || [],
     videoUrl: p.video_url || '',
     stock: p.stock, // null = متوفّر دائماً
+    soldCount: p.sold_count != null ? Number(p.sold_count) : 0, // عدد القطع المباعة (دليل اجتماعي)
     sizeStock: p.size_stock && typeof p.size_stock === 'object' ? p.size_stock : {},
     colorStock: p.color_stock && typeof p.color_stock === 'object' ? p.color_stock : {},
     colorImages: p.color_images && typeof p.color_images === 'object' ? p.color_images : {},

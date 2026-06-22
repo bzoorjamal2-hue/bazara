@@ -48,6 +48,8 @@ async function notifyOwnerNewOrder(storeId, info) {
 async function decrementStock(orderItems) {
   for (const it of orderItems) {
     const qty = it.qty;
+    // عدّاد المبيعات الحقيقي — يزيد عند تأكيد الطلب (دليل اجتماعي للزبائن)
+    await query('UPDATE products SET sold_count = sold_count + $2 WHERE id = $1', [it.id, qty]);
     // المخزون العام (NULL = متوفّر دائماً → لا يُلمس)
     await query('UPDATE products SET stock = GREATEST(0, stock - $2) WHERE id = $1 AND stock IS NOT NULL', [it.id, qty]);
     // مخزون المقاس المجمّع (نمرة) إن كان المنتج يتتبّع كميات لكل مقاس
@@ -75,6 +77,8 @@ async function decrementStock(orderItems) {
 async function restoreStock(orderItems) {
   for (const it of orderItems || []) {
     const qty = it.qty;
+    // إرجاع/إلغاء طلب مؤكّد → نخفّض عدّاد المبيعات بنفس الكمية
+    await query('UPDATE products SET sold_count = GREATEST(0, sold_count - $2) WHERE id = $1', [it.id, qty]);
     await query('UPDATE products SET stock = stock + $2 WHERE id = $1 AND stock IS NOT NULL', [it.id, qty]);
     if (it.size) {
       await query(
