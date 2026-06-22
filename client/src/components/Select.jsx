@@ -1,35 +1,53 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 // قائمة منسدلة مخصّصة وأنيقة بثيم الموقع (بديل عن <select> الأصلي القبيح).
+// تُرسَم القائمة عبر Portal على مستوى الصفحة بموضع ثابت محسوب من زر الفتح،
+// فلا تقصّها ولا تغطّيها أي حاوية فيها overflow (نوافذ/بطاقات) — تظهر دائماً كاملة وفوق كل شيء.
 // options: [{ value, label }] — onChange يُمرّر القيمة المختارة.
 export default function Select({ value, onChange, options, className = '', placeholder = '' }) {
   const [open, setOpen] = useState(false);
-  const [dropUp, setDropUp] = useState(false); // تفتح للأعلى إن لم تكفِ المساحة بالأسفل
+  const [pos, setPos] = useState(null); // { left, width, top, bottom, dropUp }
   const ref = useRef(null);
+  const menuRef = useRef(null);
   const selected = options.find((o) => o.value === value);
+
+  const computePos = () => {
+    if (!ref.current) return;
+    const r = ref.current.getBoundingClientRect();
+    // تفتح للأعلى إن لم تكفِ المساحة بالأسفل وكانت المساحة فوقها أوسع
+    const dropUp = window.innerHeight - r.bottom < 280 && r.top > window.innerHeight - r.bottom;
+    setPos({ left: r.left, width: r.width, top: r.bottom, bottom: window.innerHeight - r.top, dropUp });
+  };
 
   const toggle = () => {
     setOpen((o) => {
       const next = !o;
-      if (next && ref.current) {
-        const rect = ref.current.getBoundingClientRect();
-        setDropUp(window.innerHeight - rect.bottom < 280);
-      }
+      if (next) computePos();
       return next;
     });
   };
 
   useEffect(() => {
     if (!open) return undefined;
-    const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    const onDoc = (e) => {
+      if (ref.current?.contains(e.target) || menuRef.current?.contains(e.target)) return;
+      setOpen(false);
+    };
     const onKey = (e) => { if (e.key === 'Escape') setOpen(false); };
+    // عند تمرير أي حاوية أو تغيير الحجم نُغلق (الموضع الثابت لا يتبع التمرير) — أبسط وأأمن
+    const onScrollResize = () => setOpen(false);
     document.addEventListener('mousedown', onDoc);
     document.addEventListener('touchstart', onDoc);
     document.addEventListener('keydown', onKey);
+    window.addEventListener('resize', onScrollResize);
+    window.addEventListener('scroll', onScrollResize, true); // capture: يلتقط تمرير الحاويات الداخلية
     return () => {
       document.removeEventListener('mousedown', onDoc);
       document.removeEventListener('touchstart', onDoc);
       document.removeEventListener('keydown', onKey);
+      window.removeEventListener('resize', onScrollResize);
+      window.removeEventListener('scroll', onScrollResize, true);
     };
   }, [open]);
 
@@ -49,8 +67,16 @@ export default function Select({ value, onChange, options, className = '', place
         </svg>
       </button>
 
-      {open && (
-        <div className={`animate-pop absolute z-[80] max-h-64 w-full min-w-max overflow-auto rounded-2xl border border-wine/15 bg-white p-1.5 shadow-2xl ${dropUp ? 'bottom-full mb-1.5' : 'top-full mt-1.5'}`}>
+      {open && pos && createPortal(
+        <div
+          ref={menuRef}
+          className="animate-pop fixed z-[120] max-h-64 overflow-auto rounded-2xl border border-wine/15 bg-white p-1.5 shadow-2xl"
+          style={{
+            left: pos.left,
+            width: pos.width,
+            ...(pos.dropUp ? { bottom: pos.bottom + 6 } : { top: pos.top + 6 }),
+          }}
+        >
           {options.map((o) => {
             const active = o.value === value;
             return (
@@ -62,7 +88,7 @@ export default function Select({ value, onChange, options, className = '', place
                   active ? 'bg-wine/10 font-semibold text-wine' : 'text-[#2b2b2b] hover:bg-wine/5'
                 }`}
               >
-                <span className="whitespace-nowrap">{o.label}</span>
+                <span className="min-w-0 break-words">{o.label}</span>
                 {active && (
                   <svg className="h-4 w-4 shrink-0 text-wine" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M20 6L9 17l-5-5" />
@@ -71,7 +97,8 @@ export default function Select({ value, onChange, options, className = '', place
               </button>
             );
           })}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
