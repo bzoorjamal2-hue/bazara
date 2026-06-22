@@ -162,6 +162,7 @@ function AnimatedRoutes() {
             }
           />
           <Route path="/store/:slug" element={<StorePage />} />
+          <Route path="/store/:slug/reels" element={<Reels />} />
           <Route path="/category/:cat" element={<CategoryPage />} />
           <Route path="/categories" element={<Categories />} />
           <Route path="/product/:id" element={<ProductDetails />} />

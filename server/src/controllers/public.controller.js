@@ -4,7 +4,7 @@ import { activeStoreSql } from '../utils/subscription.js';
 
 // أعمدة المنتج + بيانات المتجر + تجميع التقييمات. نربط users لفلترة المشتركين الفعّالين.
 const PRODUCT_SELECT = `
-  SELECT p.*, s.slug AS store_slug, s.name AS store_name,
+  SELECT p.*, s.slug AS store_slug, s.name AS store_name, s.logo_url AS store_logo,
          s.whatsapp AS store_whatsapp, s.instagram AS store_instagram, s.phone AS store_phone,
          s.size_chart AS store_size_chart, s.return_policy AS store_return_policy,
          COALESCE(r.avg, 0) AS rating_avg, COALESCE(r.cnt, 0) AS rating_count
@@ -238,14 +238,20 @@ export async function getOffers(_req, res, next) {
   }
 }
 
-// ريلز: منتجات الفيديو من كل المتاجر الفعّالة (تصفّح عمودي بأسلوب عصري)
-export async function getReels(_req, res, next) {
+// ريلز: منتجات الفيديو (تصفّح عمودي عصري). ?store=slug → ريلز متجر واحد فقط.
+export async function getReels(req, res, next) {
   try {
     const active = activeStoreSql('u');
-    const r = await query(
-      `${PRODUCT_SELECT} WHERE p.video_url IS NOT NULL AND p.video_url <> '' AND ${active}
-       ORDER BY p.featured DESC, p.created_at DESC LIMIT 40`
-    );
+    const slug = (req.query.store || '').trim();
+    const where = `p.video_url IS NOT NULL AND p.video_url <> '' AND ${active}`;
+    const r = slug
+      ? await query(
+          `${PRODUCT_SELECT} WHERE ${where} AND s.slug = $1 ORDER BY p.featured DESC, p.created_at DESC LIMIT 40`,
+          [slug]
+        )
+      : await query(
+          `${PRODUCT_SELECT} WHERE ${where} ORDER BY p.featured DESC, p.created_at DESC LIMIT 40`
+        );
     res.json({ products: r.rows.map(mapProduct) });
   } catch (err) {
     next(err);

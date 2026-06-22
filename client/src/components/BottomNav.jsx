@@ -49,6 +49,14 @@ function TrackIcon({ className = 'h-6 w-6', filled }) {
     </svg>
   );
 }
+function ReelsIcon({ className = 'h-6 w-6' }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="4" width="18" height="16" rx="3" />
+      <path d="M10 9.5l4 2.5-4 2.5z" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
 
 // شريط تنقّل سفلي بأسلوب التطبيقات (يظهر داخل التطبيق المثبّت فقط).
 export default function BottomNav() {
@@ -90,6 +98,11 @@ export default function BottomNav() {
   // "الرئيسية": المدير العام → الصفحة الرئيسية للموقع (ليعاين تعديلاته)؛ المشترك → متجره؛ الزائر → بازارا العام
   const homeTo = isAdmin ? '/shop' : user && store?.slug ? `/store/${store.slug}` : '/shop';
   const homeActive = homeTo === '/shop' ? pathname === '/shop' : pathname === homeTo;
+  // ريلز: المتجر الذي تتصفّحه الآن، أو متجر المشترك نفسه، أو العام (كل متجر له ريلز خاص)
+  const viewingStoreSlug = (pathname.match(/^\/store\/([^/]+)/) || [])[1] || '';
+  const reelsStoreSlug = viewingStoreSlug || (user && store?.slug && !isAdmin ? store.slug : '');
+  const reelsTo = reelsStoreSlug ? `/store/${reelsStoreSlug}/reels` : '/reels';
+  const reelsActive = pathname.endsWith('/reels');
   // إغلاق أدراج السلة/المفضلة قبل الانتقال (الشريط يبقى ظاهراً فوق الأدراج)
   const closeDrawers = () => { setOpen(false); setWishOpen(false); };
   const goto = (to) => { closeDrawers(); navigate(to); };
@@ -99,6 +112,7 @@ export default function BottomNav() {
     { key: 'account', label: t('nav.account') || 'حسابي', Icon: UserIcon, active: !cartOpen && !wishOpen && pathname.startsWith('/dashboard'), badge: newOrders, onClick: () => goto(accountTo) },
     { key: 'track', label: t('nav.track'), Icon: TrackIcon, active: !cartOpen && !wishOpen && pathname === '/track', onClick: () => goto('/track') },
     { key: 'offers', label: t('nav.offers'), Icon: OffersIcon, active: !cartOpen && !wishOpen && pathname === '/offers', onClick: () => goto('/offers') },
+    { key: 'reels', label: t('reels.title'), Icon: ReelsIcon, active: !cartOpen && !wishOpen && reelsActive, onClick: () => goto(reelsTo) },
     { key: 'categories', label: t('nav.categories'), Icon: CategoriesIcon, active: !cartOpen && !wishOpen && (pathname === '/categories' || pathname.startsWith('/category/')), onClick: () => goto('/categories') },
     { key: 'home', label: t('nav.home'), Icon: HomeIcon, active: !cartOpen && !wishOpen && homeActive, onClick: () => goto(homeTo) },
   ];
@@ -113,12 +127,12 @@ export default function BottomNav() {
             key={key}
             onClick={onClick}
             data-cart-target={key === 'cart' ? '' : undefined}
-            className={`relative flex flex-1 flex-col items-center gap-1 py-1 text-[11px] font-medium transition ${
+            className={`relative flex min-w-0 flex-1 flex-col items-center gap-1 py-1 text-[10px] font-medium leading-tight transition ${
               active ? 'text-wine' : 'text-stone-400'
             }`}
           >
             {/* تظليل التبويب الفعّال: حبّة خمرية حول الأيقونة ليعرف المستخدم مكانه */}
-            <span className={`relative flex items-center justify-center rounded-2xl px-5 py-1 transition-colors duration-200 ${active ? 'bg-wine text-cream shadow-sm' : ''}`}>
+            <span className={`relative flex items-center justify-center rounded-2xl px-3.5 py-1 transition-colors duration-200 ${active ? 'bg-wine text-cream shadow-sm' : ''}`}>
               <Icon className="h-6 w-6" filled={active} />
               {badge > 0 && (
                 <span className={`absolute -end-0.5 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold ${active ? 'bg-cream text-wine' : 'bg-wine text-cream'}`}>
@@ -126,7 +140,7 @@ export default function BottomNav() {
                 </span>
               )}
             </span>
-            <span className={active ? 'font-bold' : ''}>{label}</span>
+            <span className={`max-w-full truncate ${active ? 'font-bold' : ''}`}>{label}</span>
           </button>
         ))}
       </div>

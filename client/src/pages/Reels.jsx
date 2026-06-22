@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client.js';
 import { useWishlist } from '../context/WishlistContext.jsx';
-import { cldOptimized, cldVideoPoster } from '../utils/cloudinary.js';
+import { cldOptimized, cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
 import { HeartIcon } from '../components/icons.jsx';
 import CloseButton from '../components/CloseButton.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
@@ -15,17 +15,21 @@ export default function Reels() {
   const { t, i18n } = useTranslation();
   const rtl = i18n.language !== 'en';
   const navigate = useNavigate();
+  const { slug } = useParams(); // مسار /store/:slug/reels → ريلز متجر واحد فقط
   const [items, setItems] = useState(null);
   const [muted, setMuted] = useState(true);
   useScrollLock(true); // تجميد الخلفية + إخفاء الشريط السفلي (immersive)
 
   useEffect(() => {
     let on = true;
-    api.get('/public/reels').then((r) => { if (on) setItems(r.data.products || []); }).catch(() => { if (on) setItems([]); });
+    setItems(null);
+    api.get(`/public/reels${slug ? `?store=${encodeURIComponent(slug)}` : ''}`)
+      .then((r) => { if (on) setItems(r.data.products || []); })
+      .catch(() => { if (on) setItems([]); });
     return () => { on = false; };
-  }, []);
+  }, [slug]);
 
-  const goBack = () => (window.history.length > 1 ? navigate(-1) : navigate('/shop'));
+  const goBack = () => (slug ? navigate(`/store/${slug}`) : window.history.length > 1 ? navigate(-1) : navigate('/shop'));
 
   return (
     <div className="fixed inset-0 z-[90] bg-black">
@@ -147,22 +151,26 @@ function ReelSlide({ p, muted, rtl, t, hint, onUnmute }) {
           </button>
         </div>
 
-        {/* معلومات المنتج + زر العرض */}
-        <div className="absolute inset-x-0 bottom-0 z-10 p-4 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] text-white">
-          <Link to={`/store/${p.storeSlug}`} className="mb-1 inline-flex items-center gap-1.5 text-sm font-medium text-white/85">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-[10px]">🏪</span>
-            {p.storeName}
+        {/* معلومات المنتج + زر العرض — مرتّبة بمسافات واضحة، ومساحة جانبية للأزرار */}
+        <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col gap-2.5 p-4 pe-16 pb-[calc(env(safe-area-inset-bottom,0px)+18px)] text-white">
+          <Link to={`/store/${p.storeSlug}`} className="inline-flex max-w-fit items-center gap-2 text-sm font-semibold text-white drop-shadow">
+            {p.storeLogo ? (
+              <img src={cldThumb(p.storeLogo, 80)} alt="" className="h-7 w-7 shrink-0 rounded-full object-cover ring-1 ring-white/50" />
+            ) : (
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 text-xs">🏪</span>
+            )}
+            <span className="truncate">{p.storeName}</span>
           </Link>
-          <h2 className="line-clamp-2 text-lg font-bold leading-snug drop-shadow">{p.name}</h2>
-          <div className="mt-1 flex items-center gap-2">
-            <span className="font-display text-xl font-extrabold text-gold-300 drop-shadow">{t('common.currency')}{p.price}</span>
+          <h2 className="line-clamp-2 text-lg font-bold leading-snug drop-shadow-lg">{p.name}</h2>
+          <div className="flex items-center gap-2">
+            <span className="rounded-lg bg-black/35 px-2.5 py-1 font-display text-lg font-extrabold text-gold-200 backdrop-blur-sm">{t('common.currency')}{p.price}</span>
             {p.oldPrice && p.oldPrice > p.price && (
-              <span className="text-sm text-white/60 line-through">{t('common.currency')}{p.oldPrice}</span>
+              <span className="text-sm text-white/70 line-through">{t('common.currency')}{p.oldPrice}</span>
             )}
           </div>
           <Link
             to={`/product/${p.id}`}
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-3 text-sm font-bold text-wine shadow-lg transition active:scale-[0.98]"
+            className="mt-1 flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-3 text-sm font-bold text-wine shadow-lg transition active:scale-[0.98]"
           >
             🛍️ {t('reels.view')}
             <span aria-hidden>{rtl ? '‹' : '›'}</span>

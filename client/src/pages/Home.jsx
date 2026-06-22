@@ -55,9 +55,6 @@ export default function Home() {
       {/* بطاقة تنزيل التطبيق (تظهر إن كان قابلاً للتثبيت وغير مثبّت) */}
       <InstallApp />
 
-      {/* دخول الريلز — تصفّح فيديوهات المنتجات بأسلوب عصري */}
-      <ReelsEntry />
-
       {/* تصفّح حسب الفئة */}
       <section className="mt-12">
         <SectionTitle>{t('home.browseByCategory')}</SectionTitle>
@@ -327,28 +324,6 @@ function SlideButton({ href, label, onLight }) {
     return <a href={href} target="_blank" rel="noreferrer" className={cls}>{label}</a>;
   }
   return <Link to={href.startsWith('/') ? href : `/${href}`} className={cls}>{label}</Link>;
-}
-
-// بطاقة دخول الريلز — متدرّج خمري فخم بأيقونة تشغيل ذهبية
-function ReelsEntry() {
-  const { t, i18n } = useTranslation();
-  const rtl = i18n.language !== 'en';
-  return (
-    <Link
-      to="/reels"
-      className="mt-10 flex items-center gap-4 overflow-hidden rounded-3xl bg-gradient-to-l from-wine to-[#7a2540] p-4 text-cream shadow-md ring-1 ring-gold-400/25 transition hover:-translate-y-0.5 hover:shadow-lg sm:p-5"
-    >
-      <span className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-cream/15">
-        <span aria-hidden className="absolute inset-0 animate-ping rounded-2xl bg-gold-300/20" />
-        <svg viewBox="0 0 24 24" className="relative h-7 w-7 fill-gold-300" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="font-display text-sm font-bold sm:text-lg">🎬 {t('reels.entry')}</p>
-        <p className="mt-0.5 text-xs text-cream/75 sm:text-sm">{t('reels.entrySub')}</p>
-      </div>
-      <span aria-hidden className="shrink-0 text-2xl text-gold-300">{rtl ? '‹' : '›'}</span>
-    </Link>
-  );
 }
 
 // شريط ترويجي كريمي بأيقونة هدية + زر (طبق المرجع)
