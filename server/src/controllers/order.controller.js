@@ -4,6 +4,7 @@ import { isLahzaConfigured, initializeTransaction, verifyTransaction, PAY_CURREN
 import { evaluateCoupon } from './coupon.controller.js';
 import { sendMail, isMailConfigured } from '../utils/mail.js';
 import { sendPushToUser } from '../config/push.js';
+import { sendNativeToUser } from '../config/nativePush.js';
 
 // إشعار صاحب المتجر (بريد + إشعار دفع على الجوال) عند وصول طلب جديد — بالخلفية
 async function notifyOwnerNewOrder(storeId, info) {
@@ -15,12 +16,14 @@ async function notifyOwnerNewOrder(storeId, info) {
     const row = r.rows[0];
     if (!row) return;
 
-    // إشعار دفع على الجوال
-    sendPushToUser(row.user_id, {
+    // إشعار دفع على الجوال — للويب/PWA (VAPID) وللتطبيق الأصلي (APNs) معاً
+    const pushPayload = {
       title: `🛍️ طلب جديد — ${row.store_name}`,
       body: `${info.name} · ₪${Number(info.total).toFixed(2)}`,
       url: '/dashboard?tab=myOrders',
-    });
+    };
+    sendPushToUser(row.user_id, pushPayload);
+    sendNativeToUser(row.user_id, pushPayload);
 
     if (!isMailConfigured() || !row.email) return;
     const rows = (info.items || [])

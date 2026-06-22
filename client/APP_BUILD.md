@@ -44,28 +44,53 @@ npx cap open android
 
 ---
 
-## 🍎 آيفون (App Store) — يحتاج جهاز Mac
+## 🍎 آيفون (App Store) — بناء سحابي من الويندوز (بدون ماك)
 
-⚠️ بناء تطبيقات iOS **مستحيل على Windows**. تحتاج **Mac + Xcode**.
-بدائل بدون Mac: خدمة Mac سحابي (MacinCloud) أو بناء سحابي (Codemagic / Ionic Appflow).
+✅ ما تحتاج ماك. نستخدم **Codemagic** (يبني على ماك سحابي ويرفع لمتجر آبل).
+ملف الإعداد جاهز بجذر المشروع: `codemagic.yaml`.
 
-### على جهاز Mac
-1. ثبّت **Xcode** من App Store.
-2. من مجلد `client`:
-```
-npm install
-npm run build
-npx cap sync ios
-npx cap open ios
-```
-3. في Xcode: اختر فريق التطوير (Apple ID)، عدّل الـ Bundle ID لو لزم.
-4. وصّل آيفون أو استعمل المحاكي → اضغط ▶️ Run للتجربة.
+### تجهيز لمرة واحدة
+1. اشترك في **Apple Developer Program**: https://developer.apple.com (**99$/سنة**)
+2. في https://appstoreconnect.apple.com:
+   - **Users and Access → Integrations → App Store Connect API** → أنشئ مفتاحاً، واحفظ:
+     Issuer ID + Key ID + ملف `.p8`
+   - أنشئ التطبيق (Bundle ID: `com.bazara.store`) وخذ **رقم Apple ID** للتطبيق.
+3. في https://codemagic.io (سجّل بحساب GitHub):
+   - اربط ريبو `bzoorjamal2-hue/bazara`.
+   - **Teams → Integrations → App Store Connect** → أضف المفتاح، وسمِّه بالضبط: `BazaraAppStore`
+4. في `codemagic.yaml` بدّل `APP_STORE_APP_ID: 0000000000` برقم Apple ID الحقيقي للتطبيق.
 
-### النشر على App Store
-1. سجّل في **Apple Developer Program**: https://developer.apple.com (**99$/سنة**)
-2. في Xcode: **Product → Archive** → **Distribute App → App Store Connect**
-3. في https://appstoreconnect.apple.com: عبّي معلومات التطبيق، لقطات الشاشة، الوصف، سياسة الخصوصية
-4. أرسل للمراجعة (عادةً ١–٣ أيام)
+### كل بناء (من الويندوز)
+- ادخل https://codemagic.io → التطبيق → **Start new build** → اختر workflow `Bazara iOS — App Store`.
+- ينتج `.ipa` ويرفعه تلقائياً لـ **TestFlight** للتجربة.
+- لما تبي ترسل للمراجعة النهائية: فعّل `submit_to_app_store: true` في `codemagic.yaml` (أو أرسلها يدوياً من App Store Connect).
+- أول مرة: عبّي معلومات التطبيق، لقطات الشاشة، الوصف، سياسة الخصوصية في App Store Connect ثم **Submit for Review** (المراجعة عادةً ١–٣ أيام).
+
+> ⚠️ ملاحظة Apple (Guideline 4.2): قد ترفض التطبيق لو اعتبرته "مجرد موقع مغلّف".
+> ✅ أضفنا ميزة أصلية: **إشعارات Push عبر APNs** (إعدادها تحت) — تقلّل خطر الرفض.
+
+---
+
+## 🔔 إشعارات Push الأصلية (APNs) — إعداد لمرة واحدة
+
+الكود جاهز (إضافة `@capacitor/push-notifications` + صلاحية Push في مشروع iOS +
+استقبال التوكن بالخادم). ينقص فقط مفتاح آبل ليبدأ الإرسال — يبقى نائماً بهدوء قبله.
+
+بعد شراء حساب المطوّر:
+1. في [Apple Developer](https://developer.apple.com) → Certificates, Identifiers & Profiles:
+   - **Identifiers** → افتح `com.bazara.store` → فعّل **Push Notifications**.
+   - **Keys** → أنشئ مفتاح **APNs** (نوع Apple Push Notifications service) → نزّل ملف `.p8` (مرة واحدة!) واحفظ **Key ID** و**Team ID**.
+2. على Render أضف متغيّرات البيئة:
+   ```
+   APNS_KEY        = (محتوى ملف .p8 كامل، بسطوره)
+   APNS_KEY_ID     = (الـ Key ID — 10 أحرف)
+   APNS_TEAM_ID    = (الـ Team ID — 10 أحرف)
+   APNS_TOPIC      = com.bazara.store
+   APNS_PRODUCTION = true
+   ```
+3. خلاص — أول طلب جديد يوصل صاحب المتجر إشعار على الآيفون. (زر الجرس 🔔 في التطبيق يفعّل الإذن.)
+
+> ملاحظة: نظام إشعارات الويب (PWA على المتصفّح) مستقل ويظل يعمل عبر مفاتيح VAPID.
 
 > ⚠️ ملاحظة Apple: قد ترفض التطبيق إذا اعتبرته "مجرد موقع مغلّف" (Guideline 4.2).
 > لتقليل الخطر نضيف ميزة أصلية مثل **إشعارات Push** — أخبرني وقتها لأضيفها.

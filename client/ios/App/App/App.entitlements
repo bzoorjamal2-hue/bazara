@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- إشعارات Push الأصلية عبر APNs.
+	     "production" لأن البناء يتم عبر Codemagic كنسخة App Store/TestFlight.
+	     طابِقه على الخادم: APNS_PRODUCTION=true في متغيّرات Render. -->
+	<key>aps-environment</key>
+	<string>production</string>
+</dict>
+</plist>

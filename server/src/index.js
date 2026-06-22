@@ -198,6 +198,15 @@ async function ensureColumns() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );`);
     await pool.query('CREATE INDEX IF NOT EXISTS idx_push_user ON push_subscriptions(user_id);');
+    // توكنات الأجهزة الأصلية (APNs لِـ iOS / FCM لِـ Android) — للتطبيق المغلّف بـ Capacitor
+    await pool.query(`CREATE TABLE IF NOT EXISTS native_push_tokens (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      token TEXT NOT NULL UNIQUE,
+      platform VARCHAR(10) NOT NULL DEFAULT 'ios',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );`);
+    await pool.query('CREATE INDEX IF NOT EXISTS idx_native_push_user ON native_push_tokens(user_id);');
     // إعدادات الموقع العامة (صف واحد) — بانرات الصفحة الرئيسية يتحكّم بها المدير
     await pool.query(`CREATE TABLE IF NOT EXISTS site_settings (
       id INTEGER PRIMARY KEY DEFAULT 1,

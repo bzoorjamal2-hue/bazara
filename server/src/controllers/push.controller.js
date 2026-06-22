@@ -33,3 +33,30 @@ export async function unsubscribe(req, res, next) {
     next(err);
   }
 }
+
+// تسجيل توكن جهاز أصلي (آيفون/أندرويد من التطبيق المغلّف) للمستخدم الحالي
+export async function registerNative(req, res, next) {
+  const token = (req.body.token || '').trim();
+  const platform = req.body.platform === 'android' ? 'android' : 'ios';
+  if (!token) return res.status(400).json({ error: 'توكن غير صالح.' });
+  try {
+    await query(
+      `INSERT INTO native_push_tokens (user_id, token, platform)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (token) DO UPDATE SET user_id = EXCLUDED.user_id, platform = EXCLUDED.platform`,
+      [req.user.id, token, platform]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function unregisterNative(req, res, next) {
+  try {
+    await query('DELETE FROM native_push_tokens WHERE user_id = $1 AND token = $2', [req.user.id, req.body.token || '']);
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+}

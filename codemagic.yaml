@@ -1,0 +1,79 @@
+# ===================================================================
+#  Bazara Store — بناء iOS سحابي (Codemagic)
+#  يبني نسخة الآيفون على ماك سحابي ويرفعها لـ App Store Connect.
+#  تشغّله من الويندوز بضغطة زر — ما تحتاج تملك ماك.
+#
+#  ⚙️ إعداد لمرة واحدة (من موقع codemagic.io، مو من الكود):
+#   1. سجّل دخول بحساب GitHub واربط ريبو:  bzoorjamal2-hue/bazara
+#   2. Teams → Integrations → App Store Connect → أضف مفتاح API:
+#        - تجيبه من appstoreconnect.apple.com → Users and Access → Integrations → App Store Connect API
+#        - يعطيك: Issuer ID + Key ID + ملف .p8  (يحتاج اشتراك Apple Developer 99$/سنة)
+#        - سمِّ التكامل بالضبط:  BazaraAppStore   (نفس الاسم المستخدم تحت)
+#   3. أنشئ التطبيق في App Store Connect (Bundle ID: com.bazara.store) وخذ رقم Apple ID
+#        وحطّه بمتغيّر APP_STORE_APP_ID تحت.
+#   بعدها: كل بناء جديد = افتح codemagic.io → Start new build (من الويندوز).
+# ===================================================================
+
+workflows:
+  ios-release:
+    name: Bazara iOS — App Store
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+
+    integrations:
+      # نفس الاسم اللي سمّيت فيه مفتاح App Store Connect API في إعدادات Codemagic
+      app_store_connect: BazaraAppStore
+
+    environment:
+      ios_signing:
+        distribution_type: app_store          # توقيع تلقائي لنسخة المتجر
+        bundle_identifier: com.bazara.store
+      vars:
+        # رقم Apple ID للتطبيق من App Store Connect (بدّله برقمك الحقيقي)
+        APP_STORE_APP_ID: 0000000000
+        XCODE_PROJECT: "client/ios/App/App.xcodeproj"
+        XCODE_SCHEME: "App"
+      node: 20
+      xcode: latest
+
+    scripts:
+      - name: تثبيت حزم الويب
+        script: |
+          cd client
+          npm ci
+
+      - name: بناء ملفات الويب (Vite)
+        script: |
+          cd client
+          npm run build
+
+      - name: مزامنة Capacitor مع iOS
+        script: |
+          cd client
+          npx cap sync ios
+
+      - name: تجهيز التوقيع (Provisioning Profiles)
+        script: |
+          xcode-project use-profiles
+
+      - name: ترقيم الإصدار تلقائياً
+        script: |
+          cd client/ios/App
+          LATEST=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APP_ID" 2>/dev/null || echo 0)
+          agvtool new-version -all $(($LATEST + 1))
+
+      - name: بناء ملف IPA
+        script: |
+          xcode-project build-ipa \
+            --project "$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true            # يرفعها لـ TestFlight للتجربة
+        # submit_to_app_store: true           # فعّلها لمّا تبي ترسل للمراجعة النهائية مباشرة
