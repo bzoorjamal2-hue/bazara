@@ -86,7 +86,7 @@ export function TrenchIcon({ className = 'h-16 w-16' }) {
 export const CATEGORY_ICON = { abaya: AbayaIcon, set: SetIcon, dress: DressIcon, hijab: HijabIcon, trench: TrenchIcon };
 
 // ===== أيقونات واجهة (خطّية رفيعة) =====
-const L = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round' };
+const L = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.75, strokeLinecap: 'round', strokeLinejoin: 'round' };
 
 export function ShieldIcon({ className = 'h-7 w-7' }) {
   return (
@@ -131,7 +131,8 @@ export function HeartIcon({ className = 'h-5 w-5', filled = false }) {
         d="M12 21 C12 21 4 15 4 8.5 A4.5 4.5 0 0 1 12 6 A4.5 4.5 0 0 1 20 8.5 C20 15 12 21 12 21 Z"
         fill={filled ? 'currentColor' : 'none'}
         stroke="currentColor"
-        strokeWidth="1.6"
+        strokeWidth="1.75"
+        strokeLinecap="round"
         strokeLinejoin="round"
       />
     </svg>
