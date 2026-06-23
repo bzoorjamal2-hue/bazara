@@ -72,7 +72,10 @@
     "entry": "Watch Reels",
     "entrySub": "Browse product videos, reel-style",
     "copied": "Link copied ✓",
-    "copyPrompt": "Copy the product link:"
+    "copyPrompt": "Copy the product link:",
+    "add": "Add to cart",
+    "size": "Size",
+    "color": "Color"
   },
   "common": {
     "search": "Search",

@@ -392,6 +392,15 @@ html.dark .theme-pub .app-navbar {
 }
 .animate-toast-top { animation: toast-top 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
 
+/* انفجار قلب عند الضغط المزدوج (Reels) */
+@keyframes heart-pop {
+  0% { transform: scale(0.3); opacity: 0; }
+  25% { transform: scale(1.15); opacity: 0.95; }
+  55% { transform: scale(1); opacity: 0.9; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+.animate-heart-pop { animation: heart-pop 0.8s ease-out forwards; }
+
 /* ============================================================= */
 /*  مساعِدة الأناقة (StylistChat) — ألوانها مستقلّة لأنها تُعرض    */
 /*  عبر بورتال خارج .theme-pub، فنتحكّم بالوضعين هنا مباشرة        */
