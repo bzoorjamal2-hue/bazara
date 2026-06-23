@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client.js';
-import { cldOptimized, cldThumb } from '../utils/cloudinary.js';
+import { cldOptimized, cldThumb, cldVideoPoster } from '../utils/cloudinary.js';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
 import CloseButton from './CloseButton.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
@@ -108,8 +108,12 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
   const sendReply = () => {
     const text = reply.trim();
     const body = text || t('story.replyMsg', { name: store?.name });
-    const productLink = cur?.productId ? `${window.location.origin}/share/product/${cur.productId}` : '';
-    const msg = productLink ? `${body}\n${productLink}` : body;
+    // رابط يحمل صورة بالمعاينة: المنتج المربوط أولاً، وإلا صورة الستوري نفسها
+    let media = '';
+    if (cur?.productId) media = `${window.location.origin}/share/product/${cur.productId}`;
+    else if (cur?.mediaType === 'image') media = cldOptimized(cur.mediaUrl, 'image');
+    else if (cur?.mediaUrl) media = cldVideoPoster(cur.mediaUrl) || '';
+    const msg = media ? `${body}\n${media}` : body;
     window.open(buildWhatsappLink(store.whatsapp, msg), '_blank');
     setReply('');
   };
