@@ -4,9 +4,10 @@ import api from '../api/client.js';
 import { uploadToCloudinary, cldThumb } from '../utils/cloudinary.js';
 import StoryViewer from './StoryViewer.jsx';
 
-// دائرة ستوري المتجر (أسلوب إنستغرام): حلقة ذهبية إن وُجدت ستوريات، والمالكة
-// ترى زر (+) لإضافة ستوري من جهازها. الزائر يراها فقط إن وُجدت ستوريات فعّالة.
-export default function StoryBar({ store, stories, isOwner, onAdded, onDeleted }) {
+// ستوري المتجر على شعار المتجر نفسه (أسلوب إنستغرام): حلقة ذهبية إن وُجدت ستوريات،
+// والمالكة ترى زر (+) لإضافة ستوري من جهازها. الزائر يراها فقط إن وُجدت ستوريات.
+// compact = يُدمج داخل الهيدر على الشعار الصغير (بلا تسمية).
+export default function StoryBar({ store, stories, isOwner, onAdded, onDeleted, compact = false }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -36,38 +37,44 @@ export default function StoryBar({ store, stories, isOwner, onAdded, onDeleted }
 
   const onCircle = () => { if (hasStories) setOpen(true); else if (isOwner) pick(); };
 
-  if (!isOwner && !hasStories) return null; // الزائر بلا ستوريات → لا نعرض شيئاً
+  // بالوضع المدمج (الشعار بالهيدر) نعرض الشعار دائماً؛ بالوضع المنفصل نخفيه للزائر بلا ستوريات
+  if (!compact && !isOwner && !hasStories) return null;
+
+  const logoSize = compact ? 'h-10 w-10' : 'h-16 w-16';
+  const ringPad = compact ? 'p-[2px]' : 'p-[3px]';
+  const plusSize = compact ? 'h-5 w-5' : 'h-6 w-6';
+  const plusIcon = compact ? 'h-3 w-3' : 'h-3.5 w-3.5';
 
   return (
-    <div className="mb-5 flex items-center gap-4">
+    <div className={compact ? 'inline-flex' : 'mb-5 flex items-center gap-4'}>
       <div className="flex flex-col items-center gap-1.5">
-        <button onClick={onCircle} className="relative active:scale-95" aria-label="story">
-          <span className={`block rounded-full p-[3px] ${hasStories ? 'bg-gradient-to-tr from-gold-400 via-wine to-gold-300' : 'bg-wine/20'}`}>
+        <button onClick={onCircle} className="relative shrink-0 active:scale-95" aria-label="story">
+          <span className={`block rounded-full ${ringPad} ${hasStories ? 'bg-gradient-to-tr from-gold-400 via-wine to-gold-300' : 'bg-wine/20'}`}>
             <span className="block rounded-full bg-white p-[2px]">
               {store.logoUrl
-                ? <img src={cldThumb(store.logoUrl, 160)} alt={store.name} className="h-16 w-16 rounded-full object-cover" />
-                : <span className="flex h-16 w-16 items-center justify-center rounded-full bg-cream text-2xl">🏪</span>}
+                ? <img src={cldThumb(store.logoUrl, 160)} alt={store.name} className={`${logoSize} rounded-full object-cover`} />
+                : <span className={`flex ${logoSize} items-center justify-center rounded-full bg-cream text-xl`}>🏪</span>}
             </span>
           </span>
           {uploading && (
-            <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/55 text-xs font-bold text-white">{progress}%</span>
+            <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/55 text-[10px] font-bold text-white">{progress}%</span>
           )}
           {isOwner && !uploading && (
             <span
               role="button"
               onClick={(e) => { e.stopPropagation(); pick(); }}
               aria-label="add"
-              className="absolute -bottom-0.5 -end-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-wine text-cream shadow"
+              className={`absolute -bottom-0.5 -end-0.5 flex ${plusSize} items-center justify-center rounded-full border-2 border-white bg-wine text-cream shadow`}
             >
-              <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+              <svg viewBox="0 0 24 24" className={plusIcon} fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
             </span>
           )}
         </button>
-        <span className="max-w-[5rem] truncate text-xs font-medium text-wine">{isOwner ? t('story.yours') : store.name}</span>
+        {!compact && <span className="max-w-[5rem] truncate text-xs font-medium text-wine">{isOwner ? t('story.yours') : store.name}</span>}
       </div>
 
       <input ref={fileRef} type="file" accept="image/*,video/*" onChange={onFile} className="hidden" />
-      {err && <span className="text-xs font-medium text-red-600">{err}</span>}
+      {err && !compact && <span className="text-xs font-medium text-red-600">{err}</span>}
 
       {open && (
         <StoryViewer stories={stories} store={store} isOwner={isOwner} onClose={() => setOpen(false)} onDeleted={onDeleted} />

@@ -10,6 +10,7 @@ import CloseButton from './CloseButton.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { MenuIcon, SearchIcon, CartIcon, HeartIcon } from './icons.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
+import StoryBar from './StoryBar.jsx';
 import { cldThumb } from '../utils/cloudinary.js';
 import { productThumb } from '../utils/recentlyViewed.js';
 
@@ -29,7 +30,7 @@ function MenuBtn({ onOpen }) {
 
 // هيدر صفحة المتجر — صف 1: شعار/اسم المتجر + قائمة (☰). صف 2: بحث + سلة (تحت زر القائمة تماماً).
 // عند التمرير: الشعار يتقلّص بنعومة، ويظهر زر قائمة مُصغّر بحركة scale ناعمة (بلا قصّ ولا قفز).
-export default function StoreHeader({ store, q, setQ, cat, setCat, products = [], onShare }) {
+export default function StoreHeader({ store, q, setQ, cat, setCat, products = [], onShare, stories = [], isOwner = false, onStoryAdded, onStoryDeleted }) {
   const { t, i18n } = useTranslation();
   const ltr = i18n.language !== 'ar';
   const { count, setOpen } = useCart();
@@ -104,12 +105,20 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
         <div ref={logoWrapRef} className="grid will-change-transform" style={{ gridTemplateRows: '1fr', marginBottom: '12px' }}>
           <div className="min-h-0 overflow-hidden">
             <div className="flex items-center justify-between gap-3">
-              <Link to={`/store/${store.slug}`} onClick={() => setCat('all')} className="flex items-center gap-2.5">
-                {store.logoUrl && (
-                  <img src={store.logoUrl} alt={store.name} className="h-10 w-10 rounded-xl border border-wine/15 object-cover" />
-                )}
-                <span className="font-display text-2xl font-bold tracking-wide text-wine">{store.name}</span>
-              </Link>
+              <div className="flex items-center gap-2.5">
+                {/* الشعار = دائرة الستوري (حلقة ذهبية إن وُجدت ستوريات، و(+) للمالكة) */}
+                <StoryBar
+                  compact
+                  store={store}
+                  stories={stories}
+                  isOwner={isOwner}
+                  onAdded={onStoryAdded}
+                  onDeleted={onStoryDeleted}
+                />
+                <Link to={`/store/${store.slug}`} onClick={() => setCat('all')}>
+                  <span className="font-display text-2xl font-bold tracking-wide text-wine">{store.name}</span>
+                </Link>
+              </div>
               {/* زر تحويل اللغة ظاهر بالشريط (بلا فتح الدرج) + القائمة */}
               <div className="flex shrink-0 items-center gap-2">
                 <LanguageSwitcher />

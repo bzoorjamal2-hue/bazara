@@ -9,7 +9,6 @@ import { StorePageSkeleton } from '../components/Skeleton.jsx';
 import ProductCard from '../components/ProductCard.jsx';
 import CategoryGrid from '../components/CategoryGrid.jsx';
 import StoreHeader from '../components/StoreHeader.jsx';
-import StoryBar from '../components/StoryBar.jsx';
 import FeaturesBar from '../components/FeaturesBar.jsx';
 import CatThumb from '../components/CatThumb.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
@@ -161,20 +160,23 @@ export default function StorePage() {
     <>
       <Seo title={store.name} description={store.description || `${store.name}`} image={store.logoUrl} jsonLd={storeLd} />
 
-      {/* الهيدر الخاص بالمتجر: قائمة + اسم + بحث */}
-      <StoreHeader store={store} q={q} setQ={setQ} cat={cat} setCat={setCat} products={data.products} onShare={() => setShareOpen(true)} />
+      {/* الهيدر الخاص بالمتجر: قائمة + اسم + بحث + ستوري على الشعار */}
+      <StoreHeader
+        store={store}
+        q={q}
+        setQ={setQ}
+        cat={cat}
+        setCat={setCat}
+        products={data.products}
+        onShare={() => setShareOpen(true)}
+        stories={stories}
+        isOwner={isOwner}
+        onStoryAdded={(s) => setStories((p) => [...p, s])}
+        onStoryDeleted={(id) => setStories((p) => p.filter((x) => x.id !== id))}
+      />
 
       {/* شريط إعلانات متحرّك (إن فعّلته المالكة) */}
       {(store.announcement || store.announcementEn) && <AnnouncementBar ar={store.announcement} en={store.announcementEn} />}
-
-      {/* ستوري المتجر — المالكة تضيف بالضغط على (+)، والزبونة تشاهد بالضغط على الدائرة */}
-      <StoryBar
-        store={store}
-        stories={stories}
-        isOwner={isOwner}
-        onAdded={(s) => setStories((p) => [...p, s])}
-        onDeleted={(id) => setStories((p) => p.filter((x) => x.id !== id))}
-      />
 
       {/* نافذة ترحيب لأول زيارة (إن فعّلتها المالكة) */}
       <WelcomePopup store={store} />
