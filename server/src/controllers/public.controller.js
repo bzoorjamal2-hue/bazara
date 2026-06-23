@@ -48,6 +48,18 @@ function mapStorePublic(s) {
   };
 }
 
+function mapStory(s) {
+  return {
+    id: s.id,
+    mediaUrl: s.media_url,
+    mediaType: s.media_type,
+    productId: s.product_id || null,
+    caption: s.caption || '',
+    views: s.views != null ? Number(s.views) : 0,
+    createdAt: s.created_at,
+  };
+}
+
 export async function getHomeData(_req, res, next) {
   try {
     const active = activeStoreSql('u');
@@ -98,14 +110,14 @@ export async function getStoreBySlug(req, res, next) {
 
     // ستوريات المتجر الفعّالة (لم تنتهِ بعد) — للعرض على دائرة الستوري
     const storiesResult = await query(
-      `SELECT id, media_url, media_type, created_at FROM stories WHERE store_id = $1 AND expires_at > now() ORDER BY created_at ASC`,
+      `SELECT id, media_url, media_type, product_id, caption, views, created_at FROM stories WHERE store_id = $1 AND expires_at > now() ORDER BY created_at ASC`,
       [store.id]
     );
 
     res.json({
       store: mapStorePublic(store),
       products: productsResult.rows.map(mapProduct),
-      stories: storiesResult.rows.map((s) => ({ id: s.id, mediaUrl: s.media_url, mediaType: s.media_type, createdAt: s.created_at })),
+      stories: storiesResult.rows.map(mapStory),
     });
   } catch (err) {
     next(err);
@@ -260,6 +272,36 @@ export async function getReels(req, res, next) {
     params.push(offset); sql += ` OFFSET $${params.length}`;
     const r = await query(sql, params);
     res.json({ products: r.rows.map(mapProduct), hasMore: r.rows.length === REELS_PAGE });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// صف ستوريات السوق العام: المتاجر الفعّالة التي لديها ستوريات حالية (للصفحة الرئيسية)
+export async function getStoriesFeed(_req, res, next) {
+  try {
+    const active = activeStoreSql('u');
+    const r = await query(
+      `SELECT st.id, st.media_url, st.media_type, st.product_id, st.caption, st.views, st.created_at,
+              s.slug AS store_slug, s.name AS store_name, s.logo_url AS store_logo, s.whatsapp AS store_whatsapp
+       FROM stories st
+       JOIN stores s ON s.id = st.store_id
+       JOIN users u ON u.id = s.user_id
+       WHERE st.expires_at > now() AND ${active}
+       ORDER BY s.id, st.created_at ASC`
+    );
+    // نجمّع الستوريات حسب المتجر
+    const byStore = new Map();
+    for (const row of r.rows) {
+      if (!byStore.has(row.store_slug)) {
+        byStore.set(row.store_slug, {
+          slug: row.store_slug, name: row.store_name, logoUrl: row.store_logo || '', whatsapp: row.store_whatsapp || '',
+          stories: [],
+        });
+      }
+      byStore.get(row.store_slug).stories.push(mapStory(row));
+    }
+    res.json({ feed: [...byStore.values()].slice(0, 30) });
   } catch (err) {
     next(err);
   }

@@ -13,6 +13,7 @@ import CategoryGrid from '../components/CategoryGrid.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
 import StylistChat from '../components/StylistChat.jsx';
 import InstallApp from '../components/InstallApp.jsx';
+import StoriesRow from '../components/StoriesRow.jsx';
 import FeaturesBar from '../components/FeaturesBar.jsx';
 import { BAZARA_WHATSAPP } from '../config/site.js';
 
@@ -54,6 +55,9 @@ export default function Home() {
 
       {/* بطاقة تنزيل التطبيق (تظهر إن كان قابلاً للتثبيت وغير مثبّت) */}
       <InstallApp />
+
+      {/* صف ستوريات المتاجر (يظهر فقط إن وُجدت ستوريات فعّالة) */}
+      <StoriesRow />
 
       {/* تصفّح حسب الفئة */}
       <section className="mt-12">

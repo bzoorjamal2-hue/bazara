@@ -221,6 +221,10 @@ async function ensureColumns() {
       expires_at TIMESTAMPTZ NOT NULL DEFAULT (now() + interval '24 hours')
     );`);
     await pool.query('CREATE INDEX IF NOT EXISTS idx_stories_store ON stories(store_id, expires_at);');
+    // منتج مرتبط بالستوري (اطلبي الآن) + تعليق نصّي + عدّاد مشاهدات
+    await pool.query('ALTER TABLE stories ADD COLUMN IF NOT EXISTS product_id UUID;');
+    await pool.query("ALTER TABLE stories ADD COLUMN IF NOT EXISTS caption TEXT DEFAULT '';");
+    await pool.query('ALTER TABLE stories ADD COLUMN IF NOT EXISTS views INTEGER NOT NULL DEFAULT 0;');
     // إعدادات الموقع العامة (صف واحد) — بانرات الصفحة الرئيسية يتحكّم بها المدير
     await pool.query(`CREATE TABLE IF NOT EXISTS site_settings (
       id INTEGER PRIMARY KEY DEFAULT 1,

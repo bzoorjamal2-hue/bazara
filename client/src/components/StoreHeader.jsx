@@ -112,6 +112,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
                   store={store}
                   stories={stories}
                   isOwner={isOwner}
+                  products={products}
                   onAdded={onStoryAdded}
                   onDeleted={onStoryDeleted}
                 />

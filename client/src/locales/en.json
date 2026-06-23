@@ -82,7 +82,15 @@
     "yours": "Your story",
     "uploadFail": "Upload failed, try again",
     "minsAgo": "{{count}}m ago",
-    "hrsAgo": "{{count}}h ago"
+    "hrsAgo": "{{count}}h ago",
+    "shopNow": "Shop now",
+    "reply": "Reply",
+    "replyMsg": "Hi {{name}} 🌸 about your story...",
+    "newStory": "New story",
+    "captionPlaceholder": "Add a caption (optional)",
+    "linkProduct": "Link a product (optional)",
+    "noProduct": "No product",
+    "publish": "Publish story"
   },
   "common": {
     "search": "Search",

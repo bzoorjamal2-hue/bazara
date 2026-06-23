@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client.js';
 import { cldOptimized, cldThumb } from '../utils/cloudinary.js';
+import { buildWhatsappLink } from '../utils/whatsapp.js';
 import CloseButton from './CloseButton.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 
@@ -10,7 +12,7 @@ const IMG_MS = 5000; // مدة عرض الصورة
 
 // عارض ستوري بأسلوب إنستغرام: أشرطة تقدّم، انتقال تلقائي، نقر يمين/يسار،
 // ضغط مطوّل للإيقاف، وحذف للمالك. الفيديو يعتمد مدته، والصورة ٥ ثوانٍ.
-export default function StoryViewer({ stories, store, startIndex = 0, isOwner = false, onClose, onDeleted }) {
+export default function StoryViewer({ stories, store, startIndex = 0, isOwner = false, onClose, onDeleted, onSeen }) {
   const { t, i18n } = useTranslation();
   const rtl = i18n.language !== 'en';
   const [idx, setIdx] = useState(startIndex);
@@ -30,6 +32,17 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
   const goPrev = () => setIdx((i) => Math.max(0, i - 1));
 
   useEffect(() => { setProgress(0); elapsedRef.current = 0; }, [idx]);
+
+  // تسجيل مشاهدة (مرة لكل ستوري) + تعليم كمُشاهَدة
+  const viewedRef = useRef(new Set());
+  useEffect(() => {
+    if (!cur) return;
+    onSeen?.(cur.id);
+    if (!viewedRef.current.has(cur.id)) {
+      viewedRef.current.add(cur.id);
+      api.post(`/public/story/${cur.id}/view`).catch(() => {});
+    }
+  }, [idx, cur]);
 
   // مؤقّت الصورة (الفيديو يستخدم timeupdate)
   useEffect(() => {
@@ -115,6 +128,12 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
             <p className="text-[11px] text-white/70">{ago}</p>
           </div>
           {isOwner && (
+            <span className="flex items-center gap-1 rounded-full bg-black/40 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur">
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+              {cur.views ?? 0}
+            </span>
+          )}
+          {isOwner && (
             <button onClick={del} aria-label="delete" className="flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur transition hover:bg-red-500/70">
               <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13" /></svg>
             </button>
@@ -135,6 +154,26 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
           />
         ) : (
           <img src={cldOptimized(cur.mediaUrl, 'image')} alt="" className="h-full w-full bg-black object-contain" />
+        )}
+
+        {/* تعليق + زر اطلبي الآن + ردّ واتساب */}
+        {(cur.caption || cur.productId || store?.whatsapp) && (
+          <div className="absolute inset-x-0 bottom-0 z-30 flex flex-col gap-2.5 p-4 pb-[calc(env(safe-area-inset-bottom,0px)+18px)]" dir={rtl ? 'rtl' : 'ltr'}>
+            {cur.caption && <p className="max-w-fit rounded-2xl bg-black/45 px-3.5 py-2 text-sm font-medium text-white backdrop-blur drop-shadow">{cur.caption}</p>}
+            <div className="flex items-stretch gap-2">
+              {cur.productId && (
+                <Link to={`/product/${cur.productId}`} onClick={onClose} className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl bg-white py-2.5 text-sm font-bold text-wine shadow-lg active:scale-[0.98]">
+                  🛍️ {t('story.shopNow')}
+                </Link>
+              )}
+              {store?.whatsapp && (
+                <a href={buildWhatsappLink(store.whatsapp, t('story.replyMsg', { name: store.name }))} target="_blank" rel="noreferrer"
+                  className="flex items-center justify-center rounded-2xl bg-white/15 px-4 py-2.5 text-sm font-bold text-white backdrop-blur active:scale-95">
+                  {t('story.reply')}
+                </a>
+              )}
+            </div>
+          </div>
         )}
 
         {/* مناطق اللمس: يسار (٣٠٪) سابق، يمين (٧٠٪) تالي، ضغط مطوّل = إيقاف */}

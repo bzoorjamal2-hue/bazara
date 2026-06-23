@@ -82,7 +82,15 @@
     "yours": "ستوريتك",
     "uploadFail": "تعذّر الرفع، حاولي ثانية",
     "minsAgo": "منذ {{count}} دقيقة",
-    "hrsAgo": "منذ {{count}} ساعة"
+    "hrsAgo": "منذ {{count}} ساعة",
+    "shopNow": "اطلبي الآن",
+    "reply": "ردّي",
+    "replyMsg": "مرحباً {{name}} 🌸 بخصوص الستوري...",
+    "newStory": "ستوري جديدة",
+    "captionPlaceholder": "أضيفي تعليقاً (اختياري)",
+    "linkProduct": "اربطي منتجاً (اختياري)",
+    "noProduct": "بدون منتج",
+    "publish": "نشر الستوري"
   },
   "common": {
     "search": "بحث",
