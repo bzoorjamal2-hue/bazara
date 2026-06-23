@@ -17,6 +17,7 @@ import couponRoutes from './routes/coupon.routes.js';
 import stockRequestRoutes from './routes/stockRequest.routes.js';
 import referralRoutes from './routes/referral.routes.js';
 import pushRoutes from './routes/push.routes.js';
+import storyRoutes from './routes/story.routes.js';
 import siteRoutes from './routes/site.routes.js';
 import { robots, sitemap, indexNowKey, shareProduct, shareStore } from './controllers/seo.controller.js';
 import { issueCsrfToken, verifyCsrf, getCsrfToken } from './middleware/csrf.js';
@@ -88,6 +89,7 @@ app.use('/api/coupons', couponRoutes);
 app.use('/api/stock-requests', stockRequestRoutes);
 app.use('/api/referrals', referralRoutes);
 app.use('/api/push', pushRoutes);
+app.use('/api/stories', storyRoutes);
 app.use('/api/site', siteRoutes);
 
 // مسارات SEO (على الجذر)
@@ -209,6 +211,16 @@ async function ensureColumns() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );`);
     await pool.query('CREATE INDEX IF NOT EXISTS idx_native_push_user ON native_push_tokens(user_id);');
+    // ستوريات المتجر (تختفي بعد ٢٤ ساعة) — صورة/فيديو يضيفها المالك
+    await pool.query(`CREATE TABLE IF NOT EXISTS stories (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+      media_url TEXT NOT NULL,
+      media_type VARCHAR(10) NOT NULL DEFAULT 'image',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      expires_at TIMESTAMPTZ NOT NULL DEFAULT (now() + interval '24 hours')
+    );`);
+    await pool.query('CREATE INDEX IF NOT EXISTS idx_stories_store ON stories(store_id, expires_at);');
     // إعدادات الموقع العامة (صف واحد) — بانرات الصفحة الرئيسية يتحكّم بها المدير
     await pool.query(`CREATE TABLE IF NOT EXISTS site_settings (
       id INTEGER PRIMARY KEY DEFAULT 1,

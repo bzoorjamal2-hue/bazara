@@ -78,6 +78,12 @@
     "color": "اللون",
     "soundHint": "اضغطي للصوت"
   },
+  "story": {
+    "yours": "ستوريتك",
+    "uploadFail": "تعذّر الرفع، حاولي ثانية",
+    "minsAgo": "منذ {{count}} دقيقة",
+    "hrsAgo": "منذ {{count}} ساعة"
+  },
   "common": {
     "search": "بحث",
     "all": "الكل",

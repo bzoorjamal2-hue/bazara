@@ -96,9 +96,16 @@ export async function getStoreBySlug(req, res, next) {
       [store.id]
     );
 
+    // ستوريات المتجر الفعّالة (لم تنتهِ بعد) — للعرض على دائرة الستوري
+    const storiesResult = await query(
+      `SELECT id, media_url, media_type, created_at FROM stories WHERE store_id = $1 AND expires_at > now() ORDER BY created_at ASC`,
+      [store.id]
+    );
+
     res.json({
       store: mapStorePublic(store),
       products: productsResult.rows.map(mapProduct),
+      stories: storiesResult.rows.map((s) => ({ id: s.id, mediaUrl: s.media_url, mediaType: s.media_type, createdAt: s.created_at })),
     });
   } catch (err) {
     next(err);

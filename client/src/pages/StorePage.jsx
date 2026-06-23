@@ -9,6 +9,7 @@ import { StorePageSkeleton } from '../components/Skeleton.jsx';
 import ProductCard from '../components/ProductCard.jsx';
 import CategoryGrid from '../components/CategoryGrid.jsx';
 import StoreHeader from '../components/StoreHeader.jsx';
+import StoryBar from '../components/StoryBar.jsx';
 import FeaturesBar from '../components/FeaturesBar.jsx';
 import CatThumb from '../components/CatThumb.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
@@ -40,6 +41,7 @@ export default function StorePage() {
   const [openSheet, setOpenSheet] = useState(null); // 'sort' | 'size' | 'offers'
   const [page, setPage] = useState(1);
   const [shareOpen, setShareOpen] = useState(false); // نافذة شاركي واربحي
+  const [stories, setStories] = useState([]); // ستوريات المتجر الفعّالة
 
   // الفئة و"عرض الكل" جزء من الرابط (search params) كي يحفظهما زرّ الرجوع:
   // تختار فئة ← تدخل منتج ← ترجع → ترجع لنفس الفئة وموضعها (بدل القفز للرئيسية).
@@ -70,6 +72,7 @@ export default function StorePage() {
   }, [slug, t]);
 
   useEffect(() => setPage(1), [cat, q, sort, sizesSel, offersOnly]);
+  useEffect(() => { setStories(data?.stories || []); }, [data]); // مزامنة الستوريات
 
   // التقاط كود الإحالة من الرابط (?ref=CODE) وحفظه للمتجر، ثم تنظيف الرابط
   useEffect(() => {
@@ -163,6 +166,15 @@ export default function StorePage() {
 
       {/* شريط إعلانات متحرّك (إن فعّلته المالكة) */}
       {(store.announcement || store.announcementEn) && <AnnouncementBar ar={store.announcement} en={store.announcementEn} />}
+
+      {/* ستوري المتجر — المالكة تضيف بالضغط على (+)، والزبونة تشاهد بالضغط على الدائرة */}
+      <StoryBar
+        store={store}
+        stories={stories}
+        isOwner={isOwner}
+        onAdded={(s) => setStories((p) => [...p, s])}
+        onDeleted={(id) => setStories((p) => p.filter((x) => x.id !== id))}
+      />
 
       {/* نافذة ترحيب لأول زيارة (إن فعّلتها المالكة) */}
       <WelcomePopup store={store} />

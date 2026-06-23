@@ -78,6 +78,12 @@
     "color": "Color",
     "soundHint": "Tap for sound"
   },
+  "story": {
+    "yours": "Your story",
+    "uploadFail": "Upload failed, try again",
+    "minsAgo": "{{count}}m ago",
+    "hrsAgo": "{{count}}h ago"
+  },
   "common": {
     "search": "Search",
     "all": "All",
