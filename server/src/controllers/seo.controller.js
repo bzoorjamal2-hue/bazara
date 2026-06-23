@@ -143,6 +143,33 @@ export async function shareStore(req, res, next) {
   } catch { res.redirect(302, url); }
 }
 
+// صفحة مشاركة الستوري: معاينة بصورة الستوري، والضغط يوجّه للمنتج المربوط أو المتجر
+export async function shareStory(req, res, next) {
+  const { id } = req.params;
+  try {
+    const active = activeStoreSql('u');
+    const r = await query(
+      `SELECT st.media_url, st.media_type, st.product_id, st.caption, s.slug, s.name AS store_name
+       FROM stories st JOIN stores s ON s.id = st.store_id JOIN users u ON u.id = s.user_id
+       WHERE st.id = $1 AND st.expires_at > now() AND ${active}`,
+      [id]
+    );
+    const st = r.rows[0];
+    if (!st) return res.redirect(302, site() || '/');
+    const url = st.product_id ? `${site()}/product/${st.product_id}` : `${site()}/store/${st.slug}`;
+    let img = st.media_url || '';
+    if (st.media_type === 'video' && img.includes('/video/upload/')) {
+      img = img.replace('/video/upload/', '/video/upload/so_0/').replace(/\.[a-z0-9]+($|\?.*$)/i, '.jpg');
+    }
+    res.set('Cache-Control', 'public, max-age=300').type('html').send(shareHtml({
+      title: `${st.store_name} — ستوري`,
+      desc: (st.caption || '').replace(/\s+/g, ' ').trim().slice(0, 160) || st.store_name,
+      image: ogImage(img),
+      url,
+    }));
+  } catch { res.redirect(302, site() || '/'); }
+}
+
 // ملف مفتاح IndexNow الذي تطلبه محركات البحث للتحقق
 export function indexNowKey(req, res) {
   const key = process.env.INDEXNOW_KEY;

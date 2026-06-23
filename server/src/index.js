@@ -19,7 +19,7 @@ import referralRoutes from './routes/referral.routes.js';
 import pushRoutes from './routes/push.routes.js';
 import storyRoutes from './routes/story.routes.js';
 import siteRoutes from './routes/site.routes.js';
-import { robots, sitemap, indexNowKey, shareProduct, shareStore } from './controllers/seo.controller.js';
+import { robots, sitemap, indexNowKey, shareProduct, shareStore, shareStory } from './controllers/seo.controller.js';
 import { issueCsrfToken, verifyCsrf, getCsrfToken } from './middleware/csrf.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
@@ -98,6 +98,7 @@ app.get('/sitemap.xml', sitemap);
 // صفحات المشاركة بوسوم OG حقيقية (صورة المنتج/المتجر تظهر بمعاينة واتساب)
 app.get('/share/product/:id', shareProduct);
 app.get('/share/store/:slug', shareStore);
+app.get('/share/story/:id', shareStory);
 app.get('/:key([a-f0-9]+\\.txt)', indexNowKey); // ملف مفتاح IndexNow
 
 // 404 ومعالج الأخطاء
