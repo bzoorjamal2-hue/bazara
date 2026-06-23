@@ -144,16 +144,16 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
 
   const doLike = () => { if (!liked) toggle(p); setBurst((b) => b + 1); };
 
-  // نقرة مفردة = كتم/تشغيل | نقرة مزدوجة = لايك
+  // نقرة مفردة = كتم/تشغيل | نقرة مزدوجة = لايك (نافذة 350ms لموثوقية iOS)
   const onTap = () => {
     const now = Date.now();
-    if (now - tapRef.current.t < 300) {
+    if (now - tapRef.current.t < 350) {
       clearTimeout(tapRef.current.timer);
       tapRef.current.t = 0;
       doLike();
     } else {
       tapRef.current.t = now;
-      tapRef.current.timer = setTimeout(() => { if (muted) onUnmute(); }, 300);
+      tapRef.current.timer = setTimeout(() => { if (muted) onUnmute(); tapRef.current.t = 0; }, 350);
     }
   };
 
@@ -193,12 +193,15 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
           muted={muted}
           playsInline
           preload={preload ? 'auto' : 'none'}
-          onClick={onTap}
           onTimeUpdate={onTimeUpdate}
           onEnded={onVidEnded}
           style={{ touchAction: 'pan-y' }}
           className="h-full w-full object-cover"
         />
+
+        {/* طبقة لمس فوق الفيديو (تحت الأزرار z-10/20): نقرة = كتم، نقرة مزدوجة = لايك.
+            تسمح بالتمرير العمودي (pan-y) وتلتقط النقرات بدقة بدل الاعتماد على الفيديو. */}
+        <div className="absolute inset-0 z-[5]" style={{ touchAction: 'pan-y' }} onClick={onTap} />
 
         {/* انفجار قلب الدبل-تاب */}
         {burst > 0 && (
