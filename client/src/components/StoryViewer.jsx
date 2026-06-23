@@ -78,12 +78,12 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === 'Escape') onClose();
-      else if (e.key === 'ArrowLeft') goPrev();
-      else if (e.key === 'ArrowRight') goNext();
+      else if (e.key === 'ArrowLeft') (rtl ? goNext : goPrev)();
+      else if (e.key === 'ArrowRight') (rtl ? goPrev : goNext)();
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [idx, stories.length]);
+  }, [rtl, idx, stories.length]);
 
   const onDownZone = () => {
     holdRef.current.held = false;
@@ -92,9 +92,9 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
   const onUpZone = (where) => {
     clearTimeout(holdRef.current.timer);
     if (holdRef.current.held) { holdRef.current.held = false; setPaused(false); return; }
-    // تنقّل ثابت ومتسق للغتين: يسار = السابق، يمين = التالي (لا انعكاس)
-    if (where === 'prev') goPrev();
-    else goNext();
+    // يتبع اللغة: إنجليزي → يسار=سابق/يمين=تالي | عربي → يسار=تالي/يمين=سابق
+    if (where === 'prev') (rtl ? goNext : goPrev)();
+    else (rtl ? goPrev : goNext)();
   };
 
   const del = async () => {
