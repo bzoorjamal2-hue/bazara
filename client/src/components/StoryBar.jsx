@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import api from '../api/client.js';
 import { uploadToCloudinary, cldThumb } from '../utils/cloudinary.js';
 import { getSeenSet, markSeen } from '../utils/storySeen.js';
+import useScrollLock from '../hooks/useScrollLock.js';
 import Select from './Select.jsx';
 import StoryViewer from './StoryViewer.jsx';
 
@@ -22,6 +23,7 @@ export default function StoryBar({ store, stories, isOwner, onAdded, onDeleted, 
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
   const fileRef = useRef(null);
+  useScrollLock(!!file); // تجميد الخلفية أثناء شيت النشر (لا تتحرك الشاشة تحته)
 
   const hasStories = stories.length > 0;
   const hasUnseen = stories.some((s) => !seen.has(s.id));

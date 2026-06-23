@@ -85,6 +85,7 @@
     "hrsAgo": "{{count}}h ago",
     "shopNow": "Shop now",
     "reply": "Reply",
+    "replyPlaceholder": "Reply to story…",
     "replyMsg": "Hi {{name}} 🌸 about your story...",
     "newStory": "New story",
     "captionPlaceholder": "Add a caption (optional)",

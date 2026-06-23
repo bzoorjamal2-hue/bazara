@@ -156,25 +156,25 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
           <img src={cldOptimized(cur.mediaUrl, 'image')} alt="" className="h-full w-full bg-black object-contain" />
         )}
 
-        {/* تعليق + زر اطلبي الآن + ردّ واتساب */}
-        {(cur.caption || cur.productId || store?.whatsapp) && (
-          <div className="absolute inset-x-0 bottom-0 z-30 flex flex-col gap-2.5 p-4 pb-[calc(env(safe-area-inset-bottom,0px)+18px)]" dir={rtl ? 'rtl' : 'ltr'}>
-            {cur.caption && <p className="max-w-fit rounded-2xl bg-black/45 px-3.5 py-2 text-sm font-medium text-white backdrop-blur drop-shadow">{cur.caption}</p>}
-            <div className="flex items-stretch gap-2">
-              {cur.productId && (
-                <Link to={`/product/${cur.productId}`} onClick={onClose} className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl bg-white py-2.5 text-sm font-bold text-wine shadow-lg active:scale-[0.98]">
-                  🛍️ {t('story.shopNow')}
-                </Link>
-              )}
-              {store?.whatsapp && (
-                <a href={buildWhatsappLink(store.whatsapp, t('story.replyMsg', { name: store.name }))} target="_blank" rel="noreferrer"
-                  className="flex items-center justify-center rounded-2xl bg-white/15 px-4 py-2.5 text-sm font-bold text-white backdrop-blur active:scale-95">
-                  {t('story.reply')}
-                </a>
-              )}
-            </div>
-          </div>
-        )}
+        {/* أسفل العارض (أسلوب إنستغرام): تعليق + زر اطلبي الآن + شريط ردّ */}
+        <div className="absolute inset-x-0 bottom-0 z-30 flex flex-col gap-3 p-4 pb-[calc(env(safe-area-inset-bottom,0px)+18px)]" dir={rtl ? 'rtl' : 'ltr'}>
+          {cur.caption && (
+            <p className="mx-auto max-w-[92%] text-center text-[15px] font-semibold leading-snug text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.85)]">{cur.caption}</p>
+          )}
+          {cur.productId && (
+            <Link to={`/product/${cur.productId}`} onClick={onClose}
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-white py-3 text-sm font-bold text-wine shadow-lg transition active:scale-[0.98]">
+              🛍️ {t('story.shopNow')}
+            </Link>
+          )}
+          {store?.whatsapp && (
+            <a href={buildWhatsappLink(store.whatsapp, t('story.replyMsg', { name: store.name }))} target="_blank" rel="noreferrer"
+              className="flex items-center gap-3 rounded-full border border-white/40 bg-white/10 px-5 py-3 text-sm text-white/90 backdrop-blur transition active:scale-[0.99]">
+              <span className="flex-1 text-start">{t('story.replyPlaceholder')}</span>
+              <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z" /></svg>
+            </a>
+          )}
+        </div>
 
         {/* مناطق اللمس: يسار (٣٠٪) سابق، يمين (٧٠٪) تالي، ضغط مطوّل = إيقاف */}
         <button aria-label="prev" className="absolute inset-y-0 start-0 z-20 w-[30%]"

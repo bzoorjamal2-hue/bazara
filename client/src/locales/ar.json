@@ -85,6 +85,7 @@
     "hrsAgo": "منذ {{count}} ساعة",
     "shopNow": "اطلبي الآن",
     "reply": "ردّي",
+    "replyPlaceholder": "ردّي على الستوري…",
     "replyMsg": "مرحباً {{name}} 🌸 بخصوص الستوري...",
     "newStory": "ستوري جديدة",
     "captionPlaceholder": "أضيفي تعليقاً (اختياري)",
