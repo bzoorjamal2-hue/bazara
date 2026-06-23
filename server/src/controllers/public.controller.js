@@ -239,20 +239,20 @@ export async function getOffers(_req, res, next) {
 }
 
 // ريلز: منتجات الفيديو (تصفّح عمودي عصري). ?store=slug → ريلز متجر واحد فقط.
+const REELS_PAGE = 40;
 export async function getReels(req, res, next) {
   try {
     const active = activeStoreSql('u');
     const slug = (req.query.store || '').trim();
-    const where = `p.video_url IS NOT NULL AND p.video_url <> '' AND ${active}`;
-    const r = slug
-      ? await query(
-          `${PRODUCT_SELECT} WHERE ${where} AND s.slug = $1 ORDER BY p.featured DESC, p.created_at DESC LIMIT 40`,
-          [slug]
-        )
-      : await query(
-          `${PRODUCT_SELECT} WHERE ${where} ORDER BY p.featured DESC, p.created_at DESC LIMIT 40`
-        );
-    res.json({ products: r.rows.map(mapProduct) });
+    const offset = Math.max(0, parseInt(req.query.offset, 10) || 0);
+    const params = [];
+    let sql = `${PRODUCT_SELECT} WHERE p.video_url IS NOT NULL AND p.video_url <> '' AND ${active}`;
+    if (slug) { params.push(slug); sql += ` AND s.slug = $${params.length}`; } // ريلز متجر واحد
+    sql += ` ORDER BY p.featured DESC, p.created_at DESC`;
+    params.push(REELS_PAGE); sql += ` LIMIT $${params.length}`;
+    params.push(offset); sql += ` OFFSET $${params.length}`;
+    const r = await query(sql, params);
+    res.json({ products: r.rows.map(mapProduct), hasMore: r.rows.length === REELS_PAGE });
   } catch (err) {
     next(err);
   }

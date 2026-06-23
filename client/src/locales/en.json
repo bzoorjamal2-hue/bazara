@@ -75,7 +75,8 @@
     "copyPrompt": "Copy the product link:",
     "add": "Add to cart",
     "size": "Size",
-    "color": "Color"
+    "color": "Color",
+    "soundHint": "Tap for sound"
   },
   "common": {
     "search": "Search",

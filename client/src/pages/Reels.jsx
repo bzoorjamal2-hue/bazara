@@ -11,29 +11,69 @@ import useScrollLock from '../hooks/useScrollLock.js';
 import Spinner from '../components/Spinner.jsx';
 import { sizeLabel } from '../utils/sizes.js';
 
+const MUTE_KEY = 'bz_reels_muted';
+
 // تصفّح عمودي لفيديوهات المنتجات (Reels) — ملء الشاشة، تشغيل تلقائي للظاهر فقط،
-// تحميل مسبق للتالي، شريط تقدّم + انتقال تلقائي، دبل-تاب لايك، وإضافة للسلة مباشرة.
+// تحميل مسبق + تحميل المزيد، شريط تقدّم/انتقال تلقائي، ضغط مطوّل للإيقاف،
+// دبل-تاب لايك (قلب أحمر) مع اهتزاز، تلميح صوت، ومؤشّر تحميل + حماية من فشل الفيديو.
 export default function Reels() {
   const { t, i18n } = useTranslation();
   const rtl = i18n.language !== 'en';
   const navigate = useNavigate();
-  const { slug } = useParams(); // /store/:slug/reels → ريلز متجر واحد
+  const { slug } = useParams();
   const [items, setItems] = useState(null);
-  const [muted, setMuted] = useState(true);
+  const [muted, setMuted] = useState(() => {
+    try { return localStorage.getItem(MUTE_KEY) !== '0'; } catch { return true; }
+  });
   const [active, setActive] = useState(0);
+  const [soundHint, setSoundHint] = useState(true);
   const feedRef = useRef(null);
+  const offsetRef = useRef(0);
+  const hasMoreRef = useRef(true);
+  const loadingRef = useRef(false);
   useScrollLock(true);
+
+  const setMutedPersist = (v) => {
+    setMuted((m) => {
+      const next = typeof v === 'function' ? v(m) : v;
+      try { localStorage.setItem(MUTE_KEY, next ? '1' : '0'); } catch { /* تجاهل */ }
+      return next;
+    });
+  };
+
+  const reelsUrl = (off) => `/public/reels?offset=${off}${slug ? `&store=${encodeURIComponent(slug)}` : ''}`;
 
   useEffect(() => {
     let on = true;
     setItems(null);
-    api.get(`/public/reels${slug ? `?store=${encodeURIComponent(slug)}` : ''}`)
-      .then((r) => { if (on) setItems(r.data.products || []); })
+    offsetRef.current = 0; hasMoreRef.current = true; loadingRef.current = false;
+    api.get(reelsUrl(0))
+      .then((r) => {
+        if (!on) return;
+        const list = r.data.products || [];
+        setItems(list);
+        offsetRef.current = list.length;
+        hasMoreRef.current = !!r.data.hasMore;
+      })
       .catch(() => { if (on) setItems([]); });
     return () => { on = false; };
   }, [slug]);
 
-  // تتبّع الشريحة الفعّالة (تشغيل/تحميل مسبق/تقدّم/انتقال تلقائي)
+  const loadMore = () => {
+    if (loadingRef.current || !hasMoreRef.current) return;
+    loadingRef.current = true;
+    api.get(reelsUrl(offsetRef.current))
+      .then((r) => {
+        const list = r.data.products || [];
+        setItems((prev) => [...(prev || []), ...list]);
+        offsetRef.current += list.length;
+        hasMoreRef.current = !!r.data.hasMore;
+      })
+      .catch(() => {})
+      .finally(() => { loadingRef.current = false; });
+  };
+
+  // تتبّع الشريحة الفعّالة + تحميل المزيد قرب النهاية
   useEffect(() => {
     const root = feedRef.current;
     if (!root || !items || items.length === 0) return undefined;
@@ -43,7 +83,10 @@ export default function Reels() {
         entries.forEach((e) => {
           if (e.isIntersecting && e.intersectionRatio >= 0.6) {
             const idx = slides.indexOf(e.target);
-            if (idx >= 0) setActive(idx);
+            if (idx >= 0) {
+              setActive(idx);
+              if (idx >= items.length - 3) loadMore();
+            }
           }
         });
       },
@@ -52,6 +95,10 @@ export default function Reels() {
     slides.forEach((s) => io.observe(s));
     return () => io.disconnect();
   }, [items]);
+
+  // إخفاء تلميح الصوت تلقائياً، وفور تشغيل الصوت
+  useEffect(() => { if (!muted) setSoundHint(false); }, [muted]);
+  useEffect(() => { const id = setTimeout(() => setSoundHint(false), 4200); return () => clearTimeout(id); }, []);
 
   const goNext = (i) => {
     const root = feedRef.current;
@@ -65,11 +112,18 @@ export default function Reels() {
         style={{ paddingTop: 'calc(env(safe-area-inset-top,0px) + 12px)' }}>
         <div className="pointer-events-auto"><CloseButton onClick={goBack} variant="ghost" size="h-10 w-10" label="back" /></div>
         <span className="pointer-events-none select-none font-display text-lg font-bold text-white/90 drop-shadow">🎬 {t('reels.title')}</span>
-        <button type="button" onClick={() => setMuted((m) => !m)} aria-label={muted ? 'unmute' : 'mute'}
+        <button type="button" onClick={() => setMutedPersist((m) => !m)} aria-label={muted ? 'unmute' : 'mute'}
           className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur transition hover:bg-black/60">
           {muted ? <MutedIcon /> : <SoundIcon />}
         </button>
       </div>
+
+      {/* تلميح الصوت */}
+      {items && items.length > 0 && soundHint && muted && (
+        <div className="pointer-events-none absolute inset-x-0 z-30 flex justify-center" style={{ top: 'calc(env(safe-area-inset-top,0px) + 60px)' }}>
+          <span className="animate-toast-top rounded-full bg-black/55 px-3.5 py-1.5 text-xs font-semibold text-white backdrop-blur">🔊 {t('reels.soundHint')}</span>
+        </div>
+      )}
 
       {items === null ? (
         <div className="flex h-full items-center justify-center"><Spinner /></div>
@@ -85,7 +139,7 @@ export default function Reels() {
           style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
           {items.map((p, i) => (
             <ReelSlide
-              key={p.id}
+              key={`${p.id}-${i}`}
               p={p}
               muted={muted}
               rtl={rtl}
@@ -94,7 +148,7 @@ export default function Reels() {
               isActive={i === active}
               preload={i === active || i === active + 1}
               isLast={i === items.length - 1}
-              onUnmute={() => setMuted(false)}
+              onUnmute={() => setMutedPersist(false)}
               onEnded={() => goNext(i)}
             />
           ))}
@@ -111,11 +165,14 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   const [copied, setCopied] = useState(false);
   const [progress, setProgress] = useState(0);
   const [burst, setBurst] = useState(0);
+  const [buffering, setBuffering] = useState(false);
+  const [errored, setErrored] = useState(false);
   const [pick, setPick] = useState(false);
   const [selSize, setSelSize] = useState('');
   const [selColor, setSelColor] = useState('');
   const vidRef = useRef(null);
   const tapRef = useRef({ t: 0, timer: null });
+  const holdRef = useRef({ timer: null, held: false, x: 0, y: 0, moved: false });
   const poster = cldVideoPoster(p.videoUrl) || p.imageUrl || '';
 
   const sizes = (p.size || '').split(',').map((s) => s.trim()).filter(Boolean);
@@ -123,7 +180,6 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   const hasDiscount = p.oldPrice && p.oldPrice > p.price;
   const discountPct = hasDiscount ? Math.round((1 - p.price / p.oldPrice) * 100) : 0;
 
-  // تشغيل/إيقاف حسب كونها الشريحة الفعّالة
   useEffect(() => {
     const vid = vidRef.current;
     if (!vid) return;
@@ -139,12 +195,16 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   };
   const onVidEnded = () => {
     if (isLast) { const v = vidRef.current; if (v) { v.currentTime = 0; v.play().catch(() => {}); } }
-    else onEnded(); // انتقال تلقائي للتالي
+    else onEnded();
   };
 
-  const doLike = () => { if (!liked) toggle(p); setBurst((b) => b + 1); };
+  const doLike = () => {
+    if (!liked) toggle(p);
+    setBurst((b) => b + 1);
+    if (navigator.vibrate) navigator.vibrate(18); // اهتزاز خفيف (أندرويد)
+  };
 
-  // نقرة مفردة = كتم/تشغيل | نقرة مزدوجة = لايك (نافذة 350ms لموثوقية iOS)
+  // نقرة مفردة = كتم/تشغيل | نقرة مزدوجة = لايك
   const onTap = () => {
     const now = Date.now();
     if (now - tapRef.current.t < 350) {
@@ -155,6 +215,28 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
       tapRef.current.t = now;
       tapRef.current.timer = setTimeout(() => { if (muted) onUnmute(); tapRef.current.t = 0; }, 350);
     }
+  };
+
+  // ضغط مطوّل = إيقاف مؤقّت (مع إلغائه إن صار تمرير)
+  const onDown = (e) => {
+    holdRef.current = { ...holdRef.current, held: false, moved: false, x: e.clientX || 0, y: e.clientY || 0 };
+    holdRef.current.timer = setTimeout(() => {
+      if (!holdRef.current.moved) { holdRef.current.held = true; vidRef.current?.pause(); }
+    }, 280);
+  };
+  const onMove = (e) => {
+    if (Math.abs((e.clientX || 0) - holdRef.current.x) > 10 || Math.abs((e.clientY || 0) - holdRef.current.y) > 10) {
+      holdRef.current.moved = true;
+      clearTimeout(holdRef.current.timer);
+    }
+  };
+  const onUp = () => {
+    clearTimeout(holdRef.current.timer);
+    if (holdRef.current.held && isActive) vidRef.current?.play().catch(() => {});
+  };
+  const onLayerClick = () => {
+    if (holdRef.current.held) { holdRef.current.held = false; return; } // كان ضغطاً مطوّلاً، لا نعتبره نقرة
+    onTap();
   };
 
   const share = async (e) => {
@@ -186,27 +268,50 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
           <div className="h-full bg-white/90 transition-[width] duration-150 ease-linear" style={{ width: `${progress}%` }} />
         </div>
 
-        <video
-          ref={vidRef}
-          src={cldOptimized(p.videoUrl, 'video')}
-          poster={poster}
-          muted={muted}
-          playsInline
-          preload={preload ? 'auto' : 'none'}
-          onTimeUpdate={onTimeUpdate}
-          onEnded={onVidEnded}
+        {/* صورة احتياطية إن فشل الفيديو */}
+        {errored && poster ? (
+          <img src={cldThumb(poster, 720)} alt={p.name} className="h-full w-full object-cover" />
+        ) : (
+          <video
+            ref={vidRef}
+            src={cldOptimized(p.videoUrl, 'video')}
+            poster={poster}
+            muted={muted}
+            playsInline
+            preload={preload ? 'auto' : 'none'}
+            onTimeUpdate={onTimeUpdate}
+            onEnded={onVidEnded}
+            onWaiting={() => setBuffering(true)}
+            onPlaying={() => setBuffering(false)}
+            onCanPlay={() => setBuffering(false)}
+            onError={() => setErrored(true)}
+            style={{ touchAction: 'pan-y' }}
+            className="h-full w-full object-cover"
+          />
+        )}
+
+        {/* مؤشّر تحميل الفيديو */}
+        {buffering && isActive && !errored && (
+          <div className="pointer-events-none absolute inset-0 z-[6] flex items-center justify-center">
+            <span className="h-10 w-10 animate-spin rounded-full border-[3px] border-white/30 border-t-white" />
+          </div>
+        )}
+
+        {/* طبقة لمس: نقرة=كتم، مزدوجة=لايك، ضغط مطوّل=إيقاف (تسمح بالتمرير) */}
+        <div
+          className="absolute inset-0 z-[5]"
           style={{ touchAction: 'pan-y' }}
-          className="h-full w-full object-cover"
+          onPointerDown={onDown}
+          onPointerMove={onMove}
+          onPointerUp={onUp}
+          onPointerCancel={onUp}
+          onClick={onLayerClick}
         />
 
-        {/* طبقة لمس فوق الفيديو (تحت الأزرار z-10/20): نقرة = كتم، نقرة مزدوجة = لايك.
-            تسمح بالتمرير العمودي (pan-y) وتلتقط النقرات بدقة بدل الاعتماد على الفيديو. */}
-        <div className="absolute inset-0 z-[5]" style={{ touchAction: 'pan-y' }} onClick={onTap} />
-
-        {/* انفجار قلب الدبل-تاب */}
+        {/* انفجار القلب الأحمر (دبل-تاب) */}
         {burst > 0 && (
           <div key={burst} className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
-            <svg viewBox="0 0 24 24" className="animate-heart-pop h-28 w-28 fill-white drop-shadow-2xl" aria-hidden="true">
+            <svg viewBox="0 0 24 24" className="animate-heart-pop h-28 w-28 drop-shadow-2xl" style={{ fill: '#ff2d55' }} aria-hidden="true">
               <path d="M12 21C12 21 4 15 4 8.5A4.5 4.5 0 0 1 12 6 A4.5 4.5 0 0 1 20 8.5C20 15 12 21 12 21Z" />
             </svg>
           </div>
@@ -232,9 +337,9 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
           {p.soldCount > 0 && <span className="rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur">{t('product.soldCount', { count: p.soldCount })}</span>}
         </div>
 
-        {/* شريط الإجراءات (مفضّلة + مشاركة) — z-20 فوق المعلومات */}
+        {/* مفضّلة + مشاركة */}
         <div className="absolute bottom-40 end-3 z-20 flex flex-col items-center gap-4">
-          <button type="button" onClick={() => toggle(p)} aria-label="wishlist"
+          <button type="button" onClick={() => { if (!liked && navigator.vibrate) navigator.vibrate(18); toggle(p); }} aria-label="wishlist"
             className={`flex h-12 w-12 items-center justify-center rounded-full backdrop-blur transition active:scale-90 ${liked ? 'bg-red-500/90 text-white' : 'bg-black/40 text-white hover:bg-black/60'}`}>
             <HeartIcon className="h-6 w-6" filled={liked} />
           </button>
@@ -245,7 +350,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
         </div>
 
         {/* معلومات المنتج + أزرار */}
-        <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col gap-2.5 p-4 pe-16 pb-[calc(env(safe-area-inset-bottom,0px)+18px)] text-white">
+        <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col gap-2 p-4 pe-16 pb-[calc(env(safe-area-inset-bottom,0px)+18px)] text-white">
           <Link to={`/store/${p.storeSlug}`} className="inline-flex max-w-fit items-center gap-2 text-sm font-semibold text-white drop-shadow">
             {p.storeLogo ? (
               <img src={cldThumb(p.storeLogo, 80)} alt="" className="h-7 w-7 shrink-0 rounded-full object-cover ring-1 ring-white/50" />
@@ -255,6 +360,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
             <span className="truncate">{p.storeName}</span>
           </Link>
           <h2 className="line-clamp-2 text-lg font-bold leading-snug drop-shadow-lg">{p.name}</h2>
+          {p.description && <p className="line-clamp-1 text-xs text-white/75 drop-shadow">{p.description}</p>}
           <div className="flex items-center gap-2">
             <span className="rounded-lg bg-black/35 px-2.5 py-1 font-display text-lg font-extrabold text-gold-200 backdrop-blur-sm">{t('common.currency')}{p.price}</span>
             {hasDiscount && <span className="text-sm text-white/70 line-through">{t('common.currency')}{p.oldPrice}</span>}
@@ -271,7 +377,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
           </div>
         </div>
 
-        {/* شيت اختيار المقاس/اللون قبل الإضافة */}
+        {/* شيت اختيار المقاس/اللون */}
         {pick && (
           <div className="absolute inset-0 z-40 flex items-end" onClick={() => setPick(false)}>
             <div className="absolute inset-0 bg-black/55 backdrop-blur-[1px]" />
