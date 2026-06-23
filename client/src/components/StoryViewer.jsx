@@ -8,7 +8,7 @@ import { buildWhatsappLink } from '../utils/whatsapp.js';
 import CloseButton from './CloseButton.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 
-const IMG_MS = 5000; // مدة عرض الصورة
+const IMG_MS = 3500; // مدة عرض الصورة (أسرع)
 
 // عارض ستوري بأسلوب إنستغرام: أشرطة تقدّم، انتقال تلقائي، نقر يمين/يسار،
 // ضغط مطوّل للإيقاف، وحذف للمالك. الفيديو يعتمد مدته، والصورة ٥ ثوانٍ.
@@ -78,12 +78,12 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === 'Escape') onClose();
-      else if (e.key === 'ArrowRight') (rtl ? goPrev : goNext)();
-      else if (e.key === 'ArrowLeft') (rtl ? goNext : goPrev)();
+      else if (e.key === 'ArrowLeft') goPrev();
+      else if (e.key === 'ArrowRight') goNext();
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [rtl, idx, stories.length]);
+  }, [idx, stories.length]);
 
   const onDownZone = () => {
     holdRef.current.held = false;
@@ -92,9 +92,9 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
   const onUpZone = (where) => {
     clearTimeout(holdRef.current.timer);
     if (holdRef.current.held) { holdRef.current.held = false; setPaused(false); return; }
-    // نقرة: الجهة المنطقية تتبع اللغة (في RTL يمين=السابق)
-    if (where === 'prev') (rtl ? goNext : goPrev)();
-    else (rtl ? goPrev : goNext)();
+    // تنقّل ثابت ومتسق للغتين: يسار = السابق، يمين = التالي (لا انعكاس)
+    if (where === 'prev') goPrev();
+    else goNext();
   };
 
   const del = async () => {
