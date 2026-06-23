@@ -18,6 +18,7 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
   const [idx, setIdx] = useState(startIndex);
   const [progress, setProgress] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [reply, setReply] = useState('');
   const vidRef = useRef(null);
   const rafRef = useRef(0);
   const startRef = useRef(0);
@@ -98,6 +99,16 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
     onClose();
   };
 
+  // إرسال ردّ الزبونة لواتساب المتجر: نصّها + رابط المنتج (يظهر بصورته بالمعاينة)
+  const sendReply = () => {
+    const text = reply.trim();
+    const body = text || t('story.replyMsg', { name: store?.name });
+    const productLink = cur?.productId ? `${window.location.origin}/share/product/${cur.productId}` : '';
+    const msg = productLink ? `${body}\n${productLink}` : body;
+    window.open(buildWhatsappLink(store.whatsapp, msg), '_blank');
+    setReply('');
+  };
+
   const ago = (() => {
     const mins = Math.max(0, Math.floor((Date.now() - new Date(cur?.createdAt).getTime()) / 60000));
     if (mins < 60) return t('story.minsAgo', { count: mins });
@@ -107,7 +118,11 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
   if (!cur) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[95] flex justify-center bg-black" dir="ltr">
+    <div
+      className="fixed inset-0 z-[95] flex select-none justify-center bg-black"
+      dir="ltr"
+      style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none', WebkitTapHighlightColor: 'transparent' }}
+    >
       <div className="relative h-full w-full sm:max-w-[480px]">
         {/* أشرطة التقدّم */}
         <div className="absolute inset-x-0 top-0 z-30 flex gap-1 px-2.5" style={{ paddingTop: 'calc(env(safe-area-inset-top,0px) + 8px)' }}>
@@ -168,11 +183,22 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
             </Link>
           )}
           {store?.whatsapp && (
-            <a href={buildWhatsappLink(store.whatsapp, t('story.replyMsg', { name: store.name }))} target="_blank" rel="noreferrer"
-              className="flex items-center gap-3 rounded-full border border-white/40 bg-white/10 px-5 py-3 text-sm text-white/90 backdrop-blur transition active:scale-[0.99]">
-              <span className="flex-1 text-start">{t('story.replyPlaceholder')}</span>
-              <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z" /></svg>
-            </a>
+            <form
+              onSubmit={(e) => { e.preventDefault(); sendReply(); }}
+              className="flex items-center gap-2 rounded-full border border-white/40 bg-white/10 ps-4 pe-1.5 py-1.5 backdrop-blur"
+            >
+              <input
+                value={reply}
+                onChange={(e) => setReply(e.target.value)}
+                onFocus={() => setPaused(true)}
+                onBlur={() => setPaused(false)}
+                placeholder={t('story.replyPlaceholder')}
+                className="min-w-0 flex-1 bg-transparent py-1.5 text-sm text-white placeholder:text-white/55 focus:outline-none"
+              />
+              <button type="submit" aria-label="send" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-wine transition active:scale-90">
+                <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z" /></svg>
+              </button>
+            </form>
           )}
         </div>
 
