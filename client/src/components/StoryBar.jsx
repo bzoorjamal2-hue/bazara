@@ -42,8 +42,10 @@ export default function StoryBar({ store, stories, isOwner, onAdded, onDeleted, 
 
   const logoSize = compact ? 'h-10 w-10' : 'h-16 w-16';
   const ringPad = compact ? 'p-[2px]' : 'p-[3px]';
-  const plusSize = compact ? 'h-5 w-5' : 'h-6 w-6';
+  const plusSize = compact ? 'h-[18px] w-[18px]' : 'h-6 w-6';
   const plusIcon = compact ? 'h-3 w-3' : 'h-3.5 w-3.5';
+  // بوضع الهيدر المدمج: الحاوية فيها overflow-hidden، فنُبقي (+) داخل حدود الشعار كي لا يُقصّ
+  const plusPos = compact ? 'bottom-0 end-0' : '-bottom-0.5 -end-0.5';
 
   return (
     <div className={compact ? 'inline-flex' : 'mb-5 flex items-center gap-4'}>
@@ -64,7 +66,7 @@ export default function StoryBar({ store, stories, isOwner, onAdded, onDeleted, 
               role="button"
               onClick={(e) => { e.stopPropagation(); pick(); }}
               aria-label="add"
-              className={`absolute -bottom-0.5 -end-0.5 flex ${plusSize} items-center justify-center rounded-full border-2 border-white bg-wine text-cream shadow`}
+              className={`absolute ${plusPos} flex ${plusSize} items-center justify-center rounded-full border-2 border-white bg-wine text-cream shadow`}
             >
               <svg viewBox="0 0 24 24" className={plusIcon} fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
             </span>
