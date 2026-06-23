@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client.js';
 import { uploadToCloudinary, cldThumb } from '../utils/cloudinary.js';
@@ -93,8 +94,9 @@ export default function StoryBar({ store, stories, isOwner, onAdded, onDeleted, 
         <StoryViewer stories={stories} store={store} isOwner={isOwner} onClose={() => setOpen(false)} onDeleted={onDeleted} onSeen={onSeen} />
       )}
 
-      {/* شيت النشر: معاينة + تعليق + ربط منتج */}
-      {file && (
+      {/* شيت النشر: معاينة + تعليق + ربط منتج — Portal على مستوى الصفحة كي لا يتأثّر
+          بالهيدر (will-change/transform) الذي يجعل fixed نسبةً له فيتكسّر */}
+      {file && createPortal(
         <div className="fixed inset-0 z-[95] flex items-end justify-center sm:items-center" onClick={() => !busy && closeCompose()}>
           <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px]" />
           <div className="relative w-full max-w-md rounded-t-3xl bg-white p-5 pb-[calc(env(safe-area-inset-bottom,0px)+18px)] text-wine sm:rounded-3xl" onClick={(e) => e.stopPropagation()}>
@@ -121,7 +123,8 @@ export default function StoryBar({ store, stories, isOwner, onAdded, onDeleted, 
               <button onClick={closeCompose} disabled={busy} className="rounded-2xl border border-wine/30 px-5 font-semibold text-wine disabled:opacity-50">{t('common.cancel')}</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
