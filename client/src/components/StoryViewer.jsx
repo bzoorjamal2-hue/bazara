@@ -45,16 +45,21 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
     }
   }, [idx, cur]);
 
-  // مؤقّت الصورة (الفيديو يستخدم timeupdate)
+  // تقدّم سلس (60fps) عبر requestAnimationFrame لكلٍّ من الصورة (مؤقّت) والفيديو (currentTime)
   useEffect(() => {
-    if (isVideo || paused || !cur) return undefined;
+    if (paused || !cur) return undefined;
+    const v = vidRef.current;
     startRef.current = Date.now() - elapsedRef.current;
     const tick = () => {
-      const el = Date.now() - startRef.current;
-      elapsedRef.current = el;
-      const pct = Math.min(100, (el / IMG_MS) * 100);
-      setProgress(pct);
-      if (pct >= 100) { goNext(); return; }
+      if (isVideo) {
+        if (v && v.duration) setProgress((v.currentTime / v.duration) * 100);
+      } else {
+        const el = Date.now() - startRef.current;
+        elapsedRef.current = el;
+        const pct = Math.min(100, (el / IMG_MS) * 100);
+        setProgress(pct);
+        if (pct >= 100) { goNext(); return; }
+      }
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
@@ -163,12 +168,11 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
             src={cldOptimized(cur.mediaUrl, 'video')}
             autoPlay
             playsInline
-            onTimeUpdate={(e) => { const v = e.currentTarget; if (v.duration) setProgress((v.currentTime / v.duration) * 100); }}
             onEnded={goNext}
-            className="h-full w-full bg-black object-contain"
+            className="h-full w-full bg-black object-cover"
           />
         ) : (
-          <img src={cldOptimized(cur.mediaUrl, 'image')} alt="" className="h-full w-full bg-black object-contain" />
+          <img src={cldOptimized(cur.mediaUrl, 'image')} alt="" className="h-full w-full bg-black object-cover" />
         )}
 
         {/* أسفل العارض (أسلوب إنستغرام): تعليق + زر اطلبي الآن + شريط ردّ */}
