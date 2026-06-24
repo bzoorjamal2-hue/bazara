@@ -107,7 +107,10 @@ export default function Reels() {
   const goBack = () => (slug ? navigate(`/store/${slug}`) : window.history.length > 1 ? navigate(-1) : navigate('/shop'));
 
   return (
-    <div className="fixed inset-0 z-[90] bg-black">
+    <div
+      className="fixed inset-0 z-[90] select-none bg-black"
+      style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none', WebkitTapHighlightColor: 'transparent' }}
+    >
       <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-center justify-between p-3"
         style={{ paddingTop: 'calc(env(safe-area-inset-top,0px) + 12px)' }}>
         <div className="pointer-events-auto"><CloseButton onClick={goBack} variant="ghost" size="h-10 w-10" label="back" /></div>

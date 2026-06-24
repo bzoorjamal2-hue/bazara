@@ -130,8 +130,8 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
       style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none', WebkitTapHighlightColor: 'transparent' }}
     >
       <div className="relative h-full w-full sm:max-w-[480px]">
-        {/* أشرطة التقدّم */}
-        <div className="absolute inset-x-0 top-0 z-30 flex gap-1 px-2.5" style={{ paddingTop: 'calc(env(safe-area-inset-top,0px) + 8px)' }}>
+        {/* أشرطة التقدّم — تتبع اللغة: عربي الأول يمين والتعبئة من اليمين، إنجليزي بالعكس */}
+        <div className="absolute inset-x-0 top-0 z-30 flex gap-1 px-2.5" dir={rtl ? 'rtl' : 'ltr'} style={{ paddingTop: 'calc(env(safe-area-inset-top,0px) + 8px)' }}>
           {stories.map((s, i) => (
             <div key={s.id} className="h-0.5 flex-1 overflow-hidden rounded-full bg-white/30">
               <div className="h-full rounded-full bg-white" style={{ width: `${i < idx ? 100 : i === idx ? progress : 0}%` }} />
