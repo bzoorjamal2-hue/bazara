@@ -41,9 +41,10 @@ export default function OrdersManager() {
     }
   };
 
-  // إرسال الطلب لشركة التوصيل عبر واتساب برسالة جاهزة (الزبونة + العنوان + الإجمالي COD)
+  // إرسال الطلب عبر واتساب برسالة جاهزة — لشركة التوصيل إن حُدّدت، وإلا لواتساب صاحب المتجر
   const sendToDelivery = (o) => {
-    if (!store?.deliveryPhone) return;
+    const num = store?.deliveryPhone || store?.whatsapp;
+    if (!num) return;
     const cur = t('common.currency');
     const items = (o.items || []).map((it) => `• ${it.name}${it.size ? ` (${it.size})` : ''}${it.color ? ` - ${it.color}` : ''} ×${it.qty}`).join('\n');
     const msg = [
@@ -58,7 +59,7 @@ export default function OrdersManager() {
       `الإجمالي: ${cur}${Number(o.total).toFixed(2)} (الدفع عند الاستلام)`,
       o.notes ? `ملاحظات: ${o.notes}` : '',
     ].filter(Boolean).join('\n');
-    window.open(buildWhatsappLink(store.deliveryPhone, msg), '_blank');
+    window.open(buildWhatsappLink(num, msg), '_blank');
   };
 
   // تصدير الطلبات لملف CSV يفتح في Excel (BOM لدعم العربية) — بناء من البيانات مباشرة بلا خادم
@@ -178,7 +179,7 @@ export default function OrdersManager() {
                   {wa && (
                     <a href={wa} target="_blank" rel="noreferrer" className="btn-whatsapp !px-3 !py-1.5 text-xs">💬 {t('dashboard.ordersSection.contactWhatsapp')}</a>
                   )}
-                  {store?.deliveryPhone && (
+                  {(store?.deliveryPhone || store?.whatsapp) && (
                     <button onClick={() => sendToDelivery(o)} className="inline-flex items-center gap-1 rounded-xl border border-gold-400/30 px-3 py-1.5 text-xs font-semibold text-gold-200 transition hover:bg-gold-400/10">
                       🚚 {t('dashboard.ordersSection.sendDelivery')}
                     </button>
