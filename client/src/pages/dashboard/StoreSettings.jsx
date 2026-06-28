@@ -7,7 +7,7 @@ import ImageInput from '../../components/ImageInput.jsx';
 import BannerEditor from '../../components/BannerEditor.jsx';
 
 const EMPTY = {
-  name: '', slug: '', description: '', logoUrl: '', phone: '', whatsapp: '',
+  name: '', slug: '', description: '', logoUrl: '', phone: '', whatsapp: '', deliveryPhone: '',
   instagram: '', facebook: '', tiktok: '', themeColor: '#d4af37', deliveryInfo: '', paymentInfo: '', banners: [],
 };
 
@@ -36,7 +36,7 @@ export default function StoreSettings() {
         const s = res.data.store;
         setForm({
           name: s.name || '', slug: s.slug || '', description: s.description || '', logoUrl: s.logoUrl || '',
-          phone: s.phone || '', whatsapp: s.whatsapp || '', instagram: s.instagram || '',
+          phone: s.phone || '', whatsapp: s.whatsapp || '', deliveryPhone: s.deliveryPhone || '', instagram: s.instagram || '',
           facebook: s.facebook || '', tiktok: s.tiktok || '', themeColor: s.themeColor || '#d4af37',
           deliveryInfo: s.deliveryInfo || '', paymentInfo: s.paymentInfo || '',
           banners: Array.isArray(s.banners) && s.banners.length ? s.banners : DEFAULT_BANNERS,
@@ -169,6 +169,11 @@ export default function StoreSettings() {
             <div>
               <label className="label">{t('dashboard.store.phone')}</label>
               <input type="text" dir="ltr" className="input" value={form.phone} onChange={set('phone')} />
+            </div>
+            <div>
+              <label className="label">🚚 {t('dashboard.store.deliveryPhone')}</label>
+              <input type="text" dir="ltr" className="input" placeholder="+970590000000" value={form.deliveryPhone} onChange={set('deliveryPhone')} />
+              <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.deliveryPhoneHint')}</p>
             </div>
             <div>
               <label className="label">{t('dashboard.store.instagram')}</label>

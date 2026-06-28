@@ -4,6 +4,7 @@ import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
 import { buildWhatsappLink } from '../../utils/whatsapp.js';
+import { useAuth } from '../../context/AuthContext.jsx';
 
 const FLOW = ['new', 'confirmed', 'shipped', 'delivered', 'cancelled'];
 const BADGE = {
@@ -19,6 +20,7 @@ const BADGE = {
 
 export default function OrdersManager() {
   const { t } = useTranslation();
+  const { store } = useAuth();
   const [orders, setOrders] = useState(null);
   const [error, setError] = useState('');
   const [savingId, setSavingId] = useState('');
@@ -37,6 +39,26 @@ export default function OrdersManager() {
     } finally {
       setSavingId('');
     }
+  };
+
+  // إرسال الطلب لشركة التوصيل عبر واتساب برسالة جاهزة (الزبونة + العنوان + الإجمالي COD)
+  const sendToDelivery = (o) => {
+    if (!store?.deliveryPhone) return;
+    const cur = t('common.currency');
+    const items = (o.items || []).map((it) => `• ${it.name}${it.size ? ` (${it.size})` : ''}${it.color ? ` - ${it.color}` : ''} ×${it.qty}`).join('\n');
+    const msg = [
+      `🚚 طلب توصيل — ${store.name || ''}`,
+      `الزبونة: ${o.customerName || ''}`,
+      `الهاتف: ${o.customerPhone || ''}`,
+      o.city ? `المدينة: ${o.city}` : '',
+      o.address ? `العنوان: ${o.address}` : '',
+      '',
+      items,
+      '',
+      `الإجمالي: ${cur}${Number(o.total).toFixed(2)} (الدفع عند الاستلام)`,
+      o.notes ? `ملاحظات: ${o.notes}` : '',
+    ].filter(Boolean).join('\n');
+    window.open(buildWhatsappLink(store.deliveryPhone, msg), '_blank');
   };
 
   // تصدير الطلبات لملف CSV يفتح في Excel (BOM لدعم العربية) — بناء من البيانات مباشرة بلا خادم
@@ -155,6 +177,11 @@ export default function OrdersManager() {
                   {savingId === o.id && <span className="text-xs text-stone-500">…</span>}
                   {wa && (
                     <a href={wa} target="_blank" rel="noreferrer" className="btn-whatsapp !px-3 !py-1.5 text-xs">💬 {t('dashboard.ordersSection.contactWhatsapp')}</a>
+                  )}
+                  {store?.deliveryPhone && (
+                    <button onClick={() => sendToDelivery(o)} className="inline-flex items-center gap-1 rounded-xl border border-gold-400/30 px-3 py-1.5 text-xs font-semibold text-gold-200 transition hover:bg-gold-400/10">
+                      🚚 {t('dashboard.ordersSection.sendDelivery')}
+                    </button>
                   )}
                 </div>
               </div>

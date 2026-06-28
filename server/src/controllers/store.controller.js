@@ -18,6 +18,7 @@ function mapStore(s) {
     themeColor: s.theme_color,
     deliveryInfo: s.delivery_info,
     paymentInfo: s.payment_info,
+    deliveryPhone: s.delivery_phone || '',
     banners: Array.isArray(s.banners) ? s.banners : [],
     deliveryZones: Array.isArray(s.delivery_zones) ? s.delivery_zones : [],
     freeShippingOver: Number(s.free_shipping_over || 0),
@@ -133,6 +134,7 @@ export async function getMyStore(req, res, next) {
 // تحديث إعدادات المتجر (المالك فقط)
 export async function updateMyStore(req, res, next) {
   const { name, description, logoUrl, phone, whatsapp, instagram, facebook, tiktok, themeColor, deliveryInfo, paymentInfo } = req.body;
+  const deliveryPhone = String(req.body.deliveryPhone || '').replace(/[^\d+]/g, '').slice(0, 40);
   const banners = sanitizeBanners(req.body.banners);
   const deliveryZones = sanitizeZones(req.body.deliveryZones);
   const freeShippingOver = Math.max(0, Number(req.body.freeShippingOver) || 0);
@@ -177,7 +179,7 @@ export async function updateMyStore(req, res, next) {
          banners = $13::jsonb, delivery_zones = $14::jsonb, free_shipping_over = $15,
          size_chart = $16::jsonb, return_policy = $17, announcement = $18, welcome_offer = $19,
          category_meta = $20::jsonb, custom_categories = $21::jsonb, referral_percent = $23,
-         announcement_en = $24, old_slugs = $25::text[], updated_at = now()
+         announcement_en = $24, old_slugs = $25::text[], delivery_phone = $26, updated_at = now()
        WHERE id = $22
        RETURNING *`,
       [
@@ -206,6 +208,7 @@ export async function updateMyStore(req, res, next) {
         referralPercent,
         announcementEn,
         newOldSlugs,
+        deliveryPhone,
       ]
     );
 
