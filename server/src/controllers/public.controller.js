@@ -97,7 +97,8 @@ export async function getStoreBySlug(req, res, next) {
   try {
     const active = activeStoreSql('u');
     const storeResult = await query(
-      `SELECT s.*, u.phone AS owner_phone FROM stores s JOIN users u ON u.id = s.user_id WHERE s.slug = $1 AND ${active}`,
+      `SELECT s.*, u.phone AS owner_phone FROM stores s JOIN users u ON u.id = s.user_id
+       WHERE (s.slug = $1 OR $1 = ANY(s.old_slugs)) AND ${active}`,
       [slug]
     );
     const store = storeResult.rows[0];

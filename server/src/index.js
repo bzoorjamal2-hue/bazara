@@ -109,6 +109,8 @@ app.use(errorHandler);
 async function ensureColumns() {
   try {
     await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS banners JSONB DEFAULT '[]'::jsonb;");
+    // الروابط القديمة للمتجر (تبقى شغّالة بعد تغيير رابط المتجر المخصّص)
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS old_slugs TEXT[] DEFAULT '{}';");
     await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS facebook VARCHAR(200) DEFAULT '';");
     await pool.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS video_url TEXT DEFAULT '';");
     // كمية المخزون لكل مقاس (نمرة): {"38": 5, "40": 2, ...}

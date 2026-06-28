@@ -342,6 +342,8 @@
     },
     "store": {
       "name": "Store name",
+      "urlLabel": "Your store link",
+      "urlHint": "Pick a memorable Latin handle (like your store name). The old link keeps working.",
       "description": "Store description",
       "logo": "Store logo",
       "saved": "Store settings saved.",

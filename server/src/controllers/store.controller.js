@@ -1,4 +1,5 @@
 import { query } from '../config/db.js';
+import slugify from 'slugify';
 import { generateUniqueStoreSlug } from '../utils/slug.js';
 import { pingIndexNow } from '../utils/indexnow.js';
 
@@ -144,14 +145,29 @@ export async function updateMyStore(req, res, next) {
   const categoryMeta = sanitizeCategoryMeta(req.body.categoryMeta);
   const customCategories = sanitizeCustomCategories(req.body.customCategories);
   try {
-    const current = await query('SELECT id, name, slug FROM stores WHERE user_id = $1', [req.user.id]);
+    const current = await query('SELECT id, name, slug, old_slugs FROM stores WHERE user_id = $1', [req.user.id]);
     const store = current.rows[0];
     if (!store) return res.status(404).json({ error: 'لا يوجد متجر لهذا المستخدم.' });
 
+    const oldSlugs = Array.isArray(store.old_slugs) ? store.old_slugs : [];
     let slug = store.slug;
-    if (name && name !== store.name) {
+    const customSlug = String(req.body.slug || '').trim();
+    if (customSlug) {
+      // رابط متجر مخصّص (handle لاتيني يختاره المالك)
+      const clean = slugify(customSlug, { lower: true, strict: true });
+      if (!clean || clean.length < 3) {
+        return res.status(400).json({ error: 'رابط المتجر غير صالح (٣ أحرف لاتينية/أرقام على الأقل).' });
+      }
+      if (clean !== store.slug) {
+        const taken = await query('SELECT id FROM stores WHERE (slug = $1 OR $1 = ANY(old_slugs)) AND id <> $2', [clean, store.id]);
+        if (taken.rows.length) return res.status(400).json({ error: 'هذا الرابط مستخدم، اختاري رابطاً آخر.' });
+        slug = clean;
+      }
+    } else if (name && name !== store.name) {
       slug = await generateUniqueStoreSlug(name, store.id);
     }
+    // نحفظ الروابط القديمة لتبقى شغّالة (تحوّل للجديد)
+    const newOldSlugs = slug !== store.slug ? [...new Set([...oldSlugs, store.slug])].slice(-10) : oldSlugs;
 
     const updated = await query(
       `UPDATE stores SET
@@ -161,7 +177,7 @@ export async function updateMyStore(req, res, next) {
          banners = $13::jsonb, delivery_zones = $14::jsonb, free_shipping_over = $15,
          size_chart = $16::jsonb, return_policy = $17, announcement = $18, welcome_offer = $19,
          category_meta = $20::jsonb, custom_categories = $21::jsonb, referral_percent = $23,
-         announcement_en = $24, updated_at = now()
+         announcement_en = $24, old_slugs = $25::text[], updated_at = now()
        WHERE id = $22
        RETURNING *`,
       [
@@ -189,6 +205,7 @@ export async function updateMyStore(req, res, next) {
         store.id,
         referralPercent,
         announcementEn,
+        newOldSlugs,
       ]
     );
 

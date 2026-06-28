@@ -7,7 +7,7 @@ import ImageInput from '../../components/ImageInput.jsx';
 import BannerEditor from '../../components/BannerEditor.jsx';
 
 const EMPTY = {
-  name: '', description: '', logoUrl: '', phone: '', whatsapp: '',
+  name: '', slug: '', description: '', logoUrl: '', phone: '', whatsapp: '',
   instagram: '', facebook: '', tiktok: '', themeColor: '#d4af37', deliveryInfo: '', paymentInfo: '', banners: [],
 };
 
@@ -35,7 +35,7 @@ export default function StoreSettings() {
       .then((res) => {
         const s = res.data.store;
         setForm({
-          name: s.name || '', description: s.description || '', logoUrl: s.logoUrl || '',
+          name: s.name || '', slug: s.slug || '', description: s.description || '', logoUrl: s.logoUrl || '',
           phone: s.phone || '', whatsapp: s.whatsapp || '', instagram: s.instagram || '',
           facebook: s.facebook || '', tiktok: s.tiktok || '', themeColor: s.themeColor || '#d4af37',
           deliveryInfo: s.deliveryInfo || '', paymentInfo: s.paymentInfo || '',
@@ -137,6 +137,19 @@ export default function StoreSettings() {
           <div>
             <label className="label">{t('dashboard.store.name')}</label>
             <input type="text" required className="input" value={form.name} onChange={set('name')} />
+          </div>
+          <div>
+            <label className="label">{t('dashboard.store.urlLabel')}</label>
+            <div className="flex items-center gap-1 rounded-xl border border-wine/20 bg-white/5 px-3 py-1" dir="ltr">
+              <span className="shrink-0 text-xs text-stone-400">bazarastore.site/store/</span>
+              <input
+                type="text" dir="ltr" inputMode="latin" placeholder="lifestyle"
+                className="min-w-0 flex-1 bg-transparent py-1.5 text-sm text-stone-100 focus:outline-none"
+                value={form.slug}
+                onChange={(e) => setForm({ ...form, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })}
+              />
+            </div>
+            <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.urlHint')}</p>
           </div>
           <div>
             <label className="label">{t('dashboard.store.description')}</label>

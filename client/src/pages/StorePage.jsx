@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -27,6 +27,7 @@ const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
 
 export default function StorePage() {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const { store: myStore } = useAuth();
   const { ensureStore } = useCart();
@@ -72,6 +73,13 @@ export default function StorePage() {
 
   useEffect(() => setPage(1), [cat, q, sort, sizesSel, offersOnly]);
   useEffect(() => { setStories(data?.stories || []); }, [data]); // مزامنة الستوريات
+  // تحويل لرابط المتجر الجديد إن فُتح برابط قديم (عشان يبقى الرابط الرسمي نظيفاً)
+  useEffect(() => {
+    if (data?.store?.slug && data.store.slug !== slug) {
+      navigate(`/store/${data.store.slug}${window.location.search}`, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data?.store?.slug, slug]);
 
   // التقاط كود الإحالة من الرابط (?ref=CODE) وحفظه للمتجر، ثم تنظيف الرابط
   useEffect(() => {
