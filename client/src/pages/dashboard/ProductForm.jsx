@@ -100,6 +100,22 @@ export default function ProductForm({ initial, onClose, onSaved }) {
   const submit = async (e) => {
     e.preventDefault();
     setError('');
+    // الكمية لكل نمرة مختارة (لون/مقاس) إجبارية — وإلا اللون لا يُحفظ
+    for (const c of Object.keys(form.colorStock)) {
+      const sizes = form.colorStock[c] || {};
+      for (const s of Object.keys(sizes)) {
+        if (sizes[s] === '' || sizes[s] == null) {
+          setError(t('dashboard.product.qtyRequired'));
+          return;
+        }
+      }
+    }
+    for (const s of Object.keys(form.sizeStock || {})) {
+      if (form.sizeStock[s] === '' || form.sizeStock[s] == null) {
+        setError(t('dashboard.product.qtyRequired'));
+        return;
+      }
+    }
     setBusy(true);
     const payload = {
       ...form,
@@ -245,8 +261,8 @@ export default function ProductForm({ initial, onClose, onSaved }) {
                             <div key={s} className="flex items-center gap-2">
                               <span className="w-12 shrink-0 text-xs font-bold text-gold-100">{sizeLabel(s, t)}</span>
                               <input
-                                type="number" min="0" inputMode="numeric"
-                                className="input !py-1.5 text-sm"
+                                type="number" min="0" inputMode="numeric" required
+                                className={`input !py-1.5 text-sm ${sizes[s] === '' || sizes[s] == null ? 'ring-1 ring-red-400/70' : ''}`}
                                 placeholder={t('dashboard.product.qty')}
                                 value={sizes[s] ?? ''}
                                 onChange={(e) => setColorSizeQty(c, s, e.target.value)}

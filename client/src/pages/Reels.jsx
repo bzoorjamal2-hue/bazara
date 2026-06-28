@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import api from '../api/client.js';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
-import { cldOptimized, cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
+import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
 import { HeartIcon, CartIcon } from '../components/icons.jsx';
 import CloseButton from '../components/CloseButton.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
@@ -12,6 +12,9 @@ import Spinner from '../components/Spinner.jsx';
 import { sizeLabel } from '../utils/sizes.js';
 
 const MUTE_KEY = 'bz_reels_muted';
+
+// نسخة فيديو أخف للريلز (أبعاد محدودة + جودة موفّرة) → تحميل أسرع بكثير
+const reelVideo = (url) => (url && url.includes('/upload/') ? url.replace('/upload/', '/upload/f_auto,q_auto:eco,w_720,c_limit/') : url);
 
 // تصفّح عمودي لفيديوهات المنتجات (Reels) — ملء الشاشة، تشغيل تلقائي للظاهر فقط،
 // تحميل مسبق + تحميل المزيد، شريط تقدّم/انتقال تلقائي، ضغط مطوّل للإيقاف،
@@ -277,7 +280,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
         ) : (
           <video
             ref={vidRef}
-            src={cldOptimized(p.videoUrl, 'video')}
+            src={reelVideo(p.videoUrl)}
             poster={poster}
             muted={muted}
             playsInline

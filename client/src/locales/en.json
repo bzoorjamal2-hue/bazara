@@ -416,6 +416,7 @@
       "variants": "Sizes & stock per color",
       "variantsHint": "Add each color, then choose its available sizes and the quantity of each. The customer picks a color first, then sees the available sizes.",
       "qty": "Qty",
+      "qtyRequired": "Enter the quantity for every selected size (required) — otherwise the color won't be saved.",
       "addColor": "Add color",
       "addColorPlaceholder": "Type a color name (e.g. Black) and press ＋",
       "colorImages": "Photos for this color",

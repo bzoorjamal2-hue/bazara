@@ -49,9 +49,9 @@ export default function ProductsManager({ onCount }) {
     }
   };
 
-  // رابط مباشر لكل منتج — مشاركة (على الجوال) أو نسخ للحافظة
+  // رابط مشاركة المنتج عبر /share/product → تظهر صورة المنتج بمعاينة واتساب (OG)
   const shareProduct = async (p) => {
-    const url = `${window.location.origin}/product/${p.id}`;
+    const url = `${window.location.origin}/share/product/${p.id}`;
     try {
       if (navigator.share) {
         await navigator.share({ title: p.name, url });
