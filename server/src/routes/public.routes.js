@@ -7,6 +7,7 @@ import { viewStory } from '../controllers/story.controller.js';
 import { chatAssistant } from '../controllers/assistant.controller.js';
 import { createReferral, validateReferral } from '../controllers/referral.controller.js';
 import { handleValidation, reviewRules } from '../middleware/validate.js';
+import { cacheGet } from '../middleware/cache.js';
 import rateLimit from 'express-rate-limit';
 
 const router = Router();
@@ -30,13 +31,14 @@ const assistantLimiter = rateLimit({
   message: { error: 'محاولات كثيرة للمساعِدة. حاولي بعد قليل.' },
 });
 
-router.get('/home', getHomeData);
-router.get('/category/:cat', getByCategory);
-router.get('/offers', getOffers);
-router.get('/reels', getReels);
-router.get('/stories', getStoriesFeed);
+// كاش ذاكرة قصير (30ث) للصفحات العامة كثيرة الزيارة — يخدمها فوراً بلا استعلام متكرّر
+router.get('/home', cacheGet(30), getHomeData);
+router.get('/category/:cat', cacheGet(30), getByCategory);
+router.get('/offers', cacheGet(30), getOffers);
+router.get('/reels', cacheGet(30), getReels);
+router.get('/stories', cacheGet(30), getStoriesFeed);
 router.post('/story/:id/view', viewStory);
-router.get('/store/:slug', getStoreBySlug);
+router.get('/store/:slug', cacheGet(30), getStoreBySlug);
 router.get('/store/:slug/checkout', getStoreCheckout);
 router.get('/product/:id', idParam, handleValidation, getProductById);
 router.post('/product/:id/reviews', reviewLimiter, idParam, reviewRules, handleValidation, addReview);
