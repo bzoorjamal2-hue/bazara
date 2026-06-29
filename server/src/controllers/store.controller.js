@@ -2,6 +2,7 @@ import { query } from '../config/db.js';
 import slugify from 'slugify';
 import { generateUniqueStoreSlug } from '../utils/slug.js';
 import { pingIndexNow } from '../utils/indexnow.js';
+import { toHostedUrl } from '../utils/hostImage.js';
 
 function mapStore(s) {
   return {
@@ -171,6 +172,9 @@ export async function updateMyStore(req, res, next) {
     // نحفظ الروابط القديمة لتبقى شغّالة (تحوّل للجديد)
     const newOldSlugs = slug !== store.slug ? [...new Set([...oldSlugs, store.slug])].slice(-10) : oldSlugs;
 
+    // حماية: لو دخل الشعار كصورة base64 ثقيلة، نرفعه تلقائياً لـ Cloudinary ونخزّن الرابط الخفيف
+    const hostedLogo = await toHostedUrl(logoUrl || '');
+
     const updated = await query(
       `UPDATE stores SET
          name = $1, description = $2, logo_url = $3, slug = $4,
@@ -185,7 +189,7 @@ export async function updateMyStore(req, res, next) {
       [
         name,
         description || '',
-        logoUrl || '',
+        hostedLogo,
         slug,
         phone || '',
         whatsapp || '',
