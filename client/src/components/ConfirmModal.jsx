@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import useScrollLock from '../hooks/useScrollLock.js';
+import { WarnIcon } from './icons.jsx';
 
 // نافذة تأكيد أنيقة (بديلة عن window.confirm) — تُغلق بالضغط خارجها (يُلغي)
 export default function ConfirmModal({
@@ -27,7 +28,7 @@ export default function ConfirmModal({
               <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v5M14 11v5" />
             </svg>
           ) : (
-            <span className="text-3xl">❓</span>
+            <WarnIcon className="h-8 w-8" />
           )}
         </div>
 

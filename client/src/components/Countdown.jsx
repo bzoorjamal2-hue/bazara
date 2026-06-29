@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { FireIcon, ClockIcon } from './icons.jsx';
 
 // صيغة كلمة "يوم" حسب العدد (عربي: يوم/يومين/أيام)
 function dayWord(n, t) {
@@ -49,7 +50,7 @@ export default function Countdown({ endsAt, variant = 'pill', className = '' }) 
     );
     return (
       <div className={`inline-flex flex-col gap-2 rounded-2xl bg-gradient-to-br from-red-500/10 to-rose-500/5 p-3 ring-1 ring-red-400/20 ${className}`}>
-        <span className="flex items-center gap-1.5 text-xs font-bold text-red-500">🔥 {t('offer.endsIn')}</span>
+        <span className="flex items-center gap-1.5 text-xs font-bold text-red-500"><FireIcon className="h-3.5 w-3.5" /> {t('offer.endsIn')}</span>
         <div className="flex items-center gap-1.5" dir="ltr">
           {left.d > 0 && (<><Box value={left.d} label={dayWord(left.d, t)} /><span className="self-start pt-3 font-bold text-wine/30">:</span></>)}
           <Box value={left.h} label={t('offer.hours')} />
@@ -68,7 +69,7 @@ export default function Countdown({ endsAt, variant = 'pill', className = '' }) 
     : `${pad(left.h)}:${pad(left.m)}:${pad(left.s)}`;
   return (
     <span className={`inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-red-500 to-rose-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm ${className}`}>
-      <span aria-hidden>⏱️</span>
+      <ClockIcon className="h-3.5 w-3.5" />
       <span dir="ltr" className="tabular-nums tracking-wide">{time}</span>
     </span>
   );

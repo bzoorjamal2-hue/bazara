@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useAuth } from '../context/AuthContext.jsx';
 import Seo from '../components/Seo.jsx';
+import { UserIcon, DownloadIcon } from '../components/icons.jsx';
 import SubscriptionBanner from '../components/SubscriptionBanner.jsx';
 import Profile from './dashboard/Profile.jsx';
 import StoreSettings from './dashboard/StoreSettings.jsx';
@@ -58,7 +59,7 @@ export default function Dashboard() {
     <img src={user.avatarUrl} alt={user.name} className="h-12 w-12 rounded-full border border-gold-400/40 object-cover" />
   ) : (
     <span className="flex h-12 w-12 items-center justify-center rounded-full border border-gold-400/40 bg-gold-400/15 text-lg font-bold text-gold-200">
-      {user?.name?.[0] || '👤'}
+      {user?.name?.[0] || <UserIcon className="h-5 w-5" />}
     </span>
   );
 
@@ -153,7 +154,7 @@ function Overview({ productsCount }) {
                 <span className="font-mono font-bold text-gold-300" dir="ltr">{subscription.subscriberCode}</span>
               </p>
             )}
-            <button onClick={downloadQr} className="btn-ghost mt-3 text-sm">⬇️ {t('qr.download')}</button>
+            <button onClick={downloadQr} className="btn-ghost mt-3 gap-1.5 text-sm"><DownloadIcon className="h-4 w-4" /> {t('qr.download')}</button>
           </div>
         </div>
       )}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import useScrollLock from '../hooks/useScrollLock.js';
+import { InstallIcon } from './icons.jsx';
 
 const isStandalone = () =>
   (typeof window !== 'undefined' &&
@@ -62,7 +63,7 @@ export default function InstallApp() {
         <div className="relative flex flex-col items-center gap-4 text-center sm:flex-row sm:text-start">
           <img src="/icon-192.png?v=3" alt="Bazara" className="h-20 w-20 shrink-0 rounded-3xl shadow-lg ring-2 ring-cream/25" />
           <div className="min-w-0 flex-1">
-            <h3 className="font-display text-xl font-extrabold text-cream">📲 {t('pwa.title')}</h3>
+            <h3 className="flex items-center gap-2 font-display text-xl font-extrabold text-cream"><InstallIcon className="h-5 w-5" /> {t('pwa.title')}</h3>
             <p className="mt-1.5 text-sm text-cream/75">{t('pwa.desc')}</p>
           </div>
           <button

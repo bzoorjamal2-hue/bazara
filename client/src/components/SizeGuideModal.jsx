@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import useScrollLock from '../hooks/useScrollLock.js';
 import CloseButton from './CloseButton.jsx';
+import { CheckIcon, SparkleIcon, RulerIcon } from './icons.jsx';
 import { SIZE_CHART, sizeLabel } from '../utils/sizes.js';
 
 // نافذة دليل المقاسات — جدول قياسات (صدر/خصر/أرداف) + مرشد "اعرفي مقاسك".
@@ -79,7 +80,7 @@ export default function SizeGuideModal({ sizes = [], chart = null, onClose }) {
                     return (
                       <tr key={s} className={isSug ? 'bg-emerald-500/15' : i % 2 ? 'bg-wine/[0.04]' : 'bg-white'}>
                         <td className="px-1.5 py-2.5 font-bold text-wine">
-                          {isSug && <span className="me-0.5">✓</span>}
+                          {isSug && <CheckIcon className="me-0.5 inline h-3.5 w-3.5" />}
                           {sizeLabel(s, t)}<span className="text-[0.85em] font-medium text-wine/50"> · {SIZE_CHART[s].intl}</span>
                         </td>
                         <td className="px-1 py-2.5 text-[#2b2b2b]">{m.bust || '—'}</td>
@@ -94,7 +95,7 @@ export default function SizeGuideModal({ sizes = [], chart = null, onClose }) {
 
             {/* اعرفي مقاسك — مرشد سريع */}
             <div className="mt-4 rounded-2xl border border-wine/15 bg-wine/[0.04] p-4">
-              <p className="mb-1 flex items-center gap-1.5 text-sm font-bold text-wine">✨ {t('product.findMySize')}</p>
+              <p className="mb-1 flex items-center gap-1.5 text-sm font-bold text-wine"><SparkleIcon className="h-4 w-4" /> {t('product.findMySize')}</p>
               <p className="mb-3 text-xs text-wine/60">{t('product.findMySizeHint')}</p>
               <div className="grid grid-cols-2 gap-2">
                 <label className="block min-w-0 text-xs font-medium text-wine/70">
@@ -120,7 +121,7 @@ export default function SizeGuideModal({ sizes = [], chart = null, onClose }) {
 
             {/* كيف تقيسين؟ */}
             <div className="mt-4 rounded-2xl bg-wine/5 p-4">
-              <p className="mb-2 text-sm font-bold text-wine">📐 {t('product.howMeasure')}</p>
+              <p className="mb-2 flex items-center gap-1.5 text-sm font-bold text-wine"><RulerIcon className="h-4 w-4" /> {t('product.howMeasure')}</p>
               <ul className="space-y-1 text-sm text-wine/70">
                 <li>• {t('product.measureBust')}</li>
                 <li>• {t('product.measureWaist')}</li>
