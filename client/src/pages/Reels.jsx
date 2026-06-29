@@ -5,7 +5,7 @@ import api from '../api/client.js';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
-import { HeartIcon, CartIcon } from '../components/icons.jsx';
+import { HeartIcon, CartIcon, VideoIcon, SpeakerIcon, StoreIcon } from '../components/icons.jsx';
 import CloseButton from '../components/CloseButton.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import Spinner from '../components/Spinner.jsx';
@@ -117,7 +117,7 @@ export default function Reels() {
       <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-center justify-between p-3"
         style={{ paddingTop: 'calc(env(safe-area-inset-top,0px) + 12px)' }}>
         <div className="pointer-events-auto"><CloseButton onClick={goBack} variant="ghost" size="h-10 w-10" label="back" /></div>
-        <span className="pointer-events-none select-none font-display text-lg font-bold text-white/90 drop-shadow">🎬 {t('reels.title')}</span>
+        <span className="pointer-events-none inline-flex select-none items-center gap-2 font-display text-lg font-bold text-white/90 drop-shadow"><VideoIcon className="h-5 w-5" /> {t('reels.title')}</span>
         <button type="button" onClick={() => setMutedPersist((m) => !m)} aria-label={muted ? 'unmute' : 'mute'}
           className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur transition hover:bg-black/60">
           {muted ? <MutedIcon /> : <SoundIcon />}
@@ -127,7 +127,7 @@ export default function Reels() {
       {/* تلميح الصوت */}
       {items && items.length > 0 && soundHint && muted && (
         <div className="pointer-events-none absolute inset-x-0 z-30 flex justify-center" style={{ top: 'calc(env(safe-area-inset-top,0px) + 60px)' }}>
-          <span className="animate-toast-top rounded-full bg-black/55 px-3.5 py-1.5 text-xs font-semibold text-white backdrop-blur">🔊 {t('reels.soundHint')}</span>
+          <span className="inline-flex animate-toast-top items-center gap-1.5 rounded-full bg-black/55 px-3.5 py-1.5 text-xs font-semibold text-white backdrop-blur"><SpeakerIcon className="h-4 w-4" /> {t('reels.soundHint')}</span>
         </div>
       )}
 
@@ -135,7 +135,7 @@ export default function Reels() {
         <div className="flex h-full items-center justify-center"><Spinner /></div>
       ) : items.length === 0 ? (
         <div className="flex h-full flex-col items-center justify-center gap-4 px-6 text-center text-white/80">
-          <span className="text-5xl">🎬</span>
+          <VideoIcon className="h-14 w-14 text-white/50" />
           <p className="text-lg font-semibold">{t('reels.empty')}</p>
           <button onClick={goBack} className="rounded-full bg-white/15 px-5 py-2 text-sm font-semibold backdrop-blur transition hover:bg-white/25">{t('reels.back')}</button>
         </div>
@@ -362,7 +362,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
             {p.storeLogo ? (
               <img src={cldThumb(p.storeLogo, 80)} alt="" className="h-7 w-7 shrink-0 rounded-full object-cover ring-1 ring-white/50" />
             ) : (
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 text-xs">🏪</span>
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 text-white"><StoreIcon className="h-4 w-4" /></span>
             )}
             <span className="truncate">{p.storeName}</span>
           </Link>

@@ -7,6 +7,7 @@ import { getSeenSet, markSeen } from '../utils/storySeen.js';
 import useScrollLock from '../hooks/useScrollLock.js';
 import Select from './Select.jsx';
 import StoryViewer from './StoryViewer.jsx';
+import { StoreIcon, SparkleIcon } from './icons.jsx';
 
 // ستوري المتجر على الشعار (إنستغرام): حلقة ذهبية = ستوريات غير مُشاهَدة، رمادية = مُشاهَدة/لا شيء.
 // المالكة ترى (+) لإضافة ستوري (مع تعليق + ربط منتج). compact = الشعار داخل الهيدر.
@@ -76,7 +77,7 @@ export default function StoryBar({ store, stories, isOwner, onAdded, onDeleted, 
             <span className="block rounded-full bg-white p-[2px]">
               {store.logoUrl
                 ? <img src={cldThumb(store.logoUrl, 160)} alt={store.name} className={`${logoSize} rounded-full object-cover`} />
-                : <span className={`flex ${logoSize} items-center justify-center rounded-full bg-cream text-xl`}>🏪</span>}
+                : <span className={`flex ${logoSize} items-center justify-center rounded-full bg-cream text-wine`}><StoreIcon className="h-5 w-5" /></span>}
             </span>
           </span>
           {isOwner && (
@@ -120,7 +121,7 @@ export default function StoryBar({ store, stories, isOwner, onAdded, onDeleted, 
             {err && <p className="mb-2 text-sm font-medium text-red-600">{err}</p>}
             <div className="flex gap-2">
               <button onClick={publish} disabled={busy} className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-wine py-3 font-bold text-cream transition active:scale-[0.98] disabled:opacity-50">
-                {busy ? `${progress}%` : `✨ ${t('story.publish')}`}
+                {busy ? `${progress}%` : <span className="inline-flex items-center gap-1.5"><SparkleIcon className="h-4 w-4" /> {t('story.publish')}</span>}
               </button>
               <button onClick={closeCompose} disabled={busy} className="rounded-2xl border border-wine/30 px-5 font-semibold text-wine disabled:opacity-50">{t('common.cancel')}</button>
             </div>

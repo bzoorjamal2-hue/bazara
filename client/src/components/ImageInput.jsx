@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { resizeImageFile } from '../utils/image.js';
 import { uploadToCloudinary, cldOptimized, cloudinaryEnabled } from '../utils/cloudinary.js';
+import { UploadIcon, LinkIcon, ImageIcon } from './icons.jsx';
 
 // حقل صورة موحّد: رفع من الجهاز أو لصق رابط. القيمة سلسلة نصية (رابط أو data URL).
 export default function ImageInput({ value, onChange, round = false, label }) {
@@ -41,14 +42,14 @@ export default function ImageInput({ value, onChange, round = false, label }) {
           onClick={() => setTab('upload')}
           className={`flex-1 rounded-lg py-1.5 transition ${tab === 'upload' ? 'bg-gold-400/20 text-gold-200' : 'text-stone-400'}`}
         >
-          ⬆️ {t('image.upload')}
+          <UploadIcon className="inline h-4 w-4" /> {t('image.upload')}
         </button>
         <button
           type="button"
           onClick={() => setTab('url')}
           className={`flex-1 rounded-lg py-1.5 transition ${tab === 'url' ? 'bg-gold-400/20 text-gold-200' : 'text-stone-400'}`}
         >
-          🔗 {t('image.url')}
+          <LinkIcon className="inline h-4 w-4" /> {t('image.url')}
         </button>
       </div>
 
@@ -61,8 +62,8 @@ export default function ImageInput({ value, onChange, round = false, label }) {
             onError={(e) => (e.currentTarget.style.opacity = '0.3')}
           />
         ) : (
-          <div className={`flex h-20 w-20 flex-shrink-0 items-center justify-center border border-dashed border-gold-400/30 text-2xl text-stone-600 ${round ? 'rounded-full' : 'rounded-xl'}`}>
-            🖼️
+          <div className={`flex h-20 w-20 flex-shrink-0 items-center justify-center border border-dashed border-gold-400/30 text-stone-600 ${round ? 'rounded-full' : 'rounded-xl'}`}>
+            <ImageIcon className="h-7 w-7" />
           </div>
         )}
 

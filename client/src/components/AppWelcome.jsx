@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import Logo from './Logo.jsx';
 import LanguageSwitcher from './LanguageSwitcher.jsx';
+import { BagIcon } from './icons.jsx';
 
 // شاشة افتتاح التطبيق المثبّت (standalone) — تصميم فخم متحرّك بألوان Bazara.
 // تظهر فقط داخل التطبيق؛ الموقع في المتصفح يبقى كما هو.
@@ -128,7 +129,7 @@ export default function AppWelcome() {
           className="block w-full rounded-2xl py-4 text-center font-bold shadow-xl"
           style={{ background: 'linear-gradient(135deg, #f7ecd2 0%, #F4EDE2 50%, #e6c878 100%)', color: '#3f2e22' }}
         >
-          🛍️ {t('appWelcome.browse')}
+          <BagIcon className="inline h-5 w-5" /> {t('appWelcome.browse')}
         </MLink>
         <MLink
           variants={rise}

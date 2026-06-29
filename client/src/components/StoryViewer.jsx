@@ -6,6 +6,7 @@ import api from '../api/client.js';
 import { cldOptimized, cldThumb } from '../utils/cloudinary.js';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
 import CloseButton from './CloseButton.jsx';
+import { StoreIcon, BagIcon } from './icons.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 
 const IMG_MS = 3500; // مدة عرض الصورة (أسرع)
@@ -143,7 +144,7 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
         <div className="absolute inset-x-0 top-0 z-30 flex items-center gap-3 px-3 pt-5" style={{ paddingTop: 'calc(env(safe-area-inset-top,0px) + 20px)' }} dir={rtl ? 'rtl' : 'ltr'}>
           {store?.logoUrl
             ? <img src={cldThumb(store.logoUrl, 80)} alt="" className="h-9 w-9 rounded-full object-cover ring-1 ring-white/60" />
-            : <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-sm text-white">🏪</span>}
+            : <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-white"><StoreIcon className="h-5 w-5" /></span>}
           <div className="min-w-0 flex-1 leading-tight">
             <p className="truncate text-sm font-bold text-white drop-shadow">{store?.name}</p>
             <p className="text-[11px] text-white/70">{ago}</p>
@@ -184,7 +185,7 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
           {cur.productId && (
             <Link to={`/product/${cur.productId}`} onClick={onClose}
               className="flex w-full items-center justify-center gap-2 rounded-full bg-white py-3 text-sm font-bold text-wine shadow-lg transition active:scale-[0.98]">
-              🛍️ {t('story.shopNow')}
+              <BagIcon className="h-5 w-5" /> {t('story.shopNow')}
             </Link>
           )}
           {store?.whatsapp && (

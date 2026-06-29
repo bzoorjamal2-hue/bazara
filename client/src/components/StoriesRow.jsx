@@ -3,6 +3,7 @@ import api from '../api/client.js';
 import { cldThumb } from '../utils/cloudinary.js';
 import { getSeenSet, markSeen } from '../utils/storySeen.js';
 import StoryViewer from './StoryViewer.jsx';
+import { StoreIcon } from './icons.jsx';
 
 // صف ستوريات السوق العام (الصفحة الرئيسية): دائرة لكل متجر لديه ستوريات فعّالة،
 // الضغط يفتح ستوريات ذلك المتجر. حلقة ذهبية = غير مُشاهَدة.
@@ -32,7 +33,7 @@ export default function StoriesRow() {
                 <span className="block rounded-full bg-white p-[2px]">
                   {s.logoUrl
                     ? <img src={cldThumb(s.logoUrl, 160)} alt={s.name} className="h-14 w-14 rounded-full object-cover" />
-                    : <span className="flex h-14 w-14 items-center justify-center rounded-full bg-cream text-xl">🏪</span>}
+                    : <span className="flex h-14 w-14 items-center justify-center rounded-full bg-cream text-wine"><StoreIcon className="h-7 w-7" /></span>}
                 </span>
               </span>
               <span className="max-w-[4.5rem] truncate text-[11px] font-medium text-wine">{s.name}</span>

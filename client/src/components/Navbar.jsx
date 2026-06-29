@@ -7,7 +7,7 @@ import api from '../api/client.js';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import LanguageSwitcher from './LanguageSwitcher.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
-import { CartIcon, HeartIcon, MenuIcon } from './icons.jsx';
+import { CartIcon, HeartIcon, MenuIcon, UserIcon } from './icons.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import NavBell from './NavBell.jsx';
 import CloseButton from './CloseButton.jsx';
@@ -19,7 +19,7 @@ function Avatar({ user, size = 'h-8 w-8' }) {
   if (user?.avatarUrl) {
     return <img src={cldThumb(user.avatarUrl, 140)} alt={user.name} loading="eager" decoding="async" className={`${size} rounded-full border border-gold-400/40 object-cover`} />;
   }
-  const initial = user?.name?.trim()?.[0] || '👤';
+  const initial = user?.name?.trim()?.[0] || <UserIcon className="h-5 w-5" />;
   return (
     <span className={`${size} flex items-center justify-center rounded-full border border-gold-400/40 bg-gold-400/15 text-sm font-bold text-gold-200`}>
       {initial}
@@ -296,7 +296,7 @@ export default function Navbar() {
                 <img src={store.logoUrl} alt={store.name} className="h-12 w-12 rounded-xl border border-cream/40 object-cover" />
               ) : (
                 <span className="flex h-12 w-12 items-center justify-center rounded-full border border-cream/40 bg-cream/15 text-lg font-bold text-cream">
-                  {user.name?.[0] || '👤'}
+                  {user.name?.[0] || <UserIcon className="h-5 w-5" />}
                 </span>
               )}
               <div className="min-w-0">
