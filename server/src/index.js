@@ -3,6 +3,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
+import compression from 'compression';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import pool from './config/db.js';
@@ -30,6 +31,9 @@ const PORT = process.env.PORT || 5000;
 
 // الثقة بالبروكسي (مطلوبة على Render/Railway لتعمل secure cookies و rate limit)
 app.set('trust proxy', 1);
+
+// ضغط الاستجابات (gzip) — يصغّر JSON/HTML كثيراً فتصل أسرع
+app.use(compression());
 
 // رؤوس أمان HTTP
 app.use(

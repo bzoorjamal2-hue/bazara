@@ -81,6 +81,7 @@ export async function getHomeData(_req, res, next) {
       homeBanners = Array.isArray(sb.rows[0]?.home_banners) ? sb.rows[0].home_banners : [];
     } catch { /* الجدول غير موجود بعد */ }
 
+    res.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300'); // كاش حافة Vercel
     res.json({
       stores: stores.rows.map((s) => ({ ...mapStorePublic(s), productsCount: s.products_count })),
       featured: featured.rows.map(mapProduct),
@@ -252,6 +253,7 @@ export async function getOffers(_req, res, next) {
     );
     // mapProduct يلغي الخصم المنتهي زمنياً → نُبقي ما يزال مخفّضاً فعلاً
     const products = r.rows.map(mapProduct).filter((p) => p.oldPrice && p.oldPrice > p.price);
+    res.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300');
     res.json({ products });
   } catch (err) {
     next(err);
@@ -272,6 +274,7 @@ export async function getReels(req, res, next) {
     params.push(REELS_PAGE); sql += ` LIMIT $${params.length}`;
     params.push(offset); sql += ` OFFSET $${params.length}`;
     const r = await query(sql, params);
+    res.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300');
     res.json({ products: r.rows.map(mapProduct), hasMore: r.rows.length === REELS_PAGE });
   } catch (err) {
     next(err);
@@ -302,6 +305,7 @@ export async function getStoriesFeed(_req, res, next) {
       }
       byStore.get(row.store_slug).stories.push(mapStory(row));
     }
+    res.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300');
     res.json({ feed: [...byStore.values()].slice(0, 30) });
   } catch (err) {
     next(err);
