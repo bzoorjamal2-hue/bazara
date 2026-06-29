@@ -105,8 +105,9 @@ export async function getStoreBySlug(req, res, next) {
     const store = storeResult.rows[0];
     if (!store) return res.status(404).json({ error: 'المتجر غير موجود.' });
 
+    // نجلب كل المنتجات (الواجهة تفلتر/تفرز فوراً بالمتصفّح)، مع سقف أمان يمنع تحميلاً ضخماً لو كبر المتجر جداً
     const productsResult = await query(
-      `${PRODUCT_SELECT} WHERE p.store_id = $1 ORDER BY p.featured DESC, p.created_at DESC`,
+      `${PRODUCT_SELECT} WHERE p.store_id = $1 ORDER BY p.featured DESC, p.created_at DESC LIMIT 500`,
       [store.id]
     );
 

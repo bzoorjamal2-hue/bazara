@@ -33,4 +33,24 @@ pool.on('error', (err) => {
  */
 export const query = (text, params) => pool.query(text, params);
 
+/**
+ * تنفيذ مجموعة عمليات داخل معاملة واحدة (إمّا تنجح كلها أو تُلغى كلها — ذرّية).
+ * يُمرّر للدالة منفّذ `q(text, params)` يستخدم نفس اتصال المعاملة.
+ */
+export const withTransaction = async (fn) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const q = (text, params) => client.query(text, params);
+    const result = await fn(q);
+    await client.query('COMMIT');
+    return result;
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
+};
+
 export default pool;

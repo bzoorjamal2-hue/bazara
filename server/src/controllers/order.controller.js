@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { query } from '../config/db.js';
+import { query, withTransaction } from '../config/db.js';
 import { isLahzaConfigured, initializeTransaction, verifyTransaction, PAY_CURRENCY } from '../config/lahza.js';
 import { evaluateCoupon } from './coupon.controller.js';
 import { sendMail, isMailConfigured } from '../utils/mail.js';
@@ -45,16 +45,16 @@ async function notifyOwnerNewOrder(storeId, info) {
 }
 
 // يخصم الكمية المطلوبة من مخزون المنتج العام ومن مخزون المقاس/اللون (إن وُجد) — لا يقل عن صفر
-async function decrementStock(orderItems) {
+async function decrementStock(orderItems, q = query) {
   for (const it of orderItems) {
     const qty = it.qty;
     // عدّاد المبيعات الحقيقي — يزيد عند تأكيد الطلب (دليل اجتماعي للزبائن)
-    await query('UPDATE products SET sold_count = sold_count + $2 WHERE id = $1', [it.id, qty]);
+    await q('UPDATE products SET sold_count = sold_count + $2 WHERE id = $1', [it.id, qty]);
     // المخزون العام (NULL = متوفّر دائماً → لا يُلمس)
-    await query('UPDATE products SET stock = GREATEST(0, stock - $2) WHERE id = $1 AND stock IS NOT NULL', [it.id, qty]);
+    await q('UPDATE products SET stock = GREATEST(0, stock - $2) WHERE id = $1 AND stock IS NOT NULL', [it.id, qty]);
     // مخزون المقاس المجمّع (نمرة) إن كان المنتج يتتبّع كميات لكل مقاس
     if (it.size) {
-      await query(
+      await q(
         `UPDATE products
          SET size_stock = jsonb_set(size_stock, ARRAY[$2::text], to_jsonb(GREATEST(0, COALESCE((size_stock->>$2)::int, 0) - $3)))
          WHERE id = $1 AND size_stock ? $2`,
@@ -63,7 +63,7 @@ async function decrementStock(orderItems) {
     }
     // مخزون اللون ثم النمرة إن كان المنتج يتتبّع المخزون لكل لون
     if (it.color && it.size) {
-      await query(
+      await q(
         `UPDATE products
          SET color_stock = jsonb_set(color_stock, ARRAY[$2::text, $3::text], to_jsonb(GREATEST(0, COALESCE((color_stock->$2->>$3)::int, 0) - $4)))
          WHERE id = $1 AND color_stock ? $2 AND (color_stock->$2) ? $3`,
@@ -74,14 +74,14 @@ async function decrementStock(orderItems) {
 }
 
 // يعيد الكميات للمخزون (عند إلغاء طلب سبق أن خُصم)
-async function restoreStock(orderItems) {
+async function restoreStock(orderItems, q = query) {
   for (const it of orderItems || []) {
     const qty = it.qty;
     // إرجاع/إلغاء طلب مؤكّد → نخفّض عدّاد المبيعات بنفس الكمية
-    await query('UPDATE products SET sold_count = GREATEST(0, sold_count - $2) WHERE id = $1', [it.id, qty]);
-    await query('UPDATE products SET stock = stock + $2 WHERE id = $1 AND stock IS NOT NULL', [it.id, qty]);
+    await q('UPDATE products SET sold_count = GREATEST(0, sold_count - $2) WHERE id = $1', [it.id, qty]);
+    await q('UPDATE products SET stock = stock + $2 WHERE id = $1 AND stock IS NOT NULL', [it.id, qty]);
     if (it.size) {
-      await query(
+      await q(
         `UPDATE products
          SET size_stock = jsonb_set(size_stock, ARRAY[$2::text], to_jsonb(COALESCE((size_stock->>$2)::int, 0) + $3))
          WHERE id = $1 AND size_stock ? $2`,
@@ -89,7 +89,7 @@ async function restoreStock(orderItems) {
       );
     }
     if (it.color && it.size) {
-      await query(
+      await q(
         `UPDATE products
          SET color_stock = jsonb_set(color_stock, ARRAY[$2::text, $3::text], to_jsonb(COALESCE((color_stock->$2->>$3)::int, 0) + $4))
          WHERE id = $1 AND color_stock ? $2 AND (color_stock->$2) ? $3`,
@@ -276,30 +276,33 @@ export async function updateOrderStatus(req, res, next) {
     const wasApplied = order.stock_applied || APPLY_STATUSES.includes(order.status);
     let stockApplied = wasApplied;
 
-    // تأكيد الطلب لأول مرة → نخصم المخزون ونرفع عدّاد الكوبون
-    if (shouldApply && !wasApplied) {
-      await decrementStock(order.items);
-      if (order.coupon_code) {
-        await query('UPDATE coupons SET used_count = used_count + 1 WHERE store_id = $1 AND code = $2', [store.id, order.coupon_code]);
-      }
-      if (order.referral_code) {
-        await query('UPDATE referrals SET uses = uses + 1 WHERE store_id = $1 AND code = $2', [store.id, order.referral_code]);
-      }
-      stockApplied = true;
-    }
-    // إلغاء/إرجاع طلب سبق خصمه → نعيد المخزون وعدّاد الكوبون/الإحالة
-    else if (!shouldApply && wasApplied) {
-      await restoreStock(order.items);
-      if (order.coupon_code) {
-        await query('UPDATE coupons SET used_count = GREATEST(0, used_count - 1) WHERE store_id = $1 AND code = $2', [store.id, order.coupon_code]);
-      }
-      if (order.referral_code) {
-        await query('UPDATE referrals SET uses = GREATEST(0, uses - 1) WHERE store_id = $1 AND code = $2', [store.id, order.referral_code]);
-      }
-      stockApplied = false;
-    }
+    // تغيير المخزون والكوبون/الإحالة وحالة الطلب داخل معاملة واحدة (ذرّية) — إمّا تتمّ كلها أو لا شيء
+    if (shouldApply && !wasApplied) stockApplied = true;
+    else if (!shouldApply && wasApplied) stockApplied = false;
 
-    await query('UPDATE orders SET status = $1, stock_applied = $2 WHERE id = $3 AND store_id = $4', [status, stockApplied, id, store.id]);
+    await withTransaction(async (q) => {
+      // تأكيد الطلب لأول مرة → نخصم المخزون ونرفع عدّاد الكوبون
+      if (shouldApply && !wasApplied) {
+        await decrementStock(order.items, q);
+        if (order.coupon_code) {
+          await q('UPDATE coupons SET used_count = used_count + 1 WHERE store_id = $1 AND code = $2', [store.id, order.coupon_code]);
+        }
+        if (order.referral_code) {
+          await q('UPDATE referrals SET uses = uses + 1 WHERE store_id = $1 AND code = $2', [store.id, order.referral_code]);
+        }
+      }
+      // إلغاء/إرجاع طلب سبق خصمه → نعيد المخزون وعدّاد الكوبون/الإحالة
+      else if (!shouldApply && wasApplied) {
+        await restoreStock(order.items, q);
+        if (order.coupon_code) {
+          await q('UPDATE coupons SET used_count = GREATEST(0, used_count - 1) WHERE store_id = $1 AND code = $2', [store.id, order.coupon_code]);
+        }
+        if (order.referral_code) {
+          await q('UPDATE referrals SET uses = GREATEST(0, uses - 1) WHERE store_id = $1 AND code = $2', [store.id, order.referral_code]);
+        }
+      }
+      await q('UPDATE orders SET status = $1, stock_applied = $2 WHERE id = $3 AND store_id = $4', [status, stockApplied, id, store.id]);
+    });
     res.json({ ok: true, status });
   } catch (err) {
     next(err);
