@@ -87,9 +87,8 @@ ${img ? `<meta property="og:image" content="${img}">\n<meta property="og:image:w
 <meta name="twitter:description" content="${d}">
 ${img ? `<meta name="twitter:image" content="${img}">` : ''}
 <link rel="canonical" href="${u}">
-<meta http-equiv="refresh" content="0; url=${u}">
 </head><body style="font-family:sans-serif;background:#F4EDE2;color:#5e4636;text-align:center;padding:40px">
-<script>location.replace(${JSON.stringify(url)})</script>
+<script>setTimeout(function(){location.replace(${JSON.stringify(url)})},60)</script>
 <p><a href="${u}">${t}</a></p>
 </body></html>`;
 }

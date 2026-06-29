@@ -256,7 +256,7 @@ function HomeHero({ banners = [] }) {
               return (
                 <div key={idx} className="w-full shrink-0" dir="rtl">
                   <div
-                    className={`relative isolate flex h-[340px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[420px] ${onMedia ? 'bg-black' : 'bg-gradient-to-br from-[#f6ecd9] via-[#efe1c6] to-[#f6ecd9]'}`}
+                    className={`relative isolate flex h-[340px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[420px] ${onMedia ? 'bg-[#241712]' : 'bg-gradient-to-br from-[#f6ecd9] via-[#efe1c6] to-[#f6ecd9]'}`}
                     style={isColor ? { background: s.bgValue } : isVideo ? { backgroundImage: `url("${vPoster}")`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
                   >
                     {isImage && (
