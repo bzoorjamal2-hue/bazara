@@ -266,7 +266,7 @@ export default function StorePage() {
             <CategoryGrid onSelect={pickCategory} active={cat} cats={gridCats} />
           </section>
 
-          <ProductSection title={`${t('store.newArrivals')} ❤️`} products={newest} wa={wa} />
+          <ProductSection title={t('store.newArrivals')} products={newest} wa={wa} />
           <ProductSection title={t('store.bestSellers')} products={featured.slice(0, 8)} wa={wa} />
 
           {data.products.length > 0 && (
