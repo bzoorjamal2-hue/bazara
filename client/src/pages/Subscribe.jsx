@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { CardIcon, KeyIcon } from '../components/icons.jsx';
 import Seo from '../components/Seo.jsx';
 import Spinner from '../components/Spinner.jsx';
 
@@ -83,13 +84,13 @@ export default function Subscribe() {
 
           {/* تعليمات الدفع (التحويل المباشر) */}
           <div className="mt-4 rounded-xl border border-gold-400/20 bg-black/30 p-4">
-            <p className="mb-1 text-sm font-semibold text-gold-200">💳 {t('subscription.payInstructions')}</p>
+            <p className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-gold-200"><CardIcon className="h-4 w-4" /> {t('subscription.payInstructions')}</p>
             <p className="whitespace-pre-line text-sm text-stone-300">{status.paymentInfo}</p>
           </div>
 
           {/* إدخال كود التفعيل */}
           <form onSubmit={redeem} className="mt-5 space-y-3">
-            <label className="label">🔑 {t('subscription.haveCode')}</label>
+            <label className="label flex items-center gap-1.5"><KeyIcon className="h-4 w-4" /> {t('subscription.haveCode')}</label>
             <input
               type="text"
               dir="ltr"

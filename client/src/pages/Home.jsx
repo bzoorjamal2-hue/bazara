@@ -9,6 +9,7 @@ import ProductRail from '../components/ProductRail.jsx';
 import { getRecent } from '../utils/recentlyViewed.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
+import { GiftIcon } from '../components/icons.jsx';
 import CategoryGrid from '../components/CategoryGrid.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
 import StylistChat from '../components/StylistChat.jsx';
@@ -340,7 +341,7 @@ function PromoBanner() {
   const { t } = useTranslation();
   return (
     <Link to="/shop" className="mt-10 flex items-center gap-4 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-wine/10 transition hover:-translate-y-0.5 hover:shadow-md sm:p-5">
-      <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-cream text-3xl">🎁</span>
+      <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-cream text-wine"><GiftIcon className="h-7 w-7" /></span>
       <div className="min-w-0 flex-1">
         <p className="font-display text-sm font-bold text-wine sm:text-lg">{t('home.promoTitle')}</p>
         <p className="mt-0.5 text-xs text-stone-500 sm:text-sm">{t('home.promoSub')}</p>

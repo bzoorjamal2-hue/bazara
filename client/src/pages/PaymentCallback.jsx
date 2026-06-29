@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client.js';
 import { useCart } from '../context/CartContext.jsx';
+import { PartyIcon, WarnIcon } from '../components/icons.jsx';
 import Seo from '../components/Seo.jsx';
 import Spinner from '../components/Spinner.jsx';
 
@@ -37,14 +38,14 @@ export default function PaymentCallback() {
         )}
         {state === 'paid' && (
           <>
-            <p className="mb-3 text-6xl">🎉</p>
+            <p className="mb-3 flex justify-center text-emerald-500"><PartyIcon className="h-16 w-16" /></p>
             <h1 className="font-display text-2xl font-bold gradient-text">{t('checkout.success')}</h1>
             <Link to="/" className="btn-primary mt-6 inline-block">{t('checkout.backToStore')}</Link>
           </>
         )}
         {state === 'failed' && (
           <>
-            <p className="mb-3 text-6xl">⚠️</p>
+            <p className="mb-3 flex justify-center text-red-400"><WarnIcon className="h-16 w-16" /></p>
             <h1 className="font-display text-xl font-bold text-red-300">{t('checkout.failed')}</h1>
             <Link to="/" className="btn-ghost mt-6 inline-block">{t('checkout.backToStore')}</Link>
           </>

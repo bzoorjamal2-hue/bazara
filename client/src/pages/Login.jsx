@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext.jsx';
 import { getErrorMessage } from '../api/client.js';
+import { CheckIcon, KeyIcon } from '../components/icons.jsx';
 import Seo from '../components/Seo.jsx';
 import AuthShell, { Field, MailIcon, LockIcon, EyeIcon, rise } from '../components/AuthShell.jsx';
 
@@ -142,7 +143,7 @@ export default function Login() {
             <motion.label custom={4} variants={rise} initial="hidden" animate="show" className="flex cursor-pointer items-center gap-2.5 ps-1 text-sm text-stone-500">
               <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="peer sr-only" />
               <span className="flex h-5 w-5 items-center justify-center rounded-md border border-wine/30 text-[11px] text-cream transition peer-checked:border-wine peer-checked:bg-wine">
-                {remember && '✓'}
+                {remember && <CheckIcon className="h-3.5 w-3.5" />}
               </span>
               {t('auth.rememberMe')}
             </motion.label>
@@ -150,7 +151,7 @@ export default function Login() {
 
           {needsCode && (
             <div>
-              <label className="mb-1.5 block text-sm font-semibold text-wine">🔑 {t('auth.renewCodeLabel')}</label>
+              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-wine"><KeyIcon className="h-4 w-4" /> {t('auth.renewCodeLabel')}</label>
               <Field
                 type="text"
                 dir="ltr"

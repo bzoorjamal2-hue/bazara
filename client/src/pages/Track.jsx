@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import Seo from '../components/Seo.jsx';
+import { PackageIcon, CheckIcon } from '../components/icons.jsx';
 
 const STEPS = ['new', 'confirmed', 'shipped', 'delivered'];
 const BADGE = {
@@ -49,7 +50,7 @@ export default function Track() {
           >
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={rtl ? 'M9 6l6 6-6 6' : 'M15 6l-6 6 6 6'} /></svg>
           </button>
-          <h1 className="font-display text-2xl font-bold text-wine">📦 {t('track.title')}</h1>
+          <h1 className="flex items-center gap-2 font-display text-2xl font-bold text-wine"><PackageIcon className="h-6 w-6" /> {t('track.title')}</h1>
         </div>
 
         <p className="mb-4 text-sm text-stone-500">{t('track.hint')}</p>
@@ -99,7 +100,7 @@ export default function Track() {
                           <div key={s} className="flex flex-1 items-center last:flex-none">
                             <div className="flex flex-col items-center">
                               <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${i <= stepIdx ? 'bg-wine text-cream' : 'bg-wine/10 text-wine/40'}`}>
-                                {i <= stepIdx ? '✓' : i + 1}
+                                {i <= stepIdx ? <CheckIcon className="h-4 w-4" /> : i + 1}
                               </span>
                               <span className={`mt-1 text-[10px] ${i <= stepIdx ? 'font-bold text-wine' : 'text-stone-400'}`}>{t(`dashboard.ordersSection.${s}`)}</span>
                             </div>

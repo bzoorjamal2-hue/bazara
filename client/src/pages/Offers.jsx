@@ -4,6 +4,7 @@ import api, { getErrorMessage } from '../api/client.js';
 import Seo from '../components/Seo.jsx';
 import { ProductGridSkeleton } from '../components/Skeleton.jsx';
 import ProductCard from '../components/ProductCard.jsx';
+import { TagIcon } from '../components/icons.jsx';
 import { getCache, setCache } from '../utils/apiCache.js';
 
 // صفحة العروض — كل القطع المخفّضة عبر متاجر بازارا بمكان واحد
@@ -27,7 +28,7 @@ export default function Offers() {
         <div className="flex items-center justify-center gap-2.5 text-wine">
           <span aria-hidden className="text-sm text-wine/40">❖</span>
           <span className="h-px w-8 bg-gradient-to-r from-transparent to-wine/30" />
-          <h1 className="font-display text-2xl font-bold">🏷️ {t('offers.title')}</h1>
+          <h1 className="flex items-center gap-2 font-display text-2xl font-bold"><TagIcon className="h-6 w-6" /> {t('offers.title')}</h1>
           <span className="h-px w-8 bg-gradient-to-l from-transparent to-wine/30" />
           <span aria-hidden className="text-sm text-wine/40">❖</span>
         </div>
