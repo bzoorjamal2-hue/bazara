@@ -14,6 +14,7 @@ import CatThumb from '../components/CatThumb.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
 import StylistChat from '../components/StylistChat.jsx';
 import ShareEarnModal from '../components/ShareEarnModal.jsx';
+import { WaveIcon, GiftIcon, CheckIcon, PlusIcon } from '../components/icons.jsx';
 import CloseButton from '../components/CloseButton.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
@@ -192,8 +193,8 @@ export default function StorePage() {
       {/* شريط المالك */}
       {isOwner && (
         <div className="mb-5 flex flex-col items-center justify-between gap-3 rounded-2xl border border-gold-400/30 bg-gold-400/5 p-4 sm:flex-row">
-          <p className="text-sm text-gold-200">👋 {t('store.ownerView')}</p>
-          <Link to="/dashboard?tab=myProducts" className="btn-primary !py-2 text-sm">＋ {t('dashboard.addProduct')}</Link>
+          <p className="flex items-center gap-1.5 text-sm text-gold-200"><WaveIcon className="h-4 w-4" /> {t('store.ownerView')}</p>
+          <Link to="/dashboard?tab=myProducts" className="btn-primary gap-1.5 !py-2 text-sm"><PlusIcon className="h-4 w-4" /> {t('dashboard.addProduct')}</Link>
         </div>
       )}
 
@@ -369,7 +370,7 @@ function StoreFooter({ store, wa, onShare }) {
             onClick={onShare}
             className="group mx-auto mt-3 flex w-full max-w-sm items-center gap-3 rounded-2xl border border-cream/30 px-5 py-3.5 text-start text-cream transition hover:-translate-y-0.5 hover:bg-cream/10"
           >
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-cream/15 text-xl" aria-hidden="true">🎁</span>
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-cream/15" aria-hidden="true"><GiftIcon className="h-5 w-5" /></span>
             <span className="min-w-0 flex-1">
               <span className="block font-display text-base font-bold leading-tight">{t('referral.shareTitle')}</span>
               <span className="block truncate text-xs text-cream/70">{t('referral.shareDesc', { percent: Number(store.referralPercent) })}</span>
@@ -463,7 +464,7 @@ function WelcomePopup({ store }) {
       <div className="absolute inset-0 bg-black/55 animate-fade-up" />
       <div onClick={(e) => e.stopPropagation()} className="animate-pop relative w-full max-w-sm overflow-hidden rounded-3xl bg-white p-6 text-center shadow-2xl">
         <CloseButton onClick={() => setOpen(false)} variant="wine" className="absolute end-3 top-3" />
-        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-wine/10 text-3xl">🎁</div>
+        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-wine/10 text-wine"><GiftIcon className="h-7 w-7" /></div>
         <h3 className="font-display text-xl font-bold text-wine">{t('store.welcomeTitle')}</h3>
         <p className="mt-3 whitespace-pre-line text-[15px] leading-relaxed text-wine/80">{store.welcomeOffer}</p>
         <button onClick={() => setOpen(false)} className="mt-5 w-full rounded-2xl bg-gradient-to-r from-[#e6c878] via-[#d4af37] to-[#c79a3a] py-3 font-bold text-[#3f2e22] shadow-lg transition hover:brightness-105">
@@ -606,7 +607,7 @@ function Radio({ on }) {
 function Check({ on }) {
   return (
     <span className={`flex h-5 w-5 items-center justify-center rounded-md border text-xs ${on ? 'border-wine bg-wine text-cream' : 'border-stone-300'}`}>
-      {on && '✓'}
+      {on && <CheckIcon className="h-3.5 w-3.5" />}
     </span>
   );
 }
