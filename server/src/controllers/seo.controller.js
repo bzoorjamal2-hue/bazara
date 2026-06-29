@@ -70,8 +70,8 @@ function ogImage(url) {
   return url;
 }
 
-function shareHtml({ title, desc, image, url, type = 'website' }) {
-  const t = escapeXml(title), d = escapeXml(desc), img = escapeXml(image), u = escapeXml(url);
+function shareHtml({ title, desc, image, url, type = 'website', siteName = 'Bazara' }) {
+  const t = escapeXml(title), d = escapeXml(desc), img = escapeXml(image), u = escapeXml(url), sn = escapeXml(siteName);
   return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${t}</title>
@@ -80,7 +80,7 @@ function shareHtml({ title, desc, image, url, type = 'website' }) {
 <meta property="og:title" content="${t}">
 <meta property="og:description" content="${d}">
 <meta property="og:url" content="${u}">
-<meta property="og:site_name" content="Bazara">
+<meta property="og:site_name" content="${sn}">
 ${img ? `<meta property="og:image" content="${img}">\n<meta property="og:image:width" content="1200">` : ''}
 <meta name="twitter:card" content="${img ? 'summary_large_image' : 'summary'}">
 <meta name="twitter:title" content="${t}">
@@ -117,6 +117,7 @@ export async function shareProduct(req, res, next) {
       image: ogImage(img),
       url,
       type: 'product',
+      siteName: p.store_name,
     }));
   } catch { res.redirect(302, url); } // أي خطأ (مثل معرّف غير صالح) → توجيه للصفحة بدل خطأ 500
 }
@@ -139,6 +140,7 @@ export async function shareStore(req, res, next) {
       desc: (s.description || '').replace(/\s+/g, ' ').trim().slice(0, 160) || `${s.name} — ${'أزياء فاخرة'}`,
       image: ogImage(s.logo_url || ''),
       url,
+      siteName: s.name,
     }));
   } catch { res.redirect(302, url); }
 }
@@ -166,6 +168,7 @@ export async function shareStory(req, res, next) {
       desc: (st.caption || '').replace(/\s+/g, ' ').trim().slice(0, 160) || st.store_name,
       image: ogImage(img),
       url,
+      siteName: st.store_name,
     }));
   } catch { res.redirect(302, site() || '/'); }
 }
