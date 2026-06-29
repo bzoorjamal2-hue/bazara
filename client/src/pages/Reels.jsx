@@ -14,7 +14,7 @@ import { sizeLabel } from '../utils/sizes.js';
 const MUTE_KEY = 'bz_reels_muted';
 
 // نسخة فيديو أخف للريلز (أبعاد محدودة + جودة موفّرة) → تحميل أسرع بكثير
-const reelVideo = (url) => (url && url.includes('/upload/') ? url.replace('/upload/', '/upload/f_auto,q_auto:eco,w_540,c_limit/') : url);
+const reelVideo = (url) => (url && url.includes('/upload/') ? url.replace('/upload/', '/upload/f_auto,q_auto:eco,w_480,c_limit/') : url);
 
 // تصفّح عمودي لفيديوهات المنتجات (Reels) — ملء الشاشة، تشغيل تلقائي للظاهر فقط،
 // تحميل مسبق + تحميل المزيد، شريط تقدّم/انتقال تلقائي، ضغط مطوّل للإيقاف،

@@ -262,15 +262,19 @@ function HomeHero({ banners = [] }) {
                       <img src={cldThumb(s.bgValue, 1280)} alt="" loading={idx === 0 ? 'eager' : 'lazy'} decoding="async" style={{ filter: 'brightness(0.6)' }} className="absolute inset-0 -z-10 h-full w-full object-cover" />
                     )}
                     {isVideo && (
-                      <video
-                        src={s.bgValue}
-                        poster={cldVideoPoster(s.bgValue)}
-                        autoPlay muted loop playsInline preload="auto"
-                        onEnded={(e) => { e.currentTarget.currentTime = 0; e.currentTarget.play().catch(() => {}); }}
-                        onPause={(e) => { if (!document.hidden) e.currentTarget.play().catch(() => {}); }}
-                        style={{ filter: 'brightness(0.6)' }}
-                        className="absolute inset-0 -z-10 h-full w-full object-cover"
-                      />
+                      <>
+                        <img src={cldVideoPoster(s.bgValue)} alt="" aria-hidden loading={idx === 0 ? 'eager' : 'lazy'} style={{ filter: 'brightness(0.6)', zIndex: -2 }} className="absolute inset-0 h-full w-full object-cover" />
+                        <video
+                          src={s.bgValue}
+                          poster={cldVideoPoster(s.bgValue)}
+                          autoPlay muted loop playsInline preload="auto"
+                          onEnded={(e) => { e.currentTarget.currentTime = 0; e.currentTarget.play().catch(() => {}); }}
+                          onPause={(e) => { if (!document.hidden) e.currentTarget.play().catch(() => {}); }}
+                          onCanPlay={(e) => { e.currentTarget.style.opacity = '1'; }}
+                          style={{ filter: 'brightness(0.6)', opacity: 0, transition: 'opacity .35s ease', zIndex: -1 }}
+                          className="absolute inset-0 h-full w-full object-cover"
+                        />
+                      </>
                     )}
                     {s.title && <h1 className={`font-display text-3xl font-extrabold leading-tight sm:text-5xl ${onMedia ? 'text-cream drop-shadow-lg' : 'text-[#5e4636]'}`}>{s.title}</h1>}
                     {s.subtitle && <p className={`mx-auto mt-4 max-w-2xl sm:text-lg ${onMedia ? 'text-cream/85 drop-shadow' : 'text-[#6e5340]'}`}>{s.subtitle}</p>}

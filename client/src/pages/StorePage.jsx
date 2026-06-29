@@ -795,20 +795,24 @@ function HeroSlider({ store }) {
                     />
                   )}
                   {isVideo && (
-                    <video
-                      src={s.bgValue}
-                      poster={cldVideoPoster(s.bgValue)}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      preload="auto"
-                      // ضمان التكرار حتى لو أوقفه النظام: نعيده من البداية ونشغّله
-                      onEnded={(e) => { e.currentTarget.currentTime = 0; e.currentTarget.play().catch(() => {}); }}
-                      onPause={(e) => { if (!document.hidden) e.currentTarget.play().catch(() => {}); }}
-                      style={{ filter: 'brightness(0.6)' }}
-                      className="absolute inset-0 z-0 h-full w-full object-cover"
-                    />
+                    <>
+                      {/* صورة أول لقطة دائمة خلف الفيديو → لا سواد أبداً */}
+                      <img src={posterImg} alt="" aria-hidden="true" loading={idx === 0 ? 'eager' : 'lazy'} style={{ filter: 'brightness(0.6)' }} className="absolute inset-0 z-0 h-full w-full object-cover" />
+                      <video
+                        src={s.bgValue}
+                        poster={posterImg}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        preload="auto"
+                        onEnded={(e) => { e.currentTarget.currentTime = 0; e.currentTarget.play().catch(() => {}); }}
+                        onPause={(e) => { if (!document.hidden) e.currentTarget.play().catch(() => {}); }}
+                        onCanPlay={(e) => { e.currentTarget.style.opacity = '1'; }}
+                        style={{ filter: 'brightness(0.6)', opacity: 0, transition: 'opacity .35s ease' }}
+                        className="absolute inset-0 z-[1] h-full w-full object-cover"
+                      />
+                    </>
                   )}
                   {/* طبقة تظليل موحّدة فوق الصورة/الفيديو — نفس الدرجة لكل الشرائح ليظهر النص بوضوح */}
                   {!custom && <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-cream/10 blur-3xl" />}
