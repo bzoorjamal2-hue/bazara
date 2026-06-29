@@ -6,6 +6,7 @@ import useScrollLock from '../hooks/useScrollLock.js';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
 import CloseButton from './CloseButton.jsx';
+import { GiftIcon, ShareIcon, WhatsAppIcon } from './icons.jsx';
 
 // نافذة "شاركي واربحي" — الزبونة تُنشئ رابط إحالتها الخاص وتشاركه.
 // مستقلّة الألوان (بورتال خارج theme-pub) فنتحكّم بالوضعين عبر sc-* في index.css.
@@ -59,7 +60,7 @@ export default function ShareEarnModal({ store, onClose }) {
       <div className="absolute inset-0 bg-black/45 backdrop-blur-[2px]" onClick={onClose} />
       <div className="sc-panel relative mx-auto flex w-full max-w-md flex-col overflow-hidden rounded-t-3xl shadow-2xl sm:mb-4 sm:rounded-3xl">
         <header className="flex shrink-0 items-center gap-3 border-b border-gold-400/25 bg-gradient-to-l from-wine to-[#7a2540] px-4 py-3 text-cream">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gold-300/20 text-gold-200 ring-1 ring-gold-300/40" aria-hidden="true">🎁</span>
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gold-300/20 text-gold-200 ring-1 ring-gold-300/40" aria-hidden="true"><GiftIcon className="h-5 w-5" /></span>
           <p className="min-w-0 flex-1 truncate font-display text-base font-bold">{t('referral.shareTitle')}</p>
           <CloseButton variant="cream" size="h-10 w-10" onClick={onClose} />
         </header>
@@ -95,10 +96,10 @@ export default function ShareEarnModal({ store, onClose }) {
                   </button>
                 </div>
               </div>
-              <button type="button" onClick={nativeShare} className="w-full rounded-2xl bg-wine py-3 font-bold text-cream shadow-md transition hover:bg-[#7a2540]">
-                📤 {t('referral.shareNow')}
+              <button type="button" onClick={nativeShare} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-wine py-3 font-bold text-cream shadow-md transition hover:bg-[#7a2540]">
+                <ShareIcon className="h-5 w-5" /> {t('referral.shareNow')}
               </button>
-              <button type="button" onClick={waShare} className="btn-whatsapp w-full">💬 {t('referral.shareWhatsapp')}</button>
+              <button type="button" onClick={waShare} className="btn-whatsapp w-full gap-2"><WhatsAppIcon className="h-5 w-5" /> {t('referral.shareWhatsapp')}</button>
             </div>
           )}
         </div>

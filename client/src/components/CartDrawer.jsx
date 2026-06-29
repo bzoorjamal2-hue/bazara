@@ -6,6 +6,7 @@ import { buildWhatsappCheckout } from '../utils/whatsapp.js';
 import useScrollLock from '../hooks/useScrollLock.js';
 import Select from './Select.jsx';
 import CloseButton from './CloseButton.jsx';
+import { CartIcon, BagIcon, XIcon, PinIcon, GiftIcon, TicketIcon, CheckIcon, ReceiptIcon, PartyIcon, TruckIcon, CashIcon, WhatsAppIcon } from './icons.jsx';
 import api from '../api/client.js';
 import { sizeLabel } from '../utils/sizes.js';
 import { getRef, clearRef } from '../utils/referral.js';
@@ -184,14 +185,14 @@ export default function CartDrawer() {
                 {ar ? '→' : '←'}
               </button>
             )}
-            {view === 'cart' ? `🛒 ${t('cart.title')}` : t('co.title')}
+            {view === 'cart' ? <><CartIcon className="h-5 w-5" /> {t('cart.title')}</> : t('co.title')}
           </h2>
           <CloseButton onClick={close} variant="wine" />
         </div>
 
         {items.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center text-stone-400">
-            <span className="text-5xl">🛍️</span>
+            <BagIcon className="h-14 w-14 text-wine/40" />
             {t('cart.empty')}
           </div>
         ) : (
@@ -213,7 +214,7 @@ export default function CartDrawer() {
                         <p className="mt-1 font-bold text-gold-300">{t('common.currency')}{i.price}</p>
                       </div>
                       <div className="flex flex-col items-end justify-between">
-                        <button onClick={() => remove(i.key)} className="text-stone-500 hover:text-red-300">✕</button>
+                        <button onClick={() => remove(i.key)} aria-label={t('common.remove')} className="text-stone-500 hover:text-red-300"><XIcon className="h-4 w-4" /></button>
                         <div className="flex items-center gap-2">
                           <button onClick={() => setQty(i.key, i.qty - 1)} className="h-6 w-6 rounded-md border border-gold-400/30 text-gold-200">−</button>
                           <span className="w-5 text-center text-sm">{i.qty}</span>
@@ -240,7 +241,7 @@ export default function CartDrawer() {
                 <div className="flex-1 space-y-4 overflow-y-auto p-4">
                   {/* بيانات التوصيل */}
                   <div>
-                    <h3 className="mb-2 text-sm font-bold text-wine">📍 {t('co.customer')}</h3>
+                    <h3 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-wine"><PinIcon className="h-4 w-4" /> {t('co.customer')}</h3>
                     <div className="space-y-2.5">
                       <input className="input !rounded-2xl" placeholder={t('co.name')} value={cust.name} onChange={(e) => setCust({ ...cust, name: e.target.value })} />
                       <input className="input !rounded-2xl" dir="ltr" inputMode="tel" placeholder={t('co.phone')} value={cust.phone} onChange={(e) => setCust({ ...cust, phone: e.target.value })} />
@@ -258,8 +259,8 @@ export default function CartDrawer() {
 
                   {/* خصم الإحالة التلقائي (إن وصلت عبر رابط إحالة ولم تستخدم كوبوناً) */}
                   {!coupon && refDiscount > 0 && (
-                    <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 px-3.5 py-2.5 text-sm font-semibold text-emerald-700">
-                      🎁 {referral?.referrerName
+                    <div className="flex items-center gap-1.5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 px-3.5 py-2.5 text-sm font-semibold text-emerald-700">
+                      <GiftIcon className="h-4 w-4 shrink-0" /> {referral?.referrerName
                         ? t('referral.welcomeFrom', { name: referral.referrerName, percent: referral.percent })
                         : t('referral.welcome', { percent: referral.percent })}
                     </div>
@@ -267,10 +268,10 @@ export default function CartDrawer() {
 
                   {/* كوبون الخصم */}
                   <div>
-                    <h3 className="mb-2 text-sm font-bold text-wine">🎟️ {t('coupon.title')}</h3>
+                    <h3 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-wine"><TicketIcon className="h-4 w-4" /> {t('coupon.title')}</h3>
                     {coupon ? (
                       <div className="flex items-center justify-between rounded-2xl border border-emerald-500/30 bg-emerald-500/5 px-3.5 py-2.5">
-                        <span className="text-sm font-semibold text-emerald-700">✓ {coupon.code} — −{t('common.currency')}{discount.toFixed(2)}</span>
+                        <span className="flex items-center gap-1 text-sm font-semibold text-emerald-700"><CheckIcon className="h-4 w-4" /> {coupon.code} — −{t('common.currency')}{discount.toFixed(2)}</span>
                         <button onClick={removeCoupon} className="text-xs text-stone-400 hover:text-red-400">{t('coupon.remove')}</button>
                       </div>
                     ) : (
@@ -292,7 +293,7 @@ export default function CartDrawer() {
 
                   {/* ملخّص الطلب */}
                   <div className="glass p-3.5">
-                    <h3 className="mb-2 text-sm font-bold text-wine">🧾 {t('co.summary')}</h3>
+                    <h3 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-wine"><ReceiptIcon className="h-4 w-4" /> {t('co.summary')}</h3>
                     <div className="space-y-1.5 text-sm">
                       {items.map((i) => (
                         <div key={i.key} className="flex items-center justify-between text-stone-300">
@@ -311,29 +312,29 @@ export default function CartDrawer() {
                       <div className="flex justify-between text-stone-400">
                         <span>{t('co.delivery')}</span>
                         {freeShip
-                          ? <span className="font-bold text-emerald-600">{t('co.freeShipping')} 🎉</span>
+                          ? <span className="inline-flex items-center gap-1 font-bold text-emerald-600">{t('co.freeShipping')} <PartyIcon className="h-4 w-4" /></span>
                           : <span>{t('common.currency')}{delivery.toFixed(2)}</span>}
                       </div>
                       <div className="mt-1 flex justify-between font-bold text-wine"><span>{t('co.grandTotal')}</span><span className="font-display text-lg">{t('common.currency')}{grand.toFixed(2)}</span></div>
                     </div>
                     {/* تحفيز للشحن المجاني: كم باقي ليصير التوصيل مجاناً */}
                     {freeOver > 0 && !freeShip && (
-                      <p className="mt-2 rounded-xl bg-wine/5 px-3 py-2 text-center text-xs font-semibold text-wine">
-                        🚚 {t('co.freeShippingHint', { amount: (freeOver - afterDiscount).toFixed(2) })}
+                      <p className="mt-2 flex items-center justify-center gap-1.5 rounded-xl bg-wine/5 px-3 py-2 text-center text-xs font-semibold text-wine">
+                        <TruckIcon className="h-4 w-4 shrink-0" /> {t('co.freeShippingHint', { amount: (freeOver - afterDiscount).toFixed(2) })}
                       </p>
                     )}
                     <p className="mt-2 text-[11px] text-stone-400">* {t('co.deliveryNote')}</p>
                   </div>
 
                   <div className="flex items-center justify-center gap-2 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 py-2.5 text-sm font-medium text-emerald-700">
-                    💵 {t('co.cod')}
+                    <CashIcon className="h-4 w-4" /> {t('co.cod')}
                   </div>
                 </div>
 
                 <div className="border-t border-gold-400/15 p-4">
                   {err && <p className="mb-2 text-center text-xs text-red-500">{err}</p>}
                   <button onClick={confirmOrder} disabled={placing} className="btn-whatsapp w-full disabled:opacity-60">
-                    {placing ? t('common.loading') : `💬 ${t('co.confirm')}`}
+                    {placing ? t('common.loading') : <span className="inline-flex items-center gap-2"><WhatsAppIcon className="h-5 w-5" /> {t('co.confirm')}</span>}
                   </button>
                 </div>
               </motion.div>
