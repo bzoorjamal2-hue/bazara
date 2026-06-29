@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import Spinner from '../../components/Spinner.jsx';
 import ImageInput from '../../components/ImageInput.jsx';
 import BannerEditor from '../../components/BannerEditor.jsx';
+import { SaveIcon, TruckIcon, ImageIcon, XIcon, GiftIcon, FolderIcon, TrashIcon, MegaphoneIcon, RulerIcon, ShieldIcon } from '../../components/icons.jsx';
 
 const EMPTY = {
   name: '', slug: '', description: '', logoUrl: '', phone: '', whatsapp: '', deliveryPhone: '',
@@ -132,7 +133,7 @@ export default function StoreSettings() {
         <div className="glass space-y-4 p-6">
           <div>
             <ImageInput label={t('dashboard.store.logo')} value={form.logoUrl} onChange={(v) => setForm({ ...form, logoUrl: v })} />
-            <button type="button" onClick={saveLogo} className="btn-ghost mt-3 text-sm">💾 {t('image.saveImage')}</button>
+            <button type="button" onClick={saveLogo} className="btn-ghost mt-3 gap-1.5 text-sm"><SaveIcon className="h-4 w-4" /> {t('image.saveImage')}</button>
           </div>
           <div>
             <label className="label">{t('dashboard.store.name')}</label>
@@ -171,7 +172,7 @@ export default function StoreSettings() {
               <input type="text" dir="ltr" className="input" value={form.phone} onChange={set('phone')} />
             </div>
             <div>
-              <label className="label">🚚 {t('dashboard.store.deliveryPhone')}</label>
+              <label className="label flex items-center gap-1.5"><TruckIcon className="h-4 w-4" /> {t('dashboard.store.deliveryPhone')}</label>
               <input type="text" dir="ltr" className="input" placeholder="+970590000000" value={form.deliveryPhone} onChange={set('deliveryPhone')} />
               <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.deliveryPhoneHint')}</p>
             </div>
@@ -192,14 +193,14 @@ export default function StoreSettings() {
 
         {/* بانرات السلايدر */}
         <div className="glass space-y-4 p-6">
-          <h2 className="font-display text-lg font-bold text-stone-100">🖼️ {t('dashboard.store.banners')}</h2>
+          <h2 className="flex items-center gap-1.5 font-display text-lg font-bold text-stone-100"><ImageIcon className="h-5 w-5" /> {t('dashboard.store.banners')}</h2>
           <BannerEditor banners={form.banners} onChange={(b) => setForm((f) => ({ ...f, banners: b }))} />
         </div>
 
         {/* مناطق التوصيل ورسومها */}
         <div className="glass space-y-3 p-6">
           <div>
-            <h2 className="font-display text-lg font-bold text-stone-100">🚚 {t('dashboard.store.zones')}</h2>
+            <h2 className="flex items-center gap-1.5 font-display text-lg font-bold text-stone-100"><TruckIcon className="h-5 w-5" /> {t('dashboard.store.zones')}</h2>
             <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.zonesHint')}</p>
           </div>
 
@@ -223,7 +224,7 @@ export default function StoreSettings() {
                     />
                     <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-stone-400">₪</span>
                   </div>
-                  <button type="button" onClick={() => removeZone(idx)} className="rounded-lg p-2 text-stone-400 hover:text-red-300" aria-label="remove">✕</button>
+                  <button type="button" onClick={() => removeZone(idx)} className="rounded-lg p-2 text-stone-400 hover:text-red-300" aria-label="remove"><XIcon className="h-4 w-4" /></button>
                 </div>
               ))}
             </div>
@@ -241,7 +242,7 @@ export default function StoreSettings() {
 
           {/* برنامج الإحالة: نسبة خصم الزبونة الجديدة (0 = معطّل) */}
           <div className="border-t border-white/5 pt-3">
-            <label className="label">🎁 {t('dashboard.store.referralPercent')}</label>
+            <label className="label flex items-center gap-1.5"><GiftIcon className="h-4 w-4" /> {t('dashboard.store.referralPercent')}</label>
             <div className="relative w-40">
               <input className="input pe-8" type="number" min="0" max="90" step="1" placeholder="0" value={form.referralPercent} onChange={set('referralPercent')} />
               <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-stone-400">%</span>
@@ -253,7 +254,7 @@ export default function StoreSettings() {
         {/* تخصيص الفئات — صورة واقعية + اسم لكل فئة */}
         <div className="glass space-y-4 p-6">
           <div>
-            <h2 className="font-display text-lg font-bold text-stone-100">🗂️ {t('dashboard.store.categories')}</h2>
+            <h2 className="flex items-center gap-1.5 font-display text-lg font-bold text-stone-100"><FolderIcon className="h-5 w-5" /> {t('dashboard.store.categories')}</h2>
             <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.categoriesHint')}</p>
           </div>
           <div className="space-y-3">
@@ -290,7 +291,7 @@ export default function StoreSettings() {
                   <div key={cc.key || idx} className="rounded-xl border border-gold-400/15 bg-black/20 p-3">
                     <div className="mb-2 flex items-center justify-between">
                       <span className="text-sm font-semibold text-gold-200">{cc.name || t('dashboard.store.newCategory')}</span>
-                      <button type="button" onClick={() => removeCustomCat(idx)} className="rounded-lg px-2 py-1 text-xs text-stone-400 hover:text-red-300">🗑 {t('common.delete')}</button>
+                      <button type="button" onClick={() => removeCustomCat(idx)} className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-stone-400 hover:text-red-300"><TrashIcon className="h-3.5 w-3.5" /> {t('common.delete')}</button>
                     </div>
                     <input type="text" maxLength={40} className="input mb-2" placeholder={t('dashboard.store.categoryNameField')} value={cc.name} onChange={(e) => setCustomCat(idx, 'name', e.target.value)} />
                     <ImageInput value={cc.image || ''} onChange={(v) => setCustomCat(idx, 'image', v)} />
@@ -303,7 +304,7 @@ export default function StoreSettings() {
 
         {/* تسويق: شريط إعلانات + نافذة ترحيب */}
         <div className="glass space-y-4 p-6">
-          <h2 className="font-display text-lg font-bold text-stone-100">📣 {t('dashboard.store.marketing')}</h2>
+          <h2 className="flex items-center gap-1.5 font-display text-lg font-bold text-stone-100"><MegaphoneIcon className="h-5 w-5" /> {t('dashboard.store.marketing')}</h2>
           <div>
             <label className="label">{t('dashboard.store.announcement')}</label>
             <textarea rows={3} maxLength={500} className="input resize-none" placeholder={t('dashboard.store.announcementPlaceholder')} value={form.announcement} onChange={set('announcement')} />
@@ -324,7 +325,7 @@ export default function StoreSettings() {
         {/* دليل المقاسات المخصّص */}
         <div className="glass space-y-3 p-6">
           <div>
-            <h2 className="font-display text-lg font-bold text-stone-100">📏 {t('dashboard.store.sizeChart')}</h2>
+            <h2 className="flex items-center gap-1.5 font-display text-lg font-bold text-stone-100"><RulerIcon className="h-5 w-5" /> {t('dashboard.store.sizeChart')}</h2>
             <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.sizeChartHint')}</p>
           </div>
           <table className="w-full table-fixed border-collapse text-center text-[clamp(0.72rem,3.2vw,0.875rem)]">
@@ -361,7 +362,7 @@ export default function StoreSettings() {
 
         {/* سياسة الإرجاع والتبديل */}
         <div className="glass space-y-2 p-6">
-          <label className="label">🛡️ {t('dashboard.store.returnPolicy')}</label>
+          <label className="label flex items-center gap-1.5"><ShieldIcon className="h-4 w-4" /> {t('dashboard.store.returnPolicy')}</label>
           <p className="text-xs text-stone-400">{t('dashboard.store.returnPolicyHint')}</p>
           <textarea rows={3} className="input resize-none" maxLength={2000} placeholder={t('product.returnPolicyDefault')} value={form.returnPolicy} onChange={set('returnPolicy')} />
         </div>
@@ -383,7 +384,7 @@ export default function StoreSettings() {
           disabled={busy}
           className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-wine to-wine-dark py-3.5 font-bold text-cream shadow-lg transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {busy ? t('common.loading') : `💾 ${t('common.save')}`}
+          {busy ? t('common.loading') : <span className="inline-flex items-center gap-1.5"><SaveIcon className="h-4 w-4" /> {t('common.save')}</span>}
         </button>
       </form>
     </div>

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
+import { KeyIcon, CardIcon, LockOpenIcon } from '../../components/icons.jsx';
 
 function genPassword() {
   const lower = 'abcdefghijkmnpqrstuvwxyz';
@@ -100,7 +101,7 @@ export default function AdminRequests() {
 
       {/* أكواد التفعيل */}
       <div className="glass space-y-4 p-5">
-        <h2 className="font-display text-lg font-bold text-stone-100">🔑 {t('admin.codesTitle')}</h2>
+        <h2 className="flex items-center gap-1.5 font-display text-lg font-bold text-stone-100"><KeyIcon className="h-5 w-5" /> {t('admin.codesTitle')}</h2>
         <p className="text-xs text-stone-400">{t('admin.codesHint')}</p>
         <form onSubmit={generate} className="flex flex-wrap items-end gap-3">
           <div>
@@ -163,7 +164,7 @@ export default function AdminRequests() {
 
       {/* تعليمات الدفع */}
       <form onSubmit={savePayment} className="glass space-y-3 p-5">
-        <h2 className="font-display text-lg font-bold text-stone-100">💳 {t('admin.paymentTitle')}</h2>
+        <h2 className="flex items-center gap-1.5 font-display text-lg font-bold text-stone-100"><CardIcon className="h-5 w-5" /> {t('admin.paymentTitle')}</h2>
         <p className="text-xs text-stone-400">{t('admin.paymentHint')}</p>
         {payMsg && <Alert ok>{payMsg}</Alert>}
         <textarea rows={4} className="input resize-none" value={payInfo} onChange={(e) => setPayInfo(e.target.value)}
@@ -173,7 +174,7 @@ export default function AdminRequests() {
 
       {/* إعادة تعيين كلمة مرور مشترك */}
       <form onSubmit={doReset} className="glass space-y-3 p-5">
-        <h2 className="font-display text-lg font-bold text-stone-100">🔓 {t('admin.resetSection')}</h2>
+        <h2 className="flex items-center gap-1.5 font-display text-lg font-bold text-stone-100"><LockOpenIcon className="h-5 w-5" /> {t('admin.resetSection')}</h2>
         <p className="text-xs text-stone-400">{t('admin.resetHint')}</p>
         {rMsg && <Alert ok>{rMsg}</Alert>}
         {rErr && <Alert>{rErr}</Alert>}

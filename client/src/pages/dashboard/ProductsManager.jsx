@@ -4,6 +4,7 @@ import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import ProductForm from './ProductForm.jsx';
 import ConfirmModal from '../../components/ConfirmModal.jsx';
+import { StarIcon, LinkIcon } from '../../components/icons.jsx';
 import { cldVideoPoster } from '../../utils/cloudinary.js';
 
 const PH = 'https://placehold.co/48x48/121214/d4af37?text=%F0%9F%91%97';
@@ -74,7 +75,7 @@ export default function ProductsManager({ onCount }) {
 
   const Badges = ({ p }) => (
     <span className="ms-2 inline-flex gap-1 align-middle">
-      {p.featured && <span className="badge bg-gold-400/20 text-gold-200">★</span>}
+      {p.featured && <span className="badge inline-flex items-center bg-gold-400/20 text-gold-200"><StarIcon className="h-3 w-3" /></span>}
       {p.oldPrice > p.price && <span className="badge bg-red-500/80 text-white">%</span>}
       {p.stock === 0 && <span className="badge bg-ink-700 text-stone-300">{t('product.outOfStock')}</span>}
     </span>
@@ -116,7 +117,7 @@ export default function ProductsManager({ onCount }) {
                   <td className="p-4 font-semibold text-gold-300">{t('common.currency')}{p.price}</td>
                   <td className="p-4">
                     <div className="flex justify-end gap-2">
-                      <button onClick={() => shareProduct(p)} className="btn-ghost !px-3 !py-1.5 text-xs" title={t('product.shareProduct')}>🔗 {t('product.shareProduct')}</button>
+                      <button onClick={() => shareProduct(p)} className="btn-ghost gap-1.5 !px-3 !py-1.5 text-xs" title={t('product.shareProduct')}><LinkIcon className="h-4 w-4" /> {t('product.shareProduct')}</button>
                       <button onClick={() => setModal(p)} className="btn-ghost !px-3 !py-1.5 text-xs">{t('common.edit')}</button>
                       <button onClick={() => setConfirmDel(p)} className="btn-danger !px-3 !py-1.5 text-xs">{t('common.delete')}</button>
                     </div>
@@ -134,7 +135,7 @@ export default function ProductsManager({ onCount }) {
                   <p className="truncate font-medium text-stone-100">{p.name}</p>
                   <p className="text-xs text-stone-400">{t(`categories.${p.category}`)} · <span className="text-gold-300">{t('common.currency')}{p.price}</span></p>
                 </div>
-                <button onClick={() => shareProduct(p)} className="btn-ghost !px-2.5 !py-1.5 text-xs" title={t('product.shareProduct')}>🔗</button>
+                <button onClick={() => shareProduct(p)} className="btn-ghost !px-2.5 !py-1.5 text-xs" title={t('product.shareProduct')} aria-label={t('product.shareProduct')}><LinkIcon className="h-4 w-4" /></button>
                 <button onClick={() => setModal(p)} className="btn-ghost !px-2.5 !py-1.5 text-xs">{t('common.edit')}</button>
                 <button onClick={() => setConfirmDel(p)} className="btn-danger !px-2.5 !py-1.5 text-xs">{t('common.delete')}</button>
               </div>

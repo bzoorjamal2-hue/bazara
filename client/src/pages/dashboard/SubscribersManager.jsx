@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
+import { CrownIcon, LinkIcon, BellIcon, SaveIcon, PlusIcon, MailIcon, TrashIcon } from '../../components/icons.jsx';
 
 function fmt(d) {
   return d ? new Date(d).toLocaleString() : '—';
@@ -90,7 +91,7 @@ function SubRow({ s, onDeleted, onUpdated }) {
 
   const statusBadge = s.isAdmin ? (
     <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-400 px-3 py-1 text-xs font-bold text-ink-950 shadow-sm">
-      👑 {t('admin.statusAdmin')}
+      <CrownIcon className="h-3.5 w-3.5" /> {t('admin.statusAdmin')}
     </span>
   ) : s.active ? (
     <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500 px-3 py-1 text-xs font-bold text-white shadow-sm">
@@ -114,7 +115,7 @@ function SubRow({ s, onDeleted, onUpdated }) {
         </div>
         {/* المدير حساب تحكّم — بلا رابط متجر عام */}
         {!s.isAdmin && (
-          <a href={`/store/${s.storeSlug}`} target="_blank" rel="noreferrer" className="text-xs text-gold-300 hover:text-gold-200">🔗 {t('admin.subStore')}</a>
+          <a href={`/store/${s.storeSlug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-gold-300 hover:text-gold-200"><LinkIcon className="h-3.5 w-3.5" /> {t('admin.subStore')}</a>
         )}
       </div>
 
@@ -125,7 +126,7 @@ function SubRow({ s, onDeleted, onUpdated }) {
           {/* الخطة التي اختارها المستخدم عند التسجيل — ليفعّلها المدير مباشرة */}
           {!s.isAdmin && s.requestedPlan && (
             <span className="ms-2 inline-flex items-center rounded-full bg-gold-400/15 px-2 py-0.5 text-[11px] font-bold text-gold-300 ring-1 ring-gold-400/30">
-              🛎️ {t('admin.requested')}: {t(`subscription.${s.requestedPlan}`)}
+              <BellIcon className="inline h-4 w-4" /> {t('admin.requested')}: {t(`subscription.${s.requestedPlan}`)}
             </span>
           )}
         </div>
@@ -153,7 +154,7 @@ function SubRow({ s, onDeleted, onUpdated }) {
               ]}
             />
             <button onClick={save} disabled={saveBusy} className={`!py-1.5 text-sm flex-1 sm:flex-none ${dirty ? 'btn-primary' : 'btn-ghost'}`}>
-              {saveBusy ? t('common.loading') : `💾 ${t('admin.saveChanges')}`}
+              {saveBusy ? t('common.loading') : <span className="inline-flex items-center gap-1.5"><SaveIcon className="h-4 w-4" /> {t('admin.saveChanges')}</span>}
             </button>
           </div>
 
@@ -169,25 +170,25 @@ function SubRow({ s, onDeleted, onUpdated }) {
               className="input !w-20 shrink-0 !py-1.5 text-center text-sm"
             />
             <button onClick={addDays} disabled={daysBusy} className="btn-primary !py-1.5 text-sm flex-1 sm:flex-none">
-              {daysBusy ? t('common.loading') : `➕ ${t('admin.addDaysBtn')}`}
+              {daysBusy ? t('common.loading') : <span className="inline-flex items-center gap-1.5"><PlusIcon className="h-4 w-4" /> {t('admin.addDaysBtn')}</span>}
             </button>
           </div>
 
           {/* المجموعة 3: إرسال الكود + حذف الحساب */}
           <div className="flex flex-wrap items-center gap-2">
             <button onClick={send} disabled={busy} className="btn-ghost !py-1.5 text-sm flex-1 sm:flex-none">
-              {busy ? t('common.loading') : `✉️ ${t('admin.sendCodeBtn')}`}
+              {busy ? t('common.loading') : <span className="inline-flex items-center gap-1.5"><MailIcon className="h-4 w-4" /> {t('admin.sendCodeBtn')}</span>}
             </button>
             {confirmDel ? (
               <span className="flex flex-1 items-center gap-2 sm:flex-none">
                 <button onClick={remove} disabled={delBusy} className="flex-1 rounded-lg bg-red-500/90 px-3 py-1.5 text-sm font-semibold text-white hover:bg-red-500 sm:flex-none">
-                  {delBusy ? t('common.loading') : `🗑 ${t('admin.confirmDelete')}`}
+                  {delBusy ? t('common.loading') : <span className="inline-flex items-center gap-1.5"><TrashIcon className="h-4 w-4" /> {t('admin.confirmDelete')}</span>}
                 </button>
                 <button onClick={() => setConfirmDel(false)} className="text-sm text-stone-400 hover:text-stone-200">{t('common.cancel')}</button>
               </span>
             ) : (
               <button onClick={() => setConfirmDel(true)} className="rounded-lg border border-red-400/40 px-3 py-1.5 text-sm font-medium text-red-300 hover:bg-red-500/10 flex-1 sm:flex-none">
-                🗑 {t('admin.deleteAccount')}
+                <TrashIcon className="inline h-4 w-4" /> {t('admin.deleteAccount')}
               </button>
             )}
           </div>

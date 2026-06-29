@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import ImageInput from './ImageInput.jsx';
 import VideoInput from './VideoInput.jsx';
+import { TrashIcon } from './icons.jsx';
 
 const BG_TYPES = [['', 'bgTheme'], ['color', 'bgColor'], ['image', 'bgImage'], ['video', 'bgVideo']];
 const MAX_BANNERS = 5;
@@ -30,7 +31,7 @@ export default function BannerEditor({ banners = [], onChange, withButtons = fal
             <div key={idx} className="rounded-xl border border-gold-400/15 bg-black/20 p-3">
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-sm font-semibold text-gold-200">{t('dashboard.store.slide')} {idx + 1}</span>
-                <button type="button" onClick={() => removeBanner(idx)} className="text-xs text-red-300 hover:text-red-200">🗑 {t('common.delete')}</button>
+                <button type="button" onClick={() => removeBanner(idx)} className="inline-flex items-center gap-1 text-xs text-red-300 hover:text-red-200"><TrashIcon className="h-3.5 w-3.5" /> {t('common.delete')}</button>
               </div>
               <input
                 type="text"
@@ -84,7 +85,7 @@ export default function BannerEditor({ banners = [], onChange, withButtons = fal
               {/* زر الشريحة (للمدير) — نص + وجهة عند الضغط */}
               {withButtons && (
                 <div className="mt-3 border-t border-gold-400/10 pt-3">
-                  <p className="mb-2 text-xs font-semibold text-stone-300">🔘 {t('dashboard.store.slideButton')}</p>
+                  <p className="mb-2 text-xs font-semibold text-stone-300">{t('dashboard.store.slideButton')}</p>
                   <input
                     type="text"
                     className="input mb-2"

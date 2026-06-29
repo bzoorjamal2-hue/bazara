@@ -6,6 +6,7 @@ import ImageInput from '../../components/ImageInput.jsx';
 import VideoInput from '../../components/VideoInput.jsx';
 import Select from '../../components/Select.jsx';
 import useScrollLock from '../../hooks/useScrollLock.js';
+import { XIcon, VideoIcon, ClockIcon, PaletteIcon, CameraIcon, StarIcon } from '../../components/icons.jsx';
 import { SIZES, sizeLabel } from '../../utils/sizes.js';
 
 const CATEGORIES = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
@@ -145,7 +146,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
           <h2 className="font-display text-xl font-bold gradient-text">
             {isEdit ? t('dashboard.product.editTitle') : t('dashboard.product.newTitle')}
           </h2>
-          <button type="button" onClick={onClose} className="rounded-lg p-2 text-stone-400 hover:text-gold-200" aria-label="close">✕</button>
+          <button type="button" onClick={onClose} className="rounded-lg p-2 text-stone-400 hover:text-gold-200" aria-label="close"><XIcon className="h-5 w-5" /></button>
         </div>
 
         {error && <div className="mb-4 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
@@ -162,7 +163,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
                   <div className="flex-1">
                     <ImageInput value={img} onChange={(v) => setGalleryAt(idx, v)} />
                   </div>
-                  <button type="button" onClick={() => removeGallery(idx)} className="mt-1 rounded-lg p-2 text-stone-400 hover:text-red-300">✕</button>
+                  <button type="button" onClick={() => removeGallery(idx)} className="mt-1 rounded-lg p-2 text-stone-400 hover:text-red-300"><XIcon className="h-4 w-4" /></button>
                 </div>
               ))}
               {form.images.length < 5 && (
@@ -174,7 +175,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
           {/* فيديو المنتج (رفع مباشر أو رابط) */}
           <div>
             <VideoInput
-              label={`🎬 ${t('dashboard.product.video')} (${t('common.optional')})`}
+              label={`${t('dashboard.product.video')} (${t('common.optional')})`}
               value={form.videoUrl}
               onChange={(v) => setForm({ ...form, videoUrl: v })}
             />
@@ -199,7 +200,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
           {/* عرض بوقت محدود: عدّاد تنازلي — يظهر للزبون، وعند انتهائه يعود السعر الأصلي تلقائياً */}
           {form.oldPrice !== '' && (
             <div className="min-w-0">
-              <label className="label">⏱️ {t('dashboard.product.saleEndsAt')} <span className="text-stone-500">({t('common.optional')})</span></label>
+              <label className="label flex items-center gap-1.5"><ClockIcon className="h-4 w-4" /> {t('dashboard.product.saleEndsAt')} <span className="text-stone-500">({t('common.optional')})</span></label>
               <input type="date" className="input w-full max-w-full [color-scheme:dark]" value={form.saleEndsAt} onChange={set('saleEndsAt')} />
               <p className="mt-1 text-xs text-stone-400">{t('dashboard.product.saleEndsHint')}</p>
             </div>
@@ -223,7 +224,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
 
           {/* المتغيّرات: لكل لون نختار النمر المتوفّرة وكميتها — الزبون يختار اللون أولاً ثم النمرة */}
           <div>
-            <label className="label">🎨 {t('dashboard.product.variants')} <span className="text-stone-500">({t('common.optional')})</span></label>
+            <label className="label flex items-center gap-1.5"><PaletteIcon className="h-4 w-4" /> {t('dashboard.product.variants')} <span className="text-stone-500">({t('common.optional')})</span></label>
             <p className="mb-2 text-xs text-stone-400">{t('dashboard.product.variantsHint')}</p>
 
             {colors.length > 0 && (
@@ -237,7 +238,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
                           <span className="h-3.5 w-3.5 rounded-full border border-cream/40" style={{ background: c }} />
                           {c}
                         </span>
-                        <button type="button" onClick={() => removeColorVariant(c)} className="rounded-lg px-2 py-1 text-xs text-stone-400 hover:text-red-300">✕ {t('common.delete')}</button>
+                        <button type="button" onClick={() => removeColorVariant(c)} className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-stone-400 hover:text-red-300"><XIcon className="h-3.5 w-3.5" /> {t('common.delete')}</button>
                       </div>
                       {/* اختيار النمر المتوفّرة لهذا اللون */}
                       <div className="flex flex-wrap gap-1.5">
@@ -274,12 +275,12 @@ export default function ProductForm({ initial, onClose, onSaved }) {
 
                       {/* صور هذا اللون — تظهر للزبونة عند اختياره (Color Swatches) */}
                       <div className="mt-3 border-t border-gold-400/10 pt-3">
-                        <p className="mb-2 text-xs font-semibold text-stone-300">📷 {t('dashboard.product.colorImages')}</p>
+                        <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-stone-300"><CameraIcon className="h-4 w-4" /> {t('dashboard.product.colorImages')}</p>
                         <div className="space-y-2">
                           {(form.colorImages?.[c] || []).map((img, idx) => (
                             <div key={idx} className="flex items-start gap-2">
                               <div className="flex-1"><ImageInput value={img} onChange={(v) => setColorImageAt(c, idx, v)} /></div>
-                              <button type="button" onClick={() => removeColorImage(c, idx)} className="mt-1 rounded-lg p-2 text-stone-400 hover:text-red-300" aria-label={t('common.delete')}>✕</button>
+                              <button type="button" onClick={() => removeColorImage(c, idx)} className="mt-1 rounded-lg p-2 text-stone-400 hover:text-red-300" aria-label={t('common.delete')}><XIcon className="h-4 w-4" /></button>
                             </div>
                           ))}
                           {(form.colorImages?.[c] || []).length < 4 && (
@@ -314,7 +315,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
 
           <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-gold-400/15 bg-black/20 px-4 py-3">
             <input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} className="h-5 w-5 accent-gold-400" />
-            <span className="text-sm text-stone-200">⭐ {t('dashboard.product.featured')}</span>
+            <span className="inline-flex items-center gap-1.5 text-sm text-stone-200"><StarIcon className="h-4 w-4 text-gold-300" /> {t('dashboard.product.featured')}</span>
           </label>
 
           <div className="flex gap-3 pt-2">

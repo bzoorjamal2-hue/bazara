@@ -4,6 +4,7 @@ import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
 import { buildWhatsappLink } from '../../utils/whatsapp.js';
+import { PinIcon, NoteIcon, TicketIcon, WhatsAppIcon, TruckIcon } from '../../components/icons.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 
 const FLOW = ['new', 'confirmed', 'shipped', 'delivered', 'cancelled'];
@@ -148,18 +149,18 @@ export default function OrdersManager() {
                 {/* التوصيل */}
                 {(o.city || o.address) && (
                   <p className="mt-2 text-xs text-stone-400">
-                    📍 {t('dashboard.ordersSection.deliveryTo')}: <span className="text-stone-200">{o.city}</span>
+                    <PinIcon className="inline h-4 w-4" /> {t('dashboard.ordersSection.deliveryTo')}: <span className="text-stone-200">{o.city}</span>
                     {o.address ? <span className="text-stone-300"> — {o.address}</span> : null}
                   </p>
                 )}
-                {o.notes && <p className="mt-1 text-xs text-stone-400">📝 {o.notes}</p>}
+                {o.notes && <p className="mt-1 flex items-center gap-1 text-xs text-stone-400"><NoteIcon className="h-3.5 w-3.5 shrink-0" /> {o.notes}</p>}
 
                 {/* المبالغ */}
                 <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-white/5 pt-2 text-sm">
                   <span className="text-xs text-stone-500">{new Date(o.createdAt).toLocaleString()}</span>
                   <div className="flex flex-wrap items-center gap-3 text-stone-400">
                     <span>{t('dashboard.ordersSection.subtotal')}: {t('common.currency')}{subtotal}</span>
-                    {o.discount > 0 && <span className="text-emerald-300">🎟️ {o.couponCode}: −{t('common.currency')}{o.discount.toFixed(2)}</span>}
+                    {o.discount > 0 && <span className="inline-flex items-center gap-1 text-emerald-300"><TicketIcon className="h-3.5 w-3.5" /> {o.couponCode}: −{t('common.currency')}{o.discount.toFixed(2)}</span>}
                     <span>{t('dashboard.ordersSection.delivery')}: {t('common.currency')}{(o.deliveryFee || 0).toFixed(2)}</span>
                     <span className="font-display text-base font-bold text-gold-300">{t('common.currency')}{o.total.toFixed(2)}</span>
                   </div>
@@ -177,11 +178,11 @@ export default function OrdersManager() {
                   </div>
                   {savingId === o.id && <span className="text-xs text-stone-500">…</span>}
                   {wa && (
-                    <a href={wa} target="_blank" rel="noreferrer" className="btn-whatsapp !px-3 !py-1.5 text-xs">💬 {t('dashboard.ordersSection.contactWhatsapp')}</a>
+                    <a href={wa} target="_blank" rel="noreferrer" className="btn-whatsapp gap-1.5 !px-3 !py-1.5 text-xs"><WhatsAppIcon className="h-4 w-4" /> {t('dashboard.ordersSection.contactWhatsapp')}</a>
                   )}
                   {(store?.deliveryPhone || store?.whatsapp) && (
                     <button onClick={() => sendToDelivery(o)} className="inline-flex items-center gap-1 rounded-xl border border-gold-400/30 px-3 py-1.5 text-xs font-semibold text-gold-200 transition hover:bg-gold-400/10">
-                      🚚 {t('dashboard.ordersSection.sendDelivery')}
+                      <TruckIcon className="inline h-4 w-4" /> {t('dashboard.ordersSection.sendDelivery')}
                     </button>
                   )}
                 </div>
