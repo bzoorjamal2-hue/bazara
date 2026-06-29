@@ -14,7 +14,7 @@ import { sizeLabel } from '../utils/sizes.js';
 const MUTE_KEY = 'bz_reels_muted';
 
 // نسخة فيديو أخف للريلز (أبعاد محدودة + جودة موفّرة) → تحميل أسرع بكثير
-const reelVideo = (url) => (url && url.includes('/upload/') ? url.replace('/upload/', '/upload/f_auto,q_auto:eco,w_720,c_limit/') : url);
+const reelVideo = (url) => (url && url.includes('/upload/') ? url.replace('/upload/', '/upload/f_auto,q_auto:eco,w_540,c_limit/') : url);
 
 // تصفّح عمودي لفيديوهات المنتجات (Reels) — ملء الشاشة، تشغيل تلقائي للظاهر فقط،
 // تحميل مسبق + تحميل المزيد، شريط تقدّم/انتقال تلقائي، ضغط مطوّل للإيقاف،
@@ -274,8 +274,9 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
           <div className="h-full bg-white/90 transition-[width] duration-150 ease-linear" style={{ width: `${progress}%` }} />
         </div>
 
-        {/* صورة احتياطية إن فشل الفيديو */}
-        {errored && poster ? (
+        {/* الشرائح البعيدة تعرض الصورة فقط (لا عنصر فيديو) → تمرير أسلس وأسرع بلا تعليق.
+            الفيديو يُحمّل للنشطة والتالية فقط. */}
+        {(!preload || errored) ? (
           <img src={cldThumb(poster, 720)} alt={p.name} className="h-full w-full object-cover" />
         ) : (
           <video
@@ -284,7 +285,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
             poster={poster}
             muted={muted}
             playsInline
-            preload={preload ? 'auto' : 'none'}
+            preload="auto"
             onTimeUpdate={onTimeUpdate}
             onEnded={onVidEnded}
             onWaiting={() => setBuffering(true)}

@@ -770,9 +770,13 @@ function HeroSlider({ store }) {
             const isImage = !s.fixed && s.bgType === 'image' && s.bgValue;
             const isVideo = !s.fixed && s.bgType === 'video' && s.bgValue;
             const custom = isColor || isImage || isVideo;
-            // الصورة والفيديو يُعرضان كعنصر وسائط بنفس درجة التعتيم (brightness) تماماً —
-            // فيبقى التعتيم موحّداً بين كل الشرائح بلا فرق عند الانتقال.
-            const style = isColor ? { background: s.bgValue } : undefined;
+            // نضع صورة أول لقطة (poster) كخلفية الشريحة فوراً → الفيديو يظهر مباشرة بلا خلفية سوداء/بنّية
+            const posterImg = isVideo ? cldVideoPoster(s.bgValue) : isImage ? cldThumb(s.bgValue, 1280) : '';
+            const style = isColor
+              ? { background: s.bgValue }
+              : posterImg
+                ? { backgroundImage: `url("${posterImg}")`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                : undefined;
             return (
               <div key={idx} className="w-full shrink-0" dir="rtl">
                 <div

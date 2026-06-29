@@ -256,7 +256,7 @@ function HomeHero({ banners = [] }) {
                 <div key={idx} className="w-full shrink-0" dir="rtl">
                   <div
                     className={`relative isolate flex h-[340px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[420px] ${onMedia ? 'bg-black' : 'bg-gradient-to-br from-[#f6ecd9] via-[#efe1c6] to-[#f6ecd9]'}`}
-                    style={isColor ? { background: s.bgValue } : undefined}
+                    style={isColor ? { background: s.bgValue } : isVideo ? { backgroundImage: `url("${cldVideoPoster(s.bgValue)}")`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
                   >
                     {isImage && (
                       <img src={cldThumb(s.bgValue, 1280)} alt="" loading={idx === 0 ? 'eager' : 'lazy'} decoding="async" style={{ filter: 'brightness(0.6)' }} className="absolute inset-0 -z-10 h-full w-full object-cover" />
