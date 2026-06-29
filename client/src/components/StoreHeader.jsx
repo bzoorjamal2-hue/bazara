@@ -68,12 +68,12 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
         lw.style.marginBottom = 12 * inv + 'px';
         lw.style.transform = `translate3d(0, ${-12 * p}px, 0)`;
       }
-      // زر القائمة المُصغّر: ينمو بنعومة (scale = العرض) عند الطرف، والسلة تبقى على يمينه
+      // زر القائمة المُصغّر: ينمو بنعومة (scale = العرض) في جهة البداية (يمين البحث بالعربي)
       const cw = compactWrapRef.current;
       if (cw) {
         cw.style.width = 44 * p + 'px';
         cw.style.opacity = String(p);
-        cw.style.marginInlineStart = 10 * p + 'px';
+        cw.style.marginInlineEnd = 10 * p + 'px';
         cw.style.pointerEvents = p > 0.5 ? 'auto' : 'none';
         const inner = cw.firstElementChild;
         if (inner) inner.style.transform = `scale(${p})`;
@@ -119,18 +119,23 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
                 <Link to={`/store/${store.slug}`} onClick={() => setCat('all')}>
                   <span className="font-display text-2xl font-bold tracking-wide text-wine">{store.name}</span>
                 </Link>
+                {/* زر القائمة بجانب اسم المتجر (جهة البداية: يمين بالعربي/يسار بالإنجليزي) */}
+                <MenuBtn onOpen={openMenu} />
               </div>
-              {/* زر تحويل اللغة ظاهر بالشريط (بلا فتح الدرج) + القائمة */}
+              {/* زر تحويل اللغة ظاهر بالشريط (بلا فتح الدرج) */}
               <div className="flex shrink-0 items-center gap-2">
                 <LanguageSwitcher />
-                <MenuBtn onOpen={openMenu} />
               </div>
             </div>
           </div>
         </div>
 
-        {/* صف البحث + السلة + (قائمة مُصغّرة تظهر بأقصى الشمال عند التمرير) */}
+        {/* صف البحث: القائمة المُصغّرة (تظهر عند التمرير، جهة البداية) + البحث + السلة + المفضّلة */}
         <div className="flex items-center">
+          {/* زر القائمة المُصغّر — يظهر بنعومة عند التمرير على يمين البحث (جهة البداية) */}
+          <div ref={compactWrapRef} className="flex shrink-0 items-center justify-center overflow-hidden" style={{ width: 0, opacity: 0 }}>
+            <div className="will-change-transform"><MenuBtn onOpen={openMenu} /></div>
+          </div>
           <div className="relative flex-1">
             <span className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-wine/50">
               <SearchIcon className="h-5 w-5" />
@@ -169,7 +174,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
             )}
           </div>
 
-          {/* السلة — على يمين زر القائمة، وتكون بأقصى الحافة (تحت ☰) قبل التمرير */}
+          {/* السلة */}
           <button
             data-cart-target
             onClick={() => setOpen(true)}
@@ -184,10 +189,19 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
             )}
           </button>
 
-          {/* زر القائمة المُصغّر — يظهر بنعومة بأقصى الشمال (آخر عنصر)، والسلة على يمينه */}
-          <div ref={compactWrapRef} className="flex shrink-0 items-center justify-center overflow-hidden" style={{ width: 0, opacity: 0 }}>
-            <div className="will-change-transform"><MenuBtn onOpen={openMenu} /></div>
-          </div>
+          {/* المفضّلة — مكان زر القائمة القديم (جهة النهاية) */}
+          <button
+            onClick={() => setWishOpen(true)}
+            aria-label="wishlist"
+            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-wine/10 text-wine transition hover:bg-wine/20 ms-2.5"
+          >
+            <HeartIcon className="h-5 w-5" />
+            {wishCount > 0 && (
+              <span className="absolute -end-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                {wishCount}
+              </span>
+            )}
+          </button>
         </div>
       </div>
 
