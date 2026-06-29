@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
+import { ChartIcon, WarnIcon, TrophyIcon } from '../../components/icons.jsx';
 
 const ic = (p) => ({ viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.9, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true, ...p });
 const I = {
@@ -51,7 +52,7 @@ export default function AnalyticsManager() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-2xl font-bold gradient-text">📊 {t('dashboard.analytics.title')}</h1>
+        <h1 className="flex items-center gap-2 font-display text-2xl font-bold gradient-text"><ChartIcon className="h-6 w-6" /> {t('dashboard.analytics.title')}</h1>
         <p className="mt-1 text-sm text-stone-400">{t('dashboard.analytics.hint')}</p>
       </div>
 
@@ -66,7 +67,7 @@ export default function AnalyticsManager() {
       {/* قاربت على النفاد — تنبيه لإعادة التوفير */}
       {data.lowStock?.length > 0 && (
         <div className="glass border border-amber-400/25 p-5">
-          <h2 className="font-display text-lg font-bold text-stone-100">⚠️ {t('dashboard.analytics.lowStock')}</h2>
+          <h2 className="flex items-center gap-1.5 font-display text-lg font-bold text-stone-100"><WarnIcon className="h-5 w-5" /> {t('dashboard.analytics.lowStock')}</h2>
           <p className="mb-3 mt-0.5 text-xs text-stone-400">{t('dashboard.analytics.lowStockHint')}</p>
           <div className="flex flex-wrap gap-2">
             {data.lowStock.map((p) => (
@@ -110,7 +111,7 @@ export default function AnalyticsManager() {
 
       {/* الأكثر مبيعاً */}
       <div className="glass p-5">
-        <h2 className="mb-4 font-display text-lg font-bold text-stone-100">🏆 {t('dashboard.analytics.topProducts')}</h2>
+        <h2 className="mb-4 flex items-center gap-1.5 font-display text-lg font-bold text-stone-100"><TrophyIcon className="h-5 w-5" /> {t('dashboard.analytics.topProducts')}</h2>
         {data.topProducts.length === 0 ? (
           <p className="py-4 text-center text-sm text-stone-400">{t('dashboard.analytics.noSales')}</p>
         ) : (

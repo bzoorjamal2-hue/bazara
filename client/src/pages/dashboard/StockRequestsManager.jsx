@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import { buildWhatsappLink } from '../../utils/whatsapp.js';
+import { BellIcon, WhatsAppIcon, TrashIcon } from '../../components/icons.jsx';
 import { sizeLabel } from '../../utils/sizes.js';
 
 export default function StockRequestsManager() {
@@ -23,7 +24,7 @@ export default function StockRequestsManager() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="font-display text-2xl font-bold gradient-text">🔔 {t('dashboard.stockRequests.title')}</h1>
+        <h1 className="flex items-center gap-2 font-display text-2xl font-bold gradient-text"><BellIcon className="h-6 w-6" /> {t('dashboard.stockRequests.title')}</h1>
         <p className="mt-1 text-sm text-stone-400">{t('dashboard.stockRequests.hint')}</p>
       </div>
 
@@ -64,9 +65,9 @@ export default function StockRequestsManager() {
                     rel="noreferrer"
                     className={`btn-whatsapp !px-3 !py-1.5 text-xs ${r.inStock ? 'ring-2 ring-emerald-400/50' : ''}`}
                   >
-                    💬 {r.inStock ? t('dashboard.stockRequests.notifyReady') : t('dashboard.stockRequests.notify')}
+                    <WhatsAppIcon className="inline h-4 w-4" /> {r.inStock ? t('dashboard.stockRequests.notifyReady') : t('dashboard.stockRequests.notify')}
                   </a>
-                  <button onClick={() => remove(r.id)} aria-label="remove" className="rounded-lg p-2 text-stone-400 hover:text-red-300">🗑️</button>
+                  <button onClick={() => remove(r.id)} aria-label="remove" className="rounded-lg p-2 text-stone-400 hover:text-red-300"><TrashIcon className="h-4 w-4" /></button>
                 </div>
               </div>
             );

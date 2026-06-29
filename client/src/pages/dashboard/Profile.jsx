@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import api, { getErrorMessage } from '../../api/client.js';
 import ImageInput from '../../components/ImageInput.jsx';
 import PasswordStrength from '../../components/PasswordStrength.jsx';
+import { SaveIcon, KeyIcon, MailIcon } from '../../components/icons.jsx';
 
 export default function Profile() {
   const { t } = useTranslation();
@@ -96,7 +97,7 @@ export default function Profile() {
         <Alert>{error}</Alert>
         <div>
           <ImageInput label={t('dashboard.profileSection.avatar')} value={form.avatarUrl} onChange={(v) => setForm({ ...form, avatarUrl: v })} round />
-          <button type="button" onClick={saveAvatar} className="btn-ghost mt-3 text-sm">💾 {t('image.saveImage')}</button>
+          <button type="button" onClick={saveAvatar} className="btn-ghost mt-3 gap-1.5 text-sm"><SaveIcon className="h-4 w-4" /> {t('image.saveImage')}</button>
         </div>
         <div>
           <label className="label">{t('auth.name')}</label>
@@ -115,7 +116,7 @@ export default function Profile() {
 
       {/* تغيير كلمة المرور */}
       <form onSubmit={submitPassword} className="glass space-y-4 p-6">
-        <h3 className="font-semibold text-stone-100">🔑 {t('dashboard.security.changePassword')}</h3>
+        <h3 className="flex items-center gap-1.5 font-semibold text-stone-100"><KeyIcon className="h-4 w-4" /> {t('dashboard.security.changePassword')}</h3>
         <Alert ok>{pwMsg}</Alert>
         <Alert>{pwErr}</Alert>
         <div>
@@ -132,7 +133,7 @@ export default function Profile() {
 
       {/* تغيير البريد */}
       <form onSubmit={submitEmail} className="glass space-y-4 p-6">
-        <h3 className="font-semibold text-stone-100">✉️ {t('dashboard.security.changeEmail')}</h3>
+        <h3 className="flex items-center gap-1.5 font-semibold text-stone-100"><MailIcon className="h-4 w-4" /> {t('dashboard.security.changeEmail')}</h3>
         <Alert ok>{emMsg}</Alert>
         <Alert>{emErr}</Alert>
         <div>

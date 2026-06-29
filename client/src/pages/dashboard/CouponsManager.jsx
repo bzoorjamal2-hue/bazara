@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
+import { TicketIcon, EditIcon, TrashIcon } from '../../components/icons.jsx';
 
 const EMPTY = { code: '', type: 'percent', value: '', minTotal: '', maxUses: '', expiresAt: '', active: true };
 
@@ -78,7 +79,7 @@ export default function CouponsManager() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="font-display text-2xl font-bold gradient-text">🎟️ {t('dashboard.coupons.title')}</h1>
+        <h1 className="flex items-center gap-2 font-display text-2xl font-bold gradient-text"><TicketIcon className="h-6 w-6" /> {t('dashboard.coupons.title')}</h1>
         <p className="mt-1 text-sm text-stone-400">{t('dashboard.coupons.hint')}</p>
       </div>
 
@@ -152,8 +153,8 @@ export default function CouponsManager() {
                     <button onClick={() => toggle(c)} className={`rounded-full px-3 py-1 text-xs font-bold ${c.active ? 'bg-emerald-500/20 text-emerald-200' : 'bg-stone-500/20 text-stone-300'}`}>
                       {c.active ? t('dashboard.coupons.statusActive') : t('dashboard.coupons.statusOff')}
                     </button>
-                    <button onClick={() => edit(c)} className="rounded-lg p-2 text-stone-400 hover:text-gold-200" aria-label="edit">✎</button>
-                    <button onClick={() => remove(c)} className="rounded-lg p-2 text-stone-400 hover:text-red-300" aria-label="delete">🗑️</button>
+                    <button onClick={() => edit(c)} className="rounded-lg p-2 text-stone-400 hover:text-gold-200" aria-label="edit"><EditIcon className="h-4 w-4" /></button>
+                    <button onClick={() => remove(c)} className="rounded-lg p-2 text-stone-400 hover:text-red-300" aria-label="delete"><TrashIcon className="h-4 w-4" /></button>
                   </div>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-400">

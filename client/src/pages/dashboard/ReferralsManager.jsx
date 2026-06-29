@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
+import { GiftIcon } from '../../components/icons.jsx';
 
 // لوحة الإحالات لصاحب المتجر: من أحال ومن، وكم زبونة جاءت عبر كل كود.
 export default function ReferralsManager() {
@@ -20,7 +21,7 @@ export default function ReferralsManager() {
 
   return (
     <div>
-      <h2 className="mb-1 font-display text-2xl font-bold gradient-text">🎁 {t('dashboard.referrals.title')}</h2>
+      <h2 className="mb-1 flex items-center gap-2 font-display text-2xl font-bold gradient-text"><GiftIcon className="h-6 w-6" /> {t('dashboard.referrals.title')}</h2>
       <p className="mb-5 text-sm text-stone-400">{t('dashboard.referrals.subtitle')}</p>
 
       {/* ملخّص */}
