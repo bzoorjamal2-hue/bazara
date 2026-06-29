@@ -25,6 +25,16 @@
       "source": "/share/:path*",
       "destination": "https://bazara-hwux.onrender.com/share/:path*"
     },
+    {
+      "source": "/store/:slug",
+      "has": [{ "type": "header", "key": "user-agent", "value": "(?i).*(facebookexternalhit|whatsapp|twitterbot|telegrambot|linkedinbot|slackbot|discordbot|pinterest|embedly|vkshare|redditbot|skypeuripreview).*" }],
+      "destination": "https://bazara-hwux.onrender.com/share/store/:slug"
+    },
+    {
+      "source": "/product/:id",
+      "has": [{ "type": "header", "key": "user-agent", "value": "(?i).*(facebookexternalhit|whatsapp|twitterbot|telegrambot|linkedinbot|slackbot|discordbot|pinterest|embedly|vkshare|redditbot|skypeuripreview).*" }],
+      "destination": "https://bazara-hwux.onrender.com/share/product/:id"
+    },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

@@ -776,7 +776,7 @@ function HeroSlider({ store }) {
             return (
               <div key={idx} className="w-full shrink-0" dir="rtl">
                 <div
-                  className={`relative isolate flex h-[260px] flex-col items-center justify-center overflow-hidden bg-wine-dark px-6 text-center sm:h-[340px] ${custom ? '' : 'pub-hero'}`}
+                  className={`relative isolate flex h-[260px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[340px] ${custom ? 'bg-black' : 'bg-wine-dark pub-hero'}`}
                   style={style}
                 >
                   {/* وسائط الشريحة (صورة أو فيديو) بنفس التعتيم تماماً — معتّمة من أول لحظة بلا وميض */}
