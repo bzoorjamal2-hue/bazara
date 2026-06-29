@@ -771,7 +771,8 @@ function HeroSlider({ store }) {
             const isVideo = !s.fixed && s.bgType === 'video' && s.bgValue;
             const custom = isColor || isImage || isVideo;
             // نضع صورة أول لقطة (poster) كخلفية الشريحة فوراً → الفيديو يظهر مباشرة بلا خلفية سوداء/بنّية
-            const posterImg = isVideo ? cldVideoPoster(s.bgValue) : isImage ? cldThumb(s.bgValue, 1280) : '';
+            // poster مصغّر (يحمّل فوراً) → لا يظهر سواد قبل الفيديو
+            const posterImg = isVideo ? cldThumb(cldVideoPoster(s.bgValue), 900) : isImage ? cldThumb(s.bgValue, 1280) : '';
             const style = isColor
               ? { background: s.bgValue }
               : posterImg
