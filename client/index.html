@@ -59,6 +59,37 @@
       </div>
     </div>
     <style>@keyframes bz-spin{to{transform:rotate(360deg)}}</style>
+    <!-- مِظلّة أمان مضمّنة (خارج الـ bundle): إن بقيت شاشة الإقلاع عالقة (فشل تحميل
+         الأكواد — غالباً service worker قديم يخدم ملفات محذوفة)، نتعافى تلقائياً:
+         محاولة (1) إعادة تحميل بسيطة، (2) تنظيف الكاش وإلغاء الـ SW ثم إعادة التحميل،
+         ثم نتوقّف لتفادي أي حلقة. تُصفَّر العدّاد عند نجاح الإقلاع. -->
+    <script>
+      (function () {
+        var KEY = 'bz_boot_recover';
+        window.addEventListener('load', function () {
+          setTimeout(function () {
+            if (!document.getElementById('boot-splash')) return; // أقلع بنجاح
+            var n = parseInt(sessionStorage.getItem(KEY) || '0', 10);
+            if (n >= 2) return; // جرّبنا مرتين → خطأ حقيقي، لا نكرّر
+            sessionStorage.setItem(KEY, String(n + 1));
+            if (n === 0) { location.reload(); return; } // محاولة بسيطة أولاً
+            var done = function () { location.reload(); };
+            var jobs = [];
+            try {
+              if (window.caches && caches.keys) jobs.push(caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }));
+              if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) jobs.push(navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }));
+              Promise.all(jobs).then(done, done);
+              setTimeout(done, 2500);
+            } catch (e) { done(); }
+          }, 12000);
+        });
+        // عند نجاح الإقلاع لاحقاً نصفّر العدّاد (يسمح بتعافٍ مستقبلي)
+        var iv = setInterval(function () {
+          if (!document.getElementById('boot-splash')) { sessionStorage.removeItem(KEY); clearInterval(iv); }
+        }, 1000);
+        setTimeout(function () { clearInterval(iv); }, 20000);
+      })();
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
