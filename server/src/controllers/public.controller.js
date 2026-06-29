@@ -275,8 +275,14 @@ export async function getReels(req, res, next) {
     params.push(offset); sql += ` OFFSET $${params.length}`;
     const r = await query(sql, params);
     res.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300');
-    // الريلز وحدها تعرض شعار المتجر (أفاتار صغير) → نضيفه هنا فقط
-    res.json({ products: r.rows.map((row) => ({ ...mapProduct(row), storeLogo: row.store_logo || '' })), hasMore: r.rows.length === REELS_PAGE });
+    // الريلز وحدها تعرض شعار المتجر (أفاتار صغير) → نضيفه هنا فقط، ونتجاهل الشعارات الضخمة (base64) لتفادي ثقلها
+    res.json({
+      products: r.rows.map((row) => {
+        const logo = row.store_logo || '';
+        return { ...mapProduct(row), storeLogo: logo.startsWith('data:') ? '' : logo };
+      }),
+      hasMore: r.rows.length === REELS_PAGE,
+    });
   } catch (err) {
     next(err);
   }
