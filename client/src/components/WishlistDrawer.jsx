@@ -5,6 +5,7 @@ import { useWishlist } from '../context/WishlistContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import CloseButton from './CloseButton.jsx';
+import { HeartIcon, CartIcon, XIcon } from './icons.jsx';
 import { cldThumb } from '../utils/cloudinary.js';
 
 const PH = 'https://placehold.co/120x120/f1e9dd/5e4636?text=%F0%9F%91%97';
@@ -40,7 +41,7 @@ export default function WishlistDrawer() {
         {/* الرأس */}
         <div className="flex items-center justify-between border-b border-gold-400/15 p-4">
           <h2 className="flex items-center gap-2 font-display text-xl font-bold gradient-text">
-            ❤️ {t('wishlist.title')}
+            <HeartIcon className="h-5 w-5" filled /> {t('wishlist.title')}
             {items.length > 0 && <span className="text-sm font-normal text-stone-400">({items.length})</span>}
           </h2>
           <CloseButton onClick={close} variant="wine" label={ar ? 'إغلاق' : 'close'} />
@@ -48,7 +49,7 @@ export default function WishlistDrawer() {
 
         {items.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center text-stone-400">
-            <span className="text-5xl">🤍</span>
+            <HeartIcon className="h-14 w-14 text-wine/30" />
             {t('wishlist.empty')}
           </div>
         ) : (
@@ -65,18 +66,18 @@ export default function WishlistDrawer() {
                       <span className="font-bold text-gold-300">{t('common.currency')}{p.price}</span>
                       {p.oldPrice > p.price && <span className="text-xs text-stone-500 line-through">{t('common.currency')}{p.oldPrice}</span>}
                     </p>
-                    <button onClick={() => addToCart(p)} className="mt-2 rounded-full bg-wine px-3 py-1.5 text-xs font-bold text-cream transition hover:bg-wine-dark">
-                      🛒 {t('product.addToCart')}
+                    <button onClick={() => addToCart(p)} className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-wine px-3 py-1.5 text-xs font-bold text-cream transition hover:bg-wine-dark">
+                      <CartIcon className="h-3.5 w-3.5" /> {t('product.addToCart')}
                     </button>
                   </div>
-                  <button onClick={() => remove(p.id)} aria-label={ar ? 'حذف' : 'remove'} className="self-start text-stone-500 hover:text-red-300">✕</button>
+                  <button onClick={() => remove(p.id)} aria-label={ar ? 'حذف' : 'remove'} className="self-start text-stone-500 hover:text-red-300"><XIcon className="h-4 w-4" /></button>
                 </div>
               ))}
             </div>
 
             <div className="space-y-2 border-t border-gold-400/15 p-4">
-              <button onClick={addAll} className="w-full rounded-2xl bg-wine py-3.5 font-bold text-cream shadow-lg transition hover:bg-wine-dark">
-                🛒 {t('wishlist.addAllToCart')}
+              <button onClick={addAll} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-wine py-3.5 font-bold text-cream shadow-lg transition hover:bg-wine-dark">
+                <CartIcon className="h-5 w-5" /> {t('wishlist.addAllToCart')}
               </button>
               <button onClick={goFull} className="w-full text-center text-xs text-stone-400 hover:text-gold-200">{t('wishlist.viewAll')} ←</button>
             </div>

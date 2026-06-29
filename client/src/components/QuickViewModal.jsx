@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
-import { HeartIcon, CartIcon } from './icons.jsx';
+import { HeartIcon, CartIcon, HandIcon } from './icons.jsx';
 import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
 import { flyToCart } from '../utils/flyToCart.js';
 import useScrollLock from '../hooks/useScrollLock.js';
@@ -182,7 +182,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
                 </button>
               </div>
               {hasColorStock && !color ? (
-                <p className="rounded-xl bg-wine/5 px-3 py-2 text-sm font-medium text-wine/70">👆 {t('product.pickColorFirst')}</p>
+                <p className="flex items-center gap-1.5 rounded-xl bg-wine/5 px-3 py-2 text-sm font-medium text-wine/70"><HandIcon className="h-4 w-4 shrink-0" /> {t('product.pickColorFirst')}</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {availSizes.map((s) => {

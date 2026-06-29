@@ -8,7 +8,7 @@ import LanguageSwitcher from './LanguageSwitcher.jsx';
 import CatThumb from './CatThumb.jsx';
 import CloseButton from './CloseButton.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
-import { MenuIcon, SearchIcon, CartIcon, HeartIcon } from './icons.jsx';
+import { MenuIcon, SearchIcon, CartIcon, HeartIcon, PackageIcon, GiftIcon } from './icons.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import StoryBar from './StoryBar.jsx';
 import { cldThumb } from '../utils/cloudinary.js';
@@ -249,7 +249,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
                 onClick={() => setDrawer(false)}
                 className="flex w-full items-center gap-3 rounded-xl border border-cream/25 bg-cream/10 px-3 py-3 text-start text-base font-bold text-cream transition hover:bg-cream/20"
               >
-                <span className="text-xl">📦</span> {t('nav.track')}
+                <PackageIcon className="h-5 w-5 shrink-0" /> {t('nav.track')}
               </Link>
               {/* شاركي واربحي — يظهر فقط إن فعّل المتجر برنامج الإحالة */}
               {Number(store.referralPercent) > 0 && onShare && (
@@ -257,7 +257,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
                   onClick={() => { setDrawer(false); onShare(); }}
                   className="flex w-full items-center gap-3 rounded-xl border border-cream/25 bg-cream/10 px-3 py-3 text-start text-base font-bold text-cream transition hover:bg-cream/20"
                 >
-                  <span className="text-xl">🎁</span> {t('referral.shareTitle')}
+                  <GiftIcon className="h-5 w-5 shrink-0" /> {t('referral.shareTitle')}
                 </button>
               )}
             </nav>

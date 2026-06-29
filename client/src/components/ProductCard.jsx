@@ -7,7 +7,7 @@ import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import StarRating from './StarRating.jsx';
 import Countdown from './Countdown.jsx';
-import { HeartIcon, CartIcon } from './icons.jsx';
+import { HeartIcon, CartIcon, XIcon, StarIcon } from './icons.jsx';
 import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
 import { flyToCart } from '../utils/flyToCart.js';
 import QuickViewModal from './QuickViewModal.jsx';
@@ -100,7 +100,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
       {/* شارات */}
       <div className="absolute start-2 top-2 z-10 flex flex-col gap-1">
         {isNew && <span className="badge bg-emerald-500 text-white">{t('product.new')}</span>}
-        {product.featured && <span className="badge bg-gold-400 text-ink-950">★ {t('product.featured')}</span>}
+        {product.featured && <span className="badge flex items-center gap-0.5 bg-gold-400 text-ink-950"><StarIcon className="h-3 w-3" /> {t('product.featured')}</span>}
         {hasDiscount && <span className="badge bg-red-500 text-white">-{discountPct}%</span>}
         {outOfStock && <span className="badge bg-ink-700 text-stone-300">{t('product.outOfStock')}</span>}
       </div>
@@ -206,7 +206,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
     {/* ضغطة مطوّلة (جوال) → الفيديو بالصوت في عارض ملء الشاشة */}
     {showVideo && product.videoUrl && createPortal(
       <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/85 p-4 animate-fade-in" onClick={closeVideo}>
-        <button onClick={closeVideo} aria-label="close" className="absolute end-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-xl text-white backdrop-blur transition hover:bg-white/25">✕</button>
+        <button onClick={closeVideo} aria-label="close" className="absolute end-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur transition hover:bg-white/25"><XIcon className="h-5 w-5" /></button>
         <video
           src={product.videoUrl}
           poster={videoPoster}
