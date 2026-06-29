@@ -4,13 +4,13 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        // عربي: Tajawal / Cairo — إنجليزي: Inter — عناوين فخمة: Playfair Display
+        // عربي: Tajawal (نصوص) — إنجليزي: Inter — عناوين فخمة: Playfair (إنجليزي) / El Messiri (عربي)
         sans: ['Inter', 'Tajawal', 'system-ui', 'sans-serif'],
-        ar: ['Tajawal', 'Cairo', 'sans-serif'],
-        display: ['"Playfair Display"', 'Cairo', 'serif'],
-        // ثيم المتجر العام (خمري/عاجي): عناوين El Messiri + نصوص Almarai
-        messiri: ['"El Messiri"', 'Cairo', 'serif'],
-        almarai: ['Almarai', 'Tajawal', 'sans-serif'],
+        ar: ['Tajawal', 'sans-serif'],
+        display: ['"Playfair Display"', '"El Messiri"', 'serif'],
+        // ثيم المتجر العام (خمري/عاجي): عناوين El Messiri + نصوص Tajawal
+        messiri: ['"El Messiri"', 'serif'],
+        almarai: ['Tajawal', 'sans-serif'],
       },
       colors: {
         // هوية دافئة: بنّي قهوة + بيج كريمي (مستوحاة من أجواء الخريف)

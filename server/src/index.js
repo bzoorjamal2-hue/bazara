@@ -242,6 +242,12 @@ async function ensureColumns() {
       CONSTRAINT site_settings_singleton CHECK (id = 1)
     );`);
     await pool.query("INSERT INTO site_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING;");
+    // فهارس أداء لاستعلامات العرض الأكثر تكراراً (الترتيب حسب المميّز/الأحدث) — تسرّع الصفحات العامة كلما زادت المنتجات
+    await pool.query('CREATE INDEX IF NOT EXISTS idx_products_featured_created ON products(featured, created_at DESC);');
+    await pool.query('CREATE INDEX IF NOT EXISTS idx_products_created ON products(created_at DESC);');
+    await pool.query('CREATE INDEX IF NOT EXISTS idx_products_category_created ON products(category, created_at DESC);');
+    // فهرس جزئي للعروض (منتجات مخفّضة فقط) — يسرّع صفحة العروض
+    await pool.query('CREATE INDEX IF NOT EXISTS idx_products_offers ON products(created_at DESC) WHERE old_price IS NOT NULL AND old_price > price;');
   } catch (err) {
     console.error('⚠️ تعذّر تطبيق الترقيات:', err.message);
   }
