@@ -212,8 +212,7 @@ export function mapProduct(p) {
     ratingCount: p.rating_count != null ? Number(p.rating_count) : 0,
     storeSlug: p.store_slug,
     storeName: p.store_name,
-    storeLogo: p.store_logo || '',
-    storeLogo: p.store_logo || '',
+    // ملاحظة: storeLogo لا يُرسَل هنا (قد يكون ثقيلاً وغير مستخدم بالقوائم) — يُضاف في الريلز فقط عند الحاجة
     storeWhatsapp: p.store_whatsapp || '',
     storeInstagram: p.store_instagram || '',
     storePhone: p.store_phone || '',
