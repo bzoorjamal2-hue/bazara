@@ -14,6 +14,7 @@ import { pushRecent, getRecent } from '../utils/recentlyViewed.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { sizeLabel } from '../utils/sizes.js';
 import Countdown from '../components/Countdown.jsx';
+import { HeartIcon, BagIcon, CartIcon, BellIcon, SparkleIcon, FireIcon, HandIcon } from '../components/icons.jsx';
 import SizeGuideModal from '../components/SizeGuideModal.jsx';
 import ImageInput from '../components/ImageInput.jsx';
 
@@ -293,7 +294,7 @@ export default function ProductDetails() {
                 onClick={() => toggle(product)}
                 className={`flex h-10 w-10 items-center justify-center rounded-full border transition ${liked ? 'border-red-400 bg-red-500/20' : 'border-gold-400/30 hover:bg-gold-400/10'}`}
               >
-                {liked ? '❤️' : '🤍'}
+                <HeartIcon className="h-6 w-6" filled={liked} />
               </button>
             </div>
           </div>
@@ -393,7 +394,7 @@ export default function ProductDetails() {
                 </button>
               </div>
               {hasColorStock && !selColor ? (
-                <p className="rounded-xl bg-wine/5 px-3 py-2 text-sm font-medium text-wine/70">👆 {t('product.pickColorFirst')}</p>
+                <p className="flex items-center gap-1.5 rounded-xl bg-wine/5 px-3 py-2 text-sm font-medium text-wine/70"><HandIcon className="h-4 w-4 shrink-0" /> {t('product.pickColorFirst')}</p>
               ) : (
                 <>
                   <div className="flex flex-wrap gap-2">
@@ -436,7 +437,7 @@ export default function ProductDetails() {
                 <p className="text-center text-sm font-semibold text-emerald-600">{t('product.notifySent')}</p>
               ) : (
                 <>
-                  <p className="mb-2 text-sm font-bold text-wine">🔔 {t('product.notifyTitle')}</p>
+                  <p className="mb-2 flex items-center gap-1.5 text-sm font-bold text-wine"><BellIcon className="h-4 w-4" /> {t('product.notifyTitle')}</p>
                   <div className="flex gap-2">
                     <input
                       dir="ltr"
@@ -462,14 +463,14 @@ export default function ProductDetails() {
               disabled={outOfStock}
               className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-wine to-wine-dark py-3.5 font-bold text-cream shadow-lg transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              🛍️ {t('product.buyNow')}
+              <BagIcon className="h-5 w-5" /> {t('product.buyNow')}
             </button>
             <button
               onClick={handleAdd}
               disabled={outOfStock}
               className="flex flex-1 items-center justify-center gap-2 rounded-2xl border-2 border-wine/40 py-3.5 font-bold text-wine transition hover:bg-wine/10 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              🛒 {t('product.addToCart')}
+              <CartIcon className="h-5 w-5" /> {t('product.addToCart')}
             </button>
           </div>
         </div>
@@ -490,7 +491,7 @@ export default function ProductDetails() {
       )}
 
       {/* أكملي إطلالتك — قطع مكمّلة من المتجر (فئة مختلفة) */}
-      <ProductRail title={`✨ ${t('product.completeLook')}`} products={complementary} currentId={product.id} />
+      <ProductRail title={t('product.completeLook')} icon={<SparkleIcon className="h-5 w-5" />} products={complementary} currentId={product.id} />
 
       {/* قد يعجبك أيضاً */}
       <ProductRail title={t('product.youMayLike')} products={related} currentId={product.id} />
@@ -523,7 +524,7 @@ function StockBadge({ outOfStock, selSize, selSizeQty, stock, t }) {
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/80" />
           <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-white" />
         </span>
-        🔥 {t('product.lastFew', { count: remaining })}
+        <FireIcon className="h-4 w-4" /> {t('product.lastFew', { count: remaining })}
       </span>
     );
   }

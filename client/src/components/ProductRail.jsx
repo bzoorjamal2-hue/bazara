@@ -10,14 +10,14 @@ const PH =
   );
 
 // شريط أفقي من بطاقات منتجات مصغّرة (شاهدت مؤخراً / قد يعجبك أيضاً).
-export default function ProductRail({ title, products, currentId }) {
+export default function ProductRail({ title, products, currentId, icon = null }) {
   const { t } = useTranslation();
   const list = (products || []).filter((p) => p && p.id !== currentId);
   if (list.length === 0) return null;
 
   return (
     <section className="mt-10">
-      <h2 className="mb-4 font-display text-xl font-bold text-wine">{title}</h2>
+      <h2 className="mb-4 flex items-center gap-2 font-display text-xl font-bold text-wine">{icon}{title}</h2>
       <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
         {list.map((p) => {
           const hasDiscount = p.oldPrice && p.oldPrice > p.price;
