@@ -6,6 +6,7 @@ import Select from '../../components/Select.jsx';
 import { buildWhatsappLink } from '../../utils/whatsapp.js';
 import { PinIcon, NoteIcon, TicketIcon, WhatsAppIcon, TruckIcon } from '../../components/icons.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
+import OpostSend from '../../components/OpostSend.jsx';
 
 const FLOW = ['new', 'confirmed', 'shipped', 'delivered', 'cancelled'];
 const BADGE = {
@@ -25,10 +26,29 @@ export default function OrdersManager() {
   const [orders, setOrders] = useState(null);
   const [error, setError] = useState('');
   const [savingId, setSavingId] = useState('');
+  // ربط أوبتيموس: نجلب الحالة + المدن + أنواع الشحن مرّة واحدة (لا لكل طلب) — يقلّل استهلاك الـ API
+  const [opost, setOpost] = useState({ connected: false, cities: [], types: [] });
 
   useEffect(() => {
     api.get('/orders/mine').then((r) => setOrders(r.data.orders)).catch((e) => setError(getErrorMessage(e)));
   }, []);
+
+  useEffect(() => {
+    let on = true;
+    api.get('/opost/status').then(async (r) => {
+      if (!on || !r.data.connected) return;
+      const [c, ty] = await Promise.all([
+        api.get('/opost/cities').catch(() => ({ data: { cities: [] } })),
+        api.get('/opost/shipment-types').catch(() => ({ data: { types: [] } })),
+      ]);
+      if (on) setOpost({ connected: true, cities: c.data.cities || [], types: ty.data.types || [] });
+    }).catch(() => {});
+    return () => { on = false; };
+  }, []);
+
+  // بعد إرسال طلب لأوبتيموس نحدّث رقم تتبّعه محلياً
+  const markSent = (id, tracking) =>
+    setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, opostTracking: tracking || '✓' } : o)));
 
   const setStatus = async (id, status) => {
     setSavingId(id);
@@ -184,6 +204,9 @@ export default function OrdersManager() {
                     <button onClick={() => sendToDelivery(o)} className="inline-flex items-center gap-1 rounded-xl border border-gold-400/30 px-3 py-1.5 text-xs font-semibold text-gold-200 transition hover:bg-gold-400/10">
                       <TruckIcon className="inline h-4 w-4" /> {t('dashboard.ordersSection.sendDelivery')}
                     </button>
+                  )}
+                  {(opost.connected || o.opostTracking) && (
+                    <OpostSend order={o} cities={opost.cities} types={opost.types} onSent={markSent} />
                   )}
                 </div>
               </div>

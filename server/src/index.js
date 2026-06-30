@@ -20,6 +20,7 @@ import referralRoutes from './routes/referral.routes.js';
 import pushRoutes from './routes/push.routes.js';
 import storyRoutes from './routes/story.routes.js';
 import siteRoutes from './routes/site.routes.js';
+import opostRoutes from './routes/opost.routes.js';
 import { robots, sitemap, indexNowKey, shareProduct, shareStore, shareStory } from './controllers/seo.controller.js';
 import { issueCsrfToken, verifyCsrf, getCsrfToken } from './middleware/csrf.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
@@ -95,6 +96,7 @@ app.use('/api/referrals', referralRoutes);
 app.use('/api/push', pushRoutes);
 app.use('/api/stories', storyRoutes);
 app.use('/api/site', siteRoutes);
+app.use('/api/opost', opostRoutes);
 
 // مسارات SEO (على الجذر)
 app.get('/robots.txt', robots);
@@ -189,6 +191,18 @@ async function ensureColumns() {
     // نظام الإحالة: نسبة خصم الزبونة الجديدة لكل متجر + جدول أكواد الإحالة + ربط الطلب بالكود
     await pool.query('ALTER TABLE stores ADD COLUMN IF NOT EXISTS referral_percent NUMERIC(5,2) DEFAULT 0;');
     await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS referral_code VARCHAR(20) DEFAULT '';");
+    // ربط شركة التوصيل أوبتيموس (Opost) — توكنات مشفّرة لكل متجر + رقم تتبّع الشحنة على الطلب
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS opost_email VARCHAR(150) DEFAULT '';");
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS opost_access_token TEXT DEFAULT '';");
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS opost_refresh_token TEXT DEFAULT '';");
+    await pool.query('ALTER TABLE stores ADD COLUMN IF NOT EXISTS opost_token_expires TIMESTAMPTZ;');
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS opost_business VARCHAR(40) DEFAULT '';");
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS opost_business_address VARCHAR(40) DEFAULT '';");
+    await pool.query('ALTER TABLE stores ADD COLUMN IF NOT EXISTS opost_connected BOOLEAN NOT NULL DEFAULT false;');
+    await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS opost_id VARCHAR(60) DEFAULT '';");
+    await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS opost_tracking VARCHAR(120) DEFAULT '';");
+    await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS opost_status VARCHAR(60) DEFAULT '';");
+    await pool.query('ALTER TABLE orders ADD COLUMN IF NOT EXISTS opost_sent_at TIMESTAMPTZ;');
     await pool.query(`CREATE TABLE IF NOT EXISTS referrals (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,

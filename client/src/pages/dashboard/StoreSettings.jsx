@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import Spinner from '../../components/Spinner.jsx';
 import ImageInput from '../../components/ImageInput.jsx';
 import BannerEditor from '../../components/BannerEditor.jsx';
+import OpostConnect from '../../components/OpostConnect.jsx';
 import { SaveIcon, TruckIcon, ImageIcon, XIcon, GiftIcon, FolderIcon, TrashIcon, MegaphoneIcon, RulerIcon, ShieldIcon } from '../../components/icons.jsx';
 
 const EMPTY = {
@@ -387,6 +388,9 @@ export default function StoreSettings() {
           {busy ? t('common.loading') : <span className="inline-flex items-center gap-1.5"><SaveIcon className="h-4 w-4" /> {t('common.save')}</span>}
         </button>
       </form>
+
+      {/* ربط شركة التوصيل أوبتيموس — مستقلّ عن فورم الإعدادات */}
+      <OpostConnect />
     </div>
   );
 }

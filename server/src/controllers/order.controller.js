@@ -435,7 +435,8 @@ export async function listMyOrders(req, res, next) {
     if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
     const r = await query(
       `SELECT id, customer_name, customer_phone, items, total, currency, status, created_at,
-              city, address, notes, delivery_fee, coupon_code, discount
+              city, address, notes, delivery_fee, coupon_code, discount,
+              opost_tracking, opost_status
        FROM orders WHERE store_id = $1 ORDER BY created_at DESC LIMIT 200`,
       [store.id]
     );
@@ -454,6 +455,8 @@ export async function listMyOrders(req, res, next) {
         city: o.city || '',
         address: o.address || '',
         notes: o.notes || '',
+        opostTracking: o.opost_tracking || '',
+        opostStatus: o.opost_status || '',
         createdAt: o.created_at,
       })),
     });
