@@ -63,10 +63,10 @@ export default function StoryBar({ store, stories, isOwner, onAdded, onDeleted, 
 
   if (!compact && !isOwner && !hasStories) return null;
 
-  const logoSize = compact ? 'h-10 w-10' : 'h-16 w-16';
-  const ringPad = compact ? 'p-[2px]' : 'p-[3px]';
-  const plusSize = compact ? 'h-[18px] w-[18px]' : 'h-6 w-6';
-  const plusIcon = compact ? 'h-3 w-3' : 'h-3.5 w-3.5';
+  const logoSize = compact ? 'h-8 w-8' : 'h-16 w-16';
+  const ringPad = compact ? 'p-[1.5px]' : 'p-[3px]';
+  const plusSize = compact ? 'h-4 w-4' : 'h-6 w-6';
+  const plusIcon = compact ? 'h-2.5 w-2.5' : 'h-3.5 w-3.5';
   const plusPos = compact ? 'bottom-0 end-0' : '-bottom-0.5 -end-0.5';
 
   return (

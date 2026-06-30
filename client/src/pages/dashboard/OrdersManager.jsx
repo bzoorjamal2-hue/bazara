@@ -46,9 +46,9 @@ export default function OrdersManager() {
     return () => { on = false; };
   }, []);
 
-  // بعد إرسال طلب لأوبتيموس نحدّث رقم تتبّعه محلياً
+  // بعد إرسال طلب لأوبتيموس: نحفظ رقم التتبّع ونحوّل الحالة لـ"تم الشحن" محلياً (مُقفلة)
   const markSent = (id, tracking) =>
-    setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, opostTracking: tracking || '✓' } : o)));
+    setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, opostTracking: tracking || '✓', status: 'shipped' } : o)));
 
   const setStatus = async (id, status) => {
     setSavingId(id);
@@ -189,13 +189,20 @@ export default function OrdersManager() {
                 {/* تحديث الحالة + تواصل */}
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <span className="text-xs text-stone-400">{t('dashboard.ordersSection.updateStatus')}:</span>
-                  <div className="min-w-[140px]">
-                    <Select
-                      value={FLOW.includes(o.status) ? o.status : 'new'}
-                      onChange={(v) => setStatus(o.id, v)}
-                      options={FLOW.map((s) => ({ value: s, label: t(`dashboard.ordersSection.${s}`) }))}
-                    />
-                  </div>
+                  {o.opostTracking ? (
+                    // الطلب بعهدة أوبتيموس → الحالة مُقفلة (تُدار عبر شركة التوصيل)
+                    <span className="inline-flex items-center gap-1 rounded-xl bg-indigo-500/15 px-3 py-1.5 text-xs font-semibold text-indigo-200">
+                      🔒 {t(`dashboard.ordersSection.${FLOW.includes(o.status) ? o.status : 'shipped'}`)} · {t('dashboard.opost.managed')}
+                    </span>
+                  ) : (
+                    <div className="min-w-[140px]">
+                      <Select
+                        value={FLOW.includes(o.status) ? o.status : 'new'}
+                        onChange={(v) => setStatus(o.id, v)}
+                        options={FLOW.map((s) => ({ value: s, label: t(`dashboard.ordersSection.${s}`) }))}
+                      />
+                    </div>
+                  )}
                   {savingId === o.id && <span className="text-xs text-stone-500">…</span>}
                   {wa && (
                     <a href={wa} target="_blank" rel="noreferrer" className="btn-whatsapp gap-1.5 !px-3 !py-1.5 text-xs"><WhatsAppIcon className="h-4 w-4" /> {t('dashboard.ordersSection.contactWhatsapp')}</a>

@@ -1,4 +1,5 @@
 import { query } from '../config/db.js';
+import { applyOrderStatus } from './order.controller.js';
 import {
   isOpostConfigured,
   loginOpost,
@@ -287,6 +288,10 @@ export async function opostSendOrder(req, res, next) {
       `UPDATE orders SET opost_id = $1, opost_tracking = $2, opost_status = $3, opost_sent_at = now() WHERE id = $4`,
       [info.id, info.tracking, info.status, order.id]
     );
+
+    // الطلب الآن بعهدة أوبتيموس → نحوّله تلقائياً لـ"تم الشحن" (يخصم المخزون إن لم يُخصم)
+    // ويُقفل التغيير اليدوي بالواجهة. لا نُفشل الردّ لو تعثّر هذا الجزء.
+    try { await applyOrderStatus(store.id, order.id, 'shipped'); } catch (e) { console.error('opost auto-status:', e.message); }
 
     res.json({ ok: true, tracking: info.tracking, id: info.id, status: info.status });
   } catch (err) {

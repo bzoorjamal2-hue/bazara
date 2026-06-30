@@ -255,6 +255,47 @@ export async function createCodOrder(req, res, next) {
 const ORDER_STATUSES = ['new', 'confirmed', 'shipped', 'delivered', 'cancelled'];
 // الحالات التي تعني أن الطلب مؤكّد ويجب خصم مخزونه
 const APPLY_STATUSES = ['confirmed', 'shipped', 'delivered'];
+// يطبّق حالة على طلب (مع خصم/إعادة المخزون وعدّاد الكوبون/الإحالة ذرّياً).
+// مُصدَّرة ليعيد استخدامها تكامل أوبتيموس (يحوّل الطلب لـ"تم الشحن" تلقائياً عند الإرسال).
+export async function applyOrderStatus(storeId, id, status) {
+  const cur = await query(
+    'SELECT items, status, stock_applied, coupon_code, referral_code FROM orders WHERE id = $1 AND store_id = $2',
+    [id, storeId]
+  );
+  const order = cur.rows[0];
+  if (!order) return { ok: false, code: 404 };
+
+  const shouldApply = APPLY_STATUSES.includes(status);
+  // الطلب يُعتبر "مخصوماً" إن كان العلم مضبوطاً، أو كانت حالته الحالية مؤكّدة
+  const wasApplied = order.stock_applied || APPLY_STATUSES.includes(order.status);
+  let stockApplied = wasApplied;
+  if (shouldApply && !wasApplied) stockApplied = true;
+  else if (!shouldApply && wasApplied) stockApplied = false;
+
+  // تغيير المخزون والكوبون/الإحالة وحالة الطلب داخل معاملة واحدة (ذرّية)
+  await withTransaction(async (q) => {
+    if (shouldApply && !wasApplied) {
+      await decrementStock(order.items, q);
+      if (order.coupon_code) {
+        await q('UPDATE coupons SET used_count = used_count + 1 WHERE store_id = $1 AND code = $2', [storeId, order.coupon_code]);
+      }
+      if (order.referral_code) {
+        await q('UPDATE referrals SET uses = uses + 1 WHERE store_id = $1 AND code = $2', [storeId, order.referral_code]);
+      }
+    } else if (!shouldApply && wasApplied) {
+      await restoreStock(order.items, q);
+      if (order.coupon_code) {
+        await q('UPDATE coupons SET used_count = GREATEST(0, used_count - 1) WHERE store_id = $1 AND code = $2', [storeId, order.coupon_code]);
+      }
+      if (order.referral_code) {
+        await q('UPDATE referrals SET uses = GREATEST(0, uses - 1) WHERE store_id = $1 AND code = $2', [storeId, order.referral_code]);
+      }
+    }
+    await q('UPDATE orders SET status = $1, stock_applied = $2 WHERE id = $3 AND store_id = $4', [status, stockApplied, id, storeId]);
+  });
+  return { ok: true, status };
+}
+
 export async function updateOrderStatus(req, res, next) {
   const { id } = req.params;
   const status = (req.body.status || '').trim();
@@ -262,47 +303,8 @@ export async function updateOrderStatus(req, res, next) {
   try {
     const store = await getUserStore(req.user.id);
     if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
-
-    const cur = await query(
-      'SELECT items, stock_applied, coupon_code, referral_code FROM orders WHERE id = $1 AND store_id = $2',
-      [id, store.id]
-    );
-    const order = cur.rows[0];
-    if (!order) return res.status(404).json({ error: 'الطلب غير موجود.' });
-
-    const shouldApply = APPLY_STATUSES.includes(status);
-    // الطلب يُعتبر "مخصوماً" إن كان العلم مضبوطاً، أو كانت حالته الحالية مؤكّدة
-    // (طلبات قديمة أُكّدت قبل تحديث المنطق — كان يُخصم مخزونها عند الإنشاء بلا علم)
-    const wasApplied = order.stock_applied || APPLY_STATUSES.includes(order.status);
-    let stockApplied = wasApplied;
-
-    // تغيير المخزون والكوبون/الإحالة وحالة الطلب داخل معاملة واحدة (ذرّية) — إمّا تتمّ كلها أو لا شيء
-    if (shouldApply && !wasApplied) stockApplied = true;
-    else if (!shouldApply && wasApplied) stockApplied = false;
-
-    await withTransaction(async (q) => {
-      // تأكيد الطلب لأول مرة → نخصم المخزون ونرفع عدّاد الكوبون
-      if (shouldApply && !wasApplied) {
-        await decrementStock(order.items, q);
-        if (order.coupon_code) {
-          await q('UPDATE coupons SET used_count = used_count + 1 WHERE store_id = $1 AND code = $2', [store.id, order.coupon_code]);
-        }
-        if (order.referral_code) {
-          await q('UPDATE referrals SET uses = uses + 1 WHERE store_id = $1 AND code = $2', [store.id, order.referral_code]);
-        }
-      }
-      // إلغاء/إرجاع طلب سبق خصمه → نعيد المخزون وعدّاد الكوبون/الإحالة
-      else if (!shouldApply && wasApplied) {
-        await restoreStock(order.items, q);
-        if (order.coupon_code) {
-          await q('UPDATE coupons SET used_count = GREATEST(0, used_count - 1) WHERE store_id = $1 AND code = $2', [store.id, order.coupon_code]);
-        }
-        if (order.referral_code) {
-          await q('UPDATE referrals SET uses = GREATEST(0, uses - 1) WHERE store_id = $1 AND code = $2', [store.id, order.referral_code]);
-        }
-      }
-      await q('UPDATE orders SET status = $1, stock_applied = $2 WHERE id = $3 AND store_id = $4', [status, stockApplied, id, store.id]);
-    });
+    const r = await applyOrderStatus(store.id, id, status);
+    if (!r.ok) return res.status(r.code || 400).json({ error: 'الطلب غير موجود.' });
     res.json({ ok: true, status });
   } catch (err) {
     next(err);

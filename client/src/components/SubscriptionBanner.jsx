@@ -49,9 +49,12 @@ export default function SubscriptionBanner() {
   // فعّال
   if (active) {
     return (
-      <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-4 text-sm">
-        <span className="inline-flex items-center gap-1 font-semibold text-emerald-700"><CheckIcon className="h-4 w-4" /> {t('subscription.active')}</span>
-        {dateStr && <span className="text-emerald-600"> — {t('subscription.expiresOn')} {dateStr}</span>}
+      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-4 text-sm">
+        <CheckIcon className="h-4 w-4 shrink-0 text-emerald-700" />
+        <span className="font-semibold text-emerald-700">{t('subscription.active')}</span>
+        {dateStr && (
+          <span className="text-emerald-600">— {t('subscription.expiresOn')} <span dir="ltr">{dateStr}</span></span>
+        )}
       </div>
     );
   }

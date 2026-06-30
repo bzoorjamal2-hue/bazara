@@ -99,25 +99,26 @@ export default function OpostSend({ order, cities = [], types = [], onSent }) {
     }
   };
 
-  // الضغطة الأساسية: مطابقة تلقائية للمدينة والمنطقة ثم إرسال مباشر
+  // الضغطة الأساسية: مطابقة تلقائية. لا نرسل تلقائياً إلا عند تطابق المنطقة
+  // المؤكّد (مطابقة تامّة)؛ غير هيك نفتح اللوحة بالمدينة معبّأة لتأكيد المنطقة
+  // قبل الإرسال — حتى لا يروح طلب بمنطقة غلط (الدقّة أهمّ).
   const handleSmartSend = async () => {
     setError(''); setHint('');
     const city = bestMatch(order.city, cities) || bestMatch(order.address, cities);
     if (!city) { setOpen(true); return; } // لا مدينة مطابقة → اختيار يدوي
     setBusy(true);
     const list = await loadAreas(String(city.id));
-    // المنطقة نطابقها على عنوان الزبون فقط — لا نطابق على اسم المدينة
-    // (كثير من أسماء مناطق أوبتيموس تنتهي باسم المدينة فيقع تطابق خاطئ)
+    setCityId(String(city.id));
     const area = bestMatch(order.address, list);
-    if (!area) {
-      // المدينة تطابقت بس المنطقة لأ → افتح الاختيار مع تعبئة المدينة
-      setCityId(String(city.id));
-      setHint(t('dashboard.opost.pickAreaHint'));
-      setBusy(false);
-      setOpen(true);
-      return;
-    }
-    await doSend(String(city.id), String(area.id), typeId);
+    const nad = norm(order.address);
+    // تطابق "مؤكّد" = اسم المنطقة مطابق تماماً للعنوان أو العنوان يبدأ به
+    const exact = area && (norm(area.name) === nad || nad.startsWith(norm(area.name) + ' '));
+    if (exact) { await doSend(String(city.id), String(area.id), typeId); return; }
+    // غير مؤكّد: نفتح اللوحة. إن وُجد ترشيح نختاره ونطلب التأكيد، وإلا يختار يدوياً
+    if (area) { setAreaId(String(area.id)); setHint(t('dashboard.opost.verifyArea')); }
+    else { setAreaId(''); setHint(t('dashboard.opost.pickAreaHint')); }
+    setBusy(false);
+    setOpen(true);
   };
 
   // الزر الرئيسي (قبل فتح اللوحة)
@@ -126,7 +127,7 @@ export default function OpostSend({ order, cities = [], types = [], onSent }) {
       <button
         onClick={handleSmartSend}
         disabled={busy}
-        className="inline-flex items-center gap-1 rounded-xl border border-violet-400/40 px-3 py-1.5 text-xs font-semibold text-violet-200 transition hover:bg-violet-400/10 disabled:opacity-60"
+        className="inline-flex items-center gap-1 rounded-xl bg-wine px-3 py-1.5 text-xs font-semibold text-cream shadow-sm transition hover:bg-wine-dark disabled:opacity-60"
       >
         <TruckIcon className="inline h-4 w-4" /> {busy ? t('common.loading') : t('dashboard.opost.sendBtn')}
       </button>
@@ -135,8 +136,8 @@ export default function OpostSend({ order, cities = [], types = [], onSent }) {
 
   // اللوحة اليدوية (عند تعذّر المطابقة التلقائية أو فشل الإرسال)
   return (
-    <div className="mt-1 w-full space-y-2 rounded-xl border border-violet-400/20 bg-violet-500/5 p-3">
-      <p className="text-xs font-semibold text-violet-200">{t('dashboard.opost.sendTitle')}</p>
+    <div className="mt-1 w-full space-y-2 rounded-xl border border-gold-400/20 bg-gold-400/5 p-3">
+      <p className="text-xs font-semibold text-gold-200">{t('dashboard.opost.sendTitle')}</p>
       {hint && <div className="rounded-lg bg-amber-500/10 px-3 py-1.5 text-xs text-amber-200">{hint}</div>}
       {error && <div className="rounded-lg bg-red-500/10 px-3 py-1.5 text-xs text-red-200">{error}</div>}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">

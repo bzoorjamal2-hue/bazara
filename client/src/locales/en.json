@@ -285,8 +285,10 @@
       "choose": "Choose…",
       "pickCityArea": "Choose city and area.",
       "pickAreaHint": "We matched the city automatically — just choose the area then send.",
+      "verifyArea": "Double-check the selected area before sending (we matched it approximately from the customer address).",
       "confirmSend": "Send shipment",
-      "tracked": "Optimus"
+      "tracked": "Optimus",
+      "managed": "via Optimus"
     },
     "coupons": {
       "title": "Discount coupons",
