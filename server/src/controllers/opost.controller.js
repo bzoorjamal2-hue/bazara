@@ -23,7 +23,7 @@ import {
 async function getUserStoreRow(userId) {
   const r = await query(
     `SELECT id, user_id, name, opost_email, opost_access_token, opost_refresh_token,
-            opost_token_expires, opost_business, opost_business_address, opost_connected
+            opost_token_expires, opost_business, opost_business_address, opost_shipment_type, opost_connected
      FROM stores WHERE user_id = $1`,
     [userId]
   );
@@ -80,6 +80,7 @@ export async function opostStatus(req, res, next) {
       email: store.opost_email || '',
       business: store.opost_business || '',
       businessAddress: store.opost_business_address || '',
+      shipmentType: store.opost_shipment_type || '',
     });
   } catch (err) {
     next(err);
@@ -174,6 +175,19 @@ export async function opostSetAddress(req, res, next) {
   }
 }
 
+// ───────── PUT /api/opost/shipment-type — نوع الشحنة الافتراضي للمتجر ─────────
+export async function opostSetType(req, res, next) {
+  try {
+    const store = await getUserStoreRow(req.user.id);
+    if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
+    const typeId = String(req.body.shipmentType || '').slice(0, 40);
+    await query('UPDATE stores SET opost_shipment_type = $1 WHERE id = $2', [typeId, store.id]);
+    res.json({ ok: true, shipmentType: typeId });
+  } catch (err) {
+    next(err);
+  }
+}
+
 // ───────── GET /api/opost/cities ─────────
 export async function opostCities(req, res, next) {
   try {
@@ -244,8 +258,8 @@ export async function opostSendOrder(req, res, next) {
 
     const token = await ensureToken(store);
 
-    // نوع الشحنة: المختار، وإلا أول نوع متاح
-    let typeId = shipmentTypeId;
+    // نوع الشحنة: المُمرَّر، ثم الافتراضي للمتجر، ثم أول نوع متاح
+    let typeId = shipmentTypeId || (store.opost_shipment_type ? String(store.opost_shipment_type) : '');
     if (!typeId) {
       const types = await fetchShipmentTypes(token);
       typeId = types[0]?.id ? String(types[0].id) : '';
@@ -266,7 +280,8 @@ export async function opostSendOrder(req, res, next) {
         phone: order.customer_phone || '',
         city: cityId,
         area: areaId,
-        address: order.address || order.city || '-',
+        // العنوان التفصيلي = ما اختاره/كتبه الزبون (مدينته ثم عنوانه) كما هو
+        address: [order.city, order.address].map((x) => (x || '').trim()).filter(Boolean).join(' - ') || '-',
       },
       shipment_types: [{ id: typeId }],
       ref_order_id: order.id, // ربط الشحنة برقم طلب بازارا

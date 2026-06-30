@@ -10,6 +10,7 @@ import {
   opostShipmentTypes,
   opostSendOrder,
   opostSync,
+  opostSetType,
 } from '../controllers/opost.controller.js';
 import { requireAuth } from '../middleware/auth.js';
 
@@ -30,6 +31,7 @@ router.get('/status', opostStatus);
 router.post('/connect', connectLimiter, opostConnect);
 router.post('/disconnect', opostDisconnect);
 router.put('/address', opostSetAddress);
+router.put('/shipment-type', opostSetType);
 router.get('/cities', opostCities);
 router.get('/areas', opostAreas);
 router.get('/shipment-types', opostShipmentTypes);

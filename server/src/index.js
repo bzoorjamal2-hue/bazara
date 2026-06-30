@@ -199,6 +199,7 @@ async function ensureColumns() {
     await pool.query('ALTER TABLE stores ADD COLUMN IF NOT EXISTS opost_token_expires TIMESTAMPTZ;');
     await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS opost_business VARCHAR(40) DEFAULT '';");
     await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS opost_business_address VARCHAR(40) DEFAULT '';");
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS opost_shipment_type VARCHAR(40) DEFAULT '';");
     await pool.query('ALTER TABLE stores ADD COLUMN IF NOT EXISTS opost_connected BOOLEAN NOT NULL DEFAULT false;');
     await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS opost_id VARCHAR(60) DEFAULT '';");
     await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS opost_tracking VARCHAR(120) DEFAULT '';");

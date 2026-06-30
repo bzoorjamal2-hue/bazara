@@ -40,13 +40,13 @@ function bestMatch(text, list) {
 
 // زر "إرسال لأوبتيموس" — يطابق المدينة/المنطقة تلقائياً من الطلب ويبعت بضغطة،
 // ويفتح الاختيار اليدوي فقط لو ما قدر يطابق. props: order, cities[], types[], onSent
-export default function OpostSend({ order, cities = [], types = [], onSent }) {
+export default function OpostSend({ order, cities = [], types = [], defaultType = '', onSent }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [cityId, setCityId] = useState('');
   const [areas, setAreas] = useState([]);
   const [areaId, setAreaId] = useState('');
-  const [typeId, setTypeId] = useState(types[0]?.id ? String(types[0].id) : '');
+  const [typeId, setTypeId] = useState(String(defaultType || types[0]?.id || ''));
   const [loadingAreas, setLoadingAreas] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');

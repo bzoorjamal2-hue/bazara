@@ -276,6 +276,8 @@
       "connected": "Your Optimus account was connected ✓",
       "connectedAs": "Connected as:",
       "pickupAddress": "Pickup address",
+      "defaultType": "Default shipment type",
+      "defaultTypeHint": "Used automatically for all your shipments (e.g. Clothes).",
       "disconnect": "Disconnect",
       "sendBtn": "Send to Optimus",
       "sendTitle": "Choose the destination then send",

@@ -47,7 +47,7 @@ export default function OrdersManager() {
   const [error, setError] = useState('');
   const [savingId, setSavingId] = useState('');
   // ربط أوبتيموس: نجلب الحالة + المدن + أنواع الشحن مرّة واحدة (لا لكل طلب) — يقلّل استهلاك الـ API
-  const [opost, setOpost] = useState({ connected: false, cities: [], types: [] });
+  const [opost, setOpost] = useState({ connected: false, cities: [], types: [], defaultType: '' });
 
   useEffect(() => {
     let on = true;
@@ -75,7 +75,7 @@ export default function OrdersManager() {
         api.get('/opost/cities').catch(() => ({ data: { cities: [] } })),
         api.get('/opost/shipment-types').catch(() => ({ data: { types: [] } })),
       ]);
-      if (on) setOpost({ connected: true, cities: c.data.cities || [], types: ty.data.types || [] });
+      if (on) setOpost({ connected: true, cities: c.data.cities || [], types: ty.data.types || [], defaultType: r.data.shipmentType || '' });
     }).catch(() => {});
     return () => { on = false; };
   }, []);
@@ -247,7 +247,7 @@ export default function OrdersManager() {
                     </button>
                   )}
                   {(opost.connected || o.opostTracking) && (
-                    <OpostSend order={o} cities={opost.cities} types={opost.types} onSent={markSent} />
+                    <OpostSend order={o} cities={opost.cities} types={opost.types} defaultType={opost.defaultType} onSent={markSent} />
                   )}
                 </div>
               </div>

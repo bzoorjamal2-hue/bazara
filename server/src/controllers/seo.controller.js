@@ -72,8 +72,11 @@ function ogImage(url) {
 
 function shareHtml({ title, desc, image, url, type = 'website', siteName = 'Bazara' }) {
   const t = escapeXml(title), d = escapeXml(desc), img = escapeXml(image), u = escapeXml(url), sn = escapeXml(siteName);
+  // تحويل فوري عبر meta refresh (يعمل بلا JS — متصفّح انستغرام/فيسبوك المدمج يوقف
+  // بعض الـ JS فكانت تظهر صفحة شبه فارغة). الزواحف الاجتماعية تقرأ وسوم OG قبل التحويل.
   return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="refresh" content="0;url=${u}">
 <title>${t}</title>
 <meta name="description" content="${d}">
 <meta property="og:type" content="${type}">
@@ -88,8 +91,8 @@ ${img ? `<meta property="og:image" content="${img}">\n<meta property="og:image:w
 ${img ? `<meta name="twitter:image" content="${img}">` : ''}
 <link rel="canonical" href="${u}">
 </head><body style="font-family:sans-serif;background:#F4EDE2;color:#5e4636;text-align:center;padding:40px">
-<script>setTimeout(function(){location.replace(${JSON.stringify(url)})},60)</script>
-<p><a href="${u}">${t}</a></p>
+<script>location.replace(${JSON.stringify(url)})</script>
+<p>جارٍ التحويل… <a href="${u}">${t}</a></p>
 </body></html>`;
 }
 

@@ -11,13 +11,22 @@ export default function OpostConnect() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [addresses, setAddresses] = useState([]); // عناوين الاستلام لو أكثر من واحد
+  const [types, setTypes] = useState([]); // أنواع الشحن لاختيار الافتراضي
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
-    api.get('/opost/status').then((r) => setStatus(r.data)).catch(() => setStatus({ enabled: false, connected: false }));
+    api.get('/opost/status').then((r) => {
+      setStatus(r.data);
+      if (r.data.connected) api.get('/opost/shipment-types').then((t2) => setTypes(t2.data.types || [])).catch(() => {});
+    }).catch(() => setStatus({ enabled: false, connected: false }));
   }, []);
+
+  const setShipmentType = async (id) => {
+    setStatus((s) => ({ ...s, shipmentType: id }));
+    try { await api.put('/opost/shipment-type', { shipmentType: id }); } catch { /* غير حرج */ }
+  };
 
   const connect = async () => {
     setMsg(''); setError('');
@@ -29,6 +38,7 @@ export default function OpostConnect() {
       setAddresses(Array.isArray(r.data.addresses) ? r.data.addresses : []);
       setPassword('');
       setMsg(t('dashboard.opost.connected'));
+      api.get('/opost/shipment-types').then((t2) => setTypes(t2.data.types || [])).catch(() => {});
     } catch (err) {
       setError(getErrorMessage(err, t('errors.generic')));
     } finally {
@@ -95,6 +105,16 @@ export default function OpostConnect() {
               <select className="input" value={status.businessAddress || ''} onChange={(e) => setAddress(e.target.value)}>
                 {addresses.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
               </select>
+            </div>
+          )}
+          {types.length > 0 && (
+            <div>
+              <label className="label">{t('dashboard.opost.defaultType')}</label>
+              <select className="input" value={status.shipmentType || ''} onChange={(e) => setShipmentType(e.target.value)}>
+                <option value="">{t('dashboard.opost.choose')}</option>
+                {types.map((ty) => <option key={ty.id} value={ty.id}>{ty.name}</option>)}
+              </select>
+              <p className="mt-1 text-xs text-stone-400">{t('dashboard.opost.defaultTypeHint')}</p>
             </div>
           )}
           <button type="button" onClick={disconnect} disabled={busy} className="btn-ghost gap-1.5 text-sm text-red-300">
