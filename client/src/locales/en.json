@@ -284,6 +284,7 @@
       "type": "Shipment type",
       "choose": "Choose…",
       "pickCityArea": "Choose city and area.",
+      "pickAreaHint": "We matched the city automatically — just choose the area then send.",
       "confirmSend": "Send shipment",
       "tracked": "Optimus"
     },
