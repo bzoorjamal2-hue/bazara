@@ -229,7 +229,7 @@ export default function ProductDetails() {
               alt={product.name}
               decoding="async"
               onClick={() => setLightbox(true)}
-              className="block max-h-[75vh] w-auto max-w-full cursor-zoom-in rounded-2xl bg-ink-800 object-contain"
+              className="media-cap block w-auto max-w-full cursor-zoom-in rounded-2xl bg-ink-800 object-contain"
               onError={(e) => (e.currentTarget.src = PH)}
             />
             {hasDiscount && <span className="badge absolute start-3 top-3 bg-red-500 text-white">-{Math.round((1 - product.price / product.oldPrice) * 100)}%</span>}
@@ -261,7 +261,7 @@ export default function ProductDetails() {
               controls
               playsInline
               preload="metadata"
-              className="mx-auto mt-3 block max-h-[75vh] w-auto max-w-full rounded-2xl bg-ink-900"
+              className="media-cap mx-auto mt-3 block w-auto max-w-full rounded-2xl bg-ink-900"
             />
           )}
         </div>
