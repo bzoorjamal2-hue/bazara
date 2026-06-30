@@ -160,6 +160,20 @@ export function createShipment(token, payload) {
   return opostApi('/api/resources/shipments', token, { method: 'POST', form: payload });
 }
 
+// جلب شحنة واحدة بالمعرّف (للمزامنة الحيّة لحالة الطلب)
+export async function getShipment(token, id) {
+  const data = await opostApi(`/api/resources/shipments/${encodeURIComponent(id)}`, token);
+  // قد يرجع الكائن مباشرة أو ملفوفاً بـ data / [{data:[...]}]
+  if (data && typeof data === 'object' && !Array.isArray(data) && data.id) return data;
+  const list = asList(data);
+  return list[0] || data || {};
+}
+
+// الحالة الحالية للشحنة (نص أوبتيموس الخام مثل Delivered/Cancelled)
+export function shipmentStatus(obj) {
+  return String(obj?.status || obj?.last_status?.status || '').trim();
+}
+
 // استخراج رقم التتبّع/المعرّف من ردّ إنشاء الشحنة — دفاعي لأن الملف ما فيه مثال ردّ ناجح
 export function extractShipmentInfo(resp) {
   const top = resp?.data && typeof resp.data === 'object' ? resp.data : resp || {};

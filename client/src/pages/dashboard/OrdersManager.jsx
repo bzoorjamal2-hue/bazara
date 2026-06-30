@@ -9,6 +9,25 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import OpostSend from '../../components/OpostSend.jsx';
 
 const FLOW = ['new', 'confirmed', 'shipped', 'delivered', 'cancelled'];
+
+// خريطة حالات أوبتيموس (نص خام إنجليزي) → عربي، لعرض نفس حالة تطبيق أوبتيموس
+const OPOST_STATUS_AR = {
+  new: 'قيد التجهيز', pending: 'قيد التجهيز', processing: 'قيد التجهيز', created: 'قيد التجهيز',
+  ready: 'جاهزة للاستلام', 'ready for pickup': 'جاهزة للاستلام', ready_for_pickup: 'جاهزة للاستلام', confirmed: 'جاهزة للاستلام',
+  'awaiting pickup': 'بانتظار التحميل', awaiting_pickup: 'بانتظار التحميل', assigned: 'بانتظار التحميل',
+  'picked up': 'تم التحميل', picked_up: 'تم التحميل', pickedup: 'تم التحميل', loaded: 'تم التحميل', received: 'تم التحميل',
+  'in transit': 'جاري التسليم', in_transit: 'جاري التسليم', intransit: 'جاري التسليم', shipped: 'جاري التسليم',
+  'out for delivery': 'جاري التسليم', out_for_delivery: 'جاري التسليم', delivering: 'جاري التسليم', dispatched: 'جاري التسليم',
+  delivered: 'تم التسليم', completed: 'تم التسليم',
+  collected: 'تم التحصيل', cod_collected: 'تم التحصيل',
+  returned: 'مرتجع', return: 'مرتجع',
+  cancelled: 'ملغاة', canceled: 'ملغاة',
+  postponed: 'مؤجّلة', stuck: 'عالق', pending_customer: 'عالق', pending_action: 'عالق',
+};
+const opostLabel = (raw) => {
+  const s = String(raw || '').trim();
+  return OPOST_STATUS_AR[s.toLowerCase()] || s;
+};
 const BADGE = {
   new: 'bg-sky-500/20 text-sky-200',
   confirmed: 'bg-gold-400/20 text-gold-200',
@@ -30,7 +49,21 @@ export default function OrdersManager() {
   const [opost, setOpost] = useState({ connected: false, cities: [], types: [] });
 
   useEffect(() => {
-    api.get('/orders/mine').then((r) => setOrders(r.data.orders)).catch((e) => setError(getErrorMessage(e)));
+    let on = true;
+    api.get('/orders/mine').then(async (r) => {
+      if (!on) return;
+      const list = r.data.orders;
+      setOrders(list);
+      // مزامنة حالة الطلبات المُرسلة لأوبتيموس مع حالتها الحيّة هناك
+      if (list.some((o) => o.opostTracking)) {
+        try {
+          const s = await api.get('/opost/sync');
+          const m = s.data.statuses || {};
+          if (on) setOrders((prev) => prev.map((o) => (m[o.id] != null ? { ...o, opostStatus: m[o.id] } : o)));
+        } catch { /* تجاهل */ }
+      }
+    }).catch((e) => on && setError(getErrorMessage(e)));
+    return () => { on = false; };
   }, []);
 
   useEffect(() => {
@@ -192,7 +225,7 @@ export default function OrdersManager() {
                   {o.opostTracking ? (
                     // الطلب بعهدة أوبتيموس → الحالة مُقفلة (تُدار عبر شركة التوصيل)
                     <span className="inline-flex items-center gap-1 rounded-xl bg-indigo-500/15 px-3 py-1.5 text-xs font-semibold text-indigo-200">
-                      🔒 {t(`dashboard.ordersSection.${FLOW.includes(o.status) ? o.status : 'shipped'}`)} · {t('dashboard.opost.managed')}
+                      🔒 {o.opostStatus ? opostLabel(o.opostStatus) : t(`dashboard.ordersSection.${FLOW.includes(o.status) ? o.status : 'shipped'}`)} · {t('dashboard.opost.managed')}
                     </span>
                   ) : (
                     <div className="min-w-[140px]">

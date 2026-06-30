@@ -13,6 +13,8 @@ import {
   fetchShipmentTypes,
   createShipment,
   extractShipmentInfo,
+  getShipment,
+  shipmentStatus,
 } from '../config/opost.js';
 
 async function getUserStoreRow(userId) {
@@ -264,6 +266,7 @@ export async function opostSendOrder(req, res, next) {
         address: order.address || order.city || '-',
       },
       shipment_types: [{ id: typeId }],
+      ref_order_id: order.id, // ربط الشحنة برقم طلب بازارا
       quantity,
       items_description: itemsDescription,
       is_cod: 1,
@@ -298,6 +301,48 @@ export async function opostSendOrder(req, res, next) {
     if (err.code === 'NOT_CONNECTED') {
       return res.status(400).json({ error: 'اربط حساب أوبتيموس أولاً من إعدادات المتجر.' });
     }
+    next(err);
+  }
+}
+
+// حالات أوبتيموس النهائية — ما نعيد الاستعلام عنها (وفّر استدعاءات)
+const OPOST_TERMINAL = new Set(['delivered', 'cancelled', 'canceled', 'returned', 'return']);
+
+// ───────── GET /api/opost/sync — مزامنة حالة الطلبات مع أوبتيموس ─────────
+// يجلب الحالة الحيّة لكل شحنة غير منتهية ويحدّث الطلب، ويعكس النهائي على حالة بازارا.
+export async function opostSync(req, res, next) {
+  try {
+    const store = await getUserStoreRow(req.user.id);
+    if (!store?.opost_connected) return res.json({ statuses: {} });
+
+    const r = await query(
+      `SELECT id, opost_id, opost_status FROM orders
+       WHERE store_id = $1 AND opost_id <> '' ORDER BY created_at DESC LIMIT 50`,
+      [store.id]
+    );
+    const out = {};
+    r.rows.forEach((o) => { out[o.id] = o.opost_status || ''; });
+
+    const pending = r.rows.filter((o) => !OPOST_TERMINAL.has(String(o.opost_status || '').toLowerCase()));
+    if (!pending.length) return res.json({ statuses: out });
+
+    const token = await ensureToken(store);
+    for (const o of pending.slice(0, 30)) {
+      try {
+        const st = shipmentStatus(await getShipment(token, o.opost_id));
+        if (st && st !== o.opost_status) {
+          await query('UPDATE orders SET opost_status = $1 WHERE id = $2', [st, o.id]);
+          out[o.id] = st;
+          const low = st.toLowerCase();
+          // عكس الحالة النهائية على حالة بازارا (للإحصائيات والمخزون)
+          if (low === 'delivered') await applyOrderStatus(store.id, o.id, 'delivered').catch(() => {});
+          else if (OPOST_TERMINAL.has(low)) await applyOrderStatus(store.id, o.id, 'cancelled').catch(() => {});
+        }
+      } catch { /* نتجاهل فشل شحنة مفردة */ }
+    }
+    res.json({ statuses: out });
+  } catch (err) {
+    if (err.code === 'NOT_CONNECTED') return res.json({ statuses: {} });
     next(err);
   }
 }

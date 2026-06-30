@@ -9,6 +9,7 @@ import {
   opostAreas,
   opostShipmentTypes,
   opostSendOrder,
+  opostSync,
 } from '../controllers/opost.controller.js';
 import { requireAuth } from '../middleware/auth.js';
 
@@ -32,6 +33,7 @@ router.put('/address', opostSetAddress);
 router.get('/cities', opostCities);
 router.get('/areas', opostAreas);
 router.get('/shipment-types', opostShipmentTypes);
+router.get('/sync', opostSync);
 router.post('/orders/:id/send', opostSendOrder);
 
 export default router;
