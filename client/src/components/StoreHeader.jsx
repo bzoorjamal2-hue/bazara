@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useCart } from '../context/CartContext.jsx';
@@ -72,7 +73,10 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
   const openMenu = () => setDrawer(true);
 
   return (
-    <header className="app-navbar sticky top-0 z-50 -mx-4 -mt-5 mb-5 shadow-sm sm:-mx-6">
+    <header
+      className="app-navbar sticky top-0 z-50 -mx-4 -mt-5 mb-5 shadow-sm sm:-mx-6"
+      style={{ transform: 'translateZ(0)' }}
+    >
       <div className="mx-auto max-w-6xl px-4 py-2.5 sm:px-6">
         {/* الصف الأول: اسم/شعار المتجر + زر القائمة (☰) — يتقلّص بانتقال CSS سلس */}
         <div
@@ -184,8 +188,9 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
         </div>
       </div>
 
-      {/* الدرج الجانبي المنزلق — يُغلق بالضغط خارجه أو بزر ✕ */}
-      {drawer && (
+      {/* الدرج الجانبي المنزلق — يُعرَض عبر Portal على مستوى الصفحة حتى لا يكون
+          ابن الهيدر (المرفوع لطبقة عرض مستقلّة)، فيبقى تموضعه fixed سليماً */}
+      {drawer && createPortal((
         <div className="fixed inset-0 z-[60]">
           <div className="absolute inset-0 bg-black/50 animate-fade-up" onClick={() => setDrawer(false)} />
           <aside
@@ -263,7 +268,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
             </div>
           </aside>
         </div>
-      )}
+      ), document.body)}
     </header>
   );
 }

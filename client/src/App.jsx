@@ -76,28 +76,28 @@ function AnimatedRoutes() {
     if (navType === 'POP') {
       const target = scrollPositions.get(location.key) || 0;
       if (target > 0) {
-        let done = false;
-        let ro = null;
-        let cap = null;
-        const finish = () => {
-          if (done) return;
-          done = true;
-          window.scrollTo({ top: target, behavior: 'instant' });
-          if (ro) ro.disconnect();
-          if (cap) clearTimeout(cap);
+        let userScrolled = false;
+        const maxReach = () => document.documentElement.scrollHeight - window.innerHeight;
+        // نطبّق الموضع المطلوب فقط عندما يكبر المحتوى كفايةً ليبلغه، ونعيد تطبيقه
+        // مع كل نموّ للصفحة (الصور/البيانات تصل تدريجياً) كي لا يزيح الموضع. نتوقّف
+        // فور أن يحرّك المستخدم التمرير بنفسه أو بعد مهلة قصيرة (لا نقاوم المستخدم).
+        const apply = () => {
+          if (userScrolled) return;
+          if (maxReach() >= target - 2) window.scrollTo({ top: target, behavior: 'instant' });
         };
-        // نقفز فقط عندما يصبح المستند طويلاً كفايةً ليبلغ الموضع المطلوب
-        const tryJump = () => {
-          if (done) return;
-          if (document.documentElement.scrollHeight - window.innerHeight >= target - 2) finish();
+        const onUser = () => { userScrolled = true; };
+        window.addEventListener('wheel', onUser, { passive: true });
+        window.addEventListener('touchmove', onUser, { passive: true });
+        apply(); // فوري إن كان المحتوى جاهزاً (من الكاش)
+        const ro = new ResizeObserver(apply); // نتابع نموّ الصفحة ونصحّح الموضع
+        ro.observe(document.body);
+        const stop = setTimeout(() => { userScrolled = true; ro.disconnect(); }, 1800);
+        return () => {
+          ro.disconnect();
+          clearTimeout(stop);
+          window.removeEventListener('wheel', onUser);
+          window.removeEventListener('touchmove', onUser);
         };
-        tryJump(); // فوري إن كان المحتوى جاهزاً (من الكاش) → قفزة لحظية بلا أي زحف
-        if (!done) {
-          ro = new ResizeObserver(tryJump); // نراقب نمو الصفحة ونقفز عند جهوزها
-          ro.observe(document.body);
-          cap = setTimeout(finish, 3000); // مهلة أمان: أقرب موضع متاح
-        }
-        return () => { done = true; if (ro) ro.disconnect(); if (cap) clearTimeout(cap); };
       }
     }
     window.scrollTo({ top: 0, behavior: 'instant' });
