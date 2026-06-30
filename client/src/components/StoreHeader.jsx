@@ -21,9 +21,9 @@ function MenuBtn({ onOpen }) {
     <button
       onClick={onOpen}
       aria-label="menu"
-      className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-wine shadow-sm ring-1 ring-wine/10 transition hover:bg-wine hover:text-cream"
+      className="flex h-9 w-9 items-center justify-center rounded-full bg-wine text-cream shadow-md ring-1 ring-wine/20 transition hover:bg-wine-dark"
     >
-      <MenuIcon className="h-6 w-6" />
+      <MenuIcon className="h-[18px] w-[18px]" />
     </button>
   );
 }
@@ -65,13 +65,13 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
       if (lw) {
         lw.style.gridTemplateRows = inv + 'fr';
         lw.style.opacity = String(inv);
-        lw.style.marginBottom = 12 * inv + 'px';
+        lw.style.marginBottom = 8 * inv + 'px';
         lw.style.transform = `translate3d(0, ${-12 * p}px, 0)`;
       }
       // زر القائمة المُصغّر: ينمو بنعومة (scale = العرض) في جهة البداية (يمين البحث بالعربي)
       const cw = compactWrapRef.current;
       if (cw) {
-        cw.style.width = 44 * p + 'px';
+        cw.style.width = 36 * p + 'px';
         cw.style.opacity = String(p);
         cw.style.marginInlineEnd = 10 * p + 'px';
         cw.style.pointerEvents = p > 0.5 ? 'auto' : 'none';
@@ -100,12 +100,14 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
 
   return (
     <header className="app-navbar sticky top-0 z-50 -mx-4 -mt-5 mb-5 shadow-sm sm:-mx-6">
-      <div className="mx-auto max-w-6xl px-4 py-3 sm:px-6">
+      <div className="mx-auto max-w-6xl px-4 py-2.5 sm:px-6">
         {/* الصف الأول: اسم/شعار المتجر + زر القائمة (☰) — يتقلّص بنعومة مع التمرير */}
-        <div ref={logoWrapRef} className="grid will-change-transform" style={{ gridTemplateRows: '1fr', marginBottom: '12px' }}>
+        <div ref={logoWrapRef} className="grid will-change-transform" style={{ gridTemplateRows: '1fr', marginBottom: '8px' }}>
           <div className="min-h-0 overflow-hidden">
             <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
+                {/* زر القائمة أقصى البداية (يمين بالعربي/يسار بالإنجليزي) */}
+                <MenuBtn onOpen={openMenu} />
                 {/* الشعار = دائرة الستوري (حلقة ذهبية إن وُجدت ستوريات، و(+) للمالكة) */}
                 <StoryBar
                   compact
@@ -117,10 +119,8 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
                   onDeleted={onStoryDeleted}
                 />
                 <Link to={`/store/${store.slug}`} onClick={() => setCat('all')}>
-                  <span className="font-display text-2xl font-bold tracking-wide text-wine">{store.name}</span>
+                  <span className="font-display text-xl font-bold tracking-wide text-wine">{store.name}</span>
                 </Link>
-                {/* زر القائمة بجانب اسم المتجر (جهة البداية: يمين بالعربي/يسار بالإنجليزي) */}
-                <MenuBtn onOpen={openMenu} />
               </div>
               {/* زر تحويل اللغة ظاهر بالشريط (بلا فتح الدرج) */}
               <div className="flex shrink-0 items-center gap-2">
@@ -146,7 +146,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
               onFocus={() => setFocus(true)}
               onBlur={() => setTimeout(() => setFocus(false), 150)}
               placeholder={t('store.searchPlaceholder')}
-              className="w-full rounded-full border-0 bg-white py-2.5 pe-4 ps-10 text-[#2b2b2b] placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-cream/50"
+              className="w-full rounded-full border-0 bg-white py-2 pe-4 ps-10 text-[#2b2b2b] placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-cream/50"
             />
 
             {/* اقتراحات البحث الفوري */}
@@ -179,9 +179,9 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
             data-cart-target
             onClick={() => setOpen(true)}
             aria-label="cart"
-            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-wine/10 text-wine transition hover:bg-wine/20 ms-2.5"
+            className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-wine shadow-sm ring-1 ring-wine/15 transition hover:bg-wine hover:text-cream ms-2"
           >
-            <CartIcon className="h-5 w-5" />
+            <CartIcon className="h-[18px] w-[18px]" />
             {count > 0 && (
               <span className="absolute -end-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
                 {count}
@@ -193,9 +193,9 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
           <button
             onClick={() => setWishOpen(true)}
             aria-label="wishlist"
-            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-wine/10 text-wine transition hover:bg-wine/20 ms-2.5"
+            className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-wine shadow-sm ring-1 ring-wine/15 transition hover:bg-wine hover:text-cream ms-2"
           >
-            <HeartIcon className="h-5 w-5" />
+            <HeartIcon className="h-[18px] w-[18px]" />
             {wishCount > 0 && (
               <span className="absolute -end-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
                 {wishCount}
