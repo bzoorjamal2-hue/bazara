@@ -96,9 +96,9 @@ html.dark .theme-pub .glass { box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5); }
 html[lang='ar'] body {
   @apply font-ar;
 }
-/* العناوين الفخمة تبقى Playfair بالإنجليزي وEl Messiri بالعربي */
+/* العناوين الفخمة تبقى Playfair بالإنجليزي وCairo (نظيف) بالعربي */
 html[lang='ar'] .font-display {
-  font-family: 'El Messiri', serif;
+  font-family: 'Cairo', serif;
 }
 
 /* بطاقة زجاجية بحدود ذهبية خفيفة */
