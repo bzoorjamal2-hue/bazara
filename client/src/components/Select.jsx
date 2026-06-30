@@ -35,19 +35,27 @@ export default function Select({ value, onChange, options, className = '', place
       setOpen(false);
     };
     const onKey = (e) => { if (e.key === 'Escape') setOpen(false); };
-    // عند تمرير أي حاوية أو تغيير الحجم نُغلق (الموضع الثابت لا يتبع التمرير) — أبسط وأأمن
-    const onScrollResize = () => setOpen(false);
+    // عند التمرير/تغيير الحجم نعيد حساب موضع القائمة لتتبع الزر (بدل إغلاقها)،
+    // ونغلق فقط إذا خرج الزر نفسه عن الشاشة. هذا يسمح بالتمرير داخل القائمة أو
+    // داخل النوافذ المنبثقة دون أن تُغلق القائمة. (التمرير داخل القائمة نفسها لا يحرّك الزر)
+    const reposition = (e) => {
+      if (menuRef.current && e?.target && menuRef.current.contains(e.target)) return; // تمرير داخل القائمة ذاتها
+      if (!ref.current) { setOpen(false); return; }
+      const r = ref.current.getBoundingClientRect();
+      if (r.bottom <= 0 || r.top >= window.innerHeight) { setOpen(false); return; }
+      computePos();
+    };
     document.addEventListener('mousedown', onDoc);
     document.addEventListener('touchstart', onDoc);
     document.addEventListener('keydown', onKey);
-    window.addEventListener('resize', onScrollResize);
-    window.addEventListener('scroll', onScrollResize, true); // capture: يلتقط تمرير الحاويات الداخلية
+    window.addEventListener('resize', reposition);
+    window.addEventListener('scroll', reposition, true); // capture: يلتقط تمرير الحاويات الداخلية
     return () => {
       document.removeEventListener('mousedown', onDoc);
       document.removeEventListener('touchstart', onDoc);
       document.removeEventListener('keydown', onKey);
-      window.removeEventListener('resize', onScrollResize);
-      window.removeEventListener('scroll', onScrollResize, true);
+      window.removeEventListener('resize', reposition);
+      window.removeEventListener('scroll', reposition, true);
     };
   }, [open]);
 
