@@ -1,5 +1,7 @@
 import { query } from '../config/db.js';
 import { applyOrderStatus } from './order.controller.js';
+import { sendPushToUser } from '../config/push.js';
+import { sendNativeToUser } from '../config/nativePush.js';
 import {
   isOpostConfigured,
   loginOpost,
@@ -15,11 +17,12 @@ import {
   extractShipmentInfo,
   getShipment,
   shipmentStatus,
+  statusLabelAr,
 } from '../config/opost.js';
 
 async function getUserStoreRow(userId) {
   const r = await query(
-    `SELECT id, name, opost_email, opost_access_token, opost_refresh_token,
+    `SELECT id, user_id, name, opost_email, opost_access_token, opost_refresh_token,
             opost_token_expires, opost_business, opost_business_address, opost_connected
      FROM stores WHERE user_id = $1`,
     [userId]
@@ -307,42 +310,83 @@ export async function opostSendOrder(req, res, next) {
 
 // حالات أوبتيموس النهائية — ما نعيد الاستعلام عنها (وفّر استدعاءات)
 const OPOST_TERMINAL = new Set(['delivered', 'cancelled', 'canceled', 'returned', 'return']);
+const normStatus = (s) => String(s || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
 
-// ───────── GET /api/opost/sync — مزامنة حالة الطلبات مع أوبتيموس ─────────
-// يجلب الحالة الحيّة لكل شحنة غير منتهية ويحدّث الطلب، ويعكس النهائي على حالة بازارا.
+// يزامن طلبات متجر واحد مع حالتها الحيّة في أوبتيموس.
+// يُرجّع { statuses, changed: [{ orderId, status, customer }] }.
+async function syncStoreOrders(store) {
+  const r = await query(
+    `SELECT id, opost_id, opost_status, customer_name FROM orders
+     WHERE store_id = $1 AND opost_id <> '' ORDER BY created_at DESC LIMIT 50`,
+    [store.id]
+  );
+  const statuses = {};
+  r.rows.forEach((o) => { statuses[o.id] = o.opost_status || ''; });
+
+  const pending = r.rows.filter((o) => !OPOST_TERMINAL.has(normStatus(o.opost_status)));
+  const changed = [];
+  if (!pending.length) return { statuses, changed };
+
+  const token = await ensureToken(store);
+  for (const o of pending.slice(0, 30)) {
+    try {
+      const st = shipmentStatus(await getShipment(token, o.opost_id));
+      if (st && st !== o.opost_status) {
+        await query('UPDATE orders SET opost_status = $1 WHERE id = $2', [st, o.id]);
+        statuses[o.id] = st;
+        changed.push({ orderId: o.id, status: st, customer: o.customer_name });
+        const low = normStatus(st);
+        // عكس الحالة النهائية على حالة بازارا (للإحصائيات والمخزون)
+        if (low === 'delivered') await applyOrderStatus(store.id, o.id, 'delivered').catch(() => {});
+        else if (OPOST_TERMINAL.has(low)) await applyOrderStatus(store.id, o.id, 'cancelled').catch(() => {});
+      }
+    } catch { /* نتجاهل فشل شحنة مفردة */ }
+  }
+  return { statuses, changed };
+}
+
+// ───────── GET /api/opost/sync — مزامنة حالة طلبات المتجر الحالي ─────────
 export async function opostSync(req, res, next) {
   try {
     const store = await getUserStoreRow(req.user.id);
     if (!store?.opost_connected) return res.json({ statuses: {} });
-
-    const r = await query(
-      `SELECT id, opost_id, opost_status FROM orders
-       WHERE store_id = $1 AND opost_id <> '' ORDER BY created_at DESC LIMIT 50`,
-      [store.id]
-    );
-    const out = {};
-    r.rows.forEach((o) => { out[o.id] = o.opost_status || ''; });
-
-    const pending = r.rows.filter((o) => !OPOST_TERMINAL.has(String(o.opost_status || '').toLowerCase()));
-    if (!pending.length) return res.json({ statuses: out });
-
-    const token = await ensureToken(store);
-    for (const o of pending.slice(0, 30)) {
-      try {
-        const st = shipmentStatus(await getShipment(token, o.opost_id));
-        if (st && st !== o.opost_status) {
-          await query('UPDATE orders SET opost_status = $1 WHERE id = $2', [st, o.id]);
-          out[o.id] = st;
-          const low = st.toLowerCase();
-          // عكس الحالة النهائية على حالة بازارا (للإحصائيات والمخزون)
-          if (low === 'delivered') await applyOrderStatus(store.id, o.id, 'delivered').catch(() => {});
-          else if (OPOST_TERMINAL.has(low)) await applyOrderStatus(store.id, o.id, 'cancelled').catch(() => {});
-        }
-      } catch { /* نتجاهل فشل شحنة مفردة */ }
-    }
-    res.json({ statuses: out });
+    const { statuses } = await syncStoreOrders(store);
+    res.json({ statuses });
   } catch (err) {
     if (err.code === 'NOT_CONNECTED') return res.json({ statuses: {} });
     next(err);
+  }
+}
+
+// ───────── مهمّة خلفية: تزامن كل المتاجر المربوطة وتُشعر المالك عند تغيّر الحالة ─────────
+let syncRunning = false;
+export async function syncAllConnectedStores() {
+  if (!isOpostConfigured() || syncRunning) return;
+  syncRunning = true;
+  try {
+    const r = await query(
+      `SELECT id, user_id, name, opost_access_token, opost_refresh_token, opost_token_expires
+       FROM stores WHERE opost_connected = true`
+    );
+    for (const store of r.rows) {
+      try {
+        const { changed } = await syncStoreOrders(store);
+        for (const c of changed) {
+          const payload = {
+            title: `🚚 تحديث شحنة — ${store.name}`,
+            body: `${c.customer || 'طلب'}: ${statusLabelAr(c.status)}`,
+            url: '/dashboard?tab=myOrders',
+          };
+          sendPushToUser(store.user_id, payload);
+          sendNativeToUser(store.user_id, payload);
+        }
+      } catch (e) {
+        console.error('opost sync store', store.id, e.message);
+      }
+    }
+  } catch (e) {
+    console.error('syncAllConnectedStores:', e.message);
+  } finally {
+    syncRunning = false;
   }
 }

@@ -169,9 +169,28 @@ export async function getShipment(token, id) {
   return list[0] || data || {};
 }
 
-// الحالة الحالية للشحنة (نص أوبتيموس الخام مثل Delivered/Cancelled)
+// الحالة الحالية للشحنة. نفضّل last_status.status لأنه الكود القانوني (snake_case
+// مثل picked_up/cod_pickup) وأحدث حدث، ثم الحقل status العام كبديل.
 export function shipmentStatus(obj) {
-  return String(obj?.status || obj?.last_status?.status || '').trim();
+  return String(obj?.last_status?.status || obj?.status || '').trim();
+}
+
+// خريطة حالات أوبتيموس → عربي (للإشعارات). أكواد مؤكّدة من الـ API + القياسية.
+const STATUS_AR = {
+  draft: 'مسودّة', submitted: 'قيد التجهيز', created: 'قيد التجهيز', processing: 'قيد التجهيز',
+  ready: 'جاهزة للاستلام', ready_for_pickup: 'جاهزة للاستلام',
+  awaiting_pickup: 'بانتظار التحميل', assigned: 'بانتظار التحميل',
+  picked_up: 'تم التحميل', loaded: 'تم التحميل', received: 'تم التحميل',
+  in_transit: 'جاري التسليم', out_for_delivery: 'جاري التسليم', dispatched: 'جاري التسليم', shipped: 'جاري التسليم',
+  cod_pickup: 'تم التحصيل', collected: 'تم التحصيل',
+  delivered: 'تم التسليم', completed: 'تم التسليم',
+  returned: 'مرتجع', returned_to_business: 'مرتجع',
+  cancelled: 'ملغاة', canceled: 'ملغاة',
+  pending: 'عالق', postponed: 'مؤجّلة', rejected: 'مرفوض',
+};
+export function statusLabelAr(raw) {
+  const key = String(raw || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+  return STATUS_AR[key] || String(raw || '').trim();
 }
 
 // استخراج رقم التتبّع/المعرّف من ردّ إنشاء الشحنة — دفاعي لأن الملف ما فيه مثال ردّ ناجح

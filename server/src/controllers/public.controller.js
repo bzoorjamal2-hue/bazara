@@ -1,6 +1,7 @@
 import { query } from '../config/db.js';
 import { mapProduct } from './product.controller.js';
 import { activeStoreSql } from '../utils/subscription.js';
+import { notifyStoreOwner } from '../utils/notify.js';
 
 // أعمدة المنتج + بيانات المتجر + تجميع التقييمات. نربط users لفلترة المشتركين الفعّالين.
 const PRODUCT_SELECT = `
@@ -333,8 +334,9 @@ export async function addReview(req, res, next) {
   if (imageUrl && !/^(https?:\/\/|data:image\/)/i.test(imageUrl)) imageUrl = '';
   imageUrl = imageUrl.slice(0, 2000);
   try {
-    const exists = await query('SELECT id FROM products WHERE id = $1', [id]);
+    const exists = await query('SELECT id, store_id, name FROM products WHERE id = $1', [id]);
     if (exists.rows.length === 0) return res.status(404).json({ error: 'المنتج غير موجود.' });
+    const product = exists.rows[0];
 
     const result = await query(
       'INSERT INTO reviews (product_id, author_name, rating, comment, image_url) VALUES ($1, $2, $3, $4, $5) RETURNING id, author_name, rating, comment, image_url, created_at',
@@ -343,6 +345,13 @@ export async function addReview(req, res, next) {
     const r = result.rows[0];
     res.status(201).json({
       review: { id: r.id, authorName: r.author_name, rating: r.rating, comment: r.comment, imageUrl: r.image_url || '', createdAt: r.created_at },
+    });
+
+    // إشعار المالك بتقييم جديد (بالخلفية)
+    notifyStoreOwner(product.store_id, {
+      title: `⭐ تقييم جديد (${stars}/5) — ${product.name}`,
+      body: `${name}${(comment || '').trim() ? `: ${(comment || '').trim().slice(0, 80)}` : ''}`,
+      url: '/dashboard?tab=myProducts',
     });
   } catch (err) {
     next(err);

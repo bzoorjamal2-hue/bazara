@@ -10,23 +10,24 @@ import OpostSend from '../../components/OpostSend.jsx';
 
 const FLOW = ['new', 'confirmed', 'shipped', 'delivered', 'cancelled'];
 
-// خريطة حالات أوبتيموس (نص خام إنجليزي) → عربي، لعرض نفس حالة تطبيق أوبتيموس
+// خريطة حالات أوبتيموس (snake_case مؤكّدة من الـ API + القياسية) → عربي،
+// لعرض نفس مسمّى حالة تطبيق أوبتيموس بصفحة الطلبات.
 const OPOST_STATUS_AR = {
-  new: 'قيد التجهيز', pending: 'قيد التجهيز', processing: 'قيد التجهيز', created: 'قيد التجهيز',
-  ready: 'جاهزة للاستلام', 'ready for pickup': 'جاهزة للاستلام', ready_for_pickup: 'جاهزة للاستلام', confirmed: 'جاهزة للاستلام',
-  'awaiting pickup': 'بانتظار التحميل', awaiting_pickup: 'بانتظار التحميل', assigned: 'بانتظار التحميل',
-  'picked up': 'تم التحميل', picked_up: 'تم التحميل', pickedup: 'تم التحميل', loaded: 'تم التحميل', received: 'تم التحميل',
-  'in transit': 'جاري التسليم', in_transit: 'جاري التسليم', intransit: 'جاري التسليم', shipped: 'جاري التسليم',
-  'out for delivery': 'جاري التسليم', out_for_delivery: 'جاري التسليم', delivering: 'جاري التسليم', dispatched: 'جاري التسليم',
+  draft: 'مسودّة',
+  submitted: 'قيد التجهيز', created: 'قيد التجهيز', new: 'قيد التجهيز', processing: 'قيد التجهيز',
+  ready: 'جاهزة للاستلام', ready_for_pickup: 'جاهزة للاستلام', confirmed: 'جاهزة للاستلام',
+  awaiting_pickup: 'بانتظار التحميل', waiting_pickup: 'بانتظار التحميل', assigned: 'بانتظار التحميل',
+  picked_up: 'تم التحميل', pickedup: 'تم التحميل', loaded: 'تم التحميل', received: 'تم التحميل',
+  in_transit: 'جاري التسليم', out_for_delivery: 'جاري التسليم', delivering: 'جاري التسليم', dispatched: 'جاري التسليم', shipped: 'جاري التسليم',
+  cod_pickup: 'تم التحصيل', collected: 'تم التحصيل', cod_collected: 'تم التحصيل',
   delivered: 'تم التسليم', completed: 'تم التسليم',
-  collected: 'تم التحصيل', cod_collected: 'تم التحصيل',
-  returned: 'مرتجع', return: 'مرتجع',
+  returned: 'مرتجع', return: 'مرتجع', returned_to_business: 'مرتجع',
   cancelled: 'ملغاة', canceled: 'ملغاة',
-  postponed: 'مؤجّلة', stuck: 'عالق', pending_customer: 'عالق', pending_action: 'عالق',
+  pending: 'عالق', stuck: 'عالق', postponed: 'مؤجّلة', rejected: 'مرفوض',
 };
 const opostLabel = (raw) => {
-  const s = String(raw || '').trim();
-  return OPOST_STATUS_AR[s.toLowerCase()] || s;
+  const key = String(raw || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+  return OPOST_STATUS_AR[key] || String(raw || '').trim();
 };
 const BADGE = {
   new: 'bg-sky-500/20 text-sky-200',

@@ -21,6 +21,7 @@ import pushRoutes from './routes/push.routes.js';
 import storyRoutes from './routes/story.routes.js';
 import siteRoutes from './routes/site.routes.js';
 import opostRoutes from './routes/opost.routes.js';
+import { syncAllConnectedStores } from './controllers/opost.controller.js';
 import { robots, sitemap, indexNowKey, shareProduct, shareStore, shareStory } from './controllers/seo.controller.js';
 import { issueCsrfToken, verifyCsrf, getCsrfToken } from './middleware/csrf.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
@@ -271,6 +272,11 @@ function start() {
   app.listen(PORT, () => {
     console.log(`🚀 الخادم يعمل على المنفذ ${PORT}`);
   });
+  // مزامنة خلفية لحالات شحنات أوبتيموس كل 10 دقائق — تُشعر المالك عند التغيّر
+  // حتى لو صفحة الطلبات مسكّرة (تعمل ما دام الخادم مستيقظاً).
+  const TEN_MIN = 10 * 60 * 1000;
+  setInterval(() => { syncAllConnectedStores().catch(() => {}); }, TEN_MIN);
+  setTimeout(() => { syncAllConnectedStores().catch(() => {}); }, 30 * 1000); // تشغيلة أولى بعد الإقلاع
 }
 
 // الترقية التلقائية على الإنتاج فقط (Render). محلياً نشغّل مباشرة بلا لمس قاعدة البيانات.

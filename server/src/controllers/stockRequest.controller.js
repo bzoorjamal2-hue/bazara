@@ -1,4 +1,5 @@
 import { query } from '../config/db.js';
+import { notifyStoreOwner } from '../utils/notify.js';
 
 async function getUserStore(userId) {
   const r = await query('SELECT id FROM stores WHERE user_id = $1', [userId]);
@@ -31,6 +32,14 @@ export async function createStockRequest(req, res, next) {
       [product.store_id, productId, product.name, color, size, phone]
     );
     res.status(201).json({ ok: true });
+
+    // إشعار المالك بطلب توفّر جديد (بالخلفية)
+    const variant = [color, size].filter(Boolean).join(' - ');
+    notifyStoreOwner(product.store_id, {
+      title: `🔔 طلب توفّر — ${product.name}`,
+      body: `زبون ينتظر توفّر${variant ? ` (${variant})` : ''} — ${phone}`,
+      url: '/dashboard?tab=stockRequests',
+    });
   } catch (err) {
     next(err);
   }
