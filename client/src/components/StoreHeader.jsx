@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useCart } from '../context/CartContext.jsx';
@@ -42,52 +42,25 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
   // اقتراحات البحث الفوري: أول 6 منتجات يطابق اسمها ما يكتبه المستخدم
   const term = q.trim().toLowerCase();
   const suggestions = term ? products.filter((p) => p.name.toLowerCase().includes(term)).slice(0, 6) : [];
-  const logoWrapRef = useRef(null);
-  const compactWrapRef = useRef(null);
+  const [collapsed, setCollapsed] = useState(false);
   useScrollLock(drawer);
 
+  // طيّ الهيدر عند التمرير عبر تبديل حالة واحدة + انتقال CSS سلس (بدون تحريك التخطيط
+  // كل فريم → بلا تعليق على كل الأجهزة). هيستيريسيس يمنع الرفرفة عند الحدّ.
   useEffect(() => {
-    const RANGE = 150;
-    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const smoothstep = (t) => t * t * (3 - 2 * t);
-    let target = Math.min(Math.max(window.scrollY / RANGE, 0), 1);
-    let cur = target;
-    let raf = 0;
-    let running = false;
-
-    const draw = () => {
-      cur += (target - cur) * (reduce ? 1 : 0.15);
-      if (Math.abs(target - cur) < 0.0006) cur = target;
-      const p = smoothstep(Math.min(Math.max(cur, 0), 1));
-      const inv = 1 - p;
-
-      const lw = logoWrapRef.current;
-      if (lw) {
-        lw.style.gridTemplateRows = inv + 'fr';
-        lw.style.opacity = String(inv);
-        lw.style.marginBottom = 8 * inv + 'px';
-        lw.style.transform = `translate3d(0, ${-12 * p}px, 0)`;
-      }
-      // زر القائمة المُصغّر: ينمو بنعومة (scale = العرض) في جهة البداية (يمين البحث بالعربي)
-      const cw = compactWrapRef.current;
-      if (cw) {
-        cw.style.width = 36 * p + 'px';
-        cw.style.opacity = String(p);
-        cw.style.marginInlineEnd = 10 * p + 'px';
-        cw.style.pointerEvents = p > 0.5 ? 'auto' : 'none';
-        const inner = cw.firstElementChild;
-        if (inner) inner.style.transform = `scale(${p})`;
-      }
-
-      if (cur !== target) raf = requestAnimationFrame(draw);
-      else { running = false; raf = 0; }
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        setCollapsed((c) => (c ? y > 36 : y > 84));
+        ticking = false;
+      });
     };
-    const tick = () => { if (!running) { running = true; raf = requestAnimationFrame(draw); } };
-    const onScroll = () => { target = Math.min(Math.max(window.scrollY / RANGE, 0), 1); tick(); };
-
-    draw();
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => { window.removeEventListener('scroll', onScroll); if (raf) cancelAnimationFrame(raf); };
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   const pick = (c) => {
@@ -101,8 +74,11 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
   return (
     <header className="app-navbar sticky top-0 z-50 -mx-4 -mt-5 mb-5 shadow-sm sm:-mx-6">
       <div className="mx-auto max-w-6xl px-4 py-2.5 sm:px-6">
-        {/* الصف الأول: اسم/شعار المتجر + زر القائمة (☰) — يتقلّص بنعومة مع التمرير */}
-        <div ref={logoWrapRef} className="grid will-change-transform" style={{ gridTemplateRows: '1fr', marginBottom: '8px' }}>
+        {/* الصف الأول: اسم/شعار المتجر + زر القائمة (☰) — يتقلّص بانتقال CSS سلس */}
+        <div
+          className="grid overflow-hidden transition-[grid-template-rows,opacity,margin] duration-300 ease-out motion-reduce:transition-none"
+          style={{ gridTemplateRows: collapsed ? '0fr' : '1fr', opacity: collapsed ? 0 : 1, marginBottom: collapsed ? 0 : 8 }}
+        >
           <div className="min-h-0 overflow-hidden">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
@@ -118,8 +94,8 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
                   onAdded={onStoryAdded}
                   onDeleted={onStoryDeleted}
                 />
-                <Link to={`/store/${store.slug}`} onClick={() => setCat('all')}>
-                  <span className="font-display text-xl font-bold tracking-wide text-wine">{store.name}</span>
+                <Link to={`/store/${store.slug}`} onClick={() => setCat('all')} className="min-w-0">
+                  <span className="block max-w-[46vw] truncate font-display text-base font-bold leading-tight tracking-wide text-wine sm:max-w-[22rem] sm:text-lg">{store.name}</span>
                 </Link>
               </div>
               {/* زر تحويل اللغة ظاهر بالشريط (بلا فتح الدرج) */}
@@ -133,8 +109,11 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
         {/* صف البحث: القائمة المُصغّرة (تظهر عند التمرير، جهة البداية) + البحث + السلة + المفضّلة */}
         <div className="flex items-center">
           {/* زر القائمة المُصغّر — يظهر بنعومة عند التمرير على يمين البحث (جهة البداية) */}
-          <div ref={compactWrapRef} className="flex shrink-0 items-center justify-center overflow-hidden" style={{ width: 0, opacity: 0 }}>
-            <div className="will-change-transform"><MenuBtn onOpen={openMenu} /></div>
+          <div
+            className="flex shrink-0 items-center justify-center overflow-hidden transition-[width,opacity,margin] duration-300 ease-out motion-reduce:transition-none"
+            style={{ width: collapsed ? 36 : 0, opacity: collapsed ? 1 : 0, marginInlineEnd: collapsed ? 10 : 0, pointerEvents: collapsed ? 'auto' : 'none' }}
+          >
+            <MenuBtn onOpen={openMenu} />
           </div>
           <div className="relative flex-1">
             <span className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-wine/50">
