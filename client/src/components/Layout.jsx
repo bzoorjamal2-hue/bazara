@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router-dom';
 import Navbar from './Navbar.jsx';
@@ -24,6 +25,21 @@ export default function Layout({ children }) {
   // شريط التنقّل السفلي يظهر داخل التطبيق المثبّت على كل الصفحات (بما فيها المتجر) عدا الترحيب/الدخول
   // الشريط السفلي يظهر على كل الأجهزة (جوال/آيباد/كمبيوتر) عدا شاشات الترحيب/الدخول
   const showBottomNav = !isAppWelcome && !isAuthFull;
+
+  // إغلاق لوحة المفاتيح فور بدء التمرير (سحب الشاشة) — يمنع تعليق الشاشة والقفز
+  // أثناء فتح أي شريط بحث، ويعطي إحساس التطبيقات الأصلية. يطبَّق على كل الموقع.
+  useEffect(() => {
+    const dismiss = () => {
+      const el = document.activeElement;
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') &&
+          !['button', 'submit', 'checkbox', 'radio', 'range', 'file', 'color', 'image'].includes(el.type)) {
+        el.blur();
+      }
+    };
+    window.addEventListener('touchmove', dismiss, { passive: true });
+    window.addEventListener('wheel', dismiss, { passive: true });
+    return () => { window.removeEventListener('touchmove', dismiss); window.removeEventListener('wheel', dismiss); };
+  }, []);
 
   return (
     <div className="app-bg theme-pub flex min-h-screen flex-col">

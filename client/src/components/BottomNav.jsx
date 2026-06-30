@@ -93,6 +93,18 @@ export default function BottomNav() {
     return () => obs.disconnect();
   }, []);
 
+  // إخفاء الشريط عند فتح لوحة المفاتيح (التركيز على حقل نصّي) — كي لا يطفو فوق الكيبورد.
+  const [kbOpen, setKbOpen] = useState(false);
+  useEffect(() => {
+    const isText = (el) => el && (el.tagName === 'TEXTAREA' ||
+      (el.tagName === 'INPUT' && !['button', 'submit', 'checkbox', 'radio', 'range', 'file', 'color', 'image'].includes(el.type)));
+    const onIn = (e) => { if (isText(e.target)) setKbOpen(true); };
+    const onOut = () => { setTimeout(() => { if (!isText(document.activeElement)) setKbOpen(false); }, 60); };
+    document.addEventListener('focusin', onIn);
+    document.addEventListener('focusout', onOut);
+    return () => { document.removeEventListener('focusin', onIn); document.removeEventListener('focusout', onOut); };
+  }, []);
+
   // عند وجود طلب جديد، يفتح تبويب "الطلبات" مباشرة (الإشعار يوصلك لمصدره)
   const accountTo = user ? (newOrders > 0 ? '/dashboard?tab=myOrders' : '/dashboard') : '/login';
   // "الرئيسية": المدير العام → الصفحة الرئيسية للموقع (ليعاين تعديلاته)؛ المشترك → متجره؛ الزائر → بازارا العام
@@ -117,7 +129,7 @@ export default function BottomNav() {
     { key: 'home', label: t('nav.home'), Icon: HomeIcon, active: !cartOpen && !wishOpen && homeActive, onClick: () => goto(homeTo) },
   ];
 
-  if (locked) return null; // نافذة/درج مفتوح → نخفي الشريط (يرجع تلقائياً عند الإغلاق)
+  if (locked || kbOpen) return null; // نافذة/درج مفتوح أو لوحة مفاتيح ظاهرة → نخفي الشريط (يرجع تلقائياً)
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-[78] border-t border-wine/10 bg-white/95 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 shadow-[0_-6px_20px_rgba(94,70,54,0.08)] backdrop-blur">
