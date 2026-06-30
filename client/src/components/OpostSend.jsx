@@ -11,6 +11,7 @@ const areaCache = new Map();
 const norm = (s) =>
   String(s || '')
     .replace(/[ً-ْ]/g, '')
+    .replace(/\(.*?\)/g, ' ') // إزالة اسم المدينة بين قوسين بأسماء المناطق: "عابا الغربية (جنين)"
     .replace(/[أإآ]/g, 'ا')
     .replace(/ى/g, 'ي')
     .replace(/ة/g, 'ه')
@@ -105,7 +106,9 @@ export default function OpostSend({ order, cities = [], types = [], onSent }) {
     if (!city) { setOpen(true); return; } // لا مدينة مطابقة → اختيار يدوي
     setBusy(true);
     const list = await loadAreas(String(city.id));
-    const area = bestMatch(order.address, list) || bestMatch(order.city, list);
+    // المنطقة نطابقها على عنوان الزبون فقط — لا نطابق على اسم المدينة
+    // (كثير من أسماء مناطق أوبتيموس تنتهي باسم المدينة فيقع تطابق خاطئ)
+    const area = bestMatch(order.address, list);
     if (!area) {
       // المدينة تطابقت بس المنطقة لأ → افتح الاختيار مع تعبئة المدينة
       setCityId(String(city.id));
