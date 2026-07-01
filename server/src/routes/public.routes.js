@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { param } from 'express-validator';
-import { getHomeData, getStoreBySlug, getStoreCheckout, getProductById, getByCategory, getOffers, getReels, getStoriesFeed, addReview, trackOrders } from '../controllers/public.controller.js';
+import { getHomeData, getStoreBySlug, getStoreCheckout, getProductById, getByCategory, getOffers, getReels, getStoriesFeed, addReview, trackOrders, trackStoreVisit } from '../controllers/public.controller.js';
 import { validateCoupon } from '../controllers/coupon.controller.js';
 import { createStockRequest } from '../controllers/stockRequest.controller.js';
 import { viewStory } from '../controllers/story.controller.js';
@@ -40,6 +40,7 @@ router.get('/stories', cacheGet(30), getStoriesFeed);
 router.post('/story/:id/view', viewStory);
 router.get('/store/:slug', cacheGet(30), getStoreBySlug);
 router.get('/store/:slug/checkout', getStoreCheckout);
+router.post('/store/:slug/visit', trackStoreVisit);
 router.get('/product/:id', idParam, handleValidation, getProductById);
 router.post('/product/:id/reviews', reviewLimiter, idParam, reviewRules, handleValidation, addReview);
 router.post('/coupon/validate', validateCoupon);

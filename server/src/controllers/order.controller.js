@@ -363,6 +363,7 @@ export async function getStats(req, res, next) {
     );
 
     const prod = await query('SELECT COUNT(*)::int AS c FROM products WHERE store_id = $1', [sid]);
+    const visitsRow = await query('SELECT COALESCE(views, 0)::int AS v FROM stores WHERE id = $1', [sid]);
 
     // المنتجات قاربة النفاد (المتبقّي ≤ 3) — تنبيه للمالكة لإعادة التوفير قبل انتهائها.
     // نحسب المتبقّي: المخزون العام إن وُجد، وإلا مجموع كميات اللون/المقاس. (NULL = غير محدود → نتجاهله)
@@ -396,6 +397,7 @@ export async function getStats(req, res, next) {
       confirmedOrders: t.confirmed_orders,
       cancelledOrders: t.cancelled_orders,
       productsCount: prod.rows[0].c,
+      visitors: visitsRow.rows[0]?.v || 0,
       topProducts: top.rows.map((r) => ({ name: r.name, qty: r.qty })),
       daily: daily.rows.map((r) => ({ day: r.day, orders: r.orders })),
       lowStock,

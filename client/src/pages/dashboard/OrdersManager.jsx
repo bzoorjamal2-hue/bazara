@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
@@ -28,6 +28,17 @@ const OPOST_STATUS_AR = {
 const opostLabel = (raw) => {
   const key = String(raw || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
   return OPOST_STATUS_AR[key] || String(raw || '').trim();
+};
+
+// مفتاح اليوم (سنة-شهر-يوم) لفصل الطلبات اليومية، ووصف بشري له (اليوم/أمس/تاريخ)
+const dayKey = (d) => { const x = new Date(d); return `${x.getFullYear()}-${x.getMonth()}-${x.getDate()}`; };
+const dayLabel = (d, t) => {
+  const that = new Date(d); that.setHours(0, 0, 0, 0);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const diff = Math.round((today - that) / 86400000);
+  if (diff === 0) return t('dashboard.ordersSection.today');
+  if (diff === 1) return t('dashboard.ordersSection.yesterday');
+  return new Date(d).toLocaleDateString();
 };
 const BADGE = {
   new: 'bg-sky-500/20 text-sky-200',
@@ -176,11 +187,27 @@ export default function OrdersManager() {
         <div className="glass p-10 text-center text-stone-400">{t('dashboard.ordersSection.empty')}</div>
       ) : (
         <div className="space-y-3">
-          {orders?.map((o) => {
+          {(() => {
+            // عدد الطلبات لكل يوم (لعرضه بجانب عنوان اليوم)
+            const counts = {};
+            orders.forEach((o) => { const k = dayKey(o.createdAt); counts[k] = (counts[k] || 0) + 1; });
+            let lastDay = null;
+            return orders.map((o) => {
             const subtotal = (o.total - (o.deliveryFee || 0) + (o.discount || 0)).toFixed(2);
             const wa = o.customerPhone ? buildWhatsappLink(o.customerPhone) : '';
+            const k = dayKey(o.createdAt);
+            const header = k !== lastDay ? (
+              <div className="flex items-center gap-2 pt-2">
+                <h3 className="text-sm font-bold text-gold-300">{dayLabel(o.createdAt, t)}</h3>
+                <span className="rounded-full bg-white/5 px-2 py-0.5 text-xs text-stone-400">{t('dashboard.ordersSection.ordersCount', { count: counts[k] })}</span>
+                <span className="h-px flex-1 bg-white/10" />
+              </div>
+            ) : null;
+            lastDay = k;
             return (
-              <div key={o.id} className="glass p-4">
+              <Fragment key={o.id}>
+              {header}
+              <div className="glass p-4">
                 {/* رأس: الزبون + الحالة */}
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="min-w-0">
@@ -251,8 +278,10 @@ export default function OrdersManager() {
                   )}
                 </div>
               </div>
+              </Fragment>
             );
-          })}
+            });
+          })()}
         </div>
       )}
     </div>

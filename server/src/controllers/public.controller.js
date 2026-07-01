@@ -321,6 +321,18 @@ export async function getStoriesFeed(_req, res, next) {
   }
 }
 
+// عدّاد زيارات المتجر — يُستدعى مرّة لكل جلسة زائر (يُمنع التكرار على العميل).
+// يدعم الروابط القديمة للمتاجر المعاد تسميتها. أي خطأ لا يزعج الزائر.
+export async function trackStoreVisit(req, res) {
+  try {
+    const slug = String(req.params.slug || '').trim();
+    if (slug) {
+      await query('UPDATE stores SET views = COALESCE(views, 0) + 1 WHERE slug = $1 OR $1 = ANY(old_slugs)', [slug]);
+    }
+  } catch { /* غير حرج */ }
+  res.json({ ok: true });
+}
+
 export async function addReview(req, res, next) {
   const { id } = req.params;
   const { authorName, rating, comment } = req.body;

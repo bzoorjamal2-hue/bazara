@@ -72,6 +72,18 @@ export default function StorePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, t]);
 
+  // عدّاد الزيارة: مرّة واحدة لكل جلسة لكل متجر، وبدون احتساب المالك
+  useEffect(() => {
+    const s = data?.store;
+    if (!s?.slug || isOwner) return;
+    const key = `bz_visited:${s.slug}`;
+    try {
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, '1');
+    } catch { /* ignore */ }
+    api.post(`/public/store/${s.slug}/visit`).catch(() => {});
+  }, [data?.store?.slug, isOwner]);
+
   useEffect(() => setPage(1), [cat, q, sort, sizesSel, offersOnly]);
   useEffect(() => { setStories(data?.stories || []); }, [data]); // مزامنة الستوريات
   // تحويل لرابط المتجر الجديد إن فُتح برابط قديم (عشان يبقى الرابط الرسمي نظيفاً)

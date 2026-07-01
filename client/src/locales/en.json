@@ -253,6 +253,9 @@
       "notes": "Notes",
       "contactWhatsapp": "Contact on WhatsApp",
       "sendDelivery": "Send to courier",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "ordersCount": "{{count}} orders",
       "new": "New",
       "confirmed": "Confirmed",
       "shipped": "Shipped",
@@ -350,6 +353,8 @@
       "soldOut": "Sold out"
     },
     "productsCount": "Products",
+    "visitors": "Visitors",
+    "visitorsHint": "Visitors to your store on the platform",
     "viewPublicStore": "View public store",
     "viewHome": "Bazara homepage",
     "welcome": "Welcome",

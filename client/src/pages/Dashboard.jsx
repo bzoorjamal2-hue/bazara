@@ -1,5 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import api from '../api/client.js';
 import { useTranslation } from 'react-i18next';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -90,8 +91,17 @@ function Overview({ productsCount }) {
   const { t } = useTranslation();
   const { store, subscription } = useAuth();
   const [copied, setCopied] = useState(false);
+  const [stats, setStats] = useState(null);
   const qrRef = useRef(null);
   const publicUrl = store ? `${window.location.origin}/store/${store.slug}` : '';
+
+  // نجلب العدّادات (منتجات/زوّار) مباشرةً كي تظهر بالنظرة العامة بلا فتح تبويب آخر
+  useEffect(() => {
+    api.get('/orders/stats').then((r) => setStats(r.data)).catch(() => {});
+  }, []);
+
+  const productCount = stats?.productsCount ?? productsCount;
+  const visitors = stats?.visitors;
 
   const copy = async () => {
     await navigator.clipboard.writeText(publicUrl);
@@ -114,10 +124,15 @@ function Overview({ productsCount }) {
 
       <SubscriptionBanner />
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-3">
         <div className="glass p-6">
           <p className="text-sm text-stone-400">{t('dashboard.productsCount')}</p>
-          <p className="mt-2 font-display text-4xl font-extrabold text-gold-300">{productsCount ?? '—'}</p>
+          <p className="mt-2 font-display text-4xl font-extrabold text-gold-300">{productCount ?? '—'}</p>
+        </div>
+        <div className="glass p-6">
+          <p className="text-sm text-stone-400">👁️ {t('dashboard.visitors')}</p>
+          <p className="mt-2 font-display text-4xl font-extrabold text-emerald-300">{visitors ?? '—'}</p>
+          <p className="mt-1 text-xs text-stone-400">{t('dashboard.visitorsHint')}</p>
         </div>
         <div className="glass p-6">
           <p className="text-sm text-stone-400">{t('dashboard.store.name')}</p>

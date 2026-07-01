@@ -253,6 +253,9 @@
       "notes": "ملاحظات",
       "contactWhatsapp": "تواصل واتساب",
       "sendDelivery": "أرسل للتوصيل",
+      "today": "اليوم",
+      "yesterday": "أمس",
+      "ordersCount": "{{count}} طلب",
       "new": "جديد",
       "confirmed": "مؤكّد",
       "shipped": "تم الشحن",
@@ -350,6 +353,8 @@
       "soldOut": "نفد"
     },
     "productsCount": "عدد المنتجات",
+    "visitors": "عدد الزوّار",
+    "visitorsHint": "زوّار متجرك على المنصّة",
     "viewPublicStore": "عرض المتجر العام",
     "viewHome": "الصفحة الرئيسية لـ Bazara",
     "welcome": "مرحباً",

@@ -191,6 +191,7 @@ async function ensureColumns() {
     await pool.query('CREATE INDEX IF NOT EXISTS idx_stockreq_store ON stock_requests(store_id);');
     // نظام الإحالة: نسبة خصم الزبونة الجديدة لكل متجر + جدول أكواد الإحالة + ربط الطلب بالكود
     await pool.query('ALTER TABLE stores ADD COLUMN IF NOT EXISTS referral_percent NUMERIC(5,2) DEFAULT 0;');
+    await pool.query('ALTER TABLE stores ADD COLUMN IF NOT EXISTS views INTEGER NOT NULL DEFAULT 0;');
     await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS referral_code VARCHAR(20) DEFAULT '';");
     // ربط شركة التوصيل أوبتيموس (Opost) — توكنات مشفّرة لكل متجر + رقم تتبّع الشحنة على الطلب
     await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS opost_email VARCHAR(150) DEFAULT '';");
