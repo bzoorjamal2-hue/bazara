@@ -226,6 +226,8 @@
   },
   "dashboard": {
     "title": "Dashboard",
+    "hello": "Hello",
+    "viewStore": "View store",
     "overview": "Overview",
     "profile": "My profile",
     "storeSettings": "Store settings",

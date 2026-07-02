@@ -439,6 +439,64 @@ html.dark .theme-pub .app-navbar {
 .sc-dark .sc-chip:hover { background: #5e4636; color: #F4EDE2; }
 
 /* ============================================================= */
+/*  لوحة التحكم الفاخرة (.dash) — هيدر بنّي عميق بلمعة ذهبية        */
+/*  + تبويبات أنيقة + بطاقات بظل أنعم. تعمل بالوضعين الفاتح/الداكن  */
+/* ============================================================= */
+.dash-hero {
+  background:
+    radial-gradient(460px 220px at 88% -30%, rgba(230, 200, 120, 0.25), transparent 60%),
+    radial-gradient(320px 180px at 0% 115%, rgba(230, 200, 120, 0.10), transparent 60%),
+    linear-gradient(135deg, #2e2118 0%, #4a3628 55%, #5e4636 100%);
+  border: 1px solid rgba(230, 200, 120, 0.20);
+  box-shadow: 0 24px 48px -24px rgba(46, 33, 24, 0.55);
+}
+
+/* شريط التبويبات: قابل للتمرير أفقياً بلا شريط تمرير ظاهر */
+.dash-tabs { scrollbar-width: none; -ms-overflow-style: none; overscroll-behavior-x: contain; }
+.dash-tabs::-webkit-scrollbar { display: none; }
+
+.dash-tab {
+  @apply inline-flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition-all;
+  background: #ffffff;
+  border-color: rgba(94, 70, 54, 0.16);
+  color: #5e4636;
+}
+.dash-tab:hover { border-color: rgba(94, 70, 54, 0.45); transform: translateY(-1px); }
+.dash-tab-active,
+.dash-tab-active:hover {
+  background: #5e4636;
+  border-color: #5e4636;
+  color: #F4EDE2;
+  box-shadow: 0 10px 22px -10px rgba(94, 70, 54, 0.6);
+}
+html.dark .dash-tab { background: #2b211a; border-color: rgba(212, 175, 55, 0.18); color: #cabdab; }
+html.dark .dash-tab:hover { border-color: rgba(212, 175, 55, 0.45); }
+html.dark .dash-tab-active,
+html.dark .dash-tab-active:hover {
+  background: linear-gradient(135deg, #e6c878 0%, #d4af37 60%, #b8932c 100%);
+  border-color: rgba(212, 175, 55, 0.6);
+  color: #221a14;
+  box-shadow: 0 10px 22px -10px rgba(212, 175, 55, 0.35);
+}
+
+/* خيط ذهبي رفيع أعلى بطاقات الإحصائيات */
+.dash-hairline {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.6), transparent);
+}
+
+/* بطاقات لوحة التحكم: زوايا أنعم وظل فخم متدرّج (يشمل كل الأقسام تلقائياً) */
+.theme-pub .dash .glass {
+  border-radius: 1.4rem;
+  border-color: rgba(94, 70, 54, 0.10);
+  box-shadow: 0 1px 2px rgba(94, 70, 54, 0.05), 0 22px 44px -24px rgba(94, 70, 54, 0.22);
+}
+html.dark .theme-pub .dash .glass {
+  border-color: rgba(212, 175, 55, 0.14);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 22px 44px -24px rgba(0, 0, 0, 0.65);
+}
+
+/* ============================================================= */
 /*  الوضع الليلي (Dark Mode) — يقلب الأسطح الكريمية إلى بنّي عميق   */
 /*  مفعّل عبر إضافة .dark على <html>. هوية بازارا محفوظة (ذهبي/بنّي) */
 /* ============================================================= */

@@ -226,6 +226,8 @@
   },
   "dashboard": {
     "title": "لوحة التحكم",
+    "hello": "أهلاً",
+    "viewStore": "عرض المتجر",
     "overview": "نظرة عامة",
     "profile": "ملفي الشخصي",
     "storeSettings": "إعدادات المتجر",
