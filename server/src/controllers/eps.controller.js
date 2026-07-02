@@ -39,26 +39,23 @@ export async function epsStatus(req, res, next) {
   }
 }
 
-// ───────── POST /api/eps/connect — ربط حساب EPS للمتجر ─────────
+// ───────── POST /api/eps/connect — ربط حساب EPS للمتجر (بريد + كلمة سر فقط، مثل أوبتيموس) ─────────
 // لا يوجد مسار تسجيل دخول لدى LogesTechs للتحقّق المسبق — البيانات تُستخدم مع كل
 // إنشاء شحنة، لذا نخزّنها مشفّرة ويظهر أي خطأ اعتماد عند أول إرسال.
+// مدينة/عنوان الاستلام يُضبطان بعد الربط (PUT /origin) ويُتحقّق منهما عند الإرسال.
 export async function epsConnect(req, res, next) {
   const email = String(req.body.email || '').trim();
   const password = String(req.body.password || '');
-  const cityId = String(req.body.city || '');
-  const address = String(req.body.address || '').trim().slice(0, 300);
   if (!email || !password) return res.status(400).json({ error: 'البريد وكلمة السر مطلوبان.' });
-  if (!cityId || !address) return res.status(400).json({ error: 'اختر مدينة الاستلام واكتب عنوان الاستلام.' });
 
   try {
     const store = await getUserStoreRow(req.user.id);
     if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
     await query(
-      `UPDATE stores SET eps_email = $1, eps_password = $2, eps_city = $3, eps_address = $4,
-         eps_connected = true WHERE id = $5`,
-      [email, encrypt(password), cityId, address, store.id]
+      `UPDATE stores SET eps_email = $1, eps_password = $2, eps_connected = true WHERE id = $3`,
+      [email, encrypt(password), store.id]
     );
-    res.json({ connected: true, email, city: cityId, address });
+    res.json({ connected: true, email });
   } catch (err) {
     next(err);
   }
@@ -124,6 +121,9 @@ export async function epsSendOrder(req, res, next) {
 
     const cityId = String(req.body.city || '');
     if (!cityId) return res.status(400).json({ error: 'اختر مدينة الزبون.' });
+    if (!store.eps_city || !store.eps_address) {
+      return res.status(400).json({ error: 'حدّد مدينة وعنوان الاستلام أولاً من إعدادات المتجر (بطاقة EPS).' });
+    }
 
     const password = decrypt(store.eps_password);
     if (!store.eps_email || !password) return res.status(400).json({ error: 'اربط حساب EPS أولاً من إعدادات المتجر.' });
