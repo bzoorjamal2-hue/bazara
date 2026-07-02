@@ -440,7 +440,7 @@ export async function listMyOrders(req, res, next) {
     const r = await query(
       `SELECT id, customer_name, customer_phone, items, total, currency, status, created_at,
               city, address, notes, delivery_fee, coupon_code, discount,
-              opost_tracking, opost_status
+              opost_tracking, opost_status, eps_barcode, eps_status
        FROM orders WHERE store_id = $1 ORDER BY created_at DESC LIMIT 200`,
       [store.id]
     );
@@ -461,6 +461,8 @@ export async function listMyOrders(req, res, next) {
         notes: o.notes || '',
         opostTracking: o.opost_tracking || '',
         opostStatus: o.opost_status || '',
+        epsTracking: o.eps_barcode || '',
+        epsStatus: o.eps_status || '',
         createdAt: o.created_at,
       })),
     });

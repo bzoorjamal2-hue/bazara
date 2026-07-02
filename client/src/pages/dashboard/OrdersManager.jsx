@@ -7,6 +7,7 @@ import { buildWhatsappLink } from '../../utils/whatsapp.js';
 import { PinIcon, NoteIcon, TicketIcon, WhatsAppIcon, TruckIcon } from '../../components/icons.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import OpostSend from '../../components/OpostSend.jsx';
+import EpsSend from '../../components/EpsSend.jsx';
 
 const FLOW = ['new', 'confirmed', 'shipped', 'delivered', 'cancelled'];
 
@@ -28,6 +29,39 @@ const OPOST_STATUS_AR = {
 const opostLabel = (raw) => {
   const key = String(raw || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
   return OPOST_STATUS_AR[key] || String(raw || '').trim();
+};
+
+// خريطة حالات EPS (نظام LogesTechs — أكواد UPPER_SNAKE من توثيقهم الرسمي) → عربي
+const EPS_STATUS_AR = {
+  DRAFT: 'مسودّة',
+  PENDING_CUSTOMER_CARE_APPROVAL: 'طلب جديد',
+  APPROVED_BY_CUSTOMER_CARE_AND_WAITING_FOR_DISPATCHER: 'بانتظار تعيين سائق',
+  ASSIGNED_TO_DRIVER_AND_PENDING_APPROVAL: 'بانتظار موافقة السائق',
+  REJECTED_BY_DRIVER_AND_PENDING_MANGEMENT: 'رفضها السائق',
+  ACCEPTED_BY_DRIVER_AND_PENDING_PICKUP: 'بانتظار التحميل',
+  SCANNED_BY_DRIVER_AND_IN_CAR: 'بالمركبة',
+  SCANNED_BY_HANDLER_AND_UNLOADED: 'وصلت مركز الفرز',
+  MOVED_TO_SHELF_AND_OUT_OF_HANDLER_CUSTODY: 'على الرفوف',
+  OPENED_ISSUE_AND_WAITING_FOR_MANAGEMENT: 'بانتظار مراجعة الإدارة',
+  OUT_FOR_DELIVERY: 'جاري التسليم',
+  POSTPONED_DELIVERY: 'مؤجّلة',
+  FAILED: 'فشل التوصيل',
+  DELIVERED_TO_RECIPIENT: 'تم التوصيل',
+  PARTIALLY_DELIVERED: 'تسليم جزئي',
+  COMPLETED: 'مغلقة',
+  CANCELLED: 'ملغاة',
+  RETURNED_BY_RECIPIENT: 'مرتجعة',
+  DELIVERED_TO_SENDER: 'مسلّمة للمرسل',
+  TRANSFERRED_OUT: 'مصدرة لشريك',
+  EXPORTED_TO_THIRD_PARTY: 'مصدرة لطرف ثالث',
+  SWAPPED: 'تم تبديلها',
+  BROUGHT: 'تم إحضارها',
+  LOST: 'مفقودة',
+  DAMAGED: 'تالفة',
+};
+const epsLabel = (raw) => {
+  const key = String(raw || '').trim().toUpperCase().replace(/[\s-]+/g, '_');
+  return EPS_STATUS_AR[key] || String(raw || '').trim();
 };
 
 // مفتاح اليوم (سنة-شهر-يوم) لفصل الطلبات اليومية، ووصف بشري له (اليوم/أمس/تاريخ)
@@ -59,6 +93,8 @@ export default function OrdersManager() {
   const [savingId, setSavingId] = useState('');
   // ربط أوبتيموس: نجلب الحالة + المدن + أنواع الشحن مرّة واحدة (لا لكل طلب) — يقلّل استهلاك الـ API
   const [opost, setOpost] = useState({ connected: false, cities: [], types: [], defaultType: '' });
+  // ربط EPS (LogesTechs): الحالة + المدن مرّة واحدة
+  const [eps, setEps] = useState({ connected: false, cities: [] });
 
   useEffect(() => {
     let on = true;
@@ -74,7 +110,25 @@ export default function OrdersManager() {
           if (on) setOrders((prev) => prev.map((o) => (m[o.id] != null ? { ...o, opostStatus: m[o.id] } : o)));
         } catch { /* تجاهل */ }
       }
+      // ونفس الشي لشحنات EPS
+      if (list.some((o) => o.epsTracking)) {
+        try {
+          const s = await api.get('/eps/sync');
+          const m = s.data.statuses || {};
+          if (on) setOrders((prev) => prev.map((o) => (m[o.id] != null ? { ...o, epsStatus: m[o.id] } : o)));
+        } catch { /* تجاهل */ }
+      }
     }).catch((e) => on && setError(getErrorMessage(e)));
+    return () => { on = false; };
+  }, []);
+
+  useEffect(() => {
+    let on = true;
+    api.get('/eps/status').then(async (r) => {
+      if (!on || !r.data.connected) return;
+      const c = await api.get('/eps/cities').catch(() => ({ data: { cities: [] } }));
+      if (on) setEps({ connected: true, cities: c.data.cities || [] });
+    }).catch(() => {});
     return () => { on = false; };
   }, []);
 
@@ -91,9 +145,11 @@ export default function OrdersManager() {
     return () => { on = false; };
   }, []);
 
-  // بعد إرسال طلب لأوبتيموس: نحفظ رقم التتبّع ونحوّل الحالة لـ"تم الشحن" محلياً (مُقفلة)
+  // بعد إرسال طلب لشركة توصيل: نحفظ رقم التتبّع ونحوّل الحالة لـ"تم الشحن" محلياً (مُقفلة)
   const markSent = (id, tracking) =>
     setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, opostTracking: tracking || '✓', status: 'shipped' } : o)));
+  const markSentEps = (id, tracking) =>
+    setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, epsTracking: tracking || '✓', status: 'shipped' } : o)));
 
   const setStatus = async (id, status) => {
     setSavingId(id);
@@ -255,6 +311,11 @@ export default function OrdersManager() {
                     <span className="inline-flex items-center gap-1 rounded-xl bg-indigo-500/15 px-3 py-1.5 text-xs font-semibold text-indigo-200">
                       🔒 {o.opostStatus ? opostLabel(o.opostStatus) : t(`dashboard.ordersSection.${FLOW.includes(o.status) ? o.status : 'shipped'}`)} · {t('dashboard.opost.managed')}
                     </span>
+                  ) : o.epsTracking ? (
+                    // الطلب بعهدة EPS → الحالة مُقفلة (تُدار عبر شركة التوصيل)
+                    <span className="inline-flex items-center gap-1 rounded-xl bg-sky-500/15 px-3 py-1.5 text-xs font-semibold text-sky-200">
+                      🔒 {o.epsStatus ? epsLabel(o.epsStatus) : t(`dashboard.ordersSection.${FLOW.includes(o.status) ? o.status : 'shipped'}`)} · {t('dashboard.eps.managed')}
+                    </span>
                   ) : (
                     <div className="min-w-[140px]">
                       <Select
@@ -273,8 +334,11 @@ export default function OrdersManager() {
                       <TruckIcon className="inline h-4 w-4" /> {t('dashboard.ordersSection.sendDelivery')}
                     </button>
                   )}
-                  {(opost.connected || o.opostTracking) && (
+                  {(opost.connected || o.opostTracking) && !o.epsTracking && (
                     <OpostSend order={o} cities={opost.cities} types={opost.types} defaultType={opost.defaultType} onSent={markSent} />
+                  )}
+                  {(eps.connected || o.epsTracking) && !o.opostTracking && (
+                    <EpsSend order={o} cities={eps.cities} onSent={markSentEps} />
                   )}
                 </div>
               </div>

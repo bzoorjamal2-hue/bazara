@@ -6,6 +6,7 @@ import Spinner from '../../components/Spinner.jsx';
 import ImageInput from '../../components/ImageInput.jsx';
 import BannerEditor from '../../components/BannerEditor.jsx';
 import OpostConnect from '../../components/OpostConnect.jsx';
+import EpsConnect from '../../components/EpsConnect.jsx';
 import { SaveIcon, TruckIcon, ImageIcon, XIcon, GiftIcon, FolderIcon, TrashIcon, MegaphoneIcon, RulerIcon, ShieldIcon } from '../../components/icons.jsx';
 
 const EMPTY = {
@@ -389,8 +390,9 @@ export default function StoreSettings() {
         </button>
       </form>
 
-      {/* ربط شركة التوصيل أوبتيموس — مستقلّ عن فورم الإعدادات */}
+      {/* ربط شركات التوصيل — مستقلّ عن فورم الإعدادات */}
       <OpostConnect />
+      <EpsConnect />
     </div>
   );
 }
