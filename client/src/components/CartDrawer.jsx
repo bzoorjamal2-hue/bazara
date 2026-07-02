@@ -216,9 +216,9 @@ export default function CartDrawer() {
                       <div className="flex flex-col items-end justify-between">
                         <button onClick={() => remove(i.key)} aria-label={t('common.remove')} className="text-stone-500 hover:text-red-300"><XIcon className="h-4 w-4" /></button>
                         <div className="flex items-center gap-2">
-                          <button onClick={() => setQty(i.key, i.qty - 1)} className="h-6 w-6 rounded-md border border-gold-400/30 text-gold-200">−</button>
+                          <button onClick={() => setQty(i.key, i.qty - 1)} className="flex h-6 w-6 items-center justify-center rounded-md border border-gold-400/30 leading-none text-gold-200">−</button>
                           <span className="w-5 text-center text-sm">{i.qty}</span>
-                          <button onClick={() => setQty(i.key, i.qty + 1)} className="h-6 w-6 rounded-md border border-gold-400/30 text-gold-200">+</button>
+                          <button onClick={() => setQty(i.key, i.qty + 1)} className="flex h-6 w-6 items-center justify-center rounded-md border border-gold-400/30 leading-none text-gold-200">+</button>
                         </div>
                       </div>
                     </div>

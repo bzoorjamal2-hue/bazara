@@ -126,10 +126,10 @@ export default function AppWelcome() {
           variants={rise}
           to="/shop"
           whileTap={{ scale: 0.97 }}
-          className="block w-full rounded-2xl py-4 text-center font-bold shadow-xl"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-center font-bold shadow-xl"
           style={{ background: 'linear-gradient(135deg, #f7ecd2 0%, #F4EDE2 50%, #e6c878 100%)', color: '#3f2e22' }}
         >
-          <BagIcon className="inline h-5 w-5" /> {t('appWelcome.browse')}
+          <BagIcon className="h-5 w-5" /> {t('appWelcome.browse')}
         </MLink>
         <MLink
           variants={rise}

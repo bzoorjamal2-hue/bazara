@@ -187,8 +187,8 @@ function SubRow({ s, onDeleted, onUpdated }) {
                 <button onClick={() => setConfirmDel(false)} className="text-sm text-stone-400 hover:text-stone-200">{t('common.cancel')}</button>
               </span>
             ) : (
-              <button onClick={() => setConfirmDel(true)} className="rounded-lg border border-red-400/40 px-3 py-1.5 text-sm font-medium text-red-300 hover:bg-red-500/10 flex-1 sm:flex-none">
-                <TrashIcon className="inline h-4 w-4" /> {t('admin.deleteAccount')}
+              <button onClick={() => setConfirmDel(true)} className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-400/40 px-3 py-1.5 text-sm font-medium text-red-300 hover:bg-red-500/10 flex-1 sm:flex-none">
+                <TrashIcon className="h-4 w-4" /> {t('admin.deleteAccount')}
               </button>
             )}
           </div>

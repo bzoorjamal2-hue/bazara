@@ -40,16 +40,16 @@ export default function ImageInput({ value, onChange, round = false, label }) {
         <button
           type="button"
           onClick={() => setTab('upload')}
-          className={`flex-1 rounded-lg py-1.5 transition ${tab === 'upload' ? 'bg-gold-400/20 text-gold-200' : 'text-stone-400'}`}
+          className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 transition ${tab === 'upload' ? 'bg-gold-400/20 text-gold-200' : 'text-stone-400'}`}
         >
-          <UploadIcon className="inline h-4 w-4" /> {t('image.upload')}
+          <UploadIcon className="h-4 w-4" /> {t('image.upload')}
         </button>
         <button
           type="button"
           onClick={() => setTab('url')}
-          className={`flex-1 rounded-lg py-1.5 transition ${tab === 'url' ? 'bg-gold-400/20 text-gold-200' : 'text-stone-400'}`}
+          className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 transition ${tab === 'url' ? 'bg-gold-400/20 text-gold-200' : 'text-stone-400'}`}
         >
-          <LinkIcon className="inline h-4 w-4" /> {t('image.url')}
+          <LinkIcon className="h-4 w-4" /> {t('image.url')}
         </button>
       </div>
 
