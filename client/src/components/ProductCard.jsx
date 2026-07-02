@@ -97,11 +97,11 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
       onTouchMove={cancelPress}
       onClickCapture={onClickCapture}
     >
-      {/* شارات */}
+      {/* شارات — ألوان بوتيك هادئة (بنّي عميق/خمري) بدل الأخضر والأحمر الصارخين */}
       <div className="absolute start-2 top-2 z-10 flex flex-col gap-1">
-        {isNew && <span className="badge bg-emerald-500 text-white">{t('product.new')}</span>}
-        {product.featured && <span className="badge flex items-center gap-0.5 bg-gold-400 text-ink-950"><StarIcon className="h-3 w-3" /> {t('product.featured')}</span>}
-        {hasDiscount && <span className="badge bg-red-500 text-white">-{discountPct}%</span>}
+        {isNew && <span className="badge bg-[#3f2e22]/90 text-[#F4EDE2] shadow-sm backdrop-blur-sm">{t('product.new')}</span>}
+        {product.featured && <span className="badge flex items-center gap-0.5 bg-gold-400 text-ink-950 shadow-sm"><StarIcon className="h-3 w-3" /> {t('product.featured')}</span>}
+        {hasDiscount && <span className="badge bg-[#8a2438]/95 text-[#F4EDE2] shadow-sm backdrop-blur-sm">-{discountPct}%</span>}
         {outOfStock && <span className="badge bg-ink-700 text-stone-300">{t('product.outOfStock')}</span>}
       </div>
 
@@ -173,7 +173,8 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
       </div>
 
       <div className="p-3.5 text-center">
-        <h3 className="line-clamp-1 font-semibold text-stone-100">{product.name}</h3>
+        {/* اسم المنتج بخط العرض الفاخر (serif) — لمسة editorial */}
+        <h3 className="line-clamp-1 font-display font-semibold text-stone-100">{product.name}</h3>
 
         <div className="mt-1.5 flex items-baseline justify-center gap-2">
           <span className="font-display text-lg font-bold text-wine">{t('common.currency')}{product.price}</span>
@@ -189,7 +190,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
           onClick={onAdd}
           disabled={outOfStock}
           whileTap={{ scale: 0.94 }}
-          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-wine/30 py-2 text-sm font-semibold text-wine transition-colors hover:bg-wine hover:text-cream disabled:cursor-not-allowed disabled:opacity-40"
+          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full border border-wine/30 py-2 text-sm font-semibold text-wine transition-colors hover:bg-wine hover:text-cream disabled:cursor-not-allowed disabled:opacity-40"
         >
           <CartIcon className="h-4 w-4" />
           {outOfStock ? t('product.outOfStock') : t('product.addToCart')}
