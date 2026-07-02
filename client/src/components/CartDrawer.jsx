@@ -202,23 +202,25 @@ export default function CartDrawer() {
                 <div className="flex-1 space-y-3 overflow-y-auto p-4">
                   {items.map((i) => (
                     <div key={i.key} className="glass flex gap-3 p-3">
-                      <img src={i.imageUrl || 'https://placehold.co/120x120/f1e9dd/5c1a2e?text=%F0%9F%91%97'} alt={i.name} className="h-16 w-16 rounded-lg object-cover" />
+                      {/* صورة أكبر بنسبة 3:4 (نفس روح البطاقات الجديدة) */}
+                      <img src={i.imageUrl || 'https://placehold.co/120x160/f1e9dd/5c1a2e?text=%F0%9F%91%97'} alt={i.name} className="h-20 w-16 rounded-xl object-cover shadow-sm" />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-stone-100">{i.name}</p>
+                        <p className="truncate font-display text-sm font-semibold text-stone-100">{i.name}</p>
                         {(i.size || i.color) && (
                           <p className="mt-0.5 flex flex-wrap gap-1.5 text-[11px] text-stone-400">
-                            {i.size && <span className="rounded bg-wine/10 px-1.5 py-0.5 text-wine">{t('store.sizeLabel')}: {sizeLabel(i.size, t)}</span>}
-                            {i.color && <span className="rounded bg-wine/10 px-1.5 py-0.5 text-wine">{i.color}</span>}
+                            {i.size && <span className="rounded-full bg-wine/10 px-2 py-0.5 text-wine">{t('store.sizeLabel')}: {sizeLabel(i.size, t)}</span>}
+                            {i.color && <span className="rounded-full bg-wine/10 px-2 py-0.5 text-wine">{i.color}</span>}
                           </p>
                         )}
-                        <p className="mt-1 font-bold text-gold-300">{t('common.currency')}{i.price}</p>
+                        <p className="mt-1 font-display font-bold text-gold-300">{t('common.currency')}{i.price}</p>
                       </div>
                       <div className="flex flex-col items-end justify-between">
-                        <button onClick={() => remove(i.key)} aria-label={t('common.remove')} className="text-stone-500 hover:text-red-300"><XIcon className="h-4 w-4" /></button>
-                        <div className="flex items-center gap-2">
-                          <button onClick={() => setQty(i.key, i.qty - 1)} className="flex h-6 w-6 items-center justify-center rounded-md border border-gold-400/30 leading-none text-gold-200">−</button>
-                          <span className="w-5 text-center text-sm">{i.qty}</span>
-                          <button onClick={() => setQty(i.key, i.qty + 1)} className="flex h-6 w-6 items-center justify-center rounded-md border border-gold-400/30 leading-none text-gold-200">+</button>
+                        <button onClick={() => remove(i.key)} aria-label={t('common.remove')} className="text-stone-500 transition hover:text-red-400"><XIcon className="h-4 w-4" /></button>
+                        {/* عدّاد كمية بحبة دائرية أنيقة */}
+                        <div className="flex items-center gap-0.5 rounded-full border border-gold-400/30 px-1 py-0.5">
+                          <button onClick={() => setQty(i.key, i.qty - 1)} aria-label="-" className="flex h-6 w-6 items-center justify-center rounded-full leading-none text-gold-200 transition hover:bg-gold-400/10">−</button>
+                          <span className="w-5 text-center text-sm font-semibold">{i.qty}</span>
+                          <button onClick={() => setQty(i.key, i.qty + 1)} aria-label="+" className="flex h-6 w-6 items-center justify-center rounded-full leading-none text-gold-200 transition hover:bg-gold-400/10">+</button>
                         </div>
                       </div>
                     </div>
@@ -230,8 +232,13 @@ export default function CartDrawer() {
                     <span className="text-stone-300">{t('cart.total')}</span>
                     <span className="font-display text-2xl font-bold gradient-text">{t('common.currency')}{total.toFixed(2)}</span>
                   </div>
-                  <button onClick={() => { setErr(''); setView('checkout'); }} className="w-full rounded-2xl bg-wine py-3.5 font-bold text-cream shadow-lg transition hover:bg-wine-dark">
-                    {t('cart.proceed')} ←
+                  {/* حبة إتمام فاخرة بتدرج خمري وهالة ذهبية — والسهم يتبع اتجاه اللغة */}
+                  <button
+                    onClick={() => { setErr(''); setView('checkout'); }}
+                    className="w-full rounded-full py-4 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
+                    style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)', boxShadow: '0 16px 34px -14px rgba(74, 19, 34, 0.65)' }}
+                  >
+                    {t('cart.proceed')} {ar ? '←' : '→'}
                   </button>
                   <button onClick={clear} className="mt-2 w-full text-center text-xs text-stone-400 hover:text-red-300">{t('cart.clear')}</button>
                 </div>
@@ -317,11 +324,19 @@ export default function CartDrawer() {
                       </div>
                       <div className="mt-1 flex justify-between font-bold text-wine"><span>{t('co.grandTotal')}</span><span className="font-display text-lg">{t('common.currency')}{grand.toFixed(2)}</span></div>
                     </div>
-                    {/* تحفيز للشحن المجاني: كم باقي ليصير التوصيل مجاناً */}
+                    {/* تحفيز للشحن المجاني: كم باقي + شريط تقدّم ذهبي */}
                     {freeOver > 0 && !freeShip && (
-                      <p className="mt-2 flex items-center justify-center gap-1.5 rounded-xl bg-wine/5 px-3 py-2 text-center text-xs font-semibold text-wine">
-                        <TruckIcon className="h-4 w-4 shrink-0" /> {t('co.freeShippingHint', { amount: (freeOver - afterDiscount).toFixed(2) })}
-                      </p>
+                      <div className="mt-2 rounded-xl bg-wine/5 px-3 py-2">
+                        <p className="flex items-center justify-center gap-1.5 text-center text-xs font-semibold text-wine">
+                          <TruckIcon className="h-4 w-4 shrink-0" /> {t('co.freeShippingHint', { amount: (freeOver - afterDiscount).toFixed(2) })}
+                        </p>
+                        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-wine/10">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-[#e6c878] to-[#b8932c] transition-all duration-500"
+                            style={{ width: `${Math.min(100, Math.round((afterDiscount / freeOver) * 100))}%` }}
+                          />
+                        </div>
+                      </div>
                     )}
                     <p className="mt-2 text-[11px] text-stone-400">* {t('co.deliveryNote')}</p>
                   </div>
@@ -333,7 +348,7 @@ export default function CartDrawer() {
 
                 <div className="border-t border-gold-400/15 p-4">
                   {err && <p className="mb-2 text-center text-xs text-red-500">{err}</p>}
-                  <button onClick={confirmOrder} disabled={placing} className="btn-whatsapp w-full disabled:opacity-60">
+                  <button onClick={confirmOrder} disabled={placing} className="btn-whatsapp w-full !rounded-full !py-4 disabled:opacity-60">
                     {placing ? t('common.loading') : <span className="inline-flex items-center gap-2"><WhatsAppIcon className="h-5 w-5" /> {t('co.confirm')}</span>}
                   </button>
                 </div>
