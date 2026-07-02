@@ -85,7 +85,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
     <>
     <MotionLink
       to={`/product/${product.id}`}
-      className="group glass relative animate-fade-up overflow-hidden transition-shadow duration-300 hover:shadow-glow"
+      className="group relative block animate-fade-up"
       style={{ animationDelay: `${Math.min(index, 8) * 60}ms` }}
       whileHover={{ y: -6 }}
       whileTap={{ scale: 0.985 }}
@@ -97,43 +97,8 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
       onTouchMove={cancelPress}
       onClickCapture={onClickCapture}
     >
-      {/* شارات — ألوان بوتيك هادئة (بنّي عميق/خمري) بدل الأخضر والأحمر الصارخين */}
-      <div className="absolute start-2 top-2 z-10 flex flex-col gap-1">
-        {isNew && <span className="badge bg-[#3f2e22]/90 text-[#F4EDE2] shadow-sm backdrop-blur-sm">{t('product.new')}</span>}
-        {product.featured && <span className="badge flex items-center gap-0.5 bg-gold-400 text-ink-950 shadow-sm"><StarIcon className="h-3 w-3" /> {t('product.featured')}</span>}
-        {hasDiscount && <span className="badge bg-[#8a2438]/95 text-[#F4EDE2] shadow-sm backdrop-blur-sm">-{discountPct}%</span>}
-        {outOfStock && <span className="badge bg-ink-700 text-stone-300">{t('product.outOfStock')}</span>}
-      </div>
-
-      {/* مفضّلة */}
-      <motion.button
-        onClick={onLike}
-        whileTap={{ scale: 0.8 }}
-        animate={liked ? { scale: [1, 1.35, 1] } : {}}
-        transition={{ duration: 0.35 }}
-        className={`absolute end-2 top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full backdrop-blur transition-colors ${
-          liked ? 'bg-red-500/90 text-white' : 'bg-black/40 text-white hover:bg-black/60'
-        }`}
-        aria-label="wishlist"
-      >
-        <HeartIcon className="h-4 w-4" filled={liked} />
-      </motion.button>
-
-      {/* نظرة سريعة — تفتح نافذة بدون مغادرة الصفحة */}
-      <motion.button
-        onClick={onQuickView}
-        whileTap={{ scale: 0.85 }}
-        className="absolute end-2 top-[3.25rem] z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur transition hover:bg-black/60"
-        aria-label={t('product.quickView')}
-        title={t('product.quickView')}
-      >
-        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-          <path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" />
-          <circle cx="12" cy="12" r="3" />
-        </svg>
-      </motion.button>
-
-      <div className="relative aspect-[3/4] overflow-hidden bg-ink-800">
+      {/* تصميم editorial بوتيك: الصورة وحدها ببطاقة مدوّرة، والنص تحتها على خلفية الصفحة */}
+      <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-ink-800 shadow-[0_14px_30px_-16px_rgba(46,33,24,0.45)] ring-1 ring-black/5 transition-shadow duration-300 group-hover:shadow-[0_22px_44px_-18px_rgba(46,33,24,0.55)]">
         <img
           ref={imgRef}
           src={cover}
@@ -143,6 +108,43 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
           onError={(e) => (e.currentTarget.src = PLACEHOLDER)}
           className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-110 ${outOfStock ? 'opacity-50' : ''}`}
         />
+
+        {/* شارات — ألوان بوتيك هادئة (بنّي عميق/خمري) بدل الأخضر والأحمر الصارخين */}
+        <div className="absolute start-2 top-2 z-10 flex flex-col gap-1">
+          {isNew && <span className="badge bg-[#3f2e22]/90 text-[#F4EDE2] shadow-sm backdrop-blur-sm">{t('product.new')}</span>}
+          {product.featured && <span className="badge flex items-center gap-0.5 bg-gold-400 text-ink-950 shadow-sm"><StarIcon className="h-3 w-3" /> {t('product.featured')}</span>}
+          {hasDiscount && <span className="badge bg-[#8a2438]/95 text-[#F4EDE2] shadow-sm backdrop-blur-sm">-{discountPct}%</span>}
+          {outOfStock && <span className="badge bg-ink-700 text-stone-300">{t('product.outOfStock')}</span>}
+        </div>
+
+        {/* مفضّلة */}
+        <motion.button
+          onClick={onLike}
+          whileTap={{ scale: 0.8 }}
+          animate={liked ? { scale: [1, 1.35, 1] } : {}}
+          transition={{ duration: 0.35 }}
+          className={`absolute end-2 top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full backdrop-blur transition-colors ${
+            liked ? 'bg-red-500/90 text-white' : 'bg-black/35 text-white hover:bg-black/55'
+          }`}
+          aria-label="wishlist"
+        >
+          <HeartIcon className="h-4 w-4" filled={liked} />
+        </motion.button>
+
+        {/* نظرة سريعة — تفتح نافذة بدون مغادرة الصفحة */}
+        <motion.button
+          onClick={onQuickView}
+          whileTap={{ scale: 0.85 }}
+          className="absolute end-2 top-[3.25rem] z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur transition hover:bg-black/55"
+          aria-label={t('product.quickView')}
+          title={t('product.quickView')}
+        >
+          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+            <path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+        </motion.button>
+
         {/* معاينة الفيديو عند مرور الماوس (كمبيوتر) — صامتة وناعمة */}
         {product.videoUrl && hovering && (
           <video
@@ -170,31 +172,31 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
             </span>
           </span>
         )}
-      </div>
 
-      <div className="p-3.5 text-center">
-        {/* اسم المنتج بخط العرض الفاخر (serif) — لمسة editorial */}
-        <h3 className="line-clamp-1 font-display font-semibold text-stone-100">{product.name}</h3>
-
-        <div className="mt-1.5 flex items-baseline justify-center gap-2">
-          <span className="font-display text-lg font-bold text-wine">{t('common.currency')}{product.price}</span>
-          {hasDiscount && <span className="text-xs text-stone-500 line-through">{t('common.currency')}{product.oldPrice}</span>}
-        </div>
-
-        {/* عدّاد المبيعات — دليل اجتماعي خفيف (يظهر فقط عند وجود مبيعات) */}
-        {product.soldCount > 0 && (
-          <p className="mt-1 text-[11px] font-medium text-emerald-700">{t('product.soldCount', { count: product.soldCount })}</p>
-        )}
-
+        {/* زر سلة دائري عائم على الصورة — بنّي عميق بنص عاجي (ثابت بالوضعين) */}
         <motion.button
           onClick={onAdd}
           disabled={outOfStock}
-          whileTap={{ scale: 0.94 }}
-          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full border border-wine/30 py-2 text-sm font-semibold text-wine transition-colors hover:bg-wine hover:text-cream disabled:cursor-not-allowed disabled:opacity-40"
+          whileTap={{ scale: 0.85 }}
+          className="absolute bottom-2.5 end-2.5 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-[#5e4636] text-[#F4EDE2] shadow-[0_10px_22px_-8px_rgba(46,33,24,0.7)] ring-1 ring-[#F4EDE2]/25 transition hover:bg-[#3f2e22] disabled:cursor-not-allowed disabled:opacity-40"
+          aria-label={t('product.addToCart')}
+          title={t('product.addToCart')}
         >
-          <CartIcon className="h-4 w-4" />
-          {outOfStock ? t('product.outOfStock') : t('product.addToCart')}
+          <CartIcon className="h-5 w-5" />
         </motion.button>
+      </div>
+
+      {/* الاسم والسعر تحت الصورة مباشرة — بلا صندوق (editorial) */}
+      <div className="px-1 pt-2.5 text-start">
+        <h3 className="line-clamp-1 font-display font-semibold leading-snug text-stone-100">{product.name}</h3>
+        <div className="mt-0.5 flex items-baseline gap-2">
+          <span className="font-display text-lg font-bold text-wine">{t('common.currency')}{product.price}</span>
+          {hasDiscount && <span className="text-xs text-stone-500 line-through">{t('common.currency')}{product.oldPrice}</span>}
+        </div>
+        {/* عدّاد المبيعات — دليل اجتماعي خفيف (يظهر فقط عند وجود مبيعات) */}
+        {product.soldCount > 0 && (
+          <p className="mt-0.5 text-[11px] font-medium text-emerald-700">{t('product.soldCount', { count: product.soldCount })}</p>
+        )}
       </div>
     </MotionLink>
 

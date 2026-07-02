@@ -57,8 +57,14 @@ export default function Dashboard() {
   // المدير لا يصل لأقسام البيع حتى عبر الرابط
   const section = allowed.includes(raw) ? raw : defaultTab;
   const setSection = (key) => setParams(key === defaultTab ? {} : { tab: key });
+  // هذه المفاتيح كائنات بملفات الترجمة (لها title داخلي) — استدعاؤها مباشرة يرجّع خطأ i18n
+  const NESTED = ['analytics', 'coupons', 'referrals', 'stockRequests'];
   const labelFor = (key) =>
-    key === 'admin' ? t('admin.nav') : key === 'subscribers' ? t('admin.subscribersNav') : key === 'siteSliders' ? t('admin.siteSliders') : t(`dashboard.${key}`);
+    key === 'admin' ? t('admin.nav')
+    : key === 'subscribers' ? t('admin.subscribersNav')
+    : key === 'siteSliders' ? t('admin.siteSliders')
+    : NESTED.includes(key) ? t(`dashboard.${key}.title`)
+    : t(`dashboard.${key}`);
 
   // إبقاء التبويب النشط ظاهراً وسط الشريط (بلا قفزة عمودية للصفحة)
   useEffect(() => {
@@ -86,14 +92,16 @@ export default function Dashboard() {
             <p className="text-xs font-semibold text-[#d9c9a8]">
               {t('dashboard.hello')} {user?.name} 👋
             </p>
-            <h1 className="mt-0.5 truncate font-display text-2xl font-extrabold text-[#F4EDE2] sm:text-3xl">
+            {/* dir=auto: الاسم اللاتيني يأخذ اتجاهه الصحيح فلا يظهر القص (…) بأول الاسم */}
+            <h1 dir="auto" className="mt-0.5 truncate font-display text-[1.35rem] font-extrabold leading-snug text-[#F4EDE2] sm:text-3xl">
               {isAdmin ? t('admin.nav') : (store?.name || t('dashboard.title'))}
             </h1>
           </div>
+          {/* على الموبايل الزر يأخذ سطراً كاملاً لوحده — يترك عرض الشاشة لاسم المتجر */}
           {!isAdmin && store && (
             <Link
               to={`/store/${store.slug}`}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[#e6c878]/40 bg-[#F4EDE2]/10 px-4 py-2 text-sm font-semibold text-[#F4EDE2] transition hover:bg-[#F4EDE2]/20"
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-[#e6c878]/40 bg-[#F4EDE2]/10 px-4 py-2 text-sm font-semibold text-[#F4EDE2] transition hover:bg-[#F4EDE2]/20 sm:w-auto"
             >
               <StoreIcon className="h-4 w-4" /> {t('dashboard.viewStore')}
             </Link>
