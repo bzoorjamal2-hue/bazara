@@ -95,7 +95,7 @@ export default function Register() {
             type="submit"
             disabled={busy}
             whileTap={{ scale: 0.97 }}
-            className="mt-1 w-full rounded-2xl bg-wine py-4 text-center font-bold text-cream shadow-lg transition hover:bg-wine-dark disabled:opacity-60"
+            className="auth-submit mt-1"
           >
             {busy ? t('common.loading') : t('auth.submitRegister')}
           </motion.button>

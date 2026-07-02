@@ -64,7 +64,7 @@ export function KeyIcon({ className = 'h-5 w-5' }) {
   );
 }
 
-// حقل بأيقونة بادئة وعنصر لاحق اختياري (مثل زر إظهار كلمة المرور)
+// حقل بأيقونة بادئة وعنصر لاحق اختياري (مثل زر إظهار كلمة المرور) — حبّي فاخر
 export const Field = forwardRef(function Field({ icon, trailing, className = '', ...props }, ref) {
   return (
     <div className="relative">
@@ -73,13 +73,14 @@ export const Field = forwardRef(function Field({ icon, trailing, className = '',
       )}
       <input
         ref={ref}
-        className={`input !rounded-2xl !py-4 !text-base ${icon ? '!ps-12' : ''} ${trailing ? '!pe-12' : ''} ${className}`}
+        className={`input !rounded-full !py-4 !text-base ${icon ? '!ps-12' : ''} ${trailing ? '!pe-12' : ''} ${className}`}
         {...props}
       />
-      {trailing && <div className="absolute inset-y-0 end-3 flex items-center">{trailing}</div>}
+      {trailing && <div className="absolute inset-y-0 end-4 flex items-center">{trailing}</div>}
     </div>
   );
 });
+
 
 // بلا حركة دخول للعناصر — الصفحة كلها تظهر بتلاشٍ واحد ناعم عبر انتقال المسار،
 // فلا يوجد أي حركة لكل عنصر قد تتعارض وتسبب "القفز/الفصل".
@@ -89,65 +90,76 @@ const rise = {
 };
 export { rise };
 
-// قشرة موحّدة لصفحات الحساب: شريط علوي + هيرو بنّي بالشعار + عنوان/وصف + المحتوى
+// قشرة موحّدة لصفحات الحساب — تصميم بوتيك فاخر:
+// هيرو بنّي عميق بلمعة ذهبية (الرجوع/اللغة داخله) + بطاقة النموذج بيضاء "عائمة" فوقه
 export default function AuthShell({ title, subtitle, children, back = '/', compactHero = false }) {
   const { t, i18n } = useTranslation();
   const rtl = i18n.language !== 'en';
   return (
-    <div className="mx-auto -my-8 flex min-h-[calc(100vh-1px)] w-full max-w-md flex-col">
-      {/* شريط علوي: رجوع + اللغة */}
-      <div className="flex items-center justify-between py-4">
-        <Link
-          to={back}
-          aria-label={t('common.back')}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-wine/10 text-wine transition hover:bg-wine/20"
-        >
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d={rtl ? 'm9 6 6 6-6 6' : 'm15 6-6 6 6 6'} />
-          </svg>
-        </Link>
-        <LanguageSwitcher />
-      </div>
-
-      {/* الهيرو */}
+    <div className="mx-auto -my-8 flex min-h-[calc(100vh-1px)] w-full max-w-md flex-col pb-6 pt-3">
+      {/* الهيرو الفاخر */}
       <motion.div
         custom={0}
         variants={rise}
         initial="hidden"
         animate="show"
-        className={`pub-hero relative overflow-hidden rounded-3xl px-6 text-center shadow-lg ${compactHero ? 'py-6' : 'py-9'}`}
+        className={`dash-hero relative overflow-hidden rounded-[2rem] px-5 text-center ${compactHero ? 'pb-16 pt-4' : 'pb-20 pt-4'}`}
       >
-        <div className="pointer-events-none absolute -top-10 start-1/3 h-40 w-40 rounded-full bg-cream/10 blur-3xl" />
+        <div className="pointer-events-none absolute -top-10 start-1/3 h-44 w-44 rounded-full bg-[#e6c878]/15 blur-3xl" />
+
+        {/* شريط علوي داخل الهيرو: رجوع + اللغة */}
+        <div className="relative mb-3 flex items-center justify-between">
+          <Link
+            to={back}
+            aria-label={t('common.back')}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F4EDE2]/10 text-[#F4EDE2] ring-1 ring-[#e6c878]/30 transition hover:bg-[#F4EDE2]/20"
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d={rtl ? 'm9 6 6 6-6 6' : 'm15 6-6 6 6 6'} />
+            </svg>
+          </Link>
+          <LanguageSwitcher />
+        </div>
+
+        {/* الشعار بحلقة ذهبية دوّارة */}
         <div className="relative mx-auto inline-block">
           <motion.div
             className="absolute inset-[-14px] -z-0 rounded-full"
-            style={{ background: 'conic-gradient(from 0deg, transparent, rgba(212,175,55,0.5), transparent 60%)' }}
+            style={{ background: 'conic-gradient(from 0deg, transparent, rgba(212,175,55,0.55), transparent 60%)' }}
             animate={{ rotate: 360 }}
             transition={{ duration: 14, repeat: Infinity, ease: 'linear' }}
           />
-          <div className="relative rounded-full bg-wine-dark/30 p-1">
-            <Logo className={compactHero ? 'h-16 w-16 drop-shadow-xl' : 'h-20 w-20 drop-shadow-xl'} />
+          <div className="relative rounded-full bg-black/25 p-1 ring-1 ring-[#e6c878]/40">
+            <Logo className={compactHero ? 'h-14 w-14 drop-shadow-xl' : 'h-20 w-20 drop-shadow-xl'} />
           </div>
         </div>
         <h1
-          className={`mt-4 font-display font-extrabold ${compactHero ? 'text-3xl' : 'text-4xl'}`}
+          className={`mt-3 font-display font-extrabold ${compactHero ? 'text-3xl' : 'text-4xl'}`}
           style={{ background: 'linear-gradient(180deg,#f7ecd2 0%,#e6c878 70%,#d4af37 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}
         >
           Bazara
         </h1>
-        <p className="mt-1 text-sm text-cream/85">{t('app.tagline')}</p>
+        <p className="mt-1 text-sm text-[#F4EDE2]/85">{t('app.tagline')}</p>
+        {/* زخرفة ماسية ذهبية */}
+        <div className="mt-3 flex items-center justify-center gap-2 text-[#e6c878]/60">
+          <span className="h-px w-10 bg-gradient-to-r from-transparent to-[#e6c878]/50" />
+          <span aria-hidden className="text-[10px]">❖</span>
+          <span className="h-px w-10 bg-gradient-to-l from-transparent to-[#e6c878]/50" />
+        </div>
       </motion.div>
 
-      {/* المحتوى */}
-      <div className="flex-1 px-1 pt-6">
-        <motion.h2 custom={1} variants={rise} initial="hidden" animate="show" className="mb-1 font-display text-xl font-bold text-wine">
+      {/* بطاقة النموذج العائمة فوق الهيرو */}
+      <div className={`glass relative z-10 mx-1 rounded-[1.75rem] p-5 shadow-2xl sm:p-6 ${compactHero ? '-mt-12' : '-mt-14'}`}>
+        <span className="dash-hairline absolute inset-x-0 top-0" />
+        <motion.h2 custom={1} variants={rise} initial="hidden" animate="show" className="mb-1 text-center font-display text-2xl font-bold text-wine">
           {title}
         </motion.h2>
         {subtitle && (
-          <motion.p custom={1} variants={rise} initial="hidden" animate="show" className="mb-5 text-sm text-stone-400">
+          <motion.p custom={1} variants={rise} initial="hidden" animate="show" className="mb-5 text-center text-sm text-stone-400">
             {subtitle}
           </motion.p>
         )}
+        {!subtitle && <div className="mb-4" />}
         {children}
       </div>
     </div>

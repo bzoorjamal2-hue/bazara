@@ -66,7 +66,7 @@ export default function ResetPassword() {
                 <p className="mt-1.5 ps-1 text-xs text-stone-400">{t('auth.passwordHint')}</p>
               </motion.div>
               <motion.button custom={3} variants={rise} initial="hidden" animate="show" type="submit" disabled={busy} whileTap={{ scale: 0.97 }}
-                className="w-full rounded-2xl bg-wine py-4 text-center font-bold text-cream shadow-lg transition hover:bg-wine-dark disabled:opacity-60">
+                className="auth-submit">
                 {busy ? t('common.loading') : t('auth.resetSubmit')}
               </motion.button>
             </form>

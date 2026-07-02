@@ -73,7 +73,7 @@ export default function ForgotPassword() {
               <Field ref={emailRef} icon={<MailIcon />} type="text" inputMode="email" autoCapitalize="none" autoCorrect="off" aria-label={t('auth.email')} placeholder="you@email.com" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
             </motion.div>
             <motion.button custom={3} variants={rise} initial="hidden" animate="show" type="submit" disabled={busy} whileTap={{ scale: 0.97 }}
-              className="w-full rounded-2xl bg-wine py-4 text-center font-bold text-cream shadow-lg transition hover:bg-wine-dark disabled:opacity-60">
+              className="auth-submit">
               {busy ? t('common.loading') : t('auth.sendCode')}
             </motion.button>
           </form>
@@ -98,7 +98,7 @@ export default function ForgotPassword() {
               <PasswordStrength password={newPassword} />
               <p className="mt-1.5 ps-1 text-xs text-stone-400">{t('auth.passwordHint')}</p>
             </div>
-            <button type="submit" disabled={busy} className="w-full rounded-2xl bg-wine py-4 text-center font-bold text-cream shadow-lg transition hover:bg-wine-dark disabled:opacity-60">
+            <button type="submit" disabled={busy} className="auth-submit">
               {busy ? t('common.loading') : t('auth.resetSubmit')}
             </button>
             <button type="button" onClick={() => setStep(1)} className="w-full text-center text-xs text-stone-400 hover:text-wine">
