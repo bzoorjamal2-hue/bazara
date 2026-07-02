@@ -574,6 +574,7 @@
     "shareCopied": "تم نسخ الرابط ✓",
     "viewingNow": "{{count}} يشاهدن هذا المنتج الآن",
     "soldCount": "تم بيع {{count}} قطعة",
+    "savePct": "وفّري {{pct}}%",
     "pickSize": "يرجى اختيار المقاس",
     "pickColor": "يرجى اختيار اللون",
     "pickColorFirst": "اختاري اللون أولاً لعرض النمر المتوفّرة",

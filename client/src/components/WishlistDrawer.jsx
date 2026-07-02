@@ -64,7 +64,7 @@ export default function WishlistDrawer() {
                     <button onClick={() => { close(); navigate(`/product/${p.id}`); }} className="block truncate text-start text-sm font-semibold text-stone-100">{p.name}</button>
                     <p className="mt-1 flex items-center gap-2">
                       <span className="font-bold text-gold-300">{t('common.currency')}{p.price}</span>
-                      {p.oldPrice > p.price && <span className="text-xs text-stone-500 line-through">{t('common.currency')}{p.oldPrice}</span>}
+                      {p.oldPrice > p.price && <span className="strike text-xs text-stone-500">{t('common.currency')}{p.oldPrice}</span>}
                     </p>
                     <button onClick={() => addToCart(p)} className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-wine px-3 py-1.5 text-xs font-bold text-cream transition hover:bg-wine-dark">
                       <CartIcon className="h-3.5 w-3.5" /> {t('product.addToCart')}

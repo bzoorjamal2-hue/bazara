@@ -39,14 +39,14 @@ export default function ProductRail({ title, products, currentId, icon = null })
                   </span>
                 )}
                 {hasDiscount && (
-                  <span className="badge absolute start-2 top-2 bg-red-500 text-white">-{Math.round((1 - p.price / p.oldPrice) * 100)}%</span>
+                  <span className="badge absolute start-2 top-2 bg-[#8a2438]/95 text-[#F4EDE2] shadow-sm backdrop-blur-sm">-{Math.round((1 - p.price / p.oldPrice) * 100)}%</span>
                 )}
               </div>
               <div className="p-2.5 text-center">
                 <p className="line-clamp-1 text-sm font-semibold text-stone-100">{p.name}</p>
                 <div className="mt-1 flex items-baseline justify-center gap-1.5">
                   <span className="font-bold text-wine">{t('common.currency')}{p.price}</span>
-                  {hasDiscount && <span className="text-xs text-stone-500 line-through">{t('common.currency')}{p.oldPrice}</span>}
+                  {hasDiscount && <span className="strike text-xs text-stone-500">{t('common.currency')}{p.oldPrice}</span>}
                 </div>
               </div>
             </Link>

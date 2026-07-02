@@ -317,9 +317,17 @@ export default function ProductDetails() {
             </p>
           )}
 
-          <div className="mt-3 flex items-baseline gap-3">
-            <span className="font-display text-3xl font-bold gradient-text">{t('common.currency')}{product.price}</span>
-            {hasDiscount && <span className="text-lg text-stone-500 line-through">{t('common.currency')}{product.oldPrice}</span>}
+          {/* بلوك السعر الفاخر: سعر ضخم + القديم مشطوباً بالمنتصف + شارة توفير خمرية */}
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+            <span className="font-display text-4xl font-extrabold gradient-text">{t('common.currency')}{product.price}</span>
+            {hasDiscount && (
+              <>
+                <span className="strike text-lg text-stone-500">{t('common.currency')}{product.oldPrice}</span>
+                <span className="rounded-full bg-[#8a2438] px-2.5 py-1 text-xs font-bold text-[#F4EDE2] shadow-sm">
+                  {t('product.savePct', { pct: Math.round((1 - product.price / product.oldPrice) * 100) })}
+                </span>
+              </>
+            )}
           </div>
 
           {/* دليل اجتماعي: مشاهدات حيّة (تقديري) */}
@@ -412,7 +420,7 @@ export default function ProductDetails() {
                             on ? 'border-wine bg-wine text-cream' : 'border-wine/30 text-wine hover:bg-wine/10'
                           } ${soldOut ? 'cursor-not-allowed border-stone-300/50 bg-transparent text-stone-400 opacity-60' : ''}`}
                         >
-                          <span className={`text-sm font-bold leading-none ${soldOut ? 'line-through' : ''}`}>{sizeLabel(s, t)}</span>
+                          <span className={`text-sm font-bold leading-none ${soldOut ? 'strike' : ''}`}>{sizeLabel(s, t)}</span>
                           {/* المتبقّي بنفس التنسيق لكل النمر: رمادي = متوفّر، أحمر = نفد */}
                           {qty != null && (
                             <span className={`mt-1 text-[10px] font-medium leading-none ${on ? 'text-cream/80' : soldOut ? 'text-red-500' : 'text-wine/55'}`}>
@@ -456,19 +464,20 @@ export default function ProductDetails() {
             </div>
           )}
 
-          {/* أزرار الشراء — "اطلب الآن" شراء فوري (يفتح إتمام الطلب مباشرةً) */}
+          {/* أزرار الشراء — "اطلبي الآن" شراء فوري (يفتح إتمام الطلب مباشرةً) — حبوب فاخرة بهالة ذهبية */}
           <div className={`mt-auto flex flex-col gap-3 pt-6 sm:flex-row ${showNotify ? 'hidden' : ''}`}>
             <button
               onClick={handleBuy}
               disabled={outOfStock}
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-wine to-wine-dark py-3.5 font-bold text-cream shadow-lg transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
+              className="btn-primary flex flex-1 items-center justify-center gap-2 !rounded-full py-4 text-base font-bold !text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
+              style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)', boxShadow: '0 16px 34px -14px rgba(74, 19, 34, 0.65)' }}
             >
               <BagIcon className="h-5 w-5" /> {t('product.buyNow')}
             </button>
             <button
               onClick={handleAdd}
               disabled={outOfStock}
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl border-2 border-wine/40 py-3.5 font-bold text-wine transition hover:bg-wine/10 disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-wine/40 py-4 text-base font-bold text-wine transition hover:bg-wine hover:text-cream disabled:cursor-not-allowed disabled:opacity-40"
             >
               <CartIcon className="h-5 w-5" /> {t('product.addToCart')}
             </button>

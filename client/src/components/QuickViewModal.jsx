@@ -139,7 +139,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
 
           <div className="mt-2 flex items-baseline gap-2">
             <span className="font-display text-2xl font-bold text-wine">{t('common.currency')}{product.price}</span>
-            {hasDiscount && <span className="text-sm text-stone-400 line-through">{t('common.currency')}{product.oldPrice}</span>}
+            {hasDiscount && <span className="strike text-sm text-stone-400">{t('common.currency')}{product.oldPrice}</span>}
           </div>
 
           {product.description && (
@@ -196,7 +196,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
                         onClick={() => { setSize(s); setErr(''); }}
                         className={`flex min-w-[3.5rem] flex-col items-center rounded-xl border px-3 py-1.5 text-center transition ${on ? 'border-wine bg-wine text-cream' : 'border-wine/25 text-wine hover:bg-wine/5'} ${soldOut ? 'cursor-not-allowed border-stone-300/50 text-stone-400 opacity-60' : ''}`}
                       >
-                        <span className={`text-sm font-bold leading-none ${soldOut ? 'line-through' : ''}`}>{sizeLabel(s, t)}</span>
+                        <span className={`text-sm font-bold leading-none ${soldOut ? 'strike' : ''}`}>{sizeLabel(s, t)}</span>
                         {qty != null && (
                           <span className={`mt-1 text-[10px] font-medium leading-none ${on ? 'text-cream/80' : soldOut ? 'text-red-500' : 'text-wine/55'}`}>
                             {soldOut ? t('product.soldOutShort') : t('product.leftShort', { count: qty })}

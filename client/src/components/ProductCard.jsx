@@ -191,7 +191,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
         <h3 className="line-clamp-1 font-display font-semibold leading-snug text-stone-100">{product.name}</h3>
         <div className="mt-0.5 flex items-baseline gap-2">
           <span className="font-display text-lg font-bold text-wine">{t('common.currency')}{product.price}</span>
-          {hasDiscount && <span className="text-xs text-stone-500 line-through">{t('common.currency')}{product.oldPrice}</span>}
+          {hasDiscount && <span className="strike text-xs text-stone-500">{t('common.currency')}{product.oldPrice}</span>}
         </div>
         {/* عدّاد المبيعات — دليل اجتماعي خفيف (يظهر فقط عند وجود مبيعات) */}
         {product.soldCount > 0 && (

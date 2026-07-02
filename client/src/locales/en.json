@@ -574,6 +574,7 @@
     "shareCopied": "Link copied ✓",
     "viewingNow": "{{count}} viewing this now",
     "soldCount": "{{count}} sold",
+    "savePct": "Save {{pct}}%",
     "pickSize": "Please select a size",
     "pickColor": "Please select a color",
     "pickColorFirst": "Choose a color first to see available sizes",

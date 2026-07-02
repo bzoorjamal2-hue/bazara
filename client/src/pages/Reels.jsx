@@ -370,7 +370,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
           {p.description && <p className="line-clamp-1 text-xs text-white/75 drop-shadow">{p.description}</p>}
           <div className="flex items-center gap-2">
             <span className="rounded-lg bg-black/35 px-2.5 py-1 font-display text-lg font-extrabold text-gold-200 backdrop-blur-sm">{t('common.currency')}{p.price}</span>
-            {hasDiscount && <span className="text-sm text-white/70 line-through">{t('common.currency')}{p.oldPrice}</span>}
+            {hasDiscount && <span className="strike text-sm text-white/70">{t('common.currency')}{p.oldPrice}</span>}
           </div>
           <div className="mt-1 flex items-stretch gap-2">
             <button onClick={quickAdd}

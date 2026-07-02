@@ -181,6 +181,26 @@ input[type='datetime-local']::-webkit-datetime-edit {
   color: transparent;
 }
 
+/* شطب مضبوط بمنتصف النص — line-through الافتراضي ينزل عن المنتصف مع الخطوط العربية،
+   فنرسم الخط بأنفسنا متمركزاً عمودياً (يرث لون النص الحالي) */
+.strike {
+  position: relative;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.strike::after {
+  content: '';
+  position: absolute;
+  inset-inline: -2px;
+  top: 50%;
+  height: 1.5px;
+  background: currentColor;
+  opacity: 0.85;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  pointer-events: none;
+}
+
 /* فاصل ذهبي رفيع */
 .gold-divider {
   height: 1px;
