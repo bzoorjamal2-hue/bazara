@@ -19,7 +19,8 @@ import FeaturesBar from '../components/FeaturesBar.jsx';
 import { BAZARA_WHATSAPP } from '../config/site.js';
 
 export default function Home() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const rtl = i18n.language !== 'en';
   const [data, setData] = useState(() => getCache('home') || null);
   const [loading, setLoading] = useState(() => !getCache('home'));
   const recent = getRecent();
@@ -96,23 +97,30 @@ export default function Home() {
             {data.stores.length === 0 ? (
               <p className="text-stone-400">{t('common.noResults')}</p>
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              // بطاقات بوتيك عمودية: شعار بحلقة ذهبية + اسم serif + زر تسوّق يتعبّى عند اللمس
+              <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
                 {data.stores.map((s, i) => (
                   <Link
                     key={s.id}
                     to={`/store/${s.slug}`}
-                    className="glass animate-fade-up flex items-center gap-4 p-5 transition hover:-translate-y-1 hover:shadow-glow"
+                    className="glass group animate-fade-up relative flex flex-col items-center overflow-hidden p-5 text-center transition hover:-translate-y-1.5 hover:shadow-glow"
                     style={{ animationDelay: `${i * 60}ms` }}
                   >
+                    <span className="dash-hairline absolute inset-x-0 top-0" />
                     <img
-                      src={s.logoUrl || 'https://placehold.co/80x80/121214/d4af37?text=%F0%9F%91%91'}
+                      src={cldThumb(s.logoUrl, 160) || 'https://placehold.co/80x80/f1e9dd/5e4636?text=%F0%9F%91%91'}
                       alt={s.name}
-                      className="h-14 w-14 rounded-xl border border-gold-400/30 object-cover"
+                      loading="lazy"
+                      className="h-16 w-16 rounded-full object-cover shadow-md ring-2 ring-gold-400/40 transition group-hover:ring-gold-400/80"
                     />
-                    <div className="min-w-0">
-                      <h3 className="truncate font-semibold text-stone-100">{s.name}</h3>
-                      <p className="text-xs text-stone-400">{s.productsCount} {t('store.products')}</p>
-                    </div>
+                    <h3 className="mt-3 w-full truncate font-display font-bold text-stone-100">{s.name}</h3>
+                    <p className="mt-0.5 text-xs text-stone-400">{s.productsCount} {t('store.products')}</p>
+                    <span className="mt-3 inline-flex items-center gap-1 rounded-full border border-wine/25 px-3.5 py-1 text-[11px] font-bold text-wine transition group-hover:border-wine group-hover:bg-wine group-hover:text-cream">
+                      {t('home.visitStore')}
+                      <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d={rtl ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6'} />
+                      </svg>
+                    </span>
                   </Link>
                 ))}
               </div>
