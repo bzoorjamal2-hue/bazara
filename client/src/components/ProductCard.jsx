@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -30,6 +30,17 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
   const [showVideo, setShowVideo] = useState(false); // جوال: ضغطة مطوّلة → فيديو بالصوت
   const pressTimer = useRef(null);
   const longPressed = useRef(false);
+
+  // نظرة سريعة واحدة فقط على مستوى الصفحة كلها: فتح أي بطاقة يُغلق أي نافذة أخرى مفتوحة
+  // (منتجات مكرّرة بأقسام متعددة كانت تسمح بتراكب نافذتين فوق بعض)
+  const qvToken = useRef({});
+  useEffect(() => {
+    if (!quickOpen) return;
+    window.dispatchEvent(new CustomEvent('bz:quickview', { detail: qvToken.current }));
+    const closeIfOther = (e) => { if (e.detail !== qvToken.current) setQuickOpen(false); };
+    window.addEventListener('bz:quickview', closeIfOther);
+    return () => window.removeEventListener('bz:quickview', closeIfOther);
+  }, [quickOpen]);
 
   const hasImage = product.imageUrl || (product.images && product.images[0]);
   const videoPoster = product.videoUrl ? cldVideoPoster(product.videoUrl) : '';
