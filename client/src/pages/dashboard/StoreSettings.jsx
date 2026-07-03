@@ -7,6 +7,7 @@ import ImageInput from '../../components/ImageInput.jsx';
 import BannerEditor from '../../components/BannerEditor.jsx';
 import OpostConnect from '../../components/OpostConnect.jsx';
 import EpsConnect from '../../components/EpsConnect.jsx';
+import GoboxConnect from '../../components/GoboxConnect.jsx';
 import { SaveIcon, TruckIcon, ImageIcon, XIcon, GiftIcon, FolderIcon, TrashIcon, MegaphoneIcon, RulerIcon, ShieldIcon } from '../../components/icons.jsx';
 
 const EMPTY = {
@@ -393,6 +394,7 @@ export default function StoreSettings() {
       {/* ربط شركات التوصيل — مستقلّ عن فورم الإعدادات */}
       <OpostConnect />
       <EpsConnect />
+      <GoboxConnect />
     </div>
   );
 }

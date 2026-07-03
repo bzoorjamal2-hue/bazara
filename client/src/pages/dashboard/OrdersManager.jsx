@@ -8,6 +8,7 @@ import { PinIcon, NoteIcon, TicketIcon, WhatsAppIcon, TruckIcon } from '../../co
 import { useAuth } from '../../context/AuthContext.jsx';
 import OpostSend from '../../components/OpostSend.jsx';
 import EpsSend from '../../components/EpsSend.jsx';
+import GoboxSend from '../../components/GoboxSend.jsx';
 
 const FLOW = ['new', 'confirmed', 'shipped', 'delivered', 'cancelled'];
 
@@ -63,6 +64,8 @@ const epsLabel = (raw) => {
   const key = String(raw || '').trim().toUpperCase().replace(/[\s-]+/g, '_');
   return EPS_STATUS_AR[key] || String(raw || '').trim();
 };
+// gobox على نفس نظام LogesTechs → نفس أسماء الحالات
+const goboxLabel = epsLabel;
 
 // مفتاح اليوم (سنة-شهر-يوم) لفصل الطلبات اليومية، ووصف بشري له (اليوم/أمس/تاريخ)
 const dayKey = (d) => { const x = new Date(d); return `${x.getFullYear()}-${x.getMonth()}-${x.getDate()}`; };
@@ -95,6 +98,8 @@ export default function OrdersManager() {
   const [opost, setOpost] = useState({ connected: false, cities: [], types: [], defaultType: '' });
   // ربط EPS (LogesTechs): الحالة + المدن مرّة واحدة
   const [eps, setEps] = useState({ connected: false, cities: [] });
+  // ربط gobox (LogesTechs بالقرى): حالة الربط فقط — القرى تُبحث عند الإرسال
+  const [gobox, setGobox] = useState({ connected: false });
 
   useEffect(() => {
     let on = true;
@@ -118,6 +123,14 @@ export default function OrdersManager() {
           if (on) setOrders((prev) => prev.map((o) => (m[o.id] != null ? { ...o, epsStatus: m[o.id] } : o)));
         } catch { /* تجاهل */ }
       }
+      // ونفس الشي لشحنات gobox
+      if (list.some((o) => o.goboxTracking)) {
+        try {
+          const s = await api.get('/gobox/sync');
+          const m = s.data.statuses || {};
+          if (on) setOrders((prev) => prev.map((o) => (m[o.id] != null ? { ...o, goboxStatus: m[o.id] } : o)));
+        } catch { /* تجاهل */ }
+      }
     }).catch((e) => on && setError(getErrorMessage(e)));
     return () => { on = false; };
   }, []);
@@ -128,6 +141,14 @@ export default function OrdersManager() {
       if (!on || !r.data.connected) return;
       const c = await api.get('/eps/cities').catch(() => ({ data: { cities: [] } }));
       if (on) setEps({ connected: true, cities: c.data.cities || [] });
+    }).catch(() => {});
+    return () => { on = false; };
+  }, []);
+
+  useEffect(() => {
+    let on = true;
+    api.get('/gobox/status').then((r) => {
+      if (on && r.data.connected) setGobox({ connected: true });
     }).catch(() => {});
     return () => { on = false; };
   }, []);
@@ -150,6 +171,8 @@ export default function OrdersManager() {
     setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, opostTracking: tracking || '✓', status: 'shipped' } : o)));
   const markSentEps = (id, tracking) =>
     setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, epsTracking: tracking || '✓', status: 'shipped' } : o)));
+  const markSentGobox = (id, tracking) =>
+    setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, goboxTracking: tracking || '✓', status: 'shipped' } : o)));
 
   const setStatus = async (id, status) => {
     setSavingId(id);
@@ -316,6 +339,11 @@ export default function OrdersManager() {
                     <span className="inline-flex items-center gap-1 rounded-xl bg-sky-500/15 px-3 py-1.5 text-xs font-semibold text-sky-200">
                       🔒 {o.epsStatus ? epsLabel(o.epsStatus) : t(`dashboard.ordersSection.${FLOW.includes(o.status) ? o.status : 'shipped'}`)} · {t('dashboard.eps.managed')}
                     </span>
+                  ) : o.goboxTracking ? (
+                    // الطلب بعهدة gobox → الحالة مُقفلة (تُدار عبر شركة التوصيل)
+                    <span className="inline-flex items-center gap-1 rounded-xl bg-orange-500/15 px-3 py-1.5 text-xs font-semibold text-orange-200">
+                      🔒 {o.goboxStatus ? goboxLabel(o.goboxStatus) : t(`dashboard.ordersSection.${FLOW.includes(o.status) ? o.status : 'shipped'}`)} · {t('dashboard.gobox.managed')}
+                    </span>
                   ) : (
                     <div className="min-w-[140px]">
                       <Select
@@ -334,11 +362,14 @@ export default function OrdersManager() {
                       <TruckIcon className="inline h-4 w-4" /> {t('dashboard.ordersSection.sendDelivery')}
                     </button>
                   )}
-                  {(opost.connected || o.opostTracking) && !o.epsTracking && (
+                  {(opost.connected || o.opostTracking) && !o.epsTracking && !o.goboxTracking && (
                     <OpostSend order={o} cities={opost.cities} types={opost.types} defaultType={opost.defaultType} onSent={markSent} />
                   )}
-                  {(eps.connected || o.epsTracking) && !o.opostTracking && (
+                  {(eps.connected || o.epsTracking) && !o.opostTracking && !o.goboxTracking && (
                     <EpsSend order={o} cities={eps.cities} onSent={markSentEps} />
+                  )}
+                  {(gobox.connected || o.goboxTracking) && !o.opostTracking && !o.epsTracking && (
+                    <GoboxSend order={o} onSent={markSentGobox} />
                   )}
                 </div>
               </div>

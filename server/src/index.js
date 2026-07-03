@@ -24,6 +24,8 @@ import opostRoutes from './routes/opost.routes.js';
 import { syncAllConnectedStores } from './controllers/opost.controller.js';
 import epsRoutes from './routes/eps.routes.js';
 import { epsWebhook, syncAllEpsStores } from './controllers/eps.controller.js';
+import goboxRoutes from './routes/gobox.routes.js';
+import { goboxWebhook, syncAllGoboxStores } from './controllers/gobox.controller.js';
 import { robots, sitemap, indexNowKey, shareProduct, shareStore, shareStory } from './controllers/seo.controller.js';
 import { issueCsrfToken, verifyCsrf, getCsrfToken } from './middleware/csrf.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
@@ -83,6 +85,8 @@ app.use(issueCsrfToken);
 // webhook تحديثات شحنات EPS (LogesTechs) — يأتي من خوادمهم فلا كوكي/CSRF لديه،
 // لذلك يُسجَّل قبل فحص CSRF. آمن: يطابق بالباركود فقط ولا يكشف بيانات.
 app.post('/api/eps/webhook', epsWebhook);
+// webhook تحديثات شحنات gobox (نفس نظام LogesTechs) — قبل CSRF أيضاً، يطابق بالباركود فقط.
+app.post('/api/gobox/webhook', goboxWebhook);
 app.use('/api', verifyCsrf);
 
 // فحص صحة الخادم + مسار توكن CSRF
@@ -104,6 +108,7 @@ app.use('/api/stories', storyRoutes);
 app.use('/api/site', siteRoutes);
 app.use('/api/opost', opostRoutes);
 app.use('/api/eps', epsRoutes);
+app.use('/api/gobox', goboxRoutes);
 
 // مسارات SEO (على الجذر)
 app.get('/robots.txt', robots);
@@ -222,6 +227,18 @@ async function ensureColumns() {
     await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS eps_barcode VARCHAR(120) DEFAULT '';");
     await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS eps_status VARCHAR(80) DEFAULT '';");
     await pool.query('ALTER TABLE orders ADD COLUMN IF NOT EXISTS eps_sent_at TIMESTAMPTZ;');
+    // ربط شركة التوصيل gobox (نظام LogesTechs، company 15) — الموقع بالقرى (region+city+village)
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS gobox_email VARCHAR(150) DEFAULT '';");
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS gobox_password TEXT DEFAULT '';");
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS gobox_region VARCHAR(40) DEFAULT '';");
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS gobox_city VARCHAR(40) DEFAULT '';");
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS gobox_village VARCHAR(40) DEFAULT '';");
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS gobox_address VARCHAR(300) DEFAULT '';");
+    await pool.query('ALTER TABLE stores ADD COLUMN IF NOT EXISTS gobox_connected BOOLEAN NOT NULL DEFAULT false;');
+    await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS gobox_id VARCHAR(60) DEFAULT '';");
+    await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS gobox_barcode VARCHAR(120) DEFAULT '';");
+    await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS gobox_status VARCHAR(80) DEFAULT '';");
+    await pool.query('ALTER TABLE orders ADD COLUMN IF NOT EXISTS gobox_sent_at TIMESTAMPTZ;');
     await pool.query(`CREATE TABLE IF NOT EXISTS referrals (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
@@ -298,6 +315,9 @@ function start() {
   // مزامنة شحنات EPS — احتياط عن الـ webhook (لو تعطّل أو تأخّر تفعيله عندهم)
   setInterval(() => { syncAllEpsStores().catch(() => {}); }, TEN_MIN);
   setTimeout(() => { syncAllEpsStores().catch(() => {}); }, 60 * 1000);
+  // مزامنة شحنات gobox — احتياط عن الـ webhook
+  setInterval(() => { syncAllGoboxStores().catch(() => {}); }, TEN_MIN);
+  setTimeout(() => { syncAllGoboxStores().catch(() => {}); }, 90 * 1000);
 }
 
 // الترقية التلقائية على الإنتاج فقط (Render). محلياً نشغّل مباشرة بلا لمس قاعدة البيانات.
