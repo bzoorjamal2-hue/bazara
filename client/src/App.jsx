@@ -62,7 +62,10 @@ function AnimatedRoutes() {
   // نحفظ موضع التمرير الحالي باستمرار لمفتاح هذه الصفحة، ونلتقطه أيضاً لحظة المغادرة
   // (في التنظيف) كي يبقى الموضع مضموناً حتى لو لم يُطلق حدث تمرير قبل الانتقال — هذا
   // يمنع "الرجوع لأعلى الصفحة" عند تكرار التنقّل.
-  useEffect(() => {
+  // useLayoutEffect لا useEffect: التنظيف (الذي يحفظ الموضع ويزيل المستمع) يعمل في
+  // مرحلة التخطيط — أي قبل أن تصفّر الصفحة الجديدة التمرير بـ scrollTo(0). لو كان
+  // useEffect (تمريري) لعمل التنظيف بعد ذلك فيحفظ 0 بدل الموضع الحقيقي (كان يرجع للأعلى).
+  useLayoutEffect(() => {
     const key = location.key;
     const save = () => { scrollPositions.set(key, window.scrollY); };
     window.addEventListener('scroll', save, { passive: true });
