@@ -15,6 +15,7 @@ import { getCache, setCache } from '../utils/apiCache.js';
 import { sizeLabel } from '../utils/sizes.js';
 import Countdown from '../components/Countdown.jsx';
 import { HeartIcon, BagIcon, CartIcon, BellIcon, SparkleIcon, FireIcon, HandIcon } from '../components/icons.jsx';
+import { goBack } from '../utils/nav.js';
 import SizeGuideModal from '../components/SizeGuideModal.jsx';
 import ImageInput from '../components/ImageInput.jsx';
 
@@ -209,7 +210,7 @@ export default function ProductDetails() {
 
       {/* رجوع للصفحة السابقة (الفئة/المتجر/البحث) — وإن لم يوجد سجلّ نرجع للمتجر */}
       <button
-        onClick={() => { if (window.history.length > 2) navigate(-1); else navigate(`/store/${product.storeSlug}`); }}
+        onClick={() => goBack(navigate, `/store/${product.storeSlug}`)}
         className="mb-4 inline-flex items-center gap-1.5 text-sm text-gold-300 transition hover:text-gold-200"
       >
         <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -232,7 +233,7 @@ export default function ProductDetails() {
               className="media-cap block w-auto max-w-full cursor-zoom-in rounded-2xl bg-ink-800 object-contain"
               onError={(e) => (e.currentTarget.src = PH)}
             />
-            {hasDiscount && <span className="badge absolute start-3 top-3 bg-red-500 text-white">-{Math.round((1 - product.price / product.oldPrice) * 100)}%</span>}
+            {hasDiscount && <span className="badge absolute start-3 top-3 bg-[#8a2438] text-[#F4EDE2] shadow-sm">-{Math.round((1 - product.price / product.oldPrice) * 100)}%</span>}
             {/* أيقونة تكبير */}
             <button onClick={() => setLightbox(true)} aria-label="zoom" className="absolute end-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur transition hover:bg-black/65">
               <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3M11 8v6M8 11h6" /></svg>

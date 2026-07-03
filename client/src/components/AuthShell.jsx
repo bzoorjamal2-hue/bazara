@@ -1,5 +1,6 @@
 import { forwardRef } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { goBack } from '../utils/nav.js';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import Logo from './Logo.jsx';
@@ -95,6 +96,7 @@ export { rise };
 export default function AuthShell({ title, subtitle, children, back = '/', compactHero = false }) {
   const { t, i18n } = useTranslation();
   const rtl = i18n.language !== 'en';
+  const navigate = useNavigate();
   return (
     // ملء الشاشة الحقيقي: نلغي حواف/حشوات غلاف الصفحة (px-4 pt-5 pb-8) بهوامش سالبة
     // فيمتد الهيرو البنّي من حافة لحافة وتطلع الصفحة البيضاء من تحته حتى أسفل الشاشة —
@@ -114,15 +116,17 @@ export default function AuthShell({ title, subtitle, children, back = '/', compa
         <div className="mx-auto w-full max-w-md">
           {/* شريط علوي داخل الهيرو: رجوع + اللغة */}
           <div className="relative mb-3 flex items-center justify-between">
-            <Link
-              to={back}
+            {/* رجوع للصفحة السابقة الفعلية (والمسار الثابت احتياط عند الفتح المباشر) */}
+            <button
+              type="button"
+              onClick={() => goBack(navigate, back)}
               aria-label={t('common.back')}
               className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F4EDE2]/10 text-[#F4EDE2] ring-1 ring-[#e6c878]/30 transition hover:bg-[#F4EDE2]/20"
             >
               <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d={rtl ? 'm9 6 6 6-6 6' : 'm15 6-6 6 6 6'} />
               </svg>
-            </Link>
+            </button>
             <LanguageSwitcher />
           </div>
 

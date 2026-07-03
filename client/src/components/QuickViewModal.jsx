@@ -92,9 +92,10 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
         {/* زر الإغلاق */}
         <CloseButton onClick={onClose} variant="dark" className="absolute end-3 top-3 z-20" />
 
-        {/* الوسائط — فيديو يشتغل تلقائياً أو صورة، بحجمها الطبيعي 9:16 (بلا قصّ) */}
+        {/* الوسائط — فيديو يشتغل تلقائياً أو صورة، بحجمها الطبيعي 9:16 (بلا قصّ).
+            الخلفية كريمية مطابقة للغلاف — بلا إطار بنّي حول الفيديو */}
         <div className="bg-[#f3ece0] p-3">
-          <div ref={imgRef} className="relative mx-auto aspect-[9/16] max-h-[56vh] w-full overflow-hidden rounded-2xl bg-[#594335]">
+          <div ref={imgRef} className="relative mx-auto aspect-[9/16] max-h-[56vh] w-full overflow-hidden rounded-2xl bg-[#f3ece0]">
             {hasVideo ? (
               <video
                 src={product.videoUrl}
@@ -115,7 +116,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
               />
             )}
             {hasDiscount && (
-              <span className="absolute start-3 top-3 z-10 rounded-full bg-red-500 px-2.5 py-0.5 text-xs font-semibold text-white">-{discountPct}%</span>
+              <span className="absolute start-3 top-3 z-10 rounded-full bg-[#8a2438] px-2.5 py-0.5 text-xs font-semibold text-[#F4EDE2] shadow-sm">-{discountPct}%</span>
             )}
           </div>
           {!hasVideo && gallery.length > 1 && (

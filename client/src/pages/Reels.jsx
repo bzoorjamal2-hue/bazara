@@ -10,6 +10,7 @@ import CloseButton from '../components/CloseButton.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import Spinner from '../components/Spinner.jsx';
 import { sizeLabel } from '../utils/sizes.js';
+import { goBack } from '../utils/nav.js';
 
 const MUTE_KEY = 'bz_reels_muted';
 
@@ -107,7 +108,8 @@ export default function Reels() {
     const root = feedRef.current;
     if (root && root.children[i + 1]) root.children[i + 1].scrollIntoView({ behavior: 'smooth' });
   };
-  const goBack = () => (slug ? navigate(`/store/${slug}`) : window.history.length > 1 ? navigate(-1) : navigate('/shop'));
+  // يرجع للصفحة السابقة الفعلية (متجر/رئيسية/فئة...) بدل فرض صفحة المتجر
+  const goBackFn = () => goBack(navigate, slug ? `/store/${slug}` : '/shop');
 
   return (
     <div
@@ -116,10 +118,10 @@ export default function Reels() {
     >
       <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-center justify-between p-3"
         style={{ paddingTop: 'calc(env(safe-area-inset-top,0px) + 12px)' }}>
-        <div className="pointer-events-auto"><CloseButton onClick={goBack} variant="ghost" size="h-10 w-10" label="back" /></div>
+        <div className="pointer-events-auto"><CloseButton onClick={goBackFn} variant="ghost" size="h-10 w-10" label="back" /></div>
         <span className="pointer-events-none inline-flex select-none items-center gap-2 font-display text-lg font-bold text-white/90 drop-shadow"><VideoIcon className="h-5 w-5" /> {t('reels.title')}</span>
         <button type="button" onClick={() => setMutedPersist((m) => !m)} aria-label={muted ? 'unmute' : 'mute'}
-          className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur transition hover:bg-black/60">
+          className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white ring-1 ring-white/20 transition hover:bg-black/65">
           {muted ? <MutedIcon /> : <SoundIcon />}
         </button>
       </div>
@@ -127,7 +129,7 @@ export default function Reels() {
       {/* تلميح الصوت */}
       {items && items.length > 0 && soundHint && muted && (
         <div className="pointer-events-none absolute inset-x-0 z-30 flex justify-center" style={{ top: 'calc(env(safe-area-inset-top,0px) + 60px)' }}>
-          <span className="inline-flex animate-toast-top items-center gap-1.5 rounded-full bg-black/55 px-3.5 py-1.5 text-xs font-semibold text-white backdrop-blur"><SpeakerIcon className="h-4 w-4" /> {t('reels.soundHint')}</span>
+          <span className="inline-flex animate-toast-top items-center gap-1.5 rounded-full bg-black/60 px-3.5 py-1.5 text-xs font-semibold text-white"><SpeakerIcon className="h-4 w-4" /> {t('reels.soundHint')}</span>
         </div>
       )}
 
@@ -137,7 +139,7 @@ export default function Reels() {
         <div className="flex h-full flex-col items-center justify-center gap-4 px-6 text-center text-white/80">
           <VideoIcon className="h-14 w-14 text-white/50" />
           <p className="text-lg font-semibold">{t('reels.empty')}</p>
-          <button onClick={goBack} className="rounded-full bg-white/15 px-5 py-2 text-sm font-semibold backdrop-blur transition hover:bg-white/25">{t('reels.back')}</button>
+          <button onClick={goBackFn} className="rounded-full bg-white/15 px-5 py-2 text-sm font-semibold backdrop-blur transition hover:bg-white/25">{t('reels.back')}</button>
         </div>
       ) : (
         <div ref={feedRef}
@@ -328,30 +330,30 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
 
         {hint && (
           <div className="pointer-events-none absolute inset-x-0 top-1/2 flex animate-bounce justify-center text-white/70">
-            <span className="rounded-full bg-black/30 px-3 py-1 text-xs backdrop-blur">{t('reels.swipeHint')} ↑</span>
+            <span className="rounded-full bg-black/45 px-3 py-1 text-xs">{t('reels.swipeHint')} ↑</span>
           </div>
         )}
 
         {copied && (
           <div className="pointer-events-none absolute inset-x-0 top-20 z-30 flex justify-center">
-            <span className="rounded-full bg-black/75 px-4 py-2 text-xs font-semibold text-white backdrop-blur">{t('reels.copied')}</span>
+            <span className="rounded-full bg-black/75 px-4 py-2 text-xs font-semibold text-white">{t('reels.copied')}</span>
           </div>
         )}
 
         {/* شارات: خصم + عدد المبيعات */}
         <div className="absolute start-3 z-20 flex flex-col items-start gap-2" style={{ top: 'calc(env(safe-area-inset-top,0px) + 64px)' }}>
-          {hasDiscount && <span className="rounded-full bg-red-500 px-2.5 py-1 text-xs font-extrabold text-white shadow">-{discountPct}%</span>}
-          {p.soldCount > 0 && <span className="rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur">{t('product.soldCount', { count: p.soldCount })}</span>}
+          {hasDiscount && <span className="rounded-full bg-[#8a2438] px-2.5 py-1 text-xs font-extrabold text-[#F4EDE2] shadow">-{discountPct}%</span>}
+          {p.soldCount > 0 && <span className="rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-semibold text-white">{t('product.soldCount', { count: p.soldCount })}</span>}
         </div>
 
         {/* مفضّلة + مشاركة */}
         <div className="absolute bottom-40 end-3 z-20 flex flex-col items-center gap-4">
           <button type="button" onClick={() => { if (!liked && navigator.vibrate) navigator.vibrate(18); toggle(p); }} aria-label="wishlist"
-            className={`flex h-12 w-12 items-center justify-center rounded-full backdrop-blur transition active:scale-90 ${liked ? 'bg-red-500/90 text-white' : 'bg-black/40 text-white hover:bg-black/60'}`}>
+            className={`flex h-12 w-12 items-center justify-center rounded-full ring-1 ring-white/20 transition active:scale-90 ${liked ? 'bg-red-500/90 text-white' : 'bg-black/50 text-white hover:bg-black/65'}`}>
             <HeartIcon className="h-6 w-6" filled={liked} />
           </button>
           <button type="button" onClick={share} aria-label="share"
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur transition hover:bg-black/60 active:scale-90">
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-black/50 text-white ring-1 ring-white/20 transition hover:bg-black/65 active:scale-90">
             <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" /><path d="M16 6l-4-4-4 4" /><path d="M12 2v14" /></svg>
           </button>
         </div>
@@ -360,25 +362,26 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
         <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col gap-2 p-4 pe-16 pb-[calc(env(safe-area-inset-bottom,0px)+18px)] text-white">
           <Link to={`/store/${p.storeSlug}`} className="inline-flex max-w-fit items-center gap-2 text-sm font-semibold text-white drop-shadow">
             {p.storeLogo ? (
-              <img src={cldThumb(p.storeLogo, 80)} alt="" className="h-7 w-7 shrink-0 rounded-full object-cover ring-1 ring-white/50" />
+              <img src={cldThumb(p.storeLogo, 80)} alt="" className="h-7 w-7 shrink-0 rounded-full object-cover ring-2 ring-[#e6c878]/70" />
             ) : (
               <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 text-white"><StoreIcon className="h-4 w-4" /></span>
             )}
             <span className="truncate">{p.storeName}</span>
           </Link>
-          <h2 className="line-clamp-2 text-lg font-bold leading-snug drop-shadow-lg">{p.name}</h2>
+          {/* اسم بخط العرض الفاخر + سعر ذهبي بحبة عصرية (بلا blur — تمرير أسلس) */}
+          <h2 className="line-clamp-2 font-display text-lg font-bold leading-snug drop-shadow-lg">{p.name}</h2>
           {p.description && <p className="line-clamp-1 text-xs text-white/75 drop-shadow">{p.description}</p>}
           <div className="flex items-center gap-2">
-            <span className="rounded-lg bg-black/35 px-2.5 py-1 font-display text-lg font-extrabold text-gold-200 backdrop-blur-sm">{t('common.currency')}{p.price}</span>
+            <span className="rounded-full bg-black/50 px-3 py-1 font-display text-lg font-extrabold text-gold-200 ring-1 ring-[#e6c878]/30">{t('common.currency')}{p.price}</span>
             {hasDiscount && <span className="strike text-sm text-white/70">{t('common.currency')}{p.oldPrice}</span>}
           </div>
           <div className="mt-1 flex items-stretch gap-2">
             <button onClick={quickAdd}
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-white py-3 text-sm font-bold text-wine shadow-lg transition active:scale-[0.98]">
+              className="flex flex-1 items-center justify-center gap-2 rounded-full bg-white py-3 text-sm font-bold text-wine shadow-lg transition active:scale-[0.98]">
               <CartIcon className="h-5 w-5" /> {t('reels.add')}
             </button>
             <Link to={`/product/${p.id}`}
-              className="flex items-center justify-center rounded-2xl bg-white/15 px-4 py-3 text-sm font-bold text-white backdrop-blur transition active:scale-95">
+              className="flex items-center justify-center rounded-full bg-white/20 px-5 py-3 text-sm font-bold text-white ring-1 ring-white/25 transition active:scale-95">
               {t('reels.view')}
             </Link>
           </div>

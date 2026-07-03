@@ -54,6 +54,9 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(() => {
+        // درج/نافذة مفتوحة → useScrollLock يثبّت body فيصير scrollY صفراً زائفاً؛
+        // نتجاهل الحدث كي لا يتمدّد الهيدر خلف الدرج ثم "يقفز" عند الإغلاق.
+        if (document.body.style.position === 'fixed') { ticking = false; return; }
         const y = window.scrollY;
         setCollapsed((c) => (c ? y > 36 : y > 84));
         ticking = false;

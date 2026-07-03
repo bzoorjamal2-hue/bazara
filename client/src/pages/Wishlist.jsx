@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext.jsx';
 import Seo from '../components/Seo.jsx';
 import { cldThumb } from '../utils/cloudinary.js';
 import { HeartIcon, CartIcon, XIcon } from '../components/icons.jsx';
+import { goBack } from '../utils/nav.js';
 
 const PH = 'https://placehold.co/300x300/f1e9dd/5e4636?text=%F0%9F%91%97';
 
@@ -21,7 +22,7 @@ export default function Wishlist() {
       {/* رجوع للتسوّق + العنوان */}
       <div className="mb-6 flex items-center gap-3">
         <button
-          onClick={() => navigate('/shop')}
+          onClick={() => goBack(navigate, '/shop')}
           aria-label={t('common.back')}
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-wine/10 text-wine transition hover:bg-wine hover:text-cream"
         >

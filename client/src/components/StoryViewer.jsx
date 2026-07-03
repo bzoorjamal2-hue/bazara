@@ -134,8 +134,8 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
         {/* أشرطة التقدّم — تتبع اللغة: عربي الأول يمين والتعبئة من اليمين، إنجليزي بالعكس */}
         <div className="absolute inset-x-0 top-0 z-30 flex gap-1 px-2.5" dir={rtl ? 'rtl' : 'ltr'} style={{ paddingTop: 'calc(env(safe-area-inset-top,0px) + 8px)' }}>
           {stories.map((s, i) => (
-            <div key={s.id} className="h-0.5 flex-1 overflow-hidden rounded-full bg-white/30">
-              <div className="h-full rounded-full bg-white" style={{ width: `${i < idx ? 100 : i === idx ? progress : 0}%` }} />
+            <div key={s.id} className="h-1 flex-1 overflow-hidden rounded-full bg-white/25">
+              <div className="h-full rounded-full bg-gradient-to-r from-[#e6c878] to-white" style={{ width: `${i < idx ? 100 : i === idx ? progress : 0}%` }} />
             </div>
           ))}
         </div>
@@ -143,20 +143,20 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
         {/* رأس: شعار المتجر + الاسم + الوقت + حذف/إغلاق */}
         <div className="absolute inset-x-0 top-0 z-30 flex items-center gap-3 px-3 pt-5" style={{ paddingTop: 'calc(env(safe-area-inset-top,0px) + 20px)' }} dir={rtl ? 'rtl' : 'ltr'}>
           {store?.logoUrl
-            ? <img src={cldThumb(store.logoUrl, 80)} alt="" className="h-9 w-9 rounded-full object-cover ring-1 ring-white/60" />
+            ? <img src={cldThumb(store.logoUrl, 80)} alt="" className="h-9 w-9 rounded-full object-cover ring-2 ring-[#e6c878]/80" />
             : <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-white"><StoreIcon className="h-5 w-5" /></span>}
           <div className="min-w-0 flex-1 leading-tight">
             <p className="truncate text-sm font-bold text-white drop-shadow">{store?.name}</p>
             <p className="text-[11px] text-white/70">{ago}</p>
           </div>
           {isOwner && (
-            <span className="flex items-center gap-1 rounded-full bg-black/40 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur">
+            <span className="flex items-center gap-1 rounded-full bg-black/50 px-2.5 py-1 text-xs font-semibold text-white">
               <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z" /><circle cx="12" cy="12" r="3" /></svg>
               {cur.views ?? 0}
             </span>
           )}
           {isOwner && (
-            <button onClick={del} aria-label="delete" className="flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur transition hover:bg-red-500/70">
+            <button onClick={del} aria-label="delete" className="flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white transition hover:bg-red-500/70">
               <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13" /></svg>
             </button>
           )}
@@ -191,7 +191,7 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
           {store?.whatsapp && (
             <form
               onSubmit={(e) => { e.preventDefault(); sendReply(); }}
-              className="flex items-center gap-2 rounded-full border border-white/40 bg-white/10 ps-4 pe-1.5 py-1.5 backdrop-blur"
+              className="flex items-center gap-2 rounded-full border border-white/30 bg-black/35 ps-4 pe-1.5 py-1.5"
             >
               <input
                 value={reply}
