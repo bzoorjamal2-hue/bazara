@@ -475,11 +475,18 @@ function WelcomePopup({ store }) {
     <div className="fixed inset-0 z-[90] flex items-center justify-center p-4" onClick={() => setOpen(false)}>
       <div className="absolute inset-0 bg-black/55 animate-fade-up" />
       <div onClick={(e) => e.stopPropagation()} className="animate-pop relative w-full max-w-sm overflow-hidden rounded-3xl bg-white p-6 text-center shadow-2xl">
+        <span className="dash-hairline absolute inset-x-0 top-0" />
         <CloseButton onClick={() => setOpen(false)} variant="wine" className="absolute end-3 top-3" />
-        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-wine/10 text-wine"><GiftIcon className="h-7 w-7" /></div>
-        <h3 className="font-display text-xl font-bold text-wine">{t('store.welcomeTitle')}</h3>
+        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-wine/10 text-wine ring-2 ring-gold-400/40"><GiftIcon className="h-7 w-7" /></div>
+        <h3 className="font-display text-2xl font-bold text-wine">{t('store.welcomeTitle')}</h3>
+        {/* زخرفة ماسية تحت العنوان */}
+        <div className="mt-2 flex items-center justify-center gap-2 text-gold-400/70">
+          <span className="h-px w-8 bg-gradient-to-r from-transparent to-[#d4af37]/50" />
+          <span aria-hidden className="text-[10px]">❖</span>
+          <span className="h-px w-8 bg-gradient-to-l from-transparent to-[#d4af37]/50" />
+        </div>
         <p className="mt-3 whitespace-pre-line text-[15px] leading-relaxed text-wine/80">{store.welcomeOffer}</p>
-        <button onClick={() => setOpen(false)} className="mt-5 w-full rounded-2xl bg-gradient-to-r from-[#e6c878] via-[#d4af37] to-[#c79a3a] py-3 font-bold text-[#3f2e22] shadow-lg transition hover:brightness-105">
+        <button onClick={() => setOpen(false)} className="mt-5 w-full rounded-full bg-gradient-to-r from-[#e6c878] via-[#d4af37] to-[#c79a3a] py-3.5 font-bold text-[#3f2e22] shadow-lg ring-1 ring-[#b8932c]/40 transition hover:brightness-105">
           {t('store.welcomeCta')}
         </button>
       </div>

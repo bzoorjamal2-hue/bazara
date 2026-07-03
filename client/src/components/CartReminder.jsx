@@ -27,14 +27,15 @@ export default function CartReminder() {
 
   return (
     <div
-      className="animate-fade-up fixed inset-x-3 z-[60] mx-auto max-w-md rounded-2xl border border-wine/15 bg-white p-3 shadow-xl ring-1 ring-wine/5"
+      className="animate-fade-up fixed inset-x-3 z-[60] mx-auto max-w-md overflow-hidden rounded-2xl border border-wine/15 bg-white p-3 shadow-xl ring-1 ring-wine/5"
       style={{ bottom: isStandalone() ? 'calc(env(safe-area-inset-bottom,0px) + 86px)' : 'calc(env(safe-area-inset-bottom,0px) + 18px)' }}
     >
+      <span className="dash-hairline absolute inset-x-0 top-0" />
       <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-wine/10 text-wine"><BagIcon className="h-5 w-5" /></span>
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-wine/10 text-wine ring-1 ring-gold-400/40"><BagIcon className="h-5 w-5" /></span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold text-wine">{t('cart.reminderTitle')}</p>
-          <p className="text-xs text-stone-500">{t('cart.reminderText', { count })}</p>
+          <p className="truncate font-display text-sm font-bold text-wine">{t('cart.reminderTitle')}</p>
+          <p className="line-clamp-2 text-xs text-stone-500">{t('cart.reminderText', { count })}</p>
         </div>
         <button onClick={openCart} className="shrink-0 rounded-full bg-wine px-4 py-2 text-xs font-bold text-cream transition hover:bg-wine-dark">
           {t('cart.reminderCta')}

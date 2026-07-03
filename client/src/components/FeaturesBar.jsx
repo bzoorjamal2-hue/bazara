@@ -105,9 +105,10 @@ export default function FeaturesBar() {
           {shown.map(({ Icon, title }, i) => (
             <div
               key={i}
-              className="flex flex-col items-center gap-2 rounded-2xl border border-wine/10 bg-white p-4 text-center shadow-sm sm:p-5"
+              className="relative flex flex-col items-center gap-2 overflow-hidden rounded-2xl border border-wine/10 bg-white p-4 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-5"
             >
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-wine/10 text-wine">
+              <span className="dash-hairline absolute inset-x-0 top-0" />
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-wine/10 text-wine ring-1 ring-gold-400/40">
                 <Icon className="h-6 w-6" />
               </span>
               <span className="text-xs font-bold leading-snug text-[#2b2b2b] sm:text-sm">{title}</span>
