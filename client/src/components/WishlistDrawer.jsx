@@ -5,7 +5,7 @@ import { useWishlist } from '../context/WishlistContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import CloseButton from './CloseButton.jsx';
-import { HeartIcon, CartIcon, XIcon } from './icons.jsx';
+import { HeartIcon, CartIcon, XIcon, ForwardIcon } from './icons.jsx';
 import { cldThumb } from '../utils/cloudinary.js';
 
 const PH = 'https://placehold.co/120x120/f1e9dd/5e4636?text=%F0%9F%91%97';
@@ -79,7 +79,7 @@ export default function WishlistDrawer() {
               <button onClick={addAll} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-wine py-3.5 font-bold text-cream shadow-lg transition hover:bg-wine-dark">
                 <CartIcon className="h-5 w-5" /> {t('wishlist.addAllToCart')}
               </button>
-              <button onClick={goFull} className="w-full text-center text-xs text-stone-400 hover:text-gold-200">{t('wishlist.viewAll')} ←</button>
+              <button onClick={goFull} className="flex w-full items-center justify-center gap-1 text-center text-xs text-stone-400 hover:text-gold-200">{t('wishlist.viewAll')} <ForwardIcon className="h-3 w-3" /></button>
             </div>
           </motion.div>
         )}

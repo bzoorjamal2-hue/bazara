@@ -170,6 +170,9 @@ const svg = (className, children, extra) => (
 );
 
 export function XIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M6 6 L18 18 M18 6 L6 18" />); }
+// أسهم "متابعة/رجوع" تنقلب تلقائياً مع اللغة (كلاس rtl-flip بـ index.css) — بديل موحّد للأسهم النصية ← →
+export function ForwardIcon({ className = 'h-4 w-4' }) { return svg(`${className} rtl-flip`, <path {...L} d="M9 6 L15 12 L9 18" />); }
+export function BackIcon({ className = 'h-4 w-4' }) { return svg(`${className} rtl-flip`, <path {...L} d="M15 6 L9 12 L15 18" />); }
 export function CheckIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M5 13 L10 18 L19 6" />); }
 export function GiftIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M4 11 H20 V20 H4 Z M12 8 V20 M4 8 H20 V11 H4 Z" /><path {...L} d="M12 8 C12 8 10.5 4 8.5 5 C6.5 6 8 8 12 8 C12 8 13.5 4 15.5 5 C17.5 6 16 8 12 8 Z" /></>); }
 export function BagIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M6 8 H18 L19 20 H5 Z" /><path {...L} d="M9 10 V7 A3 3 0 0 1 15 7 V10" /></>); }

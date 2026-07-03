@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import Logo from './Logo.jsx';
 import LanguageSwitcher from './LanguageSwitcher.jsx';
-import { BagIcon } from './icons.jsx';
+import { BagIcon, ForwardIcon } from './icons.jsx';
 
 // شاشة افتتاح التطبيق المثبّت (standalone) — تصميم فخم متحرّك بألوان Bazara.
 // تظهر فقط داخل التطبيق؛ الموقع في المتصفح يبقى كما هو.
@@ -122,12 +122,13 @@ export default function AppWelcome() {
         animate="show"
         className="relative space-y-3 px-7 pb-[max(env(safe-area-inset-bottom),28px)]"
       >
+        {/* حبوب فاخرة موحّدة مع هوية الموقع: ذهبية للتسوّق + إطار ذهبي للدخول */}
         <MLink
           variants={rise}
           to="/shop"
           whileTap={{ scale: 0.97 }}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-center font-bold shadow-xl"
-          style={{ background: 'linear-gradient(135deg, #f7ecd2 0%, #F4EDE2 50%, #e6c878 100%)', color: '#3f2e22' }}
+          className="flex w-full items-center justify-center gap-2 rounded-full py-4 text-center font-bold shadow-xl ring-1 ring-[#e6c878]/50"
+          style={{ background: 'linear-gradient(135deg, #f7ecd2 0%, #F4EDE2 50%, #e6c878 100%)', color: '#3f2e22', boxShadow: '0 18px 38px -16px rgba(212, 175, 55, 0.55)' }}
         >
           <BagIcon className="h-5 w-5" /> {t('appWelcome.browse')}
         </MLink>
@@ -135,13 +136,13 @@ export default function AppWelcome() {
           variants={rise}
           to="/login"
           whileTap={{ scale: 0.97 }}
-          className="block w-full rounded-2xl border border-cream/35 py-3.5 text-center font-semibold text-cream transition hover:bg-cream/10"
+          className="block w-full rounded-full border border-[#e6c878]/40 py-3.5 text-center font-semibold text-cream transition hover:bg-cream/10"
         >
           {t('nav.login')}
         </MLink>
         <motion.div variants={rise} className="text-center">
-          <Link to="/register" className="inline-block pt-1 text-sm text-cream/75 transition hover:text-cream">
-            {t('appWelcome.openStore')} ←
+          <Link to="/register" className="inline-flex items-center gap-1 pt-1 text-sm text-cream/75 transition hover:text-cream">
+            {t('appWelcome.openStore')} <ForwardIcon className="h-3.5 w-3.5" />
           </Link>
         </motion.div>
       </motion.div>

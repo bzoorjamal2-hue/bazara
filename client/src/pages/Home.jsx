@@ -9,7 +9,7 @@ import ProductRail from '../components/ProductRail.jsx';
 import { getRecent } from '../utils/recentlyViewed.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
-import { GiftIcon } from '../components/icons.jsx';
+import { GiftIcon, ForwardIcon } from '../components/icons.jsx';
 import CategoryGrid from '../components/CategoryGrid.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
 import StylistChat from '../components/StylistChat.jsx';
@@ -354,7 +354,7 @@ function PromoBanner() {
         <p className="font-display text-sm font-bold text-wine sm:text-lg">{t('home.promoTitle')}</p>
         <p className="mt-0.5 text-xs text-stone-500 sm:text-sm">{t('home.promoSub')}</p>
       </div>
-      <span className="hidden shrink-0 rounded-full bg-wine px-4 py-2 text-sm font-bold text-cream sm:inline-block">{t('home.shopNow')} ←</span>
+      <span className="hidden shrink-0 items-center gap-1 rounded-full bg-wine px-4 py-2 text-sm font-bold text-cream sm:inline-flex">{t('home.shopNow')} <ForwardIcon className="h-3.5 w-3.5" /></span>
     </Link>
   );
 }

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
-import { CardIcon, KeyIcon } from '../components/icons.jsx';
+import { CardIcon, KeyIcon, BackIcon } from '../components/icons.jsx';
 import Seo from '../components/Seo.jsx';
 import Spinner from '../components/Spinner.jsx';
 
@@ -77,7 +77,7 @@ export default function Subscribe() {
         </div>
       ) : (
         <div className="glass-strong mx-auto max-w-lg animate-fade-up p-7">
-          <button onClick={() => setSelected(null)} className="mb-4 text-sm text-gold-300 hover:text-gold-200">← {t('subscription.back')}</button>
+          <button onClick={() => setSelected(null)} className="mb-4 inline-flex items-center gap-1 text-sm text-gold-300 hover:text-gold-200"><BackIcon className="h-3.5 w-3.5" /> {t('subscription.back')}</button>
           <h2 className="font-display text-xl font-bold gradient-text">
             {t('subscription.payTitle', { plan: t(`subscription.${selected}`) })}
           </h2>

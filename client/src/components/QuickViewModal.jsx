@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
-import { HeartIcon, CartIcon, HandIcon } from './icons.jsx';
+import { HeartIcon, CartIcon, HandIcon, ForwardIcon } from './icons.jsx';
 import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
 import { flyToCart } from '../utils/flyToCart.js';
 import useScrollLock from '../hooks/useScrollLock.js';
@@ -253,9 +253,9 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
           <Link
             to={`/product/${product.id}`}
             onClick={onClose}
-            className="mt-3 text-center text-sm font-medium text-wine/70 underline-offset-4 transition hover:text-wine hover:underline"
+            className="mt-3 inline-flex items-center justify-center gap-1 self-center text-center text-sm font-medium text-wine/70 underline-offset-4 transition hover:text-wine hover:underline"
           >
-            {t('product.viewDetails')} ←
+            {t('product.viewDetails')} <ForwardIcon className="h-3.5 w-3.5" />
           </Link>
         </div>
       </motion.div>

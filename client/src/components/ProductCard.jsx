@@ -109,11 +109,11 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
           className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-110 ${outOfStock ? 'opacity-50' : ''}`}
         />
 
-        {/* شارات — ألوان بوتيك هادئة (بنّي عميق/خمري) بدل الأخضر والأحمر الصارخين */}
+        {/* شارات — ألوان بوتيك هادئة معتمة (بلا backdrop-blur: يسبّب تعليق تمرير على iOS مع كثرة البطاقات) */}
         <div className="absolute start-2 top-2 z-10 flex flex-col gap-1">
-          {isNew && <span className="badge bg-[#3f2e22]/90 text-[#F4EDE2] shadow-sm backdrop-blur-sm">{t('product.new')}</span>}
+          {isNew && <span className="badge bg-[#3f2e22] text-[#F4EDE2] shadow-sm">{t('product.new')}</span>}
           {product.featured && <span className="badge flex items-center gap-0.5 bg-gold-400 text-ink-950 shadow-sm"><StarIcon className="h-3 w-3" /> {t('product.featured')}</span>}
-          {hasDiscount && <span className="badge bg-[#8a2438]/95 text-[#F4EDE2] shadow-sm backdrop-blur-sm">-{discountPct}%</span>}
+          {hasDiscount && <span className="badge bg-[#8a2438] text-[#F4EDE2] shadow-sm">-{discountPct}%</span>}
           {outOfStock && <span className="badge bg-ink-700 text-stone-300">{t('product.outOfStock')}</span>}
         </div>
 
@@ -123,8 +123,8 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
           whileTap={{ scale: 0.8 }}
           animate={liked ? { scale: [1, 1.35, 1] } : {}}
           transition={{ duration: 0.35 }}
-          className={`absolute end-2 top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full backdrop-blur transition-colors ${
-            liked ? 'bg-red-500/90 text-white' : 'bg-black/35 text-white hover:bg-black/55'
+          className={`absolute end-2 top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
+            liked ? 'bg-red-500/90 text-white' : 'bg-black/45 text-white hover:bg-black/60'
           }`}
           aria-label="wishlist"
         >
@@ -135,7 +135,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
         <motion.button
           onClick={onQuickView}
           whileTap={{ scale: 0.85 }}
-          className="absolute end-2 top-[3.25rem] z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur transition hover:bg-black/55"
+          className="absolute end-2 top-[3.25rem] z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/45 text-white transition hover:bg-black/60"
           aria-label={t('product.quickView')}
           title={t('product.quickView')}
         >
@@ -165,7 +165,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
         )}
         {product.videoUrl && (
           <span className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-center">
-            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-black/45 ring-1 ring-white/50 backdrop-blur-sm transition group-hover:scale-110">
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-black/50 ring-1 ring-white/50 transition group-hover:scale-110">
               <svg viewBox="0 0 24 24" className="h-6 w-6 translate-x-[1px] fill-white drop-shadow" aria-hidden="true">
                 <path d="M8 5v14l11-7z" />
               </svg>

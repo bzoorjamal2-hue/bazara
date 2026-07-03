@@ -181,6 +181,9 @@ input[type='datetime-local']::-webkit-datetime-edit {
   color: transparent;
 }
 
+/* أسهم تتبع اتجاه اللغة: بالعربي تنقلب أفقياً (ForwardIcon/BackIcon بـ icons.jsx) */
+[dir='rtl'] .rtl-flip { transform: scaleX(-1); }
+
 /* زر إرسال صفحات الحساب — حبة خمرية نارية بهالة ذهبية (نفس هوية أزرار الشراء) */
 .auth-submit {
   @apply w-full rounded-full py-4 text-center font-bold transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60;
@@ -194,6 +197,8 @@ input[type='datetime-local']::-webkit-datetime-edit {
    فنرسم الخط بأنفسنا متمركزاً عمودياً (يرث لون النص الحالي) */
 .strike {
   position: relative;
+  display: inline-block; /* الصندوق يحضن الأرقام تماماً → الخط بمنتصفها البصري */
+  line-height: 1.1;
   text-decoration: none;
   white-space: nowrap;
 }

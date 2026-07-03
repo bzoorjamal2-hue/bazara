@@ -6,7 +6,7 @@ import { buildWhatsappCheckout } from '../utils/whatsapp.js';
 import useScrollLock from '../hooks/useScrollLock.js';
 import Select from './Select.jsx';
 import CloseButton from './CloseButton.jsx';
-import { CartIcon, BagIcon, XIcon, PinIcon, GiftIcon, TicketIcon, CheckIcon, ReceiptIcon, PartyIcon, TruckIcon, CashIcon, WhatsAppIcon } from './icons.jsx';
+import { CartIcon, BagIcon, XIcon, PinIcon, GiftIcon, TicketIcon, CheckIcon, ReceiptIcon, PartyIcon, TruckIcon, CashIcon, WhatsAppIcon, ForwardIcon, BackIcon } from './icons.jsx';
 import api from '../api/client.js';
 import { sizeLabel } from '../utils/sizes.js';
 import { getRef, clearRef } from '../utils/referral.js';
@@ -181,8 +181,8 @@ export default function CartDrawer() {
         <div className="flex items-center justify-between border-b border-gold-400/15 p-4">
           <h2 className="flex items-center gap-2 font-display text-xl font-bold gradient-text">
             {view === 'checkout' && (
-              <button onClick={() => setView('cart')} aria-label={t('co.back')} className="text-wine/70 hover:text-wine">
-                {ar ? '→' : '←'}
+              <button onClick={() => setView('cart')} aria-label={t('co.back')} className="flex h-8 w-8 items-center justify-center rounded-full bg-wine/10 text-wine/80 transition hover:bg-wine/20 hover:text-wine">
+                <BackIcon className="h-4 w-4" />
               </button>
             )}
             {view === 'cart' ? <><CartIcon className="h-5 w-5" /> {t('cart.title')}</> : t('co.title')}
@@ -235,10 +235,10 @@ export default function CartDrawer() {
                   {/* حبة إتمام فاخرة بتدرج خمري وهالة ذهبية — والسهم يتبع اتجاه اللغة */}
                   <button
                     onClick={() => { setErr(''); setView('checkout'); }}
-                    className="w-full rounded-full py-4 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
+                    className="flex w-full items-center justify-center gap-1.5 rounded-full py-4 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
                     style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)', boxShadow: '0 16px 34px -14px rgba(74, 19, 34, 0.65)' }}
                   >
-                    {t('cart.proceed')} {ar ? '←' : '→'}
+                    {t('cart.proceed')} <ForwardIcon className="h-4 w-4" />
                   </button>
                   <button onClick={clear} className="mt-2 w-full text-center text-xs text-stone-400 hover:text-red-300">{t('cart.clear')}</button>
                 </div>

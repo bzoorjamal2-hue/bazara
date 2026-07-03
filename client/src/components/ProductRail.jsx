@@ -31,7 +31,7 @@ export default function ProductRail({ title, products, currentId, icon = null })
                 {/* مؤشّر الفيديو — زر تشغيل واضح ليُعرف أنه منتج فيديو (مثل البطاقات) */}
                 {isVideo && (
                   <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/45 ring-1 ring-white/50 backdrop-blur-sm">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/50 ring-1 ring-white/50">
                       <svg viewBox="0 0 24 24" className="h-5 w-5 translate-x-[1px] fill-white drop-shadow" aria-hidden="true">
                         <path d="M8 5v14l11-7z" />
                       </svg>
@@ -39,7 +39,7 @@ export default function ProductRail({ title, products, currentId, icon = null })
                   </span>
                 )}
                 {hasDiscount && (
-                  <span className="badge absolute start-2 top-2 bg-[#8a2438]/95 text-[#F4EDE2] shadow-sm backdrop-blur-sm">-{Math.round((1 - p.price / p.oldPrice) * 100)}%</span>
+                  <span className="badge absolute start-2 top-2 bg-[#8a2438] text-[#F4EDE2] shadow-sm">-{Math.round((1 - p.price / p.oldPrice) * 100)}%</span>
                 )}
               </div>
               <div className="p-2.5 text-center">

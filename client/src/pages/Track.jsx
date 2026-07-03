@@ -66,12 +66,13 @@ export default function Track() {
         <form onSubmit={search} className="glass relative overflow-hidden p-4">
           <span className="dash-hairline absolute inset-x-0 top-0" />
           <div className="flex gap-2">
+            {/* الحقل ltr داخل صفحة rtl → نموضع الأيقونة والحشوة فيزيائياً (يسار) حتى لا يغطيها النص */}
             <div className="relative min-w-0 flex-1">
-              <SearchIcon className="pointer-events-none absolute start-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-wine/40" />
+              <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-wine/40" />
               <input
                 dir="ltr"
                 inputMode="tel"
-                className="w-full rounded-full border border-wine/15 bg-white py-3 pe-4 ps-10 text-end text-[#2b2b2b] placeholder:text-stone-400 focus:border-wine/40 focus:outline-none focus:ring-2 focus:ring-wine/15"
+                className="w-full rounded-full border border-wine/15 bg-white py-3 pl-10 pr-4 text-end text-[#2b2b2b] placeholder:text-stone-400 focus:border-wine/40 focus:outline-none focus:ring-2 focus:ring-wine/15"
                 placeholder={t('track.phonePlaceholder')}
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
