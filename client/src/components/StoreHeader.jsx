@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -46,14 +46,6 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
   const [collapsed, setCollapsed] = useState(false);
   useScrollLock(drawer);
 
-  // عند فتح القائمة: نثبّت الهيدر بأعلى الشاشة (قفل التمرير يزيح body فيختفي الهيدر
-  // الملتصق) ونفتح الدرج تحته مباشرة. نقيس ارتفاع الهيدر لنبدأ الدرج بعده بلا تغطية.
-  const headerRef = useRef(null);
-  const [headerH, setHeaderH] = useState(0);
-  useEffect(() => {
-    if (drawer && headerRef.current) setHeaderH(headerRef.current.offsetHeight);
-  }, [drawer]);
-
   // طيّ الهيدر عند التمرير عبر تبديل حالة واحدة + انتقال CSS سلس (بدون تحريك التخطيط
   // كل فريم → بلا تعليق على كل الأجهزة). هيستيريسيس يمنع الرفرفة عند الحدّ.
   useEffect(() => {
@@ -85,8 +77,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
 
   return (
     <header
-      ref={headerRef}
-      className={`app-navbar mb-5 shadow-sm ${drawer ? 'fixed inset-x-0 top-0 z-[65] mx-0' : 'sticky top-0 z-50 -mx-4 -mt-5 sm:-mx-6'}`}
+      className="app-navbar sticky top-0 z-50 -mx-4 -mt-5 mb-5 shadow-sm sm:-mx-6"
       style={{ transform: 'translateZ(0)' }}
     >
       <div className="mx-auto max-w-6xl px-4 py-2.5 sm:px-6">
@@ -203,8 +194,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
       {/* الدرج الجانبي المنزلق — يُعرَض عبر Portal على مستوى الصفحة حتى لا يكون
           ابن الهيدر (المرفوع لطبقة عرض مستقلّة)، فيبقى تموضعه fixed سليماً */}
       {drawer && createPortal((
-        // الدرج يبدأ تحت الهيدر (top = ارتفاع الهيدر) فيبقى الهيدر ظاهراً فوقه بلا تغطية
-        <div className="fixed inset-x-0 bottom-0 z-[60]" style={{ top: headerH }}>
+        <div className="fixed inset-0 z-[60]">
           <div className="absolute inset-0 bg-black/50 animate-fade-up" onClick={() => setDrawer(false)} />
           <aside
             onClick={(e) => e.stopPropagation()}
