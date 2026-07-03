@@ -33,19 +33,36 @@ export default function Wishlist() {
       {items.length === 0 ? (
         <div className="glass p-10 text-center text-stone-400">{t('wishlist.empty')}</div>
       ) : (
+        // بطاقات editorial مطابقة لبطاقات المتجر: صورة مدوّرة بلا صندوق + زر سلة عائم + حذف فوق الصورة
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {items.map((p, i) => (
-            <div key={p.id} className="glass animate-fade-up overflow-hidden" style={{ animationDelay: `${i * 50}ms` }}>
-              <Link to={`/product/${p.id}`} className="block aspect-[3/4] overflow-hidden bg-ink-800">
-                <img src={p.imageUrl ? cldThumb(p.imageUrl, 400) : PH} alt={p.name} loading="lazy" className="h-full w-full object-cover transition hover:scale-105" onError={(e) => (e.currentTarget.src = PH)} />
-              </Link>
-              <div className="p-3">
-                <Link to={`/product/${p.id}`} className="line-clamp-1 font-semibold text-stone-100 hover:text-gold-200">{p.name}</Link>
-                <p className="mt-1 font-display font-bold text-gold-300">{t('common.currency')}{p.price}</p>
-                <div className="mt-2 flex gap-2">
-                  <button onClick={() => add(p)} className="btn-primary flex-1 gap-1.5 !px-2 !py-1.5 text-xs"><CartIcon className="h-4 w-4" /> {t('product.addToCart')}</button>
-                  <button onClick={() => remove(p.id)} aria-label={t('common.remove')} className="btn-ghost !px-2.5 !py-1.5 text-xs"><XIcon className="h-4 w-4" /></button>
-                </div>
+            <div key={p.id} className="group animate-fade-up" style={{ animationDelay: `${i * 50}ms` }}>
+              <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-ink-800 shadow-[0_14px_30px_-16px_rgba(46,33,24,0.45)] ring-1 ring-black/5">
+                <Link to={`/product/${p.id}`} className="block h-full w-full">
+                  <img src={p.imageUrl ? cldThumb(p.imageUrl, 400) : PH} alt={p.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" onError={(e) => (e.currentTarget.src = PH)} />
+                </Link>
+                <button
+                  onClick={() => remove(p.id)}
+                  aria-label={t('common.remove')}
+                  className="absolute end-2 top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/45 text-white transition hover:bg-red-500/80"
+                >
+                  <XIcon className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => add(p)}
+                  aria-label={t('product.addToCart')}
+                  title={t('product.addToCart')}
+                  className="absolute bottom-2.5 end-2.5 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-[#5e4636] text-[#F4EDE2] shadow-[0_10px_22px_-8px_rgba(46,33,24,0.7)] ring-1 ring-[#F4EDE2]/25 transition hover:bg-[#3f2e22]"
+                >
+                  <CartIcon className="h-5 w-5" />
+                </button>
+              </div>
+              <div className="px-1 pt-2.5">
+                <Link to={`/product/${p.id}`} className="line-clamp-1 font-display font-semibold text-stone-100 hover:text-gold-200">{p.name}</Link>
+                <p className="mt-0.5 flex items-baseline gap-2">
+                  <span className="font-display text-lg font-bold text-wine">{t('common.currency')}{p.price}</span>
+                  {p.oldPrice > p.price && <span className="strike text-xs text-stone-500">{t('common.currency')}{p.oldPrice}</span>}
+                </p>
               </div>
             </div>
           ))}

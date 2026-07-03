@@ -230,12 +230,14 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
 
           {err && <p className="mt-3 text-sm font-medium text-red-500">{err}</p>}
 
+          {/* أزرار حبوب فاخرة موحّدة مع صفحة المنتج */}
           <div className="mt-3 flex items-center gap-2">
             <motion.button
               onClick={onAdd}
               disabled={outOfStock}
               whileTap={{ scale: 0.96 }}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-wine py-3 font-semibold text-cream transition hover:bg-wine-dark disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex flex-1 items-center justify-center gap-2 rounded-full py-3.5 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
+              style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)', boxShadow: '0 14px 30px -12px rgba(74, 19, 34, 0.6)' }}
             >
               <CartIcon className="h-5 w-5" />
               {outOfStock ? t('product.outOfStock') : t('product.addToCart')}
@@ -244,7 +246,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
               onClick={() => toggle(product)}
               whileTap={{ scale: 0.85 }}
               aria-label="wishlist"
-              className={`flex h-12 w-12 items-center justify-center rounded-xl border transition ${liked ? 'border-red-400 bg-red-50 text-red-500' : 'border-wine/25 text-wine hover:bg-wine/5'}`}
+              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full border transition ${liked ? 'border-red-400 bg-red-50 text-red-500' : 'border-wine/25 text-wine hover:bg-wine/5'}`}
             >
               <HeartIcon className="h-5 w-5" filled={liked} />
             </motion.button>

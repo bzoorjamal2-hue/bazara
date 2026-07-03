@@ -57,11 +57,12 @@ export default function WishlistDrawer() {
             <div className="flex-1 space-y-3 overflow-y-auto p-4">
               {items.map((p) => (
                 <div key={p.id} className="glass flex gap-3 p-3">
+                  {/* صورة أكبر بنسبة 3:4 + اسم بخط العرض — نفس روح بطاقات السلة */}
                   <button onClick={() => { close(); navigate(`/product/${p.id}`); }} className="shrink-0">
-                    <img src={p.imageUrl ? cldThumb(p.imageUrl, 160) : PH} alt={p.name} className="h-16 w-16 rounded-lg object-cover" onError={(e) => (e.currentTarget.src = PH)} />
+                    <img src={p.imageUrl ? cldThumb(p.imageUrl, 160) : PH} alt={p.name} className="h-20 w-16 rounded-xl object-cover shadow-sm" onError={(e) => (e.currentTarget.src = PH)} />
                   </button>
                   <div className="min-w-0 flex-1">
-                    <button onClick={() => { close(); navigate(`/product/${p.id}`); }} className="block truncate text-start text-sm font-semibold text-stone-100">{p.name}</button>
+                    <button onClick={() => { close(); navigate(`/product/${p.id}`); }} className="block truncate text-start font-display text-sm font-semibold text-stone-100">{p.name}</button>
                     <p className="mt-1 flex items-center gap-2">
                       <span className="font-bold text-gold-300">{t('common.currency')}{p.price}</span>
                       {p.oldPrice > p.price && <span className="strike text-xs text-stone-500">{t('common.currency')}{p.oldPrice}</span>}
@@ -76,7 +77,11 @@ export default function WishlistDrawer() {
             </div>
 
             <div className="space-y-2 border-t border-gold-400/15 p-4">
-              <button onClick={addAll} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-wine py-3.5 font-bold text-cream shadow-lg transition hover:bg-wine-dark">
+              <button
+                onClick={addAll}
+                className="flex w-full items-center justify-center gap-2 rounded-full py-4 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
+                style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)', boxShadow: '0 16px 34px -14px rgba(74, 19, 34, 0.65)' }}
+              >
                 <CartIcon className="h-5 w-5" /> {t('wishlist.addAllToCart')}
               </button>
               <button onClick={goFull} className="flex w-full items-center justify-center gap-1 text-center text-xs text-stone-400 hover:text-gold-200">{t('wishlist.viewAll')} <ForwardIcon className="h-3 w-3" /></button>

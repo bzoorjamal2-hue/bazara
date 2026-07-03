@@ -61,17 +61,25 @@ export default function Subscribe() {
       {error && <div className="mb-5 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
 
       {!selected ? (
+        // بطاقات باقات فاخرة: خيط ذهبي علوي + سعر ضخم + زر حبة ناري (السنوية مميّزة بإطار ذهبي)
         <div className="grid gap-5 sm:grid-cols-2">
           {PLANS.map((p) => (
-            <div key={p.key} className={`glass-strong relative flex flex-col p-7 ${p.key === 'yearly' ? 'ring-1 ring-gold-400/50' : ''}`}>
-              {p.badge && <span className="badge absolute end-5 top-5 bg-gold-400 text-ink-950">{t(`subscription.${p.badge}`)}</span>}
+            <div key={p.key} className={`glass-strong relative flex flex-col overflow-hidden rounded-3xl p-7 ${p.key === 'yearly' ? 'ring-2 ring-gold-400/60' : ''}`}>
+              <span className="dash-hairline absolute inset-x-0 top-0" />
+              {p.badge && <span className="badge absolute end-5 top-5 bg-gold-400 text-ink-950 shadow-sm">{t(`subscription.${p.badge}`)}</span>}
               <h2 className="font-display text-xl font-bold text-stone-100">{t(`subscription.${p.key}`)}</h2>
               <div className="mt-4 flex items-baseline gap-1">
                 <span className="font-display text-5xl font-extrabold gradient-text">${p.price}</span>
                 <span className="text-stone-400">{t(`subscription.${p.per}`)}</span>
               </div>
               <p className="mt-4 text-sm leading-relaxed text-stone-400">{t('subscription.features')}</p>
-              <button onClick={() => setSelected(p.key)} className="btn-primary mt-6 w-full">{t('subscription.choose')}</button>
+              <button
+                onClick={() => setSelected(p.key)}
+                className="mt-6 w-full rounded-full py-3.5 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
+                style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)', boxShadow: '0 14px 30px -12px rgba(74, 19, 34, 0.6)' }}
+              >
+                {t('subscription.choose')}
+              </button>
             </div>
           ))}
         </div>

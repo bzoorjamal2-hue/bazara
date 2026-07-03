@@ -14,9 +14,14 @@ const svg = `<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http:/
   <rect width="1200" height="630" fill="url(#bg)"/>
   <!-- إطار ذهبي ناعم -->
   <rect x="28" y="28" width="1144" height="574" rx="28" fill="none" stroke="#c79a3a" stroke-opacity="0.45" stroke-width="2"/>
-  <!-- شعار دائري -->
-  <circle cx="600" cy="212" r="92" fill="#fffaf0" stroke="#c79a3a" stroke-width="8"/>
-  <text x="600" y="248" font-family="Georgia, 'Times New Roman', serif" font-size="110" font-weight="700" fill="#5e4636" text-anchor="middle">B</text>
+  <!-- الختم: قرص عاجي بحلقتين ذهبيتين + B منقوشة + قوس بماستين -->
+  <circle cx="600" cy="212" r="92" fill="#fffaf0" stroke="#c79a3a" stroke-width="7"/>
+  <circle cx="600" cy="212" r="80" fill="none" stroke="#c79a3a" stroke-width="2.2" opacity="0.75"/>
+  <text x="603.5" y="251.5" font-family="Georgia, 'Times New Roman', serif" font-size="100" font-weight="700" fill="#d4af37" opacity="0.85" text-anchor="middle">B</text>
+  <text x="600" y="248" font-family="Georgia, 'Times New Roman', serif" font-size="100" font-weight="700" fill="#4a3628" text-anchor="middle">B</text>
+  <path d="M566 250 Q600 266 634 250" fill="none" stroke="#c79a3a" stroke-width="5" stroke-linecap="round"/>
+  <path d="M555 238 l5 5 -5 5 -5 -5 Z" fill="#c79a3a"/>
+  <path d="M645 238 l5 5 -5 5 -5 -5 Z" fill="#c79a3a"/>
   <!-- الاسم -->
   <text x="600" y="400" font-family="Georgia, 'Times New Roman', serif" font-size="104" font-weight="700" fill="#5e4636" text-anchor="middle" letter-spacing="2">Bazara</text>
   <!-- خط ذهبي -->
