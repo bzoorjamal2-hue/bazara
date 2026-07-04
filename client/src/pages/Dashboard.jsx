@@ -46,31 +46,15 @@ const ADMIN_SECTIONS = [
 export default function Dashboard() {
   const { t } = useTranslation();
   const { user, store, subscription } = useAuth();
-  const [params, setParams] = useSearchParams();
+  const [params] = useSearchParams();
   const [productsCount, setProductsCount] = useState(null);
-  const tabsRef = useRef(null);
   const isAdmin = subscription?.isAdmin;
-  const sections = isAdmin ? ADMIN_SECTIONS : SECTIONS;
-  const allowed = sections.map((s) => s.key);
+  // التنقّل بين الأقسام عبر قائمة ☰ (Navbar) — المصدر الوحيد بلا تكرار
+  const allowed = (isAdmin ? ADMIN_SECTIONS : SECTIONS).map((s) => s.key);
   const defaultTab = isAdmin ? 'subscribers' : 'overview';
   const raw = params.get('tab') || defaultTab;
   // المدير لا يصل لأقسام البيع حتى عبر الرابط
   const section = allowed.includes(raw) ? raw : defaultTab;
-  const setSection = (key) => setParams(key === defaultTab ? {} : { tab: key });
-  // هذه المفاتيح كائنات بملفات الترجمة (لها title داخلي) — استدعاؤها مباشرة يرجّع خطأ i18n
-  const NESTED = ['analytics', 'coupons', 'referrals', 'stockRequests'];
-  const labelFor = (key) =>
-    key === 'admin' ? t('admin.nav')
-    : key === 'subscribers' ? t('admin.subscribersNav')
-    : key === 'siteSliders' ? t('admin.siteSliders')
-    : NESTED.includes(key) ? t(`dashboard.${key}.title`)
-    : t(`dashboard.${key}`);
-
-  // إبقاء التبويب النشط ظاهراً وسط الشريط (بلا قفزة عمودية للصفحة)
-  useEffect(() => {
-    tabsRef.current?.querySelector('[data-active="true"]')
-      ?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
-  }, [section]);
 
   const avatar = user?.avatarUrl ? (
     <img src={user.avatarUrl} alt={user.name} className="h-14 w-14 rounded-full object-cover ring-2 ring-[#e6c878]/60" />
@@ -108,21 +92,6 @@ export default function Dashboard() {
           )}
         </div>
       </header>
-
-      {/* شريط تبويبات أنيق — تنقّل ظاهر بدل الاعتماد على القائمة فقط */}
-      <nav ref={tabsRef} className="dash-tabs -mx-1 flex gap-2 overflow-x-auto px-1 py-1" aria-label={t('dashboard.title')}>
-        {sections.map(({ key, Icon }) => (
-          <button
-            key={key}
-            type="button"
-            data-active={section === key ? 'true' : 'false'}
-            onClick={() => setSection(key)}
-            className={section === key ? 'dash-tab dash-tab-active' : 'dash-tab'}
-          >
-            <Icon className="h-4 w-4" /> {labelFor(key)}
-          </button>
-        ))}
-      </nav>
 
       <div className="min-w-0">
         {section === 'overview' && !isAdmin && <Overview productsCount={productsCount} />}

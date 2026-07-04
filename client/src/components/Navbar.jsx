@@ -73,7 +73,6 @@ function AccountMenu({ user, store, subscription, isAdmin, onClose, onLogout }) 
           {!isAdmin && store?.slug && <MenuRow to={`/store/${store.slug}`} onClick={onClose} Icon={StoreIcon} label={t('nav.openStore')} />}
           {isAdmin && <MenuRow to="/shop" onClick={onClose} Icon={StoreIcon} label={t('nav.home')} />}
           <MenuRow to="/dashboard" onClick={onClose} Icon={GridIcon} label={t('dashboard.title')} />
-          <MenuRow to="/dashboard?tab=profile" onClick={onClose} Icon={UserLineIcon} label={t('dashboard.profile')} />
           <div className="my-1 h-px bg-wine/10" />
           <button
             onClick={() => { onClose(); onLogout(); }}
