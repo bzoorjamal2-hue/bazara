@@ -65,11 +65,15 @@ function AnimatedRoutes() {
   // useLayoutEffect لا useEffect: التنظيف (الذي يحفظ الموضع ويزيل المستمع) يعمل في
   // مرحلة التخطيط — أي قبل أن تصفّر الصفحة الجديدة التمرير بـ scrollTo(0). لو كان
   // useEffect (تمريري) لعمل التنظيف بعد ذلك فيحفظ 0 بدل الموضع الحقيقي (كان يرجع للأعلى).
+  // نحفظ موضع التمرير على كل حدث تمرير (يلتقط الموضع الحقيقي أثناء التصفّح). لا نحفظ
+  // في التنظيف: لحظة المغادرة يتقلّص ارتفاع الصفحة القديمة فينقصّ scrollY (clamp) لقيمة
+  // أصغر — والتنظيف كان يحفظها فيرجع الزر لمكان خاطئ. المستمع سبق وحفظ القيمة الصحيحة،
+  // والتنظيف يكتفي بإزالة المستمع (يُزال تزامنياً قبل حدث القصّ غير المتزامن).
   useLayoutEffect(() => {
     const key = location.key;
     const save = () => { scrollPositions.set(key, window.scrollY); };
     window.addEventListener('scroll', save, { passive: true });
-    return () => { save(); window.removeEventListener('scroll', save); };
+    return () => window.removeEventListener('scroll', save);
   }, [location.key]);
 
   // عند الرجوع (POP) نستعيد الموضع بقفزة واحدة فورية بالضبط (بلا تدرّج ولا رجوع للأعلى).
