@@ -54,21 +54,30 @@ export default function StorePage() {
 
   useEffect(() => {
     const cached = getCache(`storepage:${slug}`);
-    setData(cached || null); // عرض فوري من المخزّن عند الرجوع، ثم تحديث بالخلفية
+    // لا نُعيد ضبط البيانات إن كانت مُحمّلة أصلاً لهذا المتجر (مُهيّأة من useState عند
+    // الرجوع) — كان setData بمرجع جديد يُعيد رسم الصفحة الثقيلة كاملةً بلا داعٍ = تعليق.
+    setData((prev) => (prev && prev.store?.slug === slug ? prev : (cached || null)));
     setError('');
     if (cached) ensureStore(cached.store.slug);
-    api
+    const load = () => api
       .get(`/public/store/${slug}`)
       .then((res) => {
         const s = res.data.store;
         // نحقن معرّف/اسم المتجر بكل منتج، وننادي ensureStore لتفريغ السلة إن كانت من متجر مختلف
         const products = (res.data.products || []).map((p) => ({ ...p, storeSlug: s.slug, storeName: s.name }));
         const mapped = { ...res.data, products };
-        setData(mapped);
         setCache(`storepage:${slug}`, mapped);
         ensureStore(s.slug);
+        // لا نُعيد رسم الصفحة الثقيلة إن كانت البيانات الجديدة مطابقة للمعروضة (شائع عند
+        // الرجوع) — مقارنة واحدة أرخص بكثير من إعادة تصيير الشجرة كاملةً.
+        setData((prev) => (prev && JSON.stringify(prev) === JSON.stringify(mapped) ? prev : mapped));
       })
       .catch((err) => { if (!cached) setError(getErrorMessage(err, t('errors.storeNotFound'))); });
+    // عند الرجوع (كاش موجود) نؤجّل التحديث الخلفي قليلاً كي لا يزاحم رسم الرجوع = بلا تعليق.
+    // بلا كاش (فتح أول مرة) نحمّل فوراً.
+    if (cached) { const id = setTimeout(load, 450); return () => clearTimeout(id); }
+    load();
+    return undefined;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, t]);
 

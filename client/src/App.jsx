@@ -84,24 +84,24 @@ function AnimatedRoutes() {
       const target = scrollPositions.get(location.key) || 0;
       if (target > 0) {
         let done = false;
-        const maxReach = () => document.documentElement.scrollHeight - window.innerHeight;
-        // نصحّح الموضع فقط عند الانحراف الفعلي (>2px): إن كنّا مستقرّين لا نستدعي scrollTo
-        // مع كل نموّ للصفحة — هذا يمنع التعليق مع بقاء التصحيح عند اختلاف الارتفاع.
+        // نصحّح الموضع فقط عند الانحراف الفعلي (>2px). لا نستخدم ResizeObserver على body
+        // (كان يقرأ scrollHeight مع كل تغيّر حجم أثناء تحميل الصور/الفيديو = layout thrashing
+        // = تعليق). بدلاً منه: بضع محاولات مجدولة قليلة تلتقط انزياح التحميل بلا شغل مستمر.
         const apply = () => {
           if (done) return;
-          if (maxReach() >= target - 2 && Math.abs(window.scrollY - target) > 2) {
+          const maxReach = document.documentElement.scrollHeight - window.innerHeight;
+          if (maxReach >= target - 2 && Math.abs(window.scrollY - target) > 2) {
             window.scrollTo({ top: target, behavior: 'instant' });
           }
         };
         const onUser = () => { done = true; }; // لا نقاوم المستخدم إن حرّك بنفسه
         window.addEventListener('wheel', onUser, { passive: true });
         window.addEventListener('touchmove', onUser, { passive: true });
-        apply(); // فوري إن كان المحتوى جاهزاً (من الكاش)
-        const ro = new ResizeObserver(apply);
-        ro.observe(document.body);
-        const stop = setTimeout(() => { done = true; ro.disconnect(); }, 1500);
+        apply(); // فوري (المحتوى من الكاش غالباً جاهز)
+        const timers = [80, 200, 400, 700].map((ms) => setTimeout(apply, ms));
         return () => {
-          done = true; ro.disconnect(); clearTimeout(stop);
+          done = true;
+          timers.forEach(clearTimeout);
           window.removeEventListener('wheel', onUser);
           window.removeEventListener('touchmove', onUser);
         };

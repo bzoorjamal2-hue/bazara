@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import StarRating from './StarRating.jsx';
@@ -12,7 +12,6 @@ import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
 import { flyToCart } from '../utils/flyToCart.js';
 import QuickViewModal from './QuickViewModal.jsx';
 
-const MotionLink = motion.create(Link);
 
 const PLACEHOLDER =
   'data:image/svg+xml;utf8,' +
@@ -94,13 +93,10 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
 
   return (
     <>
-    <MotionLink
+    <Link
       to={`/product/${product.id}`}
-      className="group relative block animate-fade-up"
+      className="group relative block animate-fade-up transition-transform duration-300 ease-out will-change-transform hover:-translate-y-1.5 active:scale-[0.99]"
       style={{ animationDelay: `${Math.min(index, 8) * 60}ms` }}
-      whileHover={{ y: -6 }}
-      whileTap={{ scale: 0.985 }}
-      transition={{ type: 'spring', stiffness: 320, damping: 22 }}
       onMouseEnter={() => product.videoUrl && setHovering(true)}
       onMouseLeave={() => setHovering(false)}
       onTouchStart={startPress}
@@ -129,24 +125,20 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
         </div>
 
         {/* مفضّلة */}
-        <motion.button
+        <button
           onClick={onLike}
-          whileTap={{ scale: 0.8 }}
-          animate={liked ? { scale: [1, 1.35, 1] } : {}}
-          transition={{ duration: 0.35 }}
-          className={`absolute end-2 top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
+          className={`absolute end-2 top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full transition active:scale-90 ${
             liked ? 'bg-red-500/90 text-white' : 'bg-black/45 text-white hover:bg-black/60'
           }`}
           aria-label="wishlist"
         >
           <HeartIcon className="h-4 w-4" filled={liked} />
-        </motion.button>
+        </button>
 
         {/* نظرة سريعة — تفتح نافذة بدون مغادرة الصفحة */}
-        <motion.button
+        <button
           onClick={onQuickView}
-          whileTap={{ scale: 0.85 }}
-          className="absolute end-2 top-[3.25rem] z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/45 text-white transition hover:bg-black/60"
+          className="absolute end-2 top-[3.25rem] z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/45 text-white transition hover:bg-black/60 active:scale-90"
           aria-label={t('product.quickView')}
           title={t('product.quickView')}
         >
@@ -154,7 +146,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
             <path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" />
             <circle cx="12" cy="12" r="3" />
           </svg>
-        </motion.button>
+        </button>
 
         {/* معاينة الفيديو عند مرور الماوس (كمبيوتر) — صامتة وناعمة */}
         {product.videoUrl && hovering && (
@@ -185,16 +177,15 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
         )}
 
         {/* زر سلة دائري عائم على الصورة — بنّي عميق بنص عاجي (ثابت بالوضعين) */}
-        <motion.button
+        <button
           onClick={onAdd}
           disabled={outOfStock}
-          whileTap={{ scale: 0.85 }}
-          className="absolute bottom-2.5 end-2.5 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-[#5e4636] text-[#F4EDE2] shadow-[0_10px_22px_-8px_rgba(46,33,24,0.7)] ring-1 ring-[#F4EDE2]/25 transition hover:bg-[#3f2e22] disabled:cursor-not-allowed disabled:opacity-40"
+          className="absolute bottom-2.5 end-2.5 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-[#5e4636] text-[#F4EDE2] shadow-[0_10px_22px_-8px_rgba(46,33,24,0.7)] ring-1 ring-[#F4EDE2]/25 transition hover:bg-[#3f2e22] active:scale-90 disabled:cursor-not-allowed disabled:opacity-40"
           aria-label={t('product.addToCart')}
           title={t('product.addToCart')}
         >
           <CartIcon className="h-5 w-5" />
-        </motion.button>
+        </button>
       </div>
 
       {/* الاسم والسعر تحت الصورة مباشرة — بلا صندوق (editorial) */}
@@ -209,7 +200,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
           <p className="mt-0.5 text-[11px] font-medium text-emerald-700">{t('product.soldCount', { count: product.soldCount })}</p>
         )}
       </div>
-    </MotionLink>
+    </Link>
 
     <AnimatePresence>
       {quickOpen && (
