@@ -49,7 +49,8 @@ export default function Layout({ children }) {
       {!hideChrome && !showBottomNav && <PublicFooter />}
       <CartDrawer />
       <WishlistDrawer />
-      <CartReminder />
+      {/* لا نُظهر تذكير السلة على صفحات الحساب/الترحيب (يغطّي النموذج) */}
+      {!isAuthFull && !isAppWelcome && <CartReminder />}
       <OfflineBanner />
       {showBottomNav && <BottomNav />}
     </div>
