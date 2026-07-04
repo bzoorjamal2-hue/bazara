@@ -184,6 +184,17 @@ input[type='datetime-local']::-webkit-datetime-edit {
 /* أسهم تتبع اتجاه اللغة: بالعربي تنقلب أفقياً (ForwardIcon/BackIcon بـ icons.jsx) */
 [dir='rtl'] .rtl-flip { transform: scaleX(-1); }
 
+/* الوضع الأفقي/الشاشات القصيرة (جوال مدوّر): صفحات الحساب تُصغّر الهيرو وتُخفي الوصف
+   والزخرفة ليظهر النموذج (البريد/كلمة السر) فوراً بلا حاجة للتمرير. */
+@media (max-height: 520px) {
+  .auth-hero { padding-top: 0.4rem; padding-bottom: 1.5rem; }
+  .auth-hero .auth-logo { height: 2.5rem; width: 2.5rem; }
+  .auth-hero h1 { font-size: 1.35rem; margin-top: 0.25rem; }
+  .auth-tagline, .auth-decor { display: none; }
+  .auth-sheet { margin-top: -1.75rem; padding-top: 1rem; }
+  .auth-title { font-size: 1.15rem; margin-bottom: 0.75rem; }
+}
+
 /* زر إرسال صفحات الحساب — حبة خمرية نارية بهالة ذهبية (نفس هوية أزرار الشراء) */
 .auth-submit {
   @apply w-full rounded-full py-4 text-center font-bold transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60;

@@ -108,7 +108,7 @@ export default function AuthShell({ title, subtitle, children, back = '/', compa
         variants={rise}
         initial="hidden"
         animate="show"
-        className={`dash-hero relative overflow-hidden rounded-none px-5 text-center ${compactHero ? 'pb-16' : 'pb-20'}`}
+        className={`auth-hero dash-hero relative overflow-hidden rounded-none px-5 text-center ${compactHero ? 'pb-16' : 'pb-20'}`}
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.85rem)' }}
       >
         <div className="pointer-events-none absolute -top-10 start-1/3 h-44 w-44 rounded-full bg-[#e6c878]/15 blur-3xl" />
@@ -139,7 +139,7 @@ export default function AuthShell({ title, subtitle, children, back = '/', compa
               transition={{ duration: 14, repeat: Infinity, ease: 'linear' }}
             />
             <div className="relative rounded-full bg-black/25 p-1 ring-1 ring-[#e6c878]/40">
-              <Logo className={compactHero ? 'h-14 w-14 drop-shadow-xl' : 'h-20 w-20 drop-shadow-xl'} />
+              <Logo className={`auth-logo ${compactHero ? 'h-14 w-14 drop-shadow-xl' : 'h-20 w-20 drop-shadow-xl'}`} />
             </div>
           </div>
           <h1
@@ -148,9 +148,9 @@ export default function AuthShell({ title, subtitle, children, back = '/', compa
           >
             Bazara
           </h1>
-          <p className="mt-1 text-sm text-[#F4EDE2]/85">{t('app.tagline')}</p>
+          <p className="auth-tagline mt-1 text-sm text-[#F4EDE2]/85">{t('app.tagline')}</p>
           {/* زخرفة ماسية ذهبية */}
-          <div className="mt-3 flex items-center justify-center gap-2 text-[#e6c878]/60">
+          <div className="auth-decor mt-3 flex items-center justify-center gap-2 text-[#e6c878]/60">
             <span className="h-px w-10 bg-gradient-to-r from-transparent to-[#e6c878]/50" />
             <span aria-hidden className="text-[10px]">❖</span>
             <span className="h-px w-10 bg-gradient-to-l from-transparent to-[#e6c878]/50" />
@@ -160,12 +160,12 @@ export default function AuthShell({ title, subtitle, children, back = '/', compa
 
       {/* الصفحة البيضاء تطلع فوق الهيرو وتمتد حتى أسفل الشاشة — قطعة واحدة */}
       <div
-        className="relative z-10 -mt-12 flex-1 rounded-t-[2rem] bg-white px-5 pt-6 shadow-[0_-18px_44px_-26px_rgba(46,33,24,0.45)] sm:px-6"
+        className="auth-sheet relative z-10 -mt-12 flex-1 rounded-t-[2rem] bg-white px-5 pt-6 shadow-[0_-18px_44px_-26px_rgba(46,33,24,0.45)] sm:px-6"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.75rem)' }}
       >
         <span className="dash-hairline absolute inset-x-0 top-0" />
         <div className="mx-auto w-full max-w-md">
-          <motion.h2 custom={1} variants={rise} initial="hidden" animate="show" className="mb-1 text-center font-display text-2xl font-bold text-wine">
+          <motion.h2 custom={1} variants={rise} initial="hidden" animate="show" className="auth-title mb-1 text-center font-display text-2xl font-bold text-wine">
             {title}
           </motion.h2>
           {subtitle && (
