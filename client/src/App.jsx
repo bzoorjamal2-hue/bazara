@@ -83,25 +83,25 @@ function AnimatedRoutes() {
     if (navType === 'POP') {
       const target = scrollPositions.get(location.key) || 0;
       if (target > 0) {
-        let userScrolled = false;
+        let done = false;
         const maxReach = () => document.documentElement.scrollHeight - window.innerHeight;
-        // نطبّق الموضع المطلوب فقط عندما يكبر المحتوى كفايةً ليبلغه، ونعيد تطبيقه
-        // مع كل نموّ للصفحة (الصور/البيانات تصل تدريجياً) كي لا يزيح الموضع. نتوقّف
-        // فور أن يحرّك المستخدم التمرير بنفسه أو بعد مهلة قصيرة (لا نقاوم المستخدم).
+        // نصحّح الموضع فقط عند الانحراف الفعلي (>2px): إن كنّا مستقرّين لا نستدعي scrollTo
+        // مع كل نموّ للصفحة — هذا يمنع التعليق مع بقاء التصحيح عند اختلاف الارتفاع.
         const apply = () => {
-          if (userScrolled) return;
-          if (maxReach() >= target - 2) window.scrollTo({ top: target, behavior: 'instant' });
+          if (done) return;
+          if (maxReach() >= target - 2 && Math.abs(window.scrollY - target) > 2) {
+            window.scrollTo({ top: target, behavior: 'instant' });
+          }
         };
-        const onUser = () => { userScrolled = true; };
+        const onUser = () => { done = true; }; // لا نقاوم المستخدم إن حرّك بنفسه
         window.addEventListener('wheel', onUser, { passive: true });
         window.addEventListener('touchmove', onUser, { passive: true });
         apply(); // فوري إن كان المحتوى جاهزاً (من الكاش)
-        const ro = new ResizeObserver(apply); // نتابع نموّ الصفحة ونصحّح الموضع
+        const ro = new ResizeObserver(apply);
         ro.observe(document.body);
-        const stop = setTimeout(() => { userScrolled = true; ro.disconnect(); }, 1800);
+        const stop = setTimeout(() => { done = true; ro.disconnect(); }, 1500);
         return () => {
-          ro.disconnect();
-          clearTimeout(stop);
+          done = true; ro.disconnect(); clearTimeout(stop);
           window.removeEventListener('wheel', onUser);
           window.removeEventListener('touchmove', onUser);
         };
