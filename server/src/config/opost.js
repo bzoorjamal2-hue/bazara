@@ -131,11 +131,26 @@ export function asList(resp) {
 const TTL = 6 * 60 * 60 * 1000; // 6 ساعات
 const mem = { cities: null, citiesAt: 0, types: null, typesAt: 0, areas: new Map() };
 
+// يجلب كل الصفحات: ردّ أوبتيموس مقسّم صفحات (25/صفحة) — جنين مثلاً 133 منطقة على 6 صفحات.
+// كان الكود يجلب الصفحة الأولى فقط فتغيب القرى (رابا = منطقة 50 على الصفحة الثالثة).
+async function fetchAllPages(path, token) {
+  const sep = path.includes('?') ? '&' : '?';
+  let all = [];
+  for (let page = 1; page <= 40; page++) {
+    const resp = await opostApi(`${path}${sep}page=${page}`, token);
+    const block = Array.isArray(resp) ? resp[0] : resp;
+    const data = Array.isArray(block?.data) ? block.data : asList(resp);
+    if (data.length) all = all.concat(data);
+    const pg = block?.pagination;
+    if (!pg || !pg.has_more_pages || page >= (pg.last_page || page)) break;
+  }
+  return all;
+}
+
 export async function fetchCities(token) {
   if (mem.cities && Date.now() - mem.citiesAt < TTL) return mem.cities;
-  const list = asList(await opostApi('/api/resources/cities', token));
-  mem.cities = list;
-  mem.citiesAt = Date.now();
+  const list = await fetchAllPages('/api/resources/cities', token);
+  if (list.length) { mem.cities = list; mem.citiesAt = Date.now(); }
   return list;
 }
 
@@ -143,8 +158,8 @@ export async function fetchAreas(token, cityId) {
   const key = String(cityId);
   const hit = mem.areas.get(key);
   if (hit && Date.now() - hit.at < TTL) return hit.list;
-  const list = asList(await opostApi(`/api/resources/areas?city=${encodeURIComponent(cityId)}`, token));
-  mem.areas.set(key, { list, at: Date.now() });
+  const list = await fetchAllPages(`/api/resources/areas?city=${encodeURIComponent(cityId)}`, token);
+  if (list.length) mem.areas.set(key, { list, at: Date.now() });
   return list;
 }
 
