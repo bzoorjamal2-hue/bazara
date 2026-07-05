@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
-import { buildWhatsappLink } from '../../utils/whatsapp.js';
+import { buildWhatsappLink, waCandidates } from '../../utils/whatsapp.js';
 import { PinIcon, NoteIcon, TicketIcon, WhatsAppIcon, TruckIcon } from '../../components/icons.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import OpostSend from '../../components/OpostSend.jsx';
@@ -273,7 +273,11 @@ export default function OrdersManager() {
             let lastDay = null;
             return orders.map((o) => {
             const subtotal = (o.total - (o.deliveryFee || 0) + (o.discount || 0)).toFixed(2);
-            const wa = o.customerPhone ? buildWhatsappLink(o.customerPhone) : '';
+            // أرقام 059/056 قد تكون على واتساب بمقدمة 970 أو 972 — نجهّز المقدمتين:
+            // الزر الرئيسي يفتح الأرجح، وبجانبه بديل صغير لو قال واتساب "غير موجود"
+            const waNums = o.customerPhone ? waCandidates(o.customerPhone) : [];
+            const wa = waNums[0] ? `https://wa.me/${waNums[0]}` : '';
+            const waAlt = waNums[1] ? `https://wa.me/${waNums[1]}` : '';
             const k = dayKey(o.createdAt);
             const header = k !== lastDay ? (
               <div className="flex items-center gap-2 pt-2">
@@ -355,7 +359,10 @@ export default function OrdersManager() {
                   )}
                   {savingId === o.id && <span className="text-xs text-stone-500">…</span>}
                   {wa && (
-                    <a href={wa} target="_blank" rel="noreferrer" className="btn-whatsapp gap-1.5 !px-3 !py-1.5 text-xs"><WhatsAppIcon className="h-4 w-4" /> {t('dashboard.ordersSection.contactWhatsapp')}</a>
+                    <a href={wa} target="_blank" rel="noreferrer" className="btn-whatsapp gap-1.5 !px-3 !py-1.5 text-xs"><WhatsAppIcon className="h-4 w-4" /> {t('dashboard.ordersSection.contactWhatsapp')}{waAlt ? <span dir="ltr" className="opacity-75">+{waNums[0].slice(0, 3)}</span> : null}</a>
+                  )}
+                  {waAlt && (
+                    <a href={waAlt} target="_blank" rel="noreferrer" title={t('dashboard.ordersSection.waAltHint')} className="btn-whatsapp gap-1 !px-2.5 !py-1.5 text-xs opacity-80"><WhatsAppIcon className="h-4 w-4" /> <span dir="ltr">+{waNums[1].slice(0, 3)}</span></a>
                   )}
                   {(store?.deliveryPhone || store?.whatsapp) && (
                     <button onClick={() => sendToDelivery(o)} className="inline-flex items-center gap-1 rounded-xl border border-gold-400/30 px-3 py-1.5 text-xs font-semibold text-gold-200 transition hover:bg-gold-400/10">

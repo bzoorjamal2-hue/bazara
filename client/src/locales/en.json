@@ -255,6 +255,7 @@
       "address": "Address",
       "notes": "Notes",
       "contactWhatsapp": "Contact on WhatsApp",
+      "waAltHint": "If WhatsApp says the number doesn't exist, try this prefix",
       "sendDelivery": "Send to courier",
       "today": "Today",
       "yesterday": "Yesterday",

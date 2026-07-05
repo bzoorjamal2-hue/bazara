@@ -19,6 +19,31 @@ export function waDigits(number, defaultCc = '970') {
   return cc + local;                                        // 059… → 97059… | 054… → 97254…
 }
 
+// كل الأرقام الدولية المحتملة للرقم، بالأرجح أولاً. أرقام 059/056 (جوّال/أوريدو)
+// فلسطينية لكن أصحابها قد يكونون مسجّلين على واتساب بمقدمة 970 أو 972 — فلا يمكن
+// الجزم من الرقم وحده. نُرجّع المقدمتين ليجرّب المالك الثانية بضغطة لو قال واتساب
+// "الرقم غير موجود". بادئات الداخل الحصرية (050/052/…) تبقى مقدمة واحدة (972)،
+// والرقم المكتوب بمقدمة صريحة يُقدَّم كما كُتب مع البديل عند 59/56.
+export function waCandidates(number, defaultCc = '970') {
+  let d = (number || '').replace(/\D/g, '');
+  if (!d) return [];
+  if (d.startsWith('00')) d = d.slice(2);
+  let cc, rest;
+  if (d.startsWith('970') || d.startsWith('972')) {
+    cc = d.slice(0, 3);
+    rest = d.slice(3);
+    if (rest.startsWith('0')) rest = rest.slice(1);
+  } else {
+    rest = d.startsWith('0') ? d.slice(1) : d;
+    cc = ISRAELI_MOBILE_PREFIXES.includes(rest.slice(0, 2)) ? '972' : defaultCc;
+  }
+  if (/^5[69]\d{7}$/.test(rest)) {
+    const other = cc === '970' ? '972' : '970';
+    return [cc + rest, other + rest];
+  }
+  return [cc + rest];
+}
+
 // يبني رابط واتساب لإرسال طلب جاهز لصاحب المتجر
 export function buildWhatsappOrder(number, items, lang = 'ar') {
   const digits = waDigits(number);
