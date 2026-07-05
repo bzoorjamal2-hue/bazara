@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import Select from './Select.jsx';
 import { TruckIcon, CheckIcon } from './icons.jsx';
-import { bestMatch, bestMatchScored } from '../utils/match.js';
+import { bestMatch, bestMatchScored, stripNames } from '../utils/match.js';
 
 // تخزين مؤقّت لمناطق كل مدينة (مشترك بين كل الطلبات) — يقلّل استدعاءات الـ API
 const areaCache = new Map();
@@ -54,10 +54,15 @@ export default function OpostSend({ order, cities = [], types = [], defaultType 
     if (id) await loadAreas(id);
   };
 
-  const doSend = async (c, a, ty) => {
+  // العنوان التفصيلي = عنوان الزبون بعد إزالة اسم المدينة والقرية (اللي راحوا لحقلَي
+  // المدينة والمنطقة) — يبقى الوصف الإضافي فقط بلا تكرار. اسم القرية نمرّره لتنظيفه.
+  const detailFor = (areaName) =>
+    stripNames(order.address, [order.city, areaName].filter(Boolean)) || '';
+
+  const doSend = async (c, a, ty, detail) => {
     setBusy(true); setError('');
     try {
-      const r = await api.post(`/opost/orders/${order.id}/send`, { city: c, area: a, shipmentType: ty });
+      const r = await api.post(`/opost/orders/${order.id}/send`, { city: c, area: a, shipmentType: ty, address: detail ?? '' });
       setTracking(r.data.tracking || '✓');
       setOpen(false);
       onSent?.(order.id, r.data.tracking);
@@ -86,7 +91,7 @@ export default function OpostSend({ order, cities = [], types = [], defaultType 
     const alt = bestMatchScored(`${order.address || ''} ${order.city || ''}`, list);
     if (alt && alt.score > (m?.score || 0)) m = alt;
     // ثقة كافية (تطابق كلمات كامل أو تامّ) → إرسال مباشر بلا فتح اللوحة
-    if (m && m.score >= 60) { await doSend(String(city.id), String(m.it.id), typeId); return; }
+    if (m && m.score >= 60) { await doSend(String(city.id), String(m.it.id), typeId, detailFor(m.it.name)); return; }
     // غير مؤكّد: نفتح اللوحة مع أفضل ترشيح لتأكيد بضغطة
     if (m) { setAreaId(String(m.it.id)); setHint(t('dashboard.opost.verifyArea')); }
     else { setAreaId(''); setHint(t('dashboard.opost.pickAreaHint')); }
@@ -134,7 +139,7 @@ export default function OpostSend({ order, cities = [], types = [], defaultType 
       </div>
       <div className="flex items-center gap-2">
         <button
-          onClick={() => { if (!cityId || !areaId) { setError(t('dashboard.opost.pickCityArea')); return; } doSend(cityId, areaId, typeId); }}
+          onClick={() => { if (!cityId || !areaId) { setError(t('dashboard.opost.pickCityArea')); return; } doSend(cityId, areaId, typeId, detailFor(areas.find((x) => String(x.id) === String(areaId))?.name)); }}
           disabled={busy}
           className="btn-primary !py-1.5 !px-3 gap-1.5 text-xs"
         >

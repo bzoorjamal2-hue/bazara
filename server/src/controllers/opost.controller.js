@@ -256,6 +256,14 @@ export async function opostSendOrder(req, res, next) {
     const shipmentTypeId = req.body.shipmentType ? String(req.body.shipmentType) : '';
     if (!cityId || !areaId) return res.status(400).json({ error: 'اختر المدينة والمنطقة.' });
 
+    // العنوان التفصيلي: تُمرّره الواجهة بعد إزالة المدينة/القرية (لأنهما ذهبا لحقلَي
+    // المدينة والمنطقة) فيبقى الوصف الإضافي فقط. إن لم يُمرَّر (توافق قديم) نبني من
+    // مدينة الزبون وعنوانه كما كان.
+    const detailProvided = Object.prototype.hasOwnProperty.call(req.body, 'address');
+    const detailAddress = detailProvided
+      ? String(req.body.address || '').trim()
+      : [order.city, order.address].map((x) => (x || '').trim()).filter(Boolean).join(' - ');
+
     const token = await ensureToken(store);
 
     // نوع الشحنة: المُمرَّر، ثم الافتراضي للمتجر، ثم أول نوع متاح
@@ -280,8 +288,8 @@ export async function opostSendOrder(req, res, next) {
         phone: order.customer_phone || '',
         city: cityId,
         area: areaId,
-        // العنوان التفصيلي = ما اختاره/كتبه الزبون (مدينته ثم عنوانه) كما هو
-        address: [order.city, order.address].map((x) => (x || '').trim()).filter(Boolean).join(' - ') || '-',
+        // العنوان التفصيلي = الوصف الإضافي فقط (بلا تكرار المدينة/القرية)
+        address: detailAddress || '-',
       },
       shipment_types: [{ id: typeId }],
       ref_order_id: order.id, // ربط الشحنة برقم طلب بازارا

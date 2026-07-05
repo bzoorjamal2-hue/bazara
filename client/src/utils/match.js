@@ -62,3 +62,20 @@ export function bestMatch(text, list) {
   const b = bestMatchScored(text, list);
   return b && b.score >= 45 ? b.it : null;
 }
+
+// يزيل كلمات أسماء معروفة (المدينة/القرية) من العنوان الحرّ ويُبقي التفاصيل فقط.
+// مثال: stripNames('رابا اول البلد', ['جنين','رابا']) → 'اول البلد'
+// نستخدمه ليذهب اسم المدينة لحقل المدينة، والقرية لحقل المنطقة، والباقي فقط
+// لحقل العنوان التفصيلي في أوبتيموس (بلا تكرار).
+export function stripNames(text, names = []) {
+  const drop = new Set();
+  for (const n of names) for (const w of norm(n).split(' ')) if (w) drop.add(w);
+  if (!drop.size) return String(text || '').trim();
+  const kept = String(text || '')
+    .split(/[\s،,]+/)
+    .filter((raw) => {
+      const nw = norm(raw);
+      return nw && !nw.split(' ').every((p) => drop.has(p)); // نُسقط الكلمة إن كانت كلها ضمن الأسماء المعروفة
+    });
+  return kept.join(' ').trim();
+}
