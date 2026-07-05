@@ -144,7 +144,13 @@ export default function StorePage() {
   const { store } = data;
   // واتساب المتجر: رقم الإعدادات إن وُجد، وإلا رقم المالك المُدخل عند التسجيل
   const wa = store.whatsapp || store.ownerPhone || '';
-  const featured = data.products.filter((p) => p.featured);
+  // "الأكثر مبيعاً" الحقيقي: ترتيب بعدّاد المبيعات الفعلي (يزيد مع كل طلب مؤكّد)،
+  // والمنتجات المميّزة تكمّل القائمة عند قلّة المبيعات (متجر جديد مثلاً)
+  const bestSellers = (() => {
+    const sold = [...data.products].filter((p) => (p.soldCount || 0) > 0).sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0));
+    const fill = data.products.filter((p) => p.featured && !(p.soldCount > 0));
+    return [...sold, ...fill].slice(0, 8);
+  })();
   // تخصيص المالكة للفئات (صورة/اسم) + الفئات الإضافية المخصّصة
   const catMeta = store.categoryMeta || {};
   const customCats = Array.isArray(store.customCategories) ? store.customCategories : [];
@@ -288,7 +294,7 @@ export default function StorePage() {
           </section>
 
           <ProductSection title={t('store.newArrivals')} products={newest} wa={wa} />
-          <ProductSection title={t('store.bestSellers')} products={featured.slice(0, 8)} wa={wa} />
+          <ProductSection title={t('store.bestSellers')} products={bestSellers} wa={wa} />
 
           {data.products.length > 0 && (
             <div className="mb-10 text-center">
