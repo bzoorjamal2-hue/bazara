@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import Select from './Select.jsx';
 import { TruckIcon, CheckIcon } from './icons.jsx';
-import { norm, bestMatch } from '../utils/match.js';
+import { bestMatch, bestMatchScored } from '../utils/match.js';
 
 // تخزين مؤقّت لمناطق كل مدينة (مشترك بين كل الطلبات) — يقلّل استدعاءات الـ API
 const areaCache = new Map();
@@ -69,23 +69,26 @@ export default function OpostSend({ order, cities = [], types = [], defaultType 
     }
   };
 
-  // الضغطة الأساسية: مطابقة تلقائية. لا نرسل تلقائياً إلا عند تطابق المنطقة
-  // المؤكّد (مطابقة تامّة)؛ غير هيك نفتح اللوحة بالمدينة معبّأة لتأكيد المنطقة
-  // قبل الإرسال — حتى لا يروح طلب بمنطقة غلط (الدقّة أهمّ).
+  // الضغطة الأساسية: مطابقة تلقائية عالية الدقّة ثم إرسال مباشر بضغطة واحدة.
+  // نطابق المحافظة من مدينة الزبون (ثم عنوانه)، ونطابق القرية/المنطقة من العنوان
+  // بمطابقة قائمة على الكلمات (bestMatchScored). عند ثقة كافية نُرسل فوراً؛ وإلا
+  // نفتح اللوحة مع أفضل ترشيح لتأكيد سريع — حتى لا تروح شحنة بمنطقة غلط.
   const handleSmartSend = async () => {
     setError(''); setHint('');
+    // 1) المحافظة (city في أوبتيموس = محافظة)
     const city = bestMatch(order.city, cities) || bestMatch(order.address, cities);
-    if (!city) { setOpen(true); return; } // لا مدينة مطابقة → اختيار يدوي
+    if (!city) { setHint(t('dashboard.opost.pickAreaHint')); setOpen(true); return; }
     setBusy(true);
-    const list = await loadAreas(String(city.id));
     setCityId(String(city.id));
-    const area = bestMatch(order.address, list);
-    const nad = norm(order.address);
-    // تطابق "مؤكّد" = اسم المنطقة مطابق تماماً للعنوان أو العنوان يبدأ به
-    const exact = area && (norm(area.name) === nad || nad.startsWith(norm(area.name) + ' '));
-    if (exact) { await doSend(String(city.id), String(area.id), typeId); return; }
-    // غير مؤكّد: نفتح اللوحة. إن وُجد ترشيح نختاره ونطلب التأكيد، وإلا يختار يدوياً
-    if (area) { setAreaId(String(area.id)); setHint(t('dashboard.opost.verifyArea')); }
+    const list = await loadAreas(String(city.id));
+    // 2) القرية/المنطقة — نطابق العنوان، ثم العنوان+المدينة كبديل
+    let m = bestMatchScored(order.address, list);
+    const alt = bestMatchScored(`${order.address || ''} ${order.city || ''}`, list);
+    if (alt && alt.score > (m?.score || 0)) m = alt;
+    // ثقة كافية (تطابق كلمات كامل أو تامّ) → إرسال مباشر بلا فتح اللوحة
+    if (m && m.score >= 60) { await doSend(String(city.id), String(m.it.id), typeId); return; }
+    // غير مؤكّد: نفتح اللوحة مع أفضل ترشيح لتأكيد بضغطة
+    if (m) { setAreaId(String(m.it.id)); setHint(t('dashboard.opost.verifyArea')); }
     else { setAreaId(''); setHint(t('dashboard.opost.pickAreaHint')); }
     setBusy(false);
     setOpen(true);
