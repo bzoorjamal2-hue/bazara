@@ -496,33 +496,7 @@ html.dark .theme-pub .app-navbar {
   box-shadow: 0 24px 48px -24px rgba(46, 33, 24, 0.55);
 }
 
-/* شريط التبويبات: قابل للتمرير أفقياً بلا شريط تمرير ظاهر */
-.dash-tabs { scrollbar-width: none; -ms-overflow-style: none; overscroll-behavior-x: contain; }
-.dash-tabs::-webkit-scrollbar { display: none; }
-
-.dash-tab {
-  @apply inline-flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition-all;
-  background: #ffffff;
-  border-color: rgba(94, 70, 54, 0.16);
-  color: #5e4636;
-}
-.dash-tab:hover { border-color: rgba(94, 70, 54, 0.45); transform: translateY(-1px); }
-.dash-tab-active,
-.dash-tab-active:hover {
-  background: #5e4636;
-  border-color: #5e4636;
-  color: #F4EDE2;
-  box-shadow: 0 10px 22px -10px rgba(94, 70, 54, 0.6);
-}
-html.dark .dash-tab { background: #2b211a; border-color: rgba(212, 175, 55, 0.18); color: #cabdab; }
-html.dark .dash-tab:hover { border-color: rgba(212, 175, 55, 0.45); }
-html.dark .dash-tab-active,
-html.dark .dash-tab-active:hover {
-  background: linear-gradient(135deg, #e6c878 0%, #d4af37 60%, #b8932c 100%);
-  border-color: rgba(212, 175, 55, 0.6);
-  color: #221a14;
-  box-shadow: 0 10px 22px -10px rgba(212, 175, 55, 0.35);
-}
+/* (أزيلت أنماط .dash-tabs/.dash-tab — شريط التبويبات القديم حُذف والقائمة ☰ هي التنقّل الوحيد) */
 
 /* خيط ذهبي رفيع أعلى بطاقات الإحصائيات */
 .dash-hairline {

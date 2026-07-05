@@ -183,6 +183,13 @@ export function TruckIcon({ className = 'h-5 w-5' }) { return svg(className, <><
 export function CashIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="3" y="6" width="18" height="12" rx="2" /><circle {...L} cx="12" cy="12" r="2.6" /></>); }
 export function PhoneIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M6 3 H9 L10.5 8 L8.5 9.5 C9.5 11.8 12.2 14.5 14.5 15.5 L16 13.5 L21 15 V18 C21 19.5 19.5 21 18 21 C10 20.5 3.5 14 3 6 C3 4.5 4.5 3 6 3 Z" />); }
 export function InstagramIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="3.5" y="3.5" width="17" height="17" rx="5" /><circle {...L} cx="12" cy="12" r="4" /><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" /></>); }
+export function FacebookIcon({ className = 'h-5 w-5' }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M22 12a10 10 0 1 0-11.5 9.9v-7H8v-2.9h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.4h-1.2c-1.2 0-1.6.8-1.6 1.6v1.9H16l-.4 2.9h-2.3v7A10 10 0 0 0 22 12z" />
+    </svg>
+  );
+}
 export function PackageIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M12 3 L20 7 V17 L12 21 L4 17 V7 Z" /><path {...L} d="M4 7 L12 11 L20 7 M12 11 V21" /></>); }
 export function StoreIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M4 9 L5 4 H19 L20 9 A3 3 0 0 1 14.5 9 A3 3 0 0 1 9.5 9 A3 3 0 0 1 4 9 Z" /><path {...L} d="M5 9 V20 H19 V9 M10 20 V14 H14 V20" /></>); }
 export function BellIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M6 16 V10 A6 6 0 0 1 18 10 V16 L20 18 H4 Z" /><path {...L} d="M10 18 A2 2 0 0 0 14 18" /></>); }
