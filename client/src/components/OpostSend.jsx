@@ -86,10 +86,15 @@ export default function OpostSend({ order, cities = [], types = [], defaultType 
     setBusy(true);
     setCityId(String(city.id));
     const list = await loadAreas(String(city.id));
-    // 2) القرية/المنطقة — نطابق العنوان، ثم العنوان+المدينة كبديل
-    let m = bestMatchScored(order.address, list);
-    const alt = bestMatchScored(`${order.address || ''} ${order.city || ''}`, list);
-    if (alt && alt.score > (m?.score || 0)) m = alt;
+    // 2) القرية/المنطقة — أولاً: لو العنوان كما هو مطابق تماماً لاسم منطقة
+    // (زبون كتب "جنين البلد" حرفياً) نعتمده فوراً. غير هيك نطابق على
+    // العنوان+مدينة الزبون بعد إزالة اسم المحافظة المطابَقة منه: المحافظة حُسمت
+    // بحقلها، وإبقاء اسمها (جنين) كان يخلّي مناطق تحمل اسم المحافظة
+    // ("جنين البلد") تتفوّق على القرية الصحيحة (رابا) — وهذا بالضبط ما أرسل
+    // شحنة رابا إلى جنين البلد.
+    const rawExact = bestMatchScored(order.address, list);
+    const areaText = stripNames(`${order.address || ''} ${order.city || ''}`, [city.name]);
+    const m = rawExact?.score === 100 ? rawExact : bestMatchScored(areaText, list);
     // ثقة كافية (تطابق كلمات كامل أو تامّ) → إرسال مباشر بلا فتح اللوحة
     if (m && m.score >= 60) { await doSend(String(city.id), String(m.it.id), typeId, detailFor(m.it.name)); return; }
     // غير مؤكّد: نفتح اللوحة مع أفضل ترشيح لتأكيد بضغطة
