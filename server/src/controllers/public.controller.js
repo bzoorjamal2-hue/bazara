@@ -10,6 +10,7 @@ const PRODUCT_SELECT = `
   SELECT p.*, s.slug AS store_slug, s.name AS store_name, s.logo_url AS store_logo,
          s.whatsapp AS store_whatsapp, s.instagram AS store_instagram, s.phone AS store_phone,
          s.size_chart AS store_size_chart, s.return_policy AS store_return_policy,
+         s.fb_pixel AS store_fb_pixel, s.tiktok_pixel AS store_tiktok_pixel, s.ga_id AS store_ga_id,
          COALESCE(r.avg, 0) AS rating_avg, COALESCE(r.cnt, 0) AS rating_count
   FROM products p
   JOIN stores s ON s.id = p.store_id
@@ -47,6 +48,10 @@ function mapStorePublic(s) {
     categoryMeta: s.category_meta && typeof s.category_meta === 'object' ? s.category_meta : {},
     customCategories: Array.isArray(s.custom_categories) ? s.custom_categories : [],
     ownerPhone: s.owner_phone || '', // رقم المالك من التسجيل (احتياطي للواتساب)
+    // بكسلات تمويل المتجر — تُحقن بصفحات المتجر لتتبّع إعلانات المالك
+    fbPixel: s.fb_pixel || '',
+    tiktokPixel: s.tiktok_pixel || '',
+    gaId: s.ga_id || '',
     createdAt: s.created_at,
   };
 }
@@ -137,7 +142,7 @@ export async function trackOrders(req, res, next) {
   const last9 = phone.slice(-9);
   try {
     const r = await query(
-      `SELECT o.reference, o.status, o.items, o.total, o.delivery_fee, o.discount, o.created_at, o.city, s.name AS store_name,
+      `SELECT o.reference, o.status, o.items, o.total, o.delivery_fee, o.discount, o.created_at, o.city, s.name AS store_name, s.slug AS store_slug,
               o.opost_tracking, o.opost_status, o.eps_barcode, o.eps_status, o.gobox_barcode, o.gobox_status
        FROM orders o JOIN stores s ON s.id = o.store_id
        WHERE regexp_replace(o.customer_phone, '\\D', '', 'g') LIKE $1
@@ -163,10 +168,36 @@ export async function trackOrders(req, res, next) {
         discount: Number(o.discount || 0),
         city: o.city || '',
         storeName: o.store_name,
+        storeSlug: o.store_slug,
         createdAt: o.created_at,
         ...courierInfo(o),
       })),
     });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ───────── معاينة خصم الولاء: هل يستحق هذا الرقم خصماً على طلبه القادم؟ ─────────
+// (كل N طلبات مؤكّدة → خصم % يحدّدهما المتجر. الخادم يعيد الحساب عند إنشاء الطلب)
+export async function loyaltyPreview(req, res, next) {
+  const slug = String(req.body.slug || '').trim();
+  const phone = String(req.body.phone || '').replace(/\D/g, '');
+  try {
+    if (!slug || phone.length < 9) return res.json({ percent: 0 });
+    const sr = await query('SELECT id, loyalty_every, loyalty_percent FROM stores WHERE slug = $1', [slug]);
+    const s = sr.rows[0];
+    const every = Number(s?.loyalty_every || 0);
+    const percent = Number(s?.loyalty_percent || 0);
+    if (!s || every < 2 || percent <= 0) return res.json({ percent: 0 });
+    const cr = await query(
+      `SELECT COUNT(*)::int AS n FROM orders
+       WHERE store_id = $1 AND status IN ('confirmed','shipped','delivered')
+         AND regexp_replace(customer_phone, '\\D', '', 'g') LIKE $2`,
+      [s.id, '%' + phone.slice(-9)]
+    );
+    const n = cr.rows[0].n;
+    res.json({ percent: n > 0 && n % every === 0 ? percent : 0, orders: n });
   } catch (err) {
     next(err);
   }

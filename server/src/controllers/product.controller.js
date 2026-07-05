@@ -218,6 +218,10 @@ export function mapProduct(p) {
     storePhone: p.store_phone || '',
     storeSizeChart: p.store_size_chart && typeof p.store_size_chart === 'object' ? p.store_size_chart : {},
     storeReturnPolicy: p.store_return_policy || '',
+    // بكسلات تمويل المتجر — للهبوط المباشر على صفحة المنتج من إعلان مموّل
+    storeFbPixel: p.store_fb_pixel || '',
+    storeTiktokPixel: p.store_tiktok_pixel || '',
+    storeGaId: p.store_ga_id || '',
     createdAt: p.created_at,
   };
 }

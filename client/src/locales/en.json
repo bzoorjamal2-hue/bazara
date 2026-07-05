@@ -23,6 +23,10 @@
     }
   },
   "footer": { "rights": "All rights reserved" },
+  "loyalty": {
+    "banner": "Congrats! 🎁 You reached the loyal-customer reward — {{percent}}% off applied automatically to this order",
+    "discountLine": "Loyalty discount"
+  },
   "referral": {
     "discountLine": "Referral discount",
     "welcome": "Your {{percent}}% welcome discount is applied 🌷",
@@ -428,6 +432,15 @@
     "analytics": {
       "title": "Analytics",
       "hint": "A quick look at your sales, orders and best-selling products.",
+      "courierMonth": "This month's collections by courier",
+      "courierMonthHint": "Orders delivered this month (incl. delivery) — to reconcile the amounts each courier transfers to you.",
+      "courierOrders": "{{count}} delivered order(s)",
+      "courierNames": {
+        "optimus": "Optimus",
+        "eps": "EPS",
+        "gobox": "gobox",
+        "none": "No courier (direct delivery)"
+      },
       "revenue": "Revenue",
       "confirmed": "Confirmed orders",
       "newOrders": "New orders",
@@ -505,6 +518,18 @@
       "freeShippingHint": "Orders above this amount get free delivery (0 = off).",
       "referralPercent": "New-customer referral discount",
       "referralHint": "Discount a new customer gets when ordering via a referral link (0 = referral program off). A \"Share & earn\" button appears in your store when enabled.",
+      "loyaltyTitle": "Loyal customer reward (loyalty points)",
+      "loyaltyEveryLabel": "After every",
+      "loyaltyPercentLabel": "confirmed orders, discount",
+      "loyaltyHint": "Example: after every 5 orders, the 6th gets 10% off automatically — brings customers back (0 = off). Not combined with coupons or referrals.",
+      "adsTitle": "Ads & marketing (tracking pixels)",
+      "adsHint": "Running Facebook/Instagram or TikTok ads for your products? Add your pixel IDs here and your store will automatically track visits, product views, add-to-carts and purchases — so you can measure your ads and reach the right customers.",
+      "fbPixel": "Facebook/Instagram pixel (Meta Pixel)",
+      "fbPixelHint": "From Facebook Ads Manager → Events Manager → pixel ID (digits).",
+      "tiktokPixel": "TikTok pixel",
+      "tiktokPixelHint": "From TikTok Ads Manager → Assets → Events → pixel ID.",
+      "gaId": "Google Analytics",
+      "gaIdHint": "Measurement ID from GA4 settings (starts with G-).",
       "sizeChart": "Size guide",
       "sizeChartHint": "Enter bust/waist/hips (cm) per size. Leave empty to use the standard chart automatically.",
       "returnPolicy": "Returns & exchange policy",
@@ -726,7 +751,9 @@
     "search": "Search",
     "notFound": "No orders found for this number. Check it and try again.",
     "courier": "Courier",
-    "trackingNo": "Tracking no."
+    "trackingNo": "Tracking no.",
+    "reorder": "Reorder in one tap 🛒",
+    "reorderEmpty": "Sorry, the items in this order are no longer available."
   },
   "push": {
     "title": "Order push notifications",

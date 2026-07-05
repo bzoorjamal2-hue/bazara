@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import Seo from '../components/Seo.jsx';
-import { PackageIcon, CheckIcon, SearchIcon, TruckIcon } from '../components/icons.jsx';
+import { PackageIcon, CheckIcon, SearchIcon, TruckIcon, CartIcon } from '../components/icons.jsx';
 import { goBack } from '../utils/nav.js';
+import { useCart } from '../context/CartContext.jsx';
 
 const STEPS = ['new', 'confirmed', 'shipped', 'delivered'];
 const BADGE = {
@@ -23,6 +24,29 @@ export default function Track() {
   const [orders, setOrders] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const { add, setOpen } = useCart();
+  const [reordering, setReordering] = useState(''); // reference الطلب الجاري إعادته
+
+  // إعادة الطلب بضغطة: نجلب كل منتج بحالته الحالية (سعر/مخزون) ونضيفه للسلة بنفس
+  // الكمية والمقاس واللون — المنتجات المحذوفة/الناقصة تُتجاهل بهدوء.
+  const reorder = async (o) => {
+    if (reordering) return;
+    setReordering(o.reference);
+    let added = 0;
+    for (const it of o.items || []) {
+      if (!it.id) continue;
+      try {
+        const r = await api.get(`/public/product/${it.id}`);
+        const p = r.data.product;
+        if (!p || p.stock === 0) continue;
+        add({ ...p, size: it.size || '', color: it.color || '', whatsapp: p.storeWhatsapp }, Math.max(1, Number(it.qty) || 1));
+        added += 1;
+      } catch { /* منتج محذوف — نتجاهله */ }
+    }
+    setReordering('');
+    if (added > 0) setOpen(true);
+    else setError(t('track.reorderEmpty'));
+  };
 
   const search = async (e) => {
     e.preventDefault();
@@ -185,6 +209,14 @@ export default function Track() {
                       <span className="text-xs text-stone-400">{new Date(o.createdAt).toLocaleDateString()}</span>
                       <span className="font-display text-lg font-bold gradient-text">{t('common.currency')}{o.total.toFixed(2)}</span>
                     </div>
+                    {/* إعادة الطلب بضغطة — نفس القطع بالمقاسات والألوان (بأسعار اليوم) */}
+                    <button
+                      onClick={() => reorder(o)}
+                      disabled={Boolean(reordering)}
+                      className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-wine/30 py-2.5 text-sm font-bold text-wine transition hover:bg-wine hover:text-cream disabled:opacity-60"
+                    >
+                      <CartIcon className="h-4 w-4" /> {reordering === o.reference ? t('common.loading') : t('track.reorder')}
+                    </button>
                   </div>
                 );
               })}

@@ -228,6 +228,27 @@ export async function createCodOrder(req, res, next) {
       }
     }
 
+    // خصم الولاء (أدنى أولوية — لا يُجمع مع كوبون/إحالة): كل N طلبات مؤكّدة
+    // لنفس الرقم بهذا المتجر → خصم % على هذا الطلب. الخادم هو الحكم (لا نثق بالواجهة).
+    if (!appliedCoupon && !referralCode) {
+      const ls = await query('SELECT loyalty_every, loyalty_percent FROM stores WHERE id = $1', [storeId]);
+      const every = Number(ls.rows[0]?.loyalty_every || 0);
+      const percent = Number(ls.rows[0]?.loyalty_percent || 0);
+      const last9 = phone.replace(/\D/g, '').slice(-9);
+      if (every >= 2 && percent > 0 && last9.length === 9) {
+        const cr = await query(
+          `SELECT COUNT(*)::int AS n FROM orders
+           WHERE store_id = $1 AND status IN ('confirmed','shipped','delivered')
+             AND regexp_replace(customer_phone, '\\D', '', 'g') LIKE $2`,
+          [storeId, '%' + last9]
+        );
+        const n = cr.rows[0].n;
+        if (n > 0 && n % every === 0) {
+          discount = Math.min(subtotal, Math.round((subtotal * percent) / 100 * 100) / 100);
+        }
+      }
+    }
+
     const total = Math.max(0, subtotal - discount) + deliveryFee;
     const reference = 'BZ-' + crypto.randomBytes(5).toString('hex').toUpperCase();
 
@@ -393,6 +414,23 @@ export async function getStats(req, res, next) {
       .sort((a, b) => a.remaining - b.remaining)
       .slice(0, 12);
 
+    // تقرير التحصيل الشهري حسب شركة التوصيل: الطلبات المسلّمة هذا الشهر (عدد + مجموع
+    // شامل التوصيل) لكل شركة — لمطابقة المبالغ التي تحوّلها كل شركة لصاحب المتجر.
+    const courier = await query(
+      `SELECT CASE
+           WHEN opost_tracking <> '' THEN 'optimus'
+           WHEN eps_barcode <> '' THEN 'eps'
+           WHEN gobox_barcode <> '' THEN 'gobox'
+           ELSE 'none' END AS courier,
+         COUNT(*)::int AS orders,
+         COALESCE(SUM(total), 0) AS amount
+       FROM orders
+       WHERE store_id = $1 AND status = 'delivered'
+         AND created_at >= date_trunc('month', now())
+       GROUP BY 1 ORDER BY amount DESC`,
+      [sid]
+    );
+
     const t = totals.rows[0];
     res.json({
       revenue: Number(t.revenue),
@@ -405,6 +443,7 @@ export async function getStats(req, res, next) {
       topProducts: top.rows.map((r) => ({ name: r.name, qty: r.qty })),
       daily: daily.rows.map((r) => ({ day: r.day, orders: r.orders })),
       lowStock,
+      courierMonth: courier.rows.map((r) => ({ courier: r.courier, orders: r.orders, amount: Number(r.amount) })),
     });
   } catch (err) {
     next(err);

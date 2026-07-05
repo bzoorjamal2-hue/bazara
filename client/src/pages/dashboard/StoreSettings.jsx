@@ -54,6 +54,11 @@ export default function StoreSettings() {
           welcomeOffer: s.welcomeOffer || '',
           categoryMeta: s.categoryMeta && typeof s.categoryMeta === 'object' ? s.categoryMeta : {},
           customCategories: Array.isArray(s.customCategories) ? s.customCategories : [],
+          fbPixel: s.fbPixel || '',
+          tiktokPixel: s.tiktokPixel || '',
+          gaId: s.gaId || '',
+          loyaltyEvery: s.loyaltyEvery ? String(s.loyaltyEvery) : '',
+          loyaltyPercent: s.loyaltyPercent ? String(s.loyaltyPercent) : '',
         });
       })
       .catch((err) => setError(getErrorMessage(err)));
@@ -251,6 +256,49 @@ export default function StoreSettings() {
               <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-stone-400">%</span>
             </div>
             <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.referralHint')}</p>
+          </div>
+
+          {/* نقاط الولاء: كل N طلبات مؤكّدة → خصم % تلقائي على الطلب التالي (0 = معطّل) */}
+          <div className="border-t border-white/5 pt-3">
+            <label className="label flex items-center gap-1.5"><GiftIcon className="h-4 w-4" /> {t('dashboard.store.loyaltyTitle')}</label>
+            <div className="flex flex-wrap items-center gap-2 text-sm text-stone-300">
+              <span>{t('dashboard.store.loyaltyEveryLabel')}</span>
+              <input className="input !w-20 text-center" type="number" min="0" max="50" step="1" placeholder="0" value={form.loyaltyEvery} onChange={set('loyaltyEvery')} />
+              <span>{t('dashboard.store.loyaltyPercentLabel')}</span>
+              <div className="relative w-24">
+                <input className="input pe-7 text-center" type="number" min="0" max="50" step="1" placeholder="0" value={form.loyaltyPercent} onChange={set('loyaltyPercent')} />
+                <span className="pointer-events-none absolute inset-y-0 end-2.5 flex items-center text-xs text-stone-400">%</span>
+              </div>
+            </div>
+            <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.loyaltyHint')}</p>
+          </div>
+        </div>
+
+        {/* التمويل والإعلانات: بكسلات تتبّع لإعلانات المالك الممولة */}
+        <div className="glass space-y-4 p-6">
+          <div>
+            <h2 className="flex items-center gap-1.5 font-display text-lg font-bold text-stone-100">
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 17 9 11l4 4 8-8" /><path d="M15 7h6v6" /></svg>
+              {t('dashboard.store.adsTitle')}
+            </h2>
+            <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.adsHint')}</p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div>
+              <label className="label">{t('dashboard.store.fbPixel')}</label>
+              <input className="input" dir="ltr" placeholder="123456789012345" value={form.fbPixel} onChange={set('fbPixel')} />
+              <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.fbPixelHint')}</p>
+            </div>
+            <div>
+              <label className="label">{t('dashboard.store.tiktokPixel')}</label>
+              <input className="input" dir="ltr" placeholder="C0ABC1DEFG2HIJ3KLM" value={form.tiktokPixel} onChange={set('tiktokPixel')} />
+              <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.tiktokPixelHint')}</p>
+            </div>
+            <div>
+              <label className="label">{t('dashboard.store.gaId')}</label>
+              <input className="input" dir="ltr" placeholder="G-XXXXXXXXXX" value={form.gaId} onChange={set('gaId')} />
+              <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.gaIdHint')}</p>
+            </div>
           </div>
         </div>
 

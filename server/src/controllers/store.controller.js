@@ -31,6 +31,11 @@ function mapStore(s) {
     welcomeOffer: s.welcome_offer || '',
     categoryMeta: s.category_meta && typeof s.category_meta === 'object' ? s.category_meta : {},
     customCategories: Array.isArray(s.custom_categories) ? s.custom_categories : [],
+    fbPixel: s.fb_pixel || '',
+    tiktokPixel: s.tiktok_pixel || '',
+    gaId: s.ga_id || '',
+    loyaltyEvery: Number(s.loyalty_every || 0),
+    loyaltyPercent: Number(s.loyalty_percent || 0),
     createdAt: s.created_at,
   };
 }
@@ -147,6 +152,14 @@ export async function updateMyStore(req, res, next) {
   const welcomeOffer = String(req.body.welcomeOffer || '').slice(0, 300);
   const categoryMeta = sanitizeCategoryMeta(req.body.categoryMeta);
   const customCategories = sanitizeCustomCategories(req.body.customCategories);
+  // بكسلات التمويل: معرّفات فقط (أرقام/حروف/شرطات) — تُحقن كسكربتات رسمية بالواجهة
+  const pixelId = (v, max = 40) => String(v || '').trim().replace(/[^\w-]/g, '').slice(0, max);
+  const fbPixel = pixelId(req.body.fbPixel);
+  const tiktokPixel = pixelId(req.body.tiktokPixel);
+  const gaId = pixelId(req.body.gaId);
+  // نقاط الولاء: كل N طلبات (2-50) → خصم % (0-50). صفر = معطّلة
+  const loyaltyEvery = Math.min(50, Math.max(0, Math.round(Number(req.body.loyaltyEvery) || 0)));
+  const loyaltyPercent = Math.min(50, Math.max(0, Number(req.body.loyaltyPercent) || 0));
   try {
     const current = await query('SELECT id, name, slug, old_slugs FROM stores WHERE user_id = $1', [req.user.id]);
     const store = current.rows[0];
@@ -183,7 +196,9 @@ export async function updateMyStore(req, res, next) {
          banners = $13::jsonb, delivery_zones = $14::jsonb, free_shipping_over = $15,
          size_chart = $16::jsonb, return_policy = $17, announcement = $18, welcome_offer = $19,
          category_meta = $20::jsonb, custom_categories = $21::jsonb, referral_percent = $23,
-         announcement_en = $24, old_slugs = $25::text[], delivery_phone = $26, updated_at = now()
+         announcement_en = $24, old_slugs = $25::text[], delivery_phone = $26,
+         fb_pixel = $27, tiktok_pixel = $28, ga_id = $29,
+         loyalty_every = $30, loyalty_percent = $31, updated_at = now()
        WHERE id = $22
        RETURNING *`,
       [
@@ -213,6 +228,11 @@ export async function updateMyStore(req, res, next) {
         announcementEn,
         newOldSlugs,
         deliveryPhone,
+        fbPixel,
+        tiktokPixel,
+        gaId,
+        loyaltyEvery,
+        loyaltyPercent,
       ]
     );
 

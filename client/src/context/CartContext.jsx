@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { cldVideoPoster } from '../utils/cloudinary.js';
+import { trackPixel } from '../utils/pixels.js';
 
 const CartContext = createContext(null);
 const KEY = 'cart_v1';
@@ -53,6 +54,8 @@ export function CartProvider({ children }) {
       ];
     });
     setOpen(true);
+    // حدث بكسل التمويل (لا يعمل إلا إذا كان بكسل المتجر محقوناً بالصفحة)
+    trackPixel('AddToCart', { value: (Number(product.price) || 0) * qty, content_name: product.name, content_ids: [product.id], content_type: 'product' });
   };
 
   // شراء فوري: يضيف المنتج ويطلب فتح شاشة إتمام الطلب مباشرةً

@@ -22,6 +22,7 @@ import storyRoutes from './routes/story.routes.js';
 import siteRoutes from './routes/site.routes.js';
 import opostRoutes from './routes/opost.routes.js';
 import { syncAllConnectedStores } from './controllers/opost.controller.js';
+import { notifyAbandonedCheckouts } from './controllers/abandoned.controller.js';
 import epsRoutes from './routes/eps.routes.js';
 import { epsWebhook, syncAllEpsStores } from './controllers/eps.controller.js';
 import goboxRoutes from './routes/gobox.routes.js';
@@ -216,6 +217,15 @@ async function ensureColumns() {
       UNIQUE (store_id, phone)
     );`);
     await pool.query('CREATE INDEX IF NOT EXISTS idx_abandoned_store ON abandoned_checkouts(store_id);');
+    // هل أُشعر المالك بهذه السلة المتروكة؟ (يُصفَّر عند تحديث الزبونة لمسودّتها)
+    await pool.query('ALTER TABLE abandoned_checkouts ADD COLUMN IF NOT EXISTS notified BOOLEAN NOT NULL DEFAULT false;');
+    // بكسلات التمويل لكل متجر: يموّل صاحب المتجر منتجاته بإعلانات فيسبوك/تيكتوك/جوجل
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS fb_pixel VARCHAR(40) DEFAULT '';");
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS tiktok_pixel VARCHAR(40) DEFAULT '';");
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS ga_id VARCHAR(40) DEFAULT '';");
+    // نقاط الولاء: بعد كل N طلبات مؤكّدة يحصل الزبون على خصم % على طلبه التالي
+    await pool.query('ALTER TABLE stores ADD COLUMN IF NOT EXISTS loyalty_every INTEGER NOT NULL DEFAULT 0;');
+    await pool.query('ALTER TABLE stores ADD COLUMN IF NOT EXISTS loyalty_percent NUMERIC(5,2) NOT NULL DEFAULT 0;');
     // نظام الإحالة: نسبة خصم الزبونة الجديدة لكل متجر + جدول أكواد الإحالة + ربط الطلب بالكود
     await pool.query('ALTER TABLE stores ADD COLUMN IF NOT EXISTS referral_percent NUMERIC(5,2) DEFAULT 0;');
     await pool.query('ALTER TABLE stores ADD COLUMN IF NOT EXISTS views INTEGER NOT NULL DEFAULT 0;');
@@ -334,6 +344,9 @@ function start() {
   // مزامنة شحنات gobox — احتياط عن الـ webhook
   setInterval(() => { syncAllGoboxStores().catch(() => {}); }, TEN_MIN);
   setTimeout(() => { syncAllGoboxStores().catch(() => {}); }, 90 * 1000);
+  // إشعار جوال فوري للمالك عن السلات المتروكة الجديدة (بعد 10 دقائق من ترك الزبونة لها)
+  setInterval(() => { notifyAbandonedCheckouts().catch(() => {}); }, TEN_MIN);
+  setTimeout(() => { notifyAbandonedCheckouts().catch(() => {}); }, 2 * 60 * 1000);
 }
 
 // الترقية التلقائية على الإنتاج فقط (Render). محلياً نشغّل مباشرة بلا لمس قاعدة البيانات.

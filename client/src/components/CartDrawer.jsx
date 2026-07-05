@@ -10,6 +10,18 @@ import { CartIcon, BagIcon, XIcon, PinIcon, GiftIcon, TicketIcon, CheckIcon, Rec
 import api from '../api/client.js';
 import { sizeLabel } from '../utils/sizes.js';
 import { getRef, clearRef } from '../utils/referral.js';
+import { trackPixel } from '../utils/pixels.js';
+
+// بيانات الزبون المحفوظة محلياً — تعبّئ شاشة الإتمام تلقائياً بالطلبات القادمة
+const CUSTOMER_KEY = 'bz_customer_v1';
+const loadCustomer = () => {
+  try { return { name: '', phone: '', city: '', address: '', notes: '', ...JSON.parse(localStorage.getItem(CUSTOMER_KEY) || '{}'), notes: '' }; }
+  catch { return { name: '', phone: '', city: '', address: '', notes: '' }; }
+};
+const saveCustomer = (c) => {
+  try { localStorage.setItem(CUSTOMER_KEY, JSON.stringify({ name: c.name, phone: c.phone, city: c.city, address: c.address })); }
+  catch { /* تجاهل */ }
+};
 
 // مناطق التوصيل ورسومها (قابلة للتعديل): مدن الضفة 20₪ · القدس 35₪ · مدن الداخل 70₪
 const AREAS = [
@@ -54,7 +66,8 @@ export default function CartDrawer() {
   const ar = i18n.language !== 'en';
   const { items, open, setOpen, remove, setQty, total, clear, checkoutIntent, setCheckoutIntent } = useCart();
   const [view, setView] = useState('cart'); // 'cart' | 'checkout'
-  const [cust, setCust] = useState({ name: '', phone: '', city: '', address: '', notes: '' });
+  const [cust, setCust] = useState(loadCustomer); // مسبقة التعبئة من آخر طلب (إن وُجد)
+  const [loyalty, setLoyalty] = useState(null); // { percent } خصم ولاء مستحق لهذا الطلب
   const [err, setErr] = useState('');
   const [couponInput, setCouponInput] = useState('');
   const [coupon, setCoupon] = useState(null); // { code, discount } بعد التحقّق
@@ -99,6 +112,28 @@ export default function CartDrawer() {
     return () => clearTimeout(id);
   }, [view, storeSlug, items, cust, total]);
 
+  // حدث بكسل التمويل: بدء إتمام الطلب (مرة عند فتح الشاشة)
+  useEffect(() => {
+    if (open && view === 'checkout' && items.length) {
+      trackPixel('InitiateCheckout', { value: total, num_items: items.reduce((s, i) => s + i.qty, 0) });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, view]);
+
+  // خصم الولاء: بعد إدخال رقم صالح نسأل الخادم إن كان هذا الطلب يستحق خصم ولاء
+  // (كل N طلبات مؤكّدة → خصم % يحدّدهما المتجر). الخادم يعيد الحساب عند الإنشاء.
+  useEffect(() => {
+    if (view !== 'checkout' || !storeSlug) return undefined;
+    const digits = cust.phone.replace(/\D/g, '');
+    if (digits.length < 9) { setLoyalty(null); return undefined; }
+    const id = setTimeout(() => {
+      api.post('/public/loyalty', { slug: storeSlug, phone: cust.phone })
+        .then((r) => setLoyalty(Number(r.data.percent) > 0 ? { percent: Number(r.data.percent) } : null))
+        .catch(() => setLoyalty(null));
+    }, 600);
+    return () => clearTimeout(id);
+  }, [view, storeSlug, cust.phone]);
+
   // خصم الإحالة التلقائي: إن وصلت الزبونة عبر رابط إحالة محفوظ لهذا المتجر
   useEffect(() => {
     if (!open || !storeSlug) { return; }
@@ -124,7 +159,11 @@ export default function CartDrawer() {
   const refDiscount = (!coupon && referral && referral.percent > 0)
     ? Math.round((total * referral.percent) / 100 * 100) / 100
     : 0;
-  const discount = coupon ? coupon.discount : refDiscount;
+  // خصم الولاء — أدنى أولوية (كوبون > إحالة > ولاء)، ولا تُجمع الخصومات
+  const loyaltyDiscount = (!coupon && !refDiscount && loyalty?.percent > 0)
+    ? Math.round((total * loyalty.percent) / 100 * 100) / 100
+    : 0;
+  const discount = coupon ? coupon.discount : (refDiscount || loyaltyDiscount);
   const afterDiscount = Math.max(0, total - discount);
   const freeShip = freeOver > 0 && afterDiscount >= freeOver;
   const delivery = freeShip ? 0 : (cityOpt ? cityOpt.fee : 0);
@@ -167,6 +206,8 @@ export default function CartDrawer() {
     let waWin = null;
     try { waWin = window.open('', '_blank'); } catch { waWin = null; }
     setPlacing(true);
+    // نتذكّر بيانات الزبون محلياً — الطلب القادم يتعبّأ تلقائياً
+    saveCustomer(cust);
     // نحفظ الطلب أولاً ونتأكّد من اكتماله — هنا يُخصم المخزون من اللون/النمرة
     try {
       await api.post('/orders/cod', {
@@ -175,6 +216,8 @@ export default function CartDrawer() {
         coupon: coupon ? { code: coupon.code } : undefined,
         referralCode: (!coupon && refDiscount > 0) ? referral?.code : undefined,
       });
+      // حدث بكسل التمويل: شراء مكتمل (أهم حدث لقياس الإعلانات)
+      trackPixel('Purchase', { value: grand, num_items: items.reduce((s, i) => s + i.qty, 0), content_ids: items.map((i) => i.id), content_type: 'product' });
     } catch { /* تجاهل — نكمل لواتساب على أي حال */ }
     setPlacing(false);
     clear();
@@ -290,6 +333,13 @@ export default function CartDrawer() {
                     </div>
                   )}
 
+                  {/* خصم الولاء التلقائي — مكافأة الزبون الدائم (كل N طلبات) */}
+                  {loyaltyDiscount > 0 && (
+                    <div className="flex items-center gap-1.5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 px-3.5 py-2.5 text-sm font-semibold text-emerald-700">
+                      <GiftIcon className="h-4 w-4 shrink-0" /> {t('loyalty.banner', { percent: loyalty.percent })}
+                    </div>
+                  )}
+
                   {/* كوبون الخصم */}
                   <div>
                     <h3 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-wine"><TicketIcon className="h-4 w-4" /> {t('coupon.title')}</h3>
@@ -329,7 +379,7 @@ export default function CartDrawer() {
                       <div className="flex justify-between text-stone-400"><span>{t('co.subtotal')}</span><span>{t('common.currency')}{total.toFixed(2)}</span></div>
                       {discount > 0 && (
                         <div className="flex justify-between text-emerald-600">
-                          <span>{coupon ? `${t('coupon.discount')} (${coupon.code})` : t('referral.discountLine')}</span>
+                          <span>{coupon ? `${t('coupon.discount')} (${coupon.code})` : refDiscount > 0 ? t('referral.discountLine') : t('loyalty.discountLine')}</span>
                           <span>−{t('common.currency')}{discount.toFixed(2)}</span>
                         </div>
                       )}

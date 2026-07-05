@@ -1,4 +1,6 @@
 import { query } from '../config/db.js';
+import { sendPushToUser } from '../config/push.js';
+import { sendNativeToUser } from '../config/nativePush.js';
 
 // ───────── الطلبات غير المكتملة (إنقاذ السلات المتروكة) ─────────
 // الزبونة تدخل بياناتها بشاشة إتمام الطلب ولا تؤكّد؟ نحفظ مسودة يراها صاحب
@@ -37,7 +39,7 @@ export async function saveAbandoned(req, res, next) {
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        ON CONFLICT (store_id, phone) DO UPDATE SET
          name = EXCLUDED.name, city = EXCLUDED.city, address = EXCLUDED.address,
-         items = EXCLUDED.items, total = EXCLUDED.total, updated_at = now()`,
+         items = EXCLUDED.items, total = EXCLUDED.total, updated_at = now(), notified = false`,
       [storeId, name, phone, city, address, JSON.stringify(items), total]
     );
     res.json({ ok: true });
@@ -82,6 +84,39 @@ export async function listAbandoned(req, res, next) {
     });
   } catch (err) {
     next(err);
+  }
+}
+
+// مهمة خلفية دورية: إشعار جوال فوري للمالك عن السلات المتروكة الجديدة.
+// نشعر فقط عن المسودّات التي مرّ على آخر تعديل لها 10 دقائق (الزبونة تركت فعلاً
+// وليست ما زالت تكتب) ولم يُشعَر عنها بعد — إشعار واحد لكل مسودة.
+let notifyRunning = false;
+export async function notifyAbandonedCheckouts() {
+  if (notifyRunning) return;
+  notifyRunning = true;
+  try {
+    const r = await query(
+      `SELECT a.id, a.name, a.phone, a.total, s.user_id, s.name AS store_name
+       FROM abandoned_checkouts a JOIN stores s ON s.id = a.store_id
+       WHERE a.notified = false AND a.updated_at < now() - interval '10 minutes'
+       ORDER BY a.updated_at ASC LIMIT 50`
+    );
+    for (const a of r.rows) {
+      const payload = {
+        title: `🛒 طلب لم يكتمل — ${a.store_name}`,
+        body: `${a.name || a.phone} تركت سلة بقيمة ₪${Number(a.total || 0).toFixed(0)} — راسلها لإنقاذ الطلب`,
+        url: '/dashboard?tab=myOrders',
+      };
+      try {
+        sendPushToUser(a.user_id, payload);
+        sendNativeToUser(a.user_id, payload);
+        await query('UPDATE abandoned_checkouts SET notified = true WHERE id = $1', [a.id]);
+      } catch { /* نحاول بالدورة القادمة */ }
+    }
+  } catch (e) {
+    console.error('notifyAbandonedCheckouts:', e.message);
+  } finally {
+    notifyRunning = false;
   }
 }
 

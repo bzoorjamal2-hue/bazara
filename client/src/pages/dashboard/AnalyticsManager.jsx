@@ -87,6 +87,25 @@ export default function AnalyticsManager() {
         </div>
       )}
 
+      {/* تقرير التحصيل الشهري حسب شركة التوصيل — لمطابقة مبالغ الدفع عند الاستلام */}
+      {data.courierMonth?.length > 0 && (
+        <div className="glass p-5">
+          <h2 className="mb-1 font-display text-lg font-bold text-stone-100">💰 {t('dashboard.analytics.courierMonth')}</h2>
+          <p className="mb-4 text-xs text-stone-400">{t('dashboard.analytics.courierMonthHint')}</p>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {data.courierMonth.map((c) => (
+              <div key={c.courier} className="flex items-center justify-between rounded-xl bg-white/5 px-4 py-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-stone-100">{t(`dashboard.analytics.courierNames.${c.courier}`)}</p>
+                  <p className="text-xs text-stone-400">{t('dashboard.analytics.courierOrders', { count: c.orders })}</p>
+                </div>
+                <span className="shrink-0 font-display text-xl font-extrabold text-emerald-300">{t('common.currency')}{c.amount.toFixed(0)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* نشاط آخر 7 أيام */}
       <div className="glass p-5">
         <h2 className="mb-4 font-display text-lg font-bold text-stone-100">{t('dashboard.analytics.last7')}</h2>

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { param } from 'express-validator';
-import { getHomeData, getStoreBySlug, getStoreCheckout, getProductById, getByCategory, getOffers, getReels, getStoriesFeed, addReview, trackOrders, trackStoreVisit } from '../controllers/public.controller.js';
+import { getHomeData, getStoreBySlug, getStoreCheckout, getProductById, getByCategory, getOffers, getReels, getStoriesFeed, addReview, trackOrders, trackStoreVisit, loyaltyPreview } from '../controllers/public.controller.js';
 import { validateCoupon } from '../controllers/coupon.controller.js';
 import { createStockRequest } from '../controllers/stockRequest.controller.js';
 import { saveAbandoned } from '../controllers/abandoned.controller.js';
@@ -45,6 +45,7 @@ router.post('/store/:slug/visit', trackStoreVisit);
 router.get('/product/:id', idParam, handleValidation, getProductById);
 router.post('/product/:id/reviews', reviewLimiter, idParam, reviewRules, handleValidation, addReview);
 router.post('/coupon/validate', validateCoupon);
+router.post('/loyalty', loyaltyPreview); // معاينة خصم الولاء (كل N طلبات → خصم %)
 router.post('/track', trackOrders);
 router.post('/stock-request', reviewLimiter, createStockRequest);
 // مسودة طلب غير مكتمل — تُرسَل تلقائياً أثناء تعبئة شاشة الإتمام (حدّ أوسع من المراجعات

@@ -18,6 +18,7 @@ import { HeartIcon, BagIcon, CartIcon, BellIcon, SparkleIcon, FireIcon, HandIcon
 import { goBack } from '../utils/nav.js';
 import SizeGuideModal from '../components/SizeGuideModal.jsx';
 import ImageInput from '../components/ImageInput.jsx';
+import { initPixels, trackPixel } from '../utils/pixels.js';
 
 const PH = 'https://placehold.co/600x600/121214/d4af37?text=%F0%9F%91%97';
 
@@ -43,6 +44,13 @@ export default function ProductDetails() {
   const [notifyPhone, setNotifyPhone] = useState('');
   const [notifyBusy, setNotifyBusy] = useState(false);
   const [notifySent, setNotifySent] = useState(false);
+
+  // بكسلات تمويل المتجر: تُحقن عند الهبوط المباشر من إعلان + حدث "مشاهدة منتج"
+  useEffect(() => {
+    if (!product?.id) return;
+    initPixels(product);
+    trackPixel('ViewContent', { value: Number(product.price) || 0, content_name: product.name, content_ids: [product.id], content_type: 'product' });
+  }, [product?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const [shared, setShared] = useState(false);
 
   // مشاركة المنتج: نشارك رابط /share/ الذي يعرض صورة المنتج الحقيقية بمعاينة واتساب

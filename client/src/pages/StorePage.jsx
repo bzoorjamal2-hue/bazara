@@ -22,6 +22,7 @@ import { buildWhatsappLink } from '../utils/whatsapp.js';
 import { SIZES, sizeLabel } from '../utils/sizes.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { saveRef } from '../utils/referral.js';
+import { initPixels } from '../utils/pixels.js';
 
 const PAGE_SIZE = 8;
 const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
@@ -35,6 +36,8 @@ export default function StorePage() {
   const isOwner = myStore?.slug === slug;
   const [data, setData] = useState(() => getCache(`storepage:${slug}`) || null);
   const [error, setError] = useState('');
+  // بكسلات تمويل المتجر: تُحقن مرة واحدة عند توفّر بيانات المتجر (PageView تلقائي)
+  useEffect(() => { if (data?.store) initPixels(data.store); }, [data?.store]);
   const [q, setQ] = useState('');
   const [sort, setSort] = useState('default');
   const [sizesSel, setSizesSel] = useState([]); // مقاسات مختارة (متعدّد)
