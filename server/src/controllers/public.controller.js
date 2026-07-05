@@ -2,6 +2,8 @@ import { query } from '../config/db.js';
 import { mapProduct } from './product.controller.js';
 import { activeStoreSql } from '../utils/subscription.js';
 import { notifyStoreOwner } from '../utils/notify.js';
+import { statusLabelAr as opostStatusLabelAr } from '../config/opost.js';
+import { epsStatusLabelAr } from '../config/eps.js';
 
 // أعمدة المنتج + بيانات المتجر + تجميع التقييمات. نربط users لفلترة المشتركين الفعّالين.
 const PRODUCT_SELECT = `
@@ -135,12 +137,22 @@ export async function trackOrders(req, res, next) {
   const last9 = phone.slice(-9);
   try {
     const r = await query(
-      `SELECT o.reference, o.status, o.items, o.total, o.delivery_fee, o.discount, o.created_at, o.city, s.name AS store_name
+      `SELECT o.reference, o.status, o.items, o.total, o.delivery_fee, o.discount, o.created_at, o.city, s.name AS store_name,
+              o.opost_tracking, o.opost_status, o.eps_barcode, o.eps_status, o.gobox_barcode, o.gobox_status
        FROM orders o JOIN stores s ON s.id = o.store_id
        WHERE regexp_replace(o.customer_phone, '\\D', '', 'g') LIKE $1
        ORDER BY o.created_at DESC LIMIT 20`,
       ['%' + last9]
     );
+    // معلومات شركة التوصيل للزبون: الاسم + الحالة الحيّة (معرّبة) + رقم التتبّع.
+    // '✓' يعني أُرسل بلا رقم تتبّع من الشركة — لا نعرضه كرقم.
+    const courierInfo = (o) => {
+      const clean = (v) => (v && v !== '✓' ? String(v) : '');
+      if (o.opost_tracking) return { courier: 'أوبتيموس', tracking: clean(o.opost_tracking), courierStatus: o.opost_status ? opostStatusLabelAr(o.opost_status) : '' };
+      if (o.eps_barcode) return { courier: 'EPS', tracking: clean(o.eps_barcode), courierStatus: o.eps_status ? epsStatusLabelAr(o.eps_status) : '' };
+      if (o.gobox_barcode) return { courier: 'gobox', tracking: clean(o.gobox_barcode), courierStatus: o.gobox_status ? epsStatusLabelAr(o.gobox_status) : '' };
+      return { courier: '', tracking: '', courierStatus: '' };
+    };
     res.json({
       orders: r.rows.map((o) => ({
         reference: o.reference,
@@ -152,6 +164,7 @@ export async function trackOrders(req, res, next) {
         city: o.city || '',
         storeName: o.store_name,
         createdAt: o.created_at,
+        ...courierInfo(o),
       })),
     });
   } catch (err) {

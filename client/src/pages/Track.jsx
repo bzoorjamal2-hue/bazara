@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import Seo from '../components/Seo.jsx';
-import { PackageIcon, CheckIcon, SearchIcon } from '../components/icons.jsx';
+import { PackageIcon, CheckIcon, SearchIcon, TruckIcon } from '../components/icons.jsx';
 import { goBack } from '../utils/nav.js';
 
 const STEPS = ['new', 'confirmed', 'shipped', 'delivered'];
@@ -152,6 +152,23 @@ export default function Track() {
                             </div>
                           );
                         })}
+                      </div>
+                    )}
+
+                    {/* شركة التوصيل: الحالة الحيّة عند الشركة + رقم التتبّع (يظهر بعد إرسال الشحنة) */}
+                    {o.courier && (
+                      <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-2xl border border-gold-400/25 bg-gold-400/5 px-3.5 py-2.5 text-xs">
+                        <span className="flex items-center gap-1.5 font-bold text-wine">
+                          <TruckIcon className="h-4 w-4" /> {t('track.courier')}: {o.courier}
+                        </span>
+                        {o.courierStatus && (
+                          <span className="rounded-full bg-wine/10 px-2.5 py-0.5 font-semibold text-wine">{o.courierStatus}</span>
+                        )}
+                        {o.tracking && (
+                          <span className="text-stone-500">
+                            {t('track.trackingNo')}: <span dir="ltr" className="font-mono font-semibold text-stone-600">{o.tracking}</span>
+                          </span>
+                        )}
                       </div>
                     )}
 

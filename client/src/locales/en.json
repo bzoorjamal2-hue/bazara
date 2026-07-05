@@ -723,7 +723,9 @@
     "hint": "Enter the phone number you ordered with to see your order status.",
     "phonePlaceholder": "Phone number",
     "search": "Search",
-    "notFound": "No orders found for this number. Check it and try again."
+    "notFound": "No orders found for this number. Check it and try again.",
+    "courier": "Courier",
+    "trackingNo": "Tracking no."
   },
   "push": {
     "title": "Order push notifications",
