@@ -280,11 +280,7 @@ export default function Navbar() {
             {/* أعلى: إغلاق + اللغة */}
             <div className="flex items-center justify-between">
               <CloseButton onClick={() => setMenuOpen(false)} variant="cream" size="h-10 w-10" />
-              {/* جرس الإشعارات + تبديل اللغة — جهة النهاية */}
-              <div className="flex items-center gap-2">
-                <NavBell variant="drawer" />
-                <LanguageSwitcher onChanged={() => setMenuOpen(false)} />
-              </div>
+              <LanguageSwitcher onChanged={() => setMenuOpen(false)} />
             </div>
 
             {/* الهوية — المدير يظهر باسمه وصورته (حساب تحكّم) */}
@@ -305,6 +301,9 @@ export default function Navbar() {
                 <p className="truncate text-xs text-cream/60">{isAdmin ? user.email : user.name}</p>
               </div>
             </div>
+
+            {/* إشعارات الطلبات — بطاقة عصرية بمفتاح تبديل (تظهر للمشترك فقط) */}
+            <NavBell variant="row" />
 
             {/* الروابط — تأخذ المساحة وتتمرّر داخلياً ليبقى زر الخروج ظاهراً دائماً */}
             <nav className="mt-3 min-h-0 flex-1 space-y-1 overflow-y-auto">

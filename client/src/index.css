@@ -460,6 +460,16 @@ html.dark .theme-pub .app-navbar {
 }
 .animate-heart-pop { animation: heart-pop 0.8s ease-out forwards; }
 
+/* رنّة الجرس لحظة تفعيل الإشعارات (NavBell) — تأرجح قصير حول محور التعليق */
+@keyframes bell-swing {
+  0%, 100% { transform: rotate(0); }
+  20% { transform: rotate(14deg); }
+  40% { transform: rotate(-12deg); }
+  60% { transform: rotate(8deg); }
+  80% { transform: rotate(-5deg); }
+}
+.bell-swing { animation: bell-swing 0.7s ease-in-out; transform-origin: top center; }
+
 /* ============================================================= */
 /*  مساعِدة الأناقة (StylistChat) — ألوانها مستقلّة لأنها تُعرض    */
 /*  عبر بورتال خارج .theme-pub، فنتحكّم بالوضعين هنا مباشرة        */
