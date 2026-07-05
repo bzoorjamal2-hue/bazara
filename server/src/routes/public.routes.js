@@ -3,6 +3,7 @@ import { param } from 'express-validator';
 import { getHomeData, getStoreBySlug, getStoreCheckout, getProductById, getByCategory, getOffers, getReels, getStoriesFeed, addReview, trackOrders, trackStoreVisit } from '../controllers/public.controller.js';
 import { validateCoupon } from '../controllers/coupon.controller.js';
 import { createStockRequest } from '../controllers/stockRequest.controller.js';
+import { saveAbandoned } from '../controllers/abandoned.controller.js';
 import { viewStory } from '../controllers/story.controller.js';
 import { chatAssistant } from '../controllers/assistant.controller.js';
 import { createReferral, validateReferral } from '../controllers/referral.controller.js';
@@ -46,6 +47,10 @@ router.post('/product/:id/reviews', reviewLimiter, idParam, reviewRules, handleV
 router.post('/coupon/validate', validateCoupon);
 router.post('/track', trackOrders);
 router.post('/stock-request', reviewLimiter, createStockRequest);
+// مسودة طلب غير مكتمل — تُرسَل تلقائياً أثناء تعبئة شاشة الإتمام (حدّ أوسع من المراجعات
+// لأنها تُستدعى مع التعديل المتكرر أثناء الكتابة)
+const abandonedLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 80, standardHeaders: true, legacyHeaders: false, message: { error: 'محاولات كثيرة.' } });
+router.post('/abandoned', abandonedLimiter, saveAbandoned);
 router.post('/assistant', assistantLimiter, chatAssistant);
 router.post('/referral', reviewLimiter, createReferral);
 router.get('/referral/:code', validateReferral);

@@ -184,6 +184,23 @@ CREATE TABLE IF NOT EXISTS coupons (
 );
 CREATE INDEX IF NOT EXISTS idx_coupons_store ON coupons(store_id);
 
+-- طلبات لم تكتمل: الزبونة عبّأت بياناتها بشاشة الإتمام ولم تؤكّد — يتابعها صاحب المتجر
+-- (صف واحد لكل زبون/متجر يُحدَّث مع كل تعديل، ويُحذف تلقائياً عند إتمام الطلب فعلياً)
+CREATE TABLE IF NOT EXISTS abandoned_checkouts (
+    id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    store_id   UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+    name       VARCHAR(100) DEFAULT '',
+    phone      VARCHAR(40) NOT NULL,          -- أرقام فقط (مطبَّع للمطابقة مع الطلبات)
+    city       VARCHAR(80) DEFAULT '',
+    address    TEXT DEFAULT '',
+    items      JSONB NOT NULL DEFAULT '[]',
+    total      NUMERIC(10,2) DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (store_id, phone)
+);
+CREATE INDEX IF NOT EXISTS idx_abandoned_store ON abandoned_checkouts(store_id);
+
 -- طلبات التنبيه عند توفّر المنتج (نمرة/لون نفد)
 CREATE TABLE IF NOT EXISTS stock_requests (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),

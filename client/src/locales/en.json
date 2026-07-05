@@ -256,6 +256,18 @@
       "notes": "Notes",
       "contactWhatsapp": "Contact on WhatsApp",
       "waAltHint": "If WhatsApp says the number doesn't exist, try this prefix",
+      "notifyCustomer": "Notify customer",
+      "waStatus": {
+        "greet": "Hello {{name}} 🌸 this is {{store}}",
+        "new": "We received your order and it's under review ✅",
+        "confirmed": "Your order is confirmed and being prepared 🎀",
+        "shipped": "Your order is on its way 🚚",
+        "delivered": "Your order was delivered 🎉 we hope you love it",
+        "cancelled": "We're sorry, your order was cancelled — contact us for anything 🌹",
+        "trackingLine": "Courier: {{courier}} — tracking no.: {{tracking}}",
+        "totalLine": "Order total: ₪{{total}} (cash on delivery)",
+        "thanks": "Thank you for shopping with us 🤍"
+      },
       "sendDelivery": "Send to courier",
       "today": "Today",
       "yesterday": "Yesterday",
@@ -394,6 +406,13 @@
       "totalReferred": "Total customers via referral",
       "empty": "No referrals yet. Set a discount percentage in store settings so customers start sharing.",
       "noName": "No name"
+    },
+    "abandoned": {
+      "title": "Incomplete checkouts",
+      "hint": "Customers who entered their details but didn't confirm — a friendly message often saves the sale 😉",
+      "itemsCount": "{{count}} item(s)",
+      "nudge": "Message customer",
+      "waMsg": "Hello {{name}} 🌸 this is {{store}}\nWe noticed you started an order that wasn't completed:\n{{items}}\nTotal: ₪{{total}}\nIf you ran into any issue or have a question we're here to help finish it for you 🤍"
     },
     "stockRequests": {
       "title": "Restock requests",

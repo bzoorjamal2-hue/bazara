@@ -200,6 +200,22 @@ async function ensureColumns() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );`);
     await pool.query('CREATE INDEX IF NOT EXISTS idx_stockreq_store ON stock_requests(store_id);');
+    // طلبات لم تكتمل (سلات متروكة ببيانات تواصل): صف واحد لكل (متجر، هاتف) يُحدَّث
+    // مع كل تعديل، ويُحذف عند إتمام الطلب فعلياً — لمتابعة صاحب المتجر وإنقاذ البيع
+    await pool.query(`CREATE TABLE IF NOT EXISTS abandoned_checkouts (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+      name VARCHAR(100) DEFAULT '',
+      phone VARCHAR(40) NOT NULL,
+      city VARCHAR(80) DEFAULT '',
+      address TEXT DEFAULT '',
+      items JSONB NOT NULL DEFAULT '[]',
+      total NUMERIC(10,2) DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      UNIQUE (store_id, phone)
+    );`);
+    await pool.query('CREATE INDEX IF NOT EXISTS idx_abandoned_store ON abandoned_checkouts(store_id);');
     // نظام الإحالة: نسبة خصم الزبونة الجديدة لكل متجر + جدول أكواد الإحالة + ربط الطلب بالكود
     await pool.query('ALTER TABLE stores ADD COLUMN IF NOT EXISTS referral_percent NUMERIC(5,2) DEFAULT 0;');
     await pool.query('ALTER TABLE stores ADD COLUMN IF NOT EXISTS views INTEGER NOT NULL DEFAULT 0;');

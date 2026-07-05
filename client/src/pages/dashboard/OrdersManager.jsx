@@ -4,7 +4,7 @@ import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
 import { buildWhatsappLink, waCandidates } from '../../utils/whatsapp.js';
-import { PinIcon, NoteIcon, TicketIcon, WhatsAppIcon, TruckIcon } from '../../components/icons.jsx';
+import { PinIcon, NoteIcon, TicketIcon, WhatsAppIcon, TruckIcon, BellIcon, TrashIcon, BagIcon } from '../../components/icons.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import OpostSend from '../../components/OpostSend.jsx';
 import EpsSend from '../../components/EpsSend.jsx';
@@ -100,6 +100,19 @@ export default function OrdersManager() {
   const [eps, setEps] = useState({ connected: false, cities: [] });
   // ربط gobox (LogesTechs بالقرى): حالة الربط فقط — القرى تُبحث عند الإرسال
   const [gobox, setGobox] = useState({ connected: false });
+  // طلبات لم تكتمل (سلات متروكة ببيانات تواصل) — لمتابعتها برسالة وإنقاذ البيع
+  const [abandoned, setAbandoned] = useState([]);
+
+  useEffect(() => {
+    let on = true;
+    api.get('/orders/abandoned').then((r) => { if (on) setAbandoned(r.data.abandoned || []); }).catch(() => {});
+    return () => { on = false; };
+  }, []);
+
+  const removeAbandoned = async (id) => {
+    setAbandoned((prev) => prev.filter((x) => x.id !== id));
+    try { await api.delete(`/orders/abandoned/${id}`); } catch { /* تجاهل */ }
+  };
 
   useEffect(() => {
     let on = true;
@@ -207,6 +220,23 @@ export default function OrdersManager() {
     window.open(buildWhatsappLink(num, msg), '_blank');
   };
 
+  // رسالة جاهزة للزبون عن حالة طلبه الحالية (مع شركة التوصيل ورقم التتبّع إن وُجدا)
+  const orderStatusMsg = (o) => {
+    const st = FLOW.includes(o.status) ? o.status : 'new';
+    const courier = o.opostTracking ? 'أوبتيموس' : o.epsTracking ? 'EPS' : o.goboxTracking ? 'gobox' : '';
+    const tracking = o.opostTracking || o.epsTracking || o.goboxTracking || '';
+    const lines = [
+      t('dashboard.ordersSection.waStatus.greet', { name: o.customerName || '', store: store?.name || '' }),
+      t(`dashboard.ordersSection.waStatus.${st}`),
+    ];
+    if (courier && tracking && tracking !== '✓' && (st === 'shipped' || st === 'delivered')) {
+      lines.push(t('dashboard.ordersSection.waStatus.trackingLine', { courier, tracking }));
+    }
+    lines.push(t('dashboard.ordersSection.waStatus.totalLine', { total: Number(o.total || 0).toFixed(2) }));
+    lines.push(t('dashboard.ordersSection.waStatus.thanks'));
+    return lines.join('\n');
+  };
+
   // تصدير الطلبات لملف CSV يفتح في Excel (BOM لدعم العربية) — بناء من البيانات مباشرة بلا خادم
   const exportCsv = () => {
     if (!orders?.length) return;
@@ -261,6 +291,50 @@ export default function OrdersManager() {
         )}
       </div>
       {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
+
+      {/* طلبات لم تكتمل: زبائن أدخلوا بياناتهم بشاشة الإتمام ولم يؤكّدوا — فرصة بيع تُنقَذ برسالة */}
+      {abandoned.length > 0 && (
+        <div className="glass border border-amber-400/25 p-4">
+          <h2 className="flex items-center gap-2 font-display text-lg font-bold text-stone-100">
+            <BagIcon className="h-5 w-5 text-amber-300" /> {t('dashboard.abandoned.title')}
+            <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-bold text-amber-300">{abandoned.length}</span>
+          </h2>
+          <p className="mb-3 mt-0.5 text-xs text-stone-400">{t('dashboard.abandoned.hint')}</p>
+          <div className="space-y-2">
+            {abandoned.map((a) => {
+              const itemsTxt = (a.items || []).map((it) => `• ${it.name}${it.size ? ` (${it.size})` : ''}${it.color ? ` - ${it.color}` : ''} ×${it.qty}`).join('\n');
+              const msg = t('dashboard.abandoned.waMsg', { name: a.name || '', store: store?.name || '', items: itemsTxt, total: Number(a.total || 0).toFixed(2) });
+              const nums = waCandidates(a.phone);
+              const pieces = (a.items || []).reduce((s, i) => s + (Number(i.qty) || 1), 0);
+              return (
+                <div key={a.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white/5 p-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-stone-100">
+                      {a.name || a.phone} <span dir="ltr" className="ms-1 text-xs font-normal text-stone-400">{a.phone}</span>
+                    </p>
+                    <p className="mt-0.5 text-xs text-stone-400">
+                      {t('dashboard.abandoned.itemsCount', { count: pieces })}{a.city ? ` · ${a.city}` : ''} · ₪{Number(a.total || 0).toFixed(0)} · {new Date(a.updatedAt).toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    {nums[0] && (
+                      <a href={`https://wa.me/${nums[0]}?text=${encodeURIComponent(msg)}`} target="_blank" rel="noreferrer" className="btn-whatsapp gap-1.5 !px-3 !py-1.5 text-xs">
+                        <WhatsAppIcon className="h-4 w-4" /> {t('dashboard.abandoned.nudge')}
+                      </a>
+                    )}
+                    {nums[1] && (
+                      <a href={`https://wa.me/${nums[1]}?text=${encodeURIComponent(msg)}`} target="_blank" rel="noreferrer" title={t('dashboard.ordersSection.waAltHint')} className="btn-whatsapp gap-1 !px-2.5 !py-1.5 text-xs opacity-80">
+                        <WhatsAppIcon className="h-4 w-4" /> <span dir="ltr">+{nums[1].slice(0, 3)}</span>
+                      </a>
+                    )}
+                    <button onClick={() => removeAbandoned(a.id)} aria-label={t('common.remove')} className="p-1.5 text-stone-500 transition hover:text-red-400"><TrashIcon className="h-4 w-4" /></button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {orders && orders.length === 0 ? (
         <div className="glass p-10 text-center text-stone-400">{t('dashboard.ordersSection.empty')}</div>
@@ -363,6 +437,16 @@ export default function OrdersManager() {
                   )}
                   {waAlt && (
                     <a href={waAlt} target="_blank" rel="noreferrer" title={t('dashboard.ordersSection.waAltHint')} className="btn-whatsapp gap-1 !px-2.5 !py-1.5 text-xs opacity-80"><WhatsAppIcon className="h-4 w-4" /> <span dir="ltr">+{waNums[1].slice(0, 3)}</span></a>
+                  )}
+                  {/* رسالة جاهزة للزبون عن حالة طلبه الحالية (مع رقم التتبّع إن وُجد) */}
+                  {wa && (
+                    <a
+                      href={`https://wa.me/${waNums[0]}?text=${encodeURIComponent(orderStatusMsg(o))}`}
+                      target="_blank" rel="noreferrer"
+                      className="inline-flex items-center gap-1 rounded-xl border border-sky-400/30 px-3 py-1.5 text-xs font-semibold text-sky-200 transition hover:bg-sky-400/10"
+                    >
+                      <BellIcon className="h-4 w-4" /> {t('dashboard.ordersSection.notifyCustomer')}
+                    </a>
                   )}
                   {(store?.deliveryPhone || store?.whatsapp) && (
                     <button onClick={() => sendToDelivery(o)} className="inline-flex items-center gap-1 rounded-xl border border-gold-400/30 px-3 py-1.5 text-xs font-semibold text-gold-200 transition hover:bg-gold-400/10">

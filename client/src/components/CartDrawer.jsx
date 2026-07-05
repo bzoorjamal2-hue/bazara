@@ -82,6 +82,23 @@ export default function CartDrawer() {
       .catch(() => { setStoreZones([]); setFreeOver(0); });
   }, [open, storeSlug]);
 
+  // إنقاذ السلة المتروكة: بعد إدخال رقم هاتف صالح بشاشة الإتمام، نحفظ مسودة الطلب
+  // عند الخادم (تُحدَّث مع كل تعديل بمهلة قصيرة). لو ما أكّدت الزبونة، يراها صاحب
+  // المتجر بقائمة "طلبات لم تكتمل" ويتابعها — وتُحذف تلقائياً عند إتمام الطلب فعلياً.
+  useEffect(() => {
+    if (view !== 'checkout' || !storeSlug || !items.length) return undefined;
+    if (cust.phone.replace(/\D/g, '').length < 9) return undefined;
+    const id = setTimeout(() => {
+      api.post('/public/abandoned', {
+        slug: storeSlug,
+        customer: { name: cust.name, phone: cust.phone, city: cust.city, address: cust.address },
+        items: items.map((i) => ({ name: i.name, qty: i.qty, price: i.price, size: i.size || '', color: i.color || '' })),
+        total, // مجموع القطع (بلا توصيل/خصم — تقديري يكفي للمتابعة)
+      }).catch(() => { /* صامت — ميزة مساعدة لا توقف الشراء */ });
+    }, 1200);
+    return () => clearTimeout(id);
+  }, [view, storeSlug, items, cust, total]);
+
   // خصم الإحالة التلقائي: إن وصلت الزبونة عبر رابط إحالة محفوظ لهذا المتجر
   useEffect(() => {
     if (!open || !storeSlug) { return; }

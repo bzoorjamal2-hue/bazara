@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import { query, withTransaction } from '../config/db.js';
 import { isLahzaConfigured, initializeTransaction, verifyTransaction, PAY_CURRENCY } from '../config/lahza.js';
 import { evaluateCoupon } from './coupon.controller.js';
+import { clearAbandoned } from './abandoned.controller.js';
 import { sendMail, isMailConfigured } from '../utils/mail.js';
 import { sendPushToUser } from '../config/push.js';
 import { sendNativeToUser } from '../config/nativePush.js';
@@ -242,6 +243,9 @@ export async function createCodOrder(req, res, next) {
     // يتمّ ذلك عند تأكيد صاحب المتجر للطلب، ويُعاد عند الإلغاء (تحكّم أدق).
 
     res.status(201).json({ orderId: ins.rows[0].id, reference, discount, total });
+
+    // الطلب اكتمل فعلياً → نحذف مسودته من "الطلبات غير المكتملة" (بالخلفية)
+    clearAbandoned(storeId, phone);
 
     // إشعار صاحب المتجر بالبريد (بالخلفية)
     notifyOwnerNewOrder(storeId, { name, phone, city: (customer?.city || '').trim(), items: orderItems, total })
