@@ -72,8 +72,8 @@ export function initPixels(src = {}) {
 }
 
 // أسماء أحداث كل منصة مقابل الاسم الموحّد (أسماء فيسبوك القياسية)
-const TT_EVENTS = { ViewContent: 'ViewContent', AddToCart: 'AddToCart', InitiateCheckout: 'InitiateCheckout', Purchase: 'CompletePayment' };
-const GA_EVENTS = { ViewContent: 'view_item', AddToCart: 'add_to_cart', InitiateCheckout: 'begin_checkout', Purchase: 'purchase' };
+const TT_EVENTS = { ViewContent: 'ViewContent', AddToCart: 'AddToCart', InitiateCheckout: 'InitiateCheckout', Purchase: 'CompletePayment', Search: 'Search', AddToWishlist: 'AddToWishlist' };
+const GA_EVENTS = { ViewContent: 'view_item', AddToCart: 'add_to_cart', InitiateCheckout: 'begin_checkout', Purchase: 'purchase', Search: 'search', AddToWishlist: 'add_to_wishlist' };
 
 // إطلاق حدث تجاري موحّد: name أحد ViewContent/AddToCart/InitiateCheckout/Purchase
 // data: { value, content_name, content_ids } — العملة شيكل دائماً

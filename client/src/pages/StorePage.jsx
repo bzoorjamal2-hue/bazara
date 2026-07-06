@@ -22,7 +22,7 @@ import { buildWhatsappLink } from '../utils/whatsapp.js';
 import { SIZES, sizeLabel } from '../utils/sizes.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { saveRef } from '../utils/referral.js';
-import { initPixels } from '../utils/pixels.js';
+import { initPixels, trackPixel } from '../utils/pixels.js';
 
 const PAGE_SIZE = 8;
 const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
@@ -38,6 +38,13 @@ export default function StorePage() {
   const [error, setError] = useState('');
   // بكسلات تمويل المتجر: تُحقن مرة واحدة عند توفّر بيانات المتجر (PageView تلقائي)
   useEffect(() => { if (data?.store) initPixels(data.store); }, [data?.store]);
+  // حدث بكسل "بحث" بعد توقف الكتابة — إشارة اهتمام تفيد استهداف الإعلانات
+  useEffect(() => {
+    const term = q.trim();
+    if (term.length < 2) return undefined;
+    const idT = setTimeout(() => trackPixel('Search', { search_string: term }), 900);
+    return () => clearTimeout(idT);
+  }, [q]);
   const [q, setQ] = useState('');
   const [sort, setSort] = useState('default');
   const [sizesSel, setSizesSel] = useState([]); // مقاسات مختارة (متعدّد)

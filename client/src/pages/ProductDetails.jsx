@@ -63,11 +63,9 @@ export default function ProductDetails() {
     try { await navigator.clipboard.writeText(url); setShared(true); setTimeout(() => setShared(false), 1800); } catch { /* تجاهل */ }
   };
 
-  // دليل اجتماعي: عدد مشاهدات "حيّ" ثابت لكل منتج (تقديري، يبني ثقة)
-  const viewers = useMemo(() => {
-    const seed = String(id).split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-    return 3 + (seed % 12); // 3..14
-  }, [id]);
+  // دليل اجتماعي حقيقي: عدد من شاهدوا المنتج خلال آخر 30 دقيقة (يحسبه الخادم
+  // فعلياً بالذاكرة) — بدل الرقم الثابت التقديري السابق المشتق من معرّف المنتج.
+  const [viewers, setViewers] = useState(0);
 
   const fetchData = () => {
     api
@@ -75,6 +73,7 @@ export default function ProductDetails() {
       .then((res) => {
         const p = res.data.product;
         setProduct(p);
+        setViewers(Number(res.data.viewing) || 0);
         setReviews(res.data.reviews || []);
         setActive(0);
         pushRecent(p);
@@ -339,8 +338,8 @@ export default function ProductDetails() {
             )}
           </div>
 
-          {/* دليل اجتماعي: مشاهدات حيّة (تقديري) */}
-          {!outOfStock && (
+          {/* دليل اجتماعي: مشاهدات حقيقية خلال آخر 30 دقيقة (من الخادم) — يظهر من مشاهدَين فأكثر */}
+          {!outOfStock && viewers >= 2 && (
             <p className="mt-2.5 flex items-center gap-1.5 text-xs font-medium text-wine/60">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />

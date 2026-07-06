@@ -276,6 +276,36 @@ export async function createCodOrder(req, res, next) {
   }
 }
 
+// إشعار المالك فوراً عندما يُصفّر تأكيدُ طلبٍ مخزونَ منتج بالكامل — حتى لا يبقى
+// يعلن/يعرض منتجاً خالصاً. يُستدعى بالخلفية بعد خصم المخزون (لا يفشل الطلب أبداً).
+async function notifySoldOut(storeId, items) {
+  const ids = [...new Set((items || []).map((i) => i.id).filter(Boolean))];
+  if (!ids.length) return;
+  const r = await query('SELECT id, name, stock, size_stock, color_stock FROM products WHERE id = ANY($1::uuid[])', [ids]);
+  const sumObj = (o) => Object.values(o || {}).reduce((a, b) => a + (Number(b) || 0), 0);
+  const soldOut = r.rows.filter((p) => {
+    if (p.stock !== null && p.stock !== undefined) return Number(p.stock) <= 0;
+    const cs = p.color_stock && typeof p.color_stock === 'object' ? p.color_stock : {};
+    const ss = p.size_stock && typeof p.size_stock === 'object' ? p.size_stock : {};
+    if (Object.keys(cs).length) return Object.values(cs).reduce((s, z) => s + sumObj(z), 0) <= 0;
+    if (Object.keys(ss).length) return sumObj(ss) <= 0;
+    return false; // بلا مخزون محدّد = متوفر دائماً
+  });
+  if (!soldOut.length) return;
+  const sr = await query('SELECT user_id, name FROM stores WHERE id = $1', [storeId]);
+  const s = sr.rows[0];
+  if (!s) return;
+  for (const p of soldOut.slice(0, 3)) {
+    const payload = {
+      title: `⚠️ نفدت الكمية — ${s.name}`,
+      body: `"${p.name}" خلص مخزونه بالكامل — أعد توفيره أو أوقف إعلانه`,
+      url: '/dashboard?tab=products',
+    };
+    sendPushToUser(s.user_id, payload);
+    sendNativeToUser(s.user_id, payload);
+  }
+}
+
 // تحديث حالة الطلب (صاحب المتجر فقط)
 const ORDER_STATUSES = ['new', 'confirmed', 'shipped', 'delivered', 'cancelled'];
 // الحالات التي تعني أن الطلب مؤكّد ويجب خصم مخزونه
@@ -318,6 +348,8 @@ export async function applyOrderStatus(storeId, id, status) {
     }
     await q('UPDATE orders SET status = $1, stock_applied = $2 WHERE id = $3 AND store_id = $4', [status, stockApplied, id, storeId]);
   });
+  // خُصم المخزون للتو؟ نفحص بالخلفية إن نفد منتج بالكامل ونُشعر المالك
+  if (shouldApply && !wasApplied) notifySoldOut(storeId, order.items).catch(() => {});
   return { ok: true, status };
 }
 

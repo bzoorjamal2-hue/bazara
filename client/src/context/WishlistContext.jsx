@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { productThumb } from '../utils/recentlyViewed.js';
+import { trackPixel } from '../utils/pixels.js';
 
 const WishlistContext = createContext(null);
 const KEY = 'wishlist_v1';
@@ -22,6 +23,10 @@ export function WishlistProvider({ children }) {
   const has = (id) => items.some((i) => i.id === id);
 
   const toggle = (product) => {
+    // حدث بكسل التمويل عند الإضافة فقط (لا عند الإزالة) — إشارة اهتمام قوية للإعلانات
+    if (!items.some((i) => i.id === product.id)) {
+      trackPixel('AddToWishlist', { value: Number(product.price) || 0, content_name: product.name, content_ids: [product.id], content_type: 'product' });
+    }
     setItems((prev) => {
       if (prev.some((i) => i.id === product.id)) return prev.filter((i) => i.id !== product.id);
       return [

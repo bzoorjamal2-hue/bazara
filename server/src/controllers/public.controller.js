@@ -226,6 +226,20 @@ export async function getStoreCheckout(req, res, next) {
   }
 }
 
+// مشاهدات حيّة حقيقية لكل منتج (بالذاكرة): طوابع زمنية لآخر 30 دقيقة — دليل
+// اجتماعي صادق "X شاهدوه مؤخراً" بلا أي تخزين دائم ولا أرقام مزيفة.
+const VIEW_WINDOW = 30 * 60 * 1000;
+const productViews = new Map(); // productId -> [timestamps]
+function recordView(id) {
+  const now = Date.now();
+  const list = (productViews.get(id) || []).filter((t) => now - t < VIEW_WINDOW);
+  list.push(now);
+  if (list.length > 500) list.shift();
+  productViews.set(id, list);
+  if (productViews.size > 5000) productViews.delete(productViews.keys().next().value); // سقف أمان للذاكرة
+  return list.length;
+}
+
 export async function getProductById(req, res, next) {
   const { id } = req.params;
   try {
@@ -233,6 +247,7 @@ export async function getProductById(req, res, next) {
     const result = await query(`${PRODUCT_SELECT} WHERE p.id = $1 AND ${active}`, [id]);
     const product = result.rows[0];
     if (!product) return res.status(404).json({ error: 'المنتج غير موجود.' });
+    const viewing = recordView(id);
 
     const reviews = await query(
       'SELECT id, author_name, rating, comment, image_url, created_at FROM reviews WHERE product_id = $1 ORDER BY created_at DESC',
@@ -241,6 +256,7 @@ export async function getProductById(req, res, next) {
 
     res.json({
       product: mapProduct(product),
+      viewing, // عدد من شاهدوا المنتج خلال آخر 30 دقيقة (حقيقي، بالذاكرة)
       reviews: reviews.rows.map((r) => ({
         id: r.id,
         authorName: r.author_name,
