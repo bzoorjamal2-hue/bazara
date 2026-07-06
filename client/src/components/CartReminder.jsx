@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCart } from '../context/CartContext.jsx';
-import { isStandalone } from '../utils/pwa.js';
 import { BagIcon, XIcon } from './icons.jsx';
 
 // تذكير لطيف بالسلة المتروكة: إن عادت الزبونة وعندها قطع بالسلة، نُظهر تنبيهاً
@@ -26,9 +25,11 @@ export default function CartReminder() {
   const openCart = () => { dismiss(); setOpen(true); };
 
   return (
+    /* الشريط السفلي يظهر على كل الأجهزة (وليس المثبّت فقط) — نرفع التذكير فوقه دائماً
+       حتى لا يختبئ نصفه خلف الشريط ويبدو كقائمة عالقة (كان يحدث على الكمبيوتر) */
     <div
-      className="animate-fade-up fixed inset-x-3 z-[60] mx-auto max-w-md overflow-hidden rounded-2xl border border-wine/15 bg-white p-3 shadow-xl ring-1 ring-wine/5"
-      style={{ bottom: isStandalone() ? 'calc(env(safe-area-inset-bottom,0px) + 86px)' : 'calc(env(safe-area-inset-bottom,0px) + 18px)' }}
+      className="animate-fade-up fixed inset-x-3 z-[80] mx-auto max-w-md overflow-hidden rounded-2xl border border-wine/15 bg-white p-3 shadow-xl ring-1 ring-wine/5"
+      style={{ bottom: 'calc(env(safe-area-inset-bottom,0px) + 86px)' }}
     >
       <span className="dash-hairline absolute inset-x-0 top-0" />
       <div className="flex items-center gap-3">

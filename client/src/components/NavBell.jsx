@@ -66,9 +66,9 @@ export default function NavBell({ variant = 'bar' }) {
   if (variant === 'row') {
     const subtitle = denied ? t('push.denied') : on ? t('push.rowOn') : t('push.rowOff');
     return (
-      <div className={`mt-4 flex items-center gap-3 rounded-2xl p-3 ring-1 transition-colors duration-300 ${on ? 'bg-gold-400/15 ring-gold-400/40' : 'bg-cream/10 ring-cream/15'}`}>
+      <div className={`mb-1 flex items-center gap-2.5 rounded-2xl p-2.5 ring-1 transition-colors duration-300 ${on ? 'bg-gold-400/15 ring-gold-400/40' : 'bg-cream/10 ring-cream/15'}`}>
         <span
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
             on
               ? 'bg-gradient-to-br from-gold-200 to-gold-400 text-wine-dark shadow-[0_0_20px_rgba(230,200,120,0.5)]'
               : 'bg-cream/15 text-cream'
@@ -78,7 +78,7 @@ export default function NavBell({ variant = 'bar' }) {
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-bold text-cream">{t('push.rowTitle')}</p>
-          <p className={`mt-0.5 line-clamp-2 text-[11px] leading-snug ${denied ? 'text-amber-300' : on ? 'text-gold-200' : 'text-cream/60'}`}>{subtitle}</p>
+          <p className={`mt-0.5 line-clamp-1 text-[11px] leading-snug ${denied ? 'text-amber-300' : on ? 'text-gold-200' : 'text-cream/60'}`}>{subtitle}</p>
         </div>
         {/* مفتاح تبديل منزلق — أخضر ذهبي عند التفعيل، بحركة ناعمة */}
         <button

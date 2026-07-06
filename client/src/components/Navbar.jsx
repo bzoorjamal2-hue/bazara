@@ -302,11 +302,10 @@ export default function Navbar() {
               </div>
             </div>
 
-            {/* إشعارات الطلبات — بطاقة عصرية بمفتاح تبديل (تظهر للمشترك فقط) */}
-            <NavBell variant="row" />
-
-            {/* الروابط — تأخذ المساحة وتتمرّر داخلياً ليبقى زر الخروج ظاهراً دائماً */}
+            {/* الروابط — تأخذ المساحة وتتمرّر داخلياً. بطاقة الإشعارات أول عنصر داخل
+                منطقة التمرير (لا ثابتة) حتى لا تسرق مساحة الأزرار السفلية */}
             <nav className="mt-3 min-h-0 flex-1 space-y-1 overflow-y-auto">
+              <NavBell variant="row" />
               {sections.map((s) => {
                 const curTab = new URLSearchParams(search).get('tab') || (isAdmin ? 'subscribers' : 'overview');
                 const active = pathname.startsWith('/dashboard') && curTab === s.key;

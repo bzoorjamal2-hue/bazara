@@ -4,6 +4,7 @@ import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
 import { buildWhatsappLink, waCandidates } from '../../utils/whatsapp.js';
+import { getCache, setCache } from '../../utils/apiCache.js';
 import { PinIcon, NoteIcon, TicketIcon, WhatsAppIcon, TruckIcon, BellIcon, TrashIcon, BagIcon } from '../../components/icons.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import OpostSend from '../../components/OpostSend.jsx';
@@ -114,12 +115,22 @@ export default function OrdersManager() {
     try { await api.delete(`/orders/abandoned/${id}`); } catch { /* تجاهل */ }
   };
 
+  // فتح فوري بلا تعليق: نعرض آخر قائمة محفوظة فوراً (خاصة أول فتحة والخادم
+  // ما زال يستيقظ)، ثم يحدّثها الجلب الفعلي بالخلفية — نفس أسلوب صفحة المتجر
+  useEffect(() => {
+    if (store?.id) {
+      const cached = getCache(`myorders:${store.id}`);
+      if (cached) setOrders((prev) => prev ?? cached);
+    }
+  }, [store?.id]);
+
   useEffect(() => {
     let on = true;
     api.get('/orders/mine').then(async (r) => {
       if (!on) return;
       const list = r.data.orders;
       setOrders(list);
+      if (store?.id) setCache(`myorders:${store.id}`, list);
       // مزامنة حالة الطلبات المُرسلة لأوبتيموس مع حالتها الحيّة هناك
       if (list.some((o) => o.opostTracking)) {
         try {

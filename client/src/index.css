@@ -460,6 +460,13 @@ html.dark .theme-pub .app-navbar {
 }
 .animate-heart-pop { animation: heart-pop 0.8s ease-out forwards; }
 
+/* تلاشي دخول الصفحات عند التنقّل — CSS خالص بدل framer-motion (أخف على المعالج) */
+@keyframes route-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.route-fade { animation: route-fade 0.2s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+
 /* رنّة الجرس لحظة تفعيل الإشعارات (NavBell) — تأرجح قصير حول محور التعليق */
 @keyframes bell-swing {
   0%, 100% { transform: rotate(0); }

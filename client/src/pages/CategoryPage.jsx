@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -8,6 +8,7 @@ import { ProductGridSkeleton } from '../components/Skeleton.jsx';
 import ProductCard from '../components/ProductCard.jsx';
 import CatThumb from '../components/CatThumb.jsx';
 import { getCache, setCache } from '../utils/apiCache.js';
+import { smartNav } from '../utils/nav.js';
 
 // لوقو بيت أنيق (زر العودة للصفحة الرئيسية)
 function HomeGlyph({ className = 'h-[18px] w-[18px]' }) {
@@ -44,6 +45,7 @@ function Crumb({ className = 'h-4 w-4' }) {
 
 export default function CategoryPage() {
   const { cat } = useParams();
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const { user, store } = useAuth();
   // "الرئيسية": المشترك المسجّل يعود لمتجره العام (صفحته بحسابه)؛ الزائر لبازارا العام
@@ -74,23 +76,27 @@ export default function CategoryPage() {
 
       {/* مسار التنقّل المتتابع: الرئيسية ← التصنيفات ← الفئة (أزرار فعّالة بأيقونات للرجوع) */}
       <nav className="mb-5 mt-1 flex flex-wrap items-center gap-1.5 text-sm">
-        <Link
-          to={homeTo}
+        {/* رجوع ذكي: إن كانت الوجهة هي الصفحة السابقة فعلياً نرجع بالتاريخ
+            (فيستعيد المستخدم نفس موضع تمريره) بدل فتح صفحة جديدة من الأعلى */}
+        <button
+          type="button"
+          onClick={() => smartNav(navigate, homeTo)}
           aria-label={t('nav.home')}
           title={t('nav.home')}
           className="flex h-9 w-9 items-center justify-center rounded-full bg-wine/10 text-wine shadow-sm ring-1 ring-wine/15 transition hover:bg-wine hover:text-cream"
         >
           <HomeGlyph />
-        </Link>
+        </button>
         <Crumb />
-        <Link
-          to="/categories"
+        <button
+          type="button"
+          onClick={() => smartNav(navigate, '/categories')}
           aria-label={t('nav.categories')}
           title={t('nav.categories')}
           className="flex h-9 w-9 items-center justify-center rounded-full bg-wine/10 text-wine shadow-sm ring-1 ring-wine/15 transition hover:bg-wine hover:text-cream"
         >
           <GridGlyph />
-        </Link>
+        </button>
         <Crumb />
         <span className="flex items-center gap-2 rounded-full bg-wine/10 px-2.5 py-1 font-display text-base font-bold text-wine">
           {customCat ? (

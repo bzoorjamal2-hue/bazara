@@ -241,7 +241,7 @@ export default function CartDrawer() {
         <div className="flex items-center justify-between border-b border-gold-400/15 p-4">
           <h2 className="flex items-center gap-2 font-display text-xl font-bold gradient-text">
             {view === 'checkout' && (
-              <button onClick={() => setView('cart')} aria-label={t('co.back')} className="flex h-8 w-8 items-center justify-center rounded-full bg-wine/10 text-wine/80 transition hover:bg-wine/20 hover:text-wine">
+              <button onClick={() => setView('cart')} aria-label={t('co.back')} className="flex h-8 w-8 items-center justify-center rounded-full bg-cream/10 text-cream/80 transition hover:bg-cream/20 hover:text-cream">
                 <BackIcon className="h-4 w-4" />
               </button>
             )}
@@ -252,7 +252,7 @@ export default function CartDrawer() {
 
         {items.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center text-stone-400">
-            <BagIcon className="h-14 w-14 text-wine/40" />
+            <BagIcon className="h-14 w-14 text-cream/25" />
             {t('cart.empty')}
           </div>
         ) : (
@@ -268,8 +268,8 @@ export default function CartDrawer() {
                         <p className="truncate font-display text-sm font-semibold text-stone-100">{i.name}</p>
                         {(i.size || i.color) && (
                           <p className="mt-0.5 flex flex-wrap gap-1.5 text-[11px] text-stone-400">
-                            {i.size && <span className="rounded-full bg-wine/10 px-2 py-0.5 text-wine">{t('store.sizeLabel')}: {sizeLabel(i.size, t)}</span>}
-                            {i.color && <span className="rounded-full bg-wine/10 px-2 py-0.5 text-wine">{i.color}</span>}
+                            {i.size && <span className="rounded-full bg-gold-400/10 px-2 py-0.5 text-gold-200">{t('store.sizeLabel')}: {sizeLabel(i.size, t)}</span>}
+                            {i.color && <span className="rounded-full bg-gold-400/10 px-2 py-0.5 text-gold-200">{i.color}</span>}
                           </p>
                         )}
                         <p className="mt-1 font-display font-bold text-gold-300">{t('common.currency')}{i.price}</p>
@@ -308,7 +308,7 @@ export default function CartDrawer() {
                 <div className="flex-1 space-y-4 overflow-y-auto p-4">
                   {/* بيانات التوصيل */}
                   <div>
-                    <h3 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-wine"><PinIcon className="h-4 w-4" /> {t('co.customer')}</h3>
+                    <h3 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-gold-200"><PinIcon className="h-4 w-4" /> {t('co.customer')}</h3>
                     <div className="space-y-2.5">
                       <input className="input !rounded-2xl" placeholder={t('co.name')} value={cust.name} onChange={(e) => setCust({ ...cust, name: e.target.value })} />
                       <input className="input !rounded-2xl" dir="ltr" inputMode="tel" placeholder={t('co.phone')} value={cust.phone} onChange={(e) => setCust({ ...cust, phone: e.target.value })} />
@@ -326,7 +326,7 @@ export default function CartDrawer() {
 
                   {/* خصم الإحالة التلقائي (إن وصلت عبر رابط إحالة ولم تستخدم كوبوناً) */}
                   {!coupon && refDiscount > 0 && (
-                    <div className="flex items-center gap-1.5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 px-3.5 py-2.5 text-sm font-semibold text-emerald-700">
+                    <div className="flex items-center gap-1.5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 px-3.5 py-2.5 text-sm font-semibold text-emerald-300">
                       <GiftIcon className="h-4 w-4 shrink-0" /> {referral?.referrerName
                         ? t('referral.welcomeFrom', { name: referral.referrerName, percent: referral.percent })
                         : t('referral.welcome', { percent: referral.percent })}
@@ -335,17 +335,17 @@ export default function CartDrawer() {
 
                   {/* خصم الولاء التلقائي — مكافأة الزبون الدائم (كل N طلبات) */}
                   {loyaltyDiscount > 0 && (
-                    <div className="flex items-center gap-1.5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 px-3.5 py-2.5 text-sm font-semibold text-emerald-700">
+                    <div className="flex items-center gap-1.5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 px-3.5 py-2.5 text-sm font-semibold text-emerald-300">
                       <GiftIcon className="h-4 w-4 shrink-0" /> {t('loyalty.banner', { percent: loyalty.percent })}
                     </div>
                   )}
 
                   {/* كوبون الخصم */}
                   <div>
-                    <h3 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-wine"><TicketIcon className="h-4 w-4" /> {t('coupon.title')}</h3>
+                    <h3 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-gold-200"><TicketIcon className="h-4 w-4" /> {t('coupon.title')}</h3>
                     {coupon ? (
                       <div className="flex items-center justify-between rounded-2xl border border-emerald-500/30 bg-emerald-500/5 px-3.5 py-2.5">
-                        <span className="flex items-center gap-1 text-sm font-semibold text-emerald-700"><CheckIcon className="h-4 w-4" /> {coupon.code} — −{t('common.currency')}{discount.toFixed(2)}</span>
+                        <span className="flex items-center gap-1 text-sm font-semibold text-emerald-300"><CheckIcon className="h-4 w-4" /> {coupon.code} — −{t('common.currency')}{discount.toFixed(2)}</span>
                         <button onClick={removeCoupon} className="text-xs text-stone-400 hover:text-red-400">{t('coupon.remove')}</button>
                       </div>
                     ) : (
@@ -362,12 +362,12 @@ export default function CartDrawer() {
                         </button>
                       </div>
                     )}
-                    {couponMsg && <p className="mt-1.5 text-xs font-medium text-red-500">{couponMsg}</p>}
+                    {couponMsg && <p className="mt-1.5 text-xs font-medium text-red-300">{couponMsg}</p>}
                   </div>
 
                   {/* ملخّص الطلب */}
                   <div className="glass p-3.5">
-                    <h3 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-wine"><ReceiptIcon className="h-4 w-4" /> {t('co.summary')}</h3>
+                    <h3 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-gold-200"><ReceiptIcon className="h-4 w-4" /> {t('co.summary')}</h3>
                     <div className="space-y-1.5 text-sm">
                       {items.map((i) => (
                         <div key={i.key} className="flex items-center justify-between text-stone-300">
@@ -378,7 +378,7 @@ export default function CartDrawer() {
                       <div className="my-2 h-px bg-wine/10" />
                       <div className="flex justify-between text-stone-400"><span>{t('co.subtotal')}</span><span>{t('common.currency')}{total.toFixed(2)}</span></div>
                       {discount > 0 && (
-                        <div className="flex justify-between text-emerald-600">
+                        <div className="flex justify-between text-emerald-300">
                           <span>{coupon ? `${t('coupon.discount')} (${coupon.code})` : refDiscount > 0 ? t('referral.discountLine') : t('loyalty.discountLine')}</span>
                           <span>−{t('common.currency')}{discount.toFixed(2)}</span>
                         </div>
@@ -386,18 +386,18 @@ export default function CartDrawer() {
                       <div className="flex justify-between text-stone-400">
                         <span>{t('co.delivery')}</span>
                         {freeShip
-                          ? <span className="inline-flex items-center gap-1 font-bold text-emerald-600">{t('co.freeShipping')} <PartyIcon className="h-4 w-4" /></span>
+                          ? <span className="inline-flex items-center gap-1 font-bold text-emerald-300">{t('co.freeShipping')} <PartyIcon className="h-4 w-4" /></span>
                           : <span>{t('common.currency')}{delivery.toFixed(2)}</span>}
                       </div>
-                      <div className="mt-1 flex justify-between font-bold text-wine"><span>{t('co.grandTotal')}</span><span className="font-display text-lg">{t('common.currency')}{grand.toFixed(2)}</span></div>
+                      <div className="mt-1 flex justify-between font-bold text-gold-200"><span>{t('co.grandTotal')}</span><span className="font-display text-lg gradient-text">{t('common.currency')}{grand.toFixed(2)}</span></div>
                     </div>
                     {/* تحفيز للشحن المجاني: كم باقي + شريط تقدّم ذهبي */}
                     {freeOver > 0 && !freeShip && (
-                      <div className="mt-2 rounded-xl bg-wine/5 px-3 py-2">
-                        <p className="flex items-center justify-center gap-1.5 text-center text-xs font-semibold text-wine">
+                      <div className="mt-2 rounded-xl bg-gold-400/10 px-3 py-2">
+                        <p className="flex items-center justify-center gap-1.5 text-center text-xs font-semibold text-gold-200">
                           <TruckIcon className="h-4 w-4 shrink-0" /> {t('co.freeShippingHint', { amount: (freeOver - afterDiscount).toFixed(2) })}
                         </p>
-                        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-wine/10">
+                        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10">
                           <div
                             className="h-full rounded-full bg-gradient-to-r from-[#e6c878] to-[#b8932c] transition-all duration-500"
                             style={{ width: `${Math.min(100, Math.round((afterDiscount / freeOver) * 100))}%` }}
@@ -408,13 +408,13 @@ export default function CartDrawer() {
                     <p className="mt-2 text-[11px] text-stone-400">* {t('co.deliveryNote')}</p>
                   </div>
 
-                  <div className="flex items-center justify-center gap-2 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 py-2.5 text-sm font-medium text-emerald-700">
+                  <div className="flex items-center justify-center gap-2 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 py-2.5 text-sm font-medium text-emerald-300">
                     <CashIcon className="h-4 w-4" /> {t('co.cod')}
                   </div>
                 </div>
 
                 <div className="border-t border-gold-400/15 p-4">
-                  {err && <p className="mb-2 text-center text-xs text-red-500">{err}</p>}
+                  {err && <p className="mb-2 text-center text-xs text-red-300">{err}</p>}
                   <button onClick={confirmOrder} disabled={placing} className="btn-whatsapp w-full !rounded-full !py-4 disabled:opacity-60">
                     {placing ? t('common.loading') : <span className="inline-flex items-center gap-2"><WhatsAppIcon className="h-5 w-5" /> {t('co.confirm')}</span>}
                   </button>

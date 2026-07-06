@@ -105,8 +105,10 @@ export default function BottomNav() {
     return () => { document.removeEventListener('focusin', onIn); document.removeEventListener('focusout', onOut); };
   }, []);
 
-  // عند وجود طلب جديد، يفتح تبويب "الطلبات" مباشرة (الإشعار يوصلك لمصدره)
-  const accountTo = user ? (newOrders > 0 ? '/dashboard?tab=myOrders' : '/dashboard') : '/login';
+  // "حسابي" يفتح دائماً على الصفحة الرئيسية للوحة — لا نجبر المستخدم على تبويب
+  // الطلبات (كان يفتحه تلقائياً عند وجود طلبات جديدة فيبدو وكأنه عالق عليه).
+  // الشارة الحمراء تكفي للتنبيه، والإشعارات توصله للطلبات مباشرة عند الحاجة.
+  const accountTo = user ? '/dashboard' : '/login';
   // "الرئيسية": المدير العام → الصفحة الرئيسية للموقع (ليعاين تعديلاته)؛ المشترك → متجره؛ الزائر → بازارا العام
   const homeTo = isAdmin ? '/shop' : user && store?.slug ? `/store/${store.slug}` : '/shop';
   const homeActive = homeTo === '/shop' ? pathname === '/shop' : pathname === homeTo;

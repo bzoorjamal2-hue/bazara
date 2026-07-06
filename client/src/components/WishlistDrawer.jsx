@@ -49,7 +49,7 @@ export default function WishlistDrawer() {
 
         {items.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center text-stone-400">
-            <HeartIcon className="h-14 w-14 text-wine/30" />
+            <HeartIcon className="h-14 w-14 text-cream/25" />
             {t('wishlist.empty')}
           </div>
         ) : (

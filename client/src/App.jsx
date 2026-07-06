@@ -1,7 +1,7 @@
 import { Suspense, lazy, useEffect, useLayoutEffect, useState } from 'react';
 import { Routes, Route, useLocation, useNavigationType, Navigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import Layout from './components/Layout.jsx';
+import { recordNav } from './utils/nav.js';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import RequireSubscription from './components/RequireSubscription.jsx';
 import Spinner from './components/Spinner.jsx';
@@ -71,10 +71,12 @@ function AnimatedRoutes() {
   // والتنظيف يكتفي بإزالة المستمع (يُزال تزامنياً قبل حدث القصّ غير المتزامن).
   useLayoutEffect(() => {
     const key = location.key;
+    // نسجّل المسار لسجل "الرجوع الذكي" (أيقونات فتات الخبز ترجع بدل ما تفتح صفحة جديدة)
+    recordNav(key, location.pathname + location.search);
     const save = () => { scrollPositions.set(key, window.scrollY); };
     window.addEventListener('scroll', save, { passive: true });
     return () => window.removeEventListener('scroll', save);
-  }, [location.key]);
+  }, [location.key]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // عند الرجوع (POP) نستعيد الموضع بقفزة واحدة فورية بالضبط (بلا تدرّج ولا رجوع للأعلى).
   // useLayoutEffect: نقفز قبل أن يرسم المتصفّح الإطار، فلا تظهر الصفحة من الأعلى لحظةً
@@ -130,16 +132,11 @@ function AnimatedRoutes() {
     return () => { if (ric && window.cancelIdleCallback) window.cancelIdleCallback(id); else clearTimeout(id); };
   }, []);
 
-  // انتقال فوري بلا انتظار: الصفحة الجديدة تظهر مباشرة بحركة تلاشٍ سريعة (بلا
-  // حركة خروج تُبقي الشاشة كريمية فارغة لحظة) — يلغي إحساس "التعليق" بين الصفحات.
+  // انتقال فوري بلا انتظار: الصفحة الجديدة تظهر مباشرة بحركة تلاشٍ سريعة عبر CSS
+  // خالص (بدل framer-motion الذي كان يضيف شغل جافاسكربت مع كل تنقّل = جزء من التعليق).
   return (
     <Suspense fallback={<Spinner full />}>
-      <motion.div
-        key={location.pathname}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.2, ease: [0.22, 0.61, 0.36, 1] }}
-      >
+      <div key={location.pathname} className="route-fade">
         <Routes location={location}>
           <Route path="/" element={<Root />} />
           <Route path="/shop" element={<Home />} />
@@ -175,7 +172,7 @@ function AnimatedRoutes() {
           <Route path="/product/:id" element={<ProductDetails />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </motion.div>
+      </div>
     </Suspense>
   );
 }

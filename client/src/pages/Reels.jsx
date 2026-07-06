@@ -190,9 +190,24 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
 
   useEffect(() => {
     const vid = vidRef.current;
-    if (!vid) return;
-    if (isActive) vid.play().catch(() => {});
-    else { vid.pause(); vid.currentTime = 0; setProgress(0); }
+    if (!vid) return undefined;
+    if (!isActive) { vid.pause(); vid.currentTime = 0; setProgress(0); return undefined; }
+    // عنصر الفيديو يُركّب عند الاقتراب فقط، فقد لا يكون جاهزاً لحظة التفعيل —
+    // أمر تشغيل واحد كان يفشل بصمت ويبقى الفيديو واقفاً حتى كبسة المستخدم.
+    // الآن: محاولة فورية + إعادة عند جاهزية البيانات + محاولات مجدولة قليلة
+    // (لا نقاوم الإيقاف المتعمّد بالضغط المطوّل).
+    let alive = true;
+    const tryPlay = () => { if (alive && vid.paused && !holdRef.current.held) vid.play().catch(() => {}); };
+    tryPlay();
+    vid.addEventListener('loadeddata', tryPlay);
+    vid.addEventListener('canplay', tryPlay);
+    const timers = [200, 600, 1400].map((ms) => setTimeout(tryPlay, ms));
+    return () => {
+      alive = false;
+      timers.forEach(clearTimeout);
+      vid.removeEventListener('loadeddata', tryPlay);
+      vid.removeEventListener('canplay', tryPlay);
+    };
   }, [isActive]);
 
   useEffect(() => { if (vidRef.current) vidRef.current.muted = muted; }, [muted]);
