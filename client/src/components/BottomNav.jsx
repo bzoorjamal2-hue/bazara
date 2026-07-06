@@ -133,8 +133,10 @@ export default function BottomNav() {
 
   if (locked || kbOpen) return null; // نافذة/درج مفتوح أو لوحة مفاتيح ظاهرة → نخفي الشريط (يرجع تلقائياً)
 
+  // بلا backdrop-blur: ضبابية دائمة فوق المحتوى تُرهق معالج الرسم مع كل فريم تمرير،
+  // والخلفية 95% معتمة أصلاً فالفرق البصري صفر والفرق بالأداء محسوس
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-[78] border-t border-wine/10 bg-white/95 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 shadow-[0_-6px_20px_rgba(94,70,54,0.08)] backdrop-blur">
+    <nav className="fixed inset-x-0 bottom-0 z-[78] border-t border-wine/10 bg-white/95 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 shadow-[0_-6px_20px_rgba(94,70,54,0.08)]">
       <div className="mx-auto flex max-w-md items-stretch justify-around px-2">
         {items.map(({ key, label, Icon, active, badge, onClick }) => (
           <button
