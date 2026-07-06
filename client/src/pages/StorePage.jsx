@@ -39,15 +39,16 @@ export default function StorePage() {
   const [error, setError] = useState('');
   // بكسلات تمويل المتجر: تُحقن مرة واحدة عند توفّر بيانات المتجر (PageView تلقائي)
   useEffect(() => { if (data?.store) initPixels(data.store); }, [data?.store]);
-  // حدث بكسل "بحث" بعد توقف الكتابة — إشارة اهتمام تفيد استهداف الإعلانات
+  const [q, setQ] = useState('');
+  const [sort, setSort] = useState('default');
+  // حدث بكسل "بحث" بعد توقف الكتابة — إشارة اهتمام تفيد استهداف الإعلانات.
+  // (يجب أن يبقى بعد تعريف q أعلاه — وضعه قبله سبّب انهيار الصفحة بالكامل TDZ)
   useEffect(() => {
     const term = q.trim();
     if (term.length < 2) return undefined;
     const idT = setTimeout(() => trackPixel('Search', { search_string: term }), 900);
     return () => clearTimeout(idT);
   }, [q]);
-  const [q, setQ] = useState('');
-  const [sort, setSort] = useState('default');
   const [sizesSel, setSizesSel] = useState([]); // مقاسات مختارة (متعدّد)
   const [offersOnly, setOffersOnly] = useState(false);
   const [openSheet, setOpenSheet] = useState(null); // 'sort' | 'size' | 'offers'
