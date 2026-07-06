@@ -260,6 +260,8 @@
       "address": "Address",
       "notes": "Notes",
       "contactWhatsapp": "Contact on WhatsApp",
+      "searchPlaceholder": "Search by name, phone or order no…",
+      "noResults": "No orders match your search or filter.",
       "waAltHint": "If WhatsApp says the number doesn't exist, try this prefix",
       "notifyCustomer": "Notify customer",
       "waStatus": {

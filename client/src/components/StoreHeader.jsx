@@ -14,6 +14,7 @@ import ThemeToggle from './ThemeToggle.jsx';
 import StoryBar from './StoryBar.jsx';
 import { cldThumb } from '../utils/cloudinary.js';
 import { productThumb } from '../utils/recentlyViewed.js';
+import { norm } from '../utils/match.js';
 
 const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
 
@@ -40,9 +41,10 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
   const [drawer, setDrawer] = useState(false);
   const [focus, setFocus] = useState(false);
 
-  // اقتراحات البحث الفوري: أول 6 منتجات يطابق اسمها ما يكتبه المستخدم
-  const term = q.trim().toLowerCase();
-  const suggestions = term ? products.filter((p) => p.name.toLowerCase().includes(term)).slice(0, 6) : [];
+  // اقتراحات البحث الفوري: أول 6 منتجات تطابق ما يكتبه المستخدم — بتطبيع عربي
+  // (همزات/تاء مربوطة/أل التعريف) حتى "عبايه" تلاقي "عباية"
+  const term = norm(q);
+  const suggestions = term ? products.filter((p) => norm(p.name).includes(term)).slice(0, 6) : [];
   const [collapsed, setCollapsed] = useState(false);
   useScrollLock(drawer);
 

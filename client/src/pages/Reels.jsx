@@ -180,7 +180,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   const [selColor, setSelColor] = useState('');
   const vidRef = useRef(null);
   const tapRef = useRef({ t: 0, timer: null });
-  const holdRef = useRef({ timer: null, held: false, x: 0, y: 0, moved: false });
+  const holdRef = useRef({ timer: null, held: false, x: 0, y: 0, moved: false, swallow: false });
   const poster = cldVideoPoster(p.videoUrl) || p.imageUrl || '';
 
   const sizes = (p.size || '').split(',').map((s) => s.trim()).filter(Boolean);
@@ -245,7 +245,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
     holdRef.current = { ...holdRef.current, held: false, moved: false, x: e.clientX || 0, y: e.clientY || 0 };
     holdRef.current.timer = setTimeout(() => {
       if (!holdRef.current.moved) { holdRef.current.held = true; vidRef.current?.pause(); }
-    }, 280);
+    }, 350);
   };
   const onMove = (e) => {
     if (Math.abs((e.clientX || 0) - holdRef.current.x) > 10 || Math.abs((e.clientY || 0) - holdRef.current.y) > 10) {
@@ -253,12 +253,22 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
       clearTimeout(holdRef.current.timer);
     }
   };
-  const onUp = () => {
+  // إنهاء الضغط المطوّل من أي مسار (رفع الإصبع أو خطف التمرير للمسة عبر pointercancel).
+  // المهم: نصفّر held دائماً — كان يبقى عالقاً عند التمرير (لا يصل click يصفّره)
+  // فترفض إعادة التشغيل التلقائية تشغيل الفيديو "الموقوف عمداً" إلى الأبد،
+  // وهذا سبب توقّف الفيديو عند التصفّح لتحت حتى كبسة المستخدم.
+  const endHold = (resume) => {
     clearTimeout(holdRef.current.timer);
-    if (holdRef.current.held && isActive) vidRef.current?.play().catch(() => {});
+    if (holdRef.current.held) {
+      holdRef.current.swallow = true; // نبلع النقرة القادمة (كانت ضغطاً مطوّلاً لا نقرة)
+      holdRef.current.held = false;
+      if (resume && isActive) vidRef.current?.play().catch(() => {});
+    }
   };
+  const onUp = () => endHold(true);
+  const onCancel = () => endHold(true);
   const onLayerClick = () => {
-    if (holdRef.current.held) { holdRef.current.held = false; return; } // كان ضغطاً مطوّلاً، لا نعتبره نقرة
+    if (holdRef.current.swallow) { holdRef.current.swallow = false; return; }
     onTap();
   };
 
@@ -328,7 +338,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
           onPointerDown={onDown}
           onPointerMove={onMove}
           onPointerUp={onUp}
-          onPointerCancel={onUp}
+          onPointerCancel={onCancel}
           onClick={onLayerClick}
         />
 

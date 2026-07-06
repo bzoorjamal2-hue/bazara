@@ -512,6 +512,15 @@ html.dark .theme-pub .app-navbar {
   border: 1px solid rgba(230, 200, 120, 0.20);
   box-shadow: 0 24px 48px -24px rgba(46, 33, 24, 0.55);
 }
+/* ليلياً: عمق أسود-بنّي غني بتوهج ذهبي أقوى — بدل التدرج البنّي الموحل */
+html.dark .theme-pub .dash-hero {
+  background:
+    radial-gradient(460px 220px at 88% -30%, rgba(230, 200, 120, 0.30), transparent 60%),
+    radial-gradient(320px 180px at 0% 115%, rgba(230, 200, 120, 0.12), transparent 60%),
+    linear-gradient(135deg, #191309 0%, #241b12 55%, #302517 100%);
+  border-color: rgba(230, 200, 120, 0.32);
+  box-shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.7);
+}
 
 /* (أزيلت أنماط .dash-tabs/.dash-tab — شريط التبويبات القديم حُذف والقائمة ☰ هي التنقّل الوحيد) */
 
@@ -548,60 +557,80 @@ body,
   transition: background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease;
 }
 
-html.dark body { background-color: #1e1712; color: #ece3d6; }
+/* خلفية "إسبريسو ليلي": عميقة شبه سوداء بدفء خفيف — تباين عالٍ مع النصوص
+   العاجية والذهب، بدل البنّي الفاتح الموحل السابق */
+html.dark body { background-color: #131009; color: #f4ecdc; }
 
-html.dark .theme-pub { background: #1e1712; color: #ece3d6; }
+html.dark .theme-pub { background: #131009; color: #f4ecdc; }
 html.dark .theme-pub.app-bg,
 html.dark .theme-pub .app-bg {
   background:
-    radial-gradient(900px 480px at 90% -10%, rgba(212, 175, 55, 0.10), transparent 60%),
-    radial-gradient(700px 460px at 0% 0%, rgba(212, 175, 55, 0.06), transparent 55%),
-    #1e1712;
+    radial-gradient(900px 480px at 90% -10%, rgba(230, 200, 120, 0.12), transparent 60%),
+    radial-gradient(700px 460px at 0% 0%, rgba(212, 175, 55, 0.07), transparent 55%),
+    #131009;
 }
 
-/* البطاقات: سطح بنّي داكن بحدود ذهبية خفيفة */
+/* البطاقات: سطح داكن غني بحدود ذهبية واضحة — تنفصل عن الخلفية بوضوح */
 html.dark .theme-pub .glass {
-  background: #2b211a;
-  border-color: rgba(212, 175, 55, 0.14);
-  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
+  background: #1e1710;
+  border-color: rgba(230, 200, 120, 0.18);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.55);
 }
 html.dark .theme-pub .glass-strong {
-  background: #322619;
-  border-color: rgba(212, 175, 55, 0.18);
-  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.5);
+  background: #241b12;
+  border-color: rgba(230, 200, 120, 0.24);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.6);
 }
 
-/* النصوص */
+/* النصوص: عاجية مضيئة بتباين واضح (كانت بيجاً باهتاً على بنّي فاتح) */
 html.dark .theme-pub .text-stone-100,
-html.dark .theme-pub .text-stone-200 { color: #ece3d6; }
-html.dark .theme-pub .text-stone-300 { color: #cabdab; }
-html.dark .theme-pub .text-stone-400 { color: #ab9f90; }
-html.dark .theme-pub .text-stone-500 { color: #8d8175; }
+html.dark .theme-pub .text-stone-200 { color: #f6efe0; }
+html.dark .theme-pub .text-stone-300 { color: #ded2bc; }
+html.dark .theme-pub .text-stone-400 { color: #b9ab91; }
+html.dark .theme-pub .text-stone-500 { color: #9c8d74; }
 html.dark .theme-pub .text-stone-600,
-html.dark .theme-pub .text-stone-700 { color: #b8ab9b; }
+html.dark .theme-pub .text-stone-700 { color: #d2c4aa; }
 
-/* البنّي (عناوين/أسعار) → ذهبي دافئ ليبرز على الداكن */
-html.dark .theme-pub .text-wine { color: #e6c878; }
+/* البنّي (عناوين/أسعار) → ذهبي شمبانيا مضيء فخم */
+html.dark .theme-pub .text-wine { color: #f0dca6; }
 html.dark .theme-pub .gradient-text {
-  background: linear-gradient(135deg, #f6edcf 0%, #e0c25f 45%, #d4af37 100%);
+  background: linear-gradient(135deg, #fdf3d3 0%, #ecd28a 40%, #d4af37 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
-/* الأسطح الفاتحة (أبيض/بيج) → بنّي داكن */
-html.dark .theme-pub .bg-white { background-color: #2b211a; }
-html.dark .theme-pub .bg-ink-800 { background-color: #352a20; }
-html.dark .theme-pub .bg-ink-900 { background-color: #221a14; }
-html.dark .theme-pub .bg-ink-700 { background-color: #3d3026; }
+/* الأسطح الفاتحة (أبيض/بيج) → داكنة غنية — يشمل bg-cream (كانت تبقى فاتحة
+   فيختفي نصّها المحوَّل لذهبي فاتح: سبب "النص المختفي بالأزرار") */
+html.dark .theme-pub .bg-white { background-color: #241b12; }
+html.dark .theme-pub .bg-cream { background-color: #241b12; }
+html.dark .theme-pub .bg-ink-800 { background-color: #2b2115; }
+html.dark .theme-pub .bg-ink-900 { background-color: #191309; }
+html.dark .theme-pub .bg-ink-700 { background-color: #33281a; }
 
 /* الحقول */
 html.dark .theme-pub .input {
-  background: #2b211a;
-  border-color: rgba(212, 175, 55, 0.20);
-  color: #ece3d6;
+  background: #1e1710;
+  border-color: rgba(230, 200, 120, 0.28);
+  color: #f4ecdc;
 }
-html.dark .theme-pub .input::placeholder { color: #9b8f80; }
+html.dark .theme-pub .input::placeholder { color: #9c8d74; }
+
+/* الأزرار الفاتحة (btn-ghost أبيض بالنهاري) — كانت بلا تعريف ليلي فيبقى الزر
+   أبيض والنص شبه مخفٍ. الآن: زر داكن بإطار ونص ذهبيَين واضحَين */
+html.dark .theme-pub .btn-ghost {
+  background: #241b12;
+  border-color: rgba(230, 200, 120, 0.40);
+  color: #f0dca6;
+}
+html.dark .theme-pub .btn-ghost:hover { background: rgba(230, 200, 120, 0.12); border-color: #e6c878; }
+/* الزر الأساسي ليلياً: ذهبي مشعّ بنص داكن — أفخم وأوضح من البنّي المطفي */
+html.dark .theme-pub .btn-primary {
+  background: linear-gradient(135deg, #ecd28a 0%, #d4af37 55%, #b8932c 100%);
+  color: #1e1710;
+  box-shadow: 0 12px 28px -12px rgba(212, 175, 55, 0.45);
+}
+html.dark .theme-pub .btn-primary:hover { background: linear-gradient(135deg, #f4e0a4 0%, #e6c878 55%, #d4af37 100%); }
 
 /* الحدود البنّية → ذهبية خفيفة */
 html.dark .theme-pub .border-wine\/15,

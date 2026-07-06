@@ -23,6 +23,7 @@ import { SIZES, sizeLabel } from '../utils/sizes.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { saveRef } from '../utils/referral.js';
 import { initPixels, trackPixel } from '../utils/pixels.js';
+import { norm } from '../utils/match.js';
 
 const PAGE_SIZE = 8;
 const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
@@ -127,8 +128,11 @@ export default function StorePage() {
 
   const filtered = useMemo(() => {
     if (!data) return [];
+    // بحث ذكي: تطبيع عربي (الهمزات/التاء المربوطة/أل التعريف) + يشمل الوصف —
+    // "عبايه مطرزه" تلاقي "عباية مطرّزة" حتى لو الكلمة بالوصف مش بالاسم
+    const nq = norm(q);
     let list = data.products.filter((p) => {
-      const matchQ = !q || p.name.toLowerCase().includes(q.toLowerCase());
+      const matchQ = !nq || norm(p.name).includes(nq) || (p.description && norm(p.description).includes(nq));
       const matchCat = cat === 'all' || p.category === cat;
       // مقاسات المنتج قد تكون متعدّدة (مفصولة بفواصل)
       const prodSizes = (p.size || '').split(',').map((s) => s.trim()).filter(Boolean);

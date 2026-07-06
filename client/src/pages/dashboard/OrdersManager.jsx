@@ -103,6 +103,9 @@ export default function OrdersManager() {
   const [gobox, setGobox] = useState({ connected: false });
   // طلبات لم تكتمل (سلات متروكة ببيانات تواصل) — لمتابعتها برسالة وإنقاذ البيع
   const [abandoned, setAbandoned] = useState([]);
+  // فلترة وبحث بالطلبات: حالة + اسم/هاتف/رقم طلب — للوصول لأي طلب بثوانٍ
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [oq, setOq] = useState('');
 
   useEffect(() => {
     let on = true;
@@ -282,6 +285,19 @@ export default function OrdersManager() {
 
   if (orders === null && !error) return <Spinner />;
 
+  // الطلبات المعروضة بعد الفلترة والبحث (الاسم/الهاتف بأي صيغة/رقم الطلب)
+  const term = oq.trim().toLowerCase();
+  const termDigits = term.replace(/\D/g, '');
+  const visibleOrders = (orders || []).filter((o) => {
+    if (statusFilter !== 'all' && o.status !== statusFilter) return false;
+    if (!term) return true;
+    return (
+      (o.customerName || '').toLowerCase().includes(term) ||
+      (termDigits.length >= 3 && (o.customerPhone || '').replace(/\D/g, '').includes(termDigits)) ||
+      (o.reference || '').toLowerCase().includes(term)
+    );
+  });
+
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -347,16 +363,46 @@ export default function OrdersManager() {
         </div>
       )}
 
+      {/* شريط الفلترة والبحث — يظهر عندما تكثر الطلبات ليصل المالك لأي طلب بثوانٍ */}
+      {orders?.length > 3 && (
+        <div className="glass space-y-2.5 p-3">
+          <input
+            className="input"
+            placeholder={t('dashboard.ordersSection.searchPlaceholder')}
+            value={oq}
+            onChange={(e) => setOq(e.target.value)}
+          />
+          <div className="flex flex-wrap gap-1.5">
+            {['all', ...FLOW].map((s) => (
+              <button
+                key={s}
+                onClick={() => setStatusFilter(s)}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                  statusFilter === s
+                    ? 'bg-gold-400 text-wine-dark shadow-sm'
+                    : 'bg-white/5 text-stone-300 ring-1 ring-white/10 hover:bg-white/10'
+                }`}
+              >
+                {s === 'all' ? t('common.all') : t(`dashboard.ordersSection.${s}`)}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {orders && orders.length === 0 ? (
         <div className="glass p-10 text-center text-stone-400">{t('dashboard.ordersSection.empty')}</div>
       ) : (
         <div className="space-y-3">
           {(() => {
+            if (!visibleOrders.length) {
+              return <div className="glass p-8 text-center text-sm text-stone-400">{t('dashboard.ordersSection.noResults')}</div>;
+            }
             // عدد الطلبات لكل يوم (لعرضه بجانب عنوان اليوم)
             const counts = {};
-            orders.forEach((o) => { const k = dayKey(o.createdAt); counts[k] = (counts[k] || 0) + 1; });
+            visibleOrders.forEach((o) => { const k = dayKey(o.createdAt); counts[k] = (counts[k] || 0) + 1; });
             let lastDay = null;
-            return orders.map((o) => {
+            return visibleOrders.map((o) => {
             const subtotal = (o.total - (o.deliveryFee || 0) + (o.discount || 0)).toFixed(2);
             // أرقام 059/056 قد تكون على واتساب بمقدمة 970 أو 972 — نجهّز المقدمتين:
             // الزر الرئيسي يفتح الأرجح، وبجانبه بديل صغير لو قال واتساب "غير موجود"
