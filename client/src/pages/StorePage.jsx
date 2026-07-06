@@ -291,6 +291,14 @@ export default function StorePage() {
         <>
           <HeroSlider store={store} />
 
+          {/* شريط نقاط الولاء — يشجّع الزبون على تكرار الشراء (يظهر فقط عند تفعيله) */}
+          {store.loyaltyEvery >= 2 && store.loyaltyPercent > 0 && (
+            <div className="mt-5 flex items-center justify-center gap-2 rounded-2xl border border-gold-400/30 bg-gradient-to-r from-gold-400/10 via-gold-400/5 to-gold-400/10 px-4 py-2.5 text-center text-sm font-semibold text-wine">
+              <GiftIcon className="h-5 w-5 shrink-0 text-gold-500" />
+              {t('store.loyaltyBadge', { every: store.loyaltyEvery, percent: store.loyaltyPercent })}
+            </div>
+          )}
+
           <section className="mb-9 mt-7">
             <SectionTitle>{t('store.browseByCategory')}</SectionTitle>
             <CategoryGrid onSelect={pickCategory} active={cat} cats={gridCats} />

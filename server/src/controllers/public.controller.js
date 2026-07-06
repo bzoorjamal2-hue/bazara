@@ -52,6 +52,9 @@ function mapStorePublic(s) {
     fbPixel: s.fb_pixel || '',
     tiktokPixel: s.tiktok_pixel || '',
     gaId: s.ga_id || '',
+    // نقاط الولاء — نعرضها للزبون كتشجيع (كل N طلبات → خصم %)
+    loyaltyEvery: Number(s.loyalty_every || 0),
+    loyaltyPercent: Number(s.loyalty_percent || 0),
     createdAt: s.created_at,
   };
 }

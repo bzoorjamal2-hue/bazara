@@ -677,6 +677,7 @@
     "featured": "منتجات مميّزة",
     "newArrivals": "جديدنا",
     "bestSellers": "الأكثر مبيعاً",
+    "loyaltyBadge": "مكافأة الوفاء 🎁 كل {{every}} طلبات، طلبك التالي عليه خصم {{percent}}%",
     "welcomeTitle": "عرض ترحيبي 🎁",
     "welcomeCta": "ابدئي التسوّق",
     "viewAllProducts": "عرض جميع المنتجات",

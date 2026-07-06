@@ -677,6 +677,7 @@
     "featured": "Featured products",
     "newArrivals": "New arrivals",
     "bestSellers": "Best sellers",
+    "loyaltyBadge": "Loyalty reward 🎁 every {{every}} orders, your next order gets {{percent}}% off",
     "welcomeTitle": "Welcome offer 🎁",
     "welcomeCta": "Start shopping",
     "viewAllProducts": "View all products",
