@@ -161,6 +161,11 @@ export default function StorePage() {
     const fill = data.products.filter((p) => p.featured && !(p.soldCount > 0));
     return [...sold, ...fill].slice(0, 8);
   })();
+  // قسم التخفيضات: المنتجات المخفّضة فعلاً (سعر قديم أعلى) — الأعلى نسبة خصم أولاً
+  const onSale = [...data.products]
+    .filter((p) => p.oldPrice && p.oldPrice > p.price)
+    .sort((a, b) => (1 - b.price / b.oldPrice) - (1 - a.price / a.oldPrice))
+    .slice(0, 8);
   // تخصيص المالكة للفئات (صورة/اسم) + الفئات الإضافية المخصّصة
   const catMeta = store.categoryMeta || {};
   const customCats = Array.isArray(store.customCategories) ? store.customCategories : [];
@@ -313,6 +318,7 @@ export default function StorePage() {
 
           <ProductSection title={t('store.newArrivals')} products={newest} wa={wa} />
           <ProductSection title={t('store.bestSellers')} products={bestSellers} wa={wa} />
+          {onSale.length > 0 && <ProductSection title={t('store.saleSection')} products={onSale} wa={wa} />}
 
           {data.products.length > 0 && (
             <div className="mb-10 text-center">

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext.jsx';
@@ -65,7 +66,8 @@ export default function CartDrawer() {
   const { t, i18n } = useTranslation();
   const ar = i18n.language !== 'en';
   const { items, open, setOpen, remove, setQty, total, clear, checkoutIntent, setCheckoutIntent } = useCart();
-  const [view, setView] = useState('cart'); // 'cart' | 'checkout'
+  const [view, setView] = useState('cart'); // 'cart' | 'checkout' | 'done'
+  const [doneRef, setDoneRef] = useState(''); // رقم الطلب (المرجع) بعد النجاح
   const [cust, setCust] = useState(loadCustomer); // مسبقة التعبئة من آخر طلب (إن وُجد)
   const [loyalty, setLoyalty] = useState(null); // { percent } خصم ولاء مستحق لهذا الطلب
   const [err, setErr] = useState('');
@@ -149,7 +151,7 @@ export default function CartDrawer() {
 
   if (!open) return null;
 
-  const close = () => { setOpen(false); setView('cart'); setErr(''); };
+  const close = () => { setOpen(false); setView('cart'); setErr(''); setDoneRef(''); };
   // قائمة المناطق: مناطق المتجر المخصّصة إن وُجدت، وإلا القائمة الافتراضية
   const areaList = (storeZones && storeZones.length)
     ? storeZones.map((z) => ({ name: z.name, fee: Number(z.fee) || 0 }))
@@ -209,13 +211,15 @@ export default function CartDrawer() {
     // نتذكّر بيانات الزبون محلياً — الطلب القادم يتعبّأ تلقائياً
     saveCustomer(cust);
     // نحفظ الطلب أولاً ونتأكّد من اكتماله — هنا يُخصم المخزون من اللون/النمرة
+    let reference = '';
     try {
-      await api.post('/orders/cod', {
+      const r = await api.post('/orders/cod', {
         items: items.map((i) => ({ id: i.id, qty: i.qty, size: i.size, color: i.color })),
         customer: { name: cust.name, phone: cust.phone, city: cust.city, address: cust.address, notes: cust.notes, deliveryFee: delivery },
         coupon: coupon ? { code: coupon.code } : undefined,
         referralCode: (!coupon && refDiscount > 0) ? referral?.code : undefined,
       });
+      reference = r.data?.reference || '';
       // حدث بكسل التمويل: شراء مكتمل (أهم حدث لقياس الإعلانات)
       trackPixel('Purchase', { value: grand, num_items: items.reduce((s, i) => s + i.qty, 0), content_ids: items.map((i) => i.id), content_type: 'product' });
     } catch { /* تجاهل — نكمل لواتساب على أي حال */ }
@@ -227,7 +231,10 @@ export default function CartDrawer() {
     } else {
       window.location.href = waLink;
     }
-    close();
+    // شاشة تأكيد النجاح: رقم الطلب + تتبّع — بدل ما كانت السلة تختفي بصمت
+    // والزبونة لا تعرف رقم طلبها ولا أن الطلب انحفظ فعلاً
+    setDoneRef(reference);
+    setView('done');
   };
 
   return (
@@ -245,12 +252,39 @@ export default function CartDrawer() {
                 <BackIcon className="h-4 w-4" />
               </button>
             )}
-            {view === 'cart' ? <><CartIcon className="h-5 w-5" /> {t('cart.title')}</> : t('co.title')}
+            {view === 'cart' ? <><CartIcon className="h-5 w-5" /> {t('cart.title')}</> : view === 'done' ? t('co.doneTitle') : t('co.title')}
           </h2>
           <CloseButton onClick={close} variant="wine" />
         </div>
 
-        {items.length === 0 ? (
+        {view === 'done' ? (
+          /* شاشة نجاح الطلب: تأكيد واضح + رقم الطلب + تتبّع (السلة كانت تختفي بصمت) */
+          <div className="animate-fade-up flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
+            <span className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/15 ring-2 ring-emerald-400/40">
+              <CheckIcon className="h-10 w-10 text-emerald-300" />
+            </span>
+            <p className="text-sm leading-relaxed text-stone-300">{t('co.doneMsg')}</p>
+            {doneRef && (
+              <div className="rounded-2xl bg-gold-400/10 px-6 py-2.5 ring-1 ring-gold-400/30">
+                <span className="text-xs text-stone-400">{t('co.doneRef')}</span>
+                <p dir="ltr" className="font-mono text-lg font-bold tracking-wide text-gold-200">{doneRef}</p>
+              </div>
+            )}
+            <div className="mt-2 flex w-full flex-col gap-2">
+              <Link
+                to="/track"
+                onClick={close}
+                className="w-full rounded-full py-3.5 text-center font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
+                style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)' }}
+              >
+                {t('co.doneTrack')}
+              </Link>
+              <button onClick={close} className="w-full rounded-full border border-cream/20 py-3 font-semibold text-cream/80 transition hover:bg-cream/10">
+                {t('co.doneKeepShopping')}
+              </button>
+            </div>
+          </div>
+        ) : items.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center text-stone-400">
             <BagIcon className="h-14 w-14 text-cream/25" />
             {t('cart.empty')}
