@@ -392,10 +392,15 @@ input[type='datetime-local']::-webkit-datetime-edit {
 }
 /* ملاحظة: لا تضع transform/will-change على .app-navbar — يكسر تموضع الدرج (fixed)
    داخل هيدر المتجر فيصير شفافاً محصوراً بالهيدر. حسّن التمرير بطرق لا تنشئ containing block. */
+/* ليلياً: الهيدر يجب أن يقرأ كشريط منفصل عن الخلفية الداكنة — خلفية أرقى بلمسة
+   ذهبية، حدّ ذهبي واضح، وظلّ سفلي دائم يفصله عن المحتوى (كانت خلفيته تنصهر
+   بالخلفية والحدّ باهتاً فلا تبان معالمه) */
 html.dark .theme-pub .app-navbar {
-  background: #251c15;
-  border-bottom-color: rgba(230, 200, 120, 0.15);
+  background: linear-gradient(180deg, #2b2015 0%, #241a11 100%);
+  border-bottom: 1px solid rgba(230, 200, 120, 0.32);
+  box-shadow: 0 8px 22px -10px rgba(0, 0, 0, 0.8);
 }
+html.dark .theme-pub .app-navbar.shadow-md { box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.9); }
 
 /* ===== بطاقة الفئة الخمرية (أيقونة عاجية) ===== */
 .pub-cat {
