@@ -210,6 +210,7 @@ export function SaveIcon({ className = 'h-5 w-5' }) { return svg(className, <><p
 export function KeyIcon({ className = 'h-5 w-5' }) { return svg(className, <><circle {...L} cx="8" cy="8" r="4" /><path {...L} d="M11 11 L20 20 M17 17 L19 15 M15 15 L17 13" /></>); }
 export function CrownIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M4 18 H20 M4 18 L5 8 L9 12 L12 6 L15 12 L19 8 L20 18" />); }
 export function LinkIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M9 15 L15 9 M8 12 L6 14 A3 3 0 0 0 10 18 L12 16 M16 12 L18 10 A3 3 0 0 0 14 6 L12 8" />); }
+export function CopyIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="9" y="9" width="11" height="11" rx="2" /><path {...L} d="M5 15 H4 A1 1 0 0 1 3 14 V4 A1 1 0 0 1 4 3 H14 A1 1 0 0 1 15 4 V5" /></>); }
 export function EditIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M4 20 H8 L18 10 L14 6 L4 16 Z M13 7 L17 11" />); }
 export function CardIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="3" y="5" width="18" height="14" rx="2" /><path {...L} d="M3 9 H21 M6 15 H10" /></>); }
 export function RulerIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M4 8 L16 20 L20 16 L8 4 Z M8 8 L10 10 M11 7 L13 9 M14 10 L16 12" />); }

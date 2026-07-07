@@ -7,7 +7,7 @@ import { buildWhatsappCheckout } from '../utils/whatsapp.js';
 import useScrollLock from '../hooks/useScrollLock.js';
 import Select from './Select.jsx';
 import CloseButton from './CloseButton.jsx';
-import { CartIcon, BagIcon, XIcon, PinIcon, GiftIcon, TicketIcon, CheckIcon, ReceiptIcon, PartyIcon, TruckIcon, CashIcon, WhatsAppIcon, ForwardIcon, BackIcon } from './icons.jsx';
+import { CartIcon, BagIcon, XIcon, PinIcon, GiftIcon, TicketIcon, CheckIcon, ReceiptIcon, PartyIcon, TruckIcon, CashIcon, WhatsAppIcon, ForwardIcon, BackIcon, CopyIcon } from './icons.jsx';
 import api from '../api/client.js';
 import { sizeLabel } from '../utils/sizes.js';
 import { getRef, clearRef } from '../utils/referral.js';
@@ -68,6 +68,7 @@ export default function CartDrawer() {
   const { items, open, setOpen, remove, setQty, total, clear, checkoutIntent, setCheckoutIntent } = useCart();
   const [view, setView] = useState('cart'); // 'cart' | 'checkout' | 'done'
   const [doneRef, setDoneRef] = useState(''); // رقم الطلب (المرجع) بعد النجاح
+  const [refCopied, setRefCopied] = useState(false); // نُسخ رقم الطلب؟
   const [cust, setCust] = useState(loadCustomer); // مسبقة التعبئة من آخر طلب (إن وُجد)
   const [loyalty, setLoyalty] = useState(null); // { percent } خصم ولاء مستحق لهذا الطلب
   const [err, setErr] = useState('');
@@ -265,10 +266,21 @@ export default function CartDrawer() {
             </span>
             <p className="text-sm leading-relaxed text-stone-300">{t('co.doneMsg')}</p>
             {doneRef && (
-              <div className="rounded-2xl bg-gold-400/10 px-6 py-2.5 ring-1 ring-gold-400/30">
+              <button
+                type="button"
+                onClick={() => { try { navigator.clipboard.writeText(doneRef); setRefCopied(true); setTimeout(() => setRefCopied(false), 1600); } catch { /* تجاهل */ } }}
+                className="group rounded-2xl bg-gold-400/10 px-6 py-2.5 ring-1 ring-gold-400/30 transition hover:bg-gold-400/15"
+                title={t('co.doneCopy')}
+              >
                 <span className="text-xs text-stone-400">{t('co.doneRef')}</span>
-                <p dir="ltr" className="font-mono text-lg font-bold tracking-wide text-gold-200">{doneRef}</p>
-              </div>
+                <p dir="ltr" className="flex items-center justify-center gap-1.5 font-mono text-lg font-bold tracking-wide text-gold-200">
+                  {doneRef}
+                  {refCopied
+                    ? <CheckIcon className="h-4 w-4 text-emerald-300" />
+                    : <CopyIcon className="h-4 w-4 text-gold-200/60 transition group-hover:text-gold-200" />}
+                </p>
+                <span className="text-[10px] text-stone-500">{refCopied ? t('co.doneCopied') : t('co.doneCopy')}</span>
+              </button>
             )}
             <div className="mt-2 flex w-full flex-col gap-2">
               <Link

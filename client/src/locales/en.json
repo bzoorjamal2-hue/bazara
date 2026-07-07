@@ -744,6 +744,8 @@
     "doneTitle": "Order received 🎉",
     "doneMsg": "Your order was placed successfully — the store will contact you soon to confirm it. Keep your order number to track it anytime.",
     "doneRef": "Order number",
+    "doneCopy": "Tap to copy",
+    "doneCopied": "Copied ✓",
     "doneTrack": "Track your order 🚚",
     "doneKeepShopping": "Keep shopping",
     "confirm": "Confirm order via WhatsApp",
