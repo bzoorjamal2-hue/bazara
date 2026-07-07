@@ -193,14 +193,19 @@ export async function loyaltyPreview(req, res, next) {
     const every = Number(s?.loyalty_every || 0);
     const percent = Number(s?.loyalty_percent || 0);
     if (!s || every < 2 || percent <= 0) return res.json({ percent: 0 });
+    // نفس منطق الإنشاء (الحكم): مؤكّدة تُحدّد الاستحقاق، ووجود طلب ولاء معلّق
+    // (جديد وأخذ الخصم) يمنع الوعد به ثانية — كي لا يخالف البانرُ الخصمَ الفعلي.
     const cr = await query(
-      `SELECT COUNT(*)::int AS n FROM orders
-       WHERE store_id = $1 AND status IN ('confirmed','shipped','delivered')
-         AND regexp_replace(customer_phone, '\\D', '', 'g') LIKE $2`,
+      `SELECT
+         COUNT(*) FILTER (WHERE status IN ('confirmed','shipped','delivered'))::int AS confirmed,
+         COUNT(*) FILTER (WHERE status = 'new' AND discount > 0 AND coupon_code = '' AND COALESCE(referral_code,'') = '')::int AS pending_reward
+       FROM orders
+       WHERE store_id = $1 AND regexp_replace(customer_phone, '\\D', '', 'g') LIKE $2`,
       [s.id, '%' + phone.slice(-9)]
     );
-    const n = cr.rows[0].n;
-    res.json({ percent: n > 0 && n % every === 0 ? percent : 0, orders: n });
+    const confirmed = cr.rows[0].confirmed;
+    const eligible = confirmed > 0 && confirmed % every === 0 && cr.rows[0].pending_reward === 0;
+    res.json({ percent: eligible ? percent : 0, orders: confirmed });
   } catch (err) {
     next(err);
   }

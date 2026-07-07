@@ -236,14 +236,20 @@ export async function createCodOrder(req, res, next) {
       const percent = Number(ls.rows[0]?.loyalty_percent || 0);
       const last9 = phone.replace(/\D/g, '').slice(-9);
       if (every >= 2 && percent > 0 && last9.length === 9) {
+        // نحسب المؤكّدة (تحدّد استحقاق الدورة)، وكذلك أي طلب "جديد" غير مؤكّد لنفس
+        // الرقم أخذ خصم ولاء فعلاً (discount>0 بلا كوبون/إحالة) — فلا يُمنح الخصم
+        // مرتين لو أنشأ الزبون عدّة طلبات قبل تأكيد أيٍّ منها (كان ثغرة).
         const cr = await query(
-          `SELECT COUNT(*)::int AS n FROM orders
-           WHERE store_id = $1 AND status IN ('confirmed','shipped','delivered')
-             AND regexp_replace(customer_phone, '\\D', '', 'g') LIKE $2`,
+          `SELECT
+             COUNT(*) FILTER (WHERE status IN ('confirmed','shipped','delivered'))::int AS confirmed,
+             COUNT(*) FILTER (WHERE status = 'new' AND discount > 0 AND coupon_code = '' AND COALESCE(referral_code,'') = '')::int AS pending_reward
+           FROM orders
+           WHERE store_id = $1 AND regexp_replace(customer_phone, '\\D', '', 'g') LIKE $2`,
           [storeId, '%' + last9]
         );
-        const n = cr.rows[0].n;
-        if (n > 0 && n % every === 0) {
+        const confirmed = cr.rows[0].confirmed;
+        const pendingReward = cr.rows[0].pending_reward;
+        if (confirmed > 0 && confirmed % every === 0 && pendingReward === 0) {
           discount = Math.min(subtotal, Math.round((subtotal * percent) / 100 * 100) / 100);
         }
       }
