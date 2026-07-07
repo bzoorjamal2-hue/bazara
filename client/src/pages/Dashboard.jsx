@@ -231,14 +231,17 @@ function MetricCard({ label, value, Icon, grad, accent }) {
   );
 }
 
-// اختصار سريع أنيق — بلاطة أيقونة ذهبية + عنوان، يرتفع قليلاً عند المرور
+// اختصار سريع أنيق — بلاطة أيقونة ذهبية متدرّجة واضحة (تبرز بالوضعين) + عنوان
 function QuickAction({ to, label, Icon }) {
   return (
-    <Link to={to} className="glass group flex flex-col items-center gap-2 p-4 text-center transition duration-200 hover:-translate-y-0.5">
-      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gold-400/10 text-gold-300 ring-1 ring-gold-400/20 transition group-hover:bg-gold-400/20">
-        <Icon className="h-5 w-5" />
+    <Link to={to} className="glass group flex flex-col items-center gap-2.5 p-4 text-center transition duration-200 hover:-translate-y-0.5">
+      <span
+        className="flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-md transition group-hover:brightness-110"
+        style={{ background: 'linear-gradient(135deg, #e6c878 0%, #d4af37 55%, #b8932c 100%)' }}
+      >
+        <Icon className="h-[22px] w-[22px]" />
       </span>
-      <span className="text-xs font-semibold text-stone-300">{label}</span>
+      <span className="text-sm font-semibold text-stone-200">{label}</span>
     </Link>
   );
 }
