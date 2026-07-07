@@ -16,13 +16,12 @@ const I = {
   products: (c) => (<svg {...ic({ className: c })}><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5Z" /><path d="m3.5 7.5 8.5 4.5 8.5-4.5" /><path d="M12 21v-9" /></svg>),
 };
 
-// بطاقة إحصاء عصرية: بلاطة أيقونة متدرّجة + رقم بارز + لمعة ناعمة بالخلفية
+// بطاقة إحصاء عصرية: بلاطة أيقونة متدرّجة + رقم بارز.
+// (أُزيل الوهج الزخرفي: كان يتسرّب خارج زاوية البطاقة على iOS — منظر مقزّز.)
 function StatCard({ label, value, accent = 'text-gold-300', grad = 'from-gold-400 to-amber-500', icon }) {
   const Icon = I[icon];
   return (
-    <div className="glass relative overflow-hidden p-5">
-      {/* وهج ناعم بزاوية البطاقة */}
-      <span aria-hidden className={`pointer-events-none absolute -end-6 -top-8 h-20 w-20 rounded-full bg-gradient-to-br ${grad} opacity-15 blur-2xl`} />
+    <div className="glass overflow-hidden p-5">
       <span className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-md ${grad}`}>
         {Icon && Icon('h-[22px] w-[22px]')}
       </span>

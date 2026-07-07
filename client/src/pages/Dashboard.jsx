@@ -217,11 +217,12 @@ function Overview({ productsCount }) {
   );
 }
 
-// بطاقة مؤشّر موحّدة — بلاطة أيقونة متدرّجة + رقم بارز (نفس لغة صفحة الإحصائيات)
+// بطاقة مؤشّر موحّدة — بلاطة أيقونة متدرّجة + رقم بارز (نفس لغة صفحة الإحصائيات).
+// (أُزيل التوهّج الزخرفي المتدرّج: كان يتسرّب خارج زاوية البطاقة على iOS لأن
+// overflow-hidden لا يقصّ عنصر البلور هناك، فيظهر مربّع باهت مقزّز بالزاوية.)
 function MetricCard({ label, value, Icon, grad, accent }) {
   return (
-    <div className="glass relative overflow-hidden p-5">
-      <span aria-hidden className={`pointer-events-none absolute -end-6 -top-8 h-20 w-20 rounded-full bg-gradient-to-br ${grad} opacity-15 blur-2xl`} />
+    <div className="glass overflow-hidden p-5">
       <span className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-md ${grad}`}>
         <Icon className="h-[22px] w-[22px]" />
       </span>
