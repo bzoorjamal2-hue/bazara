@@ -412,9 +412,17 @@ export async function getStats(req, res, next) {
          COUNT(*)::int AS total_orders,
          COUNT(*) FILTER (WHERE status='new')::int AS new_orders,
          COUNT(*) FILTER (WHERE ${PAID})::int AS confirmed_orders,
+         COUNT(*) FILTER (WHERE status='delivered')::int AS delivered_orders,
          COUNT(*) FILTER (WHERE status='cancelled')::int AS cancelled_orders,
          COALESCE(SUM(total) FILTER (WHERE ${PAID}), 0) AS revenue
        FROM orders WHERE store_id = $1`,
+      [sid]
+    );
+
+    // السلات المتروكة الحاليّة (فرصة بيع ضائعة) — عدد + قيمتها الإجمالية
+    const aband = await query(
+      `SELECT COUNT(*)::int AS cnt, COALESCE(SUM(total), 0) AS val
+       FROM abandoned_checkouts WHERE store_id = $1 AND updated_at < now() - interval '10 minutes'`,
       [sid]
     );
 
@@ -483,14 +491,29 @@ export async function getStats(req, res, next) {
     );
 
     const t = totals.rows[0];
+    const visitors = visitsRow.rows[0]?.v || 0;
+    const abandonedCount = aband.rows[0].cnt;
+    const abandonedValue = Number(aband.rows[0].val);
+    // قمع التحويل: زوّار → بدؤوا الطلب (سلة متروكة + طلبات فعلية) → أتمّوا الطلب →
+    // تسلّموا. أرقام حقيقية من بياناتك — تُظهر أين يتسرّب الزبائن قبل الشراء.
+    const funnel = {
+      visitors,
+      startedCheckout: t.total_orders + abandonedCount,
+      orders: t.total_orders,
+      delivered: t.delivered_orders,
+    };
     res.json({
       revenue: Number(t.revenue),
       totalOrders: t.total_orders,
       newOrders: t.new_orders,
       confirmedOrders: t.confirmed_orders,
+      deliveredOrders: t.delivered_orders,
       cancelledOrders: t.cancelled_orders,
       productsCount: prod.rows[0].c,
-      visitors: visitsRow.rows[0]?.v || 0,
+      visitors,
+      abandonedCount,
+      abandonedValue,
+      funnel,
       topProducts: top.rows.map((r) => ({ name: r.name, qty: r.qty })),
       daily: daily.rows.map((r) => ({ day: r.day, orders: r.orders })),
       lowStock,

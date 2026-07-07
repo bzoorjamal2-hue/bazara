@@ -434,6 +434,17 @@
     "analytics": {
       "title": "Analytics",
       "hint": "A quick look at your sales, orders and best-selling products.",
+      "funnelTitle": "Conversion funnel (customer journey)",
+      "funnelHint": "Of your store visitors, how many started an order, completed it, and received it — shows where you lose customers before they buy.",
+      "funnel": {
+        "visitors": "Visitors",
+        "startedCheckout": "Started order",
+        "orders": "Completed order",
+        "delivered": "Received"
+      },
+      "convRate": "Conversion rate (visitor → order)",
+      "abandonedTitle": "Lost sales opportunity",
+      "abandonedHint": "{{count}} abandoned cart(s) waiting — message them from the orders list to recover them.",
       "courierMonth": "This month's collections by courier",
       "courierMonthHint": "Orders delivered this month (incl. delivery) — to reconcile the amounts each courier transfers to you.",
       "courierOrders": "{{count}} delivered order(s)",

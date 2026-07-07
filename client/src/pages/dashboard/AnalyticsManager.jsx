@@ -64,6 +64,58 @@ export default function AnalyticsManager() {
         <StatCard icon="products" grad="from-wine to-rose-700" accent="text-stone-100" label={t('dashboard.productsCount')} value={data.productsCount} />
       </div>
 
+      {/* لوحة النمو: قمع التحويل الحقيقي — أين يتسرّب الزبائن قبل الشراء */}
+      {data.funnel && data.funnel.visitors > 0 && (
+        <div className="glass p-5">
+          <h2 className="mb-1 flex items-center gap-1.5 font-display text-lg font-bold text-stone-100">📈 {t('dashboard.analytics.funnelTitle')}</h2>
+          <p className="mb-4 text-xs text-stone-400">{t('dashboard.analytics.funnelHint')}</p>
+          {(() => {
+            const f = data.funnel;
+            const steps = [
+              { key: 'visitors', value: f.visitors, grad: 'from-sky-400 to-indigo-500' },
+              { key: 'startedCheckout', value: f.startedCheckout, grad: 'from-violet-400 to-purple-500' },
+              { key: 'orders', value: f.orders, grad: 'from-gold-400 to-amber-500' },
+              { key: 'delivered', value: f.delivered, grad: 'from-emerald-400 to-teal-500' },
+            ];
+            const max = Math.max(1, f.visitors);
+            const pct = (n, d) => (d > 0 ? Math.round((n / d) * 100) : 0);
+            return (
+              <div className="space-y-2.5">
+                {steps.map((s, i) => (
+                  <div key={s.key} className="flex items-center gap-3">
+                    <span className="w-24 shrink-0 text-xs font-semibold text-stone-300 sm:w-28">{t(`dashboard.analytics.funnel.${s.key}`)}</span>
+                    <div className="relative h-7 flex-1 overflow-hidden rounded-lg bg-white/5">
+                      <div className={`flex h-full items-center rounded-lg bg-gradient-to-r ${s.grad} px-2`} style={{ width: `${Math.max(6, (s.value / max) * 100)}%` }}>
+                        <span className="text-xs font-bold text-white drop-shadow">{s.value}</span>
+                      </div>
+                    </div>
+                    {/* نسبة التحويل من الخطوة السابقة */}
+                    {i > 0 && <span className="w-12 shrink-0 text-end text-[11px] font-bold text-stone-400">{pct(s.value, steps[i - 1].value)}%</span>}
+                    {i === 0 && <span className="w-12 shrink-0" />}
+                  </div>
+                ))}
+                {/* الخلاصة الذهبية: معدّل التحويل الكلي (زائر → طلب) */}
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-gold-400/10 px-4 py-3 ring-1 ring-gold-400/20">
+                  <span className="text-sm font-semibold text-stone-200">{t('dashboard.analytics.convRate')}</span>
+                  <span className="font-display text-2xl font-extrabold text-gold-300">{pct(f.orders, f.visitors)}%</span>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* فرصة ضائعة: سلات متروكة بقيمة ₪ — رابط سريع لمتابعتها */}
+      {data.abandonedCount > 0 && (
+        <div className="glass flex flex-wrap items-center justify-between gap-3 border border-amber-400/25 p-5">
+          <div className="min-w-0">
+            <h2 className="flex items-center gap-1.5 font-display text-lg font-bold text-stone-100">🛒 {t('dashboard.analytics.abandonedTitle')}</h2>
+            <p className="mt-0.5 text-xs text-stone-400">{t('dashboard.analytics.abandonedHint', { count: data.abandonedCount })}</p>
+          </div>
+          <span className="font-display text-2xl font-extrabold text-amber-300">{cur}{data.abandonedValue.toFixed(0)}</span>
+        </div>
+      )}
+
       {/* قاربت على النفاد — تنبيه لإعادة التوفير */}
       {data.lowStock?.length > 0 && (
         <div className="glass border border-amber-400/25 p-5">
