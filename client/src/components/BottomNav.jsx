@@ -78,7 +78,9 @@ export default function BottomNav() {
     const id = setInterval(load, 60000);
     const onFocus = () => load();
     window.addEventListener('focus', onFocus);
-    return () => { alive = false; clearInterval(id); window.removeEventListener('focus', onFocus); };
+    // تحديث فوري عند تأكيد/شحن طلب من قائمة الطلبات (بدل انتظار الاستطلاع) — لا تعليق
+    window.addEventListener('bz:orders-changed', load);
+    return () => { alive = false; clearInterval(id); window.removeEventListener('focus', onFocus); window.removeEventListener('bz:orders-changed', load); };
   }, [user, store?.slug]);
 
   // إخفاء الشريط أثناء فتح أي نافذة/درج (قفل التمرير يجعل body ثابتاً position:fixed —
@@ -151,8 +153,12 @@ export default function BottomNav() {
             <span className={`relative flex items-center justify-center rounded-2xl px-3.5 py-1 transition-colors duration-200 ${active ? 'bg-wine text-cream shadow-sm' : ''}`}>
               <Icon className="h-6 w-6" filled={active} />
               {badge > 0 && (
-                <span className={`absolute -end-0.5 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold ${active ? 'bg-cream text-wine' : 'bg-wine text-cream'}`}>
-                  {badge}
+                // شارة فاخرة: هالة نابضة خلفها لجذب الانتباه + حبّة ذهبية متدرّجة بحدّ عاجي
+                <span className="absolute -end-1 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gold-400/60" style={{ animationDuration: '1.8s' }} />
+                  <span className="relative flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-extrabold leading-none text-wine-dark shadow-md ring-[1.5px] ring-cream" style={{ background: 'linear-gradient(135deg, #f4e0a4 0%, #e6c878 55%, #d4af37 100%)' }}>
+                    {badge > 99 ? '99+' : badge}
+                  </span>
                 </span>
               )}
             </span>

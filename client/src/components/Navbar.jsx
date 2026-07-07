@@ -139,8 +139,12 @@ export default function Navbar() {
 
   // نجلب عدد الطلبات الجديدة عند فتح القائمة → نُظهر شارة على "الطلبات" ليعرف المالك مصدر الإشعار
   useEffect(() => {
-    if (!menuOpen || !user || !store?.slug || subscription?.isAdmin) return;
-    api.get('/orders/new-count').then((r) => setNewOrders(r.data.count || 0)).catch(() => {});
+    if (!user || !store?.slug || subscription?.isAdmin) return undefined;
+    const load = () => api.get('/orders/new-count').then((r) => setNewOrders(r.data.count || 0)).catch(() => {});
+    if (menuOpen) load();
+    // تحديث فوري عند تأكيد/شحن طلب — الشارة تنقص مباشرةً بلا انتظار
+    window.addEventListener('bz:orders-changed', load);
+    return () => window.removeEventListener('bz:orders-changed', load);
   }, [menuOpen, user, store?.slug, subscription?.isAdmin]);
   useScrollLock(menuOpen); // تجميد الخلفية عند فتح قائمة الحساب
 
@@ -319,7 +323,10 @@ export default function Navbar() {
                     <s.Icon className="h-5 w-5 shrink-0 text-cream/80" />
                     <span className="flex-1">{s.label}</span>
                     {s.key === 'myOrders' && newOrders > 0 && (
-                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-gold-400 px-1.5 text-xs font-bold text-wine-dark">{newOrders}</span>
+                      <span className="relative flex h-6 min-w-6 items-center justify-center">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gold-400/50" style={{ animationDuration: '1.8s' }} />
+                        <span className="relative flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-extrabold text-wine-dark shadow-sm ring-1 ring-cream/50" style={{ background: 'linear-gradient(135deg, #f4e0a4 0%, #e6c878 55%, #d4af37 100%)' }}>{newOrders > 99 ? '99+' : newOrders}</span>
+                      </span>
                     )}
                   </Link>
                 );

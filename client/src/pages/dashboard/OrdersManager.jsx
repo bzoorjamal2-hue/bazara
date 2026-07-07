@@ -193,19 +193,30 @@ export default function OrdersManager() {
     return () => { on = false; };
   }, []);
 
+  // إشارة عامة: تغيّرت حالة طلب → تُحدّث شارة "الطلبات الجديدة" فوراً بكل الموقع
+  // (الشريط السفلي/القائمة) بدل انتظار الاستطلاع الدوري كل 60 ثانية = لا تعليق.
+  const pingOrdersChanged = () => { try { window.dispatchEvent(new Event('bz:orders-changed')); } catch { /* ignore */ } };
+
   // بعد إرسال طلب لشركة توصيل: نحفظ رقم التتبّع ونحوّل الحالة لـ"تم الشحن" محلياً (مُقفلة)
-  const markSent = (id, tracking) =>
+  const markSent = (id, tracking) => {
     setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, opostTracking: tracking || '✓', status: 'shipped' } : o)));
-  const markSentEps = (id, tracking) =>
+    pingOrdersChanged();
+  };
+  const markSentEps = (id, tracking) => {
     setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, epsTracking: tracking || '✓', status: 'shipped' } : o)));
-  const markSentGobox = (id, tracking) =>
+    pingOrdersChanged();
+  };
+  const markSentGobox = (id, tracking) => {
     setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, goboxTracking: tracking || '✓', status: 'shipped' } : o)));
+    pingOrdersChanged();
+  };
 
   const setStatus = async (id, status) => {
     setSavingId(id);
     setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o))); // تفاؤلي
     try {
       await api.patch(`/orders/${id}/status`, { status });
+      pingOrdersChanged(); // الشارة تنقص فوراً عند التأكيد/الشحن
     } catch (e) {
       setError(getErrorMessage(e));
     } finally {
