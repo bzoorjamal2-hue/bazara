@@ -111,24 +111,6 @@ export default function Dashboard() {
   );
 }
 
-// بطاقة إحصائية فاخرة: خيط ذهبي علوي + رقم كبير بخط العرض + أيقونة بختم دائري
-function StatCard({ label, value, Icon, hint, big = true }) {
-  return (
-    <div className="glass relative overflow-hidden p-6">
-      <span className="dash-hairline absolute inset-x-0 top-0" />
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-bold text-stone-400">{label}</p>
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gold-400/10 text-gold-300">
-          <Icon className="h-4 w-4" />
-        </span>
-      </div>
-      <p className={`mt-3 truncate font-display font-extrabold text-gold-300 ${big ? 'text-4xl' : 'text-2xl'}`}>
-        {value}
-      </p>
-      {hint && <p className="mt-1 text-xs text-stone-400">{hint}</p>}
-    </div>
-  );
-}
 
 function Overview({ productsCount }) {
   const { t } = useTranslation();
@@ -161,60 +143,111 @@ function Overview({ productsCount }) {
     link.click();
   };
 
+  const cur = t('common.currency');
+  const fmt = (n) => (n == null ? '—' : Number(n).toLocaleString());
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <SubscriptionBanner />
 
-      <div className="grid gap-4 grid-cols-2 sm:grid-cols-3">
-        <StatCard label={t('dashboard.productsCount')} value={productCount ?? '—'} Icon={BagIcon} />
-        <StatCard label={t('dashboard.visitors')} value={visitors ?? '—'} Icon={UsersIcon} hint={t('dashboard.visitorsHint')} />
-        <div className="col-span-2 sm:col-span-1">
-          <StatCard label={t('dashboard.store.name')} value={store?.name || '—'} Icon={StoreIcon} big={false} />
+      {/* المؤشّرات الرئيسية — بطاقات موحّدة ببلاطة أيقونة متدرّجة (متناسقة مع الإحصائيات) */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <MetricCard label={t('dashboard.analytics.revenue')} value={stats ? `${cur}${fmt(stats.revenue)}` : '—'} Icon={WalletGlyph} grad="from-emerald-400 to-teal-500" accent="text-emerald-300" />
+        <MetricCard label={t('dashboard.analytics.newOrders')} value={fmt(stats?.newOrders)} Icon={ReceiptIcon} grad="from-gold-400 to-amber-500" accent="text-gold-300" />
+        <MetricCard label={t('dashboard.visitors')} value={fmt(visitors)} Icon={UsersIcon} grad="from-sky-400 to-indigo-500" accent="text-sky-300" />
+        <MetricCard label={t('dashboard.productsCount')} value={fmt(productCount)} Icon={BagIcon} grad="from-wine to-rose-700" accent="text-stone-100" />
+      </div>
+
+      {/* إجراءات سريعة — اختصارات لأكثر ما يستخدمه صاحب المتجر يومياً */}
+      <div>
+        <h2 className="mb-3 text-sm font-bold text-stone-300">{t('dashboard.quickActions')}</h2>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <QuickAction to="/dashboard?tab=myProducts" label={t('dashboard.myProducts')} Icon={BagIcon} />
+          <QuickAction to="/dashboard?tab=myOrders" label={t('dashboard.myOrders')} Icon={ReceiptIcon} />
+          <QuickAction to="/dashboard?tab=analytics" label={t('dashboard.analytics.title')} Icon={ChartIcon} />
+          <QuickAction to="/dashboard?tab=storeSettings" label={t('dashboard.storeSettings')} Icon={GearIcon} />
         </div>
       </div>
 
+      {/* شارك متجرك: الرابط + رمز QR في بطاقة واحدة متناسقة (بدل بطاقتين منفصلتين) */}
       {store && (
         <div className="glass relative overflow-hidden p-6">
           <span className="dash-hairline absolute inset-x-0 top-0" />
-          <div className="mb-3 flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gold-400/10 text-gold-300">
+          <div className="mb-4 flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gold-400/10 text-gold-300 ring-1 ring-gold-400/20">
               <LinkIcon className="h-4 w-4" />
             </span>
-            <p className="text-sm font-semibold text-stone-300">{t('dashboard.store.publicLink')}</p>
+            <p className="font-display text-base font-bold text-gold-200">{t('dashboard.store.shareStore')}</p>
           </div>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <code className="min-w-0 flex-1 truncate rounded-xl bg-black/30 px-4 py-2.5 text-sm text-gold-200" dir="ltr">
-              {publicUrl}
-            </code>
-            <button onClick={copy} className="btn-primary !py-2.5 text-sm">
-              {copied ? t('common.copied') : t('common.copyLink')}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* رمز QR للمتجر */}
-      {store && (
-        <div className="glass relative flex flex-col items-center gap-5 overflow-hidden p-6 sm:flex-row">
-          <span className="dash-hairline absolute inset-x-0 top-0" />
-          <div ref={qrRef} className="rounded-2xl bg-white p-3 shadow-lg ring-1 ring-gold-400/30">
-            <QRCodeCanvas value={publicUrl} size={148} level="M" includeMargin={false} />
-          </div>
-          <div className="min-w-0 text-center sm:text-start">
-            <p className="font-display text-lg font-bold text-gold-200">{t('qr.title')}</p>
-            <p className="mt-1 text-sm text-stone-400">{t('qr.hint')}</p>
-            {subscription?.subscriberCode && (
-              <p className="mt-2 text-sm text-stone-300">
-                {t('subscription.subscriberCode')}:{' '}
-                <span className="font-mono font-bold text-gold-300" dir="ltr">{subscription.subscriberCode}</span>
-              </p>
-            )}
-            <button onClick={downloadQr} className="btn-ghost mt-3 gap-1.5 text-sm">
-              <DownloadIcon className="h-4 w-4" /> {t('qr.download')}
-            </button>
+          <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-stretch">
+            {/* رمز QR */}
+            <div className="flex flex-col items-center gap-2">
+              <div ref={qrRef} className="rounded-2xl bg-white p-3 shadow-lg ring-1 ring-gold-400/30">
+                <QRCodeCanvas value={publicUrl} size={132} level="M" includeMargin={false} />
+              </div>
+              <button onClick={downloadQr} className="btn-ghost gap-1.5 !py-1.5 text-xs">
+                <DownloadIcon className="h-3.5 w-3.5" /> {t('qr.download')}
+              </button>
+            </div>
+            {/* الرابط + الكود */}
+            <div className="flex min-w-0 flex-1 flex-col justify-center gap-3">
+              <div>
+                <p className="mb-1.5 text-xs font-semibold text-stone-400">{t('dashboard.store.publicLink')}</p>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <code className="min-w-0 flex-1 truncate rounded-xl bg-black/30 px-4 py-2.5 text-sm text-gold-200 ring-1 ring-white/5" dir="ltr">
+                    {publicUrl}
+                  </code>
+                  <button onClick={copy} className="btn-primary shrink-0 !py-2.5 text-sm">
+                    {copied ? t('common.copied') : t('common.copyLink')}
+                  </button>
+                </div>
+              </div>
+              {subscription?.subscriberCode && (
+                <div className="rounded-xl bg-gold-400/5 px-4 py-2.5 ring-1 ring-gold-400/15">
+                  <span className="text-xs text-stone-400">{t('subscription.subscriberCode')}: </span>
+                  <span className="font-mono text-sm font-bold text-gold-300" dir="ltr">{subscription.subscriberCode}</span>
+                </div>
+              )}
+              <p className="text-xs text-stone-500">{t('qr.hint')}</p>
+            </div>
           </div>
         </div>
       )}
     </div>
+  );
+}
+
+// بطاقة مؤشّر موحّدة — بلاطة أيقونة متدرّجة + رقم بارز (نفس لغة صفحة الإحصائيات)
+function MetricCard({ label, value, Icon, grad, accent }) {
+  return (
+    <div className="glass relative overflow-hidden p-5">
+      <span aria-hidden className={`pointer-events-none absolute -end-6 -top-8 h-20 w-20 rounded-full bg-gradient-to-br ${grad} opacity-15 blur-2xl`} />
+      <span className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-md ${grad}`}>
+        <Icon className="h-[22px] w-[22px]" />
+      </span>
+      <p className="mt-3 text-xs font-medium text-stone-400">{label}</p>
+      <p className={`mt-1 truncate font-display text-3xl font-extrabold leading-tight ${accent}`}>{value}</p>
+    </div>
+  );
+}
+
+// اختصار سريع أنيق — بلاطة أيقونة ذهبية + عنوان، يرتفع قليلاً عند المرور
+function QuickAction({ to, label, Icon }) {
+  return (
+    <Link to={to} className="glass group flex flex-col items-center gap-2 p-4 text-center transition duration-200 hover:-translate-y-0.5">
+      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gold-400/10 text-gold-300 ring-1 ring-gold-400/20 transition group-hover:bg-gold-400/20">
+        <Icon className="h-5 w-5" />
+      </span>
+      <span className="text-xs font-semibold text-stone-300">{label}</span>
+    </Link>
+  );
+}
+
+// أيقونة محفظة/إيراد (للمؤشّر الأول)
+function WalletGlyph({ className = 'h-5 w-5' }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h13A1.5 1.5 0 0 1 19 7.5V9" /><rect x="3" y="9" width="18" height="10.5" rx="2.2" /><path d="M16.5 14.25h.01" />
+    </svg>
   );
 }
