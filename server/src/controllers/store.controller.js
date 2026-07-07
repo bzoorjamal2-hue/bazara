@@ -36,6 +36,8 @@ function mapStore(s) {
     gaId: s.ga_id || '',
     loyaltyEvery: Number(s.loyalty_every || 0),
     loyaltyPercent: Number(s.loyalty_percent || 0),
+    flashPercent: Number(s.flash_percent || 0),
+    flashEndsAt: s.flash_ends_at,
     createdAt: s.created_at,
   };
 }
@@ -160,6 +162,10 @@ export async function updateMyStore(req, res, next) {
   // نقاط الولاء: كل N طلبات (2-50) → خصم % (0-50). صفر = معطّلة
   const loyaltyEvery = Math.min(50, Math.max(0, Math.round(Number(req.body.loyaltyEvery) || 0)));
   const loyaltyPercent = Math.min(50, Math.max(0, Number(req.body.loyaltyPercent) || 0));
+  // عرض الفلاش: نسبة (0-90) + وقت انتهاء. تاريخ غير صالح/فارغ → null (معطّل)
+  const flashPercent = Math.min(90, Math.max(0, Number(req.body.flashPercent) || 0));
+  const flashEndsRaw = req.body.flashEndsAt ? new Date(req.body.flashEndsAt) : null;
+  const flashEndsAt = flashEndsRaw && !Number.isNaN(flashEndsRaw.getTime()) ? flashEndsRaw : null;
   try {
     const current = await query('SELECT id, name, slug, old_slugs FROM stores WHERE user_id = $1', [req.user.id]);
     const store = current.rows[0];
@@ -198,7 +204,8 @@ export async function updateMyStore(req, res, next) {
          category_meta = $20::jsonb, custom_categories = $21::jsonb, referral_percent = $23,
          announcement_en = $24, old_slugs = $25::text[], delivery_phone = $26,
          fb_pixel = $27, tiktok_pixel = $28, ga_id = $29,
-         loyalty_every = $30, loyalty_percent = $31, updated_at = now()
+         loyalty_every = $30, loyalty_percent = $31,
+         flash_percent = $32, flash_ends_at = $33, updated_at = now()
        WHERE id = $22
        RETURNING *`,
       [
@@ -233,6 +240,8 @@ export async function updateMyStore(req, res, next) {
         gaId,
         loyaltyEvery,
         loyaltyPercent,
+        flashPercent,
+        flashEndsAt,
       ]
     );
 

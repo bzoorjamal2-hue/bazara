@@ -211,7 +211,20 @@ export async function createCodOrder(req, res, next) {
       if (ev.ok) { discount = ev.discount; appliedCoupon = cr.rows[0].code; }
     }
 
-    // خصم الإحالة (فقط إن لم يُطبَّق كوبون — لا نجمع خصمين): يُحسب على الخادم من نسبة المتجر
+    // عرض الفلاش (خصم متجر مؤقّت على كل شي) — أولوية بعد الكوبون، لا يُجمع مع غيره.
+    // نعتمد النسبة ووقت الانتهاء من الخادم (لا نثق بالواجهة). نخزّنه كعلامة FLASH
+    // في coupon_code ليظهر لصاحب المتجر ويمنع الإحالة/الولاء من الجمع.
+    if (!appliedCoupon) {
+      const fr = await query('SELECT flash_percent, flash_ends_at FROM stores WHERE id = $1', [storeId]);
+      const fp = Number(fr.rows[0]?.flash_percent || 0);
+      const fe = fr.rows[0]?.flash_ends_at ? new Date(fr.rows[0].flash_ends_at).getTime() : 0;
+      if (fp > 0 && fe > Date.now()) {
+        discount = Math.min(subtotal, Math.round((subtotal * fp) / 100 * 100) / 100);
+        appliedCoupon = 'FLASH';
+      }
+    }
+
+    // خصم الإحالة (فقط إن لم يُطبَّق كوبون/فلاش — لا نجمع خصمين): يُحسب على الخادم من نسبة المتجر
     let referralCode = '';
     if (!appliedCoupon) {
       const refIn = String(req.body?.referralCode || '').trim().toUpperCase().slice(0, 20);

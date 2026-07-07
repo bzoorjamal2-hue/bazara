@@ -24,6 +24,7 @@ import { getCache, setCache } from '../utils/apiCache.js';
 import { saveRef } from '../utils/referral.js';
 import { initPixels, trackPixel } from '../utils/pixels.js';
 import { norm } from '../utils/match.js';
+import Countdown from '../components/Countdown.jsx';
 
 const PAGE_SIZE = 8;
 const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
@@ -307,6 +308,16 @@ export default function StorePage() {
         /* الصفحة الرئيسية للمتجر — بأسلوب خريف: هيرو + فئات + جديدنا + الأكثر مبيعاً + عرض الكل */
         <>
           <HeroSlider store={store} />
+
+          {/* بانر عرض الفلاش — خصم متجر مؤقّت بعدّاد تنازلي ناري (إلحاح قوي للحملات) */}
+          {store.flashPercent > 0 && store.flashEndsAt && new Date(store.flashEndsAt).getTime() > Date.now() && (
+            <div className="mt-5 flex flex-col items-center justify-between gap-3 rounded-2xl border border-red-400/40 bg-gradient-to-r from-red-500/15 via-rose-500/10 to-red-500/15 px-4 py-3 text-center sm:flex-row sm:text-start">
+              <p className="flex items-center gap-2 font-display text-lg font-extrabold text-red-500">
+                ⚡ {t('store.flashBanner', { percent: store.flashPercent })}
+              </p>
+              <Countdown endsAt={store.flashEndsAt} variant="pill" className="shrink-0 !text-sm" />
+            </div>
+          )}
 
           {/* شريط نقاط الولاء — يشجّع الزبون على تكرار الشراء (يظهر فقط عند تفعيله) */}
           {store.loyaltyEvery >= 2 && store.loyaltyPercent > 0 && (

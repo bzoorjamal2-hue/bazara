@@ -71,6 +71,7 @@ export default function CartDrawer() {
   const [refCopied, setRefCopied] = useState(false); // نُسخ رقم الطلب؟
   const [cust, setCust] = useState(loadCustomer); // مسبقة التعبئة من آخر طلب (إن وُجد)
   const [loyalty, setLoyalty] = useState(null); // { percent } خصم ولاء مستحق لهذا الطلب
+  const [flash, setFlash] = useState(null); // { percent, endsAt } عرض فلاش فعّال بالمتجر
   const [err, setErr] = useState('');
   const [couponInput, setCouponInput] = useState('');
   const [coupon, setCoupon] = useState(null); // { code, discount } بعد التحقّق
@@ -94,8 +95,10 @@ export default function CartDrawer() {
       .then((r) => {
         setStoreZones(Array.isArray(r.data.deliveryZones) ? r.data.deliveryZones : []);
         setFreeOver(Number(r.data.freeShippingOver) || 0);
+        // عرض الفلاش الفعّال (الخادم يرجّعه فقط ما دام لم ينتهِ) — للعرض؛ الخادم هو الحكم
+        setFlash(Number(r.data.flashPercent) > 0 ? { percent: Number(r.data.flashPercent), endsAt: r.data.flashEndsAt } : null);
       })
-      .catch(() => { setStoreZones([]); setFreeOver(0); });
+      .catch(() => { setStoreZones([]); setFreeOver(0); setFlash(null); });
   }, [open, storeSlug]);
 
   // إنقاذ السلة المتروكة: بعد إدخال رقم هاتف صالح بشاشة الإتمام، نحفظ مسودة الطلب
@@ -158,15 +161,20 @@ export default function CartDrawer() {
     ? storeZones.map((z) => ({ name: z.name, fee: Number(z.fee) || 0 }))
     : AREAS.map((a) => ({ name: ar ? a.ar : a.en, fee: a.fee }));
   const cityOpt = areaList.find((z) => z.name === cust.city);
-  // خصم الإحالة (يُحسب من نسبة المتجر) — يُطبَّق فقط إن لم يُستخدم كوبون (لا نجمع خصمين)
-  const refDiscount = (!coupon && referral && referral.percent > 0)
+  // الأولوية (لا تُجمع الخصومات): كوبون > فلاش > إحالة > ولاء — نفس ترتيب الخادم (الحكم)
+  const flashActive = flash && flash.percent > 0 && flash.endsAt && new Date(flash.endsAt).getTime() > Date.now();
+  const flashDiscount = (!coupon && flashActive)
+    ? Math.round((total * flash.percent) / 100 * 100) / 100
+    : 0;
+  // خصم الإحالة (يُحسب من نسبة المتجر) — يُطبَّق فقط إن لم يُستخدم كوبون/فلاش
+  const refDiscount = (!coupon && !flashDiscount && referral && referral.percent > 0)
     ? Math.round((total * referral.percent) / 100 * 100) / 100
     : 0;
-  // خصم الولاء — أدنى أولوية (كوبون > إحالة > ولاء)، ولا تُجمع الخصومات
-  const loyaltyDiscount = (!coupon && !refDiscount && loyalty?.percent > 0)
+  // خصم الولاء — أدنى أولوية، ولا تُجمع الخصومات
+  const loyaltyDiscount = (!coupon && !flashDiscount && !refDiscount && loyalty?.percent > 0)
     ? Math.round((total * loyalty.percent) / 100 * 100) / 100
     : 0;
-  const discount = coupon ? coupon.discount : (refDiscount || loyaltyDiscount);
+  const discount = coupon ? coupon.discount : (flashDiscount || refDiscount || loyaltyDiscount);
   const afterDiscount = Math.max(0, total - discount);
   const freeShip = freeOver > 0 && afterDiscount >= freeOver;
   const delivery = freeShip ? 0 : (cityOpt ? cityOpt.fee : 0);
@@ -425,7 +433,7 @@ export default function CartDrawer() {
                       <div className="flex justify-between text-stone-400"><span>{t('co.subtotal')}</span><span>{t('common.currency')}{total.toFixed(2)}</span></div>
                       {discount > 0 && (
                         <div className="flex justify-between text-emerald-300">
-                          <span>{coupon ? `${t('coupon.discount')} (${coupon.code})` : refDiscount > 0 ? t('referral.discountLine') : t('loyalty.discountLine')}</span>
+                          <span>{coupon ? `${t('coupon.discount')} (${coupon.code})` : flashDiscount > 0 ? t('store.flashDiscountLine') : refDiscount > 0 ? t('referral.discountLine') : t('loyalty.discountLine')}</span>
                           <span>−{t('common.currency')}{discount.toFixed(2)}</span>
                         </div>
                       )}

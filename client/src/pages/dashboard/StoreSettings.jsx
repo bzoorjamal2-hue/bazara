@@ -20,6 +20,14 @@ const DEFAULT_BANNERS = [
   { title: 'تشكيلة جديدة وصلت', subtitle: 'تصفّحوا أحدث القطع لدينا', bgType: '', bgValue: '' },
   { title: 'عروض خاصة', subtitle: 'تابعونا لكل جديد وحصري', bgType: '', bgValue: '' },
 ];
+// تحويل طابع زمني ISO إلى صيغة datetime-local ("YYYY-MM-DDTHH:mm") بالتوقيت المحلي
+function toLocalInput(iso) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 // نمر دليل المقاسات القابل للتخصيص
 const CHART_SIZES = ['36', '38', '40', '42', '44', '46', '48'];
 // الفئات الثابتة (قابلة للتخصيص بصورة/اسم)
@@ -59,6 +67,9 @@ export default function StoreSettings() {
           gaId: s.gaId || '',
           loyaltyEvery: s.loyaltyEvery ? String(s.loyaltyEvery) : '',
           loyaltyPercent: s.loyaltyPercent ? String(s.loyaltyPercent) : '',
+          flashPercent: s.flashPercent ? String(s.flashPercent) : '',
+          // datetime-local يحتاج "YYYY-MM-DDTHH:mm" بالتوقيت المحلي (بلا ثوانٍ/منطقة)
+          flashEndsAt: s.flashEndsAt ? toLocalInput(s.flashEndsAt) : '',
         });
       })
       .catch((err) => setError(getErrorMessage(err)));
@@ -68,7 +79,10 @@ export default function StoreSettings() {
     e.preventDefault();
     setMsg(''); setError(''); setBusy(true);
     try {
-      await api.put('/stores/me', form);
+      // نُرسل وقت انتهاء الفلاش كـ ISO مطلق (UTC) — datetime-local محلي، فنحوّله
+      // بالمتصفح كي لا يختلف عن توقيت الخادم (Render بتوقيت UTC عادةً)
+      const payload = { ...form, flashEndsAt: form.flashEndsAt ? new Date(form.flashEndsAt).toISOString() : '' };
+      await api.put('/stores/me', payload);
       await refresh();
       setMsg(t('dashboard.store.saved'));
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -272,6 +286,32 @@ export default function StoreSettings() {
             </div>
             <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.loyaltyHint')}</p>
           </div>
+        </div>
+
+        {/* عرض الفلاش: خصم مؤقّت على كل المتجر بعدّاد تنازلي — إلحاح يرفع مبيعات الحملات */}
+        <div className="glass space-y-4 p-6">
+          <div>
+            <h2 className="flex items-center gap-1.5 font-display text-lg font-bold text-stone-100">⚡ {t('dashboard.store.flashTitle')}</h2>
+            <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.flashHint')}</p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className="label">{t('dashboard.store.flashPercent')}</label>
+              <div className="relative w-32">
+                <input className="input pe-7 text-center" type="number" min="0" max="90" step="1" placeholder="0" value={form.flashPercent} onChange={set('flashPercent')} />
+                <span className="pointer-events-none absolute inset-y-0 end-2.5 flex items-center text-xs text-stone-400">%</span>
+              </div>
+            </div>
+            <div>
+              <label className="label">{t('dashboard.store.flashEndsAt')}</label>
+              <input className="input" type="datetime-local" value={form.flashEndsAt} onChange={set('flashEndsAt')} />
+            </div>
+          </div>
+          {form.flashPercent > 0 && form.flashEndsAt && new Date(form.flashEndsAt).getTime() > Date.now() ? (
+            <p className="rounded-xl bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-300">{t('dashboard.store.flashActive', { percent: form.flashPercent })}</p>
+          ) : (
+            <p className="text-xs text-stone-400">{t('dashboard.store.flashOff')}</p>
+          )}
         </div>
 
         {/* التمويل والإعلانات: بكسلات تتبّع لإعلانات المالك الممولة */}

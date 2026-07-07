@@ -226,6 +226,9 @@ async function ensureColumns() {
     // نقاط الولاء: بعد كل N طلبات مؤكّدة يحصل الزبون على خصم % على طلبه التالي
     await pool.query('ALTER TABLE stores ADD COLUMN IF NOT EXISTS loyalty_every INTEGER NOT NULL DEFAULT 0;');
     await pool.query('ALTER TABLE stores ADD COLUMN IF NOT EXISTS loyalty_percent NUMERIC(5,2) NOT NULL DEFAULT 0;');
+    // عرض الفلاش: خصم % على كل المتجر مؤقّتاً (حتى flash_ends_at) — إلحاح للحملات
+    await pool.query('ALTER TABLE stores ADD COLUMN IF NOT EXISTS flash_percent NUMERIC(5,2) NOT NULL DEFAULT 0;');
+    await pool.query('ALTER TABLE stores ADD COLUMN IF NOT EXISTS flash_ends_at TIMESTAMPTZ;');
     // نظام الإحالة: نسبة خصم الزبونة الجديدة لكل متجر + جدول أكواد الإحالة + ربط الطلب بالكود
     await pool.query('ALTER TABLE stores ADD COLUMN IF NOT EXISTS referral_percent NUMERIC(5,2) DEFAULT 0;');
     await pool.query('ALTER TABLE stores ADD COLUMN IF NOT EXISTS views INTEGER NOT NULL DEFAULT 0;');
