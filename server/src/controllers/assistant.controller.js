@@ -61,6 +61,17 @@ const CAT_WORDS = {
   shirt: ['قميص', 'بلوزه', 'توب', 'shirt', 'blouse', 'top'],
 };
 
+// أكملي الإطلالة: كل فئة → فئات تنسّق معها (لاقتراح إطلالة كاملة بدل قطعة واحدة)
+const COMPLEMENT = {
+  dress: ['jacket', 'hijab'],
+  abaya: ['hijab'],
+  set: ['jacket', 'hijab'],
+  trench: ['dress', 'shirt'],
+  jacket: ['dress', 'shirt'],
+  shirt: ['jacket', 'trench'],
+  hijab: ['abaya', 'dress'],
+};
+
 // مناسبات → فئات مرجّحة
 const OCCASION_CAT = {
   wedding: { words: ['عرس', 'زفاف', 'خطوبه', 'سهره', 'حفله', 'مناسبه', 'عيد', 'wedding', 'party', 'evening', 'engagement', 'gala'], cats: ['dress', 'abaya', 'set'] },
@@ -197,7 +208,25 @@ export function ruleBasedRecommend(rows, lastUserMsg, lang) {
   if (picks.length === 0) {
     picks = [...scored].sort((a, b) => (b.p.featured - a.p.featured) || (a.p.stock === 0 ? 1 : -1));
   }
-  const ids = picks.slice(0, TOP_N).map((s) => String(s.p.id));
+
+  // أكملي الإطلالة: إن طُلبت فئة واحدة وتوفّرت لها قطع، نُكمل الترشيح بقطعة أو
+  // قطعتين من فئة منسّقة (فستان → جاكيت/حجاب) لتكوين إطلالة كاملة — يرفع قيمة الطلب.
+  const mainPicks = picks.slice(0, TOP_N);
+  let finalPicks = mainPicks;
+  let looked = false;
+  if (askedCat && wantedCats.size === 1 && mainPicks.length) {
+    const compCats = COMPLEMENT[[...wantedCats][0]] || [];
+    const already = new Set(mainPicks.map((s) => String(s.p.id)));
+    const comps = scored
+      .filter((s) => compCats.includes(s.p.category) && s.p.stock !== 0 && !already.has(String(s.p.id)))
+      .sort((a, b) => (b.p.featured - a.p.featured) || (b.score - a.score))
+      .slice(0, 2);
+    if (comps.length) {
+      finalPicks = [...mainPicks.slice(0, Math.max(1, TOP_N - comps.length)), ...comps];
+      looked = true;
+    }
+  }
+  const ids = finalPicks.map((s) => String(s.p.id));
 
   // رسالة صادقة بحسب ما أمكن تلبيته فعلاً (لا ندّعي مطابقة غير موجودة)
   const colorMissing = askedColor && colorOnly.length === 0;
@@ -213,6 +242,11 @@ export function ruleBasedRecommend(rows, lastUserMsg, lang) {
     else if (catMissing) reply = 'ما عندنا قطع من هالنوع حالياً 🌷 بس هاي أقرب القطع اللي ممكن تعجبك.';
     else if (askedColor || askedCat || occasionCats.size || wantSale) reply = 'اخترتلك هالقطع اللي بتناسب طلبك 🌷 إذا بتحبي حدّديلي المقاس أو ميزانيتك وبضبّطلك أكثر.';
     else reply = 'تفضّلي أبرز القطع عنا 🌷 قوليلي المناسبة أو لون أو ميزانيتك وبرشّحلك بدقة أكبر.';
+  }
+  // ملاحظة "أكملي الإطلالة" عند إضافة قطع منسّقة (لا نضيفها عند تعذّر المطابقة)
+  if (looked && !colorMissing && !catMissing) {
+    reply += en ? ' ✨ I also added a couple of pieces that pair beautifully for a complete look.'
+                : ' ✨ وضفتلك كمان قطع تنسّق معها لإطلالة كاملة.';
   }
   return { reply, ids };
 }
@@ -244,6 +278,7 @@ function systemPrompt(storeName, rows, marketplace = false) {
 - لو الطلب غامض، رشّحي أفضل ما يناسب + اسألي سؤالاً لطيفاً يوضّح (مثلاً اللون أو المناسبة).
 - لو الزبونة طلبت شيئاً غير موجود (لون/نوع مش بالكتالوج) قوليها بصراحة ولطف واقترحي أقرب بديل موجود — لا تدّعي وجوده.
 - استعيني بسياق المحادثة السابقة (مثلاً لو قالت "فستان" ثم "أبيض" فهي تريد فستاناً أبيض).
+- أكملي الإطلالة: بعد القطعة الأساسية، إن توفّر بالكتالوج، اقترحي قطعة أو قطعتين تنسّقان معها (مثلاً فستان → جاكيت أو حجاب مناسب) لتكوين إطلالة كاملة، واذكري ذلك بلطف في ردّك.
 
 قواعد صارمة (لا تُكسر):
 - لا ترشّحي إلا منتجات موجودة في الكتالوج أدناه وبمعرّفها (id) الحرفي تماماً. لا تخترعي منتجات أو أسعاراً أو معرّفات أو ألواناً غير مذكورة.
