@@ -31,7 +31,8 @@ export default defineConfig({
         // تخزين هيكل التطبيق مسبقاً (يفتح فوراً وبلا نت). لا نُخزّن طلبات /api ليبقى المحتوى محدّثاً.
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api/, /^\/sitemap\.xml/, /^\/robots\.txt/],
+        // ‏/share يجب أن يصل للسيرفر (صفحات المعاينة والتحويل) — اعتراضه يعرض 404 داخل التطبيق
+        navigateFallbackDenylist: [/^\/api/, /^\/share\//, /^\/sitemap\.xml/, /^\/robots\.txt/],
         cleanupOutdatedCaches: true,
         // حقن معالج إشعارات الدفع داخل الـ Service Worker
         importScripts: ['/push-sw.js'],
