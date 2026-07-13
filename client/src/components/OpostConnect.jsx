@@ -69,7 +69,7 @@ export default function OpostConnect() {
   return (
     <div className="glass space-y-4 p-6">
       <div className="flex items-center gap-2">
-        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 text-white shadow">
+        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-wine-light to-wine-dark text-white shadow">
           <TruckIcon className="h-5 w-5" />
         </span>
         <div className="min-w-0">

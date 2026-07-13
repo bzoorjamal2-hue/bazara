@@ -9,11 +9,11 @@ import { useCart } from '../context/CartContext.jsx';
 
 const STEPS = ['new', 'confirmed', 'shipped', 'delivered'];
 const BADGE = {
-  new: 'bg-sky-500/15 text-sky-600 ring-sky-500/25',
+  new: 'bg-amber-500/15 text-amber-700 ring-amber-500/25',
   confirmed: 'bg-gold-400/20 text-wine ring-gold-400/30',
-  shipped: 'bg-indigo-500/15 text-indigo-600 ring-indigo-500/25',
-  delivered: 'bg-emerald-500/15 text-emerald-600 ring-emerald-500/25',
-  cancelled: 'bg-red-500/15 text-red-600 ring-red-500/25',
+  shipped: 'bg-wine/10 text-wine ring-wine/20',
+  delivered: 'bg-emerald-500/15 text-emerald-700 ring-emerald-500/25',
+  cancelled: 'bg-red-500/15 text-red-700 ring-red-500/25',
 };
 
 export default function Track() {

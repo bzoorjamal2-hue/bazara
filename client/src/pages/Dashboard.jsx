@@ -152,10 +152,10 @@ function Overview({ productsCount }) {
 
       {/* المؤشّرات الرئيسية — بطاقات موحّدة ببلاطة أيقونة متدرّجة (متناسقة مع الإحصائيات) */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <MetricCard label={t('dashboard.analytics.revenue')} value={stats ? `${cur}${fmt(stats.revenue)}` : '—'} Icon={WalletGlyph} grad="from-emerald-400 to-teal-500" accent="text-emerald-300" />
+        <MetricCard label={t('dashboard.analytics.revenue')} value={stats ? `${cur}${fmt(stats.revenue)}` : '—'} Icon={WalletGlyph} grad="from-emerald-500 to-emerald-700" accent="text-emerald-300" />
         <MetricCard label={t('dashboard.analytics.newOrders')} value={fmt(stats?.newOrders)} Icon={ReceiptIcon} grad="from-gold-400 to-amber-500" accent="text-gold-300" />
-        <MetricCard label={t('dashboard.visitors')} value={fmt(visitors)} Icon={UsersIcon} grad="from-sky-400 to-indigo-500" accent="text-sky-300" />
-        <MetricCard label={t('dashboard.productsCount')} value={fmt(productCount)} Icon={BagIcon} grad="from-wine to-rose-700" accent="text-stone-100" />
+        <MetricCard label={t('dashboard.visitors')} value={fmt(visitors)} Icon={UsersIcon} grad="from-[#8a6a4f] to-[#3f2e22]" accent="text-stone-100" />
+        <MetricCard label={t('dashboard.productsCount')} value={fmt(productCount)} Icon={BagIcon} grad="from-wine to-wine-dark" accent="text-stone-100" />
       </div>
 
       {/* إجراءات سريعة — اختصارات لأكثر ما يستخدمه صاحب المتجر يومياً */}

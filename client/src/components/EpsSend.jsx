@@ -78,7 +78,7 @@ export default function EpsSend({ order, cities = [], onSent }) {
       <button
         onClick={handleSmartSend}
         disabled={busy}
-        className="inline-flex items-center gap-1 rounded-xl bg-sky-700 px-3 py-1.5 text-xs font-semibold text-cream shadow-sm transition hover:bg-sky-800 disabled:opacity-60"
+        className="inline-flex items-center gap-1 rounded-xl bg-wine px-3 py-1.5 text-xs font-semibold text-cream shadow-sm transition hover:bg-wine-dark disabled:opacity-60"
       >
         <TruckIcon className="inline h-4 w-4" /> {busy ? t('common.loading') : t('dashboard.eps.sendBtn')}
       </button>
@@ -87,8 +87,8 @@ export default function EpsSend({ order, cities = [], onSent }) {
 
   // اللوحة اليدوية (عند تعذّر المطابقة أو فشل الإرسال)
   return (
-    <div className="mt-1 w-full space-y-2 rounded-xl border border-sky-400/20 bg-sky-400/5 p-3">
-      <p className="text-xs font-semibold text-sky-200">{t('dashboard.eps.sendTitle')}</p>
+    <div className="mt-1 w-full space-y-2 rounded-xl border border-gold-400/25 bg-gold-400/10 p-3">
+      <p className="text-xs font-semibold text-gold-200">{t('dashboard.eps.sendTitle')}</p>
       {hint && <div className="rounded-lg bg-amber-500/10 px-3 py-1.5 text-xs text-amber-200">{hint}</div>}
       {error && <div className="rounded-lg bg-red-500/10 px-3 py-1.5 text-xs text-red-200">{error}</div>}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">

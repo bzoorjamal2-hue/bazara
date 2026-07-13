@@ -64,7 +64,7 @@ export default function GoboxSend({ order, onSent }) {
     return (
       <button
         onClick={() => { setError(''); setOpen(true); }}
-        className="inline-flex items-center gap-1 rounded-xl bg-orange-700 px-3 py-1.5 text-xs font-semibold text-cream shadow-sm transition hover:bg-orange-800"
+        className="inline-flex items-center gap-1 rounded-xl bg-wine px-3 py-1.5 text-xs font-semibold text-cream shadow-sm transition hover:bg-wine-dark"
       >
         <TruckIcon className="inline h-4 w-4" /> {t('dashboard.gobox.sendBtn')}
       </button>
@@ -73,8 +73,8 @@ export default function GoboxSend({ order, onSent }) {
 
   // لوحة اختيار القرية — مُعبّأة بمدينة الزبون
   return (
-    <div className="mt-1 w-full space-y-2 rounded-xl border border-orange-400/20 bg-orange-400/5 p-3">
-      <p className="text-xs font-semibold text-orange-200">{t('dashboard.gobox.sendTitle')}</p>
+    <div className="mt-1 w-full space-y-2 rounded-xl border border-gold-400/25 bg-gold-400/10 p-3">
+      <p className="text-xs font-semibold text-gold-200">{t('dashboard.gobox.sendTitle')}</p>
       <div className="rounded-lg bg-amber-500/10 px-3 py-1.5 text-xs text-amber-200">{t('dashboard.gobox.pickVillageHint')}</div>
       {error && <div className="rounded-lg bg-red-500/10 px-3 py-1.5 text-xs text-red-200">{error}</div>}
       <div>

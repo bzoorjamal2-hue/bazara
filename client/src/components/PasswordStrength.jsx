@@ -21,7 +21,7 @@ export default function PasswordStrength({ password }) {
     { w: '0%', color: 'bg-transparent', text: '', tc: '' },
     { w: '25%', color: 'bg-red-500', text: t('password.weak'), tc: 'text-red-300' },
     { w: '50%', color: 'bg-orange-500', text: t('password.medium'), tc: 'text-orange-300' },
-    { w: '75%', color: 'bg-yellow-400', text: t('password.strong'), tc: 'text-yellow-300' },
+    { w: '75%', color: 'bg-amber-500', text: t('password.strong'), tc: 'text-amber-700' },
     { w: '100%', color: 'bg-emerald-500', text: t('password.veryStrong'), tc: 'text-emerald-300' },
   ];
   const lvl = levels[score];

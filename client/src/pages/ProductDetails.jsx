@@ -365,7 +365,7 @@ export default function ProductDetails() {
           {/* للمنتجات بكميات لكل نمرة: لو نفد كلياً نعرض تنبيهاً واحداً واضحاً */}
           {perSize && outOfStock && (
             <div className="mt-3">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/15 px-3 py-1.5 text-sm font-bold text-red-500 ring-1 ring-red-500/25">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/15 px-3 py-1.5 text-sm font-bold text-red-700 ring-1 ring-red-500/25">
                 <span className="h-2 w-2 rounded-full bg-red-500" /> {t('product.outOfStock')}
               </span>
             </div>
@@ -528,7 +528,7 @@ function StockBadge({ outOfStock, selSize, selSizeQty, stock, t }) {
 
   if (outOfStock || remaining === 0) {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/15 px-3 py-1.5 text-sm font-bold text-red-500 ring-1 ring-red-500/25">
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/15 px-3 py-1.5 text-sm font-bold text-red-700 ring-1 ring-red-500/25">
         <span className="h-2 w-2 rounded-full bg-red-500" />
         {selSize ? t('product.sizeSoldOut') : t('product.outOfStock')}
       </span>

@@ -78,7 +78,7 @@ export default function EpsConnect() {
   return (
     <div className="glass space-y-4 p-6">
       <div className="flex items-center gap-2">
-        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500 to-cyan-600 text-white shadow">
+        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 text-white shadow">
           <TruckIcon className="h-5 w-5" />
         </span>
         <div className="min-w-0">

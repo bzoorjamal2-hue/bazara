@@ -79,9 +79,9 @@ const dayLabel = (d, t) => {
   return new Date(d).toLocaleDateString();
 };
 const BADGE = {
-  new: 'bg-sky-500/20 text-sky-200',
+  new: 'bg-amber-500/20 text-amber-700',
   confirmed: 'bg-gold-400/20 text-gold-200',
-  shipped: 'bg-indigo-500/20 text-indigo-200',
+  shipped: 'bg-wine/10 text-wine',
   delivered: 'bg-emerald-500/20 text-emerald-200',
   cancelled: 'bg-red-500/20 text-red-200',
   paid: 'bg-emerald-500/20 text-emerald-200',
@@ -477,17 +477,17 @@ export default function OrdersManager() {
                   <span className="text-xs text-stone-400">{t('dashboard.ordersSection.updateStatus')}:</span>
                   {o.opostTracking ? (
                     // الطلب بعهدة أوبتيموس → الحالة مُقفلة (تُدار عبر شركة التوصيل)
-                    <span className="inline-flex items-center gap-1 rounded-xl bg-indigo-500/15 px-3 py-1.5 text-xs font-semibold text-indigo-200">
+                    <span className="inline-flex items-center gap-1 rounded-xl bg-wine/10 px-3 py-1.5 text-xs font-semibold text-wine">
                       🔒 {o.opostStatus ? opostLabel(o.opostStatus) : t(`dashboard.ordersSection.${FLOW.includes(o.status) ? o.status : 'shipped'}`)} · {t('dashboard.opost.managed')}
                     </span>
                   ) : o.epsTracking ? (
                     // الطلب بعهدة EPS → الحالة مُقفلة (تُدار عبر شركة التوصيل)
-                    <span className="inline-flex items-center gap-1 rounded-xl bg-sky-500/15 px-3 py-1.5 text-xs font-semibold text-sky-200">
+                    <span className="inline-flex items-center gap-1 rounded-xl bg-wine/10 px-3 py-1.5 text-xs font-semibold text-wine">
                       🔒 {o.epsStatus ? epsLabel(o.epsStatus) : t(`dashboard.ordersSection.${FLOW.includes(o.status) ? o.status : 'shipped'}`)} · {t('dashboard.eps.managed')}
                     </span>
                   ) : o.goboxTracking ? (
                     // الطلب بعهدة gobox → الحالة مُقفلة (تُدار عبر شركة التوصيل)
-                    <span className="inline-flex items-center gap-1 rounded-xl bg-orange-500/15 px-3 py-1.5 text-xs font-semibold text-orange-200">
+                    <span className="inline-flex items-center gap-1 rounded-xl bg-wine/10 px-3 py-1.5 text-xs font-semibold text-wine">
                       🔒 {o.goboxStatus ? goboxLabel(o.goboxStatus) : t(`dashboard.ordersSection.${FLOW.includes(o.status) ? o.status : 'shipped'}`)} · {t('dashboard.gobox.managed')}
                     </span>
                   ) : (
@@ -511,7 +511,7 @@ export default function OrdersManager() {
                     <a
                       href={`https://wa.me/${waNums[0]}?text=${encodeURIComponent(orderStatusMsg(o))}`}
                       target="_blank" rel="noreferrer"
-                      className="inline-flex items-center gap-1 rounded-xl border border-sky-400/30 px-3 py-1.5 text-xs font-semibold text-sky-200 transition hover:bg-sky-400/10"
+                      className="inline-flex items-center gap-1 rounded-xl border border-gold-400/30 px-3 py-1.5 text-xs font-semibold text-gold-200 transition hover:bg-gold-400/10"
                     >
                       <BellIcon className="h-4 w-4" /> {t('dashboard.ordersSection.notifyCustomer')}
                     </a>

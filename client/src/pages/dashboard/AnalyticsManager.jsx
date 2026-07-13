@@ -57,10 +57,10 @@ export default function AnalyticsManager() {
 
       {/* البطاقات الرئيسية */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard icon="revenue" grad="from-emerald-400 to-teal-500" accent="text-emerald-300" label={t('dashboard.analytics.revenue')} value={`${cur}${data.revenue.toFixed(0)}`} />
+        <StatCard icon="revenue" grad="from-emerald-500 to-emerald-700" accent="text-emerald-300" label={t('dashboard.analytics.revenue')} value={`${cur}${data.revenue.toFixed(0)}`} />
         <StatCard icon="confirmed" grad="from-gold-400 to-amber-500" accent="text-gold-300" label={t('dashboard.analytics.confirmed')} value={data.confirmedOrders} />
-        <StatCard icon="newOrders" grad="from-sky-400 to-indigo-500" accent="text-sky-300" label={t('dashboard.analytics.newOrders')} value={data.newOrders} />
-        <StatCard icon="products" grad="from-wine to-rose-700" accent="text-stone-100" label={t('dashboard.productsCount')} value={data.productsCount} />
+        <StatCard icon="newOrders" grad="from-amber-400 to-amber-600" accent="text-amber-700" label={t('dashboard.analytics.newOrders')} value={data.newOrders} />
+        <StatCard icon="products" grad="from-wine to-wine-dark" accent="text-stone-100" label={t('dashboard.productsCount')} value={data.productsCount} />
       </div>
 
       {/* لوحة النمو: قمع التحويل الحقيقي — أين يتسرّب الزبائن قبل الشراء */}
@@ -71,10 +71,10 @@ export default function AnalyticsManager() {
           {(() => {
             const f = data.funnel;
             const steps = [
-              { key: 'visitors', value: f.visitors, grad: 'from-sky-400 to-indigo-500' },
-              { key: 'startedCheckout', value: f.startedCheckout, grad: 'from-violet-400 to-purple-500' },
+              { key: 'visitors', value: f.visitors, grad: 'from-[#8a6a4f] to-[#5e4636]' },
+              { key: 'startedCheckout', value: f.startedCheckout, grad: 'from-amber-400 to-orange-500' },
               { key: 'orders', value: f.orders, grad: 'from-gold-400 to-amber-500' },
-              { key: 'delivered', value: f.delivered, grad: 'from-emerald-400 to-teal-500' },
+              { key: 'delivered', value: f.delivered, grad: 'from-emerald-500 to-emerald-700' },
             ];
             const max = Math.max(1, f.visitors);
             const pct = (n, d) => (d > 0 ? Math.round((n / d) * 100) : 0);
