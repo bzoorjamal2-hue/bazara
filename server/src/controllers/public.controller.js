@@ -88,6 +88,16 @@ export async function getHomeData(_req, res, next) {
 
     const featured = await query(`${PRODUCT_SELECT} WHERE p.featured = true AND ${active} ORDER BY p.created_at DESC LIMIT 8`);
     const latest = await query(`${PRODUCT_SELECT} WHERE ${active} ORDER BY p.created_at DESC LIMIT 12`);
+    // صفقات اليوم: أعلى نسب الخصم عبر المنصّة (للريل الأفقي في الرئيسية)
+    const deals = await query(
+      `${PRODUCT_SELECT} WHERE p.old_price IS NOT NULL AND p.old_price > p.price AND ${active}
+       ORDER BY (1 - p.price / NULLIF(p.old_price, 0)) DESC, p.created_at DESC LIMIT 10`
+    );
+    // الأكثر مبيعاً: إثبات اجتماعي حقيقي من عدّاد المبيعات المؤكّدة
+    const bestSellers = await query(
+      `${PRODUCT_SELECT} WHERE p.sold_count > 0 AND ${active}
+       ORDER BY p.sold_count DESC, p.created_at DESC LIMIT 10`
+    );
     // بانرات الصفحة الرئيسية (يتحكّم بها المدير) — قد لا يوجد الجدول بعد على نسخ قديمة
     let homeBanners = [];
     try {
@@ -100,6 +110,8 @@ export async function getHomeData(_req, res, next) {
       stores: stores.rows.map((s) => ({ ...mapStorePublic(s), productsCount: s.products_count })),
       featured: featured.rows.map(mapProduct),
       products: latest.rows.map(mapProduct),
+      deals: deals.rows.map(mapProduct),
+      bestSellers: bestSellers.rows.map(mapProduct),
       homeBanners,
     });
   } catch (err) {

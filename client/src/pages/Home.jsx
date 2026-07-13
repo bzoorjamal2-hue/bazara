@@ -70,6 +70,22 @@ export default function Home() {
       {/* شريط ترويجي (توصيل/دفع عند الاستلام) — طبق المرجع */}
       <PromoBanner />
 
+      {/* صفقات اليوم — أعلى الخصومات عبر المنصّة (أسلوب المتاجر الكبرى) */}
+      {data?.deals?.length > 0 && (
+        <ProductRail
+          title={`⚡ ${t('home.deals')}`}
+          products={data.deals}
+          action={
+            <Link to="/offers" className="inline-flex items-center gap-1 text-sm font-semibold text-gold-200 transition hover:opacity-80">
+              {t('store.viewAll')} <ForwardIcon className="h-4 w-4 rtl-flip" />
+            </Link>
+          }
+        />
+      )}
+
+      {/* الأكثر مبيعاً — إثبات اجتماعي حقيقي من المبيعات المؤكّدة */}
+      {data?.bestSellers?.length > 0 && <ProductRail title={`🔥 ${t('home.bestSellers')}`} products={data.bestSellers} />}
+
       {/* شاهدت مؤخراً */}
       {recent.length > 0 && <ProductRail title={t('product.recentlyViewed')} products={recent} />}
 
