@@ -126,7 +126,10 @@
   },
   "appWelcome": {
     "browse": "Start shopping",
-    "openStore": "Create your store now"
+    "openStore": "Create your store now",
+    "feat1": "Delivery across Palestine",
+    "feat2": "Cash on delivery",
+    "feat3": "Easy exchange"
   },
   "pwa": {
     "title": "Get the Bazara app",

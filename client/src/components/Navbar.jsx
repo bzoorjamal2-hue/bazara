@@ -171,7 +171,9 @@ export default function Navbar() {
   const handleLogout = async () => {
     setMenuOpen(false);
     await logout();
-    navigate('/');
+    // replace: نستبدل الصفحة المحمية الحالية بالرئيسية كي لا تبقى "ميتة" في التاريخ —
+    // كانت تجعل زر الرجوع من صفحة الدخول يحتاج ضغطتين للعودة للقائمة الرئيسية
+    navigate('/', { replace: true });
   };
 
   // أقسام لوحة التحكم (تظهر في قائمة المستخدم) — المدير: تحكّم فقط بلا بيع

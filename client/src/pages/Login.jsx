@@ -54,8 +54,8 @@ export default function Login() {
     setBusy(true);
     try {
       const data = await login(email, form.password);
-      if (data?.subscription && !data.subscription.active) navigate('/subscribe');
-      else navigate('/dashboard');
+      if (data?.subscription && !data.subscription.active) navigate('/subscribe', { replace: true });
+      else navigate('/dashboard', { replace: true });
     } catch (err) {
       if (err?.response?.status === 403 && err?.response?.data?.code === 'SUBSCRIPTION_REQUIRED') {
         setNeedsCode(true);
@@ -76,7 +76,7 @@ export default function Login() {
     setBusy(true);
     try {
       await loginWithCode(email, form.password, code.trim());
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(getErrorMessage(err, t('errors.generic')));
     } finally {

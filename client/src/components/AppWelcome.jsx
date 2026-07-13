@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import Logo from './Logo.jsx';
 import LanguageSwitcher from './LanguageSwitcher.jsx';
-import { BagIcon, ForwardIcon } from './icons.jsx';
+import { BagIcon, ForwardIcon, TruckIcon, CashIcon, CheckIcon } from './icons.jsx';
 
 // شاشة افتتاح التطبيق المثبّت (standalone) — تصميم فخم متحرّك بألوان Bazara.
 // تظهر فقط داخل التطبيق؛ الموقع في المتصفح يبقى كما هو.
@@ -36,6 +36,17 @@ export default function AppWelcome() {
         className="pointer-events-none absolute bottom-0 end-0 h-80 w-80 rounded-full bg-[#8a6a4f]/40 blur-3xl"
         animate={{ y: [0, -18, 0], opacity: [0.4, 0.7, 0.4] }}
         transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
+      />
+
+      {/* إطار ذهبي رفيع حول الشاشة — لمسة بوتيك فاخرة */}
+      <div
+        className="pointer-events-none absolute rounded-[26px] ring-1 ring-[#e6c878]/25"
+        style={{
+          top: 'calc(env(safe-area-inset-top, 0px) + 10px)',
+          bottom: 'calc(env(safe-area-inset-bottom, 0px) + 10px)',
+          insetInlineStart: '10px',
+          insetInlineEnd: '10px',
+        }}
       />
 
       {/* شريط علوي */}
@@ -88,15 +99,19 @@ export default function AppWelcome() {
           </motion.div>
         </motion.div>
 
+        {/* اسم Bazara بلمعة ذهبية تمسح الحروف باستمرار (بريق المجوهرات) */}
         <motion.h1
-          variants={rise}
           className="mt-8 font-display text-5xl font-extrabold tracking-wide sm:text-6xl"
           style={{
-            background: 'linear-gradient(180deg, #f7ecd2 0%, #d4af37 70%, #b8932c 100%)',
+            background:
+              'linear-gradient(100deg, #b8932c 0%, #d4af37 30%, #f7ecd2 50%, #d4af37 70%, #b8932c 100%)',
+            backgroundSize: '250% 100%',
             WebkitBackgroundClip: 'text',
             backgroundClip: 'text',
             color: 'transparent',
           }}
+          animate={{ backgroundPosition: ['125% 0%', '-125% 0%'] }}
+          transition={{ duration: 4.5, repeat: Infinity, ease: 'linear' }}
         >
           Bazara
         </motion.h1>
@@ -113,6 +128,22 @@ export default function AppWelcome() {
         <motion.p variants={rise} className="mt-2 text-xs tracking-[0.25em] text-cream/45">
           ELEGANCE · MODESTY · DISTINCTION
         </motion.p>
+
+        {/* شارات ثقة (أسلوب المتاجر الكبرى): توصيل · دفع عند الاستلام · تبديل */}
+        <motion.div variants={rise} className="mt-7 flex flex-wrap items-center justify-center gap-2">
+          {[
+            { Icon: TruckIcon, label: t('appWelcome.feat1') },
+            { Icon: CashIcon, label: t('appWelcome.feat2') },
+            { Icon: CheckIcon, label: t('appWelcome.feat3') },
+          ].map(({ Icon, label }) => (
+            <span
+              key={label}
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#e6c878]/25 bg-[#F4EDE2]/[0.06] px-3 py-1.5 text-xs font-medium text-cream/85"
+            >
+              <Icon className="h-4 w-4 text-[#e6c878]" /> {label}
+            </span>
+          ))}
+        </motion.div>
       </motion.div>
 
       {/* الأزرار */}
@@ -124,11 +155,18 @@ export default function AppWelcome() {
       >
         {/* حبوب فاخرة موحّدة مع هوية الموقع: ذهبية للتسوّق + إطار ذهبي للدخول */}
         <MLink
-          variants={rise}
           to="/shop"
           whileTap={{ scale: 0.97 }}
           className="flex w-full items-center justify-center gap-2 rounded-full py-4 text-center font-bold shadow-xl ring-1 ring-[#e6c878]/50"
-          style={{ background: 'linear-gradient(135deg, #f7ecd2 0%, #F4EDE2 50%, #e6c878 100%)', color: '#3f2e22', boxShadow: '0 18px 38px -16px rgba(212, 175, 55, 0.55)' }}
+          style={{ background: 'linear-gradient(135deg, #f7ecd2 0%, #F4EDE2 50%, #e6c878 100%)', color: '#3f2e22' }}
+          animate={{
+            boxShadow: [
+              '0 18px 38px -16px rgba(212, 175, 55, 0.45)',
+              '0 18px 46px -12px rgba(212, 175, 55, 0.8)',
+              '0 18px 38px -16px rgba(212, 175, 55, 0.45)',
+            ],
+          }}
+          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
         >
           <BagIcon className="h-5 w-5" /> {t('appWelcome.browse')}
         </MLink>
