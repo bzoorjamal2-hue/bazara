@@ -27,16 +27,9 @@ export default function AppWelcome() {
             'radial-gradient(120% 80% at 50% -10%, rgba(212,175,55,0.18), transparent 55%), radial-gradient(100% 70% at 50% 110%, rgba(138,106,79,0.45), transparent 60%), linear-gradient(180deg, #3f2e22 0%, #2a1d14 100%)',
         }}
       />
-      <motion.div
-        className="pointer-events-none absolute -top-24 start-1/4 h-72 w-72 rounded-full bg-[#d4af37]/15 blur-3xl"
-        animate={{ y: [0, 24, 0], opacity: [0.5, 0.85, 0.5] }}
-        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
-      />
-      <motion.div
-        className="pointer-events-none absolute bottom-0 end-0 h-80 w-80 rounded-full bg-[#8a6a4f]/40 blur-3xl"
-        animate={{ y: [0, -18, 0], opacity: [0.4, 0.7, 0.4] }}
-        transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
-      />
+      {/* توهّجات ثابتة (كانت متحركة بلا توقف — إعادة رسم البلور الضخم كل إطار = تعليق) */}
+      <div className="pointer-events-none absolute -top-24 start-1/4 h-72 w-72 rounded-full bg-[#d4af37]/15 opacity-70 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 end-0 h-80 w-80 rounded-full bg-[#8a6a4f]/40 opacity-60 blur-3xl" />
 
       {/* إطار ذهبي رفيع حول الشاشة — لمسة بوتيك فاخرة */}
       <div
@@ -78,11 +71,8 @@ export default function AppWelcome() {
             animate={{ rotate: 360 }}
             transition={{ duration: 14, repeat: Infinity, ease: 'linear' }}
           />
-          <motion.div
-            className="absolute inset-0 -z-10 rounded-full bg-cream/15 blur-2xl"
-            animate={{ opacity: [0.4, 0.8, 0.4], scale: [1, 1.08, 1] }}
-            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-          />
+          {/* هالة ثابتة خلف الشعار (كانت تنبض بلور — مكلفة بلا داعٍ) */}
+          <div className="absolute inset-0 -z-10 rounded-full bg-cream/15 opacity-60 blur-2xl" />
           {/* دخول: لفّة كاملة مع عقارب الساعة + تكبير وتلاشٍ ناعم */}
           <motion.div
             initial={{ rotate: 0, scale: 0.55, opacity: 0 }}
@@ -99,9 +89,10 @@ export default function AppWelcome() {
           </motion.div>
         </motion.div>
 
-        {/* اسم Bazara بلمعة ذهبية تمسح الحروف باستمرار (بريق المجوهرات) */}
-        <motion.h1
-          className="mt-8 font-display text-5xl font-extrabold tracking-wide sm:text-6xl"
+        {/* اسم Bazara بلمعة ذهبية تمسح الحروف (بريق المجوهرات) — CSS خالص:
+            مسحة سريعة ثم راحة، فلا يُعاد الرسم إلا أثناء المسحة (بدل كل إطار) */}
+        <h1
+          className="bz-shine mt-8 font-display text-5xl font-extrabold tracking-wide sm:text-6xl"
           style={{
             background:
               'linear-gradient(100deg, #b8932c 0%, #d4af37 30%, #f7ecd2 50%, #d4af37 70%, #b8932c 100%)',
@@ -110,11 +101,9 @@ export default function AppWelcome() {
             backgroundClip: 'text',
             color: 'transparent',
           }}
-          animate={{ backgroundPosition: ['125% 0%', '-125% 0%'] }}
-          transition={{ duration: 4.5, repeat: Infinity, ease: 'linear' }}
         >
           Bazara
-        </motion.h1>
+        </h1>
 
         <motion.div variants={rise} className="mt-4 flex items-center gap-3">
           <span className="h-px w-8 bg-gradient-to-r from-transparent to-[#d4af37]/70" />
@@ -153,23 +142,24 @@ export default function AppWelcome() {
         animate="show"
         className="relative space-y-3 px-7 pb-[max(env(safe-area-inset-bottom),28px)]"
       >
-        {/* حبوب فاخرة موحّدة مع هوية الموقع: ذهبية للتسوّق + إطار ذهبي للدخول */}
-        <MLink
-          to="/shop"
-          whileTap={{ scale: 0.97 }}
-          className="flex w-full items-center justify-center gap-2 rounded-full py-4 text-center font-bold shadow-xl ring-1 ring-[#e6c878]/50"
-          style={{ background: 'linear-gradient(135deg, #f7ecd2 0%, #F4EDE2 50%, #e6c878 100%)', color: '#3f2e22' }}
-          animate={{
-            boxShadow: [
-              '0 18px 38px -16px rgba(212, 175, 55, 0.45)',
-              '0 18px 46px -12px rgba(212, 175, 55, 0.8)',
-              '0 18px 38px -16px rgba(212, 175, 55, 0.45)',
-            ],
-          }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-        >
-          <BagIcon className="h-5 w-5" /> {t('appWelcome.browse')}
-        </MLink>
+        {/* حبوب فاخرة موحّدة مع هوية الموقع: ذهبية للتسوّق + إطار ذهبي للدخول.
+            النبض = طبقة توهّج مستقلة تتنفّس بالشفافية فقط (مركّبة على GPU) —
+            وليس تحريك boxShadow الذي كان يعيد الرسم كل إطار (تعليق) */}
+        <div className="relative">
+          <motion.span
+            className="pointer-events-none absolute inset-x-5 -bottom-1.5 top-3 -z-10 rounded-full bg-[#d4af37]/50 blur-xl"
+            animate={{ opacity: [0.35, 0.75, 0.35] }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <MLink
+            to="/shop"
+            whileTap={{ scale: 0.97 }}
+            className="flex w-full items-center justify-center gap-2 rounded-full py-4 text-center font-bold shadow-xl ring-1 ring-[#e6c878]/50"
+            style={{ background: 'linear-gradient(135deg, #f7ecd2 0%, #F4EDE2 50%, #e6c878 100%)', color: '#3f2e22', boxShadow: '0 18px 38px -16px rgba(212, 175, 55, 0.55)' }}
+          >
+            <BagIcon className="h-5 w-5" /> {t('appWelcome.browse')}
+          </MLink>
+        </div>
         <MLink
           variants={rise}
           to="/login"

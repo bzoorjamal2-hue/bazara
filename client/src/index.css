@@ -91,6 +91,15 @@ html.dark .theme-pub .glass { box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5); }
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 6.5rem);
 }
 
+/* لمعة ذهبية تمسح شعار شاشة الترحيب — مسحة سريعة (٤٥٪ من الدورة) ثم راحة،
+   فلا يُعاد رسم النص إلا أثناء المسحة بدل كل إطار (كانت framer ترسمه باستمرار) */
+@keyframes bz-shine {
+  0% { background-position: 125% 0%; }
+  45% { background-position: -125% 0%; }
+  100% { background-position: -125% 0%; }
+}
+.bz-shine { animation: bz-shine 5.5s linear infinite; }
+
 /* خلفية فاخرة سوداء بلمسات ذهبية ناعمة (غير مزدحمة) */
 .app-bg {
   position: relative;

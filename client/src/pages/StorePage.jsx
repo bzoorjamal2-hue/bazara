@@ -765,6 +765,28 @@ function HeroSlider({ store }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [len, paused, i]);
 
+  // تشغيل ذكي لفيديوهات الشرائح (إصلاح تعليق): يعمل فيديو الشريحة الظاهرة فقط،
+  // ويتوقف الكل عندما يخرج السلايدر عن الشاشة — كانت كل الفيديوهات تعمل معاً دائماً.
+  const vidRefs = useRef({});
+  const iRef = useRef(0);
+  const visRef = useRef(true);
+  const [heroVisible, setHeroVisible] = useState(true);
+  iRef.current = i;
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return undefined;
+    const io = new IntersectionObserver(([en]) => { visRef.current = en.isIntersecting; setHeroVisible(en.isIntersecting); }, { threshold: 0.05 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  useEffect(() => {
+    Object.entries(vidRefs.current).forEach(([idx, v]) => {
+      if (!v) return;
+      if (Number(idx) === i && heroVisible && !document.hidden) v.play().catch(() => {});
+      else v.pause();
+    });
+  }, [i, heroVisible]);
+
   const go = (n) => setI(((n % len) + len) % len);
 
   // سحب لحظي يتبع الإصبع: المسار يتحرّك مع إصبعك، ويستقر على شريحة واحدة فقط عند الإفلات.
@@ -875,15 +897,16 @@ function HeroSlider({ store }) {
                       {/* صورة أول لقطة دائمة خلف الفيديو → لا سواد أبداً */}
                       <img src={posterImg} alt="" aria-hidden="true" loading={idx === 0 ? 'eager' : 'lazy'} style={{ filter: 'brightness(0.6)' }} className="absolute inset-0 z-0 h-full w-full object-cover" />
                       <video
+                        ref={(el) => { vidRefs.current[idx] = el; }}
                         src={s.bgValue}
                         poster={posterImg}
-                        autoPlay
+                        autoPlay={idx === 0}
                         muted
                         loop
                         playsInline
-                        preload="auto"
+                        preload={idx === 0 ? 'auto' : 'metadata'}
                         onEnded={(e) => { e.currentTarget.currentTime = 0; e.currentTarget.play().catch(() => {}); }}
-                        onPause={(e) => { if (!document.hidden) e.currentTarget.play().catch(() => {}); }}
+                        onPause={(e) => { if (!document.hidden && iRef.current === idx && visRef.current) e.currentTarget.play().catch(() => {}); }}
                         onCanPlay={(e) => { e.currentTarget.style.opacity = '1'; }}
                         style={{ filter: 'brightness(0.6)', opacity: 0, transition: 'opacity .35s ease' }}
                         className="absolute inset-0 z-[1] h-full w-full object-cover"
