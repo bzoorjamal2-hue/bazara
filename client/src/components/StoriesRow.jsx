@@ -12,10 +12,13 @@ export default function StoriesRow() {
   const [seen, setSeen] = useState(() => getSeenSet());
   const [active, setActive] = useState(null); // المتجر المفتوح
 
+  // نجلب الستوريات وقت فراغ المتصفح — كانت تزاحم بيانات الرئيسية لحظة الإقلاع
   useEffect(() => {
     let on = true;
-    api.get('/public/stories').then((r) => { if (on) setFeed(r.data.feed || []); }).catch(() => {});
-    return () => { on = false; };
+    const load = () => api.get('/public/stories').then((r) => { if (on) setFeed(r.data.feed || []); }).catch(() => {});
+    const ric = window.requestIdleCallback;
+    const id = ric ? ric(load, { timeout: 2500 }) : setTimeout(load, 600);
+    return () => { on = false; if (ric && window.cancelIdleCallback) window.cancelIdleCallback(id); else clearTimeout(id); };
   }, []);
 
   const onSeen = (id) => { markSeen(id); setSeen(getSeenSet()); };

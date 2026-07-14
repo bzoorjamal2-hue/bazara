@@ -6,6 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute.jsx';
 import RequireSubscription from './components/RequireSubscription.jsx';
 import Spinner from './components/Spinner.jsx';
 import Home from './pages/Home.jsx'; // الصفحة الرئيسية تبقى فورية (أول ما يفتح الزائر)
+import Search from './pages/Search.jsx'; // البحث يفتح من الهيدر مباشرة — ضمن الحزمة الأساسية ليفتح فورياً بلا وميض تحميل
 import AppWelcome from './components/AppWelcome.jsx';
 import Splash from './components/Splash.jsx';
 import { isStandalone, hasStoredToken } from './utils/pwa.js';
@@ -41,7 +42,6 @@ const CategoryPage = lazy(() => import('./pages/CategoryPage.jsx'));
 const Categories = lazy(() => import('./pages/Categories.jsx'));
 const ProductDetails = lazy(() => import('./pages/ProductDetails.jsx'));
 const Wishlist = lazy(() => import('./pages/Wishlist.jsx'));
-const Search = lazy(() => import('./pages/Search.jsx'));
 const Offers = lazy(() => import('./pages/Offers.jsx'));
 const Reels = lazy(() => import('./pages/Reels.jsx'));
 const Track = lazy(() => import('./pages/Track.jsx'));
@@ -127,7 +127,6 @@ function AnimatedRoutes() {
       import('./pages/Categories.jsx');
       import('./pages/CategoryPage.jsx');
       import('./pages/Wishlist.jsx');
-      import('./pages/Search.jsx');
     };
     const ric = window.requestIdleCallback;
     const id = ric ? ric(warm) : setTimeout(warm, 1200);

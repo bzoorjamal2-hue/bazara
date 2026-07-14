@@ -237,13 +237,23 @@ function HomeHero({ banners = [] }) {
     io.observe(el);
     return () => io.disconnect();
   }, []);
+  // لا نبدأ تنزيل/فك تشفير الفيديو أثناء إقلاع الصفحة (كان يزاحم الأكواد والبيانات
+  // فيتقطّع الفتح) — البوستر ظاهر فوراً، والفيديو يبدأ بعد اكتمال التحميل بلحظة
+  const [videoReady, setVideoReady] = useState(false);
+  useEffect(() => {
+    let id;
+    const start = () => { id = setTimeout(() => setVideoReady(true), 250); };
+    if (document.readyState === 'complete') start();
+    else window.addEventListener('load', start, { once: true });
+    return () => { clearTimeout(id); window.removeEventListener('load', start); };
+  }, []);
   useEffect(() => {
     Object.entries(vidRefs.current).forEach(([idx, v]) => {
       if (!v) return;
-      if (Number(idx) === i && heroVisible && !document.hidden) v.play().catch(() => {});
+      if (Number(idx) === i && heroVisible && videoReady && !document.hidden) v.play().catch(() => {});
       else v.pause();
     });
-  }, [i, heroVisible]);
+  }, [i, heroVisible, videoReady]);
 
   const go = (n) => setI(((n % len) + len) % len);
 
@@ -340,8 +350,8 @@ function HomeHero({ banners = [] }) {
                           ref={(el) => { vidRefs.current[idx] = el; }}
                           src={s.bgValue}
                           poster={vPoster}
-                          autoPlay={idx === 0} muted loop playsInline
-                          preload={idx === 0 ? 'auto' : 'metadata'}
+                          muted loop playsInline
+                          preload="metadata"
                           onEnded={(e) => { e.currentTarget.currentTime = 0; e.currentTarget.play().catch(() => {}); }}
                           onPause={(e) => { if (!document.hidden && iRef.current === idx && visRef.current) e.currentTarget.play().catch(() => {}); }}
                           onCanPlay={(e) => { e.currentTarget.style.opacity = '1'; }}

@@ -37,7 +37,11 @@ export default function Search() {
   const inputRef = useRef(null);
   const timerRef = useRef(null);
 
-  useEffect(() => { inputRef.current?.focus(); }, []);
+  // نفتح الكيبورد بعد اكتمال حركة الانتقال (٠.٢ث) — التركيز الفوري كان يجعل الفتح "يتقطّع"
+  useEffect(() => {
+    const id = setTimeout(() => inputRef.current?.focus(), 280);
+    return () => clearTimeout(id);
+  }, []);
 
   // الكتابة تحدّث الرابط (replace حتى لا يتراكم التاريخ حرفاً حرفاً)
   const onType = (v) => {
