@@ -66,23 +66,33 @@
     <script>
       (function () {
         var KEY = 'bz_boot_recover';
-        window.addEventListener('load', function () {
-          setTimeout(function () {
-            if (!document.getElementById('boot-splash')) return; // أقلع بنجاح
-            var n = parseInt(sessionStorage.getItem(KEY) || '0', 10);
-            if (n >= 2) return; // جرّبنا مرتين → خطأ حقيقي، لا نكرّر
-            sessionStorage.setItem(KEY, String(n + 1));
-            if (n === 0) { location.reload(); return; } // محاولة بسيطة أولاً
-            var done = function () { location.reload(); };
-            var jobs = [];
-            try {
-              if (window.caches && caches.keys) jobs.push(caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }));
-              if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) jobs.push(navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }));
-              Promise.all(jobs).then(done, done);
-              setTimeout(done, 2500);
-            } catch (e) { done(); }
-          }, 12000);
-        });
+        var fired = false;
+        function attempt() {
+          if (fired) return;
+          if (!document.getElementById('boot-splash')) return; // أقلع بنجاح
+          fired = true;
+          var n = parseInt(sessionStorage.getItem(KEY) || '0', 10);
+          if (n >= 2) return; // جرّبنا مرتين → خطأ حقيقي، لا نكرّر
+          sessionStorage.setItem(KEY, String(n + 1));
+          if (n === 0) { location.reload(); return; } // محاولة بسيطة أولاً
+          var done = function () { location.reload(); };
+          var jobs = [];
+          try {
+            if (window.caches && caches.keys) jobs.push(caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }));
+            if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) jobs.push(navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }));
+            Promise.all(jobs).then(done, done);
+            setTimeout(done, 2500);
+          } catch (e) { done(); }
+        }
+        // فشل تحميل ملف أكواد أثناء الإقلاع (كاش ممسوح/نسخة قديمة) → تعافٍ فوري
+        // بدل انتظار المهلة كاملة — كان المستخدم يعلق ١٢ ثانية قبل أول محاولة.
+        window.addEventListener('error', function (e) {
+          var el = e.target;
+          if (el && (el.tagName === 'SCRIPT' || el.tagName === 'LINK') && String(el.src || el.href || '').indexOf('/assets/') !== -1) attempt();
+        }, true);
+        // مهلة أقصر بعد اكتمال التحميل + مهلة مطلقة احتياطية (لو علِق التحميل نفسه فلا يصل حدث load)
+        window.addEventListener('load', function () { setTimeout(attempt, 7000); });
+        setTimeout(attempt, 15000);
         // عند نجاح الإقلاع لاحقاً نصفّر العدّاد (يسمح بتعافٍ مستقبلي)
         var iv = setInterval(function () {
           if (!document.getElementById('boot-splash')) { sessionStorage.removeItem(KEY); clearInterval(iv); }

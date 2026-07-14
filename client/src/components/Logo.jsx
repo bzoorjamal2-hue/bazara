@@ -21,13 +21,15 @@ export default function Logo({ className = 'h-9 w-9' }) {
       <circle cx="50" cy="50" r="42" fill="none" stroke="url(#bazaraGold)" strokeWidth="1" opacity="0.75" />
 
       {/* B منقوشة: نسخة ذهبية مزاحة خلف الخمرية — إحساس نقش مطبعي فاخر */}
+      {/* وزن 700 (المُحمّل فعلاً من غوغل — 800 غير موجود فكان يصطنع/يتأخر) + سلسلة
+          بدائل serif نظامية فيظهر حرف B أنيقاً فوراً قبل وصول الخط، بلا "شعار يتأخر" */}
       <text
         x="51.8"
         y="53.8"
         textAnchor="middle"
         dominantBaseline="central"
-        fontFamily="'Playfair Display', serif"
-        fontWeight="800"
+        fontFamily="'Playfair Display', Georgia, 'Times New Roman', serif"
+        fontWeight="700"
         fontSize="46"
         fill="url(#bazaraGold)"
         opacity="0.85"
@@ -39,8 +41,8 @@ export default function Logo({ className = 'h-9 w-9' }) {
         y="52"
         textAnchor="middle"
         dominantBaseline="central"
-        fontFamily="'Playfair Display', serif"
-        fontWeight="800"
+        fontFamily="'Playfair Display', Georgia, 'Times New Roman', serif"
+        fontWeight="700"
         fontSize="46"
         fill="#4a3628"
       >

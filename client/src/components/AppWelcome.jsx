@@ -18,7 +18,8 @@ const MLink = motion.create(Link);
 export default function AppWelcome() {
   const { t } = useTranslation();
   return (
-    <div className="fixed inset-0 z-40 flex flex-col overflow-hidden bg-wine-dark text-cream">
+    // تلاشٍ ناعم واحد للشاشة كلها — يلغي "القطعة" الحادة من سبلاش الإقلاع الكريمي للبنّي
+    <div className="animate-fade-in fixed inset-0 z-40 flex flex-col overflow-hidden bg-wine-dark text-cream">
       {/* خلفية متدرّجة فاخرة + توهّجات متحرّكة */}
       <div
         className="pointer-events-none absolute inset-0"
