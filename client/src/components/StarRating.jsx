@@ -18,13 +18,13 @@ export default function StarRating({ value = 0, onChange, size = 'text-base', co
             onMouseEnter={() => setHover(n)}
             onMouseLeave={() => setHover(0)}
             onClick={() => onChange(n)}
-            className={`px-0.5 transition ${filled ? 'text-gold-400' : 'text-stone-600'} hover:scale-110`}
+            className={`px-0.5 transition ${filled ? 'star-on' : 'star-off'} hover:scale-110`}
             aria-label={`${n} stars`}
           >
             ★
           </button>
         ) : (
-          <span key={n} className={filled ? 'text-gold-400' : 'text-stone-600'}>
+          <span key={n} className={filled ? 'star-on' : 'star-off'}>
             ★
           </span>
         );

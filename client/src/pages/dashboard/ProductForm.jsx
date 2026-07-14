@@ -8,6 +8,7 @@ import Select from '../../components/Select.jsx';
 import useScrollLock from '../../hooks/useScrollLock.js';
 import { XIcon, VideoIcon, ClockIcon, PaletteIcon, CameraIcon, StarIcon } from '../../components/icons.jsx';
 import { SIZES, sizeLabel } from '../../utils/sizes.js';
+import { colorToCss } from '../../utils/colorDot.js';
 
 const CATEGORIES = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
 const EMPTY = {
@@ -235,7 +236,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
                     <div key={c} className="rounded-xl border border-gold-400/15 bg-black/20 p-3">
                       <div className="mb-2 flex items-center justify-between">
                         <span className="flex items-center gap-2 font-bold text-gold-100">
-                          <span className="h-3.5 w-3.5 rounded-full border border-cream/40" style={{ background: c }} />
+                          <span className="h-4 w-4 shrink-0 rounded-full" style={{ background: colorToCss(c) || 'transparent', boxShadow: '0 0 0 1px rgba(244,237,226,0.45), inset 0 0 0 1px rgba(0,0,0,0.2)' }} />
                           {c}
                         </span>
                         <button type="button" onClick={() => removeColorVariant(c)} className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-stone-400 hover:text-red-300"><XIcon className="h-3.5 w-3.5" /> {t('common.delete')}</button>

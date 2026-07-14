@@ -10,6 +10,7 @@ import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
 import { flyToCart } from '../utils/flyToCart.js';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { sizeLabel } from '../utils/sizes.js';
+import { colorToCss } from '../utils/colorDot.js';
 import SizeGuideModal from './SizeGuideModal.jsx';
 import CloseButton from './CloseButton.jsx';
 
@@ -152,16 +153,24 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
             <div className="mt-4">
               <p className="mb-1.5 text-sm font-semibold text-stone-700">{t('dashboard.product.color')}</p>
               <div className="flex flex-wrap gap-2">
-                {colors.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => { setColor(c); if (hasColorStock) setSize(''); setErr(''); }}
-                    className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-semibold transition ${color === c ? 'border-wine bg-wine text-cream' : 'border-wine/25 text-wine hover:bg-wine/5'}`}
-                  >
-                    <span className="h-3 w-3 rounded-full border border-current/40" style={{ background: c }} />
-                    {c}
-                  </button>
-                ))}
+                {colors.map((c) => {
+                  const css = colorToCss(c);
+                  return (
+                    <button
+                      key={c}
+                      onClick={() => { setColor(c); if (hasColorStock) setSize(''); setErr(''); }}
+                      className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-semibold transition ${color === c ? 'border-wine bg-wine text-cream' : 'border-wine/25 text-wine hover:bg-wine/5'}`}
+                    >
+                      <span
+                        className="h-4 w-4 shrink-0 rounded-full"
+                        style={css
+                          ? { background: css, boxShadow: '0 0 0 1.5px rgba(255,255,255,0.55), inset 0 0 0 1px rgba(0,0,0,0.15)' }
+                          : { border: '1.5px solid currentColor', opacity: 0.45 }}
+                      />
+                      {c}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

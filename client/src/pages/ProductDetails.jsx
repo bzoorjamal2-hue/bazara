@@ -13,6 +13,7 @@ import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
 import { pushRecent, getRecent } from '../utils/recentlyViewed.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { sizeLabel } from '../utils/sizes.js';
+import { colorToCss } from '../utils/colorDot.js';
 import Countdown from '../components/Countdown.jsx';
 import { HeartIcon, BagIcon, CartIcon, BellIcon, SparkleIcon, FireIcon, HandIcon } from '../components/icons.jsx';
 import { goBack } from '../utils/nav.js';
@@ -81,7 +82,11 @@ export default function ProductDetails() {
         setCache(`product:${id}`, res.data); // للرجوع الفوري لاحقاً
         fetchRelated(p);
       })
-      .catch((err) => setError(getErrorMessage(err, t('errors.notFound'))));
+      .catch((err) => {
+        // لا نستبدل منتجاً معروضاً (من المخزّن) بصفحة خطأ بسبب تعثّر شبكة لحظي —
+        // الخطأ يظهر فقط إن لم يكن لدينا ما نعرضه أصلاً
+        if (!getCache(`product:${id}`)?.product) setError(getErrorMessage(err, t('errors.notFound')));
+      });
   };
 
   // منتجات من نفس المتجر: "قد يعجبك" (نفس الفئة) + "أكملي إطلالتك" (فئة مختلفة)
@@ -378,17 +383,26 @@ export default function ProductDetails() {
             <div className="mt-6">
               <p className="mb-2 text-sm font-semibold text-stone-300">{t('product.selectColor')}</p>
               <div className="flex flex-wrap gap-2">
-                {colors.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => { setSelColor(c); if (hasColorStock) setSelSize(''); setPickErr(''); setActive(0); }}
-                    className={`flex items-center gap-2 ${chipCls(selColor === c)}`}
-                  >
-                    <span className="h-3.5 w-3.5 rounded-full border border-current/40" style={{ background: c }} />
-                    {c}
-                  </button>
-                ))}
+                {colors.map((c) => {
+                  // دائرة بلون اللون الفعلي (الاسم العربي يُترجم لدرجة CSS) — الاسم المجهول يظهر بدائرة محايدة
+                  const css = colorToCss(c);
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => { setSelColor(c); if (hasColorStock) setSelSize(''); setPickErr(''); setActive(0); }}
+                      className={`flex items-center gap-2 ${chipCls(selColor === c)}`}
+                    >
+                      <span
+                        className="h-5 w-5 shrink-0 rounded-full"
+                        style={css
+                          ? { background: css, boxShadow: '0 0 0 1.5px rgba(255,255,255,0.55), inset 0 0 0 1px rgba(0,0,0,0.15)' }
+                          : { border: '1.5px solid currentColor', opacity: 0.45 }}
+                      />
+                      {c}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
