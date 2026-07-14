@@ -924,7 +924,7 @@ function HeroSlider({ store }) {
                           <img src={store.logoUrl} alt={store.name} className="mx-auto mb-4 h-20 w-20 rounded-2xl border-2 border-cream/30 object-cover shadow-lg sm:h-24 sm:w-24" />
                         )}
                         <h1 className="font-display text-3xl font-extrabold text-cream sm:text-5xl">{store.name}</h1>
-                        <p className="mt-3 font-display text-lg text-cream/90 sm:text-2xl">أناقة .. حشمة .. تميز</p>
+                        <p className="mt-3 font-display text-lg text-cream/90 sm:text-2xl">أناقة · حشمة · تميّز</p>
                         <p className="mt-1 text-xs tracking-[0.25em] text-cream/55 sm:text-sm">ELEGANCE · MODESTY · DISTINCTION</p>
                       </>
                     ) : (

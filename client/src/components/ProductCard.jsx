@@ -10,6 +10,7 @@ import Countdown from './Countdown.jsx';
 import { HeartIcon, CartIcon, XIcon, StarIcon } from './icons.jsx';
 import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
 import { flyToCart } from '../utils/flyToCart.js';
+import { productColorDots } from '../utils/colorDot.js';
 import QuickViewModal from './QuickViewModal.jsx';
 
 
@@ -25,6 +26,9 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
   const { has, toggle } = useWishlist();
   const imgRef = useRef(null);
   const [quickOpen, setQuickOpen] = useState(false);
+  // ظهور ناعم للصورة: هيكل لامع ريثما تُحمّل ثم تتلاشى للداخل (بلا "طفرة")
+  const [imgLoaded, setImgLoaded] = useState(false);
+  useEffect(() => { if (imgRef.current?.complete) setImgLoaded(true); }, []);
   const [hovering, setHovering] = useState(false); // كمبيوتر: معاينة فيديو عند مرور الماوس
   const [showVideo, setShowVideo] = useState(false); // جوال: ضغطة مطوّلة → فيديو بالصوت
   const pressTimer = useRef(null);
@@ -49,6 +53,8 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
   const discountPct = hasDiscount ? Math.round((1 - product.price / product.oldPrice) * 100) : 0;
   const liked = has(product.id);
   const isNew = product.createdAt && Date.now() - new Date(product.createdAt).getTime() < 14 * 86400000;
+  // نقاط الألوان المتوفرة (تظهر فقط عند لونين أو أكثر معروفَي الدرجة)
+  const colorDots = productColorDots(product);
 
   // هل للمنتج خيارات (مقاس/لون)؟ عندها نفتح النظرة السريعة لاختيارها بدل الإضافة المباشرة
   const hasOptions = Boolean((product.size && product.size.trim()) || (product.color && product.color.trim()));
@@ -106,14 +112,17 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
     >
       {/* تصميم editorial بوتيك: الصورة وحدها ببطاقة مدوّرة، والنص تحتها على خلفية الصفحة */}
       <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-ink-800 shadow-[0_14px_30px_-16px_rgba(46,33,24,0.45)] ring-1 ring-black/5 transition-shadow duration-300 group-hover:shadow-[0_22px_44px_-18px_rgba(46,33,24,0.55)]">
+        {/* هيكل لامع حتى تجهز الصورة — يُزال بعد التحميل (فلا يبقى أي أنيميشن يعمل) */}
+        {!imgLoaded && <div className="skeleton absolute inset-0" aria-hidden="true" />}
         <img
           ref={imgRef}
           src={cover}
           alt={product.name}
           loading="lazy"
           decoding="async"
-          onError={(e) => (e.currentTarget.src = PLACEHOLDER)}
-          className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-110 ${outOfStock ? 'opacity-50' : ''}`}
+          onLoad={() => setImgLoaded(true)}
+          onError={(e) => { e.currentTarget.src = PLACEHOLDER; setImgLoaded(true); }}
+          className={`h-full w-full object-cover transition-[transform,opacity] duration-500 group-hover:scale-110 ${outOfStock ? 'opacity-50' : imgLoaded ? 'opacity-100' : 'opacity-0'}`}
         />
 
         {/* شارات — ألوان بوتيك هادئة معتمة (بلا backdrop-blur: يسبّب تعليق تمرير على iOS مع كثرة البطاقات) */}
@@ -195,9 +204,32 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
           <span className="font-display text-lg font-bold text-wine">{t('common.currency')}{product.price}</span>
           {hasDiscount && <span className="strike text-xs text-stone-500">{t('common.currency')}{product.oldPrice}</span>}
         </div>
-        {/* عدّاد المبيعات — دليل اجتماعي خفيف (يظهر فقط عند وجود مبيعات) */}
-        {product.soldCount > 0 && (
-          <p className="mt-0.5 text-[11px] font-medium text-emerald-700">{t('product.soldCount', { count: product.soldCount })}</p>
+        {/* دليل اجتماعي (أسلوب المتاجر الكبرى): تقييم بنجمة + عدد المبيعات بسطر واحد */}
+        {(product.ratingCount > 0 || product.soldCount > 0) && (
+          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+            {product.ratingCount > 0 && (
+              <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-gold-200">
+                <StarIcon className="h-3 w-3" /> {product.ratingAvg} <span className="font-normal text-stone-500">({product.ratingCount})</span>
+              </span>
+            )}
+            {product.soldCount > 0 && (
+              <span className="text-[11px] font-medium text-emerald-700">{t('product.soldCount', { count: product.soldCount })}</span>
+            )}
+          </div>
+        )}
+        {/* نقاط الألوان المتوفرة — لمحة سريعة عن التشكيلة دون فتح المنتج */}
+        {colorDots.length >= 2 && (
+          <div className="mt-1.5 flex items-center gap-1.5">
+            {colorDots.slice(0, 4).map((d) => (
+              <span
+                key={d.name}
+                title={d.name}
+                className="h-3 w-3 rounded-full"
+                style={{ background: d.css, boxShadow: '0 0 0 1px rgba(255,255,255,0.4), inset 0 0 0 1px rgba(0,0,0,0.12)' }}
+              />
+            ))}
+            {colorDots.length > 4 && <span className="text-[10px] font-medium text-stone-500">+{colorDots.length - 4}</span>}
+          </div>
         )}
       </div>
     </Link>
