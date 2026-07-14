@@ -9,7 +9,7 @@ import ProductRail from '../components/ProductRail.jsx';
 import { getRecent } from '../utils/recentlyViewed.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
-import { GiftIcon, ForwardIcon, SearchIcon } from '../components/icons.jsx';
+import { GiftIcon, ForwardIcon } from '../components/icons.jsx';
 import CategoryGrid from '../components/CategoryGrid.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
 import StylistChat from '../components/StylistChat.jsx';
@@ -66,16 +66,9 @@ export default function Home() {
     <>
       <Seo title={t('app.name')} description={t('home.heroDesc')} />
 
-      {/* بحث شامل بالمنصّة — مدخل بأعلى الرئيسية (أسلوب تطبيقات التسوّق الكبرى) */}
-      <Link
-        to="/search"
-        className="mb-4 flex items-center gap-2.5 rounded-full border border-wine/15 bg-white px-4 py-3 text-sm text-stone-400 shadow-[0_6px_18px_-12px_rgba(94,70,54,0.35)] transition active:scale-[0.99]"
-      >
-        <SearchIcon className="h-[18px] w-[18px] shrink-0 text-wine/60" /> {t('searchPage.placeholder')}
-      </Link>
-
       {/* Hero — سلايدر يتحكّم به المدير. نعرض هيكل تحميل ريثما نعرف البانرات (بدل وميض
-          السلايدر الافتراضي القديم)، ونستخدم البانرات المحفوظة محلياً لظهورٍ فوري. */}
+          السلايدر الافتراضي القديم)، ونستخدم البانرات المحفوظة محلياً لظهورٍ فوري.
+          (مدخل البحث الشامل صار أيقونة داخل الهيدر — هيدر واحد بلا تكرار) */}
       {loading && !data && !(persistedBanners?.length) ? (
         <div className="skeleton h-[340px] rounded-3xl sm:h-[420px]" />
       ) : (

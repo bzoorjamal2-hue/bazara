@@ -7,7 +7,7 @@ import api from '../api/client.js';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import LanguageSwitcher from './LanguageSwitcher.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
-import { CartIcon, HeartIcon, MenuIcon, UserIcon } from './icons.jsx';
+import { CartIcon, HeartIcon, MenuIcon, UserIcon, SearchIcon } from './icons.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import NavBell from './NavBell.jsx';
 import CloseButton from './CloseButton.jsx';
@@ -148,13 +148,16 @@ export default function Navbar() {
   }, [menuOpen, user, store?.slug, subscription?.isAdmin]);
   useScrollLock(menuOpen); // تجميد الخلفية عند فتح قائمة الحساب
 
-  // عند التمرير: الشريط يلتصق بالأعلى بعرض كامل (بلا فراغ علوي) — وفوق يبقى طافياً
+  // عند التمرير: الشريط يلتصق بالأعلى بعرض كامل (بلا فراغ علوي) — وفوق يبقى طافياً.
+  // صف البحث تحت الشعار ينكمش عند النزول (زي هيدر متاجر المشتركين تماماً).
   useEffect(() => {
     let ticking = false;
     const onScroll = () => {
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(() => {
+        // قفل تمرير مفتوح (درج/نافذة)؟ لا نغيّر الحالة — وإلا "يقفز" الهيدر خلف الدرج
+        if (document.body.style.position === 'fixed') { ticking = false; return; }
         setScrolled((prev) => (prev ? window.scrollY > 10 : window.scrollY > 40));
         ticking = false;
       });
@@ -163,6 +166,9 @@ export default function Navbar() {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  // صف البحث الشامل يظهر بصفحات التسوّق فقط (لا داعي له داخل لوحة التحكم وما شابه)
+  const showSearchRow = !pathname.startsWith('/dashboard') && !pathname.startsWith('/subscribe') && !pathname.startsWith('/payment') && !pathname.startsWith('/search');
 
   // الشريط الخمري الفاخر على كل الموقع
   const standalone = isStandalone(); // داخل التطبيق المثبّت: الدخول من شاشة الترحيب فقط
@@ -202,7 +208,8 @@ export default function Navbar() {
         className={`app-navbar relative flex w-full justify-center px-3 py-2.5 transition-shadow duration-300 sm:px-6 ${scrolled ? 'shadow-md' : ''}`}
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.625rem)' }}
       >
-        <div className="relative flex h-12 w-full max-w-6xl items-center justify-between">
+        <div className="w-full max-w-6xl">
+        <div className="relative flex h-12 w-full items-center justify-between">
           {/* القائمة + الوضع الليلي — جهة البداية (اليمين في العربية، اليسار في الإنجليزية) */}
           <div className="flex items-center gap-1 sm:gap-1.5">
             <button
@@ -213,6 +220,12 @@ export default function Navbar() {
               <MenuIcon className="h-5 w-5" />
             </button>
             <ThemeToggle className="rounded-full text-wine hover:bg-wine/10" />
+            {/* أيقونة البحث تظهر فقط بالهيدر المدمج (بعد النزول) — وفوق تكون خانة البحث كاملة ظاهرة */}
+            {scrolled && showSearchRow && (
+              <Link to="/search" className="animate-fade-in rounded-full p-2 text-wine transition hover:bg-wine/10" title={t('searchPage.title')} aria-label={t('searchPage.title')}>
+                <SearchIcon className="h-[21px] w-[21px]" />
+              </Link>
+            )}
           </div>
 
           {/* الشعار بالنص (في المنتصف تماماً) */}
@@ -271,6 +284,19 @@ export default function Navbar() {
               </Link>
             )}
           </div>
+        </div>
+
+        {/* خانة البحث الشامل تحت الشعار — تنكمش بنعومة عند النزول (زي هيدر متاجر المشتركين) */}
+        {showSearchRow && (
+          <div className={`overflow-hidden transition-all duration-300 ease-out ${scrolled ? 'max-h-0 opacity-0' : 'max-h-14 pt-2 opacity-100'}`}>
+            <Link
+              to="/search"
+              className="flex items-center gap-2.5 rounded-full border border-wine/15 bg-white px-4 py-2.5 text-sm text-stone-400 shadow-[0_6px_18px_-12px_rgba(94,70,54,0.35)] transition active:scale-[0.99]"
+            >
+              <SearchIcon className="h-[18px] w-[18px] shrink-0 text-wine/60" /> {t('searchPage.placeholder')}
+            </Link>
+          </div>
+        )}
         </div>
       </nav>
 
