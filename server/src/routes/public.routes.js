@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { param } from 'express-validator';
-import { getHomeData, getStoreBySlug, getStoreCheckout, getProductById, getByCategory, getOffers, getReels, getStoriesFeed, addReview, trackOrders, trackStoreVisit, loyaltyPreview } from '../controllers/public.controller.js';
+import { getHomeData, getStoreBySlug, getStoreCheckout, getProductById, getByCategory, getOffers, getReels, getStoriesFeed, addReview, trackOrders, trackStoreVisit, loyaltyPreview, searchProducts } from '../controllers/public.controller.js';
 import { validateCoupon } from '../controllers/coupon.controller.js';
 import { createStockRequest } from '../controllers/stockRequest.controller.js';
 import { saveAbandoned } from '../controllers/abandoned.controller.js';
@@ -34,6 +34,7 @@ const assistantLimiter = rateLimit({
 
 // كاش ذاكرة قصير (30ث) للصفحات العامة كثيرة الزيارة — يخدمها فوراً بلا استعلام متكرّر
 router.get('/home', cacheGet(30), getHomeData);
+router.get('/search', cacheGet(15), searchProducts); // بحث شامل عبر المنصّة (كاش أقصر — استعلامات متنوعة)
 router.get('/category/:cat', cacheGet(30), getByCategory);
 router.get('/offers', cacheGet(30), getOffers);
 router.get('/reels', cacheGet(30), getReels);

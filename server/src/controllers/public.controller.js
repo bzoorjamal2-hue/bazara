@@ -333,6 +333,33 @@ export async function getByCategory(req, res, next) {
   }
 }
 
+// بحث شامل عبر كل المنصّة (أسلوب المتاجر الكبرى): منتجات بالاسم/الوصف/اللون + متاجر بالاسم
+export async function searchProducts(req, res, next) {
+  const q = String(req.query.q || '').trim().slice(0, 60);
+  if (q.length < 2) return res.json({ products: [], stores: [] });
+  try {
+    const active = activeStoreSql('u');
+    const like = `%${q}%`;
+    // تطابق الاسم يتقدّم على تطابق الوصف/اللون، ثم الأحدث
+    const r = await query(
+      `${PRODUCT_SELECT} WHERE ${active} AND (p.name ILIKE $1 OR p.description ILIKE $1 OR p.color ILIKE $1)
+       ORDER BY (p.name ILIKE $1) DESC, p.created_at DESC LIMIT 30`,
+      [like]
+    );
+    const sr = await query(
+      `SELECT s.slug, s.name, s.logo_url FROM stores s JOIN users u ON u.id = s.user_id
+       WHERE ${active} AND s.name ILIKE $1 ORDER BY s.created_at DESC LIMIT 4`,
+      [like]
+    );
+    res.json({
+      products: r.rows.map(mapProduct),
+      stores: sr.rows.map((s) => ({ slug: s.slug, name: s.name, logoUrl: s.logo_url || '' })),
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 // كل القطع المخفّضة عبر المتاجر الفعّالة (لصفحة "العروض")
 export async function getOffers(_req, res, next) {
   try {

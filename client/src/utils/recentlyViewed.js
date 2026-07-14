@@ -28,6 +28,7 @@ export function pushRecent(product) {
       imageUrl: productThumb(product),
       videoUrl: product.videoUrl || '', // ليظهر مؤشّر التشغيل في شريط "شاهدت مؤخراً"
       storeSlug: product.storeSlug || '',
+      category: product.category || '', // لريل "مقترحات لكِ" — نتعلّم ذوقها من فئات ما تشاهده
     };
     const list = getRecent().filter((p) => p.id !== product.id);
     list.unshift(item);

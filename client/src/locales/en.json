@@ -121,6 +121,16 @@
     "ok": "OK",
     "confirmTitle": "Confirm"
   },
+  "searchPage": {
+    "title": "Search",
+    "placeholder": "Search for a dress, abaya, store…",
+    "recent": "Recent searches",
+    "clear": "Clear all",
+    "stores": "Stores",
+    "results": "Results",
+    "noResults": "No results for “{{q}}” — try another word",
+    "tryCats": "Or browse by category"
+  },
   "offline": {
     "message": "No internet connection — only the home page is available"
   },
@@ -179,6 +189,7 @@
     "browseByCategory": "Browse by category",
     "deals": "Today's deals",
     "bestSellers": "Best sellers",
+    "forYou": "Picked for you",
     "promoTitle": "Delivery across Palestine · Cash on delivery",
     "promoSub": "Shop with confidence — easy exchange",
     "shopNow": "Shop now",

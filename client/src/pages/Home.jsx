@@ -9,7 +9,7 @@ import ProductRail from '../components/ProductRail.jsx';
 import { getRecent } from '../utils/recentlyViewed.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
-import { GiftIcon, ForwardIcon } from '../components/icons.jsx';
+import { GiftIcon, ForwardIcon, SearchIcon } from '../components/icons.jsx';
 import CategoryGrid from '../components/CategoryGrid.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
 import StylistChat from '../components/StylistChat.jsx';
@@ -24,6 +24,25 @@ export default function Home() {
   const [data, setData] = useState(() => getCache('home') || null);
   const [loading, setLoading] = useState(() => !getCache('home'));
   const recent = getRecent();
+
+  // "مقترحات لكِ": نتعلّم الفئة الأكثر مشاهدة من تصفّحها ونجلب منتجاتها (تخصيص محلي بلا حساب)
+  const [forYou, setForYou] = useState(() => getCache('forYou') || []);
+  useEffect(() => {
+    const BUILTIN = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
+    const counts = {};
+    recent.forEach((r) => { if (r.category) counts[r.category] = (counts[r.category] || 0) + 1; });
+    const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
+    if (!top || !BUILTIN.includes(top)) return;
+    const seen = new Set(recent.map((r) => r.id));
+    api.get(`/public/category/${top}`)
+      .then((r) => {
+        const list = (r.data.products || []).filter((p) => !seen.has(p.id)).slice(0, 10);
+        setForYou(list);
+        setCache('forYou', list);
+      })
+      .catch(() => { /* الريل اختياري — لا يكسر الرئيسية */ });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // بانرات الصفحة الرئيسية محفوظة محلياً → تظهر فوراً عند الفتح (لا وميض للسلايدر القديم)
   const persistedBanners = useMemo(() => {
     try { return JSON.parse(localStorage.getItem('bz_home_banners') || 'null'); } catch { return null; }
@@ -46,6 +65,14 @@ export default function Home() {
   return (
     <>
       <Seo title={t('app.name')} description={t('home.heroDesc')} />
+
+      {/* بحث شامل بالمنصّة — مدخل بأعلى الرئيسية (أسلوب تطبيقات التسوّق الكبرى) */}
+      <Link
+        to="/search"
+        className="mb-4 flex items-center gap-2.5 rounded-full border border-wine/15 bg-white px-4 py-3 text-sm text-stone-400 shadow-[0_6px_18px_-12px_rgba(94,70,54,0.35)] transition active:scale-[0.99]"
+      >
+        <SearchIcon className="h-[18px] w-[18px] shrink-0 text-wine/60" /> {t('searchPage.placeholder')}
+      </Link>
 
       {/* Hero — سلايدر يتحكّم به المدير. نعرض هيكل تحميل ريثما نعرف البانرات (بدل وميض
           السلايدر الافتراضي القديم)، ونستخدم البانرات المحفوظة محلياً لظهورٍ فوري. */}
@@ -85,6 +112,9 @@ export default function Home() {
 
       {/* الأكثر مبيعاً — إثبات اجتماعي حقيقي من المبيعات المؤكّدة */}
       {data?.bestSellers?.length > 0 && <ProductRail title={`🔥 ${t('home.bestSellers')}`} products={data.bestSellers} />}
+
+      {/* مقترحات لكِ — تخصيص محلي من فئات ما شاهدته (يظهر فقط عند وجود ما يكفي) */}
+      {forYou.length >= 3 && <ProductRail title={`✨ ${t('home.forYou')}`} products={forYou} />}
 
       {/* شاهدت مؤخراً */}
       {recent.length > 0 && <ProductRail title={t('product.recentlyViewed')} products={recent} />}

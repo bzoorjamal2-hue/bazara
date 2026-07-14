@@ -41,6 +41,7 @@ const CategoryPage = lazy(() => import('./pages/CategoryPage.jsx'));
 const Categories = lazy(() => import('./pages/Categories.jsx'));
 const ProductDetails = lazy(() => import('./pages/ProductDetails.jsx'));
 const Wishlist = lazy(() => import('./pages/Wishlist.jsx'));
+const Search = lazy(() => import('./pages/Search.jsx'));
 const Offers = lazy(() => import('./pages/Offers.jsx'));
 const Reels = lazy(() => import('./pages/Reels.jsx'));
 const Track = lazy(() => import('./pages/Track.jsx'));
@@ -126,6 +127,7 @@ function AnimatedRoutes() {
       import('./pages/Categories.jsx');
       import('./pages/CategoryPage.jsx');
       import('./pages/Wishlist.jsx');
+      import('./pages/Search.jsx');
     };
     const ric = window.requestIdleCallback;
     const id = ric ? ric(warm) : setTimeout(warm, 1200);
@@ -145,6 +147,7 @@ function AnimatedRoutes() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset" element={<ResetPassword />} />
           <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/search" element={<Search />} />
           <Route path="/offers" element={<Offers />} />
           <Route path="/reels" element={<Reels />} />
           <Route path="/track" element={<Track />} />
