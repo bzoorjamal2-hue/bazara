@@ -167,8 +167,11 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // صف البحث الشامل يظهر بصفحات التسوّق فقط (لا داعي له داخل لوحة التحكم وما شابه)
-  const showSearchRow = !pathname.startsWith('/dashboard') && !pathname.startsWith('/subscribe') && !pathname.startsWith('/payment') && !pathname.startsWith('/search');
+  // صف البحث الشامل يظهر بصفحات التصفّح فقط (قائمة بيضاء) — كان يظهر بأماكن خاطئة
+  // كالريلز وصفحة المنتج ويغطّي المحتوى أو يزاحمه
+  const showSearchRow =
+    pathname === '/' || pathname === '/shop' || pathname === '/categories' ||
+    pathname.startsWith('/category/') || pathname === '/offers';
 
   // الشريط الخمري الفاخر على كل الموقع
   const standalone = isStandalone(); // داخل التطبيق المثبّت: الدخول من شاشة الترحيب فقط

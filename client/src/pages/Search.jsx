@@ -30,6 +30,9 @@ export default function Search() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const q = (params.get('q') || '').trim();
+  // نطاق متجر مشترِكة (?store=slug): نفس تجربة البحث الشامل لكن نتائج هذا المتجر فقط
+  const storeScope = (params.get('store') || '').trim();
+  const withScope = (obj) => (storeScope ? { ...obj, store: storeScope } : obj);
   const [input, setInput] = useState(q);
   const [results, setResults] = useState(null); // { products, stores } | null = لم يبحث بعد
   const [busy, setBusy] = useState(false);
@@ -48,7 +51,7 @@ export default function Search() {
     setInput(v);
     clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
-      setParams(v.trim() ? { q: v.trim() } : {}, { replace: true });
+      setParams(v.trim() ? withScope({ q: v.trim() }) : withScope({}), { replace: true });
     }, 350);
   };
 
@@ -57,7 +60,7 @@ export default function Search() {
     if (q.length < 2) { setResults(null); setBusy(false); return undefined; }
     let alive = true;
     setBusy(true);
-    api.get(`/public/search?q=${encodeURIComponent(q)}`)
+    api.get(`/public/search?q=${encodeURIComponent(q)}${storeScope ? `&store=${encodeURIComponent(storeScope)}` : ''}`)
       .then((r) => {
         if (!alive) return;
         setResults({ products: r.data.products || [], stores: r.data.stores || [] });
@@ -72,7 +75,9 @@ export default function Search() {
   }, [q]);
 
   const clearRecents = () => { try { localStorage.removeItem(RECENT_KEY); } catch { /* تجاهل */ } setRecents([]); };
-  const searchFor = (term) => { setInput(term); setParams({ q: term }); };
+  const searchFor = (term) => { setInput(term); setParams(withScope({ q: term })); };
+  // شرائح الفئات تتبع النطاق: داخل متجر → فئة المتجر نفسه (CategoryPage يدعم ?store=)
+  const catLink = (c) => `/category/${c}${storeScope ? `?store=${encodeURIComponent(storeScope)}` : ''}`;
 
   return (
     <div className="mx-auto w-full max-w-5xl">
@@ -82,7 +87,7 @@ export default function Search() {
       <div className="flex items-center gap-2">
         <button
           type="button"
-          onClick={() => goBack(navigate, '/shop')}
+          onClick={() => goBack(navigate, storeScope ? `/store/${storeScope}` : '/shop')}
           aria-label={t('common.back')}
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-wine transition hover:bg-wine/10"
         >
@@ -103,7 +108,7 @@ export default function Search() {
           {input && (
             <button
               type="button"
-              onClick={() => { setInput(''); setParams({}, { replace: true }); inputRef.current?.focus(); }}
+              onClick={() => { setInput(''); setParams(withScope({}), { replace: true }); inputRef.current?.focus(); }}
               aria-label={t('common.remove')}
               className="absolute end-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-wine/10 text-wine transition hover:bg-wine/20"
             >
@@ -136,7 +141,7 @@ export default function Search() {
             <h2 className="mb-2.5 text-sm font-bold text-stone-300">{t('searchPage.tryCats')}</h2>
             <div className="flex flex-wrap gap-2">
               {CATS.map((c) => (
-                <Link key={c} to={`/category/${c}`}
+                <Link key={c} to={catLink(c)}
                   className="rounded-full border border-gold-400/30 bg-gold-400/10 px-3.5 py-1.5 text-sm font-semibold text-gold-200 transition hover:border-gold-400/60">
                   {t(`categories.${c}`)}
                 </Link>
@@ -184,7 +189,7 @@ export default function Search() {
                   <p className="mt-3 font-semibold text-stone-200">{t('searchPage.noResults', { q })}</p>
                   <div className="mt-5 flex flex-wrap justify-center gap-2">
                     {CATS.slice(0, 4).map((c) => (
-                      <Link key={c} to={`/category/${c}`}
+                      <Link key={c} to={catLink(c)}
                         className="rounded-full border border-gold-400/30 bg-gold-400/10 px-3.5 py-1.5 text-sm font-semibold text-gold-200">
                         {t(`categories.${c}`)}
                       </Link>

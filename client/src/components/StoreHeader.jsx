@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
@@ -38,6 +38,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
   const { count, setOpen } = useCart();
   const { count: wishCount, setOpen: setWishOpen } = useWishlist();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [drawer, setDrawer] = useState(false);
   const [focus, setFocus] = useState(false);
 
@@ -128,13 +129,14 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
             <span className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-wine/50">
               <SearchIcon className="h-5 w-5" />
             </span>
+            {/* نفس شكل الخانة تماماً — لكن الضغط يفتح صفحة البحث الشاملة بنطاق هذا المتجر
+                (تجربة أقوى: بحث بالاسم/الوصف/اللون + سابقات + حالات أنيقة) */}
             <input
               value={q}
-              onChange={(e) => setQ(e.target.value)}
-              onFocus={() => setFocus(true)}
-              onBlur={() => setTimeout(() => setFocus(false), 150)}
+              readOnly
+              onFocus={(e) => { e.currentTarget.blur(); navigate(`/search?store=${encodeURIComponent(store.slug)}`); }}
               placeholder={t('store.searchPlaceholder')}
-              className="w-full rounded-full border-0 bg-white py-2 pe-4 ps-10 text-[#2b2b2b] placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-cream/50"
+              className="w-full cursor-pointer rounded-full border-0 bg-white py-2 pe-4 ps-10 text-[#2b2b2b] placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-cream/50"
             />
 
             {/* اقتراحات البحث الفوري */}

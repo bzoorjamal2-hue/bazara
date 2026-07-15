@@ -22,7 +22,9 @@ export default function Layout({ children }) {
   const isAppWelcome = pathname === '/' && isStandalone();
   // صفحات الحساب — تصميم بملء الشاشة (هيرو + نموذج) بلا شريط/فوتر
   const isAuthFull = ['/login', '/register', '/forgot-password', '/reset'].includes(pathname);
-  const hideChrome = isStorePage || isAppWelcome || isAuthFull;
+  // الريلز = ملء الشاشة (كتيك توك) — الهيدر كان يظهر فوقها ويغطي المحتوى
+  const isReels = pathname === '/reels';
+  const hideChrome = isStorePage || isAppWelcome || isAuthFull || isReels;
   // شريط التنقّل السفلي يظهر داخل التطبيق المثبّت على كل الصفحات (بما فيها المتجر) عدا الترحيب/الدخول
   // الشريط السفلي يظهر على كل الأجهزة (جوال/آيباد/كمبيوتر) عدا شاشات الترحيب/الدخول
   const showBottomNav = !isAppWelcome && !isAuthFull;
