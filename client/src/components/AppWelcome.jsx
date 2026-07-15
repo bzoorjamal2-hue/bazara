@@ -50,16 +50,22 @@ export default function AppWelcome() {
           />
           {/* هالة ثابتة خلف الشعار */}
           <div className="absolute inset-0 -z-10 rounded-full bg-cream/15 opacity-60 blur-2xl" />
-          {/* طفو ناعم دائم — CSS transform */}
-          <div className="bz-float">
-            <Logo className="h-28 w-28 drop-shadow-2xl sm:h-32 sm:w-32" />
+          {/* دخول الشعار لمرّة واحدة (لفّة + تكبير) ثم طفو ناعم دائم — كلاهما CSS transform */}
+          <div className="bz-logo-in">
+            <div className="bz-float">
+              <Logo className="h-28 w-28 drop-shadow-2xl sm:h-32 sm:w-32" />
+            </div>
           </div>
         </div>
 
-        {/* اسم Bazara بتدرّج ذهبي ثابت (بلا لمعة تعيد رسم النص كل إطار) */}
+        {/* اسم Bazara: خط serif فخم ثابت (Playfair ثم Georgia النظامي) مستقلّ عن لغة
+            الصفحة — نتجاوز قاعدة html[lang='ar'] .font-display التي كانت تفرض Cairo
+            وتسبّب "تبديل الخط". Georgia متوفّر دائماً فلا قفزة حتى قبل تحميل Playfair.
+            وتدرّج ذهبي ثابت (بلا لمعة تعيد رسم النص كل إطار). */}
         <h1
-          className="mt-8 font-display text-5xl font-extrabold tracking-wide sm:text-6xl"
+          className="mt-8 text-5xl font-extrabold tracking-wide sm:text-6xl"
           style={{
+            fontFamily: "'Playfair Display', Georgia, 'Times New Roman', serif",
             background: 'linear-gradient(160deg, #f7ecd2 0%, #d4af37 55%, #b8932c 100%)',
             WebkitBackgroundClip: 'text',
             backgroundClip: 'text',
