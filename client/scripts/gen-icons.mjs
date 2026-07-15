@@ -6,7 +6,11 @@ import { readFileSync } from 'node:fs';
 
 const svg = readFileSync(new URL('./icon-master.svg', import.meta.url));
 const out = (name) => `public/${name}`; // يُشغَّل من مجلد client
-const MAROON = '#5C1A2E';
+const BROWN = '#5e4636'; // بني الخلفية — يملأ الزوايا أيضاً (كان خمري #5C1A2E فتظهر زوايا خمرية)
+
+// أيقونات التطبيق: مربّع بنّي كامل بلا زوايا دائرية داخلية (النظام يدوّرها) —
+// نستبدل rx="20" بـ0 فلا تبقى زوايا شفّافة تُملأ بلون مختلف. + تسطيح بنّي احتياطاً.
+const svgSquare = Buffer.from(svg.toString('utf8').replace(/rx="20"/g, 'rx="0"'));
 
 // أيقونات بخلفية صلبة (للأجهزة التي تدوّر الزوايا تلقائياً مثل iOS/Android)
 const solid = [
@@ -22,7 +26,7 @@ const favicons = [
 ];
 
 for (const [name, size] of solid) {
-  await sharp(svg, { density: 384 }).resize(size, size).flatten({ background: MAROON }).png().toFile(out(name));
+  await sharp(svgSquare, { density: 384 }).resize(size, size).flatten({ background: BROWN }).png().toFile(out(name));
   console.log('icon:', name, size);
 }
 for (const [name, size] of favicons) {
