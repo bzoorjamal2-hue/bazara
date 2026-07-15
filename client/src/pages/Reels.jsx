@@ -181,6 +181,8 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   const vidRef = useRef(null);
   const tapRef = useRef({ t: 0, timer: null });
   const holdRef = useRef({ timer: null, held: false, x: 0, y: 0, moved: false, swallow: false });
+  const activeRef = useRef(isActive);
+  activeRef.current = isActive;
   const poster = cldVideoPoster(p.videoUrl) || p.imageUrl || '';
 
   const sizes = (p.size || '').split(',').map((s) => s.trim()).filter(Boolean);
@@ -211,6 +213,23 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   }, [isActive]);
 
   useEffect(() => { if (vidRef.current) vidRef.current.muted = muted; }, [muted]);
+
+  // إيقاف الفيديو عند قفل الشاشة/تصغير التطبيق، وإيقافه وإفراغ مصدره عند مغادرة الريلز.
+  // كان صوت الريل يظل يعمل بمشغّل الوسائط على شاشة القفل (iOS PWA) وكأنه "معلّق".
+  useEffect(() => {
+    const onVis = () => {
+      const v = vidRef.current;
+      if (!v) return;
+      if (document.hidden) v.pause();
+      else if (activeRef.current && !holdRef.current.held) v.play().catch(() => {});
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      document.removeEventListener('visibilitychange', onVis);
+      const v = vidRef.current;
+      if (v) { try { v.pause(); v.removeAttribute('src'); v.load(); } catch { /* تجاهل */ } }
+    };
+  }, []);
 
   const onTimeUpdate = () => {
     const v = vidRef.current;
