@@ -107,6 +107,19 @@ html.dark .theme-pub .star-off { color: rgba(244, 237, 226, 0.28); }
 }
 .bz-shine { animation: bz-shine 5.5s linear infinite; }
 
+/* حركات شاشة الترحيب — CSS خالص على الـGPU (transform/opacity) بدل حلقات
+   framer-motion الجافاسكربتية التي كانت تُشغّل الخيط الرئيسي باستمرار = تعليق.
+   والاسم صار بتدرّج ذهبي ثابت (بلا لمعة تعيد رسم النص كل إطار). */
+@keyframes bz-spin360 { to { transform: rotate(360deg); } }
+@keyframes bz-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes bz-glowpulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 0.72; } }
+.bz-ring { animation: bz-spin360 16s linear infinite; will-change: transform; }
+.bz-float { animation: bz-float 4s ease-in-out infinite; will-change: transform; }
+.bz-glowpulse { animation: bz-glowpulse 3s ease-in-out infinite; will-change: opacity; }
+@media (prefers-reduced-motion: reduce) {
+  .bz-ring, .bz-float, .bz-glowpulse { animation: none; }
+}
+
 /* خلفية فاخرة سوداء بلمسات ذهبية ناعمة (غير مزدحمة) */
 .app-bg {
   position: relative;

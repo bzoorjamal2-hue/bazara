@@ -216,6 +216,15 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
     const v = vidRef.current;
     if (v && v.duration) setProgress((v.currentTime / v.duration) * 100);
   };
+  // الفيديو النشط يجب أن يظل يعمل دائماً. أي توقّف غير متعمّد (سباق أثناء التمرير،
+  // تعليق iOS، عودة من الخلفية) يُستأنف فوراً — هذا يصلح "الفيديو بيقطع وما بيشتغل
+  // إلا بكبسة مطوّلة": لم تكن هناك إعادة تشغيل بعد انتهاء مؤقّتات التفعيل الأولى.
+  const ensurePlaying = () => {
+    const v = vidRef.current;
+    if (v && isActive && !holdRef.current.held && !document.hidden && v.paused && !v.ended) {
+      v.play().catch(() => {});
+    }
+  };
   const onVidEnded = () => {
     if (isLast) { const v = vidRef.current; if (v) { v.currentTime = 0; v.play().catch(() => {}); } }
     else onEnded();
@@ -262,7 +271,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
     if (holdRef.current.held) {
       holdRef.current.swallow = true; // نبلع النقرة القادمة (كانت ضغطاً مطوّلاً لا نقرة)
       holdRef.current.held = false;
-      if (resume && isActive) vidRef.current?.play().catch(() => {});
+      if (resume) ensurePlaying();
     }
   };
   const onUp = () => endHold(true);
@@ -315,9 +324,10 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
             preload="auto"
             onTimeUpdate={onTimeUpdate}
             onEnded={onVidEnded}
+            onPause={ensurePlaying}
             onWaiting={() => setBuffering(true)}
             onPlaying={() => setBuffering(false)}
-            onCanPlay={() => setBuffering(false)}
+            onCanPlay={() => { setBuffering(false); ensurePlaying(); }}
             onError={() => setErrored(true)}
             style={{ touchAction: 'pan-y' }}
             className="h-full w-full object-cover"
