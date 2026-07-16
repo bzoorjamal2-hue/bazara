@@ -1,3 +1,21 @@
+// الخطوط مستضافة داخل التطبيق (بدل شبكة جوجل): تُخزَّن مع ملفات التطبيق في الـ Service Worker
+// فتظهر النصوص بالخط الفخم فوراً من أول لحظة — بلا اختفاء نص ولا "تبديل خط" ولا انتظار شبكة.
+// نستورد المجموعات المطلوبة فقط (عربي للعربي + لاتيني للإنجليزي) ليبقى الحجم خفيفاً.
+import '@fontsource/tajawal/arabic-400.css';
+import '@fontsource/tajawal/arabic-700.css';
+import '@fontsource/tajawal/latin-400.css';
+import '@fontsource/tajawal/latin-700.css';
+import '@fontsource/cairo/arabic-400.css';
+import '@fontsource/cairo/arabic-700.css';
+import '@fontsource/el-messiri/arabic-600.css';
+import '@fontsource/el-messiri/arabic-700.css';
+import '@fontsource/el-messiri/latin-600.css';
+import '@fontsource/el-messiri/latin-700.css';
+import '@fontsource/inter/latin-400.css';
+import '@fontsource/inter/latin-600.css';
+import '@fontsource/inter/latin-700.css';
+import '@fontsource/playfair-display/latin-600.css';
+import '@fontsource/playfair-display/latin-700.css';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';

@@ -19,18 +19,10 @@
     <meta name="apple-mobile-web-app-title" content="Bazara" />
     <meta name="application-name" content="Bazara" />
 
-    <!-- خطوط Google: Tajawal (نصوص عربي) + Cairo (عناوين عربي نظيفة) + El Messiri (عناوين زخرفية) — Inter + Playfair (إنجليزي) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- الخطوط مستضافة داخل التطبيق (مستوردة في main.jsx وتُخزَّن بالـ Service Worker) —
+         أُزيلت روابط خطوط Google: كانت تعتمد على الشبكة فتختفي النصوص/يتبدّل الخط عند بطئها. -->
     <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
     <link rel="dns-prefetch" href="https://res.cloudinary.com" />
-    <!-- display=optional: يمنع "تبديل الخط" المفاجئ الذي كان يقطع/يقفز شاشة الترحيب.
-         التطبيق المثبّت يخزّن الخطوط بعد أول فتح → كل فتحة لاحقة تعرض الخط الفخم
-         فوراً وبلا أي إزاحة (بدل الخط الاحتياطي ثم القفز إليه أمام عين المستخدم). -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=El+Messiri:wght@600;700&family=Inter:wght@400;600;700&family=Playfair+Display:wght@600;700&family=Tajawal:wght@400;700&display=optional"
-      rel="stylesheet"
-    />
 
     <!-- وسوم meta افتراضية (تُحدَّث ديناميكياً عبر react-helmet-async) -->
     <title>بازارا (Bazara) — منصة وأزياء فاخرة | بازارا</title>
