@@ -110,8 +110,10 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
       onTouchMove={cancelPress}
       onClickCapture={onClickCapture}
     >
-      {/* تصميم editorial بوتيك: الصورة وحدها ببطاقة مدوّرة، والنص تحتها على خلفية الصفحة */}
-      <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-ink-800 shadow-[0_14px_30px_-16px_rgba(46,33,24,0.45)] ring-1 ring-black/5 transition-shadow duration-300 group-hover:shadow-[0_22px_44px_-18px_rgba(46,33,24,0.55)]">
+      {/* بطاقة محتواة بإطار فاخر (أسلوب المتاجر الكبرى): الصورة والمعلومات داخل بطاقة
+          واحدة بحدود ذهبية خفيفة وظل ناعم — glass بيضاء نهاراً وداكنة أنيقة ليلاً */}
+      <div className="glass overflow-hidden !p-0 transition-shadow duration-300 group-hover:shadow-[0_22px_44px_-18px_rgba(46,33,24,0.35)]">
+      <div className="relative aspect-[3/4] overflow-hidden bg-ink-800">
         {/* هيكل لامع حتى تجهز الصورة — يُزال بعد التحميل (فلا يبقى أي أنيميشن يعمل) */}
         {!imgLoaded && <div className="skeleton absolute inset-0" aria-hidden="true" />}
         <img
@@ -197,8 +199,8 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
         </button>
       </div>
 
-      {/* الاسم والسعر تحت الصورة مباشرة — بلا صندوق (editorial) */}
-      <div className="px-1 pt-2.5 text-start">
+      {/* قسم المعلومات داخل البطاقة (اسم/سعر/تقييم/ألوان) — مرتّب ومحتوى */}
+      <div className="px-3 pb-3 pt-2.5 text-start">
         <h3 className="line-clamp-1 font-display font-semibold leading-snug text-stone-100">{product.name}</h3>
         <div className="mt-0.5 flex items-baseline gap-2">
           <span className="font-display text-lg font-bold text-wine">{t('common.currency')}{product.price}</span>
@@ -231,6 +233,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
             {colorDots.length > 4 && <span className="text-[10px] font-medium text-stone-500">+{colorDots.length - 4}</span>}
           </div>
         )}
+      </div>
       </div>
     </Link>
 
