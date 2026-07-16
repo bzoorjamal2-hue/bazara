@@ -30,6 +30,9 @@ export default defineConfig({
       workbox: {
         // تخزين هيكل التطبيق مسبقاً (يفتح فوراً وبلا نت). لا نُخزّن طلبات /api ليبقى المحتوى محدّثاً.
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        // hls.js (~500KB) يخصّ أندرويد فقط (iOS يشغّل HLS أصلياً) — يُحمَّل عند فتح الريلز
+        // بدل تنزيله مسبقاً على كل الأجهزة مع كل تحديث
+        globIgnores: ['**/hls-*.js'],
         navigateFallback: '/index.html',
         // ‏/share يجب أن يصل للسيرفر (صفحات المعاينة والتحويل) — اعتراضه يعرض 404 داخل التطبيق
         navigateFallbackDenylist: [/^\/api/, /^\/share\//, /^\/sitemap\.xml/, /^\/robots\.txt/],

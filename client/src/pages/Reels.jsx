@@ -15,13 +15,24 @@ import { goBack } from '../utils/nav.js';
 const MUTE_KEY = 'bz_reels_muted';
 
 // نسخة فيديو أخف للريلز (أبعاد محدودة + جودة موفّرة) → تحميل أسرع بكثير
-// فيديو الريل: H.264 صراحةً (فكّ تشفير عتادي على كل الأجهزة — f_auto كان يقدّم
-// VP9/AV1 تُفكّ بالمعالج على أجهزة كثيرة = تقطيع) + دقة 720 بجودة good (كانت
-// 480/eco = مش واضحة). أول مشاهدة لكل فيديو بعد النشر تولّد النسخة الجديدة
-// على CDN كلاودينري ثم تُخدم فورياً للجميع.
-const reelVideo = (url) => (url && url.includes('/upload/')
-  ? url.replace('/upload/', '/upload/f_mp4,vc_h264,q_auto:good,w_720,c_limit/')
-  : url);
+// ───── محرك فيديو الريلز (أسلوب انستغرام) ─────
+// المشكلة المكتشفة: روابط الفيديو المخزّنة تحمل تحويلات قديمة داخلها (f_auto,q_auto…)
+// فأي تحويل نضيفه يصير "متسلسلاً" فوقها ويعاد الترميز مرتين ويُلغى ما طلبناه.
+// الحل: نفكّك الرابط ونبني تحويلاً نظيفاً واحداً من الصفر.
+// - HLS متكيّف (sp_auto): 5 دقات يبدّل بينها المشغّل حسب سرعة النت لحظياً —
+//   على شبكة ضعيفة ينزل 360p بدل ما يعلق، وعلى واي فاي 720p واضحة. (مؤكّد
+//   حياً أن حساب كلاودينري يدعمه). iOS يشغّله أصلياً، وأندرويد عبر hls.js.
+// - احتياط MP4 نظيف (H.264 عتادي 720p) لو فشل HLS لأي سبب.
+function cldVideoParts(url) {
+  const m = String(url || '').match(/^(https?:\/\/[^/]+\/[^/]+\/video\/upload\/)(.+)$/);
+  if (!m) return null;
+  const segs = m[2].split('/');
+  let vi = segs.findIndex((s) => /^v\d+$/.test(s)); // جزء الإصدار v123... — ما قبله تحويلات قديمة نتجاهلها
+  if (vi === -1) vi = segs.length - 1;
+  return { base: m[1], rest: segs.slice(vi).join('/').replace(/\.[a-z0-9]+(\?.*)?$/i, '') };
+}
+const reelHls = (url) => { const p = cldVideoParts(url); return p ? `${p.base}sp_auto/${p.rest}.m3u8` : ''; };
+const reelMp4 = (url) => { const p = cldVideoParts(url); return p ? `${p.base}f_mp4,vc_h264,q_auto:good,w_720,c_limit/${p.rest}.mp4` : url; };
 
 // تصفّح عمودي لفيديوهات المنتجات (Reels) — ملء الشاشة، تشغيل تلقائي للظاهر فقط،
 // تحميل مسبق + تحميل المزيد، شريط تقدّم/انتقال تلقائي، ضغط مطوّل للإيقاف،
@@ -185,11 +196,45 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   const [selSize, setSelSize] = useState('');
   const [selColor, setSelColor] = useState('');
   const vidRef = useRef(null);
+  const hlsRef = useRef(null); // مشغّل hls.js (أندرويد/كروم) — iOS يشغّل HLS أصلياً
+  const [useMp4, setUseMp4] = useState(false); // فشل HLS؟ → احتياط MP4 نظيف
   const tapRef = useRef({ t: 0, timer: null });
   const holdRef = useRef({ timer: null, held: false, x: 0, y: 0, moved: false, swallow: false });
   const activeRef = useRef(isActive);
   activeRef.current = isActive;
   const poster = cldVideoPoster(p.videoUrl) || p.imageUrl || '';
+
+  // تعليق مصدر الفيديو: HLS متكيّف أولاً (iOS أصلي / أندرويد عبر hls.js يُحمَّل عند
+  // الحاجة فقط)، وعند أي فشل قاتل ننتقل تلقائياً للـMP4 النظيف — بلا شاشة سوداء.
+  useEffect(() => {
+    const vid = vidRef.current;
+    if (!vid || !preload) return undefined;
+    const hlsUrl = reelHls(p.videoUrl);
+    const mp4Url = reelMp4(p.videoUrl);
+    let cancelled = false;
+    if (!hlsUrl || useMp4) { vid.src = mp4Url; return undefined; }
+    if (vid.canPlayType('application/vnd.apple.mpegurl')) { vid.src = hlsUrl; return undefined; } // سفاري/iOS
+    let hls;
+    import('hls.js')
+      .then(({ default: Hls }) => {
+        if (cancelled) return;
+        if (!Hls.isSupported()) { vid.src = mp4Url; return; }
+        hls = new Hls({ maxBufferLength: 15, capLevelToPlayerSize: true, autoStartLoad: false });
+        hlsRef.current = hls;
+        hls.on(Hls.Events.ERROR, (_e, data) => {
+          if (data && data.fatal) { try { hls.destroy(); } catch { /* تجاهل */ } hlsRef.current = null; setUseMp4(true); }
+        });
+        hls.loadSource(hlsUrl);
+        hls.attachMedia(vid);
+        if (activeRef.current) hls.startLoad(-1);
+      })
+      .catch(() => { if (!cancelled) vid.src = mp4Url; });
+    return () => {
+      cancelled = true;
+      if (hls) { try { hls.destroy(); } catch { /* تجاهل */ } if (hlsRef.current === hls) hlsRef.current = null; }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preload, useMp4]);
 
   const sizes = (p.size || '').split(',').map((s) => s.trim()).filter(Boolean);
   const colors = (p.color || '').split(',').map((s) => s.trim()).filter(Boolean);
@@ -199,7 +244,14 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   useEffect(() => {
     const vid = vidRef.current;
     if (!vid) return undefined;
-    if (!isActive) { vid.pause(); vid.currentTime = 0; if (progressRef.current) progressRef.current.style.width = '0%'; return undefined; }
+    if (!isActive) {
+      vid.pause();
+      vid.currentTime = 0;
+      if (progressRef.current) progressRef.current.style.width = '0%';
+      if (hlsRef.current) { try { hlsRef.current.stopLoad(); } catch { /* تجاهل */ } } // الشريحة التالية لا تزاحم تحميل النشطة
+      return undefined;
+    }
+    if (hlsRef.current) { try { hlsRef.current.startLoad(-1); } catch { /* تجاهل */ } }
     // عنصر الفيديو يُركّب عند الاقتراب فقط، فقد لا يكون جاهزاً لحظة التفعيل —
     // أمر تشغيل واحد كان يفشل بصمت ويبقى الفيديو واقفاً حتى كبسة المستخدم.
     // الآن: محاولة فورية + إعادة عند جاهزية البيانات + محاولات مجدولة قليلة
@@ -236,9 +288,15 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
           stuckRef.current.count = 0;
           const pos = v.currentTime;
           try {
-            v.load(); // إعادة فتح المصدر (يتخطى المخزّن المنحشر)
-            const seek = () => { try { v.currentTime = pos; } catch { /* تجاهل */ } v.play().catch(() => {}); };
-            v.addEventListener('loadedmetadata', seek, { once: true });
+            if (hlsRef.current) {
+              // مع hls.js: إعادة إقلاع التحميل من نفس الموضع (لا نلمس v.load مع MSE)
+              hlsRef.current.startLoad(pos);
+              v.play().catch(() => {});
+            } else {
+              v.load(); // إعادة فتح المصدر (يتخطى المخزّن المنحشر)
+              const seek = () => { try { v.currentTime = pos; } catch { /* تجاهل */ } v.play().catch(() => {}); };
+              v.addEventListener('loadedmetadata', seek, { once: true });
+            }
           } catch { /* تجاهل */ }
         }
       } else {
@@ -371,7 +429,6 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
         ) : (
           <video
             ref={vidRef}
-            src={reelVideo(p.videoUrl)}
             poster={poster}
             muted={muted}
             playsInline
@@ -382,7 +439,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
             onWaiting={() => setBuffering(true)}
             onPlaying={() => setBuffering(false)}
             onCanPlay={() => { setBuffering(false); ensurePlaying(); }}
-            onError={() => setErrored(true)}
+            onError={() => { if (!useMp4) setUseMp4(true); else setErrored(true); }}
             style={{ touchAction: 'pan-y' }}
             className="h-full w-full object-cover"
           />
