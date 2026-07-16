@@ -15,7 +15,13 @@ import { goBack } from '../utils/nav.js';
 const MUTE_KEY = 'bz_reels_muted';
 
 // نسخة فيديو أخف للريلز (أبعاد محدودة + جودة موفّرة) → تحميل أسرع بكثير
-const reelVideo = (url) => (url && url.includes('/upload/') ? url.replace('/upload/', '/upload/f_auto,q_auto:eco,w_480,c_limit/') : url);
+// فيديو الريل: H.264 صراحةً (فكّ تشفير عتادي على كل الأجهزة — f_auto كان يقدّم
+// VP9/AV1 تُفكّ بالمعالج على أجهزة كثيرة = تقطيع) + دقة 720 بجودة good (كانت
+// 480/eco = مش واضحة). أول مشاهدة لكل فيديو بعد النشر تولّد النسخة الجديدة
+// على CDN كلاودينري ثم تُخدم فورياً للجميع.
+const reelVideo = (url) => (url && url.includes('/upload/')
+  ? url.replace('/upload/', '/upload/f_mp4,vc_h264,q_auto:good,w_720,c_limit/')
+  : url);
 
 // تصفّح عمودي لفيديوهات المنتجات (Reels) — ملء الشاشة، تشغيل تلقائي للظاهر فقط،
 // تحميل مسبق + تحميل المزيد، شريط تقدّم/انتقال تلقائي، ضغط مطوّل للإيقاف،
@@ -213,6 +219,35 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   }, [isActive]);
 
   useEffect(() => { if (vidRef.current) vidRef.current.muted = muted; }, [muted]);
+
+  // حارس الانحشار (زي مشغّلات الريلز الكبيرة): لو صار الفيديو "شغّال" لكن وقته لا
+  // يتقدّم ~6 ثوانٍ (تخزين معلّق/شبكة انقطعت لحظة/جلسة iOS انحشرت) نعيد تحميل
+  // المصدر ونكمل من نفس المكان تلقائياً — بدل ما يظل واقفاً حتى تدخّل المستخدم.
+  const stuckRef = useRef({ t: -1, count: 0 });
+  useEffect(() => {
+    if (!isActive) return undefined;
+    stuckRef.current = { t: -1, count: 0 };
+    const id = setInterval(() => {
+      const v = vidRef.current;
+      if (!v || v.paused || v.ended || holdRef.current.held || document.hidden) return;
+      if (v.currentTime === stuckRef.current.t) {
+        stuckRef.current.count += 1;
+        if (stuckRef.current.count >= 2) {
+          stuckRef.current.count = 0;
+          const pos = v.currentTime;
+          try {
+            v.load(); // إعادة فتح المصدر (يتخطى المخزّن المنحشر)
+            const seek = () => { try { v.currentTime = pos; } catch { /* تجاهل */ } v.play().catch(() => {}); };
+            v.addEventListener('loadedmetadata', seek, { once: true });
+          } catch { /* تجاهل */ }
+        }
+      } else {
+        stuckRef.current.t = v.currentTime;
+        stuckRef.current.count = 0;
+      }
+    }, 3000);
+    return () => clearInterval(id);
+  }, [isActive]);
 
   // إيقاف الفيديو عند قفل الشاشة/تصغير التطبيق، وإيقافه وإفراغ مصدره عند مغادرة الريلز.
   // كان صوت الريل يظل يعمل بمشغّل الوسائط على شاشة القفل (iOS PWA) وكأنه "معلّق".
