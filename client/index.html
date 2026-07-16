@@ -19,8 +19,14 @@
     <meta name="apple-mobile-web-app-title" content="Bazara" />
     <meta name="application-name" content="Bazara" />
 
-    <!-- الخطوط مستضافة داخل التطبيق (مستوردة في main.jsx وتُخزَّن بالـ Service Worker) —
-         أُزيلت روابط خطوط Google: كانت تعتمد على الشبكة فتختفي النصوص/يتبدّل الخط عند بطئها. -->
+    <!-- الخطوط مستضافة داخل التطبيق — الحرجة منها تُحمَّل مسبقاً هنا (أسماء ثابتة من
+         /fonts) فتكون جاهزة قبل ظهور أي نص: الموقع كله ثابت على الخط الجميل بلا تبديل. -->
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/tajawal-arabic-400.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/tajawal-arabic-700.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/cairo-arabic-400.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/cairo-arabic-700.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/cairo-latin-700.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/playfair-latin-700.woff2" />
     <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
     <link rel="dns-prefetch" href="https://res.cloudinary.com" />
 

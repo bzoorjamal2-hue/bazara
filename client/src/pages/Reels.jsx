@@ -33,6 +33,8 @@ function cldVideoParts(url) {
 }
 const reelHls = (url) => { const p = cldVideoParts(url); return p ? `${p.base}sp_auto/${p.rest}.m3u8` : ''; };
 const reelMp4 = (url) => { const p = cldVideoParts(url); return p ? `${p.base}f_mp4,vc_h264,q_auto:good,w_720,c_limit/${p.rest}.mp4` : url; };
+// سفاري/iOS يشغّل HLS أصلياً (بلا hls.js) — نكشفه مرة واحدة على مستوى الوحدة
+const NATIVE_HLS = typeof document !== 'undefined' && !!document.createElement('video').canPlayType('application/vnd.apple.mpegurl');
 
 // تصفّح عمودي لفيديوهات المنتجات (Reels) — ملء الشاشة، تشغيل تلقائي للظاهر فقط،
 // تحميل مسبق + تحميل المزيد، شريط تقدّم/انتقال تلقائي، ضغط مطوّل للإيقاف،
@@ -204,16 +206,15 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   activeRef.current = isActive;
   const poster = cldVideoPoster(p.videoUrl) || p.imageUrl || '';
 
-  // تعليق مصدر الفيديو: HLS متكيّف أولاً (iOS أصلي / أندرويد عبر hls.js يُحمَّل عند
-  // الحاجة فقط)، وعند أي فشل قاتل ننتقل تلقائياً للـMP4 النظيف — بلا شاشة سوداء.
+  // تعليق مصدر الفيديو: HLS متكيّف أولاً، وعند أي فشل قاتل → MP4 نظيف (بلا شاشة سوداء).
+  // أندرويد/كروم: عبر hls.js (يُحمَّل عند الحاجة) مع تحكّم كامل بالتحميل (stopLoad للتالية).
   useEffect(() => {
     const vid = vidRef.current;
-    if (!vid || !preload) return undefined;
+    if (!vid || !preload || NATIVE_HLS) return undefined;
     const hlsUrl = reelHls(p.videoUrl);
     const mp4Url = reelMp4(p.videoUrl);
     let cancelled = false;
     if (!hlsUrl || useMp4) { vid.src = mp4Url; return undefined; }
-    if (vid.canPlayType('application/vnd.apple.mpegurl')) { vid.src = hlsUrl; return undefined; } // سفاري/iOS
     let hls;
     import('hls.js')
       .then(({ default: Hls }) => {
@@ -235,6 +236,24 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preload, useMp4]);
+
+  // iOS/سفاري (HLS أصلي): لا سيطرة على تحميله — فيديوان معلّقان يتنافسان على الشبكة
+  // (لهذا كان الكمبيوتر سلساً والآيفون/الآيباد يتلعثم). الحل: نعلّق المصدر للشريحة
+  // النشطة فقط، ونفصله عند مغادرتها — البوستر يغطي الشرائح المجاورة.
+  useEffect(() => {
+    const vid = vidRef.current;
+    if (!vid || !NATIVE_HLS || !preload) return undefined;
+    const hlsUrl = reelHls(p.videoUrl);
+    const mp4Url = reelMp4(p.videoUrl);
+    const src = (!hlsUrl || useMp4) ? mp4Url : hlsUrl;
+    if (isActive) {
+      if (vid.getAttribute('src') !== src) { vid.src = src; try { vid.load(); } catch { /* تجاهل */ } }
+    } else if (vid.getAttribute('src')) {
+      try { vid.pause(); vid.removeAttribute('src'); vid.load(); } catch { /* تجاهل */ }
+    }
+    return undefined;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isActive, preload, useMp4]);
 
   const sizes = (p.size || '').split(',').map((s) => s.trim()).filter(Boolean);
   const colors = (p.color || '').split(',').map((s) => s.trim()).filter(Boolean);
