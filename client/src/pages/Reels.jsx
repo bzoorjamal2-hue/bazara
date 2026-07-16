@@ -171,7 +171,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   const { has, toggle } = useWishlist();
   const liked = has(p.id);
   const [copied, setCopied] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const progressRef = useRef(null); // شريط التقدّم يُحدَّث بالـDOM مباشرة (بلا re-render كل timeupdate = تعليق)
   const [burst, setBurst] = useState(0);
   const [buffering, setBuffering] = useState(false);
   const [errored, setErrored] = useState(false);
@@ -193,7 +193,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   useEffect(() => {
     const vid = vidRef.current;
     if (!vid) return undefined;
-    if (!isActive) { vid.pause(); vid.currentTime = 0; setProgress(0); return undefined; }
+    if (!isActive) { vid.pause(); vid.currentTime = 0; if (progressRef.current) progressRef.current.style.width = '0%'; return undefined; }
     // عنصر الفيديو يُركّب عند الاقتراب فقط، فقد لا يكون جاهزاً لحظة التفعيل —
     // أمر تشغيل واحد كان يفشل بصمت ويبقى الفيديو واقفاً حتى كبسة المستخدم.
     // الآن: محاولة فورية + إعادة عند جاهزية البيانات + محاولات مجدولة قليلة
@@ -233,7 +233,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
 
   const onTimeUpdate = () => {
     const v = vidRef.current;
-    if (v && v.duration) setProgress((v.currentTime / v.duration) * 100);
+    if (v && v.duration && progressRef.current) progressRef.current.style.width = `${(v.currentTime / v.duration) * 100}%`;
   };
   // الفيديو النشط يجب أن يظل يعمل دائماً. أي توقّف غير متعمّد (سباق أثناء التمرير،
   // تعليق iOS، عودة من الخلفية) يُستأنف فوراً — هذا يصلح "الفيديو بيقطع وما بيشتغل
@@ -324,9 +324,9 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   return (
     <section className="relative flex h-[100dvh] w-full snap-start snap-always justify-center bg-black">
       <div className="relative h-full w-full sm:max-w-[480px]">
-        {/* شريط التقدّم */}
+        {/* شريط التقدّم — يُحدَّث بالـDOM مباشرة (بلا إعادة رسم البطاقة) */}
         <div className="absolute inset-x-0 top-0 z-30 h-0.5 bg-white/20">
-          <div className="h-full bg-white/90 transition-[width] duration-150 ease-linear" style={{ width: `${progress}%` }} />
+          <div ref={progressRef} className="h-full bg-white/90 transition-[width] duration-150 ease-linear" style={{ width: '0%' }} />
         </div>
 
         {/* الشرائح البعيدة تعرض الصورة فقط (لا عنصر فيديو) → تمرير أسلس وأسرع بلا تعليق.
@@ -340,7 +340,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
             poster={poster}
             muted={muted}
             playsInline
-            preload="auto"
+            preload={isActive ? 'auto' : 'metadata'}
             onTimeUpdate={onTimeUpdate}
             onEnded={onVidEnded}
             onPause={ensurePlaying}

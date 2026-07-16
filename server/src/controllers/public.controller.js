@@ -402,15 +402,11 @@ export async function getReels(req, res, next) {
     params.push(offset); sql += ` OFFSET $${params.length}`;
     const r = await query(sql, params);
     res.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300');
-    // الريلز وحدها تعرض شعار المتجر (أفاتار صغير) → نضيفه هنا. نعرض كل الشعارات
-    // (روابط Cloudinary + base64 الصغيرة)، ونتجاهل فقط base64 الضخمة جداً لتفادي ثقل الاستجابة.
-    // كان الشرط السابق يحذف كل شعارات base64 فتختفي شعارات بعض المتاجر بالريلز.
+    // الريلز وحدها تعرض شعار المتجر (أفاتار صغير) → نُرسل شعار كل متجر كما هو
+    // (Cloudinary أو base64) ليظهر لكل المتاجر. كان الشرط السابق يحذف شعارات base64
+    // فتختفي شعارات بعض المتاجر بالريلز.
     res.json({
-      products: r.rows.map((row) => {
-        const logo = row.store_logo || '';
-        const storeLogo = logo.startsWith('data:') && logo.length > 50000 ? '' : logo;
-        return { ...mapProduct(row), storeLogo };
-      }),
+      products: r.rows.map((row) => ({ ...mapProduct(row), storeLogo: row.store_logo || '' })),
       hasMore: r.rows.length === REELS_PAGE,
     });
   } catch (err) {
