@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -150,8 +151,8 @@ export default function ProductForm({ initial, onClose, onSaved }) {
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+  return createPortal(
+    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
       <div className="glass-strong max-h-[92vh] w-full max-w-lg animate-fade-up overflow-y-auto p-6">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-display text-xl font-bold gradient-text">
@@ -354,6 +355,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
