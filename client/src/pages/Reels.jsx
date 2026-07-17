@@ -294,12 +294,19 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
     // الآن: محاولة فورية + إعادة عند جاهزية البيانات + محاولات مجدولة قليلة
     // (لا نقاوم الإيقاف المتعمّد بالضغط المطوّل).
     let alive = true;
+    let blockedTries = 0; // مرات رفض التشغيل بالصوت — نعيد المحاولة ضمن نافذة تفعيل السحبة قبل الكتم
     const tryPlay = () => {
       if (!alive || vid.ended || !vid.paused || holdRef.current.held || document.hidden) return;
       vid.play().catch((err) => {
-        // المتصفح رفض (توفير طاقة/صوت بلا إيماءة)؟ الأولوية أن يظل الفيديو يعمل دائماً:
-        // نكتم هذا العنصر فقط مؤقّتاً ونشغّله — أفضل من تجمّد، ودون إفساد التفضيل العام.
-        if (alive && err && err.name === 'NotAllowedError' && !vid.muted) {
+        if (!alive || !err || err.name !== 'NotAllowedError' || vid.muted) return;
+        // رُفض التشغيل بالصوت. iOS يسمح بالصوت خلال ثوانٍ قليلة من أي إيماءة، والسحبة
+        // التي جاءت بنا لهذا الريل هي إيماءة — فنعيد المحاولة بالصوت عدة مرات سريعة،
+        // تنجح غالباً فيبقى الصوت تلقائياً بلا أي كبسة. وإن فشلت كلها (تفعيل منتهٍ،
+        // كالتقدّم التلقائي بعد انتهاء الريل) نكتم مؤقّتاً كي لا يتجمّد، والصوت يعود
+        // بأول لمسة/سحبة تالية. (كان يكتم من أول رفضة ولا يعيد المحاولة أبداً = سبب
+        // "كل كم مقطع يروح الصوت ولازم أكبس".)
+        blockedTries += 1;
+        if (blockedTries >= 4) {
           forcedMuteRef.current = true;
           vid.muted = true;
           vid.play().catch(() => {});
@@ -309,12 +316,14 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
     tryPlay();
     vid.addEventListener('loadeddata', tryPlay);
     vid.addEventListener('canplay', tryPlay);
-    // محاولة دؤوبة كل 800ms — الفيديو النشط لا يبقى واقفاً أبداً مهما كان السبب
-    // (رفض مؤقت، انقطاع لحظي، عودة من الخلفية…) بلا أي تدخل من المستخدم.
+    // إعادات سريعة تلتقط تفعيل السحبة (خلال ~½ثانية) لاستعادة الصوت تلقائياً،
+    // ثم حارس كل 800ms يضمن ألا يبقى الفيديو واقفاً أبداً مهما كان السبب.
+    const quick = [130, 300, 520].map((ms) => setTimeout(tryPlay, ms));
     const iv = setInterval(tryPlay, 800);
     return () => {
       alive = false;
       clearInterval(iv);
+      quick.forEach(clearTimeout);
       vid.removeEventListener('loadeddata', tryPlay);
       vid.removeEventListener('canplay', tryPlay);
     };
