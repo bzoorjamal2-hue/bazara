@@ -11,7 +11,7 @@ import { flyToCart } from '../utils/flyToCart.js';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { sizeLabel } from '../utils/sizes.js';
 import Strike from './Strike.jsx';
-import { colorToCss } from '../utils/colorDot.js';
+import ColorSwatches from './ColorSwatches.jsx';
 import SizeGuideModal from './SizeGuideModal.jsx';
 import CloseButton from './CloseButton.jsx';
 
@@ -37,6 +37,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
   const [active, setActive] = useState(0);
   const [qty, setQty] = useState(1);
   const colorStock = product.colorStock && typeof product.colorStock === 'object' ? product.colorStock : {};
+  const colorImages = product.colorImages && typeof product.colorImages === 'object' ? product.colorImages : {};
   const hasColorStock = Object.keys(colorStock).length > 0;
   const sizes = (product.size || '').split(',').map((s) => s.trim()).filter(Boolean);
   const colors = hasColorStock ? Object.keys(colorStock) : (product.color || '').split(',').map((s) => s.trim()).filter(Boolean);
@@ -152,27 +153,15 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
           {/* اللون أولاً */}
           {colors.length > 0 && (
             <div className="mt-4">
-              <p className="mb-1.5 text-sm font-semibold text-stone-700">{t('dashboard.product.color')}</p>
-              <div className="flex flex-wrap gap-2">
-                {colors.map((c) => {
-                  const css = colorToCss(c);
-                  return (
-                    <button
-                      key={c}
-                      onClick={() => { setColor(c); if (hasColorStock) setSize(''); setErr(''); }}
-                      className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-semibold transition ${color === c ? 'border-wine bg-wine text-cream' : 'border-wine/25 text-wine hover:bg-wine/5'}`}
-                    >
-                      <span
-                        className="h-4 w-4 shrink-0 rounded-full"
-                        style={css
-                          ? { background: css, boxShadow: '0 0 0 1.5px rgba(255,255,255,0.55), inset 0 0 0 1px rgba(0,0,0,0.15)' }
-                          : { border: '1.5px solid currentColor', opacity: 0.45 }}
-                      />
-                      {c}
-                    </button>
-                  );
-                })}
-              </div>
+              <ColorSwatches
+                colors={colors}
+                colorImages={colorImages}
+                colorStock={colorStock}
+                value={color}
+                onChange={(c) => { setColor(c); if (hasColorStock) setSize(''); setErr(''); }}
+                label={t('dashboard.product.color')}
+                tone="light"
+              />
             </div>
           )}
 

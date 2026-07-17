@@ -14,7 +14,7 @@ import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
 import { pushRecent, getRecent } from '../utils/recentlyViewed.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { sizeLabel } from '../utils/sizes.js';
-import { colorToCss } from '../utils/colorDot.js';
+import ColorSwatches from '../components/ColorSwatches.jsx';
 import Countdown from '../components/Countdown.jsx';
 import { HeartIcon, BagIcon, CartIcon, BellIcon, SparkleIcon, FireIcon, HandIcon } from '../components/icons.jsx';
 import { goBack } from '../utils/nav.js';
@@ -193,9 +193,6 @@ export default function ProductDetails() {
       setNotifyBusy(false);
     }
   };
-
-  const chipCls = (on) =>
-    `min-w-11 rounded-xl border px-3.5 py-1.5 text-sm font-semibold transition ${on ? 'border-wine bg-wine text-cream' : 'border-wine/30 text-wine hover:bg-wine/10'}`;
 
   // بيانات Schema.org للمنتج → نتائج Google الغنية (سعر/توفّر/تقييم/علامة المتجر)
   const productLd = {
@@ -383,29 +380,15 @@ export default function ProductDetails() {
           {/* اللون — يُختار أولاً عند تتبّع المخزون لكل لون */}
           {colors.length > 0 && (
             <div className="mt-6">
-              <p className="mb-2 text-sm font-semibold text-stone-300">{t('product.selectColor')}</p>
-              <div className="flex flex-wrap gap-2">
-                {colors.map((c) => {
-                  // دائرة بلون اللون الفعلي (الاسم العربي يُترجم لدرجة CSS) — الاسم المجهول يظهر بدائرة محايدة
-                  const css = colorToCss(c);
-                  return (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => { setSelColor(c); if (hasColorStock) setSelSize(''); setPickErr(''); setActive(0); }}
-                      className={`flex items-center gap-2 ${chipCls(selColor === c)}`}
-                    >
-                      <span
-                        className="h-5 w-5 shrink-0 rounded-full"
-                        style={css
-                          ? { background: css, boxShadow: '0 0 0 1.5px rgba(255,255,255,0.55), inset 0 0 0 1px rgba(0,0,0,0.15)' }
-                          : { border: '1.5px solid currentColor', opacity: 0.45 }}
-                      />
-                      {c}
-                    </button>
-                  );
-                })}
-              </div>
+              <ColorSwatches
+                colors={colors}
+                colorImages={colorImages}
+                colorStock={colorStock}
+                value={selColor}
+                onChange={(c) => { setSelColor(c); if (hasColorStock) setSelSize(''); setPickErr(''); setActive(0); }}
+                label={t('product.selectColor')}
+                tone="dark"
+              />
             </div>
           )}
 
