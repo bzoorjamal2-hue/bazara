@@ -27,7 +27,7 @@ const MAP = {
   'تان': '#c19a6b', tan: '#c19a6b', 'بسكوتي': '#d9b98c', 'بسكويتي': '#d9b98c', biscuit: '#d9b98c',
   'جوزي': '#7a5230', walnut: '#7a5230', 'كستنائي': '#6d3f2a', chestnut: '#6d3f2a',
   'ترابي': '#9c7e65', 'بيج': '#d9c4a3', beige: '#d9c4a3',
-  'نيود': '#e3c4a8', nude: '#e3c4a8', 'توبي': '#a68a79', 'طوبي': '#a68a79', taupe: '#a68a79',
+  'نيود': '#e3c4a8', 'نود': '#e3c4a8', nude: '#e3c4a8', 'توبي': '#a68a79', 'طوبي': '#a68a79', taupe: '#a68a79',
   'غريج': '#b5aa9d', greige: '#b5aa9d', 'رملي': '#d6c6a8', sand: '#d6c6a8',
   'حجري': '#b8b0a1', stone: '#b8b0a1', 'شوفان': '#e0d5c0', oat: '#e0d5c0', oatmeal: '#e0d5c0',
   'كشمير': '#d7c3b5', cashmere: '#d7c3b5',
@@ -90,10 +90,51 @@ const MAP = {
 
 // توحيد الهمزات والتاء المربوطة + حروف صغيرة ليطابق "أسود"/"اسود" و"موكة"/"موكا" وغيرها
 const norm = (s) => String(s || '').trim().toLowerCase()
-  .replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/ـ/g, '');
+  .replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/ـ/g, '')
+  .replace(/[ً-ٟ]/g, ''); // تشكيل
 
 // للمطابقة بالاحتواء: الأطول أولاً حتى لا يسبق "روز" اسم "روز جولد"
 const KEYS = Object.keys(MAP).sort((a, b) => b.length - a.length);
+
+// ─── تعرّف ذكي يتحمّل الأخطاء الإملائية (أسلوب المصحّح التلقائي) ───
+// 1) هيكل الكلمة: حذف ألفات المدّ يطابق "كبتشينو"="كابتشينو" و"نسكافه"="نسكافيه"
+const skel = (s) => s.replace(/ا/g, '');
+const SKEL = {};
+for (const k of KEYS) { const sk = skel(k); if (sk.length >= 3 && !SKEL[sk]) SKEL[sk] = MAP[k]; }
+
+// 2) مسافة دامراو-ليفنشتاين (حرف ناقص/زائد/مبدّل/مقلوب = خطأ واحد)
+function editDist(a, b, cap) {
+  const al = a.length; const bl = b.length;
+  if (Math.abs(al - bl) > cap) return cap + 1;
+  const d = Array.from({ length: al + 1 }, () => new Array(bl + 1).fill(0));
+  for (let i = 0; i <= al; i += 1) d[i][0] = i;
+  for (let j = 0; j <= bl; j += 1) d[0][j] = j;
+  for (let i = 1; i <= al; i += 1) {
+    for (let j = 1; j <= bl; j += 1) {
+      const c = a[i - 1] === b[j - 1] ? 0 : 1;
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + c);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+    }
+  }
+  return d[al][bl];
+}
+
+// عتبة التسامح حسب طول الكلمة — قصيرة جداً؟ خطأ واحد فقط (حتى لا يختلط أحمر/أخضر)
+const fuzzyFind = (w) => {
+  if (w.length < 3) return null;
+  const cap = w.length <= 4 ? 1 : w.length <= 7 ? 2 : 3;
+  let best = null; let bestD = cap + 1;
+  for (const k of KEYS) {
+    const d = editDist(w, k, cap);
+    if (d < bestD) { bestD = d; best = k; if (d === 0) break; }
+  }
+  return best ? MAP[best] : null;
+};
+
+// كلمات وصفية لا تُفحص كأسماء ألوان
+const MODIFIERS = /^(فاتح|فاتحه|غامق|غامقه|داكن|داكنه|محروق|باستيل|لون|درجه|light|dark|deep|burnt|pastel|color|shade)$/;
+
+const lookup = (w) => MAP[w] || SKEL[skel(w)] || null;
 
 // "فاتح" يمزج نحو الأبيض و"غامق/محروق" نحو الأسود
 const shade = (hex, f) => {
@@ -102,20 +143,27 @@ const shade = (hex, f) => {
   return `#${[(n >> 16) & 255, (n >> 8) & 255, n & 255].map((x) => ch(x).toString(16).padStart(2, '0')).join('')}`;
 };
 
+const CACHE = new Map(); // تُستدعى لكل بطاقة منتج — نحفظ النتيجة
+
 export function colorToCss(name) {
   const n = norm(name);
   if (!n) return null;
-  let base = MAP[n];
-  if (!base) {
-    // كلمة-كلمة من الآخر (الوصف يلي الاسم: "أخضر زيتي" → زيتي)
-    const words = n.split(/\s+/);
-    for (let i = words.length - 1; i >= 0 && !base; i -= 1) base = MAP[words[i]];
+  if (CACHE.has(n)) return CACHE.get(n);
+  const words = n.split(/\s+/).filter((w) => !MODIFIERS.test(w));
+  // ترتيب المحاولات: مطابقة مباشرة/هيكلية → كلمة-كلمة من الآخر (الوصف يلي الاسم:
+  // "أخضر زيتي" → زيتي) → احتواء → تصحيح إملائي كاملاً ثم كلمة-كلمة
+  let base = lookup(n);
+  for (let i = words.length - 1; i >= 0 && !base; i -= 1) base = lookup(words[i]);
+  if (!base) { const k = KEYS.find((key) => key.length >= 3 && n.includes(key)); if (k) base = MAP[k]; }
+  if (!base) base = fuzzyFind(n);
+  for (let i = words.length - 1; i >= 0 && !base; i -= 1) base = fuzzyFind(words[i]);
+  let out = base || null;
+  if (out && !MAP[n]) {
+    if (/فاتح|باستيل|light|pastel|baby/.test(n)) out = shade(out, 0.32);
+    else if (/غامق|داكن|محروق|dark|deep|burnt/.test(n)) out = shade(out, -0.32);
   }
-  if (!base) { const k = KEYS.find((key) => n.includes(key)); if (k) base = MAP[k]; }
-  if (!base) return null;
-  if (/فاتح|باستيل|light|pastel|baby/.test(n) && !MAP[n]) return shade(base, 0.32);
-  if (/غامق|داكن|محروق|dark|deep|burnt/.test(n)) return shade(base, -0.32);
-  return base;
+  CACHE.set(n, out);
+  return out;
 }
 
 // ألوان المنتج المتاحة: من مخزون الألوان أو صور الألوان أو حقل اللون النصي (مفصول بفواصل)
