@@ -198,13 +198,16 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   const [burst, setBurst] = useState(0);
   const [buffering, setBuffering] = useState(false);
   const [errored, setErrored] = useState(false);
+  // المتصفح رفض التشغيل التلقائي (NotAllowedError — وضع توفير الطاقة/سياسة iOS)؟
+  // نعرض زر ▶ واضحاً، وأي لمسة (نقرة/سحب) تستأنف لأنها إيماءة مستخدم حقيقية.
+  const [needsTap, setNeedsTap] = useState(false);
   const [pick, setPick] = useState(false);
   const [selSize, setSelSize] = useState('');
   const [selColor, setSelColor] = useState('');
   const vidRef = useRef(null);
   const hlsRef = useRef(null); // مشغّل hls.js (أندرويد/كروم) — iOS يشغّل HLS أصلياً
   const [useMp4, setUseMp4] = useState(false); // فشل HLS؟ → احتياط MP4 نظيف
-  const tapRef = useRef({ t: 0, timer: null });
+  const tapRef = useRef({ t: 0 });
   const holdRef = useRef({ timer: null, held: false, x: 0, y: 0, moved: false, swallow: false });
   const activeRef = useRef(isActive);
   activeRef.current = isActive;
@@ -282,7 +285,12 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
     // الآن: محاولة فورية + إعادة عند جاهزية البيانات + محاولات مجدولة قليلة
     // (لا نقاوم الإيقاف المتعمّد بالضغط المطوّل).
     let alive = true;
-    const tryPlay = () => { if (alive && vid.paused && !holdRef.current.held) vid.play().catch(() => {}); };
+    const tryPlay = () => {
+      if (!alive || !vid.paused || holdRef.current.held) return;
+      vid.play()
+        .then(() => { if (alive) setNeedsTap(false); })
+        .catch((err) => { if (alive && err && err.name === 'NotAllowedError') setNeedsTap(true); });
+    };
     tryPlay();
     vid.addEventListener('loadeddata', tryPlay);
     vid.addEventListener('canplay', tryPlay);
@@ -295,7 +303,15 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
     };
   }, [isActive]);
 
-  useEffect(() => { if (vidRef.current) vidRef.current.muted = muted; }, [muted]);
+  // iOS يوقف الفيديو تلقائياً لو أُزيل الكتم خارج إيماءة مستخدم مباشرة (سياسة WebKit
+  // الموثّقة) — لهذا بعد تطبيق الكتم نستأنف فوراً، ولو رُفض يظهر زر ▶ بدل شاشة ميتة.
+  useEffect(() => {
+    const vid = vidRef.current;
+    if (!vid) return;
+    vid.muted = muted;
+    if (!muted) ensurePlaying();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [muted]);
 
   // حارس الانحشار (زي مشغّلات الريلز الكبيرة): لو صار الفيديو "شغّال" لكن وقته لا
   // يتقدّم ~6 ثوانٍ (تخزين معلّق/شبكة انقطعت لحظة/جلسة iOS انحشرت) نعيد تحميل
@@ -359,7 +375,9 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   const ensurePlaying = () => {
     const v = vidRef.current;
     if (v && isActive && !holdRef.current.held && !document.hidden && v.paused && !v.ended) {
-      v.play().catch(() => {});
+      v.play()
+        .then(() => setNeedsTap(false))
+        .catch((err) => { if (err && err.name === 'NotAllowedError') setNeedsTap(true); });
     }
   };
   const onVidEnded = () => {
@@ -373,21 +391,29 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
     if (navigator.vibrate) navigator.vibrate(18); // اهتزاز خفيف (أندرويد)
   };
 
-  // نقرة مفردة = كتم/تشغيل | نقرة مزدوجة = لايك
+  // نقرة = إزالة كتم (+استئناف لو واقف) | نقرة مزدوجة = لايك
+  // كل شيء يتنفّذ فوراً داخل الإيماءة نفسها — كان تأخير إزالة الكتم بمؤقّت 350ms
+  // يُخرجها من نافذة إيماءة المستخدم، فيوقف iOS الفيديو (سياسة WebKit: إزالة الكتم
+  // بلا إيماءة = إيقاف) ثم تُرفض كل محاولات التشغيل التلقائية إلى أن يضغط المستخدم
+  // ضغطاً مطوّلاً — هذا كان سبب "الريل بوقف وما برضى يشتغل إلا بضغطة طويلة".
   const onTap = () => {
+    const v = vidRef.current;
+    if (v && v.paused && !v.ended) { v.play().then(() => setNeedsTap(false)).catch(() => {}); }
     const now = Date.now();
     if (now - tapRef.current.t < 350) {
-      clearTimeout(tapRef.current.timer);
       tapRef.current.t = 0;
       doLike();
     } else {
       tapRef.current.t = now;
-      tapRef.current.timer = setTimeout(() => { if (muted) onUnmute(); tapRef.current.t = 0; }, 350);
+      if (muted) { if (v) v.muted = false; onUnmute(); } // الكتم يُزال داخل الإيماءة مباشرة — iOS ما بيوقف الفيديو
     }
   };
 
   // ضغط مطوّل = إيقاف مؤقّت (مع إلغائه إن صار تمرير)
   const onDown = (e) => {
+    // أول لمسة إيماءة حقيقية: لو الفيديو واقف (توفير طاقة/رفض تشغيل) نستأنفه فوراً
+    const v = vidRef.current;
+    if (v && activeRef.current && v.paused && !v.ended) { v.play().then(() => setNeedsTap(false)).catch(() => {}); }
     holdRef.current = { ...holdRef.current, held: false, moved: false, x: e.clientX || 0, y: e.clientY || 0 };
     holdRef.current.timer = setTimeout(() => {
       if (!holdRef.current.moved) { holdRef.current.held = true; vidRef.current?.pause(); }
@@ -462,7 +488,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
             onEnded={onVidEnded}
             onPause={ensurePlaying}
             onWaiting={() => setBuffering(true)}
-            onPlaying={() => setBuffering(false)}
+            onPlaying={() => { setBuffering(false); setNeedsTap(false); }}
             onCanPlay={() => { setBuffering(false); ensurePlaying(); }}
             onError={() => { if (!useMp4) setUseMp4(true); else setErrored(true); }}
             style={{ touchAction: 'pan-y' }}
@@ -470,8 +496,17 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
           />
         )}
 
+        {/* المتصفح رفض التشغيل التلقائي (توفير طاقة iOS ونحوه) → زر ▶ واضح، وأي لمسة تشغّل */}
+        {needsTap && isActive && !errored && (
+          <div className="pointer-events-none absolute inset-0 z-[6] flex items-center justify-center">
+            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-black/55 ring-1 ring-white/25 backdrop-blur-sm">
+              <svg viewBox="0 0 24 24" className="h-8 w-8 translate-x-0.5 text-white" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" /></svg>
+            </span>
+          </div>
+        )}
+
         {/* مؤشّر تحميل الفيديو */}
-        {buffering && isActive && !errored && (
+        {buffering && isActive && !errored && !needsTap && (
           <div className="pointer-events-none absolute inset-0 z-[6] flex items-center justify-center">
             <span className="h-10 w-10 animate-spin rounded-full border-[3px] border-white/30 border-t-white" />
           </div>
