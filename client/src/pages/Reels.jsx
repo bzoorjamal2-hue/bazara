@@ -180,6 +180,7 @@ export default function Reels() {
               preload={i === active || i === active + 1}
               isLast={i === items.length - 1}
               onUnmute={() => setMutedPersist(false)}
+              onForceMute={() => setMutedPersist(true)}
               onEnded={() => goNext(i)}
             />
           ))}
@@ -189,7 +190,7 @@ export default function Reels() {
   );
 }
 
-function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute, onEnded }) {
+function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute, onForceMute, onEnded }) {
   const { add } = useCart();
   const { has, toggle } = useWishlist();
   const liked = has(p.id);
@@ -198,9 +199,6 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   const [burst, setBurst] = useState(0);
   const [buffering, setBuffering] = useState(false);
   const [errored, setErrored] = useState(false);
-  // المتصفح رفض التشغيل التلقائي (NotAllowedError — وضع توفير الطاقة/سياسة iOS)؟
-  // نعرض زر ▶ واضحاً، وأي لمسة (نقرة/سحب) تستأنف لأنها إيماءة مستخدم حقيقية.
-  const [needsTap, setNeedsTap] = useState(false);
   const [pick, setPick] = useState(false);
   const [selSize, setSelSize] = useState('');
   const [selColor, setSelColor] = useState('');
@@ -286,25 +284,33 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
     // (لا نقاوم الإيقاف المتعمّد بالضغط المطوّل).
     let alive = true;
     const tryPlay = () => {
-      if (!alive || !vid.paused || holdRef.current.held) return;
-      vid.play()
-        .then(() => { if (alive) setNeedsTap(false); })
-        .catch((err) => { if (alive && err && err.name === 'NotAllowedError') setNeedsTap(true); });
+      if (!alive || vid.ended || !vid.paused || holdRef.current.held || document.hidden) return;
+      vid.play().catch((err) => {
+        // المتصفح رفض (توفير طاقة/صوت بلا إيماءة)؟ الأولوية أن يظل الفيديو يعمل دائماً:
+        // نكتمه ونشغّله — أفضل من شاشة مجمّدة تنتظر كبسة (والصوت يرجع بنقرة المستخدم).
+        if (alive && err && err.name === 'NotAllowedError' && !vid.muted) {
+          onForceMute();
+          vid.muted = true;
+          vid.play().catch(() => {});
+        }
+      });
     };
     tryPlay();
     vid.addEventListener('loadeddata', tryPlay);
     vid.addEventListener('canplay', tryPlay);
-    const timers = [200, 600, 1400].map((ms) => setTimeout(tryPlay, ms));
+    // محاولة دؤوبة كل 800ms — الفيديو النشط لا يبقى واقفاً أبداً مهما كان السبب
+    // (رفض مؤقت، انقطاع لحظي، عودة من الخلفية…) بلا أي تدخل من المستخدم.
+    const iv = setInterval(tryPlay, 800);
     return () => {
       alive = false;
-      timers.forEach(clearTimeout);
+      clearInterval(iv);
       vid.removeEventListener('loadeddata', tryPlay);
       vid.removeEventListener('canplay', tryPlay);
     };
   }, [isActive]);
 
   // iOS يوقف الفيديو تلقائياً لو أُزيل الكتم خارج إيماءة مستخدم مباشرة (سياسة WebKit
-  // الموثّقة) — لهذا بعد تطبيق الكتم نستأنف فوراً، ولو رُفض يظهر زر ▶ بدل شاشة ميتة.
+  // الموثّقة) — لهذا بعد تطبيق الكتم نستأنف فوراً، ولو رُفض بالصوت يُعاد مكتوماً (لا يجمد أبداً).
   useEffect(() => {
     const vid = vidRef.current;
     if (!vid) return;
@@ -375,9 +381,14 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   const ensurePlaying = () => {
     const v = vidRef.current;
     if (v && isActive && !holdRef.current.held && !document.hidden && v.paused && !v.ended) {
-      v.play()
-        .then(() => setNeedsTap(false))
-        .catch((err) => { if (err && err.name === 'NotAllowedError') setNeedsTap(true); });
+      v.play().catch((err) => {
+        // رُفض التشغيل بالصوت؟ نكتم ونشغّل — يظل يعمل تلقائياً بلا انتظار كبسة
+        if (err && err.name === 'NotAllowedError' && !v.muted) {
+          onForceMute();
+          v.muted = true;
+          v.play().catch(() => {});
+        }
+      });
     }
   };
   const onVidEnded = () => {
@@ -398,7 +409,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   // ضغطاً مطوّلاً — هذا كان سبب "الريل بوقف وما برضى يشتغل إلا بضغطة طويلة".
   const onTap = () => {
     const v = vidRef.current;
-    if (v && v.paused && !v.ended) { v.play().then(() => setNeedsTap(false)).catch(() => {}); }
+    if (v && v.paused && !v.ended) v.play().catch(() => {});
     const now = Date.now();
     if (now - tapRef.current.t < 350) {
       tapRef.current.t = 0;
@@ -411,9 +422,10 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
 
   // ضغط مطوّل = إيقاف مؤقّت (مع إلغائه إن صار تمرير)
   const onDown = (e) => {
-    // أول لمسة إيماءة حقيقية: لو الفيديو واقف (توفير طاقة/رفض تشغيل) نستأنفه فوراً
+    // أول لمسة إيماءة حقيقية: لو الفيديو واقف (توفير طاقة/رفض تشغيل) نستأنفه فوراً —
+    // حتى السحب للتمرير يكفي، فلا يحتاج المستخدم أي كبسة مقصودة.
     const v = vidRef.current;
-    if (v && activeRef.current && v.paused && !v.ended) { v.play().then(() => setNeedsTap(false)).catch(() => {}); }
+    if (v && activeRef.current && v.paused && !v.ended) v.play().catch(() => {});
     holdRef.current = { ...holdRef.current, held: false, moved: false, x: e.clientX || 0, y: e.clientY || 0 };
     holdRef.current.timer = setTimeout(() => {
       if (!holdRef.current.moved) { holdRef.current.held = true; vidRef.current?.pause(); }
@@ -488,7 +500,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
             onEnded={onVidEnded}
             onPause={ensurePlaying}
             onWaiting={() => setBuffering(true)}
-            onPlaying={() => { setBuffering(false); setNeedsTap(false); }}
+            onPlaying={() => setBuffering(false)}
             onCanPlay={() => { setBuffering(false); ensurePlaying(); }}
             onError={() => { if (!useMp4) setUseMp4(true); else setErrored(true); }}
             style={{ touchAction: 'pan-y' }}
@@ -496,17 +508,8 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
           />
         )}
 
-        {/* المتصفح رفض التشغيل التلقائي (توفير طاقة iOS ونحوه) → زر ▶ واضح، وأي لمسة تشغّل */}
-        {needsTap && isActive && !errored && (
-          <div className="pointer-events-none absolute inset-0 z-[6] flex items-center justify-center">
-            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-black/55 ring-1 ring-white/25 backdrop-blur-sm">
-              <svg viewBox="0 0 24 24" className="h-8 w-8 translate-x-0.5 text-white" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" /></svg>
-            </span>
-          </div>
-        )}
-
         {/* مؤشّر تحميل الفيديو */}
-        {buffering && isActive && !errored && !needsTap && (
+        {buffering && isActive && !errored && (
           <div className="pointer-events-none absolute inset-0 z-[6] flex items-center justify-center">
             <span className="h-10 w-10 animate-spin rounded-full border-[3px] border-white/30 border-t-white" />
           </div>
