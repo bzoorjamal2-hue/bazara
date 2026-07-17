@@ -12,6 +12,7 @@ import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
 import { flyToCart } from '../utils/flyToCart.js';
 import { productColorDots } from '../utils/colorDot.js';
 import QuickViewModal from './QuickViewModal.jsx';
+import Strike from './Strike.jsx';
 
 
 const PLACEHOLDER =
@@ -206,7 +207,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
         <h3 className="line-clamp-1 font-display font-semibold leading-snug text-stone-100">{product.name}</h3>
         <div className="mt-0.5 flex items-baseline gap-2">
           <span className="font-display text-lg font-bold text-wine">{t('common.currency')}{product.price}</span>
-          {hasDiscount && <span className="strike text-xs text-stone-500">{t('common.currency')}{product.oldPrice}</span>}
+          {hasDiscount && <Strike className="text-xs text-stone-500">{t('common.currency')}{product.oldPrice}</Strike>}
         </div>
         {/* دليل اجتماعي (أسلوب المتاجر الكبرى): تقييم بنجمة + عدد المبيعات بسطر واحد */}
         {(product.ratingCount > 0 || product.soldCount > 0) && (

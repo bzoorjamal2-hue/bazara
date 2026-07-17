@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { cldThumb } from '../utils/cloudinary.js';
 import { productThumb } from '../utils/recentlyViewed.js';
+import Strike from './Strike.jsx';
 
 const PH =
   'data:image/svg+xml;utf8,' +
@@ -49,7 +50,7 @@ export default function ProductRail({ title, products, currentId, icon = null, a
                 <p className="line-clamp-1 text-sm font-semibold text-stone-100">{p.name}</p>
                 <div className="mt-1 flex items-baseline justify-center gap-1.5">
                   <span className="font-bold text-wine">{t('common.currency')}{p.price}</span>
-                  {hasDiscount && <span className="strike text-xs text-stone-500">{t('common.currency')}{p.oldPrice}</span>}
+                  {hasDiscount && <Strike className="text-xs text-stone-500">{t('common.currency')}{p.oldPrice}</Strike>}
                 </div>
               </div>
             </Link>

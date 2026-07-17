@@ -271,7 +271,9 @@ input[type='datetime-local']::-webkit-datetime-edit {
   content: '';
   position: absolute;
   inset-inline: -2px;
-  top: 50%; /* مُعايَر بمجسّ بيسلاين حقيقي: مركز حبر الأرقام = 49.5–50.5% بتجوال/القاهرة/Inter المحلية */
+  /* يُقاس مركز حبر الأرقام حيّاً على الجهاز (كمبوننت Strike) فيُضبط بالضبط مهما
+     تضخّم الصندوق بسبب سقوط ₪ لخط أطول على iOS. قبل القياس نرجع لـ50% (قريب). */
+  top: var(--strike-y, 50%);
   height: 1.5px;
   background: currentColor;
   opacity: 0.85;

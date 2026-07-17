@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import Seo from '../components/Seo.jsx';
+import Strike from '../components/Strike.jsx';
 import { cldThumb } from '../utils/cloudinary.js';
 import { HeartIcon, CartIcon, XIcon } from '../components/icons.jsx';
 import { goBack } from '../utils/nav.js';
@@ -62,7 +63,7 @@ export default function Wishlist() {
                 <Link to={`/product/${p.id}`} className="line-clamp-1 font-display font-semibold text-stone-100 hover:text-gold-200">{p.name}</Link>
                 <p className="mt-0.5 flex items-baseline gap-2">
                   <span className="font-display text-lg font-bold text-wine">{t('common.currency')}{p.price}</span>
-                  {p.oldPrice > p.price && <span className="strike text-xs text-stone-500">{t('common.currency')}{p.oldPrice}</span>}
+                  {p.oldPrice > p.price && <Strike className="text-xs text-stone-500">{t('common.currency')}{p.oldPrice}</Strike>}
                 </p>
               </div>
             </div>

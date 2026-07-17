@@ -7,6 +7,7 @@ import { ProductDetailsSkeleton } from '../components/Skeleton.jsx';
 import StarRating from '../components/StarRating.jsx';
 import Lightbox from '../components/Lightbox.jsx';
 import ProductRail from '../components/ProductRail.jsx';
+import Strike from '../components/Strike.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
@@ -335,7 +336,7 @@ export default function ProductDetails() {
             <span className="font-display text-4xl font-extrabold gradient-text">{t('common.currency')}{product.price}</span>
             {hasDiscount && (
               <>
-                <span className="strike text-lg text-stone-500">{t('common.currency')}{product.oldPrice}</span>
+                <Strike className="text-lg text-stone-500">{t('common.currency')}{product.oldPrice}</Strike>
                 <span className="rounded-full bg-[#8a2438] px-2.5 py-1 text-xs font-bold text-[#F4EDE2] shadow-sm">
                   {t('product.savePct', { pct: Math.round((1 - product.price / product.oldPrice) * 100) })}
                 </span>

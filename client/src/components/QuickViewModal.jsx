@@ -10,6 +10,7 @@ import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
 import { flyToCart } from '../utils/flyToCart.js';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { sizeLabel } from '../utils/sizes.js';
+import Strike from './Strike.jsx';
 import { colorToCss } from '../utils/colorDot.js';
 import SizeGuideModal from './SizeGuideModal.jsx';
 import CloseButton from './CloseButton.jsx';
@@ -141,7 +142,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
 
           <div className="mt-2 flex items-baseline gap-2">
             <span className="font-display text-2xl font-bold text-wine">{t('common.currency')}{product.price}</span>
-            {hasDiscount && <span className="strike text-sm text-stone-400">{t('common.currency')}{product.oldPrice}</span>}
+            {hasDiscount && <Strike className="text-sm text-stone-400">{t('common.currency')}{product.oldPrice}</Strike>}
           </div>
 
           {product.description && (

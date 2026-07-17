@@ -9,6 +9,7 @@ import { HeartIcon, CartIcon, VideoIcon, SpeakerIcon, StoreIcon } from '../compo
 import CloseButton from '../components/CloseButton.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import Spinner from '../components/Spinner.jsx';
+import Strike from '../components/Strike.jsx';
 import { sizeLabel } from '../utils/sizes.js';
 import { goBack } from '../utils/nav.js';
 
@@ -617,7 +618,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
           {p.description && <p className="line-clamp-1 text-xs text-white/75 drop-shadow">{p.description}</p>}
           <div className="flex items-center gap-2">
             <span className="rounded-full bg-black/50 px-3 py-1 font-display text-lg font-extrabold text-gold-200 ring-1 ring-[#e6c878]/30">{t('common.currency')}{p.price}</span>
-            {hasDiscount && <span className="strike text-sm text-white/70">{t('common.currency')}{p.oldPrice}</span>}
+            {hasDiscount && <Strike className="text-sm text-white/70">{t('common.currency')}{p.oldPrice}</Strike>}
           </div>
           <div className="mt-1 flex items-stretch gap-2">
             <button onClick={quickAdd}
