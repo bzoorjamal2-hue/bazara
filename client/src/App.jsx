@@ -47,6 +47,12 @@ const Reels = lazy(() => import('./pages/Reels.jsx'));
 const Track = lazy(() => import('./pages/Track.jsx'));
 const PaymentCallback = lazy(() => import('./pages/PaymentCallback.jsx'));
 const NotFound = lazy(() => import('./pages/NotFound.jsx'));
+// معاينة تطويرية لنموذج المنتج (DEV فقط — يزيلها البناء نهائياً)
+const DevProductForm = lazy(() =>
+  import('./pages/dashboard/ProductForm.jsx').then((m) => ({
+    default: () => <m.default initial={null} onClose={() => {}} onSaved={() => {}} />,
+  }))
+);
 
 // مواضع التمرير المحفوظة لكل صفحة (لاستعادتها عند الرجوع)
 const scrollPositions = new Map();
@@ -151,6 +157,8 @@ function AnimatedRoutes() {
           <Route path="/reels" element={<Reels />} />
           <Route path="/track" element={<Track />} />
           <Route path="/payment/callback" element={<PaymentCallback />} />
+          {/* معاينة نموذج المنتج أثناء التطوير فقط — لا يدخل بنسخة الإنتاج (يُحذف بالبناء) */}
+          {import.meta.env.DEV && <Route path="/__dev/product-form" element={<DevProductForm />} />}
           <Route
             path="/dashboard"
             element={

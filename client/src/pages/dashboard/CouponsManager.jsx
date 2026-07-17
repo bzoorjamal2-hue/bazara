@@ -118,7 +118,7 @@ export default function CouponsManager() {
           </div>
           <div>
             <label className="label">{t('dashboard.coupons.expiresAt')} <span className="text-stone-500">({t('common.optional')})</span></label>
-            <input className="input w-full max-w-full [color-scheme:dark]" type="date" value={form.expiresAt} onChange={set('expiresAt')} />
+            <input className="input" type="date" value={form.expiresAt} onChange={set('expiresAt')} />
           </div>
         </div>
         <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-gold-400/15 bg-black/20 px-4 py-2.5">

@@ -205,7 +205,16 @@ input[type='time'] {
   min-width: 0;
   max-width: 100%;
   box-sizing: border-box;
+  /* iOS يقلّص خانة التاريخ الفارغة لارتفاع ضئيل — نثبّتها بحجم باقي الحقول وبعرض كامل */
+  width: 100%;
+  min-height: 2.9rem;
+  display: block;
 }
+/* تقويم النظام يتبع ثيم التطبيق (كان مقفولاً على الداكن فيبان "مطفياً" نهاراً) */
+.theme-pub input[type='date'],
+.theme-pub input[type='datetime-local'] { color-scheme: light; }
+html.dark .theme-pub input[type='date'],
+html.dark .theme-pub input[type='datetime-local'] { color-scheme: dark; }
 input[type='date']::-webkit-date-and-time-value,
 input[type='datetime-local']::-webkit-date-and-time-value {
   text-align: start;
@@ -643,6 +652,13 @@ html.dark .theme-pub .text-stone-700 { color: #d2c4aa; }
 
 /* البنّي (عناوين/أسعار) → ذهبي شمبانيا مضيء فخم */
 html.dark .theme-pub .text-wine { color: #f0dca6; }
+/* text-gold-* يُقلب نهاراً إلى بنّي (5e4636) — ليلاً يجب أن يعود ذهبياً مضيئاً وإلا اختفى على الداكن */
+html.dark .theme-pub .text-gold-100,
+html.dark .theme-pub .text-gold-200,
+html.dark .theme-pub .text-gold-300,
+html.dark .theme-pub .text-gold-400 { color: #f0dca6; }
+html.dark .theme-pub .hover\:text-gold-100:hover,
+html.dark .theme-pub .hover\:text-gold-200:hover { color: #ffe9b8; }
 html.dark .theme-pub .gradient-text {
   background: linear-gradient(135deg, #fdf3d3 0%, #ecd28a 40%, #d4af37 100%);
   -webkit-background-clip: text;

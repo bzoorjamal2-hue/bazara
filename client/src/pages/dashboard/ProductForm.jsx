@@ -6,9 +6,9 @@ import ImageInput from '../../components/ImageInput.jsx';
 import VideoInput from '../../components/VideoInput.jsx';
 import Select from '../../components/Select.jsx';
 import useScrollLock from '../../hooks/useScrollLock.js';
-import { XIcon, VideoIcon, ClockIcon, PaletteIcon, CameraIcon, StarIcon } from '../../components/icons.jsx';
+import { XIcon, ClockIcon, PaletteIcon, CameraIcon, StarIcon, EditIcon, TagIcon } from '../../components/icons.jsx';
 import { SIZES, sizeLabel } from '../../utils/sizes.js';
-import { colorToCss } from '../../utils/colorDot.js';
+import { colorToCss, COLOR_SUGGESTIONS } from '../../utils/colorDot.js';
 
 const CATEGORIES = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
 const EMPTY = {
@@ -22,6 +22,16 @@ function toDateInput(iso) {
   const d = new Date(iso);
   if (isNaN(d)) return '';
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+
+// قسم معنون داخل النموذج — يجمع الحقول المتشابهة بإطار واحد مرتب بدل رصّها المتتالي
+function Section({ icon, title, children }) {
+  return (
+    <section className="rounded-2xl border border-gold-400/15 bg-black/[0.05] p-4">
+      <h3 className="mb-3 flex items-center gap-2 border-b border-gold-400/10 pb-2.5 text-sm font-bold text-gold-100">{icon}{title}</h3>
+      <div className="space-y-4">{children}</div>
+    </section>
+  );
 }
 
 export default function ProductForm({ initial, onClose, onSaved }) {
@@ -153,61 +163,38 @@ export default function ProductForm({ initial, onClose, onSaved }) {
         {error && <div className="mb-4 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
 
         <form onSubmit={submit} className="space-y-4">
-          <ImageInput label={t('dashboard.product.image')} value={form.imageUrl} onChange={(v) => setForm({ ...form, imageUrl: v })} />
-
-          {/* معرض الصور الإضافية */}
-          <div>
-            <label className="label">{t('dashboard.product.gallery')} <span className="text-stone-500">({t('common.optional')})</span></label>
-            <div className="space-y-3">
-              {form.images.map((img, idx) => (
-                <div key={idx} className="flex items-start gap-2">
-                  <div className="flex-1">
-                    <ImageInput value={img} onChange={(v) => setGalleryAt(idx, v)} />
+          {/* ١) الصور والفيديو */}
+          <Section icon={<CameraIcon className="h-4 w-4" />} title={t('dashboard.product.secMedia')}>
+            <ImageInput label={t('dashboard.product.image')} value={form.imageUrl} onChange={(v) => setForm({ ...form, imageUrl: v })} />
+            <div>
+              <label className="label">{t('dashboard.product.gallery')} <span className="text-stone-500">({t('common.optional')})</span></label>
+              <div className="space-y-3">
+                {form.images.map((img, idx) => (
+                  <div key={idx} className="flex items-start gap-2">
+                    <div className="min-w-0 flex-1">
+                      <ImageInput value={img} onChange={(v) => setGalleryAt(idx, v)} />
+                    </div>
+                    <button type="button" onClick={() => removeGallery(idx)} className="mt-1 rounded-lg p-2 text-stone-400 hover:text-red-300"><XIcon className="h-4 w-4" /></button>
                   </div>
-                  <button type="button" onClick={() => removeGallery(idx)} className="mt-1 rounded-lg p-2 text-stone-400 hover:text-red-300"><XIcon className="h-4 w-4" /></button>
-                </div>
-              ))}
-              {form.images.length < 5 && (
-                <button type="button" onClick={addGallery} className="btn-ghost w-full text-sm">＋ {t('dashboard.product.addImage')}</button>
-              )}
+                ))}
+                {form.images.length < 5 && (
+                  <button type="button" onClick={addGallery} className="btn-ghost w-full text-sm">＋ {t('dashboard.product.addImage')}</button>
+                )}
+              </div>
             </div>
-          </div>
-
-          {/* فيديو المنتج (رفع مباشر أو رابط) */}
-          <div>
             <VideoInput
               label={`${t('dashboard.product.video')} (${t('common.optional')})`}
               value={form.videoUrl}
               onChange={(v) => setForm({ ...form, videoUrl: v })}
             />
-          </div>
+          </Section>
 
-          <div>
-            <label className="label">{t('dashboard.product.name')}</label>
-            <input type="text" required className="input" value={form.name} onChange={set('name')} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+          {/* ٢) المعلومات الأساسية */}
+          <Section icon={<EditIcon className="h-4 w-4" />} title={t('dashboard.product.secBasic')}>
             <div>
-              <label className="label">{t('dashboard.product.price')}</label>
-              <input type="number" step="0.01" min="0" required className="input" value={form.price} onChange={set('price')} />
+              <label className="label">{t('dashboard.product.name')}</label>
+              <input type="text" required className="input" value={form.name} onChange={set('name')} />
             </div>
-            <div>
-              <label className="label">{t('dashboard.product.oldPrice')} <span className="text-stone-500">({t('common.optional')})</span></label>
-              <input type="number" step="0.01" min="0" className="input" value={form.oldPrice} onChange={set('oldPrice')} />
-            </div>
-          </div>
-
-          {/* عرض بوقت محدود: عدّاد تنازلي — يظهر للزبون، وعند انتهائه يعود السعر الأصلي تلقائياً */}
-          {form.oldPrice !== '' && (
-            <div className="min-w-0">
-              <label className="label flex items-center gap-1.5"><ClockIcon className="h-4 w-4" /> {t('dashboard.product.saleEndsAt')} <span className="text-stone-500">({t('common.optional')})</span></label>
-              <input type="date" className="input w-full max-w-full [color-scheme:dark]" value={form.saleEndsAt} onChange={set('saleEndsAt')} />
-              <p className="mt-1 text-xs text-stone-400">{t('dashboard.product.saleEndsHint')}</p>
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="label">{t('dashboard.product.category')}</label>
               <Select
@@ -217,12 +204,40 @@ export default function ProductForm({ initial, onClose, onSaved }) {
               />
             </div>
             <div>
+              <label className="label">{t('dashboard.product.description')} <span className="text-stone-500">({t('common.optional')})</span></label>
+              <textarea rows={3} className="input resize-none" value={form.description} onChange={set('description')} />
+            </div>
+          </Section>
+
+          {/* ٣) السعر والعرض */}
+          <Section icon={<TagIcon className="h-4 w-4" />} title={t('dashboard.product.secPricing')}>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="min-w-0">
+                <label className="label">{t('dashboard.product.price')}</label>
+                <input type="number" step="0.01" min="0" required className="input" value={form.price} onChange={set('price')} />
+              </div>
+              <div className="min-w-0">
+                <label className="label">{t('dashboard.product.oldPrice')} <span className="text-stone-500">({t('common.optional')})</span></label>
+                <input type="number" step="0.01" min="0" className="input" value={form.oldPrice} onChange={set('oldPrice')} />
+              </div>
+            </div>
+            {/* عرض بوقت محدود: عدّاد تنازلي — يظهر للزبون، وعند انتهائه يعود السعر الأصلي تلقائياً */}
+            {form.oldPrice !== '' && (
+              <div className="min-w-0">
+                <label className="label flex items-center gap-1.5"><ClockIcon className="h-4 w-4" /> {t('dashboard.product.saleEndsAt')} <span className="text-stone-500">({t('common.optional')})</span></label>
+                <input type="date" className="input" value={form.saleEndsAt} onChange={set('saleEndsAt')} />
+                <p className="mt-1 text-xs text-stone-400">{t('dashboard.product.saleEndsHint')}</p>
+              </div>
+            )}
+          </Section>
+
+          {/* ٤) المخزون والألوان */}
+          <Section icon={<PaletteIcon className="h-4 w-4" />} title={t('dashboard.product.secInventory')}>
+            <div>
               <label className="label">{t('dashboard.product.stock')}</label>
               <input type="number" min="0" className="input" value={form.stock} onChange={set('stock')} placeholder="∞" />
               <p className="mt-1 text-xs text-stone-400">{t('dashboard.product.stockHint')}</p>
             </div>
-          </div>
-
           {/* المتغيّرات: لكل لون نختار النمر المتوفّرة وكميتها — الزبون يختار اللون أولاً ثم النمرة */}
           <div>
             <label className="label flex items-center gap-1.5"><PaletteIcon className="h-4 w-4" /> {t('dashboard.product.variants')} <span className="text-stone-500">({t('common.optional')})</span></label>
@@ -295,24 +310,32 @@ export default function ProductForm({ initial, onClose, onSaved }) {
               </div>
             )}
 
-            {/* إضافة لون جديد */}
+            {/* إضافة لون جديد — مع اقتراحات أثناء الكتابة ومعاينة حيّة لدائرة اللون */}
             <div className="mt-2 flex gap-2">
-              <input
-                type="text"
-                className="input flex-1"
-                placeholder={t('dashboard.product.addColorPlaceholder')}
-                value={colorInput}
-                onChange={(e) => setColorInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addColorVariant(colorInput); } }}
-              />
+              <div className="relative min-w-0 flex-1">
+                <input
+                  type="text"
+                  className="input !pe-10"
+                  list="bz-color-suggestions"
+                  placeholder={t('dashboard.product.addColorPlaceholder')}
+                  value={colorInput}
+                  onChange={(e) => setColorInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addColorVariant(colorInput); } }}
+                />
+                {colorToCss(colorInput) && (
+                  <span
+                    className="pointer-events-none absolute end-3 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full"
+                    style={{ background: colorToCss(colorInput), boxShadow: '0 0 0 1px rgba(244,237,226,0.45), inset 0 0 0 1px rgba(0,0,0,0.2)' }}
+                  />
+                )}
+              </div>
               <button type="button" onClick={() => addColorVariant(colorInput)} className="btn-ghost shrink-0 !px-4">＋ {t('dashboard.product.addColor')}</button>
+              <datalist id="bz-color-suggestions">
+                {COLOR_SUGGESTIONS.map((c) => <option key={c} value={c} />)}
+              </datalist>
             </div>
           </div>
-
-          <div>
-            <label className="label">{t('dashboard.product.description')}</label>
-            <textarea rows={3} className="input resize-none" value={form.description} onChange={set('description')} />
-          </div>
+          </Section>
 
           <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-gold-400/15 bg-black/20 px-4 py-3">
             <input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} className="h-5 w-5 accent-gold-400" />
