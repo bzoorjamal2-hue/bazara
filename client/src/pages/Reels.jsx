@@ -31,7 +31,11 @@ function cldVideoParts(url) {
   if (vi === -1) vi = segs.length - 1;
   return { base: m[1], rest: segs.slice(vi).join('/').replace(/\.[a-z0-9]+(\?.*)?$/i, '') };
 }
-const reelHls = (url) => { const p = cldVideoParts(url); return p ? `${p.base}sp_auto/${p.rest}.m3u8` : ''; };
+// متصفحات التطبيقات الداخلية (فيسبوك/انستغرام/تيك توك…) تتعثر مع HLS — زوار الإعلانات
+// الممولة يفتحون منها، فنعطيهم MP4 تقدّمياً مباشرة (الأكثر توافقاً، بلا انحشار).
+const IN_APP_BROWSER = typeof navigator !== 'undefined'
+  && /FBAN|FBAV|FB_IAB|FBIOS|Instagram|Threads|TikTok|Snapchat|Line\//i.test(navigator.userAgent);
+const reelHls = (url) => { if (IN_APP_BROWSER) return ''; const p = cldVideoParts(url); return p ? `${p.base}sp_auto/${p.rest}.m3u8` : ''; };
 const reelMp4 = (url) => { const p = cldVideoParts(url); return p ? `${p.base}f_mp4,vc_h264,q_auto:good,w_720,c_limit/${p.rest}.mp4` : url; };
 // سفاري/iOS يشغّل HLS أصلياً (بلا hls.js) — نكشفه مرة واحدة على مستوى الوحدة
 const NATIVE_HLS = typeof document !== 'undefined' && !!document.createElement('video').canPlayType('application/vnd.apple.mpegurl');
@@ -220,7 +224,9 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
       .then(({ default: Hls }) => {
         if (cancelled) return;
         if (!Hls.isSupported()) { vid.src = mp4Url; return; }
-        hls = new Hls({ maxBufferLength: 15, capLevelToPlayerSize: true, autoStartLoad: false });
+        // مخزون 30 ثانية بدل 15 — على شبكات الجوّال الضعيفة (جمهور الإعلانات) كان
+        // المخزون القصير ينفد فيقف الفيديو كل شوي.
+        hls = new Hls({ maxBufferLength: 30, capLevelToPlayerSize: true, autoStartLoad: false });
         hlsRef.current = hls;
         hls.on(Hls.Events.ERROR, (_e, data) => {
           if (data && data.fatal) { try { hls.destroy(); } catch { /* تجاهل */ } hlsRef.current = null; setUseMp4(true); }
