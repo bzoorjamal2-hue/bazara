@@ -86,6 +86,14 @@ const MAP = {
   'نحاسي': '#b87333', copper: '#b87333', 'برونزي': '#8c6b3f', bronze: '#8c6b3f',
   'ذهبي': '#d4af37', gold: '#d4af37', 'قولد': '#d4af37',
   'روز جولد': '#d8a49b', 'روز قولد': '#d8a49b', rosegold: '#d8a49b', 'rose gold': '#d8a49b',
+
+  // ─── إنجليزي مكتوب بحروف عربية (شائع جداً بوصف الموضة) ───
+  'بلاك': '#1c1c1c', 'وايت': '#f8f8f8', 'بلو': '#2563eb', 'ريد': '#c0392b',
+  'جرين': '#2f6b3a', 'غرين': '#2f6b3a', 'اورنج': '#e67e22', 'اورانج': '#e67e22',
+  'بينك': '#e8a2b8', 'يلو': '#e6c14c', 'بيربل': '#6d5aa8', 'بربل': '#6d5aa8',
+  'براون': '#6b4a2f', 'جراي': '#8a8a8a', 'غراي': '#8a8a8a', 'قراي': '#8a8a8a',
+  'سكاي': '#7dd3fc', 'اوليف': '#5b6236', 'مينت': '#a8d8c0', 'كوفي': '#5c4033',
+  'فيوليت': '#6d5aa8', 'انديجو': '#3f51a3', 'شوكولا': '#4e342e', 'جولد': '#d4af37',
 };
 
 // توحيد الهمزات والتاء المربوطة + حروف صغيرة ليطابق "أسود"/"اسود" و"موكة"/"موكا" وغيرها
@@ -136,6 +144,20 @@ const MODIFIERS = /^(فاتح|فاتحه|غامق|غامقه|داكن|داكنه
 
 const lookup = (w) => MAP[w] || SKEL[skel(w)] || null;
 
+// 3) محرّك المتصفح نفسه: يفهم كل أسماء CSS الإنجليزية الرسمية (148 اسماً مثل
+// periwinkle وthistle) وأكواد hex — تغطية كاملة لما لا يعرفه قاموسنا
+let cssProbe = null;
+function cssParse(w) {
+  if (/^#?[0-9a-f]{6}$/.test(w)) return w[0] === '#' ? w : `#${w}`; // كود hex مباشر
+  if (typeof document === 'undefined' || /[؀-ۿ]/.test(w)) return null;
+  if (!cssProbe) cssProbe = document.createElement('span');
+  const s = cssProbe.style;
+  s.color = '';
+  s.color = w;
+  if (!s.color) s.color = w.replace(/\s+/g, ''); // "light blue" → lightblue
+  return s.color || null;
+}
+
 // "فاتح" يمزج نحو الأبيض و"غامق/محروق" نحو الأسود
 const shade = (hex, f) => {
   const n = parseInt(hex.slice(1), 16);
@@ -155,10 +177,13 @@ export function colorToCss(name) {
   let base = lookup(n);
   for (let i = words.length - 1; i >= 0 && !base; i -= 1) base = lookup(words[i]);
   if (!base) { const k = KEYS.find((key) => key.length >= 3 && n.includes(key)); if (k) base = MAP[k]; }
+  if (!base) base = cssParse(n);
   if (!base) base = fuzzyFind(n);
   for (let i = words.length - 1; i >= 0 && !base; i -= 1) base = fuzzyFind(words[i]);
+  for (let i = words.length - 1; i >= 0 && !base; i -= 1) base = cssParse(words[i]);
   let out = base || null;
-  if (out && !MAP[n]) {
+  // درجات فاتح/غامق تُطبَّق على ألوان hex فقط (أسماء CSS تُعرض كما هي)
+  if (out && out[0] === '#' && !MAP[n]) {
     if (/فاتح|باستيل|light|pastel|baby/.test(n)) out = shade(out, 0.32);
     else if (/غامق|داكن|محروق|dark|deep|burnt/.test(n)) out = shade(out, -0.32);
   }

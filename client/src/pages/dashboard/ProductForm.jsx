@@ -334,6 +334,10 @@ export default function ProductForm({ initial, onClose, onSaved }) {
                 {COLOR_SUGGESTIONS.map((c) => <option key={c} value={c} />)}
               </datalist>
             </div>
+            {/* الاسم غير معروف؟ ننبّه قبل الحفظ بدل دائرة فاضية تفاجئه على البطاقة */}
+            {colorInput.trim().length > 1 && !colorToCss(colorInput) && (
+              <p className="mt-1.5 text-xs text-orange-700">{t('dashboard.product.colorUnknown')}</p>
+            )}
           </div>
           </Section>
 

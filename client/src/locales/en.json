@@ -628,6 +628,7 @@
       "secBasic": "Basic info",
       "secPricing": "Pricing & sale",
       "secInventory": "Stock & colors",
+      "colorUnknown": "Color not recognized — it will be saved by name without a color dot. Try a suggested name.",
       "newTitle": "Add product",
       "editTitle": "Edit product",
       "created": "Product added.",
