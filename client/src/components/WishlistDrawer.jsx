@@ -64,7 +64,7 @@ export default function WishlistDrawer() {
                   </button>
                   <div className="min-w-0 flex-1">
                     <button onClick={() => { close(); navigate(`/product/${p.id}`); }} className="block truncate text-start font-display text-sm font-semibold text-stone-100">{p.name}</button>
-                    <p className="mt-1 flex items-center gap-2">
+                    <p className="mt-1 flex items-baseline gap-2">
                       <span className="font-bold text-gold-300">{t('common.currency')}{p.price}</span>
                       {p.oldPrice > p.price && <Strike className="text-xs text-stone-500">{t('common.currency')}{p.oldPrice}</Strike>}
                     </p>

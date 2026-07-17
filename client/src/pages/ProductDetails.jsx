@@ -333,14 +333,15 @@ export default function ProductDetails() {
 
           {/* بلوك السعر الفاخر: سعر ضخم + القديم مشطوباً بالمنتصف + شارة توفير خمرية */}
           <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-            <span className="font-display text-4xl font-extrabold gradient-text">{t('common.currency')}{product.price}</span>
+            {/* الرقمان الجديد والقديم في مجموعة items-baseline → يقفان على نفس خط الأساس */}
+            <span className="flex items-baseline gap-x-3">
+              <span className="font-display text-4xl font-extrabold gradient-text">{t('common.currency')}{product.price}</span>
+              {hasDiscount && <Strike className="text-lg text-stone-500">{t('common.currency')}{product.oldPrice}</Strike>}
+            </span>
             {hasDiscount && (
-              <>
-                <Strike className="text-lg text-stone-500">{t('common.currency')}{product.oldPrice}</Strike>
-                <span className="rounded-full bg-[#8a2438] px-2.5 py-1 text-xs font-bold text-[#F4EDE2] shadow-sm">
-                  {t('product.savePct', { pct: Math.round((1 - product.price / product.oldPrice) * 100) })}
-                </span>
-              </>
+              <span className="rounded-full bg-[#8a2438] px-2.5 py-1 text-xs font-bold text-[#F4EDE2] shadow-sm">
+                {t('product.savePct', { pct: Math.round((1 - product.price / product.oldPrice) * 100) })}
+              </span>
             )}
           </div>
 

@@ -616,7 +616,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
           {/* اسم بخط العرض الفاخر + سعر ذهبي بحبة عصرية (بلا blur — تمرير أسلس) */}
           <h2 className="line-clamp-2 font-display text-lg font-bold leading-snug drop-shadow-lg">{p.name}</h2>
           {p.description && <p className="line-clamp-1 text-xs text-white/75 drop-shadow">{p.description}</p>}
-          <div className="flex items-center gap-2">
+          <div className="flex items-baseline gap-2">
             <span className="rounded-full bg-black/50 px-3 py-1 font-display text-lg font-extrabold text-gold-200 ring-1 ring-[#e6c878]/30">{t('common.currency')}{p.price}</span>
             {hasDiscount && <Strike className="text-sm text-white/70">{t('common.currency')}{p.oldPrice}</Strike>}
           </div>
