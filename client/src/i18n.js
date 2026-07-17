@@ -18,10 +18,12 @@ i18n
     // الترجمة مُضمّنة (resources) فلا حاجة لـ Suspense — يجعل تبديل اللغة فورياً بلا شاشة تحميل
     react: { useSuspense: false },
     detection: {
-      // نحفظ اختيار اللغة في localStorage
-      order: ['localStorage', 'navigator'],
+      // العربية هي الافتراضية للجميع مهما كانت لغة الجهاز — كانت لغة النظام (navigator)
+      // تفتح الموقع بالإنجليزية لكل جهاز مضبوط عليها. الإنجليزية فقط لمن بدّلها بنفسه.
+      // مفتاح جديد (bz_lang) لأن المفتاح القديم كان يخزّن لغة الجهاز المكتشفة تلقائياً.
+      order: ['localStorage'],
       caches: ['localStorage'],
-      lookupLocalStorage: 'lang',
+      lookupLocalStorage: 'bz_lang',
     },
   });
 
