@@ -36,7 +36,9 @@ function cldVideoParts(url) {
 const IN_APP_BROWSER = typeof navigator !== 'undefined'
   && /FBAN|FBAV|FB_IAB|FBIOS|Instagram|Threads|TikTok|Snapchat|Line\//i.test(navigator.userAgent);
 const reelHls = (url) => { if (IN_APP_BROWSER) return ''; const p = cldVideoParts(url); return p ? `${p.base}sp_auto/${p.rest}.m3u8` : ''; };
-const reelMp4 = (url) => { const p = cldVideoParts(url); return p ? `${p.base}f_mp4,vc_h264,q_auto:good,w_720,c_limit/${p.rest}.mp4` : url; };
+// MP4 بجودة عالية (1080p) — الريلز قصيرة فلا وقت للبث المتكيّف كي "يرتقي" بالدقة،
+// وكانت النتيجة مشاهدة معظم الريل بدقة متدنية. q_auto:good عند 1080 حادّ وواضح.
+const reelMp4 = (url) => { const p = cldVideoParts(url); return p ? `${p.base}f_mp4,vc_h264,q_auto:good,w_1080,c_limit/${p.rest}.mp4` : url; };
 // سفاري/iOS يشغّل HLS أصلياً (بلا hls.js) — نكشفه مرة واحدة على مستوى الوحدة
 const NATIVE_HLS = typeof document !== 'undefined' && !!document.createElement('video').canPlayType('application/vnd.apple.mpegurl');
 
@@ -180,7 +182,6 @@ export default function Reels() {
               preload={i === active || i === active + 1}
               isLast={i === items.length - 1}
               onUnmute={() => setMutedPersist(false)}
-              onForceMute={() => setMutedPersist(true)}
               onEnded={() => goNext(i)}
             />
           ))}
@@ -190,7 +191,7 @@ export default function Reels() {
   );
 }
 
-function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute, onForceMute, onEnded }) {
+function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute, onEnded }) {
   const { add } = useCart();
   const { has, toggle } = useWishlist();
   const liked = has(p.id);
@@ -206,6 +207,10 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   const hlsRef = useRef(null); // مشغّل hls.js (أندرويد/كروم) — iOS يشغّل HLS أصلياً
   const [useMp4, setUseMp4] = useState(false); // فشل HLS؟ → احتياط MP4 نظيف
   const tapRef = useRef({ t: 0 });
+  // كتم مؤقّت لهذا الريل فقط عند رفض iOS التشغيل بالصوت — لا نلمس التفضيل العام
+  // (كان يُكتَم الإعداد العام للأبد فيصمت كل الريلز التالية = "كل كم فيديو ينكتم").
+  // يرجع الصوت تلقائياً بأول لمسة/سحبة، والأيقونة تبقى صحيحة (صوت مفعّل).
+  const forcedMuteRef = useRef(false);
   const holdRef = useRef({ timer: null, held: false, x: 0, y: 0, moved: false, swallow: false });
   const activeRef = useRef(isActive);
   activeRef.current = isActive;
@@ -227,7 +232,13 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
         if (!Hls.isSupported()) { vid.src = mp4Url; return; }
         // مخزون 30 ثانية بدل 15 — على شبكات الجوّال الضعيفة (جمهور الإعلانات) كان
         // المخزون القصير ينفد فيقف الفيديو كل شوي.
-        hls = new Hls({ maxBufferLength: 30, capLevelToPlayerSize: true, autoStartLoad: false });
+        // جودة عالية للريلز القصيرة:
+        // - startLevel:-1 + تقدير نطاق مبدئي عالٍ (5Mbps): يبدأ بأعلى دقة فوراً بدل أدنى
+        //   دقة "احتياطاً" (الريل القصير كان يخلص قبل ارتقاء الدقة = جودة زفتة).
+        // - أزلنا capLevelToPlayerSize: كان يقيّد الدقة بعرض المشغّل بالبكسل المنطقي
+        //   (~400px) فيختار ~480p رغم شاشة retina — سبب مباشر لضبابية الصورة.
+        // - ولو الشبكة فعلاً ضعيفة، ABR ينزل تلقائياً فلا تعليق.
+        hls = new Hls({ maxBufferLength: 30, autoStartLoad: false, startLevel: -1, abrEwmaDefaultEstimate: 5000000 });
         hlsRef.current = hls;
         hls.on(Hls.Events.ERROR, (_e, data) => {
           if (data && data.fatal) { try { hls.destroy(); } catch { /* تجاهل */ } hlsRef.current = null; setUseMp4(true); }
@@ -287,9 +298,9 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
       if (!alive || vid.ended || !vid.paused || holdRef.current.held || document.hidden) return;
       vid.play().catch((err) => {
         // المتصفح رفض (توفير طاقة/صوت بلا إيماءة)؟ الأولوية أن يظل الفيديو يعمل دائماً:
-        // نكتمه ونشغّله — أفضل من شاشة مجمّدة تنتظر كبسة (والصوت يرجع بنقرة المستخدم).
+        // نكتم هذا العنصر فقط مؤقّتاً ونشغّله — أفضل من تجمّد، ودون إفساد التفضيل العام.
         if (alive && err && err.name === 'NotAllowedError' && !vid.muted) {
-          onForceMute();
+          forcedMuteRef.current = true;
           vid.muted = true;
           vid.play().catch(() => {});
         }
@@ -314,10 +325,23 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   useEffect(() => {
     const vid = vidRef.current;
     if (!vid) return;
+    forcedMuteRef.current = false; // تفضيل جديد صريح من المستخدم يلغي أي كتم مؤقّت
     vid.muted = muted;
     if (!muted) ensurePlaying();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [muted]);
+
+  // استعادة الصوت داخل أي إيماءة (لمسة/بداية سحب): لو كان هذا الريل مكتوماً مؤقّتاً
+  // (رفض iOS التشغيل بالصوت تلقائياً) والمستخدم مفضّلٌ الصوت عاماً، نرجّعه فوراً —
+  // فالصوت يعود بلا كبسة مقصودة (أول تفاعل يكفي)، دون أي تجمّد.
+  const restoreSoundIfForced = () => {
+    const v = vidRef.current;
+    if (v && forcedMuteRef.current && !muted) {
+      forcedMuteRef.current = false;
+      v.muted = false;
+      v.play().catch(() => {});
+    }
+  };
 
   // حارس الانحشار (زي مشغّلات الريلز الكبيرة): لو صار الفيديو "شغّال" لكن وقته لا
   // يتقدّم ~6 ثوانٍ (تخزين معلّق/شبكة انقطعت لحظة/جلسة iOS انحشرت) نعيد تحميل
@@ -382,9 +406,9 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
     const v = vidRef.current;
     if (v && isActive && !holdRef.current.held && !document.hidden && v.paused && !v.ended) {
       v.play().catch((err) => {
-        // رُفض التشغيل بالصوت؟ نكتم ونشغّل — يظل يعمل تلقائياً بلا انتظار كبسة
+        // رُفض بالصوت؟ نكتم هذا العنصر مؤقّتاً ونشغّل — يظل يعمل بلا كبسة وبلا كتم عام
         if (err && err.name === 'NotAllowedError' && !v.muted) {
-          onForceMute();
+          forcedMuteRef.current = true;
           v.muted = true;
           v.play().catch(() => {});
         }
@@ -423,9 +447,11 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   // ضغط مطوّل = إيقاف مؤقّت (مع إلغائه إن صار تمرير)
   const onDown = (e) => {
     // أول لمسة إيماءة حقيقية: لو الفيديو واقف (توفير طاقة/رفض تشغيل) نستأنفه فوراً —
-    // حتى السحب للتمرير يكفي، فلا يحتاج المستخدم أي كبسة مقصودة.
+    // حتى السحب للتمرير يكفي، فلا يحتاج المستخدم أي كبسة مقصودة. ونرجّع الصوت إن كان
+    // مكتوماً مؤقّتاً — هذه الإيماءة تسمح لـ iOS بالصوت، فيعود تلقائياً.
     const v = vidRef.current;
     if (v && activeRef.current && v.paused && !v.ended) v.play().catch(() => {});
+    restoreSoundIfForced();
     holdRef.current = { ...holdRef.current, held: false, moved: false, x: e.clientX || 0, y: e.clientY || 0 };
     holdRef.current.timer = setTimeout(() => {
       if (!holdRef.current.moved) { holdRef.current.held = true; vidRef.current?.pause(); }
