@@ -101,7 +101,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
     <>
     <Link
       to={`/product/${product.id}`}
-      className="group relative block animate-fade-up transition-transform duration-300 ease-out will-change-transform hover:-translate-y-1.5 active:scale-[0.99]"
+      className="group relative block h-full animate-fade-up transition-transform duration-300 ease-out will-change-transform hover:-translate-y-1.5 active:scale-[0.99]"
       style={{ animationDelay: `${Math.min(index, 8) * 60}ms` }}
       onMouseEnter={() => product.videoUrl && setHovering(true)}
       onMouseLeave={() => setHovering(false)}
@@ -112,8 +112,10 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
     >
       {/* بطاقة محتواة بإطار فاخر (أسلوب المتاجر الكبرى): الصورة والمعلومات داخل بطاقة
           واحدة بحدود ذهبية خفيفة وظل ناعم — glass بيضاء نهاراً وداكنة أنيقة ليلاً */}
-      <div className="glass overflow-hidden !p-0 transition-shadow duration-300 group-hover:shadow-[0_22px_44px_-18px_rgba(46,33,24,0.35)]">
-      <div className="relative aspect-[3/4] overflow-hidden bg-ink-800">
+      {/* flex عمودي بارتفاع كامل: كل بطاقات الصف تتساوى طولاً مهما اختلف محتواها
+          (نقاط ألوان/تقييم موجودة أو لا) — الشبكة تظل مصفوفة ومنسّقة */}
+      <div className="glass flex h-full flex-col overflow-hidden !p-0 transition-shadow duration-300 group-hover:shadow-[0_22px_44px_-18px_rgba(46,33,24,0.35)]">
+      <div className="relative aspect-[3/4] shrink-0 overflow-hidden bg-ink-800">
         {/* هيكل لامع حتى تجهز الصورة — يُزال بعد التحميل (فلا يبقى أي أنيميشن يعمل) */}
         {!imgLoaded && <div className="skeleton absolute inset-0" aria-hidden="true" />}
         <img
@@ -199,8 +201,8 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
         </button>
       </div>
 
-      {/* قسم المعلومات داخل البطاقة (اسم/سعر/تقييم/ألوان) — مرتّب ومحتوى */}
-      <div className="px-3 pb-3 pt-2.5 text-start">
+      {/* قسم المعلومات داخل البطاقة (اسم/سعر/تقييم/ألوان) — flex-1 يملأ الباقي فتتساوى البطاقات */}
+      <div className="flex-1 px-3 pb-3 pt-2.5 text-start">
         <h3 className="line-clamp-1 font-display font-semibold leading-snug text-stone-100">{product.name}</h3>
         <div className="mt-0.5 flex items-baseline gap-2">
           <span className="font-display text-lg font-bold text-wine">{t('common.currency')}{product.price}</span>

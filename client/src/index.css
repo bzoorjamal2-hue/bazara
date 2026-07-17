@@ -254,7 +254,7 @@ input[type='datetime-local']::-webkit-datetime-edit {
 .strike {
   position: relative;
   display: inline-block; /* الصندوق يحضن الأرقام تماماً → الخط بمنتصفها البصري */
-  line-height: 1.1;
+  line-height: 1; /* صندوق يلاصق الـem — مركز الصندوق = مركز الأرقام بكل خطوطنا */
   text-decoration: none;
   white-space: nowrap;
 }
@@ -262,7 +262,7 @@ input[type='datetime-local']::-webkit-datetime-edit {
   content: '';
   position: absolute;
   inset-inline: -2px;
-  top: 50%;
+  top: 50%; /* مُعايَر بمجسّ بيسلاين حقيقي: مركز حبر الأرقام = 49.5–50.5% بتجوال/القاهرة/Inter المحلية */
   height: 1.5px;
   background: currentColor;
   opacity: 0.85;
