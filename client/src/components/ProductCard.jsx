@@ -32,6 +32,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
   useEffect(() => { if (imgRef.current?.complete) setImgLoaded(true); }, []);
   const [hovering, setHovering] = useState(false); // كمبيوتر: معاينة فيديو عند مرور الماوس
   const [showVideo, setShowVideo] = useState(false); // جوال: ضغطة مطوّلة → فيديو بالصوت
+  const [swatchColor, setSwatchColor] = useState(''); // اللون الذي تُعرض صورته على البطاقة (تمرير/لمس نقطة لون)
   const pressTimer = useRef(null);
   const longPressed = useRef(false);
 
@@ -56,6 +57,12 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
   const isNew = product.createdAt && Date.now() - new Date(product.createdAt).getTime() < 14 * 86400000;
   // نقاط الألوان المتوفرة (تظهر فقط عند لونين أو أكثر معروفَي الدرجة)
   const colorDots = productColorDots(product);
+  // صورة اللون (Color Swatch) إن رفعها التاجر — تبديل صورة البطاقة عند تمرير/لمس النقطة
+  const colorImageOf = (name) => {
+    const arr = product.colorImages && product.colorImages[name];
+    return Array.isArray(arr) && arr[0] ? cldThumb(arr[0], 500) : '';
+  };
+  const activeCover = (swatchColor && colorImageOf(swatchColor)) || cover;
 
   // هل للمنتج خيارات (مقاس/لون)؟ عندها نفتح النظرة السريعة لاختيارها بدل الإضافة المباشرة
   const hasOptions = Boolean((product.size && product.size.trim()) || (product.color && product.color.trim()));
@@ -65,7 +72,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
     e.stopPropagation();
     if (outOfStock) return;
     if (hasOptions) { setQuickOpen(true); return; } // اختيار المقاس/اللون أولاً
-    flyToCart(imgRef.current, cover); // طيران صورة المنتج إلى السلة
+    flyToCart(imgRef.current, activeCover); // طيران صورة المنتج إلى السلة
     add({ ...product, whatsapp });
     setOpen(true); // يفتح السلة فوراً (إحساس "اشترِ الآن")
   };
@@ -105,7 +112,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
       className="group relative block h-full animate-fade-up transition-transform duration-300 ease-out will-change-transform hover:-translate-y-1.5 active:scale-[0.99]"
       style={{ animationDelay: `${Math.min(index, 8) * 60}ms` }}
       onMouseEnter={() => product.videoUrl && setHovering(true)}
-      onMouseLeave={() => setHovering(false)}
+      onMouseLeave={() => { setHovering(false); setSwatchColor(''); }}
       onTouchStart={startPress}
       onTouchEnd={cancelPress}
       onTouchMove={cancelPress}
@@ -121,7 +128,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
         {!imgLoaded && <div className="skeleton absolute inset-0" aria-hidden="true" />}
         <img
           ref={imgRef}
-          src={cover}
+          src={activeCover}
           alt={product.name}
           loading="lazy"
           decoding="async"
@@ -222,18 +229,27 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
             )}
           </div>
         )}
-        {/* نقاط الألوان المتوفرة — لمحة سريعة عن التشكيلة دون فتح المنتج */}
+        {/* نقاط الألوان المتوفرة — لمحة سريعة عن التشكيلة. عند وجود صور لون: تمرير/لمس
+            النقطة يبدّل صورة البطاقة لصورة المنتج بذاك اللون (أسلوب Zara/ASOS) */}
         {colorDots.length >= 2 && (
-          <div className="mt-1.5 flex items-center gap-1.5">
-            {colorDots.slice(0, 4).map((d) => (
-              <span
-                key={d.name}
-                title={d.name}
-                className="h-3 w-3 rounded-full"
-                style={{ background: d.css, boxShadow: '0 0 0 1px rgba(255,255,255,0.4), inset 0 0 0 1px rgba(0,0,0,0.12)' }}
-              />
-            ))}
-            {colorDots.length > 4 && <span className="text-[10px] font-medium text-stone-500">+{colorDots.length - 4}</span>}
+          <div className="mt-2 flex items-center gap-2">
+            {colorDots.slice(0, 5).map((d) => {
+              const img = colorImageOf(d.name);
+              const on = swatchColor === d.name;
+              return (
+                <button
+                  key={d.name}
+                  type="button"
+                  title={d.name}
+                  aria-label={d.name}
+                  onMouseEnter={() => img && setSwatchColor(d.name)}
+                  onClick={(e) => { if (img) { e.preventDefault(); e.stopPropagation(); setSwatchColor(on ? '' : d.name); } }}
+                  className={`h-3.5 w-3.5 shrink-0 rounded-full transition ${on ? 'outline outline-2 outline-wine outline-offset-1' : ''} ${img ? 'cursor-pointer hover:scale-110' : 'cursor-default'}`}
+                  style={{ background: d.css, boxShadow: '0 0 0 1px rgba(255,255,255,0.5), inset 0 0 0 1px rgba(0,0,0,0.12)' }}
+                />
+              );
+            })}
+            {colorDots.length > 5 && <span className="text-[10px] font-medium text-stone-500">+{colorDots.length - 5}</span>}
           </div>
         )}
       </div>
