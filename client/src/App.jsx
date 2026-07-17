@@ -54,8 +54,23 @@ const DevProductForm = lazy(() =>
   }))
 );
 
-// مواضع التمرير المحفوظة لكل صفحة (لاستعادتها عند الرجوع)
-const scrollPositions = new Map();
+// مواضع التمرير المحفوظة لكل صفحة (لاستعادتها عند الرجوع) — في الذاكرة + sessionStorage
+// (react-router يعيد نفس location.key لكل إدخال بالتاريخ حتى بعد إعادة التحميل، فتنجو
+// المواضع من إعادة فتح التطبيق/PWA ويرجع الزائر لمكانه بالضبط).
+const SCROLL_STORE = 'bz_scrollpos_v1';
+const scrollPositions = (() => {
+  try { return new Map(JSON.parse(sessionStorage.getItem(SCROLL_STORE) || '[]')); }
+  catch { return new Map(); }
+})();
+const flushScrollPositions = () => {
+  try { sessionStorage.setItem(SCROLL_STORE, JSON.stringify([...scrollPositions].slice(-80))); }
+  catch { /* تجاهل */ }
+};
+if (typeof window !== 'undefined') {
+  // pagehide (وليس beforeunload) — الوحيد الموثوق على iOS/سفاري عند إغلاق أو تصغير التطبيق
+  window.addEventListener('pagehide', flushScrollPositions);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) flushScrollPositions(); });
+}
 // نتولّى استعادة التمرير بأنفسنا — نوقف استعادة المتصفّح التلقائية كي لا تتعارض
 if (typeof history !== 'undefined' && 'scrollRestoration' in history) {
   history.scrollRestoration = 'manual';
@@ -80,22 +95,36 @@ function AnimatedRoutes() {
     const key = location.key;
     // نسجّل المسار لسجل "الرجوع الذكي" (أيقونات فتات الخبز ترجع بدل ما تفتح صفحة جديدة)
     recordNav(key, location.pathname + location.search);
-    const save = () => { scrollPositions.set(key, window.scrollY); };
+    // أثناء قفل التمرير (درج/نافذة مفتوحة يثبّت body) يكون scrollY صفراً زائفاً — لا نحفظه
+    const save = () => { if (document.body.style.position !== 'fixed') scrollPositions.set(key, window.scrollY); };
+    // حزامان معاً — أحداث التمرير وحدها لم تكن كافية (قد تضيع لحظة التعليق/الزخم على
+    // الموبايل فيُحفظ موضع قديم ويرجع الزائر لأعلى الصفحة):
+    // 1) scroll: يلتقط الموضع باستمرار أثناء التصفّح.
+    // 2) pointerdown/click بمرحلة الالتقاط (قبل معالجات React والتنقّل): يلتقط الموضع
+    //    الحقيقي لحظة اللمسة التي ستسبّب الانتقال — والمستند ما يزال سليماً بلا قصّ.
     window.addEventListener('scroll', save, { passive: true });
-    return () => window.removeEventListener('scroll', save);
+    document.addEventListener('pointerdown', save, { capture: true, passive: true });
+    document.addEventListener('click', save, { capture: true, passive: true });
+    return () => {
+      window.removeEventListener('scroll', save);
+      document.removeEventListener('pointerdown', save, true);
+      document.removeEventListener('click', save, true);
+    };
   }, [location.key]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // عند الرجوع (POP) نستعيد الموضع بقفزة واحدة فورية بالضبط (بلا تدرّج ولا رجوع للأعلى).
   // useLayoutEffect: نقفز قبل أن يرسم المتصفّح الإطار، فلا تظهر الصفحة من الأعلى لحظةً
-  // عندما يكون المحتوى جاهزاً (مخزّن). وإن كان المحتوى يُحمّل، ننتظر طول المستند ثم نقفز.
+  // عندما يكون المحتوى جاهزاً (مخزّن). وإن كان المحتوى يُحمّل، ننتظر نموّ المستند ثم نقفز.
+  // كانت هنا مؤقّتات ثابتة تستسلم بعد 700ms — على شبكة أبطأ من ذلك كان الرجوع يهبط
+  // لأعلى الصفحة. الآن ResizeObserver على body (مخنوق بإطار الرسم: قراءة واحدة كحدّ
+  // أقصى لكل إطار، وفقط عندما يتغيّر الارتفاع فعلاً — لا layout thrashing) يلتقط وصول
+  // المحتوى مهما تأخّر، بسقف 5 ثوانٍ، ويتوقّف فوراً عند أي تمرير يدوي من المستخدم.
   useLayoutEffect(() => {
     if (navType === 'POP') {
       const target = scrollPositions.get(location.key) || 0;
       if (target > 0) {
         let done = false;
-        // نصحّح الموضع فقط عند الانحراف الفعلي (>2px). لا نستخدم ResizeObserver على body
-        // (كان يقرأ scrollHeight مع كل تغيّر حجم أثناء تحميل الصور/الفيديو = layout thrashing
-        // = تعليق). بدلاً منه: بضع محاولات مجدولة قليلة تلتقط انزياح التحميل بلا شغل مستمر.
+        let raf = 0;
         const apply = () => {
           if (done) return;
           const maxReach = document.documentElement.scrollHeight - window.innerHeight;
@@ -103,17 +132,22 @@ function AnimatedRoutes() {
             window.scrollTo({ top: target, behavior: 'instant' });
           }
         };
-        const onUser = () => { done = true; }; // لا نقاوم المستخدم إن حرّك بنفسه
-        window.addEventListener('wheel', onUser, { passive: true });
-        window.addEventListener('touchmove', onUser, { passive: true });
-        apply(); // فوري (المحتوى من الكاش غالباً جاهز)
-        const timers = [80, 200, 400, 700].map((ms) => setTimeout(apply, ms));
-        return () => {
+        const scheduled = () => { if (!done && !raf) raf = requestAnimationFrame(() => { raf = 0; apply(); }); };
+        const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(scheduled) : null;
+        const stop = () => {
           done = true;
-          timers.forEach(clearTimeout);
-          window.removeEventListener('wheel', onUser);
-          window.removeEventListener('touchmove', onUser);
+          if (raf) cancelAnimationFrame(raf);
+          if (ro) ro.disconnect();
+          window.removeEventListener('wheel', stop);
+          window.removeEventListener('touchmove', stop);
         };
+        window.addEventListener('wheel', stop, { passive: true }); // لا نقاوم المستخدم إن حرّك بنفسه
+        window.addEventListener('touchmove', stop, { passive: true });
+        apply(); // فوري (المحتوى من الكاش غالباً جاهز — قفزة قبل أول رسم فلا وميض)
+        if (ro) ro.observe(document.body);
+        else [80, 250, 600, 1200, 2500].forEach((ms) => setTimeout(() => scheduled(), ms)); // احتياط نادر
+        const cap = setTimeout(stop, 5000);
+        return () => { clearTimeout(cap); stop(); };
       }
     }
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -141,9 +175,11 @@ function AnimatedRoutes() {
 
   // انتقال فوري بلا انتظار: الصفحة الجديدة تظهر مباشرة بحركة تلاشٍ سريعة عبر CSS
   // خالص (بدل framer-motion الذي كان يضيف شغل جافاسكربت مع كل تنقّل = جزء من التعليق).
+  // عند الرجوع (POP) لا تلاشي إطلاقاً — الصفحة السابقة تظهر فوراً على موضعها المحفوظ؛
+  // كان التلاشي + قفزة التمرير بنفس اللحظة يعطيان إحساس "تعليق" عند كل رجوع.
   return (
     <Suspense fallback={<Spinner full />}>
-      <div key={location.pathname} className="route-fade">
+      <div key={location.pathname} className={navType === 'POP' ? undefined : 'route-fade'}>
         <Routes location={location}>
           <Route path="/" element={<Root />} />
           <Route path="/shop" element={<Home />} />
