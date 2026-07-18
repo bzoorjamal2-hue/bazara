@@ -295,20 +295,29 @@ export default function ProductForm({ initial, onClose, onSaved }) {
                       )}
 
                       {/* صور هذا اللون — تظهر للزبونة عند اختياره (Color Swatches) */}
-                      <div className="mt-3 border-t border-gold-400/10 pt-3">
-                        <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-stone-300"><CameraIcon className="h-4 w-4" /> {t('dashboard.product.colorImages')}</p>
-                        <div className="space-y-2">
-                          {(form.colorImages?.[c] || []).map((img, idx) => (
-                            <div key={idx} className="flex items-start gap-2">
-                              <div className="flex-1"><ImageInput value={img} onChange={(v) => setColorImageAt(c, idx, v)} /></div>
-                              <button type="button" onClick={() => removeColorImage(c, idx)} className="mt-1 rounded-lg p-2 text-stone-400 hover:text-red-300" aria-label={t('common.delete')}><XIcon className="h-4 w-4" /></button>
+                      {(() => {
+                        const imgs = form.colorImages?.[c] || [];
+                        return (
+                          <div className="mt-3 rounded-lg border border-gold-400/20 bg-gold-400/[0.04] p-2.5">
+                            <div className="mb-1 flex items-center justify-between gap-2">
+                              <p className="flex items-center gap-1.5 text-xs font-bold text-gold-100"><CameraIcon className="h-4 w-4" /> {t('dashboard.product.colorImages')}</p>
+                              {imgs.length > 0 && <span className="shrink-0 text-[10px] font-medium text-stone-400">{t('dashboard.product.colorImagesCount', { count: imgs.length })}</span>}
                             </div>
-                          ))}
-                          {(form.colorImages?.[c] || []).length < 4 && (
-                            <button type="button" onClick={() => addColorImage(c)} className="btn-ghost w-full text-sm">＋ {t('dashboard.product.addColorImage')}</button>
-                          )}
-                        </div>
-                      </div>
+                            <p className="mb-2 text-[11px] leading-relaxed text-stone-400">{t('dashboard.product.colorImagesHint')}</p>
+                            <div className="space-y-2">
+                              {imgs.map((img, idx) => (
+                                <div key={idx} className="flex items-start gap-2">
+                                  <div className="flex-1"><ImageInput value={img} onChange={(v) => setColorImageAt(c, idx, v)} /></div>
+                                  <button type="button" onClick={() => removeColorImage(c, idx)} className="mt-1 rounded-lg p-2 text-stone-400 hover:text-red-300" aria-label={t('common.delete')}><XIcon className="h-4 w-4" /></button>
+                                </div>
+                              ))}
+                              {imgs.length < 4 && (
+                                <button type="button" onClick={() => addColorImage(c)} className="btn-ghost w-full text-sm">＋ {t('dashboard.product.addColorImage')}</button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   );
                 })}

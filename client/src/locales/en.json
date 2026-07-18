@@ -610,6 +610,8 @@
       "addColor": "Add color",
       "addColorPlaceholder": "Type a color name (e.g. Black) and press ＋",
       "colorImages": "Photos for this color",
+      "colorImagesHint": "Upload the product in this color — it shows the moment the customer picks the color, and swaps the card & gallery image automatically (up to 4).",
+      "colorImagesCount": "{{count}}/4 photos",
       "addColorImage": "Add color photo",
       "category": "Category",
       "image": "Main image",
