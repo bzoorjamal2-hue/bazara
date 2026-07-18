@@ -151,6 +151,10 @@ export default function ProductForm({ initial, onClose, onSaved }) {
     }
   };
 
+  // نرسم النافذة داخل جذر الثيم (.theme-pub) لا داخل body: يتجاوز الـstacking context الحابس
+  // (فتغطّي الهيدر) مع بقاء سياق الثيم native فتضبط ألوان النهار/الليل تلقائياً بلا التفاف
+  const portalTarget = (typeof document !== 'undefined' && (document.querySelector('.theme-pub') || document.body)) || null;
+  if (!portalTarget) return null;
   return createPortal(
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
       <div className="glass-strong max-h-[92vh] w-full max-w-lg animate-fade-up overflow-y-auto p-6">
@@ -356,6 +360,6 @@ export default function ProductForm({ initial, onClose, onSaved }) {
         </form>
       </div>
     </div>,
-    document.body,
+    portalTarget,
   );
 }
