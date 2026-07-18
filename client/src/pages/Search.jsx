@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client.js';
 import Seo from '../components/Seo.jsx';
-import ProductCard from '../components/ProductCard.jsx';
+import FilteredProductGrid from '../components/FilteredProductGrid.jsx';
 import { ProductGridSkeleton } from '../components/Skeleton.jsx';
 import { SearchIcon, StoreIcon, XIcon } from '../components/icons.jsx';
 import { cldThumb } from '../utils/cloudinary.js';
@@ -178,10 +178,8 @@ export default function Search() {
 
               {results.products.length > 0 ? (
                 <section>
-                  <h2 className="mb-3 text-sm font-bold text-stone-300">{t('searchPage.results')} ({results.products.length})</h2>
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                    {results.products.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
-                  </div>
+                  <h2 className="mb-3 text-sm font-bold text-stone-300">{t('searchPage.results')}</h2>
+                  <FilteredProductGrid products={results.products} />
                 </section>
               ) : results.stores.length === 0 && !busy && (
                 <div className="rounded-2xl border border-wine/10 bg-white p-10 text-center">

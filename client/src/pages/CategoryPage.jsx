@@ -5,7 +5,7 @@ import api, { getErrorMessage } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import Seo from '../components/Seo.jsx';
 import { ProductGridSkeleton } from '../components/Skeleton.jsx';
-import ProductCard from '../components/ProductCard.jsx';
+import FilteredProductGrid from '../components/FilteredProductGrid.jsx';
 import CatThumb from '../components/CatThumb.jsx';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { smartNav } from '../utils/nav.js';
@@ -115,11 +115,7 @@ export default function CategoryPage() {
       ) : products.length === 0 ? (
         <div className="glass p-10 text-center text-stone-400">{t('common.noResults')}</div>
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {products.map((p, i) => (
-            <ProductCard key={p.id} product={p} index={i} whatsapp={p.storeWhatsapp} />
-          ))}
-        </div>
+        <FilteredProductGrid products={products} />
       )}
     </>
   );

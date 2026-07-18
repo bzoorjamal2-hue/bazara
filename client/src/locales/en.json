@@ -131,6 +131,25 @@
     "noResults": "No results for “{{q}}” — try another word",
     "tryCats": "Or browse by category"
   },
+  "filters": {
+    "title": "Filters",
+    "sort": "Sort",
+    "sortNew": "Newest",
+    "sortPriceAsc": "Price: low to high",
+    "sortPriceDesc": "Price: high to low",
+    "sortDiscount": "Biggest discount",
+    "sortPopular": "Best selling",
+    "sortRating": "Top rated",
+    "color": "Color",
+    "size": "Size",
+    "price": "Price",
+    "from": "From",
+    "to": "To",
+    "saleOnly": "On sale only",
+    "clear": "Clear all",
+    "results": "{{count}} products",
+    "none": "No products match your filters — try loosening them"
+  },
   "offline": {
     "message": "No internet connection — only the home page is available"
   },
