@@ -549,7 +549,6 @@ export default function ProductDetails() {
       {showBuyBar && !outOfStock && (
         <div className="fixed inset-x-0 bottom-0 z-[78] animate-fade-up border-t border-wine/10 bg-white/95 pb-[max(env(safe-area-inset-bottom),8px)] pt-2.5 shadow-[0_-6px_20px_rgba(94,70,54,0.14)]">
           <div className="mx-auto flex max-w-3xl items-center gap-3 px-4">
-            <img src={cldThumb(gallery[0], 120)} alt="" className="h-11 w-11 shrink-0 rounded-lg object-cover ring-1 ring-wine/10" />
             <div className="min-w-0 flex-1">
               <p className="line-clamp-1 text-sm font-semibold text-stone-100">{product.name}</p>
               <p className="font-display text-base font-bold text-wine">{t('common.currency')}{product.price}</p>
