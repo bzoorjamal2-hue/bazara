@@ -7,7 +7,7 @@ import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import StarRating from './StarRating.jsx';
 import Countdown from './Countdown.jsx';
-import { HeartIcon, CartIcon, XIcon, StarIcon } from './icons.jsx';
+import { HeartIcon, CartIcon, XIcon, StarIcon, FireIcon } from './icons.jsx';
 import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
 import { flyToCart } from '../utils/flyToCart.js';
 import { productColorDots } from '../utils/colorDot.js';
@@ -58,6 +58,23 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
   const isNew = product.createdAt && Date.now() - new Date(product.createdAt).getTime() < 14 * 86400000;
   // نقاط الألوان المتوفرة (تظهر فقط عند لونين أو أكثر معروفَي الدرجة)
   const colorDots = productColorDots(product);
+
+  // المتبقّي بالمخزون: مجموع كميات الألوان/النمر إن وُجدت، وإلا المخزون العام.
+  // نعرض شارة استعجال "بقي X" عند القِلّة (٥ فأقل) — دليل ندرة يرفع التحويل.
+  const remaining = (() => {
+    const cs = product.colorStock && typeof product.colorStock === 'object' ? product.colorStock : null;
+    if (cs && Object.keys(cs).length) {
+      const vals = Object.values(cs).flatMap((sz) => Object.values(sz || {})).filter((q) => typeof q === 'number');
+      return vals.length ? vals.reduce((a, b) => a + b, 0) : null;
+    }
+    const ss = product.sizeStock && typeof product.sizeStock === 'object' ? product.sizeStock : null;
+    if (ss && Object.keys(ss).length) {
+      const vals = Object.values(ss).filter((q) => typeof q === 'number');
+      return vals.length ? vals.reduce((a, b) => a + b, 0) : null;
+    }
+    return typeof product.stock === 'number' ? product.stock : null;
+  })();
+  const lowStock = !outOfStock && remaining != null && remaining > 0 && remaining <= 5;
   // صورة اللون (Color Swatch) إن رفعها التاجر — تبديل صورة البطاقة عند تمرير/لمس النقطة
   const colorImageOf = (name) => {
     const arr = product.colorImages && product.colorImages[name];
@@ -230,6 +247,12 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
           <span className="font-display text-lg font-bold text-wine">{t('common.currency')}{product.price}</span>
           {hasDiscount && <Strike className="text-xs text-stone-500">{t('common.currency')}{product.oldPrice}</Strike>}
         </div>
+        {/* استعجال الندرة — "بقي X" عند قِلّة المخزون */}
+        {lowStock && (
+          <p className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-red-600">
+            <FireIcon className="h-3.5 w-3.5 shrink-0" /> {t('product.lastFew', { count: remaining })}
+          </p>
+        )}
         {/* دليل اجتماعي (أسلوب المتاجر الكبرى): تقييم بنجمة + عدد المبيعات بسطر واحد */}
         {(product.ratingCount > 0 || product.soldCount > 0) && (
           <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
