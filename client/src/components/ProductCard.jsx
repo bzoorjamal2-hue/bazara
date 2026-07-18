@@ -56,6 +56,8 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
   const discountPct = hasDiscount ? Math.round((1 - product.price / product.oldPrice) * 100) : 0;
   const liked = has(product.id);
   const isNew = product.createdAt && Date.now() - new Date(product.createdAt).getTime() < 14 * 86400000;
+  // الأكثر مبيعاً: دليل اجتماعي قوي — عتبة منخفضة تناسب متجراً ناشئاً وترتفع دلالتها مع النمو
+  const isBestSeller = (product.soldCount || 0) >= 3;
   // نقاط الألوان المتوفرة (تظهر فقط عند لونين أو أكثر معروفَي الدرجة)
   const colorDots = productColorDots(product);
 
@@ -171,6 +173,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
         {/* شارات — ألوان بوتيك هادئة معتمة (بلا backdrop-blur: يسبّب تعليق تمرير على iOS مع كثرة البطاقات) */}
         <div className="absolute start-2 top-2 z-10 flex flex-col gap-1">
           {isNew && <span className="badge bg-[#3f2e22] text-[#F4EDE2] shadow-sm">{t('product.new')}</span>}
+          {isBestSeller && <span className="badge flex items-center gap-0.5 bg-emerald-600 text-white shadow-sm"><FireIcon className="h-3 w-3" /> {t('product.bestSeller')}</span>}
           {product.featured && <span className="badge flex items-center gap-0.5 bg-gold-400 text-ink-950 shadow-sm"><StarIcon className="h-3 w-3" /> {t('product.featured')}</span>}
           {hasDiscount && <span className="badge bg-[#8a2438] text-[#F4EDE2] shadow-sm">-{discountPct}%</span>}
           {outOfStock && <span className="badge bg-ink-700 text-stone-300">{t('product.outOfStock')}</span>}

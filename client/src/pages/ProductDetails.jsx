@@ -509,6 +509,22 @@ export default function ProductDetails() {
               <CartIcon className="h-5 w-5" /> {t('product.addToCart')}
             </button>
           </div>
+
+          {/* صف الثقة — يطمئن الزبونة قبل الشراء (توصيل · دفع عند الاستلام · تبديل سهل) */}
+          {!showNotify && (
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              {[
+                { label: t('product.trustDelivery'), d: <><path d="M3 7h11v8H3zM14 10h4l3 3v2h-7z" /><circle cx="7" cy="18" r="1.6" /><circle cx="17.5" cy="18" r="1.6" /></> },
+                { label: t('product.trustCod'), d: <><rect x="2.5" y="6.5" width="19" height="11" rx="2" /><circle cx="12" cy="12" r="2.3" /></> },
+                { label: t('product.trustExchange'), d: <path d="M4 9h13l-3-3M20 15H7l3 3" /> },
+              ].map((it, i) => (
+                <div key={i} className="flex flex-col items-center gap-1.5 rounded-xl border border-wine/12 bg-wine/[0.03] px-2 py-3 text-center">
+                  <svg viewBox="0 0 24 24" className="h-5 w-5 text-wine" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{it.d}</svg>
+                  <span className="text-[11px] font-semibold leading-tight text-stone-300">{it.label}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -630,6 +646,7 @@ function Reviews({ productId, reviews, onAdded }) {
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
   const [zoom, setZoom] = useState(''); // صورة تقييم مُكبّرة
+  const photos = reviews.filter((r) => r.imageUrl); // صور الزبائن — شريط بارز أعلى المراجعات
 
   const submit = async (e) => {
     e.preventDefault();
@@ -653,6 +670,19 @@ function Reviews({ productId, reviews, onAdded }) {
       {/* قائمة المراجعات */}
       <div className="glass p-6">
         <h2 className="mb-4 font-display text-xl font-bold gradient-text">{t('product.reviews')}</h2>
+        {/* صور الزبائن — دليل اجتماعي بصري بارز (أسلوب المتاجر العالمية) */}
+        {photos.length > 0 && (
+          <div className="mb-5">
+            <p className="mb-2 text-xs font-bold text-stone-400">{t('product.customerPhotos')} ({photos.length})</p>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {photos.map((r) => (
+                <button key={r.id} type="button" onClick={() => setZoom(r.imageUrl)} className="shrink-0 overflow-hidden rounded-xl border border-wine/15 transition hover:opacity-90">
+                  <img src={r.imageUrl} alt="" loading="lazy" className="h-20 w-20 object-cover" />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         {reviews.length === 0 ? (
           <p className="text-sm text-stone-400">{t('product.noReviews')}</p>
         ) : (
