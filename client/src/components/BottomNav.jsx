@@ -107,6 +107,14 @@ export default function BottomNav() {
     return () => { document.removeEventListener('focusin', onIn); document.removeEventListener('focusout', onOut); };
   }, []);
 
+  // إخفاء الشريط عند ظهور شريط الشراء الثابت في صفحة المنتج (يحلّ محلّه بنفس الموضع)
+  const [buyBar, setBuyBar] = useState(false);
+  useEffect(() => {
+    const on = (e) => setBuyBar(!!e.detail);
+    window.addEventListener('bz:buybar', on);
+    return () => window.removeEventListener('bz:buybar', on);
+  }, []);
+
   // "حسابي" يفتح دائماً على الصفحة الرئيسية للوحة — لا نجبر المستخدم على تبويب
   // الطلبات (كان يفتحه تلقائياً عند وجود طلبات جديدة فيبدو وكأنه عالق عليه).
   // الشارة الحمراء تكفي للتنبيه، والإشعارات توصله للطلبات مباشرة عند الحاجة.
@@ -133,7 +141,7 @@ export default function BottomNav() {
     { key: 'home', label: t('nav.home'), Icon: HomeIcon, active: !cartOpen && !wishOpen && homeActive, onClick: () => goto(homeTo) },
   ];
 
-  if (locked || kbOpen) return null; // نافذة/درج مفتوح أو لوحة مفاتيح ظاهرة → نخفي الشريط (يرجع تلقائياً)
+  if (locked || kbOpen || buyBar) return null; // نافذة/درج/كيبورد مفتوح أو شريط شراء ظاهر → نخفي الشريط (يرجع تلقائياً)
 
   // بلا backdrop-blur: ضبابية دائمة فوق المحتوى تُرهق معالج الرسم مع كل فريم تمرير،
   // والخلفية 95% معتمة أصلاً فالفرق البصري صفر والفرق بالأداء محسوس

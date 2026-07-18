@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
@@ -46,6 +46,9 @@ export default function ProductDetails() {
   const [notifyPhone, setNotifyPhone] = useState('');
   const [notifyBusy, setNotifyBusy] = useState(false);
   const [notifySent, setNotifySent] = useState(false);
+  // شريط الشراء الثابت: يظهر عند التمرير تحت زر الشراء الأساسي (يحلّ محلّ شريط التنقّل)
+  const ctaRef = useRef(null);
+  const [showBuyBar, setShowBuyBar] = useState(false);
 
   // بكسلات تمويل المتجر: تُحقن عند الهبوط المباشر من إعلان + حدث "مشاهدة منتج"
   useEffect(() => {
@@ -53,6 +56,22 @@ export default function ProductDetails() {
     initPixels(product);
     trackPixel('ViewContent', { value: Number(product.price) || 0, content_name: product.name, content_ids: [product.id], content_type: 'product' });
   }, [product?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // نُظهر شريط الشراء عندما يمرّ زر الشراء الأساسي بالكامل فوق حافة الشاشة (المستخدم تحته)
+  useEffect(() => {
+    const el = ctaRef.current;
+    if (!el) return undefined;
+    const onScroll = () => setShowBuyBar(el.getBoundingClientRect().bottom < 0);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => { window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onScroll); };
+  }, [product?.id]);
+
+  // إشعار BottomNav ليختفي حين يظهر شريط الشراء (يحلّ محلّه)، والعودة عند المغادرة/الإخفاء
+  useEffect(() => { window.dispatchEvent(new CustomEvent('bz:buybar', { detail: showBuyBar })); }, [showBuyBar]);
+  useEffect(() => () => window.dispatchEvent(new CustomEvent('bz:buybar', { detail: false })), []);
+
   const [shared, setShared] = useState(false);
 
   // مشاركة المنتج: نشارك رابط /share/ الذي يعرض صورة المنتج الحقيقية بمعاينة واتساب
@@ -473,7 +492,7 @@ export default function ProductDetails() {
           )}
 
           {/* أزرار الشراء — "اطلبي الآن" شراء فوري (يفتح إتمام الطلب مباشرةً) — حبوب فاخرة بهالة ذهبية */}
-          <div className={`mt-auto flex flex-col gap-3 pt-6 sm:flex-row ${showNotify ? 'hidden' : ''}`}>
+          <div ref={ctaRef} className={`mt-auto flex flex-col gap-3 pt-6 sm:flex-row ${showNotify ? 'hidden' : ''}`}>
             <button
               onClick={handleBuy}
               disabled={outOfStock}
@@ -518,6 +537,34 @@ export default function ProductDetails() {
 
       {/* شاهدت مؤخراً */}
       <ProductRail title={t('product.recentlyViewed')} products={recent} currentId={product.id} />
+
+      {/* شريط الشراء الثابت — يظهر عند التمرير تحت زر الشراء ويحلّ محلّ شريط التنقّل (أسلوب المتاجر العالمية) */}
+      {showBuyBar && !outOfStock && (
+        <div className="fixed inset-x-0 bottom-0 z-[78] animate-fade-up border-t border-wine/10 bg-white/95 pb-[max(env(safe-area-inset-bottom),8px)] pt-2.5 shadow-[0_-6px_20px_rgba(94,70,54,0.14)]">
+          <div className="mx-auto flex max-w-3xl items-center gap-3 px-4">
+            <img src={cldThumb(gallery[0], 120)} alt="" className="h-11 w-11 shrink-0 rounded-lg object-cover ring-1 ring-wine/10" />
+            <div className="min-w-0 flex-1">
+              <p className="line-clamp-1 text-sm font-semibold text-stone-100">{product.name}</p>
+              <p className="font-display text-base font-bold text-wine">{t('common.currency')}{product.price}</p>
+            </div>
+            <button
+              onClick={handleAdd}
+              aria-label={t('product.addToCart')}
+              title={t('product.addToCart')}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-wine/40 text-wine transition hover:bg-wine hover:text-cream"
+            >
+              <CartIcon className="h-5 w-5" />
+            </button>
+            <button
+              onClick={handleBuy}
+              className="flex shrink-0 items-center justify-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
+              style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)', boxShadow: '0 12px 26px -12px rgba(74, 19, 34, 0.65)' }}
+            >
+              <BagIcon className="h-4 w-4" /> {t('product.buyNow')}
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }
