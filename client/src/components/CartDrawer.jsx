@@ -78,6 +78,7 @@ export default function CartDrawer() {
   const [couponMsg, setCouponMsg] = useState('');
   const [couponBusy, setCouponBusy] = useState(false);
   const [placing, setPlacing] = useState(false); // جارٍ حفظ الطلب
+  const [invalid, setInvalid] = useState({}); // الحقول الناقصة/الخاطئة — لتمييزها بإطار أحمر
   const [storeZones, setStoreZones] = useState(null); // مناطق المتجر المخصّصة (إن وُجدت)
   const [freeOver, setFreeOver] = useState(0); // شحن مجاني فوق هذا المبلغ (0 = معطّل)
   const [referral, setReferral] = useState(null); // { code, percent, referrerName } خصم إحالة تلقائي
@@ -207,7 +208,17 @@ export default function CartDrawer() {
   const removeCoupon = () => { setCoupon(null); setCouponInput(''); setCouponMsg(''); };
 
   const confirmOrder = async () => {
-    if (!cust.name.trim() || !cust.phone.trim() || !cust.city) { setErr(t('co.required')); return; }
+    // تحقّق حقلي واضح: نميّز الحقل الناقص بإطار أحمر، ونتأكّد أن الهاتف أرقام كافية
+    const bad = {};
+    if (!cust.name.trim()) bad.name = true;
+    if (cust.phone.replace(/\D/g, '').length < 9) bad.phone = true;
+    if (!cust.city) bad.city = true;
+    if (Object.keys(bad).length) {
+      setInvalid(bad);
+      setErr(bad.phone && cust.phone.trim() && !bad.name && !bad.city ? t('co.phoneInvalid') : t('co.required'));
+      return;
+    }
+    setInvalid({});
     if (placing) return;
     setErr('');
     const wa = items[0]?.whatsapp || '';
@@ -305,9 +316,16 @@ export default function CartDrawer() {
             </div>
           </div>
         ) : items.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center text-stone-400">
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center text-stone-400">
             <BagIcon className="h-14 w-14 text-cream/25" />
-            {t('cart.empty')}
+            <p>{t('cart.empty')}</p>
+            <button
+              onClick={close}
+              className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
+              style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)' }}
+            >
+              {t('co.doneKeepShopping')}
+            </button>
           </div>
         ) : (
           <AnimatePresence mode="wait" initial={false}>
@@ -364,13 +382,13 @@ export default function CartDrawer() {
                   <div>
                     <h3 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-gold-200"><PinIcon className="h-4 w-4" /> {t('co.customer')}</h3>
                     <div className="space-y-2.5">
-                      <input className="input !rounded-2xl" placeholder={t('co.name')} value={cust.name} onChange={(e) => setCust({ ...cust, name: e.target.value })} />
-                      <input className="input !rounded-2xl" dir="ltr" inputMode="tel" placeholder={t('co.phone')} value={cust.phone} onChange={(e) => setCust({ ...cust, phone: e.target.value })} />
+                      <input className={`input !rounded-2xl ${invalid.name ? 'ring-1 ring-red-400/70' : ''}`} placeholder={t('co.name')} value={cust.name} onChange={(e) => { setCust({ ...cust, name: e.target.value }); if (invalid.name) setInvalid((v) => ({ ...v, name: false })); }} />
+                      <input className={`input !rounded-2xl ${invalid.phone ? 'ring-1 ring-red-400/70' : ''}`} dir="ltr" inputMode="tel" placeholder={t('co.phone')} value={cust.phone} onChange={(e) => { setCust({ ...cust, phone: e.target.value }); if (invalid.phone) setInvalid((v) => ({ ...v, phone: false })); }} />
                       <Select
                         value={cust.city}
-                        onChange={(v) => setCust({ ...cust, city: v })}
+                        onChange={(v) => { setCust({ ...cust, city: v }); if (invalid.city) setInvalid((p) => ({ ...p, city: false })); }}
                         placeholder={t('co.selectCity')}
-                        className="!rounded-2xl"
+                        className={`!rounded-2xl ${invalid.city ? 'ring-1 ring-red-400/70' : ''}`}
                         options={areaList.map((z) => ({ value: z.name, label: `${z.name}${z.fee ? ` — ₪${z.fee}` : ''}` }))}
                       />
                       <input className="input !rounded-2xl" placeholder={t('co.address')} value={cust.address} onChange={(e) => setCust({ ...cust, address: e.target.value })} />

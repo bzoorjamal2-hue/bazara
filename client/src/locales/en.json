@@ -819,6 +819,7 @@
     "confirm": "Confirm order via WhatsApp",
     "back": "Back to cart",
     "required": "Please enter your name, phone and city",
+    "phoneInvalid": "Enter a valid phone number (e.g. 0599123456)",
     "deliveryNote": "Delivery fee is an estimate, confirmed by the store",
     "freeShipping": "Free",
     "freeShippingHint": "Add ₪{{amount}} to get free delivery!"
