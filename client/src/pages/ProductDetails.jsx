@@ -49,6 +49,7 @@ export default function ProductDetails() {
   // شريط الشراء الثابت: يظهر عند التمرير تحت زر الشراء الأساسي (يحلّ محلّ شريط التنقّل)
   const ctaRef = useRef(null);
   const [showBuyBar, setShowBuyBar] = useState(false);
+  const pickRef = useRef(null); // قسم اختيار اللون/المقاس — ننزلق إليه عند الضغط بلا اختيار
 
   // بكسلات تمويل المتجر: تُحقن عند الهبوط المباشر من إعلان + حدث "مشاهدة منتج"
   useEffect(() => {
@@ -195,8 +196,16 @@ export default function ProductDetails() {
     setPickErr('');
     return true;
   };
-  const handleAdd = () => { if (outOfStock || !validatePick()) return; add(cartProduct); };
-  const handleBuy = () => { if (outOfStock || !validatePick()) return; buyNow(cartProduct); };
+  // عند نقص الاختيار: ننزلق لقسم اللون/المقاس ليرى المشتري المطلوب (خصوصاً من الشريط الثابت بالأسفل).
+  // نحسب الموضع ونستخدم window.scrollTo (أوثق من scrollIntoView smooth على iOS القديم)
+  const scrollToPick = () => {
+    const el = pickRef.current;
+    if (!el) return;
+    const y = el.getBoundingClientRect().top + window.scrollY - window.innerHeight / 2 + el.offsetHeight / 2;
+    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+  };
+  const handleAdd = () => { if (outOfStock) return; if (!validatePick()) { scrollToPick(); return; } add(cartProduct); };
+  const handleBuy = () => { if (outOfStock) return; if (!validatePick()) { scrollToPick(); return; } buyNow(cartProduct); };
 
   // تنبيه التوفّر: يظهر عند نفاد المنتج كلياً أو نفاد المقاس المختار
   const showNotify = outOfStock || (selSize && sizeSoldOut(selSize));
@@ -399,7 +408,7 @@ export default function ProductDetails() {
 
           {/* اللون — يُختار أولاً عند تتبّع المخزون لكل لون */}
           {colors.length > 0 && (
-            <div className="mt-6">
+            <div ref={colors.length ? pickRef : null} className="mt-6">
               <ColorSwatches
                 colors={colors}
                 colorImages={colorImages}
@@ -414,7 +423,7 @@ export default function ProductDetails() {
 
           {/* المقاس (النمرة) — عند المخزون لكل لون تظهر نمر اللون المختار فقط */}
           {(hasColorStock ? colors.length > 0 : sizes.length > 0) && (
-            <div className="mt-5">
+            <div ref={colors.length ? null : pickRef} className="mt-5">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <p className="text-sm font-semibold text-stone-300">{t('product.selectSize')}</p>
                 <button
