@@ -26,6 +26,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
   const { add, setOpen } = useCart();
   const { has, toggle } = useWishlist();
   const imgRef = useRef(null);
+  const lastSwatchImg = useRef(''); // آخر صورة لون معروضة — تبقى أثناء تلاشي الخروج
   const [quickOpen, setQuickOpen] = useState(false);
   // ظهور ناعم للصورة: هيكل لامع ريثما تُحمّل ثم تتلاشى للداخل (بلا "طفرة")
   const [imgLoaded, setImgLoaded] = useState(false);
@@ -62,7 +63,9 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
     const arr = product.colorImages && product.colorImages[name];
     return Array.isArray(arr) && arr[0] ? cldThumb(arr[0], 500) : '';
   };
-  const activeCover = (swatchColor && colorImageOf(swatchColor)) || cover;
+  const swatchImg = swatchColor ? colorImageOf(swatchColor) : '';
+  if (swatchImg) lastSwatchImg.current = swatchImg; // نحفظ آخر صورة لون لإتمام تلاشي الخروج للأصل
+  const activeCover = swatchImg || cover;
 
   // هل للمنتج خيارات (مقاس/لون)؟ عندها نفتح النظرة السريعة لاختيارها بدل الإضافة المباشرة
   const hasOptions = Boolean((product.size && product.size.trim()) || (product.color && product.color.trim()));
@@ -128,7 +131,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
         {!imgLoaded && <div className="skeleton absolute inset-0" aria-hidden="true" />}
         <img
           ref={imgRef}
-          src={activeCover}
+          src={cover}
           alt={product.name}
           loading="lazy"
           decoding="async"
@@ -136,6 +139,17 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
           onError={(e) => { e.currentTarget.src = PLACEHOLDER; setImgLoaded(true); }}
           className={`h-full w-full object-cover transition-[transform,opacity] duration-500 group-hover:scale-110 ${outOfStock ? 'opacity-50' : imgLoaded ? 'opacity-100' : 'opacity-0'}`}
         />
+        {/* طبقة صورة اللون فوق الأصلية — تلاشٍ ناعم للدخول والخروج عند تمرير/لمس نقطة لون */}
+        {lastSwatchImg.current && (
+          <img
+            src={lastSwatchImg.current}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            decoding="async"
+            className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-opacity duration-300 group-hover:scale-110 ${swatchImg ? 'opacity-100' : 'opacity-0'}`}
+          />
+        )}
 
         {/* شارات — ألوان بوتيك هادئة معتمة (بلا backdrop-blur: يسبّب تعليق تمرير على iOS مع كثرة البطاقات) */}
         <div className="absolute start-2 top-2 z-10 flex flex-col gap-1">

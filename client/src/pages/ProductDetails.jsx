@@ -236,11 +236,12 @@ export default function ProductDetails() {
           <div className="relative mx-auto w-fit">
             {/* الصورة تظهر بحجمها الطبيعي (مثل الفيديو) بلا قص — نقر للتكبير */}
             <img
+              key={gallery[active]}
               src={cldThumb(gallery[active], 900)}
               alt={product.name}
               decoding="async"
               onClick={() => setLightbox(true)}
-              className="media-cap block w-auto max-w-full cursor-zoom-in rounded-2xl bg-ink-800 object-contain"
+              className="media-cap block w-auto max-w-full cursor-zoom-in rounded-2xl bg-ink-800 object-contain animate-fade-in [animation-duration:350ms]"
               onError={(e) => (e.currentTarget.src = PH)}
             />
             {hasDiscount && <span className="badge absolute start-3 top-3 bg-[#8a2438] text-[#F4EDE2] shadow-sm">-{Math.round((1 - product.price / product.oldPrice) * 100)}%</span>}
