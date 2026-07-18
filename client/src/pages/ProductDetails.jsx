@@ -493,19 +493,10 @@ export default function ProductDetails() {
 
           {/* أزرار الشراء — "اطلبي الآن" شراء فوري (يفتح إتمام الطلب مباشرةً) — حبوب فاخرة بهالة ذهبية */}
           <div ref={ctaRef} className={`mt-auto flex flex-col gap-3 pt-6 sm:flex-row ${showNotify ? 'hidden' : ''}`}>
-            <button
-              onClick={handleBuy}
-              disabled={outOfStock}
-              className="btn-primary flex flex-1 items-center justify-center gap-2 !rounded-full py-4 text-base font-bold !text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
-              style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)', boxShadow: '0 16px 34px -14px rgba(74, 19, 34, 0.65)' }}
-            >
+            <button onClick={handleBuy} disabled={outOfStock} className="btn-buy flex-1 py-4 text-base">
               <BagIcon className="h-5 w-5" /> {t('product.buyNow')}
             </button>
-            <button
-              onClick={handleAdd}
-              disabled={outOfStock}
-              className="flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-wine/40 py-4 text-base font-bold text-wine transition hover:bg-wine hover:text-cream disabled:cursor-not-allowed disabled:opacity-40"
-            >
+            <button onClick={handleAdd} disabled={outOfStock} className="btn-cart flex-1 py-4 text-base">
               <CartIcon className="h-5 w-5" /> {t('product.addToCart')}
             </button>
           </div>
@@ -563,19 +554,10 @@ export default function ProductDetails() {
               <p className="line-clamp-1 text-sm font-semibold text-stone-100">{product.name}</p>
               <p className="font-display text-base font-bold text-wine">{t('common.currency')}{product.price}</p>
             </div>
-            <button
-              onClick={handleAdd}
-              aria-label={t('product.addToCart')}
-              title={t('product.addToCart')}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-wine/40 text-wine transition hover:bg-wine hover:text-cream"
-            >
+            <button onClick={handleAdd} aria-label={t('product.addToCart')} title={t('product.addToCart')} className="btn-cart h-11 w-11 shrink-0">
               <CartIcon className="h-5 w-5" />
             </button>
-            <button
-              onClick={handleBuy}
-              className="flex shrink-0 items-center justify-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
-              style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)', boxShadow: '0 12px 26px -12px rgba(74, 19, 34, 0.65)' }}
-            >
+            <button onClick={handleBuy} className="btn-buy shrink-0 px-6 py-2.5 text-sm">
               <BagIcon className="h-4 w-4" /> {t('product.buyNow')}
             </button>
           </div>

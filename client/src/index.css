@@ -186,6 +186,26 @@ button > svg { vertical-align: middle; }
   background: linear-gradient(135deg, #25d366 0%, #1da851 100%);
 }
 
+/* زوج أزرار الشراء الموحّد عبر كل الصفحات (صفحة المنتج · النظرة السريعة · شريط الشراء الثابت):
+   "اطلبي الآن" ممتلئ نبيذي، و"أضيفي للسلة" مفرّغ بنفس درجة النبيذي — زوج متناسق واضح الأولوية.
+   الأبعاد (padding/flex-1) تُضاف عند الاستخدام. */
+.btn-buy {
+  @apply inline-flex items-center justify-center gap-2 rounded-full border-2 border-transparent font-bold text-cream ring-1 ring-[#e6c878]/35 transition disabled:cursor-not-allowed disabled:opacity-40;
+  background: linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%);
+  box-shadow: 0 16px 34px -14px rgba(74, 19, 34, 0.65);
+}
+.btn-buy:hover:not(:disabled) { filter: brightness(1.08); }
+.btn-cart {
+  @apply inline-flex items-center justify-center gap-2 rounded-full border-2 font-bold transition disabled:cursor-not-allowed disabled:opacity-40;
+  border-color: rgba(110, 38, 55, 0.4);
+  color: #6e2637;
+  background: transparent;
+}
+.btn-cart:hover:not(:disabled) { background: #6e2637; color: #F4EDE2; }
+/* الوضع الليلي: النبيذي الغامق يختفي على الخلفية الداكنة → ذهبي مضيء متناسق */
+html.dark .theme-pub .btn-cart { border-color: rgba(240, 220, 166, 0.45); color: #f0dca6; }
+html.dark .theme-pub .btn-cart:hover:not(:disabled) { background: #f0dca6; color: #241b12; }
+
 /* حقول الإدخال */
 .input {
   @apply w-full rounded-xl border border-gold-400/15 bg-black/30 px-4 py-2.5 text-stone-100

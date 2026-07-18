@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
-import { HeartIcon, CartIcon, HandIcon, ForwardIcon } from './icons.jsx';
+import { HeartIcon, CartIcon, BagIcon, HandIcon, ForwardIcon } from './icons.jsx';
 import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
 import { flyToCart } from '../utils/flyToCart.js';
 import useScrollLock from '../hooks/useScrollLock.js';
@@ -24,7 +24,7 @@ const PLACEHOLDER =
 // نافذة "نظرة سريعة" — تفاصيل المنتج دون مغادرة الصفحة.
 export default function QuickViewModal({ product, whatsapp = '', onClose }) {
   const { t } = useTranslation();
-  const { add } = useCart();
+  const { add, buyNow } = useCart();
   const { has, toggle } = useWishlist();
   const imgRef = useRef(null);
   useScrollLock(true);
@@ -58,18 +58,28 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
 
   const hasVideo = !!product.videoUrl;
 
-  const onAdd = () => {
-    if (outOfStock) return;
+  // تحقّق موحّد من اختيار اللون/المقاس قبل الإضافة أو الشراء
+  const validate = () => {
+    if (outOfStock) return false;
     if (hasColorStock) {
-      if (!color) { setErr(t('product.pickColorFirst')); return; }
-      if (!size) { setErr(t('product.pickSize')); return; }
-      if (sizeSoldOut(size)) { setErr(t('product.sizeSoldOut')); return; }
+      if (!color) { setErr(t('product.pickColorFirst')); return false; }
+      if (!size) { setErr(t('product.pickSize')); return false; }
+      if (sizeSoldOut(size)) { setErr(t('product.sizeSoldOut')); return false; }
     } else {
-      if (sizes.length && !size) { setErr(t('product.pickSize')); return; }
-      if (colors.length && !color) { setErr(t('product.pickColor')); return; }
+      if (sizes.length && !size) { setErr(t('product.pickSize')); return false; }
+      if (colors.length && !color) { setErr(t('product.pickColor')); return false; }
     }
+    return true;
+  };
+  const onAdd = () => {
+    if (!validate()) return;
     flyToCart(imgRef.current, hasVideo ? (poster || gallery[active]) : gallery[active]);
     add({ ...product, whatsapp, size, color }, qty);
+    onClose();
+  };
+  const onBuy = () => {
+    if (!validate()) return;
+    buyNow({ ...product, whatsapp, size, color }, qty);
     onClose();
   };
 
@@ -230,17 +240,13 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
 
           {err && <p className="mt-3 text-sm font-medium text-red-500">{err}</p>}
 
-          {/* أزرار حبوب فاخرة موحّدة مع صفحة المنتج */}
+          {/* أزرار الشراء — نفس الزوج الموحّد في صفحة المنتج (اطلبي الآن + أضيفي للسلة) */}
           <div className="mt-3 flex items-center gap-2">
-            <motion.button
-              onClick={onAdd}
-              disabled={outOfStock}
-              whileTap={{ scale: 0.96 }}
-              className="flex flex-1 items-center justify-center gap-2 rounded-full py-3.5 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
-              style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)', boxShadow: '0 14px 30px -12px rgba(74, 19, 34, 0.6)' }}
-            >
-              <CartIcon className="h-5 w-5" />
-              {outOfStock ? t('product.outOfStock') : t('product.addToCart')}
+            <motion.button onClick={onBuy} disabled={outOfStock} whileTap={{ scale: 0.96 }} className="btn-buy flex-1 py-3.5 text-sm">
+              <BagIcon className="h-5 w-5" /> {outOfStock ? t('product.outOfStock') : t('product.buyNow')}
+            </motion.button>
+            <motion.button onClick={onAdd} disabled={outOfStock} whileTap={{ scale: 0.96 }} className="btn-cart flex-1 py-3.5 text-sm">
+              <CartIcon className="h-5 w-5" /> {t('product.addToCart')}
             </motion.button>
             <motion.button
               onClick={() => toggle(product)}
