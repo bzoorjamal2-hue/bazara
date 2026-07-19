@@ -20,6 +20,7 @@ import useScrollLock from '../hooks/useScrollLock.js';
 import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
 import { SIZES, sizeLabel } from '../utils/sizes.js';
+import { productColors, colorToCss } from '../utils/colorDot.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { saveRef } from '../utils/referral.js';
 import { initPixels, trackPixel } from '../utils/pixels.js';
@@ -51,8 +52,9 @@ export default function StorePage() {
     return () => clearTimeout(idT);
   }, [q]);
   const [sizesSel, setSizesSel] = useState([]); // مقاسات مختارة (متعدّد)
+  const [colorsSel, setColorsSel] = useState([]); // ألوان مختارة (متعدّد)
   const [offersOnly, setOffersOnly] = useState(false);
-  const [openSheet, setOpenSheet] = useState(null); // 'sort' | 'size' | 'offers'
+  const [openSheet, setOpenSheet] = useState(null); // 'sort' | 'size' | 'color' | 'offers'
   const [page, setPage] = useState(1);
   const [shareOpen, setShareOpen] = useState(false); // نافذة شاركي واربحي
   const [stories, setStories] = useState([]); // ستوريات المتجر الفعّالة
@@ -106,7 +108,7 @@ export default function StorePage() {
     api.post(`/public/store/${s.slug}/visit`).catch(() => {});
   }, [data?.store?.slug, isOwner]);
 
-  useEffect(() => setPage(1), [cat, q, sort, sizesSel, offersOnly]);
+  useEffect(() => setPage(1), [cat, q, sort, sizesSel, colorsSel, offersOnly]);
   useEffect(() => { setStories(data?.stories || []); }, [data]); // مزامنة الستوريات
   // تحويل لرابط المتجر الجديد إن فُتح برابط قديم (عشان يبقى الرابط الرسمي نظيفاً)
   useEffect(() => {
@@ -139,20 +141,32 @@ export default function StorePage() {
       // مقاسات المنتج قد تكون متعدّدة (مفصولة بفواصل)
       const prodSizes = (p.size || '').split(',').map((s) => s.trim()).filter(Boolean);
       const matchSize = sizesSel.length === 0 || sizesSel.some((s) => prodSizes.includes(s));
+      const matchColor = colorsSel.length === 0 || productColors(p).some((c) => colorsSel.includes(c));
       const matchOffers = !offersOnly || (p.oldPrice && p.oldPrice > p.price);
-      return matchQ && matchCat && matchSize && matchOffers;
+      return matchQ && matchCat && matchSize && matchColor && matchOffers;
     });
     const cmp = {
       newest: (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
       priceAsc: (a, b) => a.price - b.price,
       priceDesc: (a, b) => b.price - a.price,
+      popular: (a, b) => (b.soldCount || 0) - (a.soldCount || 0),
+      discount: (a, b) => ((b.oldPrice > b.price ? 1 - b.price / b.oldPrice : 0) - (a.oldPrice > a.price ? 1 - a.price / a.oldPrice : 0)),
     }[sort];
     if (cmp) list = [...list].sort(cmp);
     return list;
-  }, [data, q, cat, sizesSel, offersOnly, sort]);
+  }, [data, q, cat, sizesSel, colorsSel, offersOnly, sort]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  // ألوان المتجر المتاحة (تُشتقّ من منتجاته المعروفة الدرجة) — لا يظهر فلتر اللون بدونها
+  const storeColors = useMemo(() => {
+    const map = new Map();
+    for (const p of data?.products || []) {
+      for (const c of productColors(p)) { if (!map.has(c)) { const css = colorToCss(c); if (css) map.set(c, css); } }
+    }
+    return [...map.entries()].map(([name, css]) => ({ name, css }));
+  }, [data]);
 
   if (error) return <div className="glass p-10 text-center text-stone-300">{error}</div>;
   if (!data) return <StorePageSkeleton />;
@@ -280,6 +294,9 @@ export default function StorePage() {
               <div className="flex w-max items-center gap-2">
                 <Chip onClick={() => setOpenSheet('sort')}>{t('store.sortBy')}: {t(SORT_LABEL[sort] || 'store.sortDefault')}</Chip>
                 <Chip onClick={() => setOpenSheet('size')} active={sizesSel.length > 0}>{t('store.sizeLabel')}{sizesSel.length ? ` (${sizesSel.length})` : ''}</Chip>
+                {storeColors.length >= 2 && (
+                  <Chip onClick={() => setOpenSheet('color')} active={colorsSel.length > 0}>{t('store.colorLabel')}{colorsSel.length ? ` (${colorsSel.length})` : ''}</Chip>
+                )}
                 <Chip onClick={() => setOpenSheet('offers')} active={offersOnly}>{t('store.specialOffers')}</Chip>
               </div>
             </div>
@@ -362,6 +379,9 @@ export default function StorePage() {
       {openSheet === 'size' && (
         <SizeSheet sizes={SIZES} value={sizesSel} onClose={() => setOpenSheet(null)} onApply={(v) => { setSizesSel(v); setOpenSheet(null); }} />
       )}
+      {openSheet === 'color' && (
+        <ColorSheet colors={storeColors} value={colorsSel} onClose={() => setOpenSheet(null)} onApply={(v) => { setColorsSel(v); setOpenSheet(null); }} />
+      )}
       {openSheet === 'offers' && (
         <OffersSheet value={offersOnly} onClose={() => setOpenSheet(null)} onApply={(v) => { setOffersOnly(v); setOpenSheet(null); }} />
       )}
@@ -378,6 +398,8 @@ const SORT_LABEL = {
   newest: 'store.sortNewest',
   priceAsc: 'store.sortPriceAsc',
   priceDesc: 'store.sortPriceDesc',
+  popular: 'store.sortPopular',
+  discount: 'store.sortDiscount',
 };
 
 // فوتر المتجر: أيقونات تواصل مربوطة بحسابات المشترك
@@ -689,7 +711,7 @@ function Check({ on }) {
 function SortSheet({ value, onClose, onApply }) {
   const { t } = useTranslation();
   const [sel, setSel] = useState(value);
-  const opts = [['default', 'store.sortDefault'], ['newest', 'store.sortNewest'], ['priceAsc', 'store.sortPriceAsc'], ['priceDesc', 'store.sortPriceDesc']];
+  const opts = [['default', 'store.sortDefault'], ['newest', 'store.sortNewest'], ['popular', 'store.sortPopular'], ['priceAsc', 'store.sortPriceAsc'], ['priceDesc', 'store.sortPriceDesc'], ['discount', 'store.sortDiscount']];
   return (
     <FilterSheet title={t('store.sortBy')} onClose={onClose} onReset={() => setSel('default')} onApply={() => onApply(sel)}>
       <div className="space-y-1">
@@ -723,6 +745,28 @@ function SizeSheet({ sizes, value, onClose, onApply }) {
           <button key={s} onClick={() => toggle(s)} className="flex w-full items-center justify-between rounded-xl px-2 py-3 text-[#2b2b2b] hover:bg-wine/5">
             <span>{sizeLabel(s, t)}</span>
             <Check on={sel.includes(s)} />
+          </button>
+        ))}
+      </div>
+    </FilterSheet>
+  );
+}
+
+// فلتر اللون: متعدّد الاختيار مع دائرة بدرجة اللون الفعلية (نفس روح swatches المنتج)
+function ColorSheet({ colors, value, onClose, onApply }) {
+  const { t } = useTranslation();
+  const [sel, setSel] = useState(value);
+  const toggle = (c) => setSel((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
+  return (
+    <FilterSheet title={t('store.colorLabel')} onClose={onClose} onReset={() => setSel([])} onApply={() => onApply(sel)}>
+      <div className="max-h-72 space-y-1 overflow-y-auto">
+        {colors.map(({ name, css }) => (
+          <button key={name} onClick={() => toggle(name)} className="flex w-full items-center justify-between rounded-xl px-2 py-3 text-[#2b2b2b] hover:bg-wine/5">
+            <span className="flex items-center gap-2.5">
+              <span className="h-6 w-6 rounded-full" style={{ background: css, boxShadow: '0 0 0 1px rgba(255,255,255,0.5), inset 0 0 0 1px rgba(0,0,0,0.12)' }} />
+              {name}
+            </span>
+            <Check on={sel.includes(name)} />
           </button>
         ))}
       </div>
