@@ -5,6 +5,8 @@ import pngToIco from 'png-to-ico';
 import { readFileSync } from 'node:fs';
 
 const svg = readFileSync(new URL('./icon-master.svg', import.meta.url));
+// أيقونة محركات البحث/التبويب: ختم دائري يملأ الحاوية الدائرية في Google (بلا مربّع)
+const faviconSvg = readFileSync(new URL('./favicon-master.svg', import.meta.url));
 const out = (name) => `public/${name}`; // يُشغَّل من مجلد client
 const BROWN = '#5e4636'; // بني الخلفية — يملأ الزوايا أيضاً (كان خمري #5C1A2E فتظهر زوايا خمرية)
 
@@ -30,7 +32,7 @@ for (const [name, size] of solid) {
   console.log('icon:', name, size);
 }
 for (const [name, size] of favicons) {
-  await sharp(svg, { density: 384 }).resize(size, size).png().toFile(out(name));
+  await sharp(faviconSvg, { density: 384 }).resize(size, size).png().toFile(out(name));
   console.log('icon:', name, size);
 }
 
