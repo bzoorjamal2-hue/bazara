@@ -341,11 +341,11 @@ function HomeHero({ banners = [] }) {
                     style={isColor ? { background: s.bgValue } : isVideo ? { backgroundImage: `url("${vPoster}")`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
                   >
                     {isImage && (
-                      <img src={cldThumb(s.bgValue, 1280)} alt="" loading={idx === 0 ? 'eager' : 'lazy'} decoding="async" style={{ filter: 'brightness(0.6)' }} className="absolute inset-0 -z-10 h-full w-full object-cover" />
+                      <img src={cldThumb(s.bgValue, 1280)} alt="" loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" style={{ filter: 'brightness(0.6)' }} className="absolute inset-0 -z-10 h-full w-full object-cover" />
                     )}
                     {isVideo && (
                       <>
-                        <img src={vPoster} alt="" aria-hidden loading={idx === 0 ? 'eager' : 'lazy'} style={{ filter: 'brightness(0.6)', zIndex: -2 }} className="absolute inset-0 h-full w-full object-cover" />
+                        <img src={vPoster} alt="" aria-hidden loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" style={{ filter: 'brightness(0.6)', zIndex: -2 }} className="absolute inset-0 h-full w-full object-cover" />
                         <video
                           ref={(el) => { vidRefs.current[idx] = el; }}
                           src={s.bgValue}
@@ -428,7 +428,9 @@ function PromoBanner() {
         <p className="font-display text-sm font-bold text-wine sm:text-lg">{t('home.promoTitle')}</p>
         <p className="mt-0.5 text-xs text-stone-500 sm:text-sm">{t('home.promoSub')}</p>
       </div>
-      <span className="hidden shrink-0 items-center gap-1 rounded-full bg-wine px-4 py-2 text-sm font-bold text-cream sm:inline-flex">{t('home.shopNow')} <ForwardIcon className="h-3.5 w-3.5" /></span>
+      <span className="hidden shrink-0 items-center gap-1 rounded-full bg-wine px-4 py-2 text-sm font-bold text-cream sm:inline-flex">{t('home.shopNow')} <ForwardIcon className="h-3.5 w-3.5 rtl-flip" /></span>
+      {/* على الجوال: سهم صغير يوضّح أن البطاقة قابلة للنقر (الزر الكامل مخفي) */}
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-wine/10 text-wine sm:hidden"><ForwardIcon className="h-4 w-4 rtl-flip" /></span>
     </Link>
   );
 }

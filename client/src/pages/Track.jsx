@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
@@ -48,12 +48,11 @@ export default function Track() {
     else setError(t('track.reorderEmpty'));
   };
 
-  const search = async (e) => {
-    e.preventDefault();
-    if (!phone.trim()) return;
+  const doSearch = async (ph) => {
+    if (!ph.trim()) return;
     setBusy(true); setError(''); setOrders(null);
     try {
-      const r = await api.post('/public/track', { phone: phone.trim() });
+      const r = await api.post('/public/track', { phone: ph.trim() });
       setOrders(r.data.orders);
     } catch (err) {
       setError(getErrorMessage(err));
@@ -61,6 +60,21 @@ export default function Track() {
       setBusy(false);
     }
   };
+  const search = (e) => { e.preventDefault(); doSearch(phone); };
+
+  // ما بعد الشراء بلا احتكاك: نعبّئ الرقم المحفوظ من آخر طلب ونبحث تلقائياً —
+  // الزبونة تفتح "تتبّعي طلبك" فترى طلباتها فوراً بلا إعادة كتابة رقمها كل مرة
+  const autoRan = useRef(false);
+  useEffect(() => {
+    if (autoRan.current) return;
+    autoRan.current = true;
+    try {
+      const saved = JSON.parse(localStorage.getItem('bz_customer_v1') || '{}');
+      const ph = String(saved.phone || '').trim();
+      if (ph.replace(/\D/g, '').length >= 9) { setPhone(ph); doSearch(ph); }
+    } catch { /* تجاهل */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>
