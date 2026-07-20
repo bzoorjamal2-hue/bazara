@@ -522,6 +522,7 @@ export default function ProductDetails() {
                     <input
                       dir="ltr"
                       inputMode="tel"
+                      autoComplete="tel"
                       className="input flex-1 !rounded-xl text-end"
                       placeholder={t('product.notifyPhonePlaceholder')}
                       value={notifyPhone}

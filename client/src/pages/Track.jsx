@@ -112,6 +112,7 @@ export default function Track() {
               <input
                 dir="ltr"
                 inputMode="tel"
+                autoComplete="tel"
                 className="w-full rounded-full border border-wine/15 bg-white py-3 pl-10 pr-4 text-end text-[#2b2b2b] placeholder:text-stone-400 focus:border-wine/40 focus:outline-none focus:ring-2 focus:ring-wine/15"
                 placeholder={t('track.phonePlaceholder')}
                 value={phone}
