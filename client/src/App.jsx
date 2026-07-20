@@ -62,6 +62,9 @@ const scrollPositions = (() => {
   try { return new Map(JSON.parse(sessionStorage.getItem(SCROLL_STORE) || '[]')); }
   catch { return new Map(); }
 })();
+// مواضع بحسب المسار (وليس مفتاح التاريخ): للتنقّل المباشر بين تبويبات الشريط السفلي
+// (رئيسية → ريلز → رئيسية = PUSH لا POP) — يرجع الزائر لموضعه بآخر زيارة لنفس الصفحة
+const pathPositions = new Map();
 const flushScrollPositions = () => {
   try { sessionStorage.setItem(SCROLL_STORE, JSON.stringify([...scrollPositions].slice(-80))); }
   catch { /* تجاهل */ }
@@ -96,7 +99,11 @@ function AnimatedRoutes() {
     // نسجّل المسار لسجل "الرجوع الذكي" (أيقونات فتات الخبز ترجع بدل ما تفتح صفحة جديدة)
     recordNav(key, location.pathname + location.search);
     // أثناء قفل التمرير (درج/نافذة مفتوحة يثبّت body) يكون scrollY صفراً زائفاً — لا نحفظه
-    const save = () => { if (document.body.style.position !== 'fixed') scrollPositions.set(key, window.scrollY); };
+    const save = () => {
+      if (document.body.style.position === 'fixed') return;
+      scrollPositions.set(key, window.scrollY);
+      pathPositions.set(location.pathname + location.search, window.scrollY);
+    };
     // حزامان معاً — أحداث التمرير وحدها لم تكن كافية (قد تضيع لحظة التعليق/الزخم على
     // الموبايل فيُحفظ موضع قديم ويرجع الزائر لأعلى الصفحة):
     // 1) scroll: يلتقط الموضع باستمرار أثناء التصفّح.
@@ -120,8 +127,12 @@ function AnimatedRoutes() {
   // أقصى لكل إطار، وفقط عندما يتغيّر الارتفاع فعلاً — لا layout thrashing) يلتقط وصول
   // المحتوى مهما تأخّر، بسقف 5 ثوانٍ، ويتوقّف فوراً عند أي تمرير يدوي من المستخدم.
   useLayoutEffect(() => {
-    if (navType === 'POP') {
-      const target = scrollPositions.get(location.key) || 0;
+    {
+      // POP (رجوع): موضع مفتاح التاريخ. PUSH (تنقّل مباشر كتبويبات الشريط السفلي):
+      // موضع آخر زيارة لنفس المسار — فالرئيسية ترجع لمكانها حتى بالتنقّل بالأزرار
+      const target = navType === 'POP'
+        ? (scrollPositions.get(location.key) || 0)
+        : (pathPositions.get(location.pathname + location.search) || 0);
       if (target > 0) {
         let done = false;
         let raf = 0;
