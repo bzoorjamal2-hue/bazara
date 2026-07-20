@@ -25,6 +25,15 @@ export function CartProvider({ children }) {
     localStorage.setItem(KEY, JSON.stringify(items));
   }, [items]);
 
+  // المتبقي بالمخزون لهذه التشكيلة (لون/نمرة) — يُحفظ مع القطعة ليقيّد عدّاد السلة
+  const stockOf = (p) => {
+    const cs = p.colorStock && typeof p.colorStock === 'object' ? p.colorStock : null;
+    if (cs && p.color && cs[p.color] && typeof cs[p.color][p.size] === 'number') return cs[p.color][p.size];
+    const ss = p.sizeStock && typeof p.sizeStock === 'object' ? p.sizeStock : null;
+    if (ss && p.size && typeof ss[p.size] === 'number') return ss[p.size];
+    return typeof p.stock === 'number' ? p.stock : null;
+  };
+
   const add = (product, qty = 1) => {
     setItems((prev) => {
       // متجر مختلف عن السلة الحالية → نفرّغها أولاً (لا نخلط منتجات متجرين)
@@ -32,8 +41,10 @@ export function CartProvider({ children }) {
       const base = slug && prev.length && prev[0].storeSlug && prev[0].storeSlug !== slug ? [] : prev;
       const key = lineKey(product);
       const existing = base.find((i) => i.key === key);
+      const maxQty = stockOf(product);
       if (existing) {
-        return base.map((i) => (i.key === key ? { ...i, qty: i.qty + qty } : i));
+        // الإضافة المتكرّرة لنفس التشكيلة لا تتجاوز المتبقي بالمخزون
+        return base.map((i) => (i.key === key ? { ...i, maxQty, qty: maxQty != null ? Math.min(i.qty + qty, Math.max(1, maxQty)) : i.qty + qty } : i));
       }
       return [
         ...base,
@@ -49,6 +60,7 @@ export function CartProvider({ children }) {
           whatsapp: product.whatsapp || product.storeWhatsapp || '',
           size: product.size || '',
           color: product.color || '',
+          maxQty,
           qty,
         },
       ];
@@ -66,7 +78,7 @@ export function CartProvider({ children }) {
 
   const remove = (key) => setItems((prev) => prev.filter((i) => i.key !== key));
   const setQty = (key, qty) =>
-    setItems((prev) => prev.map((i) => (i.key === key ? { ...i, qty: Math.max(1, qty) } : i)));
+    setItems((prev) => prev.map((i) => (i.key === key ? { ...i, qty: Math.max(1, i.maxQty != null ? Math.min(qty, i.maxQty) : qty) } : i)));
   const clear = () => setItems([]);
 
   // تفرّغ السلة تلقائياً عند دخول متجر مختلف عن متجر عناصر السلة الحالية

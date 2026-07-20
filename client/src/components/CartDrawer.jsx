@@ -353,7 +353,7 @@ export default function CartDrawer() {
                         <div className="flex items-center gap-0.5 rounded-full border border-gold-400/30 px-1 py-0.5">
                           <button onClick={() => setQty(i.key, i.qty - 1)} aria-label="-" className="flex h-6 w-6 items-center justify-center rounded-full leading-none text-gold-200 transition hover:bg-gold-400/10">−</button>
                           <span className="w-5 text-center text-sm font-semibold">{i.qty}</span>
-                          <button onClick={() => setQty(i.key, i.qty + 1)} aria-label="+" className="flex h-6 w-6 items-center justify-center rounded-full leading-none text-gold-200 transition hover:bg-gold-400/10">+</button>
+                          <button onClick={() => setQty(i.key, i.qty + 1)} disabled={i.maxQty != null && i.qty >= i.maxQty} aria-label="+" className="flex h-6 w-6 items-center justify-center rounded-full leading-none text-gold-200 transition hover:bg-gold-400/10 disabled:opacity-30">+</button>
                         </div>
                       </div>
                     </div>
