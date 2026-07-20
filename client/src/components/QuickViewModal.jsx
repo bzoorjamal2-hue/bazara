@@ -268,7 +268,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
           </div>
 
           <Link
-            to={`/product/${product.id}`}
+            to={`/product/${product.id}${color ? `?color=${encodeURIComponent(color)}` : ''}`}
             onClick={onClose}
             className="mt-3 inline-flex items-center justify-center gap-1 self-center text-center text-sm font-medium text-wine/70 underline-offset-4 transition hover:text-wine hover:underline"
           >
