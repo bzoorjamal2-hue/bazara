@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
+import { clearCachePrefixes } from '../../utils/apiCache.js';
 import Spinner from '../../components/Spinner.jsx';
 import BannerEditor from '../../components/BannerEditor.jsx';
 import { ImageIcon } from '../../components/icons.jsx';
@@ -30,6 +31,9 @@ export default function SiteSliders() {
     setMsg(''); setError(''); setBusy(true);
     try {
       await api.put('/site/banners', { banners });
+      // بانرات الرئيسية الجديدة تظهر فوراً: نفرّغ كاش الرئيسية + النسخة المحفوظة للظهور الفوري
+      clearCachePrefixes(['home']);
+      try { localStorage.removeItem('bz_home_banners'); } catch { /* تجاهل */ }
       setMsg(t('dashboard.store.saved'));
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (e) {
