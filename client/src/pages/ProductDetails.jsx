@@ -41,6 +41,8 @@ export default function ProductDetails() {
   const [selSize, setSelSize] = useState('');
   const [selColor, setSelColor] = useState('');
   const [pickErr, setPickErr] = useState('');
+  const [qty, setQty] = useState(1); // كمية الشراء (كانت بالنظرة السريعة فقط)
+  useEffect(() => { setQty(1); }, [id]); // منتج جديد → كمية 1
   const [lightbox, setLightbox] = useState(false);
   const [sizeGuide, setSizeGuide] = useState(false);
   const [notifyPhone, setNotifyPhone] = useState('');
@@ -225,8 +227,10 @@ export default function ProductDetails() {
     const y = el.getBoundingClientRect().top + window.scrollY - window.innerHeight / 2 + el.offsetHeight / 2;
     window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
   };
-  const handleAdd = () => { if (outOfStock) return; if (!validatePick()) { scrollToPick(); return; } add(cartProduct); };
-  const handleBuy = () => { if (outOfStock) return; if (!validatePick()) { scrollToPick(); return; } buyNow(cartProduct); };
+  // الكمية تُقصّ على المتبقي من المقاس المختار (قد تتغيّر بعد ضبط العدّاد)
+  const buyQty = Math.max(1, Math.min(qty, selSizeQty ?? qty));
+  const handleAdd = () => { if (outOfStock) return; if (!validatePick()) { scrollToPick(); return; } add(cartProduct, buyQty); };
+  const handleBuy = () => { if (outOfStock) return; if (!validatePick()) { scrollToPick(); return; } buyNow(cartProduct, buyQty); };
 
   // تنبيه التوفّر: يظهر عند نفاد المنتج كلياً أو نفاد المقاس المختار
   const showNotify = outOfStock || (selSize && sizeSoldOut(selSize));
@@ -522,6 +526,18 @@ export default function ProductDetails() {
           )}
 
           {/* أزرار الشراء — "اطلبي الآن" شراء فوري (يفتح إتمام الطلب مباشرةً) — حبوب فاخرة بهالة ذهبية */}
+          {/* الكمية — عدّاد حبّي (يتقيّد بالمتبقي من المقاس المختار إن عُرف) */}
+          {!outOfStock && !showNotify && (
+            <div className="mt-5 flex items-center justify-between">
+              <span className="text-sm font-semibold text-stone-300">{t('dashboard.product.qty')}</span>
+              <div className="flex items-center gap-0.5 rounded-full border border-wine/25 px-1.5 py-1">
+                <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))} disabled={qty <= 1} aria-label="-" className="flex h-8 w-8 items-center justify-center rounded-full text-lg leading-none text-wine transition hover:bg-wine/10 disabled:opacity-30">−</button>
+                <span className="w-7 text-center font-bold text-stone-100">{qty}</span>
+                <button type="button" onClick={() => setQty((q) => Math.min(selSizeQty ?? 99, q + 1))} disabled={selSizeQty != null && qty >= selSizeQty} aria-label="+" className="flex h-8 w-8 items-center justify-center rounded-full text-lg leading-none text-wine transition hover:bg-wine/10 disabled:opacity-30">+</button>
+              </div>
+            </div>
+          )}
+
           <div ref={ctaRef} className={`mt-auto flex flex-col gap-3 pt-6 sm:flex-row ${showNotify ? 'hidden' : ''}`}>
             <button onClick={handleBuy} disabled={outOfStock} className="btn-buy flex-1 py-4 text-base">
               <BagIcon className="h-5 w-5" /> {t('product.buyNow')}
