@@ -409,8 +409,9 @@ export default function CartDrawer() {
                   <div>
                     <h3 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-gold-200"><PinIcon className="h-4 w-4" /> {t('co.customer')}</h3>
                     <div className="space-y-2.5">
-                      <input className={`input !rounded-2xl ${invalid.name ? 'ring-1 ring-red-400/70' : ''}`} placeholder={t('co.name')} value={cust.name} onChange={(e) => { setCust({ ...cust, name: e.target.value }); if (invalid.name) setInvalid((v) => ({ ...v, name: false })); }} />
-                      <input className={`input !rounded-2xl ${invalid.phone ? 'ring-1 ring-red-400/70' : ''}`} dir="ltr" inputMode="tel" placeholder={t('co.phone')} value={cust.phone} onChange={(e) => { setCust({ ...cust, phone: e.target.value }); if (invalid.phone) setInvalid((v) => ({ ...v, phone: false })); }} />
+                      {/* autocomplete: الجوال يقترح الاسم/الهاتف/العنوان المحفوظين — تعبئة أسرع = إتمام أكثر */}
+                      <input className={`input !rounded-2xl ${invalid.name ? 'ring-1 ring-red-400/70' : ''}`} autoComplete="name" placeholder={t('co.name')} value={cust.name} onChange={(e) => { setCust({ ...cust, name: e.target.value }); if (invalid.name) setInvalid((v) => ({ ...v, name: false })); }} />
+                      <input className={`input !rounded-2xl ${invalid.phone ? 'ring-1 ring-red-400/70' : ''}`} dir="ltr" inputMode="tel" autoComplete="tel" placeholder={t('co.phone')} value={cust.phone} onChange={(e) => { setCust({ ...cust, phone: e.target.value }); if (invalid.phone) setInvalid((v) => ({ ...v, phone: false })); }} />
                       <Select
                         value={cust.city}
                         onChange={(v) => { setCust({ ...cust, city: v }); if (invalid.city) setInvalid((p) => ({ ...p, city: false })); }}
@@ -418,7 +419,7 @@ export default function CartDrawer() {
                         className={`!rounded-2xl ${invalid.city ? 'ring-1 ring-red-400/70' : ''}`}
                         options={areaList.map((z) => ({ value: z.name, label: `${z.name}${z.fee ? ` — ₪${z.fee}` : ''}` }))}
                       />
-                      <input className="input !rounded-2xl" placeholder={t('co.address')} value={cust.address} onChange={(e) => setCust({ ...cust, address: e.target.value })} />
+                      <input className="input !rounded-2xl" autoComplete="street-address" placeholder={t('co.address')} value={cust.address} onChange={(e) => setCust({ ...cust, address: e.target.value })} />
                       <textarea className="input !rounded-2xl" rows={2} placeholder={t('co.notes')} value={cust.notes} onChange={(e) => setCust({ ...cust, notes: e.target.value })} />
                     </div>
                   </div>
