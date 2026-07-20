@@ -671,7 +671,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
                     {colors.map((c) => {
                       const css = colorToCss(c);
                       return (
-                        <button key={c} onClick={() => { setSelColor(c); if (hasCS) setSelSize(''); }}
+                        <button key={c} onClick={() => { setSelColor(selColor === c ? '' : c); if (hasCS) setSelSize(''); }}
                           className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-semibold transition ${selColor === c ? 'border-wine bg-wine text-cream' : 'border-wine/30 text-wine hover:bg-wine/10'}`}>
                           {css && <span className="h-4 w-4 shrink-0 rounded-full" style={{ background: css, boxShadow: '0 0 0 1px rgba(255,255,255,0.55), inset 0 0 0 1px rgba(0,0,0,0.15)' }} />}
                           {c}
@@ -688,10 +688,18 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
                 <div className="mb-4">
                   <p className="mb-1.5 text-xs font-medium text-stone-500">{t('reels.size')}</p>
                   <div className="flex flex-wrap gap-2">
-                    {sizes.map((s) => (
-                      <button key={s} onClick={() => setSelSize(s)}
-                        className={`min-w-11 rounded-xl border px-3.5 py-1.5 text-sm font-semibold transition ${selSize === s ? 'border-wine bg-wine text-cream' : 'border-wine/30 text-wine hover:bg-wine/10'}`}>{sizeLabel(s, t)}</button>
-                    ))}
+                    {sizes.map((s) => {
+                      // المتبقّي من هذه النمرة (نفس عرض صفحة المنتج) — طمأنة وندرة بنفس الوقت
+                      const q = hasCS ? colorStock[selColor]?.[s] : sizeStock[s];
+                      const on = selSize === s;
+                      return (
+                        <button key={s} onClick={() => setSelSize(s)}
+                          className={`flex min-w-11 flex-col items-center rounded-xl border px-3.5 py-1.5 transition ${on ? 'border-wine bg-wine text-cream' : 'border-wine/30 text-wine hover:bg-wine/10'}`}>
+                          <span className="text-sm font-semibold leading-none">{sizeLabel(s, t)}</span>
+                          {typeof q === 'number' && <span className={`mt-1 text-[10px] font-medium leading-none ${on ? 'text-cream/80' : 'text-wine/55'}`}>{t('product.leftShort', { count: q })}</span>}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
