@@ -63,6 +63,7 @@ export default function ProductDetails() {
   const ctaRef = useRef(null);
   const [showBuyBar, setShowBuyBar] = useState(false);
   const pickRef = useRef(null); // قسم اختيار اللون/المقاس — ننزلق إليه عند الضغط بلا اختيار
+  const galTouch = useRef(null); // بداية لمسة معرض الصور (للسحب بين الصور)
 
   // بكسلات تمويل المتجر: تُحقن عند الهبوط المباشر من إعلان + حدث "مشاهدة منتج"
   useEffect(() => {
@@ -297,7 +298,22 @@ export default function ProductDetails() {
         {/* معرض الصور */}
         <div>
           {hasImages && (
-          <div className="relative mx-auto w-fit">
+          <div
+            className="relative mx-auto w-fit"
+            style={{ touchAction: 'pan-y' }}
+            onTouchStart={(e) => { const t0 = e.touches[0]; galTouch.current = { x: t0.clientX, y: t0.clientY }; }}
+            onTouchEnd={(e) => {
+              // سحب أفقي يبدّل صورة المعرض (نفس سلوك عارض الصور) — يتبع اتجاه اللغة
+              const s = galTouch.current; galTouch.current = null;
+              if (!s || gallery.length < 2) return;
+              const dx = e.changedTouches[0].clientX - s.x;
+              const dy = e.changedTouches[0].clientY - s.y;
+              if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+                const d = dx < 0 ? (rtl ? -1 : 1) : (rtl ? 1 : -1);
+                setActive((p) => (p + d + gallery.length) % gallery.length);
+              }
+            }}
+          >
             {/* الصورة تظهر بحجمها الطبيعي (مثل الفيديو) بلا قص — نقر للتكبير */}
             <img
               key={gallery[active]}
