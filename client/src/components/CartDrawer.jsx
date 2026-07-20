@@ -336,10 +336,12 @@ export default function CartDrawer() {
                 <div className="flex-1 space-y-3 overflow-y-auto p-4">
                   {items.map((i) => (
                     <div key={i.key} className="glass flex gap-3 p-3">
-                      {/* صورة أكبر بنسبة 3:4 (نفس روح البطاقات الجديدة) */}
-                      <img src={i.imageUrl || 'https://placehold.co/120x160/f1e9dd/5c1a2e?text=%F0%9F%91%97'} alt={i.name} className="h-20 w-16 rounded-xl object-cover shadow-sm" />
+                      {/* الصورة والاسم روابط لصفحة المنتج (تغلق الدرج) — مراجعة القطعة قبل الإتمام */}
+                      <Link to={`/product/${i.id}`} onClick={close} className="shrink-0">
+                        <img src={i.imageUrl || 'https://placehold.co/120x160/f1e9dd/5c1a2e?text=%F0%9F%91%97'} alt={i.name} className="h-20 w-16 rounded-xl object-cover shadow-sm transition hover:opacity-85" />
+                      </Link>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-display text-sm font-semibold text-stone-100">{i.name}</p>
+                        <Link to={`/product/${i.id}`} onClick={close} className="block truncate font-display text-sm font-semibold text-stone-100 hover:text-gold-200">{i.name}</Link>
                         {(i.size || i.color) && (
                           <p className="mt-0.5 flex flex-wrap gap-1.5 text-[11px] text-stone-400">
                             {i.size && <span className="rounded-full bg-gold-400/10 px-2 py-0.5 text-gold-200">{t('store.sizeLabel')}: {sizeLabel(i.size, t)}</span>}
