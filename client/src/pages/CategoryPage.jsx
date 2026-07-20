@@ -109,7 +109,17 @@ export default function CategoryPage() {
       </nav>
 
       {error ? (
-        <div className="glass p-10 text-center text-stone-300">{error}</div>
+        <div className="glass mx-auto flex max-w-md flex-col items-center gap-4 p-10 text-center">
+          <p className="text-stone-300">{error}</p>
+          <button
+            type="button"
+            onClick={() => smartNav(navigate, homeTo)}
+            className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
+            style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)' }}
+          >
+            {t('nav.home')}
+          </button>
+        </div>
       ) : !products ? (
         <ProductGridSkeleton count={8} />
       ) : products.length === 0 ? (
