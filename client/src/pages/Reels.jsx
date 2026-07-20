@@ -674,7 +674,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
               className="flex w-12 items-center justify-center rounded-full bg-white/20 text-white ring-1 ring-white/25 transition active:scale-95">
               <CartIcon className="h-5 w-5" />
             </button>
-            <Link to={`/product/${p.id}`}
+            <Link to={`/product/${p.id}${selColor ? `?color=${encodeURIComponent(selColor)}` : ''}`}
               className="flex items-center justify-center rounded-full bg-white/20 px-4 py-3 text-sm font-bold text-white ring-1 ring-white/25 transition active:scale-95">
               {t('reels.view')}
             </Link>
