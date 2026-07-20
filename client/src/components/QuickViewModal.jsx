@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -44,6 +44,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
   const [size, setSize] = useState('');
   const [color, setColor] = useState('');
   const [err, setErr] = useState('');
+  useEffect(() => { setQty(1); }, [color, size]); // لون/نمرة جديدة → كمية 1 (المتبقي يختلف)
   const [sizeGuide, setSizeGuide] = useState(false);
   // النمر المتاحة وكميتها حسب اللون المختار (عند المخزون لكل لون)
   const sizeStock = product.sizeStock && typeof product.sizeStock === 'object' ? product.sizeStock : {};
@@ -228,15 +229,23 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
             />
           )}
 
-          {/* الكمية */}
-          <div className="mt-4">
-            <p className="mb-1.5 text-sm font-semibold text-stone-700">{t('product.quantity')}</p>
-            <div className="inline-flex items-center gap-3 rounded-xl border border-wine/20 px-2 py-1">
-              <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="flex h-8 w-8 items-center justify-center rounded-lg text-lg text-wine hover:bg-wine/10">−</button>
-              <span className="min-w-6 text-center font-semibold">{qty}</span>
-              <button onClick={() => setQty((q) => q + 1)} className="flex h-8 w-8 items-center justify-center rounded-lg text-lg text-wine hover:bg-wine/10">+</button>
-            </div>
-          </div>
+          {/* الكمية — مقفولة حتى يكتمل اختيار اللون/النمرة، ثم تتقيّد بمتبقي النمرة */}
+          {(() => {
+            const pickDone = hasColorStock
+              ? (color && size && !sizeSoldOut(size))
+              : ((!sizes.length || size) && (!colors.length || color));
+            const maxQ = typeof qtyFor(size) === 'number' ? qtyFor(size) : 99;
+            return (
+              <div className={`mt-4 transition ${pickDone ? '' : 'opacity-45'}`}>
+                <p className="mb-1.5 text-sm font-semibold text-stone-700">{t('product.quantity')}</p>
+                <div className="inline-flex items-center gap-3 rounded-xl border border-wine/20 px-2 py-1">
+                  <button disabled={!pickDone || qty <= 1} onClick={() => setQty((q) => Math.max(1, q - 1))} className="flex h-8 w-8 items-center justify-center rounded-lg text-lg text-wine hover:bg-wine/10 disabled:opacity-30">−</button>
+                  <span className="min-w-6 text-center font-semibold">{qty}</span>
+                  <button disabled={!pickDone || qty >= maxQ} onClick={() => setQty((q) => Math.min(maxQ, q + 1))} className="flex h-8 w-8 items-center justify-center rounded-lg text-lg text-wine hover:bg-wine/10 disabled:opacity-30">+</button>
+                </div>
+              </div>
+            );
+          })()}
 
           {err && <p className="mt-3 text-sm font-medium text-red-500">{err}</p>}
 
