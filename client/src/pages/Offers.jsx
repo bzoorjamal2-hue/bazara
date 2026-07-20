@@ -42,7 +42,7 @@ export default function Offers() {
       ) : products.length === 0 ? (
         <div className="glass p-10 text-center text-stone-400">{t('offers.empty')}</div>
       ) : (
-        <FilteredProductGrid products={products} />
+        <FilteredProductGrid products={products} defaultSort="discount" />
       )}
     </>
   );

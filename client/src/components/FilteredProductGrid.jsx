@@ -19,7 +19,7 @@ const discountPct = (p) => (p.oldPrice && p.oldPrice > p.price ? (p.oldPrice - p
 
 // فلترة وفرز على الواجهة فوق النتائج الموجودة (فوري، بلا طلبات إضافية). الفئات
 // (ألوان/مقاسات/سعر) تُشتقّ من نفس المنتجات فلا يظهر إلا الفلتر الذي له معنى.
-export default function FilteredProductGrid({ products, whatsapp }) {
+export default function FilteredProductGrid({ products, whatsapp, defaultSort = 'new' }) {
   const { t } = useTranslation();
   // الفلاتر تُحفظ بالجلسة لكل صفحة: تفلترين → تفتحين منتجاً → ترجعين → فلاترك كما هي
   const { pathname, search } = useLocation();
@@ -28,7 +28,7 @@ export default function FilteredProductGrid({ products, whatsapp }) {
     try { return JSON.parse(sessionStorage.getItem(memKey) || '{}'); } catch { return {}; }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memKey]);
-  const [sort, setSort] = useState(saved.sort || 'new');
+  const [sort, setSort] = useState(saved.sort || defaultSort);
   const [selColors, setSelColors] = useState(Array.isArray(saved.selColors) ? saved.selColors : []);
   const [selSizes, setSelSizes] = useState(Array.isArray(saved.selSizes) ? saved.selSizes : []);
   const [saleOnly, setSaleOnly] = useState(!!saved.saleOnly);
