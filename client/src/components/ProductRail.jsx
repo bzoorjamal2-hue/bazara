@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { cldThumb } from '../utils/cloudinary.js';
@@ -12,17 +13,37 @@ const PH =
 
 // شريط أفقي من بطاقات منتجات مصغّرة (شاهدت مؤخراً / قد يعجبك أيضاً).
 export default function ProductRail({ title, products, currentId, icon = null, action = null }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const rtl = i18n.language !== 'en';
+  const railRef = useRef(null);
   const list = (products || []).filter((p) => p && p.id !== currentId);
   if (list.length === 0) return null;
+
+  // أسهم تمرير للكمبيوتر (تظهر من md فأعلى — الجوال يسحب باللمس)، تتبع اتجاه اللغة
+  const scrollRail = (dir) => {
+    const el = railRef.current;
+    if (!el) return;
+    const amount = el.clientWidth * 0.8 * dir * (rtl ? -1 : 1);
+    el.scrollBy({ left: amount, behavior: 'smooth' });
+  };
 
   return (
     <section className="mt-10">
       <h2 className="mb-4 flex items-center gap-2 font-display text-xl font-bold text-wine">
         {icon}{title}
-        {action && <span className="ms-auto">{action}</span>}
+        <span className="ms-auto flex items-center gap-2">
+          {action}
+          <span className="hidden items-center gap-1.5 md:flex">
+            <button type="button" onClick={() => scrollRail(-1)} aria-label="prev" className="flex h-8 w-8 items-center justify-center rounded-full border border-wine/20 text-wine transition hover:bg-wine hover:text-cream">
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={rtl ? 'M9 6l6 6-6 6' : 'M15 6l-6 6 6 6'} /></svg>
+            </button>
+            <button type="button" onClick={() => scrollRail(1)} aria-label="next" className="flex h-8 w-8 items-center justify-center rounded-full border border-wine/20 text-wine transition hover:bg-wine hover:text-cream">
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={rtl ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6'} /></svg>
+            </button>
+          </span>
+        </span>
       </h2>
-      <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
+      <div ref={railRef} className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
         {list.map((p) => {
           const hasDiscount = p.oldPrice && p.oldPrice > p.price;
           const thumb = productThumb(p);
