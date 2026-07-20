@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import ProductCard from './ProductCard.jsx';
 import Select from './Select.jsx';
@@ -20,13 +21,23 @@ const discountPct = (p) => (p.oldPrice && p.oldPrice > p.price ? (p.oldPrice - p
 // (ألوان/مقاسات/سعر) تُشتقّ من نفس المنتجات فلا يظهر إلا الفلتر الذي له معنى.
 export default function FilteredProductGrid({ products, whatsapp }) {
   const { t } = useTranslation();
-  const [sort, setSort] = useState('new');
-  const [selColors, setSelColors] = useState([]);
-  const [selSizes, setSelSizes] = useState([]);
-  const [saleOnly, setSaleOnly] = useState(false);
-  const [pmin, setPmin] = useState('');
-  const [pmax, setPmax] = useState('');
+  // الفلاتر تُحفظ بالجلسة لكل صفحة: تفلترين → تفتحين منتجاً → ترجعين → فلاترك كما هي
+  const { pathname, search } = useLocation();
+  const memKey = `bz_fpg:${pathname}${search}`;
+  const saved = useMemo(() => {
+    try { return JSON.parse(sessionStorage.getItem(memKey) || '{}'); } catch { return {}; }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [memKey]);
+  const [sort, setSort] = useState(saved.sort || 'new');
+  const [selColors, setSelColors] = useState(Array.isArray(saved.selColors) ? saved.selColors : []);
+  const [selSizes, setSelSizes] = useState(Array.isArray(saved.selSizes) ? saved.selSizes : []);
+  const [saleOnly, setSaleOnly] = useState(!!saved.saleOnly);
+  const [pmin, setPmin] = useState(saved.pmin ?? '');
+  const [pmax, setPmax] = useState(saved.pmax ?? '');
   const [open, setOpen] = useState(false);
+  useEffect(() => {
+    try { sessionStorage.setItem(memKey, JSON.stringify({ sort, selColors, selSizes, saleOnly, pmin, pmax })); } catch { /* تجاهل */ }
+  }, [memKey, sort, selColors, selSizes, saleOnly, pmin, pmax]);
 
   const facets = useMemo(() => {
     const colorMap = new Map();
