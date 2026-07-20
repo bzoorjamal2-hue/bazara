@@ -280,9 +280,11 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   // والنمر المتاحة تتبع اللون المختار (تُستثنى المنفدة) — فلا تُضاف تشكيلة غير متوفرة
   const colorStock = p.colorStock && typeof p.colorStock === 'object' ? p.colorStock : {};
   const hasCS = Object.keys(colorStock).length > 0;
+  // منتجات مخزون النمر العادي: نستثني المنفدة (كمية 0) أيضاً — نفس منطق مخزون الألوان
+  const sizeStock = p.sizeStock && typeof p.sizeStock === 'object' ? p.sizeStock : {};
   const sizes = hasCS
     ? (selColor ? Object.entries(colorStock[selColor] || {}).filter(([, q]) => q !== 0).map(([s]) => s) : [])
-    : (p.size || '').split(',').map((s) => s.trim()).filter(Boolean);
+    : (p.size || '').split(',').map((s) => s.trim()).filter(Boolean).filter((s) => sizeStock[s] !== 0);
   const colors = hasCS ? Object.keys(colorStock) : (p.color || '').split(',').map((s) => s.trim()).filter(Boolean);
   const hasDiscount = p.oldPrice && p.oldPrice > p.price;
   const discountPct = hasDiscount ? Math.round((1 - p.price / p.oldPrice) * 100) : 0;
