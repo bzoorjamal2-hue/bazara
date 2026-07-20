@@ -73,13 +73,33 @@ export default function ProductsManager({ onCount }) {
     return <img src={img || PH} alt={p.name} className={`${size} rounded-lg object-cover`} />;
   };
 
-  const Badges = ({ p }) => (
-    <span className="ms-2 inline-flex gap-1 align-middle">
-      {p.featured && <span className="badge inline-flex items-center bg-gold-400/20 text-gold-200"><StarIcon className="h-3 w-3" /></span>}
-      {p.oldPrice > p.price && <span className="badge bg-red-500/80 text-white">%</span>}
-      {p.stock === 0 && <span className="badge bg-ink-700 text-stone-300">{t('product.outOfStock')}</span>}
-    </span>
-  );
+  // المتبقي الكلي: مجموع كميات الألوان/النمر إن وُجدت وإلا المخزون العام —
+  // نفس منطق شارات الزبون، فتنبيهات التاجرة تطابق ما يراه زبونها
+  const remainingOf = (p) => {
+    const cs = p.colorStock && typeof p.colorStock === 'object' ? p.colorStock : null;
+    if (cs && Object.keys(cs).length) {
+      const v = Object.values(cs).flatMap((sz) => Object.values(sz || {})).filter((q) => typeof q === 'number');
+      return v.length ? v.reduce((a, b) => a + b, 0) : null;
+    }
+    const ss = p.sizeStock && typeof p.sizeStock === 'object' ? p.sizeStock : null;
+    if (ss && Object.keys(ss).length) {
+      const v = Object.values(ss).filter((q) => typeof q === 'number');
+      return v.length ? v.reduce((a, b) => a + b, 0) : null;
+    }
+    return typeof p.stock === 'number' ? p.stock : null;
+  };
+
+  const Badges = ({ p }) => {
+    const rem = remainingOf(p);
+    return (
+      <span className="ms-2 inline-flex gap-1 align-middle">
+        {p.featured && <span className="badge inline-flex items-center bg-gold-400/20 text-gold-200"><StarIcon className="h-3 w-3" /></span>}
+        {p.oldPrice > p.price && <span className="badge bg-red-500/80 text-white">%</span>}
+        {rem === 0 && <span className="badge bg-red-500/20 text-red-300">{t('product.outOfStock')}</span>}
+        {rem != null && rem > 0 && rem <= 5 && <span className="badge bg-amber-500/20 text-amber-300">{t('product.lastFew', { count: rem })}</span>}
+      </span>
+    );
+  };
 
   return (
     <div className="space-y-5">
