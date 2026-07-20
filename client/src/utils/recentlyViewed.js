@@ -17,6 +17,14 @@ export function getRecent() {
   }
 }
 
+// إزالة منتج من "شاهدت مؤخراً" — يُستدعى عند اكتشاف أنه حُذف (404) كي لا يظل بالريل
+export function removeRecent(id) {
+  try {
+    const list = (JSON.parse(localStorage.getItem(KEY)) || []).filter((p) => p && p.id !== id);
+    localStorage.setItem(KEY, JSON.stringify(list));
+  } catch { /* تجاهل */ }
+}
+
 export function pushRecent(product) {
   if (!product || !product.id) return;
   try {

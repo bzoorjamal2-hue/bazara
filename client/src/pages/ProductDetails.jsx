@@ -11,7 +11,7 @@ import Strike from '../components/Strike.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
-import { pushRecent, getRecent } from '../utils/recentlyViewed.js';
+import { pushRecent, getRecent, removeRecent } from '../utils/recentlyViewed.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { sizeLabel } from '../utils/sizes.js';
 import ColorSwatches from '../components/ColorSwatches.jsx';
@@ -142,6 +142,8 @@ export default function ProductDetails() {
         // لا نستبدل منتجاً معروضاً (من المخزّن) بصفحة خطأ بسبب تعثّر شبكة لحظي —
         // الخطأ يظهر فقط إن لم يكن لدينا ما نعرضه أصلاً
         if (!getCache(`product:${id}`)?.product) setError(getErrorMessage(err, t('errors.notFound')));
+        // منتج محذوف (404): نزيله من "شاهدت مؤخراً" كي لا يظل يظهر بالرفوف
+        if (err?.response?.status === 404) removeRecent(id);
       });
   };
 
