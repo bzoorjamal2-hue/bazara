@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
+import { clearCachePrefixes } from '../../utils/apiCache.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import Spinner from '../../components/Spinner.jsx';
 import ImageInput from '../../components/ImageInput.jsx';
@@ -84,6 +85,7 @@ export default function StoreSettings() {
       const payload = { ...form, flashEndsAt: form.flashEndsAt ? new Date(form.flashEndsAt).toISOString() : '' };
       await api.put('/stores/me', payload);
       await refresh();
+      clearCachePrefixes(['home', 'storepage:']); // الإعدادات الجديدة (شعار/بانر/فلاش) تظهر فوراً
       setMsg(t('dashboard.store.saved'));
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
@@ -99,6 +101,7 @@ export default function StoreSettings() {
     try {
       await api.put('/stores/me', form);
       await refresh();
+      clearCachePrefixes(['home', 'storepage:']);
       setMsg(t('image.imageSaved'));
       setTimeout(() => setMsg(''), 2000);
     } catch (err) {
