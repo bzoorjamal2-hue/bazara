@@ -42,7 +42,7 @@ export default function ProductDetails() {
   const [selColor, setSelColor] = useState('');
   const [pickErr, setPickErr] = useState('');
   const [qty, setQty] = useState(1); // كمية الشراء (كانت بالنظرة السريعة فقط)
-  useEffect(() => { setQty(1); }, [id]); // منتج جديد → كمية 1
+  useEffect(() => { setQty(1); }, [id, selColor, selSize]); // منتج/لون/نمرة جديدة → كمية 1
   const [lightbox, setLightbox] = useState(false);
   const [sizeGuide, setSizeGuide] = useState(false);
   const [notifyPhone, setNotifyPhone] = useState('');
@@ -526,17 +526,23 @@ export default function ProductDetails() {
           )}
 
           {/* أزرار الشراء — "اطلبي الآن" شراء فوري (يفتح إتمام الطلب مباشرةً) — حبوب فاخرة بهالة ذهبية */}
-          {/* الكمية — عدّاد حبّي (يتقيّد بالمتبقي من المقاس المختار إن عُرف) */}
-          {!outOfStock && !showNotify && (
-            <div className="mt-5 flex items-center justify-between">
-              <span className="text-sm font-semibold text-stone-300">{t('dashboard.product.qty')}</span>
-              <div className="flex items-center gap-0.5 rounded-full border border-wine/25 px-1.5 py-1">
-                <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))} disabled={qty <= 1} aria-label="-" className="flex h-8 w-8 items-center justify-center rounded-full text-lg leading-none text-wine transition hover:bg-wine/10 disabled:opacity-30">−</button>
-                <span className="w-7 text-center font-bold text-stone-100">{qty}</span>
-                <button type="button" onClick={() => setQty((q) => Math.min(selSizeQty ?? 99, q + 1))} disabled={selSizeQty != null && qty >= selSizeQty} aria-label="+" className="flex h-8 w-8 items-center justify-center rounded-full text-lg leading-none text-wine transition hover:bg-wine/10 disabled:opacity-30">+</button>
+          {/* الكمية — عدّاد حبّي: مقفول حتى يكتمل اختيار اللون/النمرة (فلا كمية قبل معرفة المتبقي)،
+              وبعدها يتقيّد بالمتبقي من نمرة اللون المختار */}
+          {!outOfStock && !showNotify && (() => {
+            const pickDone = hasColorStock
+              ? (selColor && selSize && !sizeSoldOut(selSize))
+              : ((!sizes.length || selSize) && (!colors.length || selColor));
+            return (
+              <div className={`mt-5 flex items-center justify-between transition ${pickDone ? '' : 'opacity-45'}`}>
+                <span className="text-sm font-semibold text-stone-300">{t('dashboard.product.qty')}</span>
+                <div className="flex items-center gap-0.5 rounded-full border border-wine/25 px-1.5 py-1">
+                  <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))} disabled={!pickDone || qty <= 1} aria-label="-" className="flex h-8 w-8 items-center justify-center rounded-full text-lg leading-none text-wine transition hover:bg-wine/10 disabled:opacity-30">−</button>
+                  <span className="w-7 text-center font-bold text-stone-100">{qty}</span>
+                  <button type="button" onClick={() => { if (!pickDone) { validatePick(); scrollToPick(); return; } setQty((q) => Math.min(selSizeQty ?? 99, q + 1)); }} disabled={pickDone && selSizeQty != null && qty >= selSizeQty} aria-label="+" className="flex h-8 w-8 items-center justify-center rounded-full text-lg leading-none text-wine transition hover:bg-wine/10 disabled:opacity-30">+</button>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           <div ref={ctaRef} className={`mt-auto flex flex-col gap-3 pt-6 sm:flex-row ${showNotify ? 'hidden' : ''}`}>
             <button onClick={handleBuy} disabled={outOfStock} className="btn-buy flex-1 py-4 text-base">
