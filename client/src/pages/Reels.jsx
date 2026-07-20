@@ -74,6 +74,29 @@ export default function Reels() {
 
   const reelsUrl = (off) => `/public/reels?offset=${off}${slug ? `&store=${encodeURIComponent(slug)}` : ''}`;
 
+  // نتذكّر آخر ريل وصلته الزائرة (لكل متجر على حدة) — الخروج والرجوع يكمل من مكانها.
+  // نقرأ الموضع المحفوظ وقت أول render (قبل أي تأثير) كي لا يدهسه تأثير الحفظ بـ0
+  const posKey = `bz_reels_pos:${slug || 'all'}`;
+  const initialPosRef = useRef(null);
+  if (initialPosRef.current === null) {
+    try { initialPosRef.current = parseInt(sessionStorage.getItem(posKey) || '0', 10) || 0; } catch { initialPosRef.current = 0; }
+  }
+  useEffect(() => {
+    try { sessionStorage.setItem(posKey, String(active)); } catch { /* تجاهل */ }
+  }, [active, posKey]);
+  useEffect(() => {
+    if (!items || items.length === 0) return;
+    const saved = initialPosRef.current;
+    initialPosRef.current = 0; // تُستهلك مرة واحدة
+    const feed = feedRef.current;
+    if (saved > 0 && saved < items.length && feed && feed.children[saved]) {
+      feed.scrollTop = saved * feed.clientHeight; // قفزة فورية (snap) بلا حركة
+      setActive(saved);
+    }
+    // عند أول تحميل للقائمة فقط
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items === null]);
+
   useEffect(() => {
     let on = true;
     setItems(null);
