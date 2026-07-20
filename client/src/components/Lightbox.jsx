@@ -25,6 +25,18 @@ export default function Lightbox({ images, index = 0, onClose }) {
 
   const go = (d) => { setZoom(false); setI((p) => (p + d + images.length) % images.length); };
 
+  // سحب باللمس للتنقّل بين الصور (كان مذكوراً بالوصف وغير موجود فعلياً) —
+  // السحب يتبع الإصبع بنفس اتجاه الأسهم، ويُعطَّل أثناء التكبير (اللمس للتحريك حينها)
+  const [tStart, setTStart] = useState(null);
+  const onTouchStart = (e) => { const t0 = e.touches[0]; setTStart({ x: t0.clientX, y: t0.clientY }); };
+  const onTouchEnd = (e) => {
+    if (!tStart || zoom || images.length < 2) { setTStart(null); return; }
+    const dx = e.changedTouches[0].clientX - tStart.x;
+    const dy = e.changedTouches[0].clientY - tStart.y;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) go(dx < 0 ? (rtl ? -1 : 1) : (rtl ? 1 : -1));
+    setTStart(null);
+  };
+
   return createPortal(
     <motion.div
       className="fixed inset-0 z-[100] flex flex-col bg-black/90"
@@ -40,7 +52,7 @@ export default function Lightbox({ images, index = 0, onClose }) {
       </div>
 
       {/* الصورة */}
-      <div className="relative flex flex-1 items-center justify-center overflow-hidden p-2" onClick={(e) => e.stopPropagation()}>
+      <div className="relative flex flex-1 items-center justify-center overflow-hidden p-2" onClick={(e) => e.stopPropagation()} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
         <AnimatePresence mode="wait">
           <motion.img
             key={i}
