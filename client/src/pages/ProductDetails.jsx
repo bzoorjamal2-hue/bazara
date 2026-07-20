@@ -178,7 +178,22 @@ export default function ProductDetails() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  if (error) return <div className="glass p-10 text-center text-stone-300">{error}</div>;
+  // منتج محذوف/رابط قديم: بطاقة أنيقة بمخرج واضح بدل نص عارٍ يترك الزائرة عالقة
+  if (error) {
+    return (
+      <div className="glass mx-auto flex max-w-md flex-col items-center gap-4 p-10 text-center">
+        <BagIcon className="h-12 w-12 text-wine/25" />
+        <p className="text-stone-300">{error}</p>
+        <Link
+          to="/shop"
+          className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
+          style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)' }}
+        >
+          {t('co.doneKeepShopping')}
+        </Link>
+      </div>
+    );
+  }
   if (!product) return <ProductDetailsSkeleton />;
 
   // صور اللون المختار (Color Swatches) تطغى على المعرض العام عند اختيار لون له صور
