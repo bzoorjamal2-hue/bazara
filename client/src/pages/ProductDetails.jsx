@@ -73,6 +73,22 @@ export default function ProductDetails() {
   useEffect(() => { window.dispatchEvent(new CustomEvent('bz:buybar', { detail: showBuyBar })); }, [showBuyBar]);
   useEffect(() => () => window.dispatchEvent(new CustomEvent('bz:buybar', { detail: false })), []);
 
+  // الضغط على مساحة فاضية خارج منطقة الاختيار يلغي اللون المختار ويطوي نمره —
+  // مع استثناء كل العناصر التفاعلية (أزرار/روابط/حقول/صور/الشريط الثابت) كي لا
+  // يضيع الاختيار أثناء الإضافة للسلة أو تصفّح المعرض
+  useEffect(() => {
+    if (!selColor) return undefined;
+    const onDocClick = (e) => {
+      const el = e.target;
+      if (!(el instanceof Element)) return;
+      if (el.closest('[data-pick-zone]')) return; // داخل قسمي الألوان/النمر
+      if (el.closest('button, a, input, textarea, select, label, img, video, [role="button"], .fixed')) return;
+      setSelColor(''); setSelSize(''); setPickErr('');
+    };
+    document.addEventListener('click', onDocClick);
+    return () => document.removeEventListener('click', onDocClick);
+  }, [selColor]);
+
   const [shared, setShared] = useState(false);
 
   // مشاركة المنتج: نشارك رابط /share/ الذي يعرض صورة المنتج الحقيقية بمعاينة واتساب
@@ -408,7 +424,7 @@ export default function ProductDetails() {
 
           {/* اللون — يُختار أولاً عند تتبّع المخزون لكل لون */}
           {colors.length > 0 && (
-            <div ref={colors.length ? pickRef : null} className="mt-6">
+            <div ref={colors.length ? pickRef : null} data-pick-zone className="mt-6">
               <ColorSwatches
                 colors={colors}
                 colorImages={colorImages}
@@ -423,7 +439,7 @@ export default function ProductDetails() {
 
           {/* المقاس (النمرة) — عند المخزون لكل لون تظهر نمر اللون المختار فقط */}
           {(hasColorStock ? colors.length > 0 : sizes.length > 0) && (
-            <div ref={colors.length ? null : pickRef} className="mt-5">
+            <div ref={colors.length ? null : pickRef} data-pick-zone className="mt-5">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <p className="text-sm font-semibold text-stone-300">{t('product.selectSize')}</p>
                 <button

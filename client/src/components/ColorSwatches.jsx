@@ -45,7 +45,7 @@ export default function ColorSwatches({
               disabled={soldOut}
               onMouseEnter={() => setHover(c)}
               onFocus={() => setHover(c)}
-              onClick={() => onChange?.(c)}
+              onClick={() => onChange?.(on ? '' : c)}
               className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-xl transition ${
                 on ? 'outline outline-2 outline-wine outline-offset-2' : ''
               } ${soldOut ? 'cursor-not-allowed opacity-45' : 'hover:opacity-90'}`}
