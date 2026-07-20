@@ -670,6 +670,8 @@
     "oneSize": "One Size",
     "lastFew": "Only {{count}} left!",
     "bestSeller": "Best seller",
+    "shareText": "{{name}} — ₪{{price}} 🤎",
+    "shareTextDeal": "{{name}} — {{pct}}% off 🔥 ₪{{price}} instead of ₪{{oldPrice}}",
     "customerPhotos": "Customer photos",
     "trustDelivery": "Delivery across Palestine",
     "trustCod": "Cash on delivery",
