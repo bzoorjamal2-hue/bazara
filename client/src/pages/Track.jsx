@@ -26,6 +26,7 @@ export default function Track() {
   const [error, setError] = useState('');
   const { add, setOpen } = useCart();
   const [reordering, setReordering] = useState(''); // reference الطلب الجاري إعادته
+  const [copiedRef, setCopiedRef] = useState(''); // رقم الطلب المنسوخ للتو (تأكيد بصري)
 
   // إعادة الطلب بضغطة: نجلب كل منتج بحالته الحالية (سعر/مخزون) ونضيفه للسلة بنفس
   // الكمية والمقاس واللون — المنتجات المحذوفة/الناقصة تُتجاهل بهدوء.
@@ -148,7 +149,16 @@ export default function Track() {
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="min-w-0">
                         <span className="font-display text-lg font-bold text-wine">{o.storeName}</span>
-                        <span className="ms-2 rounded-full bg-wine/5 px-2 py-0.5 font-mono text-[11px] text-stone-400" dir="ltr">{o.reference}</span>
+                        {/* رقم الطلب ينُسخ بضغطة (لإرساله للمتجر عند الاستفسار) */}
+                        <button
+                          type="button"
+                          onClick={() => { try { navigator.clipboard.writeText(o.reference); setCopiedRef(o.reference); setTimeout(() => setCopiedRef(''), 1500); } catch { /* تجاهل */ } }}
+                          className="ms-2 rounded-full bg-wine/5 px-2 py-0.5 font-mono text-[11px] text-stone-400 transition hover:bg-wine/10"
+                          dir="ltr"
+                          title={t('co.doneCopy')}
+                        >
+                          {copiedRef === o.reference ? t('common.copied') : o.reference}
+                        </button>
                       </div>
                       <span className={`rounded-full px-3 py-1 text-xs font-bold ring-1 ${BADGE[o.status] || ''}`}>
                         {t(`dashboard.ordersSection.${o.status}`)}
