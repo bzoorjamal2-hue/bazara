@@ -361,6 +361,26 @@ export default function CartDrawer() {
                 </div>
 
                 <div className="border-t border-gold-400/15 p-4">
+                  {/* تحفيز الشحن المجاني بأول شاشة بالسلة (كان بشاشة الإتمام فقط — متأخّر):
+                      "باقي ₪X" يدفع الزبونة تضيف قطعة بدل ما تكمل — أقوى محفّز لرفع قيمة السلة */}
+                  {freeOver > 0 && (
+                    <div className="mb-3 rounded-xl bg-gold-400/10 px-3 py-2">
+                      {total >= freeOver ? (
+                        <p className="flex items-center justify-center gap-1.5 text-center text-xs font-bold text-emerald-300">
+                          <PartyIcon className="h-4 w-4 shrink-0" /> {t('co.freeShipping')}
+                        </p>
+                      ) : (
+                        <>
+                          <p className="flex items-center justify-center gap-1.5 text-center text-xs font-semibold text-gold-200">
+                            <TruckIcon className="h-4 w-4 shrink-0" /> {t('co.freeShippingHint', { amount: (freeOver - total).toFixed(2) })}
+                          </p>
+                          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10">
+                            <div className="h-full rounded-full bg-gradient-to-r from-[#e6c878] to-[#b8932c] transition-all duration-500" style={{ width: `${Math.min(100, Math.round((total / freeOver) * 100))}%` }} />
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
                   <div className="mb-3 flex items-center justify-between">
                     <span className="text-stone-300">{t('cart.total')}</span>
                     <span className="font-display text-2xl font-bold gradient-text">{t('common.currency')}{total.toFixed(2)}</span>
