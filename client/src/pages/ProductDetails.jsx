@@ -534,7 +534,7 @@ export default function ProductDetails() {
               : ((!sizes.length || selSize) && (!colors.length || selColor));
             return (
               <div className={`mt-5 flex items-center justify-between transition ${pickDone ? '' : 'opacity-45'}`}>
-                <span className="text-sm font-semibold text-stone-300">{t('dashboard.product.qty')}</span>
+                <span className="text-sm font-semibold text-stone-300">{t('product.quantity')}</span>
                 <div className="flex items-center gap-0.5 rounded-full border border-wine/25 px-1.5 py-1">
                   <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))} disabled={!pickDone || qty <= 1} aria-label="-" className="flex h-8 w-8 items-center justify-center rounded-full text-lg leading-none text-wine transition hover:bg-wine/10 disabled:opacity-30">−</button>
                   <span className="w-7 text-center font-bold text-stone-100">{qty}</span>

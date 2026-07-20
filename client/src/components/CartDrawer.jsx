@@ -10,6 +10,7 @@ import CloseButton from './CloseButton.jsx';
 import { CartIcon, BagIcon, XIcon, PinIcon, GiftIcon, TicketIcon, CheckIcon, ReceiptIcon, PartyIcon, TruckIcon, CashIcon, WhatsAppIcon, ForwardIcon, BackIcon, CopyIcon } from './icons.jsx';
 import api from '../api/client.js';
 import { sizeLabel } from '../utils/sizes.js';
+import { colorToCss } from '../utils/colorDot.js';
 import { getRef, clearRef } from '../utils/referral.js';
 import { trackPixel } from '../utils/pixels.js';
 
@@ -342,7 +343,12 @@ export default function CartDrawer() {
                         {(i.size || i.color) && (
                           <p className="mt-0.5 flex flex-wrap gap-1.5 text-[11px] text-stone-400">
                             {i.size && <span className="rounded-full bg-gold-400/10 px-2 py-0.5 text-gold-200">{t('store.sizeLabel')}: {sizeLabel(i.size, t)}</span>}
-                            {i.color && <span className="rounded-full bg-gold-400/10 px-2 py-0.5 text-gold-200">{i.color}</span>}
+                            {i.color && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-gold-400/10 px-2 py-0.5 text-gold-200">
+                                {colorToCss(i.color) && <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: colorToCss(i.color), boxShadow: '0 0 0 1px rgba(255,255,255,0.5), inset 0 0 0 1px rgba(0,0,0,0.15)' }} />}
+                                {i.color}
+                              </span>
+                            )}
                           </p>
                         )}
                         <p className="mt-1 font-display font-bold text-gold-300">{t('common.currency')}{i.price}</p>
