@@ -296,6 +296,9 @@ export default function OrdersManager() {
 
   if (orders === null && !error) return <Spinner />;
 
+  // عدّادات الحالات — التاجرة ترى بنظرة كم طلباً يحتاج إجراء (جديد/مؤكّد…)
+  const statusCounts = (orders || []).reduce((acc, o) => { acc[o.status] = (acc[o.status] || 0) + 1; return acc; }, {});
+
   // الطلبات المعروضة بعد الفلترة والبحث (الاسم/الهاتف بأي صيغة/رقم الطلب)
   const term = oq.trim().toLowerCase();
   const termDigits = term.replace(/\D/g, '');
@@ -384,19 +387,25 @@ export default function OrdersManager() {
             onChange={(e) => setOq(e.target.value)}
           />
           <div className="flex flex-wrap gap-1.5">
-            {['all', ...FLOW].map((s) => (
-              <button
-                key={s}
-                onClick={() => setStatusFilter(s)}
-                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                  statusFilter === s
-                    ? 'bg-gold-400 text-wine-dark shadow-sm'
-                    : 'bg-white/5 text-stone-300 ring-1 ring-white/10 hover:bg-white/10'
-                }`}
-              >
-                {s === 'all' ? t('common.all') : t(`dashboard.ordersSection.${s}`)}
-              </button>
-            ))}
+            {['all', ...FLOW].map((s) => {
+              const n = s === 'all' ? (orders?.length || 0) : (statusCounts[s] || 0);
+              if (s !== 'all' && n === 0) return null; // حالة بلا طلبات لا تشغل مكاناً
+              const on = statusFilter === s;
+              return (
+                <button
+                  key={s}
+                  onClick={() => setStatusFilter(s)}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                    on
+                      ? 'bg-gold-400 text-wine-dark shadow-sm'
+                      : 'bg-white/5 text-stone-300 ring-1 ring-white/10 hover:bg-white/10'
+                  }`}
+                >
+                  {s === 'all' ? t('common.all') : t(`dashboard.ordersSection.${s}`)}
+                  <span className={`rounded-full px-1.5 text-[10px] font-bold ${on ? 'bg-wine/15 text-wine-dark' : 'bg-white/10 text-stone-400'}`}>{n}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -409,9 +418,14 @@ export default function OrdersManager() {
             if (!visibleOrders.length) {
               return <div className="glass p-8 text-center text-sm text-stone-400">{t('dashboard.ordersSection.noResults')}</div>;
             }
-            // عدد الطلبات لكل يوم (لعرضه بجانب عنوان اليوم)
+            // عدد الطلبات وإجمالي المبيعات لكل يوم (الملغاة لا تُحسب بالإجمالي)
             const counts = {};
-            visibleOrders.forEach((o) => { const k = dayKey(o.createdAt); counts[k] = (counts[k] || 0) + 1; });
+            const daySums = {};
+            visibleOrders.forEach((o) => {
+              const k = dayKey(o.createdAt);
+              counts[k] = (counts[k] || 0) + 1;
+              if (o.status !== 'cancelled') daySums[k] = (daySums[k] || 0) + (Number(o.total) || 0);
+            });
             let lastDay = null;
             return visibleOrders.map((o) => {
             const subtotal = (o.total - (o.deliveryFee || 0) + (o.discount || 0)).toFixed(2);
@@ -425,6 +439,7 @@ export default function OrdersManager() {
               <div className="flex items-center gap-2 pt-2">
                 <h3 className="text-sm font-bold text-gold-300">{dayLabel(o.createdAt, t)}</h3>
                 <span className="rounded-full bg-white/5 px-2 py-0.5 text-xs text-stone-400">{t('dashboard.ordersSection.ordersCount', { count: counts[k] })}</span>
+                {daySums[k] > 0 && <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-300">{t('common.currency')}{daySums[k].toFixed(0)}</span>}
                 <span className="h-px flex-1 bg-white/10" />
               </div>
             ) : null;
