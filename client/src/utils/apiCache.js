@@ -24,6 +24,19 @@ export function getCache(key) {
   return null;
 }
 
+// تفريغ عناصر الكاش التي تبدأ بأيٍّ من البادئات (ذاكرة + localStorage) —
+// يُستدعى بعد حذف/تعديل منتج كي لا تعرض الصفحات العامة (الرئيسية/المتجر/الفئات)
+// محتوى قديماً حتى انتهاء صلاحية الكاش (5 دقائق)
+export function clearCachePrefixes(prefixes) {
+  for (const k of [...mem.keys()]) { if (prefixes.some((p) => k.startsWith(p))) mem.delete(k); }
+  try {
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(LS_PREFIX) && prefixes.some((p) => k.slice(LS_PREFIX.length).startsWith(p))) localStorage.removeItem(k);
+    }
+  } catch { /* تجاهل */ }
+}
+
 export function setCache(key, value) {
   const entry = { v: value, t: Date.now() };
   mem.set(key, entry);

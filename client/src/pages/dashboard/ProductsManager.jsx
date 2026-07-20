@@ -6,6 +6,11 @@ import ProductForm from './ProductForm.jsx';
 import ConfirmModal from '../../components/ConfirmModal.jsx';
 import { StarIcon, LinkIcon } from '../../components/icons.jsx';
 import { cldVideoPoster } from '../../utils/cloudinary.js';
+import { clearCachePrefixes } from '../../utils/apiCache.js';
+
+// بعد حذف/تعديل/إضافة منتج: نفرّغ كاش الصفحات العامة كي يختفي/يظهر التغيير فوراً
+// (الرئيسية، صفحة المتجر، الفئات، العروض، المقترحات، وصفحة المنتج نفسها)
+const purgePublicCaches = () => clearCachePrefixes(['home', 'storepage:', 'cat:', 'offers', 'forYou', 'product:']);
 
 const PH = 'https://placehold.co/48x48/121214/d4af37?text=%F0%9F%91%97';
 
@@ -32,7 +37,7 @@ export default function ProductsManager({ onCount }) {
 
   const flash = (m) => { setMsg(m); setTimeout(() => setMsg(''), 1800); };
 
-  const handleSaved = (m) => { setModal(null); flash(m); load(); };
+  const handleSaved = (m) => { setModal(null); flash(m); load(); purgePublicCaches(); };
 
   const doRemove = async () => {
     if (!confirmDel) return;
@@ -42,6 +47,7 @@ export default function ProductsManager({ onCount }) {
       setConfirmDel(null);
       flash(t('dashboard.product.deleted'));
       load();
+      purgePublicCaches();
     } catch (err) {
       setError(getErrorMessage(err, t('errors.generic')));
       setConfirmDel(null);
