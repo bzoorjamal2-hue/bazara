@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext.jsx';
@@ -23,6 +23,7 @@ const PLACEHOLDER =
 
 export default function ProductCard({ product, index = 0, whatsapp = '' }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { add, setOpen } = useCart();
   const { has, toggle } = useWishlist();
   const imgRef = useRef(null);
@@ -283,8 +284,12 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
                   title={d.name}
                   aria-label={d.name}
                   onMouseEnter={() => img && setSwatchColor(d.name)}
-                  onClick={(e) => { if (img) { e.preventDefault(); e.stopPropagation(); setSwatchColor(on ? '' : d.name); } }}
-                  className={`h-3.5 w-3.5 shrink-0 rounded-full transition ${on ? 'outline outline-2 outline-wine outline-offset-1' : ''} ${img ? 'cursor-pointer hover:scale-110' : 'cursor-default'}`}
+                  onClick={(e) => {
+                    // نقرة النقطة تفتح المنتج وهذا اللون محدّد مسبقاً (?color=) — أسرع من فتحه ثم الاختيار
+                    e.preventDefault(); e.stopPropagation();
+                    navigate(`/product/${product.id}?color=${encodeURIComponent(d.name)}`);
+                  }}
+                  className={`h-3.5 w-3.5 shrink-0 cursor-pointer rounded-full transition hover:scale-110 ${on ? 'outline outline-2 outline-wine outline-offset-1' : ''}`}
                   style={{ background: d.css, boxShadow: '0 0 0 1px rgba(255,255,255,0.5), inset 0 0 0 1px rgba(0,0,0,0.12)' }}
                 />
               );

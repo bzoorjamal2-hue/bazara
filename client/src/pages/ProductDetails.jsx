@@ -43,6 +43,17 @@ export default function ProductDetails() {
   const [pickErr, setPickErr] = useState('');
   const [qty, setQty] = useState(1); // كمية الشراء (كانت بالنظرة السريعة فقط)
   useEffect(() => { setQty(1); }, [id, selColor, selSize]); // منتج/لون/نمرة جديدة → كمية 1
+
+  // لون محدّد مسبقاً من الرابط (?color=) — نقرة نقطة اللون على البطاقة تفتح المنتج به
+  useEffect(() => {
+    if (!product) return;
+    const c = new URLSearchParams(window.location.search).get('color');
+    if (!c) return;
+    const cs = product.colorStock && typeof product.colorStock === 'object' ? product.colorStock : {};
+    const list = Object.keys(cs).length ? Object.keys(cs) : String(product.color || '').split(',').map((s) => s.trim()).filter(Boolean);
+    if (list.includes(c)) setSelColor(c);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product?.id]);
   const [lightbox, setLightbox] = useState(false);
   const [sizeGuide, setSizeGuide] = useState(false);
   const [notifyPhone, setNotifyPhone] = useState('');
