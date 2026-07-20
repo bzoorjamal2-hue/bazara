@@ -258,7 +258,8 @@ export default function CartDrawer() {
   };
 
   return (
-    <div className="fixed inset-0 z-[85] flex justify-end bg-black/60 p-3 backdrop-blur-sm sm:p-4" onClick={close}>
+    // z-[95]: فوق صفحة الريلز (z-90) — الإضافة/الشراء من الريل كانت تفتح السلة خلفها فلا تُرى
+    <div className="fixed inset-0 z-[95] flex justify-end bg-black/60 p-3 backdrop-blur-sm sm:p-4" onClick={close}>
       <aside
         onClick={(e) => e.stopPropagation()}
         className="flex h-full w-full max-w-md animate-slide-in flex-col overflow-hidden rounded-3xl border border-gold-400/20 bg-ink-900 shadow-2xl"

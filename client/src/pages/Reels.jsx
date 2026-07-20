@@ -5,7 +5,8 @@ import api from '../api/client.js';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
-import { HeartIcon, CartIcon, VideoIcon, SpeakerIcon, StoreIcon } from '../components/icons.jsx';
+import { HeartIcon, CartIcon, BagIcon, VideoIcon, SpeakerIcon, StoreIcon } from '../components/icons.jsx';
+import { colorToCss } from '../utils/colorDot.js';
 import CloseButton from '../components/CloseButton.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import Spinner from '../components/Spinner.jsx';
@@ -193,7 +194,7 @@ export default function Reels() {
 }
 
 function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute, onEnded }) {
-  const { add } = useCart();
+  const { add, buyNow } = useCart();
   const { has, toggle } = useWishlist();
   const liked = has(p.id);
   const [copied, setCopied] = useState(false);
@@ -202,6 +203,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   const [buffering, setBuffering] = useState(false);
   const [errored, setErrored] = useState(false);
   const [pick, setPick] = useState(false);
+  const [pickMode, setPickMode] = useState('add'); // 'add' | 'buy' — أي زر فتح شيت الاختيار
   const [selSize, setSelSize] = useState('');
   const [selColor, setSelColor] = useState('');
   const vidRef = useRef(null);
@@ -274,8 +276,14 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive, preload, useMp4]);
 
-  const sizes = (p.size || '').split(',').map((s) => s.trim()).filter(Boolean);
-  const colors = (p.color || '').split(',').map((s) => s.trim()).filter(Boolean);
+  // المتغيّرات بوعي مخزون الألوان (النموذج الجديد): الألوان من colorStock إن وُجد،
+  // والنمر المتاحة تتبع اللون المختار (تُستثنى المنفدة) — فلا تُضاف تشكيلة غير متوفرة
+  const colorStock = p.colorStock && typeof p.colorStock === 'object' ? p.colorStock : {};
+  const hasCS = Object.keys(colorStock).length > 0;
+  const sizes = hasCS
+    ? (selColor ? Object.entries(colorStock[selColor] || {}).filter(([, q]) => q !== 0).map(([s]) => s) : [])
+    : (p.size || '').split(',').map((s) => s.trim()).filter(Boolean);
+  const colors = hasCS ? Object.keys(colorStock) : (p.color || '').split(',').map((s) => s.trim()).filter(Boolean);
   const hasDiscount = p.oldPrice && p.oldPrice > p.price;
   const discountPct = hasDiscount ? Math.round((1 - p.price / p.oldPrice) * 100) : 0;
 
@@ -504,14 +512,21 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   };
 
   const quickAdd = () => {
-    if (sizes.length || colors.length) { setPick(true); return; }
+    if (sizes.length || colors.length) { setPickMode('add'); setPick(true); return; }
     add({ ...p, whatsapp: p.storeWhatsapp, size: '', color: '' });
   };
+  // شراء فوري من الريل: نفس تدفّق الاختيار، ثم تفتح السلة على إتمام الطلب مباشرة
+  const quickBuy = () => {
+    if (sizes.length || colors.length) { setPickMode('buy'); setPick(true); return; }
+    buyNow({ ...p, whatsapp: p.storeWhatsapp, size: '', color: '' });
+  };
   const confirmAdd = () => {
-    add({ ...p, whatsapp: p.storeWhatsapp, size: selSize, color: selColor });
+    const doIt = pickMode === 'buy' ? buyNow : add;
+    doIt({ ...p, whatsapp: p.storeWhatsapp, size: selSize, color: selColor });
     setPick(false);
   };
-  const canConfirm = (!sizes.length || selSize) && (!colors.length || selColor);
+  // اللون أولاً (إن وُجد)، ثم النمرة من المتاح — ولون نفدت كل نمره لا يُؤكَّد
+  const canConfirm = (!colors.length || selColor) && (!sizes.length || selSize) && !(hasCS && selColor && sizes.length === 0);
 
   return (
     <section className="relative flex h-[100dvh] w-full snap-start snap-always justify-center bg-black">
@@ -621,12 +636,17 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
             {hasDiscount && <Strike className="text-sm text-white/70">{t('common.currency')}{p.oldPrice}</Strike>}
           </div>
           <div className="mt-1 flex items-stretch gap-2">
-            <button onClick={quickAdd}
+            {/* شراء فوري من الريل — الزر الأساسي (يفتح إتمام الطلب مباشرة بعد الاختيار) */}
+            <button onClick={quickBuy}
               className="flex flex-1 items-center justify-center gap-2 rounded-full bg-white py-3 text-sm font-bold text-wine shadow-lg transition active:scale-[0.98]">
-              <CartIcon className="h-5 w-5" /> {t('reels.add')}
+              <BagIcon className="h-5 w-5" /> {t('product.buyNow')}
+            </button>
+            <button onClick={quickAdd} aria-label={t('reels.add')} title={t('reels.add')}
+              className="flex w-12 items-center justify-center rounded-full bg-white/20 text-white ring-1 ring-white/25 transition active:scale-95">
+              <CartIcon className="h-5 w-5" />
             </button>
             <Link to={`/product/${p.id}`}
-              className="flex items-center justify-center rounded-full bg-white/20 px-5 py-3 text-sm font-bold text-white ring-1 ring-white/25 transition active:scale-95">
+              className="flex items-center justify-center rounded-full bg-white/20 px-4 py-3 text-sm font-bold text-white ring-1 ring-white/25 transition active:scale-95">
               {t('reels.view')}
             </Link>
           </div>
@@ -642,14 +662,23 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
                 <div className="mb-3">
                   <p className="mb-1.5 text-xs font-medium text-stone-500">{t('reels.color')}</p>
                   <div className="flex flex-wrap gap-2">
-                    {colors.map((c) => (
-                      <button key={c} onClick={() => setSelColor(c)}
-                        className={`rounded-xl border px-3.5 py-1.5 text-sm font-semibold transition ${selColor === c ? 'border-wine bg-wine text-cream' : 'border-wine/30 text-wine hover:bg-wine/10'}`}>{c}</button>
-                    ))}
+                    {colors.map((c) => {
+                      const css = colorToCss(c);
+                      return (
+                        <button key={c} onClick={() => { setSelColor(c); if (hasCS) setSelSize(''); }}
+                          className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-semibold transition ${selColor === c ? 'border-wine bg-wine text-cream' : 'border-wine/30 text-wine hover:bg-wine/10'}`}>
+                          {css && <span className="h-4 w-4 shrink-0 rounded-full" style={{ background: css, boxShadow: '0 0 0 1px rgba(255,255,255,0.55), inset 0 0 0 1px rgba(0,0,0,0.15)' }} />}
+                          {c}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
-              {sizes.length > 0 && (
+              {/* مع مخزون الألوان: النمر تظهر بعد اختيار اللون (المتاح فقط) */}
+              {hasCS && !selColor ? (
+                <p className="mb-4 rounded-xl bg-wine/5 px-3 py-2 text-sm font-medium text-wine/70">{t('product.pickColorFirst')}</p>
+              ) : sizes.length > 0 && (
                 <div className="mb-4">
                   <p className="mb-1.5 text-xs font-medium text-stone-500">{t('reels.size')}</p>
                   <div className="flex flex-wrap gap-2">
@@ -662,7 +691,8 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
               )}
               <button onClick={confirmAdd} disabled={!canConfirm}
                 className="flex w-full items-center justify-center gap-2 rounded-2xl bg-wine py-3 font-bold text-cream transition active:scale-[0.98] disabled:opacity-40">
-                <CartIcon className="h-5 w-5" /> {t('reels.add')}
+                {pickMode === 'buy' ? <BagIcon className="h-5 w-5" /> : <CartIcon className="h-5 w-5" />}
+                {pickMode === 'buy' ? t('product.buyNow') : t('reels.add')}
               </button>
             </div>
           </div>
