@@ -168,7 +168,24 @@ export default function StorePage() {
     return [...map.entries()].map(([name, css]) => ({ name, css }));
   }, [data]);
 
-  if (error) return <div className="glass p-10 text-center text-stone-300">{error}</div>;
+  // متجر غير موجود/رابط خاطئ: بطاقة بمخرج واضح بدل نص عارٍ
+  if (error) {
+    return (
+      <div className="glass mx-auto flex max-w-md flex-col items-center gap-4 p-10 text-center">
+        <svg viewBox="0 0 24 24" className="h-12 w-12 text-wine/25" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M4 7 6 3h12l2 4M4 7h16M4 7v13h16V7M9 20v-6h6v6" />
+        </svg>
+        <p className="text-stone-300">{error}</p>
+        <Link
+          to="/shop"
+          className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
+          style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)' }}
+        >
+          {t('co.doneKeepShopping')}
+        </Link>
+      </div>
+    );
+  }
   if (!data) return <StorePageSkeleton />;
 
   const { store } = data;
