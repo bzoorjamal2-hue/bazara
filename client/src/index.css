@@ -81,12 +81,12 @@ table { max-width: 100%; }
   background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.45) 50%, transparent 65%);
   transform: translateX(-160%); transition: transform 0.8s ease;
 }
-.btn-primary:hover::after { transform: translateX(160%); }
+@media (hover: hover) { .btn-primary:hover::after { transform: translateX(160%); } }
 /* 3: عناوين أرقى بتباعد حروف خفيف */
 .font-display { letter-spacing: 0.012em; }
 /* 5: بطاقات أنعم — ارتفاع وظل لطيف عند المرور (إحساس راقٍ) */
 .theme-pub .glass { transition: box-shadow 0.35s ease, transform 0.35s ease; }
-.theme-pub a.glass:hover, .theme-pub button.glass:hover { transform: translateY(-3px); box-shadow: 0 16px 38px -14px rgba(94, 70, 54, 0.26); }
+@media (hover: hover) { .theme-pub a.glass:hover, .theme-pub button.glass:hover { transform: translateY(-3px); box-shadow: 0 16px 38px -14px rgba(94, 70, 54, 0.26); } }
 /* 1: حركة ظهور أنعم للعناصر */
 @media (prefers-reduced-motion: no-preference) {
   .animate-fade-up { animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1); }
@@ -194,17 +194,17 @@ button > svg { vertical-align: middle; }
   background: linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%);
   box-shadow: 0 16px 34px -14px rgba(74, 19, 34, 0.65);
 }
-.btn-buy:hover:not(:disabled) { filter: brightness(1.08); }
+@media (hover: hover) { .btn-buy:hover:not(:disabled) { filter: brightness(1.08); } }
 .btn-cart {
   @apply inline-flex items-center justify-center gap-2 rounded-full border-2 font-bold transition disabled:cursor-not-allowed disabled:opacity-40;
   border-color: rgba(110, 38, 55, 0.4);
   color: #6e2637;
   background: transparent;
 }
-.btn-cart:hover:not(:disabled) { background: #6e2637; color: #F4EDE2; }
+@media (hover: hover) { .btn-cart:hover:not(:disabled) { background: #6e2637; color: #F4EDE2; } }
 /* الوضع الليلي: النبيذي الغامق يختفي على الخلفية الداكنة → ذهبي مضيء متناسق */
 html.dark .theme-pub .btn-cart { border-color: rgba(240, 220, 166, 0.45); color: #f0dca6; }
-html.dark .theme-pub .btn-cart:hover:not(:disabled) { background: #f0dca6; color: #241b12; }
+@media (hover: hover) { html.dark .theme-pub .btn-cart:hover:not(:disabled) { background: #f0dca6; color: #241b12; } }
 
 /* حقول الإدخال */
 .input {
@@ -367,13 +367,13 @@ input[type='datetime-local']::-webkit-datetime-edit {
   color: #F4EDE2;
   box-shadow: 0 10px 24px -10px rgba(94, 70, 54, 0.6);
 }
-.theme-pub .btn-primary:hover { background: #3f2e22; }
+@media (hover: hover) { .theme-pub .btn-primary:hover { background: #3f2e22; } }
 .theme-pub .btn-ghost {
   background: #ffffff;
   border-color: rgba(94, 70, 54, 0.25);
   color: #5e4636;
 }
-.theme-pub .btn-ghost:hover { background: rgba(94, 70, 54, 0.06); border-color: #5e4636; }
+@media (hover: hover) { .theme-pub .btn-ghost:hover { background: rgba(94, 70, 54, 0.06); border-color: #5e4636; } }
 .theme-pub .btn:focus { --tw-ring-color: rgba(94, 70, 54, 0.4); }
 
 /* الحقول */
@@ -408,19 +408,21 @@ input[type='datetime-local']::-webkit-datetime-edit {
 .theme-pub .text-gold-300,
 .theme-pub .text-gold-400 { color: #5e4636; }
 .theme-pub .text-ink-950 { color: #F4EDE2; }
-.theme-pub .hover\:text-gold-100:hover,
-.theme-pub .hover\:text-gold-200:hover { color: #5e4636; }
-.theme-pub .hover\:text-ink-950:hover { color: #F4EDE2; }
+@media (hover: hover) {
+  .theme-pub .hover\:text-gold-100:hover,
+  .theme-pub .hover\:text-gold-200:hover { color: #5e4636; }
+  .theme-pub .hover\:text-ink-950:hover { color: #F4EDE2; }
+}
 
 .theme-pub .bg-ink-800 { background-color: #f1e9dd; }
 .theme-pub .bg-ink-900 { background-color: #F4EDE2; }
 .theme-pub .bg-ink-700 { background-color: #e7ddcf; }
 .theme-pub .bg-gold-400 { background-color: #5e4636; }
-.theme-pub .hover\:bg-gold-400:hover { background-color: #5e4636; }
+@media (hover: hover) { .theme-pub .hover\:bg-gold-400:hover { background-color: #5e4636; } }
 .theme-pub .bg-gold-400\/5 { background-color: rgba(94, 70, 54, 0.05); }
 .theme-pub .bg-gold-400\/10,
 .theme-pub .bg-gold-400\/15 { background-color: rgba(94, 70, 54, 0.08); }
-.theme-pub .hover\:bg-gold-400\/10:hover { background-color: rgba(94, 70, 54, 0.08); }
+@media (hover: hover) { .theme-pub .hover\:bg-gold-400\/10:hover { background-color: rgba(94, 70, 54, 0.08); } }
 .theme-pub .bg-emerald-500 { background-color: #2eb872; }
 
 .theme-pub .border-gold-400 { border-color: #5e4636; }
@@ -433,7 +435,7 @@ input[type='datetime-local']::-webkit-datetime-edit {
 .theme-pub .ring-gold-400\/60 { --tw-ring-color: rgba(94, 70, 54, 0.4); }
 
 .theme-pub .shadow-gold { box-shadow: 0 10px 30px -12px rgba(94, 70, 54, 0.45); }
-.theme-pub .hover\:shadow-glow:hover { box-shadow: 0 14px 32px -10px rgba(94, 70, 54, 0.28); }
+@media (hover: hover) { .theme-pub .hover\:shadow-glow:hover { box-shadow: 0 14px 32px -10px rgba(94, 70, 54, 0.28); } }
 
 /* فواصل/حدود/خلفيات بيضاء أو سوداء خفيفة (كانت للثيم الداكن) → تظهر على الفاتح */
 .theme-pub .border-white,
@@ -441,8 +443,10 @@ input[type='datetime-local']::-webkit-datetime-edit {
 .theme-pub .border-white\/5,
 .theme-pub .border-white\/10 { border-color: rgba(94, 70, 54, 0.1); }
 .theme-pub .divide-white\/5 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(94, 70, 54, 0.1); }
-.theme-pub .hover\:bg-white\/5:hover,
-.theme-pub .hover\:bg-white\/10:hover { background-color: rgba(94, 70, 54, 0.06); }
+@media (hover: hover) {
+  .theme-pub .hover\:bg-white\/5:hover,
+  .theme-pub .hover\:bg-white\/10:hover { background-color: rgba(94, 70, 54, 0.06); }
+}
 .theme-pub .bg-white\/5,
 .theme-pub .bg-white\/\[0\.03\],
 .theme-pub .bg-white\/\[0\.05\] { background-color: rgba(94, 70, 54, 0.04); }
@@ -484,7 +488,7 @@ html.dark .theme-pub .app-navbar.shadow-md { box-shadow: 0 12px 28px -8px rgba(0
   border: 1px solid rgba(74, 19, 34, 0.4);
   box-shadow: 0 8px 22px -10px rgba(94, 70, 54, 0.5);
 }
-.pub-cat:hover { background: #6e5340; }
+@media (hover: hover) { .pub-cat:hover { background: #6e5340; } }
 
 /* ===== بانر Hero الخمري ===== */
 .pub-hero {
@@ -569,7 +573,7 @@ html.dark .theme-pub .app-navbar.shadow-md { box-shadow: 0 12px 28px -8px rgba(0
 .sc-input { background: #ffffff; color: #5e4636; border-color: rgba(94, 70, 54, 0.20); }
 .sc-input::placeholder { color: #a89ca0; }
 .sc-chip { background: rgba(255, 255, 255, 0.7); color: #5e4636; border-color: rgba(94, 70, 54, 0.25); }
-.sc-chip:hover { background: #5e4636; color: #F4EDE2; }
+@media (hover: hover) { .sc-chip:hover { background: #5e4636; color: #F4EDE2; } }
 
 /* الوضع الليلي — أسطح داكنة دافئة ونصوص فاتحة واضحة (لا شيء مخفي) */
 .sc-dark .sc-panel { background: #241b15; }
@@ -579,7 +583,7 @@ html.dark .theme-pub .app-navbar.shadow-md { box-shadow: 0 12px 28px -8px rgba(0
 .sc-dark .sc-input { background: #33271e; color: #f3ece0; border-color: rgba(230, 200, 120, 0.22); }
 .sc-dark .sc-input::placeholder { color: #9b8f80; }
 .sc-dark .sc-chip { background: #33271e; color: #e6c878; border-color: rgba(230, 200, 120, 0.20); }
-.sc-dark .sc-chip:hover { background: #5e4636; color: #F4EDE2; }
+@media (hover: hover) { .sc-dark .sc-chip:hover { background: #5e4636; color: #F4EDE2; } }
 
 /* ============================================================= */
 /*  لوحة التحكم الفاخرة (.dash) — هيدر بنّي عميق بلمعة ذهبية        */
@@ -679,8 +683,10 @@ html.dark .theme-pub .text-gold-100,
 html.dark .theme-pub .text-gold-200,
 html.dark .theme-pub .text-gold-300,
 html.dark .theme-pub .text-gold-400 { color: #f0dca6; }
-html.dark .theme-pub .hover\:text-gold-100:hover,
-html.dark .theme-pub .hover\:text-gold-200:hover { color: #ffe9b8; }
+@media (hover: hover) {
+  html.dark .theme-pub .hover\:text-gold-100:hover,
+  html.dark .theme-pub .hover\:text-gold-200:hover { color: #ffe9b8; }
+}
 html.dark .theme-pub .gradient-text {
   background: linear-gradient(135deg, #fdf3d3 0%, #ecd28a 40%, #d4af37 100%);
   -webkit-background-clip: text;
@@ -711,14 +717,14 @@ html.dark .theme-pub .btn-ghost {
   border-color: rgba(230, 200, 120, 0.40);
   color: #f0dca6;
 }
-html.dark .theme-pub .btn-ghost:hover { background: rgba(230, 200, 120, 0.12); border-color: #e6c878; }
+@media (hover: hover) { html.dark .theme-pub .btn-ghost:hover { background: rgba(230, 200, 120, 0.12); border-color: #e6c878; } }
 /* الزر الأساسي ليلياً: ذهبي مشعّ بنص داكن — أفخم وأوضح من البنّي المطفي */
 html.dark .theme-pub .btn-primary {
   background: linear-gradient(135deg, #ecd28a 0%, #d4af37 55%, #b8932c 100%);
   color: #1e1710;
   box-shadow: 0 12px 28px -12px rgba(212, 175, 55, 0.45);
 }
-html.dark .theme-pub .btn-primary:hover { background: linear-gradient(135deg, #f4e0a4 0%, #e6c878 55%, #d4af37 100%); }
+@media (hover: hover) { html.dark .theme-pub .btn-primary:hover { background: linear-gradient(135deg, #f4e0a4 0%, #e6c878 55%, #d4af37 100%); } }
 
 /* الحدود البنّية → ذهبية خفيفة */
 html.dark .theme-pub .border-wine\/15,
@@ -806,7 +812,7 @@ html.dark .theme-pub .text-wine\/45 { color: rgba(236, 227, 214, 0.62); }
 html.dark .theme-pub .text-wine\/40 { color: rgba(236, 227, 214, 0.55); }
 html.dark .theme-pub .text-wine\/35 { color: rgba(236, 227, 214, 0.50); }
 html.dark .theme-pub .text-wine\/30 { color: rgba(236, 227, 214, 0.45); }
-html.dark .theme-pub .hover\:text-wine:hover { color: #f0d896; }
+@media (hover: hover) { html.dark .theme-pub .hover\:text-wine:hover { color: #f0d896; } }
 
 /* رسائل التأكيد الخضراء الفاتحة كانت تختفي على الخلفية الكريمية الفاتحة →
    نجعلها خضراء واضحة في الوضع النهاري، وفاتحة في الوضع الليلي. */

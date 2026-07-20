@@ -1,5 +1,8 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  // hover: يعمل فقط على أجهزة تدعمه فعلاً (ماوس) — على اللمس كان تأثير الضغط
+  // "يعلق" على الزر بعد رفع الإصبع (المتصفح يثبّت حالة hover) ويبقى كأنه مضغوط
+  future: { hoverOnlyWhenSupported: true },
   content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: {
     extend: {
