@@ -27,6 +27,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
   const { add, buyNow } = useCart();
   const { has, toggle } = useWishlist();
   const imgRef = useRef(null);
+  const qvTouch = useRef(null); // بداية لمسة السحب بين الصور
   useScrollLock(true);
 
   const gallery = [product.imageUrl, ...(product.images || [])].filter(Boolean);
@@ -109,7 +110,24 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
         {/* الوسائط — فيديو يشتغل تلقائياً أو صورة، بحجمها الطبيعي 9:16 (بلا قصّ).
             الخلفية كريمية مطابقة للغلاف — بلا إطار بنّي حول الفيديو */}
         <div className="bg-[#f3ece0] p-3">
-          <div ref={imgRef} className="relative mx-auto aspect-[9/16] max-h-[56vh] w-full overflow-hidden rounded-2xl bg-[#f3ece0]">
+          <div
+            ref={imgRef}
+            className="relative mx-auto aspect-[9/16] max-h-[56vh] w-full overflow-hidden rounded-2xl bg-[#f3ece0]"
+            style={{ touchAction: 'pan-y' }}
+            onTouchStart={(e) => { const t0 = e.touches[0]; qvTouch.current = { x: t0.clientX, y: t0.clientY }; }}
+            onTouchEnd={(e) => {
+              // سحب أفقي يبدّل الصور (نفس سلوك صفحة المنتج وعارض الصور) — للصور فقط لا الفيديو
+              const s = qvTouch.current; qvTouch.current = null;
+              if (!s || hasVideo || gallery.length < 2) return;
+              const dx = e.changedTouches[0].clientX - s.x;
+              const dy = e.changedTouches[0].clientY - s.y;
+              if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+                const rtl = document.documentElement.dir !== 'ltr';
+                const d = dx < 0 ? (rtl ? -1 : 1) : (rtl ? 1 : -1);
+                setActive((p) => (p + d + gallery.length) % gallery.length);
+              }
+            }}
+          >
             {hasVideo ? (
               <video
                 src={product.videoUrl}
