@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import api from '../api/client.js';
 import { cldOptimized, cldThumb } from '../utils/cloudinary.js';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
+import { clearCachePrefixes } from '../utils/apiCache.js';
 import CloseButton from './CloseButton.jsx';
 import { StoreIcon, BagIcon } from './icons.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
@@ -100,7 +101,7 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
 
   const del = async () => {
     if (!cur) return;
-    try { await api.delete(`/stories/${cur.id}`); } catch { /* تجاهل */ }
+    try { await api.delete(`/stories/${cur.id}`); clearCachePrefixes(['storepage:', 'home']); } catch { /* تجاهل */ }
     onDeleted?.(cur.id);
     onClose();
   };

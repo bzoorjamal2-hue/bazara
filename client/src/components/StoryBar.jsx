@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import api from '../api/client.js';
 import { uploadToCloudinary, cldThumb } from '../utils/cloudinary.js';
 import { getSeenSet, markSeen } from '../utils/storySeen.js';
+import { clearCachePrefixes } from '../utils/apiCache.js';
 import useScrollLock from '../hooks/useScrollLock.js';
 import Select from './Select.jsx';
 import StoryViewer from './StoryViewer.jsx';
@@ -48,6 +49,7 @@ export default function StoryBar({ store, stories, isOwner, onAdded, onDeleted, 
     try {
       const url = await uploadToCloudinary(file, mediaType, setProgress);
       const { data } = await api.post('/stories', { mediaUrl: url, mediaType, caption: caption.trim(), productId: prod });
+      clearCachePrefixes(['storepage:', 'home']); // الستوري الجديدة تظهر فوراً (الستوريات ضمن كاش صفحة المتجر)
       onAdded(data.story);
       closeCompose();
     } catch {
