@@ -905,7 +905,14 @@
     "empty": "No products in your wishlist yet.",
     "addAllToCart": "Add all to cart",
     "viewAll": "View full wishlist",
-    "clearConfirm": "Clear entire wishlist?"
+    "clearConfirm": "Clear entire wishlist?",
+    "share": "Share my wishlist",
+    "shared": "Shared wishlist",
+    "sharedGone": "These shared items are no longer available.",
+    "sharedHint": "These are the pieces picked by whoever shared this link 🌷",
+    "keepAll": "Add them to my wishlist",
+    "mine": "My wishlist",
+    "shareMsg": "Check out the pieces I love 🌷"
   },
   "subscription": {
     "title": "Activate your store",
