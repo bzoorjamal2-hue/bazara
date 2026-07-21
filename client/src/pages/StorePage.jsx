@@ -320,8 +320,18 @@ export default function StorePage() {
           )}
 
           {filtered.length === 0 ? (
-            <div className="glass p-10 text-center text-stone-400">
-              {data.products.length === 0 ? t('store.noProducts') : t('common.noResults')}
+            <div className="glass flex flex-col items-center gap-4 p-10 text-center text-stone-400">
+              <p>{data.products.length === 0 ? t('store.noProducts') : t('common.noResults')}</p>
+              {/* عند وجود فلاتر نشطة نعطي مخرجاً بضغطة (بحث/فئة/مقاس/لون/عروض) */}
+              {data.products.length > 0 && (q || cat !== 'all' || sizesSel.length || colorsSel.length || offersOnly) && (
+                <button
+                  type="button"
+                  onClick={() => { setQ(''); setSizesSel([]); setColorsSel([]); setOffersOnly(false); setSearchParams({}); }}
+                  className="rounded-full border border-wine/30 px-5 py-2 text-sm font-bold text-wine transition hover:bg-wine hover:text-cream"
+                >
+                  {t('filters.clear')}
+                </button>
+              )}
             </div>
           ) : (
             <>
