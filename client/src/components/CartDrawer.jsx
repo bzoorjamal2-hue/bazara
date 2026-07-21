@@ -502,6 +502,12 @@ export default function CartDrawer() {
                       ))}
                       <div className="my-2 h-px bg-wine/10" />
                       <div className="flex justify-between text-stone-400"><span>{t('co.subtotal')}</span><span>{t('common.currency')}{total.toFixed(2)}</span></div>
+                      {(() => {
+                        const saved = items.reduce((s, i) => s + (i.oldPrice && i.oldPrice > i.price ? (i.oldPrice - i.price) * i.qty : 0), 0);
+                        return saved > 0 ? (
+                          <div className="flex justify-between font-semibold text-emerald-300"><span>{t('cart.saved')}</span><span>{t('common.currency')}{saved.toFixed(2)}</span></div>
+                        ) : null;
+                      })()}
                       {discount > 0 && (
                         <div className="flex justify-between text-emerald-300">
                           <span>{coupon ? `${t('coupon.discount')} (${coupon.code})` : flashDiscount > 0 ? t('store.flashDiscountLine') : refDiscount > 0 ? t('referral.discountLine') : t('loyalty.discountLine')}</span>
