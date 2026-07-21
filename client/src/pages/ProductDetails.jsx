@@ -58,6 +58,29 @@ export default function ProductDetails() {
   const [lightbox, setLightbox] = useState(false);
   const [descExp, setDescExp] = useState(false); // طيّ الوصف الطويل بـ«اقرأ المزيد»
   const [mySize] = useState(getMySize); // مقاسها المعتاد — نميّزه فقط (بلا اختيار تلقائي)
+
+  // تكبير الصورة بحركة المؤشّر (أسلوب متاجر الأزياء الفاخرة). أجهزة اللمس مستثناة —
+  // عندها التكبير بالنقر/العارض. نحدّث الأنماط على العنصر مباشرةً بلا setState كي لا
+  // نُعيد تصيير الصفحة الثقيلة مع كل حركة مؤشّر (كان يسبّب تقطيعاً).
+  const zoomRef = useRef(null);
+  const canHoverZoom = typeof window !== 'undefined'
+    && typeof window.matchMedia === 'function'
+    && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const onZoomMove = (e) => {
+    const el = zoomRef.current;
+    if (!el || !canHoverZoom) return;
+    const r = el.getBoundingClientRect();
+    const x = ((e.clientX - r.left) / r.width) * 100;
+    const y = ((e.clientY - r.top) / r.height) * 100;
+    el.style.transformOrigin = `${x}% ${y}%`;
+    el.style.transform = 'scale(2.2)';
+  };
+  const onZoomLeave = () => {
+    const el = zoomRef.current;
+    if (!el) return;
+    el.style.transform = '';
+    el.style.transformOrigin = '';
+  };
   const [sizeGuide, setSizeGuide] = useState(false);
   const [notifyPhone, setNotifyPhone] = useState('');
   const [notifyBusy, setNotifyBusy] = useState(false);
@@ -334,16 +357,25 @@ export default function ProductDetails() {
               }
             }}
           >
-            {/* الصورة تظهر بحجمها الطبيعي (مثل الفيديو) بلا قص — نقر للتكبير */}
-            <img
-              key={gallery[active]}
-              src={cldThumb(gallery[active], 900)}
-              alt={product.name}
-              decoding="async"
-              onClick={() => setLightbox(true)}
-              className="media-cap block w-auto max-w-full cursor-zoom-in rounded-2xl bg-ink-800 object-contain animate-fade-in [animation-duration:350ms]"
-              onError={(e) => (e.currentTarget.src = PH)}
-            />
+            {/* الصورة تظهر بحجمها الطبيعي (مثل الفيديو) بلا قص — نقر للتكبير،
+                وعلى الكمبيوتر تتبع حركة المؤشّر بتكبير عدسي. الغلاف يقصّ الزائد
+                (overflow) كي لا تتجاوز الصورة المكبّرة إطارها */}
+            <span
+              className="block overflow-hidden rounded-2xl"
+              onMouseMove={onZoomMove}
+              onMouseLeave={onZoomLeave}
+            >
+              <img
+                key={gallery[active]}
+                ref={zoomRef}
+                src={cldThumb(gallery[active], 900)}
+                alt={product.name}
+                decoding="async"
+                onClick={() => setLightbox(true)}
+                className="media-cap block w-auto max-w-full cursor-zoom-in rounded-2xl bg-ink-800 object-contain animate-fade-in [animation-duration:350ms] [transition:transform_.18s_ease-out]"
+                onError={(e) => (e.currentTarget.src = PH)}
+              />
+            </span>
             {hasDiscount && <span className="badge absolute start-3 top-3 bg-[#8a2438] text-[#F4EDE2] shadow-sm">-{Math.round((1 - product.price / product.oldPrice) * 100)}%</span>}
             {/* أيقونة تكبير */}
             <button onClick={() => setLightbox(true)} aria-label="zoom" className="absolute end-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur transition hover:bg-black/65">
