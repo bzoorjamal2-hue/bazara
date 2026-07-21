@@ -1009,7 +1009,9 @@ function HeroSlider({ store }) {
             return (
               <div key={idx} className="w-full shrink-0" dir="rtl">
                 <div
-                  className={`relative isolate flex h-[260px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[340px] ${custom ? 'bg-[#241712]' : 'bg-wine-dark pub-hero'}`}
+                  // الارتفاع ينمو مع العرض: كان يتوقّف عند 340px فيبدو شريطاً رفيعاً
+                  // (نسبة ~5:1) على الشاشات العريضة بعد توسيع الحاوية
+                  className={`relative isolate flex h-[260px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[340px] lg:h-[420px] 2xl:h-[500px] ${custom ? 'bg-[#241712]' : 'bg-wine-dark pub-hero'}`}
                   style={style}
                 >
                   {/* وسائط الشريحة (صورة أو فيديو) بنفس التعتيم تماماً — معتّمة من أول لحظة بلا وميض */}

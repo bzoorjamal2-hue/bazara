@@ -70,7 +70,7 @@ export default function Home() {
           السلايدر الافتراضي القديم)، ونستخدم البانرات المحفوظة محلياً لظهورٍ فوري.
           (مدخل البحث الشامل صار أيقونة داخل الهيدر — هيدر واحد بلا تكرار) */}
       {loading && !data && !(persistedBanners?.length) ? (
-        <div className="skeleton h-[340px] rounded-3xl sm:h-[420px]" />
+        <div className="skeleton h-[340px] rounded-3xl sm:h-[420px] lg:h-[500px] 2xl:h-[580px]" />
       ) : (
         <HomeHero banners={data ? data.homeBanners : persistedBanners || []} />
       )}
@@ -363,7 +363,7 @@ function HomeHero({ banners = [] }) {
               return (
                 <div key={idx} className="w-full shrink-0" dir="rtl">
                   <div
-                    className={`relative isolate flex h-[340px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[420px] ${onMedia ? 'bg-[#241712]' : 'bg-gradient-to-br from-[#f6ecd9] via-[#efe1c6] to-[#f6ecd9]'}`}
+                    className={`relative isolate flex h-[340px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[420px] lg:h-[500px] 2xl:h-[580px] ${onMedia ? 'bg-[#241712]' : 'bg-gradient-to-br from-[#f6ecd9] via-[#efe1c6] to-[#f6ecd9]'}`}
                     style={isColor ? { background: s.bgValue } : isVideo ? { backgroundImage: `url("${vPoster}")`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
                   >
                     {isImage && (
@@ -396,7 +396,7 @@ function HomeHero({ banners = [] }) {
             // الشريحة الافتراضية (نصّية) — كريمي فخم بنص خمري (بلا البني)
             return (
               <div key={idx} className="w-full shrink-0" dir="rtl">
-                <div className="relative flex h-[340px] flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#f6ecd9] via-[#efe1c6] to-[#f6ecd9] px-6 text-center sm:h-[420px]">
+                <div className="relative flex h-[340px] flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#f6ecd9] via-[#efe1c6] to-[#f6ecd9] px-6 text-center sm:h-[420px] lg:h-[500px] 2xl:h-[580px]">
                   <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-wine/5 blur-3xl" />
                   <p className="mb-3 text-sm font-semibold tracking-[0.3em] text-[#6e5340]">{s.eyebrow}</p>
                   <h1 className="font-display text-3xl font-extrabold leading-tight text-[#5e4636] sm:text-5xl">
