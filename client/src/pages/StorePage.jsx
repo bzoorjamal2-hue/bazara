@@ -175,7 +175,8 @@ export default function StorePage() {
   }, [data, q, cat, sizesSel, colorsSel, offersOnly, stockOnly, sort]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  // تراكمي مع «عرض المزيد» (لا قصّ صفحة واحدة) — القطع السابقة تبقى ظاهرة بمكانها
+  const pageItems = filtered.slice(0, page * PAGE_SIZE);
 
   // ألوان المتجر المتاحة (تُشتقّ من منتجاته المعروفة الدرجة) — لا يظهر فلتر اللون بدونها
   const storeColors = useMemo(() => {
@@ -360,11 +361,19 @@ export default function StorePage() {
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
                 {pageItems.map((p, i) => <ProductCard key={p.id} product={p} index={i} whatsapp={wa} />)}
               </div>
-              {totalPages > 1 && (
-                <div className="mt-8 flex items-center justify-center gap-2">
-                  {Array.from({ length: totalPages }).map((_, i) => (
-                    <button key={i} onClick={() => { setPage(i + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`h-9 w-9 rounded-lg text-sm font-semibold transition ${page === i + 1 ? 'bg-wine text-cream' : 'border border-wine/30 text-wine hover:bg-wine/10'}`}>{i + 1}</button>
-                  ))}
+              {/* «عرض المزيد» يراكم القطع بمكانها بدل ترقيم صفحات يقفز للأعلى — تصفّح
+                  أسلس على الجوال، ولا تفقد الزبونة موضعها بين كل ثمانية منتجات */}
+              {page < totalPages && (
+                <div className="mt-8 flex flex-col items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPage((n) => n + 1)}
+                    className="rounded-full px-8 py-3 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
+                    style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)' }}
+                  >
+                    {t('store.loadMore')}
+                  </button>
+                  <span className="text-xs text-stone-400">{pageItems.length} / {filtered.length}</span>
                 </div>
               )}
             </>
