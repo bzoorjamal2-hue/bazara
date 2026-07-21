@@ -179,9 +179,10 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
         <div className="flex flex-col p-5 text-[#2b2b2b]">
           <h3 className="font-display text-xl font-bold leading-snug text-wine">{product.name}</h3>
 
-          <div className="mt-2 flex items-baseline gap-2">
+          <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
             <span className="font-display text-2xl font-bold text-wine">{t('common.currency')}{product.price}</span>
             {hasDiscount && <Strike className="text-sm text-stone-400">{t('common.currency')}{product.oldPrice}</Strike>}
+            {hasDiscount && <span className="text-xs font-semibold text-[#8a2438]">{t('product.saveAmount', { amount: `${t('common.currency')}${(product.oldPrice - product.price).toFixed(2).replace(/\.00$/, '')}` })}</span>}
           </div>
 
           {product.description && (
