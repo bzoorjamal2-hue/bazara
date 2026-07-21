@@ -6,10 +6,10 @@ import { useWishlist } from '../context/WishlistContext.jsx';
 import Seo from '../components/Seo.jsx';
 import ProductCard from '../components/ProductCard.jsx';
 import { ProductGridSkeleton } from '../components/Skeleton.jsx';
-import { HeartIcon, LinkIcon } from '../components/icons.jsx';
+import { HeartIcon, LinkIcon, SparkleIcon } from '../components/icons.jsx';
 import { goBack } from '../utils/nav.js';
 
-const GRID = 'grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5';
+const GRID = 'grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5';
 const MAX_SHARE = 20; // سقف معقول لطول الرابط
 
 // المفضّلة بنفس ستايل الموقع: بطاقات ProductCard الموحّدة (شارات/ألوان/نظرة سريعة/
@@ -140,7 +140,9 @@ export default function Wishlist() {
       ) : (
         <>
           {dropCount > 0 && (
-            <p className="mb-4 text-center text-sm font-bold text-emerald-600">✨ {t('wishlist.priceDropCount', { count: dropCount })}</p>
+            <p className="mb-4 flex items-center justify-center gap-1.5 text-center text-sm font-bold text-emerald-600">
+              <SparkleIcon className="h-4 w-4 shrink-0" /> {t('wishlist.priceDropCount', { count: dropCount })}
+            </p>
           )}
           <div className={GRID}>
             {items.map((saved, i) => {

@@ -50,7 +50,7 @@ export default function ProductRail({ title, products, currentId, icon = null, a
           const img = thumb ? cldThumb(thumb, 300) : PH;
           const isVideo = Boolean(p.videoUrl);
           return (
-            <Link key={p.id} to={`/product/${p.id}`} className="glass w-36 shrink-0 overflow-hidden transition hover:-translate-y-1 hover:shadow-glow sm:w-40">
+            <Link key={p.id} to={`/product/${p.id}`} className="glass w-36 shrink-0 overflow-hidden transition hover:-translate-y-1 hover:shadow-glow sm:w-40 lg:w-44 2xl:w-48">
               <div className="relative aspect-[3/4] overflow-hidden bg-ink-800">
                 <img src={img} alt={p.name} loading="lazy" decoding="async" onError={(e) => (e.currentTarget.src = PH)} className="h-full w-full object-cover" />
                 {/* مؤشّر الفيديو — زر تشغيل واضح ليُعرف أنه منتج فيديو (مثل البطاقات) */}
