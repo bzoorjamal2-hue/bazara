@@ -11,7 +11,7 @@ import Strike from '../components/Strike.jsx';
 import { getMySize, setMySize } from '../utils/mySize.js';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
-import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
+import { cldVideoPoster, cldThumb, cldSrcSet } from '../utils/cloudinary.js';
 import { pushRecent, getRecent, removeRecent } from '../utils/recentlyViewed.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { sizeLabel } from '../utils/sizes.js';
@@ -369,11 +369,13 @@ export default function ProductDetails() {
                 key={gallery[active]}
                 ref={zoomRef}
                 src={cldThumb(gallery[active], 900)}
+                srcSet={cldSrcSet(gallery[active], [400, 600, 900, 1200])}
+                sizes="(min-width: 768px) 50vw, 100vw"
                 alt={product.name}
                 decoding="async"
                 onClick={() => setLightbox(true)}
                 className="media-cap block w-auto max-w-full cursor-zoom-in rounded-2xl bg-ink-800 object-contain animate-fade-in [animation-duration:350ms] [transition:transform_.18s_ease-out]"
-                onError={(e) => (e.currentTarget.src = PH)}
+                onError={(e) => { e.currentTarget.srcset = ''; e.currentTarget.src = PH; }}
               />
             </span>
             {hasDiscount && <span className="badge absolute start-3 top-3 bg-[#8a2438] text-[#F4EDE2] shadow-sm">-{Math.round((1 - product.price / product.oldPrice) * 100)}%</span>}

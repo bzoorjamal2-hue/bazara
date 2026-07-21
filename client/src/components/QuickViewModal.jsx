@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import { HeartIcon, CartIcon, BagIcon, HandIcon, ForwardIcon } from './icons.jsx';
-import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
+import { cldVideoPoster, cldThumb, cldSrcSet } from '../utils/cloudinary.js';
 import { flyToCart } from '../utils/flyToCart.js';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { sizeLabel } from '../utils/sizes.js';
@@ -151,9 +151,11 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
             ) : (
               <img
                 src={cldThumb(gallery[active], 800)}
+                srcSet={cldSrcSet(gallery[active], [400, 600, 800])}
+                sizes="(min-width: 640px) 50vw, 92vw"
                 alt={product.name}
                 decoding="async"
-                onError={(e) => (e.currentTarget.src = PLACEHOLDER)}
+                onError={(e) => { e.currentTarget.srcset = ''; e.currentTarget.src = PLACEHOLDER; }}
                 className="h-full w-full object-contain"
               />
             )}
