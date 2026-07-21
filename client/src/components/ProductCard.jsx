@@ -52,7 +52,6 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
   const hasImage = product.imageUrl || (product.images && product.images[0]);
   const videoPoster = product.videoUrl ? cldVideoPoster(product.videoUrl) : '';
   const cover = cldThumb(hasImage || videoPoster || PLACEHOLDER, 500);
-  const outOfStock = product.stock === 0;
   const hasDiscount = product.oldPrice && product.oldPrice > product.price;
   const discountPct = hasDiscount ? Math.round((1 - product.price / product.oldPrice) * 100) : 0;
   const liked = has(product.id);
@@ -77,6 +76,8 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
     }
     return typeof product.stock === 'number' ? product.stock : null;
   })();
+  // نفد المخزون: صفر عام أو نفاد كل كميات الألوان/النمر (كان يفوته النفاد عبر المخزون التفصيلي)
+  const outOfStock = product.stock === 0 || remaining === 0;
   const lowStock = !outOfStock && remaining != null && remaining > 0 && remaining <= 5;
   // صورة اللون (Color Swatch) إن رفعها التاجر — تبديل صورة البطاقة عند تمرير/لمس النقطة
   const colorImageOf = (name) => {

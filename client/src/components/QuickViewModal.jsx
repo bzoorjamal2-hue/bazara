@@ -58,7 +58,11 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
   const qtyFor = (s) => (hasColorStock ? (color ? colorStock[color]?.[s] : undefined) : sizeStock[s]);
   const sizeSoldOut = (s) => qtyFor(s) === 0;
 
-  const outOfStock = product.stock === 0;
+  // نفد المخزون: صفر عام، أو نفاد كل كميات الألوان/النمر إن اعتُمد المخزون التفصيلي
+  const totalDetailed = hasColorStock
+    ? Object.values(colorStock).flatMap((sz) => Object.values(sz || {})).filter((q) => typeof q === 'number')
+    : Object.values(sizeStock).filter((q) => typeof q === 'number');
+  const outOfStock = product.stock === 0 || (totalDetailed.length > 0 && totalDetailed.reduce((a, b) => a + b, 0) === 0);
   const hasDiscount = product.oldPrice && product.oldPrice > product.price;
   const discountPct = hasDiscount ? Math.round((1 - product.price / product.oldPrice) * 100) : 0;
   const liked = has(product.id);
