@@ -9,7 +9,7 @@ import ProductRail from '../components/ProductRail.jsx';
 import { getRecent } from '../utils/recentlyViewed.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { cldVideoPoster, cldThumb, cldSrcSet } from '../utils/cloudinary.js';
-import { GiftIcon, ForwardIcon } from '../components/icons.jsx';
+import { GiftIcon, ForwardIcon, BoltIcon, FireIcon, SparkleIcon } from '../components/icons.jsx';
 import CategoryGrid from '../components/CategoryGrid.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
 import StylistChat from '../components/StylistChat.jsx';
@@ -93,7 +93,8 @@ export default function Home() {
       {/* صفقات اليوم — أعلى الخصومات عبر المنصّة (أسلوب المتاجر الكبرى) */}
       {data?.deals?.length > 0 && (
         <ProductRail
-          title={`⚡ ${t('home.deals')}`}
+          title={t('home.deals')}
+          icon={<BoltIcon className="h-5 w-5 shrink-0 text-gold-500" />}
           products={data.deals}
           action={
             <Link to="/offers" className="inline-flex items-center gap-1 text-sm font-semibold text-gold-200 transition hover:opacity-80">
@@ -104,10 +105,10 @@ export default function Home() {
       )}
 
       {/* الأكثر مبيعاً — إثبات اجتماعي حقيقي من المبيعات المؤكّدة */}
-      {data?.bestSellers?.length > 0 && <ProductRail title={`🔥 ${t('home.bestSellers')}`} products={data.bestSellers} />}
+      {data?.bestSellers?.length > 0 && <ProductRail title={t('home.bestSellers')} icon={<FireIcon className="h-5 w-5 shrink-0 text-[#8a2438]" />} products={data.bestSellers} />}
 
       {/* مقترحات لكِ — تخصيص محلي من فئات ما شاهدته (يظهر فقط عند وجود ما يكفي) */}
-      {forYou.length >= 3 && <ProductRail title={`✨ ${t('home.forYou')}`} products={forYou} />}
+      {forYou.length >= 3 && <ProductRail title={t('home.forYou')} icon={<SparkleIcon className="h-5 w-5 shrink-0 text-gold-500" />} products={forYou} />}
 
       {/* شاهدت مؤخراً */}
       {recent.length > 0 && <ProductRail title={t('product.recentlyViewed')} products={recent} />}

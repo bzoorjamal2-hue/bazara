@@ -14,7 +14,7 @@ import CatThumb from '../components/CatThumb.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
 import StylistChat from '../components/StylistChat.jsx';
 import ShareEarnModal from '../components/ShareEarnModal.jsx';
-import { WaveIcon, GiftIcon, CheckIcon, PlusIcon } from '../components/icons.jsx';
+import { WaveIcon, GiftIcon, CheckIcon, PlusIcon, BoltIcon } from '../components/icons.jsx';
 import CloseButton from '../components/CloseButton.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
@@ -388,7 +388,7 @@ export default function StorePage() {
           {store.flashPercent > 0 && store.flashEndsAt && new Date(store.flashEndsAt).getTime() > Date.now() && (
             <div className="mt-5 flex flex-col items-center justify-between gap-3 rounded-2xl border border-red-400/40 bg-gradient-to-r from-red-500/15 via-rose-500/10 to-red-500/15 px-4 py-3 text-center sm:flex-row sm:text-start">
               <p className="flex items-center gap-2 font-display text-lg font-extrabold text-red-500">
-                ⚡ {t('store.flashBanner', { percent: store.flashPercent })}
+                <BoltIcon className="h-5 w-5 shrink-0" /> {t('store.flashBanner', { percent: store.flashPercent })}
               </p>
               <Countdown endsAt={store.flashEndsAt} variant="pill" className="shrink-0 !text-sm" />
             </div>
