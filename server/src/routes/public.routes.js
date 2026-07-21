@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { param } from 'express-validator';
-import { getHomeData, getStoreBySlug, getStoreCheckout, getProductById, getByCategory, getOffers, getReels, getStoriesFeed, addReview, trackOrders, trackStoreVisit, loyaltyPreview, searchProducts } from '../controllers/public.controller.js';
+import { getHomeData, getStoreBySlug, getStoreCheckout, getProductById, getProductsByIds, getByCategory, getOffers, getReels, getStoriesFeed, addReview, trackOrders, trackStoreVisit, loyaltyPreview, searchProducts } from '../controllers/public.controller.js';
 import { validateCoupon } from '../controllers/coupon.controller.js';
 import { createStockRequest } from '../controllers/stockRequest.controller.js';
 import { saveAbandoned } from '../controllers/abandoned.controller.js';
@@ -43,6 +43,8 @@ router.post('/story/:id/view', viewStory);
 router.get('/store/:slug', cacheGet(30), getStoreBySlug);
 router.get('/store/:slug/checkout', getStoreCheckout);
 router.post('/store/:slug/visit', trackStoreVisit);
+// منتجات متعدّدة بطلب واحد (?ids=1,2,3) — تستخدمها المفضّلة بدل طلب لكل قطعة
+router.get('/products', cacheGet(15), getProductsByIds);
 router.get('/product/:id', idParam, handleValidation, getProductById);
 router.post('/product/:id/reviews', reviewLimiter, idParam, reviewRules, handleValidation, addReview);
 router.post('/coupon/validate', validateCoupon);

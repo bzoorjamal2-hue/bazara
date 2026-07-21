@@ -32,11 +32,9 @@ export default function Wishlist() {
   useEffect(() => {
     if (!isShared) { setShared(null); return; }
     let alive = true;
-    Promise.all(
-      sharedIds.slice(0, MAX_SHARE).map((id) =>
-        api.get(`/public/product/${id}`).then((r) => r.data.product).catch(() => null)
-      )
-    ).then((list) => { if (alive) setShared(list.filter(Boolean)); });
+    api.get(`/public/products?ids=${sharedIds.slice(0, MAX_SHARE).join(',')}`)
+      .then((r) => { if (alive) setShared(r.data.products || []); })
+      .catch(() => { if (alive) setShared([]); });
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.get('ids')]);
@@ -48,13 +46,14 @@ export default function Wishlist() {
   useEffect(() => {
     if (isShared || !items.length) return undefined;
     let alive = true;
-    Promise.all(items.map((it) => api.get(`/public/product/${it.id}`).then((r) => r.data.product).catch(() => null)))
-      .then((list) => {
+    api.get(`/public/products?ids=${ids}`)
+      .then((r) => {
         if (!alive) return;
         const map = {};
-        list.forEach((p) => { if (p) map[p.id] = p; });
+        (r.data.products || []).forEach((p) => { map[p.id] = p; });
         setFresh(map);
-      });
+      })
+      .catch(() => { /* يبقى المعروض لقطة المفضّلة المحفوظة — لا نكسر الصفحة */ });
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ids, isShared]);

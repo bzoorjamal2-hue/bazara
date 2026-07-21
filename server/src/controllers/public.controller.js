@@ -264,6 +264,27 @@ function recordView(id) {
   return list.length;
 }
 
+// منتجات متعدّدة بطلب واحد (?ids=1,2,3) — تستخدمها المفضّلة لجلب السعر/المخزون الحالي
+// لكل قطعة. كانت تُرسل طلباً منفصلاً لكل قطعة، فمفضّلة من 20 قطعة = 20 طلباً.
+// المعرّفات غير الصالحة أو المتاجر غير الفعّالة تُتجاهل بهدوء (لا خطأ) — الواجهة
+// تتعامل مع النقص أصلاً بعرض اللقطة المحفوظة محلياً.
+const MAX_IDS = 50; // سقف يمنع استعلاماً ضخماً من رابط مُلفَّق
+export async function getProductsByIds(req, res, next) {
+  try {
+    const ids = String(req.query.ids || '')
+      .split(',')
+      .map((s) => Number(s.trim()))
+      .filter((n) => Number.isInteger(n) && n > 0)
+      .slice(0, MAX_IDS);
+    if (ids.length === 0) return res.json({ products: [] });
+    const active = activeStoreSql('u');
+    const result = await query(`${PRODUCT_SELECT} WHERE p.id = ANY($1::int[]) AND ${active}`, [ids]);
+    res.json({ products: result.rows.map(mapProduct) });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function getProductById(req, res, next) {
   const { id } = req.params;
   try {
