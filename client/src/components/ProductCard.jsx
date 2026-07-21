@@ -8,7 +8,7 @@ import { useWishlist } from '../context/WishlistContext.jsx';
 import StarRating from './StarRating.jsx';
 import Countdown from './Countdown.jsx';
 import { HeartIcon, CartIcon, XIcon, StarIcon, FireIcon } from './icons.jsx';
-import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
+import { cldVideoPoster, cldThumb, cldSrcSet } from '../utils/cloudinary.js';
 import { flyToCart } from '../utils/flyToCart.js';
 import { productColorDots } from '../utils/colorDot.js';
 import QuickViewModal from './QuickViewModal.jsx';
@@ -51,7 +51,8 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
 
   const hasImage = product.imageUrl || (product.images && product.images[0]);
   const videoPoster = product.videoUrl ? cldVideoPoster(product.videoUrl) : '';
-  const cover = cldThumb(hasImage || videoPoster || PLACEHOLDER, 500);
+  const coverRaw = hasImage || videoPoster || PLACEHOLDER;
+  const cover = cldThumb(coverRaw, 500); // احتياط للمتصفّحات بلا دعم srcset
   const hasDiscount = product.oldPrice && product.oldPrice > product.price;
   const discountPct = hasDiscount ? Math.round((1 - product.price / product.oldPrice) * 100) : 0;
   const liked = has(product.id);
@@ -160,11 +161,14 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
         <img
           ref={imgRef}
           src={cover}
+          srcSet={cldSrcSet(coverRaw)}
+          sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
           alt={product.name}
           loading="lazy"
           decoding="async"
           onLoad={() => setImgLoaded(true)}
-          onError={(e) => { e.currentTarget.src = PLACEHOLDER; setImgLoaded(true); }}
+          // مهم: نفرّغ srcset أيضاً — لو تُرك لبقي يتغلّب على src فلا تظهر الصورة البديلة
+          onError={(e) => { e.currentTarget.srcset = ''; e.currentTarget.src = PLACEHOLDER; setImgLoaded(true); }}
           className={`h-full w-full object-cover transition-[transform,opacity] duration-500 group-hover:scale-110 ${outOfStock ? 'opacity-50' : imgLoaded ? 'opacity-100' : 'opacity-0'}`}
         />
         {/* طبقة صورة اللون فوق الأصلية — تلاشٍ ناعم للدخول والخروج عند تمرير/لمس نقطة لون */}

@@ -27,6 +27,16 @@ export function cldThumb(url, width = 500) {
   return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width},c_limit,dpr_auto/`);
 }
 
+// مجموعة أحجام لـ srcset: المتصفّح يختار الأنسب لعرض العنصر وكثافة الشاشة معاً،
+// فبطاقة بعرض 180px على جوال تنزّل ~200px بدل 500px (توفير بيانات ملموس).
+// بلا dpr_auto عمداً — واصفات w تتكفّل بالكثافة، وجمعهما معاً يضاعف الحجم بلا داعٍ.
+export function cldSrcSet(url, widths = [200, 300, 400, 600, 800]) {
+  if (typeof url !== 'string' || !url.includes('/upload/')) return undefined;
+  return widths
+    .map((w) => `${url.replace('/upload/', `/upload/f_auto,q_auto,w_${w},c_limit/`)} ${w}w`)
+    .join(', ');
+}
+
 // رفع ملف (صورة/فيديو) مباشرة من جهاز المستخدم إلى Cloudinary، ويعيد الرابط الآمن.
 // resourceType: 'video' | 'image' | 'auto'
 export async function uploadToCloudinary(file, resourceType = 'auto', onProgress) {
