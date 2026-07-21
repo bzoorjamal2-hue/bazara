@@ -439,7 +439,8 @@ export default function StorePage() {
             <div className="mb-10 text-center">
               <button
                 onClick={() => { setViewAll(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                className="rounded-full border border-wine/40 px-8 py-3 font-semibold text-wine transition hover:bg-wine hover:text-cream"
+                className="rounded-full px-10 py-3.5 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
+                style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)', boxShadow: '0 16px 34px -14px rgba(74, 19, 34, 0.65)' }}
               >
                 {t('store.viewAllProducts')}
               </button>
