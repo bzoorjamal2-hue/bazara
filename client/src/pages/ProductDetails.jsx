@@ -30,7 +30,7 @@ export default function ProductDetails() {
   const { t, i18n } = useTranslation();
   const rtl = i18n.language !== 'en';
   const { add, buyNow } = useCart();
-  const { has, toggle } = useWishlist();
+  const { has, toggle, remove: removeWish } = useWishlist();
   const [product, setProduct] = useState(() => getCache(`product:${id}`)?.product || null);
   const [reviews, setReviews] = useState(() => getCache(`product:${id}`)?.reviews || []);
   const [related, setRelated] = useState([]);
@@ -142,8 +142,8 @@ export default function ProductDetails() {
         // لا نستبدل منتجاً معروضاً (من المخزّن) بصفحة خطأ بسبب تعثّر شبكة لحظي —
         // الخطأ يظهر فقط إن لم يكن لدينا ما نعرضه أصلاً
         if (!getCache(`product:${id}`)?.product) setError(getErrorMessage(err, t('errors.notFound')));
-        // منتج محذوف (404): نزيله من "شاهدت مؤخراً" كي لا يظل يظهر بالرفوف
-        if (err?.response?.status === 404) removeRecent(id);
+        // منتج محذوف (404): نزيله من "شاهدت مؤخراً" والمفضّلة كي لا يظل يظهر ويقود لخطأ
+        if (err?.response?.status === 404) { removeRecent(id); removeWish(id); }
       });
   };
 
