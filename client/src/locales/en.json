@@ -696,6 +696,8 @@
     "shopNow": "Shop now",
     "shareProduct": "Share product",
     "quickView": "Quick view",
+    "addToWishlist": "Add to wishlist",
+    "removeFromWishlist": "Remove from wishlist",
     "viewDetails": "View full details",
     "quantity": "Quantity",
     "selectSize": "Select size",

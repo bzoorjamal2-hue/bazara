@@ -186,7 +186,9 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
           className={`absolute end-2 top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full transition active:scale-90 ${
             liked ? 'bg-red-500/90 text-white' : 'bg-black/45 text-white hover:bg-black/60'
           }`}
-          aria-label="wishlist"
+          aria-label={liked ? t('product.removeFromWishlist') : t('product.addToWishlist')}
+          aria-pressed={liked}
+          title={liked ? t('product.removeFromWishlist') : t('product.addToWishlist')}
         >
           <HeartIcon className="h-4 w-4" filled={liked} />
         </button>
