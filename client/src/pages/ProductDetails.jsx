@@ -412,8 +412,10 @@ export default function ProductDetails() {
           )}
         </div>
 
-        {/* التفاصيل */}
-        <div className="flex flex-col">
+        {/* التفاصيل — بعد توسيع حاوية الموقع صار العمود يتجاوز 700px على الشاشات
+            العريضة، وسطر النص الطويل مُتعب للقراءة. نحدّه بعرض مريح ونبقيه ملتصقاً
+            ببداية العمود (لا نمدّه لملء المساحة لمجرّد وجودها). */}
+        <div className="flex w-full flex-col 2xl:max-w-[620px]">
           <div className="flex items-start justify-between gap-3">
             <span className="badge bg-gold-400/10 text-gold-200">{t(`categories.${product.category}`)}</span>
             <div className="flex items-center gap-2">
