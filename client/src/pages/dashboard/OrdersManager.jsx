@@ -351,7 +351,7 @@ export default function OrdersManager() {
                 <div key={a.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white/5 p-3">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-stone-100">
-                      {a.name || a.phone} <span dir="ltr" className="ms-1 text-xs font-normal text-stone-400">{a.phone}</span>
+                      {a.name || a.phone} {a.phone && <a href={`tel:${String(a.phone).replace(/\s/g, '')}`} dir="ltr" className="ms-1 text-xs font-normal text-stone-400 underline-offset-2 hover:text-gold-200 hover:underline">{a.phone}</a>}
                     </p>
                     <p className="mt-0.5 text-xs text-stone-400">
                       {t('dashboard.abandoned.itemsCount', { count: pieces })}{a.city ? ` · ${a.city}` : ''} · ₪{Number(a.total || 0).toFixed(0)} · {new Date(a.updatedAt).toLocaleString()}
