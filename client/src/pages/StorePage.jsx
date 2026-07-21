@@ -30,6 +30,21 @@ import Countdown from '../components/Countdown.jsx';
 const PAGE_SIZE = 8;
 const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
 
+// نفد المخزون: صفر عام أو نفاد كل كميات الألوان/النمر (النموذج التفصيلي)
+const isSoldOut = (p) => {
+  const cs = p?.colorStock && typeof p.colorStock === 'object' ? p.colorStock : null;
+  if (cs && Object.keys(cs).length) {
+    const v = Object.values(cs).flatMap((sz) => Object.values(sz || {})).filter((q) => typeof q === 'number');
+    return v.length > 0 && v.reduce((a, b) => a + b, 0) === 0;
+  }
+  const ss = p?.sizeStock && typeof p.sizeStock === 'object' ? p.sizeStock : null;
+  if (ss && Object.keys(ss).length) {
+    const v = Object.values(ss).filter((q) => typeof q === 'number');
+    return v.length > 0 && v.reduce((a, b) => a + b, 0) === 0;
+  }
+  return p?.stock === 0;
+};
+
 export default function StorePage() {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -54,6 +69,7 @@ export default function StorePage() {
   const [sizesSel, setSizesSel] = useState([]); // مقاسات مختارة (متعدّد)
   const [colorsSel, setColorsSel] = useState([]); // ألوان مختارة (متعدّد)
   const [offersOnly, setOffersOnly] = useState(false);
+  const [stockOnly, setStockOnly] = useState(false); // إخفاء القطع المنتهية
   const [openSheet, setOpenSheet] = useState(null); // 'sort' | 'size' | 'color' | 'offers'
   const [page, setPage] = useState(1);
   const [shareOpen, setShareOpen] = useState(false); // نافذة شاركي واربحي
@@ -108,7 +124,7 @@ export default function StorePage() {
     api.post(`/public/store/${s.slug}/visit`).catch(() => {});
   }, [data?.store?.slug, isOwner]);
 
-  useEffect(() => setPage(1), [cat, q, sort, sizesSel, colorsSel, offersOnly]);
+  useEffect(() => setPage(1), [cat, q, sort, sizesSel, colorsSel, offersOnly, stockOnly]);
   useEffect(() => { setStories(data?.stories || []); }, [data]); // مزامنة الستوريات
   // تحويل لرابط المتجر الجديد إن فُتح برابط قديم (عشان يبقى الرابط الرسمي نظيفاً)
   useEffect(() => {
@@ -143,7 +159,8 @@ export default function StorePage() {
       const matchSize = sizesSel.length === 0 || sizesSel.some((s) => prodSizes.includes(s));
       const matchColor = colorsSel.length === 0 || productColors(p).some((c) => colorsSel.includes(c));
       const matchOffers = !offersOnly || (p.oldPrice && p.oldPrice > p.price);
-      return matchQ && matchCat && matchSize && matchColor && matchOffers;
+      const matchStock = !stockOnly || !isSoldOut(p);
+      return matchQ && matchCat && matchSize && matchColor && matchOffers && matchStock;
     });
     const cmp = {
       newest: (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
@@ -152,24 +169,10 @@ export default function StorePage() {
       popular: (a, b) => (b.soldCount || 0) - (a.soldCount || 0),
       discount: (a, b) => ((b.oldPrice > b.price ? 1 - b.price / b.oldPrice : 0) - (a.oldPrice > a.price ? 1 - a.price / a.oldPrice : 0)),
     }[sort];
-    // نفد المخزون: صفر عام أو نفاد كل كميات الألوان/النمر (النموذج التفصيلي)
-    const soldOut = (p) => {
-      const cs = p?.colorStock && typeof p.colorStock === 'object' ? p.colorStock : null;
-      if (cs && Object.keys(cs).length) {
-        const v = Object.values(cs).flatMap((sz) => Object.values(sz || {})).filter((q) => typeof q === 'number');
-        return v.length > 0 && v.reduce((a, b) => a + b, 0) === 0;
-      }
-      const ss = p?.sizeStock && typeof p.sizeStock === 'object' ? p.sizeStock : null;
-      if (ss && Object.keys(ss).length) {
-        const v = Object.values(ss).filter((q) => typeof q === 'number');
-        return v.length > 0 && v.reduce((a, b) => a + b, 0) === 0;
-      }
-      return p?.stock === 0;
-    };
     // المتوفّر أولاً دائماً، ثم الفرز المختار داخل كل مجموعة (المنتهي لأسفل)
-    list = [...list].sort((a, b) => (soldOut(a) - soldOut(b)) || (cmp ? cmp(a, b) : 0));
+    list = [...list].sort((a, b) => (isSoldOut(a) - isSoldOut(b)) || (cmp ? cmp(a, b) : 0));
     return list;
-  }, [data, q, cat, sizesSel, colorsSel, offersOnly, sort]);
+  }, [data, q, cat, sizesSel, colorsSel, offersOnly, stockOnly, sort]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -330,6 +333,10 @@ export default function StorePage() {
                   <Chip onClick={() => setOpenSheet('color')} active={colorsSel.length > 0}>{t('store.colorLabel')}{colorsSel.length ? ` (${colorsSel.length})` : ''}</Chip>
                 )}
                 <Chip onClick={() => setOpenSheet('offers')} active={offersOnly}>{t('store.specialOffers')}</Chip>
+                {/* تبديل مباشر (بلا شيت): يظهر فقط إن وُجدت قطعة منتهية فعلاً */}
+                {data.products.some(isSoldOut) && (
+                  <Chip onClick={() => setStockOnly((v) => !v)} active={stockOnly}>{t('filters.stockOnly')}</Chip>
+                )}
               </div>
             </div>
           )}
@@ -338,10 +345,10 @@ export default function StorePage() {
             <div className="glass flex flex-col items-center gap-4 p-10 text-center text-stone-400">
               <p>{data.products.length === 0 ? t('store.noProducts') : t('common.noResults')}</p>
               {/* عند وجود فلاتر نشطة نعطي مخرجاً بضغطة (بحث/فئة/مقاس/لون/عروض) */}
-              {data.products.length > 0 && (q || cat !== 'all' || sizesSel.length || colorsSel.length || offersOnly) && (
+              {data.products.length > 0 && (q || cat !== 'all' || sizesSel.length || colorsSel.length || offersOnly || stockOnly) && (
                 <button
                   type="button"
-                  onClick={() => { setQ(''); setSizesSel([]); setColorsSel([]); setOffersOnly(false); setSearchParams({}); }}
+                  onClick={() => { setQ(''); setSizesSel([]); setColorsSel([]); setOffersOnly(false); setStockOnly(false); setSearchParams({}); }}
                   className="rounded-full border border-wine/30 px-5 py-2 text-sm font-bold text-wine transition hover:bg-wine hover:text-cream"
                 >
                   {t('filters.clear')}
