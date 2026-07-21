@@ -232,7 +232,11 @@ export default function Navbar() {
           </div>
 
           {/* الشعار بالنص (في المنتصف تماماً) */}
-          <Link to={user ? '/dashboard' : '/'} className="absolute start-1/2 flex -translate-x-1/2 flex-col items-center leading-none rtl:translate-x-1/2">
+          <Link
+            to={user ? '/dashboard' : '/'}
+            onClick={() => { if (pathname === (user ? '/dashboard' : '/')) window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            className="absolute start-1/2 flex -translate-x-1/2 flex-col items-center leading-none rtl:translate-x-1/2"
+          >
             <span className="font-display text-2xl font-extrabold tracking-wide text-wine sm:text-[28px]">Bazara</span>
             <span className="mt-1 flex items-center gap-1.5 text-[10px] font-bold tracking-[0.35em] text-wine/45">
               <span className="h-px w-4 bg-wine/25" /> بازارا <span className="h-px w-4 bg-wine/25" />
