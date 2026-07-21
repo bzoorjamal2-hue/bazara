@@ -281,7 +281,11 @@ export default function CartDrawer() {
                 <BackIcon className="h-4 w-4" />
               </button>
             )}
-            {view === 'cart' ? <><CartIcon className="h-5 w-5" /> {t('cart.title')}</> : view === 'done' ? t('co.doneTitle') : t('co.title')}
+            {view === 'cart' ? (
+              <><CartIcon className="h-5 w-5" /> {t('cart.title')}
+                {items.length > 0 && <span className="rounded-full bg-wine/15 px-2 py-0.5 text-sm font-bold text-wine">{items.reduce((s, i) => s + i.qty, 0)}</span>}
+              </>
+            ) : view === 'done' ? t('co.doneTitle') : t('co.title')}
           </h2>
           <CloseButton onClick={close} variant="wine" />
         </div>
