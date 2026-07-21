@@ -101,6 +101,7 @@ export default function Search() {
             ref={inputRef}
             value={input}
             onChange={(e) => onType(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { clearTimeout(timerRef.current); const v = input.trim(); setParams(v ? withScope({ q: v }) : withScope({}), { replace: true }); inputRef.current?.blur(); } }}
             placeholder={t('searchPage.placeholder')}
             enterKeyHint="search"
             className="w-full rounded-full border border-wine/15 bg-white py-3 pe-11 ps-11 text-[16px] text-stone-100 shadow-[0_6px_18px_-12px_rgba(94,70,54,0.35)] outline-none transition focus:border-wine/40"
