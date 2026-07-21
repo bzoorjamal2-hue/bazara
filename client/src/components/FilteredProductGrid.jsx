@@ -195,7 +195,20 @@ export default function FilteredProductGrid({ products, whatsapp, defaultSort = 
                 <p className="mb-2 text-sm font-semibold text-stone-300">{t('filters.price')}</p>
                 {/* dir=ltr مقصود: النطاقات الرقمية تُقرأ يسار→يمين عالمياً (الأصغر يساراً)
                     حتى داخل واجهة عربية — وهذا أيضاً يجنّبنا انعكاس حساب النِسَب */}
-                <div dir="ltr" className="relative h-6 select-none">
+                <div
+                  dir="ltr"
+                  className="relative h-6 cursor-pointer select-none"
+                  onClick={(e) => {
+                    // النقر على المسار يقفز بأقرب مقبض. نتجاهل النقر الواقع على المدخلين
+                    // نفسيهما — وإلا أطلق انتهاءُ السحب نقرةً تعيد ضبط القيمة
+                    if (e.target.tagName === 'INPUT') return;
+                    const r = e.currentTarget.getBoundingClientRect();
+                    const ratio = Math.min(1, Math.max(0, (e.clientX - r.left - 9) / (r.width - 18)));
+                    const v = Math.round(facets.min + ratio * span);
+                    if (Math.abs(v - lo) <= Math.abs(v - hi)) setPmin(String(Math.min(v, hi)));
+                    else setPmax(String(Math.max(v, lo)));
+                  }}
+                >
                   <span className="absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-wine/15" />
                   <span className="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-wine" style={{ left: `${pctOf(lo)}%`, width: `${pctOf(hi) - pctOf(lo)}%` }} />
                   <input
