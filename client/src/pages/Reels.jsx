@@ -311,6 +311,12 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   const colors = hasCS ? Object.keys(colorStock) : (p.color || '').split(',').map((s) => s.trim()).filter(Boolean);
   const hasDiscount = p.oldPrice && p.oldPrice > p.price;
   const discountPct = hasDiscount ? Math.round((1 - p.price / p.oldPrice) * 100) : 0;
+  // نفد كلياً؟ (صفر عام أو نفاد كل كميات الألوان/النمر) — بدونها كان شيت الاختيار
+  // يُفتح فارغاً بلا نمرة قابلة للاختيار فتحتار الزبونة
+  const detailedQty = hasCS
+    ? Object.values(colorStock).flatMap((sz) => Object.values(sz || {})).filter((q) => typeof q === 'number')
+    : Object.values(sizeStock).filter((q) => typeof q === 'number');
+  const soldOut = p.stock === 0 || (detailedQty.length > 0 && detailedQty.reduce((a, b) => a + b, 0) === 0);
 
   useEffect(() => {
     const vid = vidRef.current;
@@ -667,12 +673,12 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
           </div>
           <div className="mt-1 flex items-stretch gap-2">
             {/* شراء فوري من الريل — الزر الأساسي (يفتح إتمام الطلب مباشرة بعد الاختيار) */}
-            <button onClick={quickBuy}
-              className="flex flex-1 items-center justify-center gap-2 rounded-full bg-white py-3 text-sm font-bold text-wine shadow-lg transition active:scale-[0.98]">
-              <BagIcon className="h-5 w-5" /> {t('product.buyNow')}
+            <button onClick={quickBuy} disabled={soldOut}
+              className="flex flex-1 items-center justify-center gap-2 rounded-full bg-white py-3 text-sm font-bold text-wine shadow-lg transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:active:scale-100">
+              <BagIcon className="h-5 w-5" /> {soldOut ? t('product.outOfStock') : t('product.buyNow')}
             </button>
-            <button onClick={quickAdd} aria-label={t('reels.add')} title={t('reels.add')}
-              className="flex w-12 items-center justify-center rounded-full bg-white/20 text-white ring-1 ring-white/25 transition active:scale-95">
+            <button onClick={quickAdd} disabled={soldOut} aria-label={t('reels.add')} title={t('reels.add')}
+              className="flex w-12 items-center justify-center rounded-full bg-white/20 text-white ring-1 ring-white/25 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 disabled:active:scale-100">
               <CartIcon className="h-5 w-5" />
             </button>
             <Link to={`/product/${p.id}${selColor ? `?color=${encodeURIComponent(selColor)}` : ''}`}
