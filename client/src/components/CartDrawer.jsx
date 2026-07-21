@@ -378,6 +378,9 @@ export default function CartDrawer() {
                           <span className="w-5 text-center text-sm font-semibold">{i.qty}</span>
                           <button onClick={() => setQty(i.key, i.qty + 1)} disabled={i.maxQty != null && i.qty >= i.maxQty} aria-label="+" className="flex h-6 w-6 items-center justify-center rounded-full leading-none text-gold-200 transition hover:bg-gold-400/10 disabled:opacity-30">+</button>
                         </div>
+                        {i.maxQty != null && i.maxQty > 0 && i.maxQty <= 3 && (
+                          <span className="mt-1 text-[10px] font-bold text-red-600">{t('product.lastFew', { count: i.maxQty })}</span>
+                        )}
                       </div>
                     </div>
                   ))}
