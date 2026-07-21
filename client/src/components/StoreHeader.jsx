@@ -47,6 +47,14 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
   const term = norm(q);
   const suggestions = term ? products.filter((p) => norm(p.name).includes(term)).slice(0, 6) : [];
   const [collapsed, setCollapsed] = useState(false);
+  // الهيدر داخل الصفحة فيُعاد تركيبه بكل تنقّل: يبدأ منفرداً ثم ينطوي بحركة 300ms بعد
+  // استعادة موضع التمرير — كان يبدو "يتشكّل" بكل رجوع. نلغي الحركة لنافذة قصيرة بعد
+  // التركيب، فيتّخذ شكله النهائي فوراً ويبقى ثابتاً بصرياً.
+  const [noAnim, setNoAnim] = useState(true);
+  useEffect(() => {
+    const id = setTimeout(() => setNoAnim(false), 450);
+    return () => clearTimeout(id);
+  }, []);
   useScrollLock(drawer);
 
   // طيّ الهيدر عند التمرير عبر تبديل حالة واحدة + انتقال CSS سلس (بدون تحريك التخطيط
@@ -86,7 +94,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
       <div className="mx-auto max-w-6xl px-4 py-2.5 sm:px-6">
         {/* الصف الأول: اسم/شعار المتجر + زر القائمة (☰) — يتقلّص بانتقال CSS سلس */}
         <div
-          className="grid overflow-hidden transition-[grid-template-rows,opacity,margin] duration-300 ease-out motion-reduce:transition-none"
+          className={`grid overflow-hidden motion-reduce:transition-none ${noAnim ? 'transition-none' : 'transition-[grid-template-rows,opacity,margin] duration-300 ease-out'}`}
           style={{ gridTemplateRows: collapsed ? '0fr' : '1fr', opacity: collapsed ? 0 : 1, marginBottom: collapsed ? 0 : 8 }}
         >
           <div className="min-h-0 overflow-hidden">
@@ -120,7 +128,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
         <div className="flex items-center">
           {/* زر القائمة المُصغّر — يظهر بنعومة عند التمرير على يمين البحث (جهة البداية) */}
           <div
-            className="flex shrink-0 items-center justify-center overflow-hidden transition-[width,opacity,margin] duration-300 ease-out motion-reduce:transition-none"
+            className={`flex shrink-0 items-center justify-center overflow-hidden motion-reduce:transition-none ${noAnim ? 'transition-none' : 'transition-[width,opacity,margin] duration-300 ease-out'}`}
             style={{ width: collapsed ? 36 : 0, opacity: collapsed ? 1 : 0, marginInlineEnd: collapsed ? 10 : 0, pointerEvents: collapsed ? 'auto' : 'none' }}
           >
             <MenuBtn onOpen={openMenu} />

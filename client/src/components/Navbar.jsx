@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -135,6 +135,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [acctOpen, setAcctOpen] = useState(false); // قائمة الحساب المنبثقة (من الأفاتار)
   const [scrolled, setScrolled] = useState(false);
+  const [noAnim, setNoAnim] = useState(false); // إلغاء حركة الهيدر لحظة تغيّر الصفحة
   const [newOrders, setNewOrders] = useState(0); // شارة الطلبات الجديدة داخل قائمة الحساب
 
   // نجلب عدد الطلبات الجديدة عند فتح القائمة → نُظهر شارة على "الطلبات" ليعرف المالك مصدر الإشعار
@@ -166,6 +167,15 @@ export default function Navbar() {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  // عند تغيّر الصفحة (خاصةً الرجوع مع استعادة موضع التمرير): الصفحة الجديدة تبدأ من 0
+  // ثم يُستعاد الموضع، فكان الهيدر ينفرد ثم ينطوي بحركة 300ms أمام الزائر ("يتشكّل").
+  // نلغي الحركة لنافذة قصيرة، فيتّخذ شكله النهائي فوراً ويبقى ثابتاً بصرياً.
+  useLayoutEffect(() => {
+    setNoAnim(true);
+    const id = setTimeout(() => setNoAnim(false), 450);
+    return () => clearTimeout(id);
+  }, [pathname, search]);
 
   // صف البحث الشامل يظهر بصفحات التصفّح فقط (قائمة بيضاء) — كان يظهر بأماكن خاطئة
   // كالريلز وصفحة المنتج ويغطّي المحتوى أو يزاحمه
@@ -208,7 +218,7 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50">
       <nav
-        className={`app-navbar relative flex w-full justify-center px-3 py-2.5 transition-shadow duration-300 sm:px-6 ${scrolled ? 'shadow-md' : ''}`}
+        className={`app-navbar relative flex w-full justify-center px-3 py-2.5 sm:px-6 ${noAnim ? 'transition-none' : 'transition-shadow duration-300'} ${scrolled ? 'shadow-md' : ''}`}
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.625rem)' }}
       >
         <div className="w-full max-w-6xl">
@@ -295,7 +305,7 @@ export default function Navbar() {
 
         {/* خانة البحث الشامل تحت الشعار — تنكمش بنعومة عند النزول (زي هيدر متاجر المشتركين) */}
         {showSearchRow && (
-          <div className={`overflow-hidden transition-all duration-300 ease-out ${scrolled ? 'max-h-0 opacity-0' : 'max-h-14 pt-2 opacity-100'}`}>
+          <div className={`overflow-hidden ${noAnim ? 'transition-none' : 'transition-all duration-300 ease-out'} ${scrolled ? 'max-h-0 opacity-0' : 'max-h-14 pt-2 opacity-100'}`}>
             <Link
               to="/search"
               className="flex items-center gap-2.5 rounded-full border border-wine/15 bg-white px-4 py-2.5 text-sm text-stone-400 shadow-[0_6px_18px_-12px_rgba(94,70,54,0.35)] transition active:scale-[0.99]"
