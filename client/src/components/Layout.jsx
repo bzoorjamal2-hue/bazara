@@ -7,6 +7,7 @@ import WishlistDrawer from './WishlistDrawer.jsx';
 import CartReminder from './CartReminder.jsx';
 import OfflineBanner from './OfflineBanner.jsx';
 import BottomNav from './BottomNav.jsx';
+import ScrollToTopButton from './ScrollToTopButton.jsx';
 import PullToRefresh from './PullToRefresh.jsx';
 import { isStandalone } from '../utils/pwa.js';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
@@ -55,6 +56,7 @@ export default function Layout({ children }) {
       {/* لا نُظهر تذكير السلة على صفحات الحساب/الترحيب (يغطّي النموذج) */}
       {!isAuthFull && !isAppWelcome && <CartReminder />}
       <OfflineBanner />
+      {!isReels && <ScrollToTopButton />}
       {showBottomNav && <BottomNav />}
     </div>
   );
