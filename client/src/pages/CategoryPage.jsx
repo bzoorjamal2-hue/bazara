@@ -105,6 +105,7 @@ export default function CategoryPage() {
             <CatThumb cat={cat} className="h-7 w-7" />
           )}
           {label}
+          {products?.length > 0 && <span className="text-xs font-medium text-wine/50">· {products.length} {t('store.products')}</span>}
         </span>
       </nav>
 
