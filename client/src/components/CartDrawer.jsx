@@ -11,6 +11,7 @@ import { CartIcon, BagIcon, XIcon, PinIcon, GiftIcon, TicketIcon, CheckIcon, Rec
 import api from '../api/client.js';
 import { sizeLabel } from '../utils/sizes.js';
 import { colorToCss } from '../utils/colorDot.js';
+import { cldThumb } from '../utils/cloudinary.js';
 import { getRef, clearRef } from '../utils/referral.js';
 import { trackPixel } from '../utils/pixels.js';
 
@@ -349,7 +350,7 @@ export default function CartDrawer() {
                     <div key={i.key} className="glass flex gap-3 p-3">
                       {/* الصورة والاسم روابط لصفحة المنتج (تغلق الدرج) — مراجعة القطعة قبل الإتمام */}
                       <Link to={`/product/${i.id}`} onClick={close} className="shrink-0">
-                        <img src={i.imageUrl || 'https://placehold.co/120x160/f1e9dd/5c1a2e?text=%F0%9F%91%97'} alt={i.name} className="h-20 w-16 rounded-xl object-cover shadow-sm transition hover:opacity-85" />
+                        <img src={i.imageUrl ? cldThumb(i.imageUrl, 200) : 'https://placehold.co/120x160/f1e9dd/5c1a2e?text=%F0%9F%91%97'} alt={i.name} loading="lazy" decoding="async" className="h-20 w-16 rounded-xl object-cover shadow-sm transition hover:opacity-85" />
                       </Link>
                       <div className="min-w-0 flex-1">
                         <Link to={`/product/${i.id}`} onClick={close} className="block truncate font-display text-sm font-semibold text-stone-100 hover:text-gold-200">{i.name}</Link>
