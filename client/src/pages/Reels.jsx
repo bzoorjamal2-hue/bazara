@@ -12,6 +12,7 @@ import useScrollLock from '../hooks/useScrollLock.js';
 import Spinner from '../components/Spinner.jsx';
 import Strike from '../components/Strike.jsx';
 import { sizeLabel } from '../utils/sizes.js';
+import { setMySize } from '../utils/mySize.js';
 import { goBack } from '../utils/nav.js';
 
 const MUTE_KEY = 'bz_reels_muted';
@@ -723,7 +724,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
                       const q = hasCS ? colorStock[selColor]?.[s] : sizeStock[s];
                       const on = selSize === s;
                       return (
-                        <button key={s} onClick={() => setSelSize(s)}
+                        <button key={s} onClick={() => { setSelSize(s); setMySize(s); }}
                           className={`flex min-w-11 flex-col items-center rounded-xl border px-3.5 py-1.5 transition ${on ? 'border-wine bg-wine text-cream' : 'border-wine/30 text-wine hover:bg-wine/10'}`}>
                           <span className="text-sm font-semibold leading-none">{sizeLabel(s, t)}</span>
                           {typeof q === 'number' && <span className={`mt-1 text-[10px] font-medium leading-none ${on ? 'text-cream/80' : 'text-wine/55'}`}>{t('product.leftShort', { count: q })}</span>}

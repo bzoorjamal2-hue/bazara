@@ -732,6 +732,8 @@
     "shareCopied": "Link copied ✓",
     "viewingNow": "{{count}} viewed this in the last 30 minutes",
     "soldCount": "{{count}} sold",
+    "mySize": "Your usual size",
+    "mySizeHint": "Your usual size ({{size}}) is available",
     "savePct": "Save {{pct}}%",
     "saveAmount": "Save {{amount}}",
     "pickSize": "Please select a size",

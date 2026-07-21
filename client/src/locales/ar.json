@@ -732,6 +732,8 @@
     "shareCopied": "تم نسخ الرابط ✓",
     "viewingNow": "{{count}} شاهدن هذا المنتج خلال آخر نصف ساعة",
     "soldCount": "تم بيع {{count}} قطعة",
+    "mySize": "مقاسك المعتاد",
+    "mySizeHint": "مقاسك المعتاد ({{size}}) متوفّر",
     "savePct": "وفّري {{pct}}%",
     "saveAmount": "توفير {{amount}}",
     "pickSize": "يرجى اختيار المقاس",

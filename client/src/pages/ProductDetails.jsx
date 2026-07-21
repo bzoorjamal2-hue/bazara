@@ -8,6 +8,7 @@ import StarRating from '../components/StarRating.jsx';
 import Lightbox from '../components/Lightbox.jsx';
 import ProductRail from '../components/ProductRail.jsx';
 import Strike from '../components/Strike.jsx';
+import { getMySize, setMySize } from '../utils/mySize.js';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
@@ -56,6 +57,7 @@ export default function ProductDetails() {
   }, [product?.id]);
   const [lightbox, setLightbox] = useState(false);
   const [descExp, setDescExp] = useState(false); // طيّ الوصف الطويل بـ«اقرأ المزيد»
+  const [mySize] = useState(getMySize); // مقاسها المعتاد — نميّزه فقط (بلا اختيار تلقائي)
   const [sizeGuide, setSizeGuide] = useState(false);
   const [notifyPhone, setNotifyPhone] = useState('');
   const [notifyBusy, setNotifyBusy] = useState(false);
@@ -534,15 +536,18 @@ export default function ProductDetails() {
                       const soldOut = sizeSoldOut(s);
                       const qty = typeof qtyFor(s) === 'number' ? qtyFor(s) : null;
                       const on = selSize === s;
+                      // مقاسها المعتاد: حلقة ذهبية خفيفة تدلّها عليه فوراً (بلا اختيار تلقائي)
+                      const usual = !on && !soldOut && mySize && s === mySize;
                       return (
                         <button
                           key={s}
                           type="button"
                           disabled={soldOut}
-                          onClick={() => { setSelSize(s); setPickErr(''); }}
-                          className={`flex min-w-[3.75rem] flex-col items-center rounded-xl border px-3 py-1.5 text-center transition ${
+                          title={usual ? t('product.mySize') : undefined}
+                          onClick={() => { setSelSize(s); setMySize(s); setPickErr(''); }}
+                          className={`relative flex min-w-[3.75rem] flex-col items-center rounded-xl border px-3 py-1.5 text-center transition ${
                             on ? 'border-wine bg-wine text-cream' : 'border-wine/30 text-wine hover:bg-wine/10'
-                          } ${soldOut ? 'cursor-not-allowed border-stone-300/50 bg-transparent text-stone-400 opacity-60' : ''}`}
+                          } ${soldOut ? 'cursor-not-allowed border-stone-300/50 bg-transparent text-stone-400 opacity-60' : ''} ${usual ? 'ring-2 ring-gold-400/70 ring-offset-1' : ''}`}
                         >
                           <span className={`text-sm font-bold leading-none ${soldOut ? 'strike' : ''}`}>{sizeLabel(s, t)}</span>
                           {/* المتبقّي بنفس التنسيق لكل النمر: رمادي = متوفّر، أحمر = نفد */}
@@ -555,6 +560,13 @@ export default function ProductDetails() {
                       );
                     })}
                   </div>
+                  {/* شرح الحلقة الذهبية — يظهر فقط إن كان مقاسها المعتاد متاحاً هنا وغير مختار بعد */}
+                  {mySize && !selSize && availSizes.includes(mySize) && !sizeSoldOut(mySize) && (
+                    <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-gold-600">
+                      <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-gold-400/70" />
+                      {t('product.mySizeHint', { size: sizeLabel(mySize, t) })}
+                    </p>
+                  )}
                 </>
               )}
             </div>
