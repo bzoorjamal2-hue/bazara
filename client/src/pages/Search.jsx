@@ -178,7 +178,7 @@ export default function Search() {
 
               {results.products.length > 0 ? (
                 <section>
-                  <h2 className="mb-3 text-sm font-bold text-stone-300">{t('searchPage.results')}</h2>
+                  <h2 className="mb-3 text-sm font-bold text-stone-300">{t('searchPage.results')} <span className="font-medium text-stone-500">· {results.products.length} {t('store.products')}</span></h2>
                   <FilteredProductGrid products={results.products} />
                 </section>
               ) : results.stores.length === 0 && !busy && (
