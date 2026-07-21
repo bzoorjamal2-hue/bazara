@@ -47,22 +47,25 @@ export default function FilteredProductGrid({ products, whatsapp, defaultSort = 
   const [selColors, setSelColors] = useState(Array.isArray(saved.selColors) ? saved.selColors : []);
   const [selSizes, setSelSizes] = useState(Array.isArray(saved.selSizes) ? saved.selSizes : []);
   const [saleOnly, setSaleOnly] = useState(!!saved.saleOnly);
+  const [stockOnly, setStockOnly] = useState(!!saved.stockOnly);
   const [pmin, setPmin] = useState(saved.pmin ?? '');
   const [pmax, setPmax] = useState(saved.pmax ?? '');
   const [open, setOpen] = useState(false);
   useEffect(() => {
-    try { sessionStorage.setItem(memKey, JSON.stringify({ sort, selColors, selSizes, saleOnly, pmin, pmax })); } catch { /* تجاهل */ }
-  }, [memKey, sort, selColors, selSizes, saleOnly, pmin, pmax]);
+    try { sessionStorage.setItem(memKey, JSON.stringify({ sort, selColors, selSizes, saleOnly, stockOnly, pmin, pmax })); } catch { /* تجاهل */ }
+  }, [memKey, sort, selColors, selSizes, saleOnly, stockOnly, pmin, pmax]);
 
   const facets = useMemo(() => {
     const colorMap = new Map();
     const sizeSet = new Set();
     let anySale = false;
+    let anySoldOut = false;
     let min = Infinity; let max = -Infinity;
     for (const p of products || []) {
       for (const c of productColors(p)) { if (!colorMap.has(c)) { const css = colorToCss(c); if (css) colorMap.set(c, css); } }
       for (const s of productSizes(p)) sizeSet.add(s);
       if (discountPct(p) > 0) anySale = true;
+      if (isSoldOut(p)) anySoldOut = true;
       const pr = Number(p.price) || 0;
       if (pr < min) min = pr;
       if (pr > max) max = pr;
@@ -72,7 +75,7 @@ export default function FilteredProductGrid({ products, whatsapp, defaultSort = 
       const ia = SIZES.indexOf(a); const ib = SIZES.indexOf(b);
       return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
     });
-    return { colors, sizes, anySale, min: min === Infinity ? 0 : Math.floor(min), max: max === -Infinity ? 0 : Math.ceil(max) };
+    return { colors, sizes, anySale, anySoldOut, min: min === Infinity ? 0 : Math.floor(min), max: max === -Infinity ? 0 : Math.ceil(max) };
   }, [products]);
 
   const view = useMemo(() => {
@@ -80,6 +83,7 @@ export default function FilteredProductGrid({ products, whatsapp, defaultSort = 
     if (selColors.length) list = list.filter((p) => productColors(p).some((c) => selColors.includes(c)));
     if (selSizes.length) list = list.filter((p) => productSizes(p).some((s) => selSizes.includes(s)));
     if (saleOnly) list = list.filter((p) => discountPct(p) > 0);
+    if (stockOnly) list = list.filter((p) => !isSoldOut(p));
     const lo = pmin !== '' ? Number(pmin) : null;
     const hi = pmax !== '' ? Number(pmax) : null;
     if (lo != null) list = list.filter((p) => (Number(p.price) || 0) >= lo);
@@ -95,11 +99,11 @@ export default function FilteredProductGrid({ products, whatsapp, defaultSort = 
     // المتوفّر أولاً دائماً، ثم الفرز المختار داخل كل مجموعة (المنتهي يهبط لأسفل)
     const cmp = by[sort] || by.new;
     return list.sort((a, b) => (isSoldOut(a) - isSoldOut(b)) || cmp(a, b));
-  }, [products, selColors, selSizes, saleOnly, pmin, pmax, sort]);
+  }, [products, selColors, selSizes, saleOnly, stockOnly, pmin, pmax, sort]);
 
   const toggle = (arr, set, v) => set(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
-  const activeCount = selColors.length + selSizes.length + (saleOnly ? 1 : 0) + (pmin !== '' || pmax !== '' ? 1 : 0);
-  const clearAll = () => { setSelColors([]); setSelSizes([]); setSaleOnly(false); setPmin(''); setPmax(''); };
+  const activeCount = selColors.length + selSizes.length + (saleOnly ? 1 : 0) + (stockOnly ? 1 : 0) + (pmin !== '' || pmax !== '' ? 1 : 0);
+  const clearAll = () => { setSelColors([]); setSelSizes([]); setSaleOnly(false); setStockOnly(false); setPmin(''); setPmax(''); };
 
   const sortOptions = [
     { value: 'new', label: t('filters.sortNew') },
@@ -191,14 +195,20 @@ export default function FilteredProductGrid({ products, whatsapp, defaultSort = 
               </div>
             </div>
           )}
-          <div className="flex items-center justify-between gap-3 pt-1">
-            {facets.anySale ? (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1">
+            {facets.anySale && (
               <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-stone-200">
                 <input type="checkbox" checked={saleOnly} onChange={(e) => setSaleOnly(e.target.checked)} className="h-4 w-4 accent-wine" />
                 {t('filters.saleOnly')}
               </label>
-            ) : <span />}
-            {activeCount > 0 && <button type="button" onClick={clearAll} className="text-sm font-semibold text-wine hover:underline">{t('filters.clear')}</button>}
+            )}
+            {facets.anySoldOut && (
+              <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-stone-200">
+                <input type="checkbox" checked={stockOnly} onChange={(e) => setStockOnly(e.target.checked)} className="h-4 w-4 accent-wine" />
+                {t('filters.stockOnly')}
+              </label>
+            )}
+            {activeCount > 0 && <button type="button" onClick={clearAll} className="ms-auto text-sm font-semibold text-wine hover:underline">{t('filters.clear')}</button>}
           </div>
         </div>
       )}

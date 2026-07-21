@@ -149,6 +149,7 @@
     "from": "From",
     "to": "To",
     "saleOnly": "On sale only",
+    "stockOnly": "In stock only",
     "clear": "Clear all",
     "results": "{{count}} products",
     "none": "No products match your filters — try loosening them"
