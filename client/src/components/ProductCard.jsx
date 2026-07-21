@@ -89,7 +89,14 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
   const activeCover = swatchImg || cover;
 
   // هل للمنتج خيارات (مقاس/لون)؟ عندها نفتح النظرة السريعة لاختيارها بدل الإضافة المباشرة
-  const hasOptions = Boolean((product.size && product.size.trim()) || (product.color && product.color.trim()));
+  // للمنتج خيارات إن كان له مقاس/لون نصّي أو مخزون ألوان/نمر تفصيلي (النموذج الجديد) —
+  // فنفتح النظرة السريعة لاختيارها بدل إضافته للسلة بلا مقاس/لون
+  const hasOptions = Boolean(
+    (product.size && product.size.trim()) ||
+    (product.color && product.color.trim()) ||
+    (product.colorStock && typeof product.colorStock === 'object' && Object.keys(product.colorStock).length) ||
+    (product.sizeStock && typeof product.sizeStock === 'object' && Object.keys(product.sizeStock).length)
+  );
 
   const onAdd = (e) => {
     e.preventDefault();
