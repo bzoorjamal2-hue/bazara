@@ -29,6 +29,11 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
   const imgRef = useRef(null);
   const qvTouch = useRef(null); // بداية لمسة السحب بين الصور
   useScrollLock(true);
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
   const gallery = [product.imageUrl, ...(product.images || [])].filter(Boolean);
   const poster = product.videoUrl ? cldVideoPoster(product.videoUrl) : '';
