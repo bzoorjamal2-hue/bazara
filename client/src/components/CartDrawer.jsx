@@ -67,7 +67,7 @@ const AREAS = [
 export default function CartDrawer() {
   const { t, i18n } = useTranslation();
   const ar = i18n.language !== 'en';
-  const { items, open, setOpen, remove, setQty, total, clear, checkoutIntent, setCheckoutIntent } = useCart();
+  const { items, open, setOpen, remove, setQty, total, count, clear, checkoutIntent, setCheckoutIntent } = useCart();
   const [view, setView] = useState('cart'); // 'cart' | 'checkout' | 'done'
   const [doneRef, setDoneRef] = useState(''); // رقم الطلب (المرجع) بعد النجاح
   const [refCopied, setRefCopied] = useState(false); // نُسخ رقم الطلب؟
@@ -284,7 +284,7 @@ export default function CartDrawer() {
             )}
             {view === 'cart' ? (
               <><CartIcon className="h-5 w-5" /> {t('cart.title')}
-                {items.length > 0 && <span className="rounded-full bg-wine/15 px-2 py-0.5 text-sm font-bold text-wine">{items.reduce((s, i) => s + i.qty, 0)}</span>}
+                {count > 0 && <span className="rounded-full bg-wine/15 px-2 py-0.5 text-sm font-bold text-wine">{count}</span>}
               </>
             ) : view === 'done' ? t('co.doneTitle') : t('co.title')}
           </h2>
