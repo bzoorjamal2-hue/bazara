@@ -118,7 +118,7 @@ export default function FilteredProductGrid({ products, whatsapp, defaultSort = 
   // شبكة أصغر من عنصرين لا تحتاج فرزاً/فلترة — نعرضها كما هي
   if ((products?.length || 0) < 2) {
     return (
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
         {(products || []).map((p, i) => <ProductCard key={p.id} product={p} index={i} whatsapp={whatsapp || p.storeWhatsapp} />)}
       </div>
     );
@@ -249,7 +249,7 @@ export default function FilteredProductGrid({ products, whatsapp, defaultSort = 
 
       {/* الشبكة */}
       {view.length ? (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
           {view.map((p, i) => <ProductCard key={p.id} product={p} index={i} whatsapp={whatsapp || p.storeWhatsapp} />)}
         </div>
       ) : (

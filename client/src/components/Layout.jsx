@@ -49,7 +49,10 @@ export default function Layout({ children }) {
     <div className="app-bg theme-pub flex min-h-screen flex-col">
       <PullToRefresh />
       {!hideChrome && <Navbar />}
-      <main className={`mx-auto w-full max-w-6xl flex-1 px-4 pt-5 sm:px-6 ${showBottomNav ? 'pb-bottomnav' : 'pb-8'}`}>{children}</main>
+      {/* عرض المحتوى ينمو مع الشاشة: كان محبوساً عند 1152px دائماً، فعلى شاشة 1920
+          يبقى 384px فارغاً من كل جهة (٤٠٪ من العرض) وعلى آيباد أفقي 107px. نوسّعه
+          تدريجياً مع الحفاظ على سطر قراءة معقول (لا نمدّه لكامل العرض). */}
+      <main className={`mx-auto w-full max-w-6xl flex-1 px-4 pt-5 sm:px-6 xl:max-w-[1320px] 2xl:max-w-[1600px] ${showBottomNav ? 'pb-bottomnav' : 'pb-8'}`}>{children}</main>
       {!hideChrome && !showBottomNav && <PublicFooter />}
       <CartDrawer />
       <WishlistDrawer />

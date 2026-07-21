@@ -29,7 +29,7 @@ export default function Categories() {
       </div>
 
       {/* بطاقات glass فاخرة بنفس ستايل بطاقات الموقع (hairline ذهبي + رفعة وظل عند المرور) */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
         {items.map((it, i) => (
           <Link
             key={it.key}

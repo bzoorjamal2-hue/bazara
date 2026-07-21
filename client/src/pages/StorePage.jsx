@@ -358,7 +358,7 @@ export default function StorePage() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
                 {pageItems.map((p, i) => <ProductCard key={p.id} product={p} index={i} whatsapp={wa} />)}
               </div>
               {/* «عرض المزيد» يراكم القطع بمكانها بدل ترقيم صفحات يقفز للأعلى — تصفّح
@@ -749,7 +749,7 @@ function ProductSection({ title, products, wa, ranked = false }) {
   return (
     <section className="mb-10">
       <SectionTitle>{title}</SectionTitle>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
         {products.map((p, i) => (
           <ProductCard key={p.id} product={p} index={i} whatsapp={wa} rank={ranked && i < 3 ? i + 1 : 0} />
         ))}

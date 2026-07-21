@@ -123,7 +123,7 @@ export default function Home() {
           {data.featured?.length > 0 && (
             <section className="mt-14">
               <SectionTitle>{t('home.featuredProducts')}</SectionTitle>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
                 {data.featured.map((p, i) => (
                   <ProductCard key={p.id} product={p} index={i} />
                 ))}
@@ -140,7 +140,7 @@ export default function Home() {
               // بطاقة بوتيك بغلاف (نمط أدلّة المتاجر العالمية): غلاف المتجر من بنراته،
               // تدرّج سفلي ليُقرأ أي نص فوق أي صورة، والشعار يجلس على حدّ الغلاف بحلقة كريمية.
               // بلا غلاف نستخدم تدرّجاً خمرياً فاخراً — لا تظهر بطاقة فارغة أبداً.
-              <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 2xl:grid-cols-5">
                 {data.stores.map((s, i) => {
                   const cover = (s.banners || []).find((b) => b?.bgType === 'image' && b?.bgValue)?.bgValue;
                   return (
@@ -198,7 +198,7 @@ export default function Home() {
             {data.products.length === 0 ? (
               <p className="text-stone-400">{t('common.noResults')}</p>
             ) : (
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
                 {data.products.map((p, i) => (
                   <ProductCard key={p.id} product={p} index={i} />
                 ))}
