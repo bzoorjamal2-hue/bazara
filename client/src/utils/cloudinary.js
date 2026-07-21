@@ -37,6 +37,13 @@ export function cldSrcSet(url, widths = [200, 300, 400, 600, 800]) {
     .join(', ');
 }
 
+// نسخة ضئيلة ضبابية (LQIP) تُعرض خلف الصورة حتى تجهز — تصل خلال أجزاء من الثانية
+// (بضعة كيلوبايت) فترى الزبونة ملامح القطعة وألوانها فوراً بدل مربّع رمادي.
+export function cldBlur(url, width = 32) {
+  if (typeof url !== 'string' || !url.includes('/upload/')) return undefined;
+  return url.replace('/upload/', `/upload/f_auto,q_auto:low,w_${width},e_blur:600,c_limit/`);
+}
+
 // رفع ملف (صورة/فيديو) مباشرة من جهاز المستخدم إلى Cloudinary، ويعيد الرابط الآمن.
 // resourceType: 'video' | 'image' | 'auto'
 export async function uploadToCloudinary(file, resourceType = 'auto', onProgress) {

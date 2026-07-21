@@ -8,7 +8,7 @@ import { useWishlist } from '../context/WishlistContext.jsx';
 import StarRating from './StarRating.jsx';
 import Countdown from './Countdown.jsx';
 import { HeartIcon, CartIcon, XIcon, StarIcon, FireIcon } from './icons.jsx';
-import { cldVideoPoster, cldThumb, cldSrcSet } from '../utils/cloudinary.js';
+import { cldVideoPoster, cldThumb, cldSrcSet, cldBlur } from '../utils/cloudinary.js';
 import { flyToCart } from '../utils/flyToCart.js';
 import { productColorDots } from '../utils/colorDot.js';
 import QuickViewModal from './QuickViewModal.jsx';
@@ -53,6 +53,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
   const videoPoster = product.videoUrl ? cldVideoPoster(product.videoUrl) : '';
   const coverRaw = hasImage || videoPoster || PLACEHOLDER;
   const cover = cldThumb(coverRaw, 500); // احتياط للمتصفّحات بلا دعم srcset
+  const blurUrl = cldBlur(coverRaw); // undefined للصور غير المستضافة على Cloudinary
   const hasDiscount = product.oldPrice && product.oldPrice > product.price;
   const discountPct = hasDiscount ? Math.round((1 - product.price / product.oldPrice) * 100) : 0;
   const liked = has(product.id);
@@ -155,9 +156,14 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
       {/* flex عمودي بارتفاع كامل: كل بطاقات الصف تتساوى طولاً مهما اختلف محتواها
           (نقاط ألوان/تقييم موجودة أو لا) — الشبكة تظل مصفوفة ومنسّقة */}
       <div className="glass flex h-full flex-col overflow-hidden !p-0 transition-shadow duration-300 group-hover:shadow-[0_22px_44px_-18px_rgba(46,33,24,0.35)]">
-      <div className="relative aspect-[3/4] shrink-0 overflow-hidden bg-ink-800">
-        {/* هيكل لامع حتى تجهز الصورة — يُزال بعد التحميل (فلا يبقى أي أنيميشن يعمل) */}
-        {!imgLoaded && <div className="skeleton absolute inset-0" aria-hidden="true" />}
+      {/* نسخة ضبابية ضئيلة خلف الصورة حتى تجهز (blur-up) — ملامح القطعة وألوانها
+          تظهر فوراً فيبدو التحميل أنعم من مربّع رمادي. نُبقي الهيكل اللامع للصور
+          غير المستضافة على Cloudinary (لا نسخة ضبابية لها) */}
+      <div
+        className="relative aspect-[3/4] shrink-0 overflow-hidden bg-ink-800 bg-cover bg-center"
+        style={blurUrl && !imgLoaded ? { backgroundImage: `url("${blurUrl}")` } : undefined}
+      >
+        {!imgLoaded && !blurUrl && <div className="skeleton absolute inset-0" aria-hidden="true" />}
         <img
           ref={imgRef}
           src={cover}
