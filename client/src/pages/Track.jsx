@@ -39,7 +39,13 @@ export default function Track() {
       try {
         const r = await api.get(`/public/product/${it.id}`);
         const p = r.data.product;
-        if (!p || p.stock === 0) continue;
+        if (!p) continue;
+        // نفد المخزون: صفر عام أو نفاد كل كميات الألوان/النمر (النموذج التفصيلي)
+        const detailed = p.colorStock && Object.keys(p.colorStock).length
+          ? Object.values(p.colorStock).flatMap((sz) => Object.values(sz || {})).filter((q) => typeof q === 'number')
+          : (p.sizeStock ? Object.values(p.sizeStock).filter((q) => typeof q === 'number') : []);
+        const soldOut = p.stock === 0 || (detailed.length > 0 && detailed.reduce((a, b) => a + b, 0) === 0);
+        if (soldOut) continue;
         add({ ...p, size: it.size || '', color: it.color || '', whatsapp: p.storeWhatsapp }, Math.max(1, Number(it.qty) || 1));
         added += 1;
       } catch { /* منتج محذوف — نتجاهله */ }
