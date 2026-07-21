@@ -411,9 +411,13 @@ export default function ProductDetails() {
           <h1 className="mt-2 font-display text-3xl font-extrabold text-stone-100">{product.name}</h1>
 
           {product.ratingCount > 0 && (
-            <div className="mt-2 flex items-center gap-2 text-sm text-stone-400">
-              <StarRating value={Math.round(product.ratingAvg)} /> {product.ratingAvg} ({product.ratingCount})
-            </div>
+            <button
+              type="button"
+              onClick={() => document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+              className="mt-2 flex items-center gap-2 text-sm text-stone-400 transition hover:text-gold-200"
+            >
+              <StarRating value={Math.round(product.ratingAvg)} /> {product.ratingAvg} <span className="underline underline-offset-2">({product.ratingCount})</span>
+            </button>
           )}
 
           {/* عدّاد المبيعات الحقيقي — دليل اجتماعي يطمئن الزبونة (يزيد عند تأكيد كل طلب) */}
@@ -744,7 +748,7 @@ function Reviews({ productId, reviews, onAdded }) {
   };
 
   return (
-    <section className="mt-8 grid gap-6 lg:grid-cols-[1fr_360px]">
+    <section id="reviews" className="mt-8 grid scroll-mt-20 gap-6 lg:grid-cols-[1fr_360px]">
       {/* قائمة المراجعات */}
       <div className="glass p-6">
         <h2 className="mb-4 font-display text-xl font-bold gradient-text">{t('product.reviews')}</h2>
