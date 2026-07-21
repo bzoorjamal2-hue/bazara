@@ -408,7 +408,7 @@ export default function StorePage() {
           </section>
 
           <ProductSection title={t('store.newArrivals')} products={newest} wa={wa} />
-          <ProductSection title={t('store.bestSellers')} products={bestSellers} wa={wa} />
+          <ProductSection title={t('store.bestSellers')} products={bestSellers} wa={wa} ranked />
           {onSale.length > 0 && <ProductSection title={t('store.saleSection')} products={onSale} wa={wa} />}
 
           {data.products.length > 0 && (
@@ -717,13 +717,17 @@ function SectionTitle({ children }) {
 }
 
 // قسم منتجات بعنوان مركزي (جديدنا / الأكثر مبيعاً)
-function ProductSection({ title, products, wa }) {
+// ranked: يرقّم أول ثلاث قطع (١·٢·٣) — أسلوب الاختيارات المنسّقة بالمتاجر العالمية.
+// نقتصر على الثلاثة الأولى عمداً: الترقيم الكامل يزحم الشبكة ويفقد معناه.
+function ProductSection({ title, products, wa, ranked = false }) {
   if (!products || products.length === 0) return null;
   return (
     <section className="mb-10">
       <SectionTitle>{title}</SectionTitle>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        {products.map((p, i) => <ProductCard key={p.id} product={p} index={i} whatsapp={wa} />)}
+        {products.map((p, i) => (
+          <ProductCard key={p.id} product={p} index={i} whatsapp={wa} rank={ranked && i < 3 ? i + 1 : 0} />
+        ))}
       </div>
     </section>
   );

@@ -22,7 +22,8 @@ const PLACEHOLDER =
   );
 
 // priceDrop: السعر وقت حفظ القطعة بالمفضّلة — لو أعلى من الحالي نعرض شارة "نزل السعر"
-export default function ProductCard({ product, index = 0, whatsapp = '', priceDrop = 0 }) {
+// rank: رقم ترتيب تحريري (١، ٢، ٣…) لأقسام مثل "الأكثر مبيعاً" — أسلوب الاختيارات المنسّقة
+export default function ProductCard({ product, index = 0, whatsapp = '', priceDrop = 0, rank = 0 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { add, setOpen } = useCart();
@@ -188,6 +189,14 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
             decoding="async"
             className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-opacity duration-300 group-hover:scale-110 ${swatchImg ? 'opacity-100' : 'opacity-0'}`}
           />
+        )}
+
+        {/* رقم ترتيب تحريري بزاوية الصورة (أقسام منسّقة كـ"الأكثر مبيعاً") — رقم كبير
+            بخط العرض على شريحة داكنة، لا يلتقط النقر */}
+        {rank > 0 && (
+          <span className="pointer-events-none absolute bottom-0 start-0 z-[3] flex h-11 w-11 items-end justify-center rounded-se-2xl bg-gradient-to-tr from-ink-950/85 to-ink-950/40 pb-1 font-display text-2xl font-extrabold leading-none text-[#e6c878]">
+            {rank}
+          </span>
         )}
 
         {/* عند النفاد: شريط واضح بوسط الصورة (فوق الإعتام) — لا يلتقط النقر فيبقى فتح المنتج شغّالاً */}

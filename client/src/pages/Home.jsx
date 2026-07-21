@@ -8,7 +8,7 @@ import ProductCard from '../components/ProductCard.jsx';
 import ProductRail from '../components/ProductRail.jsx';
 import { getRecent } from '../utils/recentlyViewed.js';
 import { getCache, setCache } from '../utils/apiCache.js';
-import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
+import { cldVideoPoster, cldThumb, cldSrcSet } from '../utils/cloudinary.js';
 import { GiftIcon, ForwardIcon } from '../components/icons.jsx';
 import CategoryGrid from '../components/CategoryGrid.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
@@ -136,32 +136,57 @@ export default function Home() {
             {data.stores.length === 0 ? (
               <p className="text-stone-400">{t('common.noResults')}</p>
             ) : (
-              // بطاقات بوتيك عمودية: شعار بحلقة ذهبية + اسم serif + زر تسوّق يتعبّى عند اللمس
+              // بطاقة بوتيك بغلاف (نمط أدلّة المتاجر العالمية): غلاف المتجر من بنراته،
+              // تدرّج سفلي ليُقرأ أي نص فوق أي صورة، والشعار يجلس على حدّ الغلاف بحلقة كريمية.
+              // بلا غلاف نستخدم تدرّجاً خمرياً فاخراً — لا تظهر بطاقة فارغة أبداً.
               <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-                {data.stores.map((s, i) => (
-                  <Link
-                    key={s.id}
-                    to={`/store/${s.slug}`}
-                    className="glass group animate-fade-up relative flex flex-col items-center overflow-hidden p-5 text-center transition hover:-translate-y-1.5 hover:shadow-glow"
-                    style={{ animationDelay: `${i * 60}ms` }}
-                  >
-                    <span className="dash-hairline absolute inset-x-0 top-0" />
-                    <img
-                      src={cldThumb(s.logoUrl, 160) || 'https://placehold.co/80x80/f1e9dd/5e4636?text=%F0%9F%91%91'}
-                      alt={s.name}
-                      loading="lazy"
-                      className="h-16 w-16 rounded-full object-cover shadow-md ring-2 ring-gold-400/40 transition group-hover:ring-gold-400/80"
-                    />
-                    <h3 className="mt-3 w-full truncate font-display font-bold text-stone-100">{s.name}</h3>
-                    <p className="mt-0.5 text-xs text-stone-400">{s.productsCount} {t('store.products')}</p>
-                    <span className="mt-3 inline-flex items-center gap-1 rounded-full border border-wine/25 px-3.5 py-1 text-[11px] font-bold text-wine transition group-hover:border-wine group-hover:bg-wine group-hover:text-cream">
-                      {t('home.visitStore')}
-                      <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <path d={rtl ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6'} />
-                      </svg>
-                    </span>
-                  </Link>
-                ))}
+                {data.stores.map((s, i) => {
+                  const cover = (s.banners || []).find((b) => b?.bgType === 'image' && b?.bgValue)?.bgValue;
+                  return (
+                    <Link
+                      key={s.id}
+                      to={`/store/${s.slug}`}
+                      className="group animate-fade-up relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-wine/10 transition duration-300 hover:-translate-y-1.5 hover:shadow-glow"
+                      style={{ animationDelay: `${i * 60}ms` }}
+                    >
+                      <div className="relative aspect-[4/3] overflow-hidden bg-wine/10">
+                        {cover ? (
+                          <img
+                            src={cldThumb(cover, 600)}
+                            srcSet={cldSrcSet(cover, [300, 500, 700])}
+                            sizes="(min-width: 1024px) 25vw, 50vw"
+                            alt=""
+                            loading="lazy"
+                            decoding="async"
+                            onError={(e) => { e.currentTarget.srcset = ''; e.currentTarget.style.display = 'none'; }}
+                            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          />
+                        ) : (
+                          <span className="block h-full w-full" style={{ background: 'linear-gradient(135deg, #8a6a4f 0%, #5e4636 55%, #3f2e22 100%)' }} />
+                        )}
+                        <span aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-transparent" />
+                        <span className="absolute end-2.5 top-2.5 rounded-full bg-black/45 px-2.5 py-0.5 text-[11px] font-bold text-white">
+                          {s.productsCount} {t('store.products')}
+                        </span>
+                      </div>
+                      <div className="flex flex-1 flex-col items-center px-3 pb-4 text-center">
+                        <img
+                          src={cldThumb(s.logoUrl, 160) || 'https://placehold.co/80x80/f1e9dd/5e4636?text=%F0%9F%91%91'}
+                          alt={s.name}
+                          loading="lazy"
+                          className="-mt-9 h-16 w-16 rounded-full bg-white object-cover shadow-md ring-[3px] ring-cream transition group-hover:ring-gold-400/70"
+                        />
+                        <h3 className="mt-2 w-full truncate font-display font-bold text-stone-100">{s.name}</h3>
+                        <span className="mt-2.5 inline-flex items-center gap-1 rounded-full border border-wine/25 px-3.5 py-1 text-[11px] font-bold text-wine transition group-hover:border-wine group-hover:bg-wine group-hover:text-cream">
+                          {t('home.visitStore')}
+                          <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <path d={rtl ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6'} />
+                          </svg>
+                        </span>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             )}
           </section>
