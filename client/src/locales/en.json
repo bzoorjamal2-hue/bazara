@@ -101,6 +101,7 @@
     "search": "Search",
     "showMore": "Read more",
     "showLess": "Show less",
+    "yes": "Yes",
     "all": "All",
     "save": "Save",
     "cancel": "Cancel",
@@ -894,7 +895,8 @@
     "title": "Wishlist",
     "empty": "No products in your wishlist yet.",
     "addAllToCart": "Add all to cart",
-    "viewAll": "View full wishlist"
+    "viewAll": "View full wishlist",
+    "clearConfirm": "Clear entire wishlist?"
   },
   "subscription": {
     "title": "Activate your store",

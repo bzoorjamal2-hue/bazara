@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useWishlist } from '../context/WishlistContext.jsx';
@@ -13,6 +14,7 @@ export default function Wishlist() {
   const rtl = i18n.language !== 'en';
   const { items, clear } = useWishlist();
   const navigate = useNavigate();
+  const [confirmClear, setConfirmClear] = useState(false); // تأكيد بخطوتين قبل مسح الكل
 
   return (
     <>
@@ -59,7 +61,15 @@ export default function Wishlist() {
       )}
       {items.length > 1 && (
         <div className="mt-6 text-center">
-          <button onClick={clear} className="text-xs font-semibold text-stone-400 transition hover:text-red-400">{t('filters.clear')}</button>
+          {confirmClear ? (
+            <span className="inline-flex items-center gap-3 text-xs">
+              <span className="text-stone-400">{t('wishlist.clearConfirm')}</span>
+              <button onClick={() => { clear(); setConfirmClear(false); }} className="font-bold text-red-400 transition hover:text-red-300">{t('common.yes')}</button>
+              <button onClick={() => setConfirmClear(false)} className="font-semibold text-stone-400 transition hover:text-stone-200">{t('common.cancel')}</button>
+            </span>
+          ) : (
+            <button onClick={() => setConfirmClear(true)} className="text-xs font-semibold text-stone-400 transition hover:text-red-400">{t('filters.clear')}</button>
+          )}
         </div>
       )}
     </>
