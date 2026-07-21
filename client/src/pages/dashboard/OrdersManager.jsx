@@ -452,7 +452,7 @@ export default function OrdersManager() {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="min-w-0">
                     <span className="font-semibold text-stone-100">{o.customerName || '—'}</span>
-                    {o.customerPhone && <span className="ms-2 text-xs text-stone-400" dir="ltr">{o.customerPhone}</span>}
+                    {o.customerPhone && <a href={`tel:${o.customerPhone.replace(/\s/g, '')}`} className="ms-2 text-xs text-stone-400 underline-offset-2 transition hover:text-gold-200 hover:underline" dir="ltr">{o.customerPhone}</a>}
                   </div>
                   <span className={`badge ${BADGE[o.status] || ''}`}>{t(`dashboard.ordersSection.${o.status}`)}</span>
                 </div>
