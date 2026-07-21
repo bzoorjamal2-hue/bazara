@@ -124,7 +124,18 @@ export default function CategoryPage() {
       ) : !products ? (
         <ProductGridSkeleton count={8} />
       ) : products.length === 0 ? (
-        <div className="glass p-10 text-center text-stone-400">{t('common.noResults')}</div>
+        <div className="glass mx-auto flex max-w-md flex-col items-center gap-4 p-10 text-center">
+          <span aria-hidden className="flex h-16 w-16 items-center justify-center rounded-full bg-wine/10 text-wine"><GridGlyph className="h-8 w-8" /></span>
+          <p className="text-stone-300">{t('common.noResults')}</p>
+          <button
+            type="button"
+            onClick={() => smartNav(navigate, '/categories')}
+            className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
+            style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)' }}
+          >
+            {t('nav.categories')}
+          </button>
+        </div>
       ) : (
         <FilteredProductGrid products={products} />
       )}
