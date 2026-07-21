@@ -906,6 +906,8 @@
     "addAllToCart": "Add all to cart",
     "viewAll": "View full wishlist",
     "clearConfirm": "Clear entire wishlist?",
+    "priceDrop": "Price drop",
+    "priceDropCount": "{{count}} of your saved pieces dropped in price!",
     "share": "Share my wishlist",
     "shared": "Shared wishlist",
     "sharedGone": "These shared items are no longer available.",

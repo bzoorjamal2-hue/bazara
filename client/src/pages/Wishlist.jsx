@@ -41,6 +41,24 @@ export default function Wishlist() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.get('ids')]);
 
+  // البيانات الحالية لقطع المفضّلة: المخزّن محلياً لقطة وقت الحفظ (سعر/مخزون قديمان).
+  // نجلب الحالي فنعرض سعراً ومخزوناً صحيحين، ونكشف أيضاً أيّ قطعة نزل سعرها منذ حفظها.
+  const ids = items.map((p) => p.id).join(',');
+  const [fresh, setFresh] = useState({});
+  useEffect(() => {
+    if (isShared || !items.length) return undefined;
+    let alive = true;
+    Promise.all(items.map((it) => api.get(`/public/product/${it.id}`).then((r) => r.data.product).catch(() => null)))
+      .then((list) => {
+        if (!alive) return;
+        const map = {};
+        list.forEach((p) => { if (p) map[p.id] = p; });
+        setFresh(map);
+      });
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ids, isShared]);
+
   const shareUrl = `${window.location.origin}/wishlist?ids=${items.slice(0, MAX_SHARE).map((p) => p.id).join(',')}`;
   const shareMine = async () => {
     try {
@@ -51,6 +69,7 @@ export default function Wishlist() {
   // إضافة كل القطع المُشاركة لمفضّلتي (نتجاهل الموجود مسبقاً فلا نحذفه بالخطأ)
   const keepAll = () => (shared || []).forEach((p) => { if (!has(p.id)) toggle(p); });
 
+  const dropCount = items.filter((s) => fresh[s.id] && fresh[s.id].price < s.price).length;
   const list = isShared ? shared : items;
   const title = isShared ? t('wishlist.shared') : t('wishlist.title');
 
@@ -120,10 +139,22 @@ export default function Wishlist() {
         </div>
       ) : (
         <>
+          {dropCount > 0 && (
+            <p className="mb-4 text-center text-sm font-bold text-emerald-600">✨ {t('wishlist.priceDropCount', { count: dropCount })}</p>
+          )}
           <div className={GRID}>
-            {items.map((p, i) => (
-              <ProductCard key={p.id} product={p} index={i} whatsapp={p.storeWhatsapp || p.whatsapp} />
-            ))}
+            {items.map((saved, i) => {
+              const now = fresh[saved.id]; // الحالي إن وصل، وإلا اللقطة المحفوظة
+              return (
+                <ProductCard
+                  key={saved.id}
+                  product={now || saved}
+                  index={i}
+                  whatsapp={(now || saved).storeWhatsapp || saved.whatsapp}
+                  priceDrop={now ? saved.price : 0}
+                />
+              );
+            })}
           </div>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
             {/* مشاركة المفضّلة: رابط يفتح نفس القطع عند أي شخص (بلا حساب) */}

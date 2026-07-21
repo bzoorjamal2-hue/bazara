@@ -21,7 +21,8 @@ const PLACEHOLDER =
     '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="100%" height="100%" fill="%23f1e9dd"/><text x="50%" y="50%" fill="%235c1a2e" font-size="48" text-anchor="middle" dy=".35em">👗</text></svg>'
   );
 
-export default function ProductCard({ product, index = 0, whatsapp = '' }) {
+// priceDrop: السعر وقت حفظ القطعة بالمفضّلة — لو أعلى من الحالي نعرض شارة "نزل السعر"
+export default function ProductCard({ product, index = 0, whatsapp = '', priceDrop = 0 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { add, setOpen } = useCart();
@@ -202,6 +203,10 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
           {isBestSeller && <span className="badge flex items-center gap-0.5 bg-emerald-600 text-white shadow-sm"><FireIcon className="h-3 w-3" /> {t('product.bestSeller')}</span>}
           {product.featured && <span className="badge flex items-center gap-0.5 bg-gold-400 text-ink-950 shadow-sm"><StarIcon className="h-3 w-3" /> {t('product.featured')}</span>}
           {hasDiscount && <span className="badge bg-[#8a2438] text-[#F4EDE2] shadow-sm">-{discountPct}%</span>}
+          {/* نزل سعرها منذ حفظها بالمفضّلة (تمرّره صفحة المفضّلة فقط) */}
+          {priceDrop > product.price && (
+            <span className="badge flex items-center gap-0.5 bg-emerald-600 text-white shadow-sm">↓ {t('wishlist.priceDrop')}</span>
+          )}
         </div>
 
         {/* مفضّلة */}
