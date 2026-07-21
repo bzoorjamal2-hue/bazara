@@ -139,9 +139,13 @@ function AnimatedRoutes() {
         const apply = () => {
           if (done) return;
           const maxReach = document.documentElement.scrollHeight - window.innerHeight;
-          if (maxReach >= target - 2 && Math.abs(window.scrollY - target) > 2) {
-            window.scrollTo({ top: target, behavior: 'instant' });
-          }
+          // لم يكبر المستند بما يكفي بعد؟ ننتظر نموّه (المراقب يعيد استدعاءنا)
+          if (maxReach < target - 2) return;
+          if (Math.abs(window.scrollY - target) > 2) window.scrollTo({ top: target, behavior: 'instant' });
+          // وصلنا → نوقف المراقبة فوراً. سابقاً كانت تستمر حتى مهلة الـ5 ثوانٍ، فكل قفزة
+          // تمرير تغيّر التخطيط فيُطلق ResizeObserver من جديد → حلقة تُصدر خطأ
+          // "ResizeObserver loop completed with undelivered notifications" وتعليقاً بكل رجوع.
+          stop();
         };
         const scheduled = () => { if (!done && !raf) raf = requestAnimationFrame(() => { raf = 0; apply(); }); };
         const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(scheduled) : null;
@@ -155,7 +159,7 @@ function AnimatedRoutes() {
         window.addEventListener('wheel', stop, { passive: true }); // لا نقاوم المستخدم إن حرّك بنفسه
         window.addEventListener('touchmove', stop, { passive: true });
         apply(); // فوري (المحتوى من الكاش غالباً جاهز — قفزة قبل أول رسم فلا وميض)
-        if (ro) ro.observe(document.body);
+        if (ro && !done) ro.observe(document.body); // !done: قد تكون apply() نجحت فوراً وأوقفت كل شيء
         else [80, 250, 600, 1200, 2500].forEach((ms) => setTimeout(() => scheduled(), ms)); // احتياط نادر
         const cap = setTimeout(stop, 5000);
         return () => { clearTimeout(cap); stop(); };
