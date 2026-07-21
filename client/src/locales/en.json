@@ -731,6 +731,7 @@
     "viewingNow": "{{count}} viewed this in the last 30 minutes",
     "soldCount": "{{count}} sold",
     "savePct": "Save {{pct}}%",
+    "saveAmount": "Save {{amount}}",
     "pickSize": "Please select a size",
     "pickColor": "Please select a color",
     "pickColorFirst": "Choose a color first to see available sizes",

@@ -443,6 +443,11 @@ export default function ProductDetails() {
                 {t('product.savePct', { pct: Math.round((1 - product.price / product.oldPrice) * 100) })}
               </span>
             )}
+            {hasDiscount && (
+              <span className="text-xs font-semibold text-[#8a2438]">
+                {t('product.saveAmount', { amount: `${t('common.currency')}${(product.oldPrice - product.price).toFixed(2).replace(/\.00$/, '')}` })}
+              </span>
+            )}
           </div>
 
           {/* دليل اجتماعي: مشاهدات حقيقية خلال آخر 30 دقيقة (من الخادم) — يظهر من مشاهدَين فأكثر */}

@@ -731,6 +731,7 @@
     "viewingNow": "{{count}} شاهدن هذا المنتج خلال آخر نصف ساعة",
     "soldCount": "تم بيع {{count}} قطعة",
     "savePct": "وفّري {{pct}}%",
+    "saveAmount": "توفير {{amount}}",
     "pickSize": "يرجى اختيار المقاس",
     "pickColor": "يرجى اختيار اللون",
     "pickColorFirst": "اختاري اللون أولاً لعرض النمر المتوفّرة",
