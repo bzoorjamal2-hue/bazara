@@ -366,6 +366,7 @@ export default function CartDrawer() {
                         )}
                         <p className="mt-1 font-display font-bold text-gold-300">
                           {t('common.currency')}{(i.price * i.qty).toFixed(2)}
+                          {i.oldPrice > i.price && <span className="ms-1.5 text-xs font-normal text-stone-500 line-through">{t('common.currency')}{(i.oldPrice * i.qty).toFixed(2)}</span>}
                           {i.qty > 1 && <span className="ms-1.5 text-xs font-normal text-stone-400">({t('common.currency')}{i.price} × {i.qty})</span>}
                         </p>
                       </div>
