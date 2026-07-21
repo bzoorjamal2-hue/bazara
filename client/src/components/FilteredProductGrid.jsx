@@ -17,6 +17,21 @@ const productSizes = (p) => {
 
 const discountPct = (p) => (p.oldPrice && p.oldPrice > p.price ? (p.oldPrice - p.price) / p.oldPrice : 0);
 
+// نفد المخزون: صفر عام أو نفاد كل كميات الألوان/النمر (النموذج التفصيلي)
+const isSoldOut = (p) => {
+  const cs = p?.colorStock && typeof p.colorStock === 'object' ? p.colorStock : null;
+  if (cs && Object.keys(cs).length) {
+    const v = Object.values(cs).flatMap((sz) => Object.values(sz || {})).filter((q) => typeof q === 'number');
+    return v.length > 0 && v.reduce((a, b) => a + b, 0) === 0;
+  }
+  const ss = p?.sizeStock && typeof p.sizeStock === 'object' ? p.sizeStock : null;
+  if (ss && Object.keys(ss).length) {
+    const v = Object.values(ss).filter((q) => typeof q === 'number');
+    return v.length > 0 && v.reduce((a, b) => a + b, 0) === 0;
+  }
+  return p?.stock === 0;
+};
+
 // فلترة وفرز على الواجهة فوق النتائج الموجودة (فوري، بلا طلبات إضافية). الفئات
 // (ألوان/مقاسات/سعر) تُشتقّ من نفس المنتجات فلا يظهر إلا الفلتر الذي له معنى.
 export default function FilteredProductGrid({ products, whatsapp, defaultSort = 'new' }) {
@@ -77,7 +92,9 @@ export default function FilteredProductGrid({ products, whatsapp, defaultSort = 
       rating: (a, b) => (b.ratingAvg || 0) - (a.ratingAvg || 0) || (b.ratingCount || 0) - (a.ratingCount || 0),
       new: (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
     };
-    return list.sort(by[sort] || by.new);
+    // المتوفّر أولاً دائماً، ثم الفرز المختار داخل كل مجموعة (المنتهي يهبط لأسفل)
+    const cmp = by[sort] || by.new;
+    return list.sort((a, b) => (isSoldOut(a) - isSoldOut(b)) || cmp(a, b));
   }, [products, selColors, selSizes, saleOnly, pmin, pmax, sort]);
 
   const toggle = (arr, set, v) => set(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
