@@ -84,6 +84,13 @@ export default function CartDrawer() {
   const [freeOver, setFreeOver] = useState(0); // شحن مجاني فوق هذا المبلغ (0 = معطّل)
   const [referral, setReferral] = useState(null); // { code, percent, referrerName } خصم إحالة تلقائي
   useScrollLock(open);
+  // إغلاق بمفتاح Escape (سلوك قياسي للنوافذ) — يعيد العرض لقائمة السلة
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKey = (e) => { if (e.key === 'Escape') { setOpen(false); setView('cart'); } };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open, setOpen]);
 
   const storeSlug = items[0]?.storeSlug || '';
   // الشراء الفوري: افتح السلة مباشرة على شاشة إتمام الطلب
