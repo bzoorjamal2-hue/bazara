@@ -53,6 +53,7 @@ export function CartProvider({ children }) {
           id: product.id,
           name: product.name,
           price: product.price,
+          oldPrice: product.oldPrice, // لعرض إجمالي التوفير بالسلة عند وجود خصم
           imageUrl: product.imageUrl || (product.images && product.images[0]) || (product.videoUrl ? cldVideoPoster(product.videoUrl) : '') || '',
           storeName: product.storeName,
           storeSlug: product.storeSlug,

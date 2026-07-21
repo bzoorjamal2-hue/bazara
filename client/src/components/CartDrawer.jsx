@@ -403,6 +403,15 @@ export default function CartDrawer() {
                       )}
                     </div>
                   )}
+                  {(() => {
+                    const saved = items.reduce((s, i) => s + (i.oldPrice && i.oldPrice > i.price ? (i.oldPrice - i.price) * i.qty : 0), 0);
+                    return saved > 0 ? (
+                      <div className="mb-2 flex items-center justify-between rounded-xl bg-emerald-500/10 px-3 py-2 text-sm font-bold text-emerald-300">
+                        <span className="inline-flex items-center gap-1.5"><PartyIcon className="h-4 w-4 shrink-0" /> {t('cart.saved')}</span>
+                        <span>{t('common.currency')}{saved.toFixed(2)}</span>
+                      </div>
+                    ) : null;
+                  })()}
                   <div className="mb-3 flex items-center justify-between">
                     <span className="text-stone-300">{t('cart.total')}</span>
                     <span className="font-display text-2xl font-bold gradient-text">{t('common.currency')}{total.toFixed(2)}</span>

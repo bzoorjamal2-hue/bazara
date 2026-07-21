@@ -797,6 +797,7 @@
   "cart": {
     "title": "Shopping cart",
     "empty": "Your cart is empty.",
+    "saved": "You saved",
     "total": "Total",
     "orderWhatsapp": "Order via WhatsApp",
     "payCard": "Pay by card 💳",
