@@ -75,6 +75,12 @@ export default function Search() {
   }, [q]);
 
   const clearRecents = () => { try { localStorage.removeItem(RECENT_KEY); } catch { /* تجاهل */ } setRecents([]); };
+  // حذف عملية بحث واحدة (بدل مسح القائمة كلها)
+  const removeRecent = (term) => {
+    const list = getRecentSearches().filter((x) => x !== term);
+    try { localStorage.setItem(RECENT_KEY, JSON.stringify(list)); } catch { /* تجاهل */ }
+    setRecents(list);
+  };
   const searchFor = (term) => { setInput(term); setParams(withScope({ q: term })); };
   // شرائح الفئات تتبع النطاق: داخل متجر → فئة المتجر نفسه (CategoryPage يدعم ?store=)
   const catLink = (c) => `/category/${c}${storeScope ? `?store=${encodeURIComponent(storeScope)}` : ''}`;
@@ -130,10 +136,18 @@ export default function Search() {
               </div>
               <div className="flex flex-wrap gap-2">
                 {recents.map((r) => (
-                  <button key={r} type="button" onClick={() => searchFor(r)}
-                    className="rounded-full border border-wine/15 bg-white px-3.5 py-1.5 text-sm text-stone-200 transition hover:border-wine/40">
-                    {r}
-                  </button>
+                  <span key={r} className="inline-flex items-center rounded-full border border-wine/15 bg-white transition hover:border-wine/40">
+                    <button type="button" onClick={() => searchFor(r)} className="max-w-[10rem] truncate py-1.5 pe-1.5 ps-3.5 text-sm text-stone-200">{r}</button>
+                    <button
+                      type="button"
+                      onClick={() => removeRecent(r)}
+                      aria-label={`${t('common.remove')} ${r}`}
+                      title={t('common.remove')}
+                      className="flex h-6 w-6 me-1.5 items-center justify-center rounded-full text-stone-400 transition hover:bg-wine/10 hover:text-wine"
+                    >
+                      <XIcon className="h-3 w-3" />
+                    </button>
+                  </span>
                 ))}
               </div>
             </section>
@@ -162,7 +176,7 @@ export default function Search() {
               {/* متاجر مطابقة */}
               {results.stores.length > 0 && (
                 <section className="mb-6">
-                  <h2 className="mb-2.5 text-sm font-bold text-stone-300">{t('searchPage.stores')}</h2>
+                  <h2 className="mb-2.5 text-sm font-bold text-stone-300">{t('searchPage.stores')} <span className="font-medium text-stone-500">· {results.stores.length}</span></h2>
                   <div className="flex flex-wrap gap-2.5">
                     {results.stores.map((s) => (
                       <Link key={s.slug} to={`/store/${s.slug}`}

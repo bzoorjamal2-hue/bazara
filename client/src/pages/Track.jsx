@@ -27,6 +27,7 @@ export default function Track() {
   const { add, setOpen } = useCart();
   const [reordering, setReordering] = useState(''); // reference الطلب الجاري إعادته
   const [copiedRef, setCopiedRef] = useState(''); // رقم الطلب المنسوخ للتو (تأكيد بصري)
+  const [copiedTrack, setCopiedTrack] = useState(''); // رقم تتبّع الشحنة المنسوخ للتو
 
   // إعادة الطلب بضغطة: نجلب كل منتج بحالته الحالية (سعر/مخزون) ونضيفه للسلة بنفس
   // الكمية والمقاس واللون — المنتجات المحذوفة/الناقصة تُتجاهل بهدوء.
@@ -221,7 +222,16 @@ export default function Track() {
                         )}
                         {o.tracking && (
                           <span className="text-stone-500">
-                            {t('track.trackingNo')}: <span dir="ltr" className="font-mono font-semibold text-stone-600">{o.tracking}</span>
+                            {t('track.trackingNo')}:{' '}
+                            <button
+                              type="button"
+                              onClick={() => { try { navigator.clipboard.writeText(o.tracking); setCopiedTrack(o.tracking); setTimeout(() => setCopiedTrack(''), 1500); } catch { /* تجاهل */ } }}
+                              dir="ltr"
+                              title={t('co.doneCopy')}
+                              className="rounded-full px-1.5 font-mono font-semibold text-stone-600 transition hover:bg-wine/10 hover:text-wine"
+                            >
+                              {copiedTrack === o.tracking ? t('common.copied') : o.tracking}
+                            </button>
                           </span>
                         )}
                       </div>
@@ -237,7 +247,11 @@ export default function Track() {
                       ))}
                     </ul>
                     <div className="mt-3 flex items-center justify-between">
-                      <span className="text-xs text-stone-400">{new Date(o.createdAt).toLocaleDateString()}</span>
+                      <span className="text-xs text-stone-400">
+                        {new Date(o.createdAt).toLocaleDateString()}
+                        {' · '}
+                        {(o.items || []).reduce((s, it) => s + (Number(it.qty) || 1), 0)} {t('store.products')}
+                      </span>
                       <span className="font-display text-lg font-bold gradient-text">{t('common.currency')}{o.total.toFixed(2)}</span>
                     </div>
                     {/* إعادة الطلب بضغطة — نفس القطع بالمقاسات والألوان (بأسعار اليوم) */}

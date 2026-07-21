@@ -262,7 +262,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
 
       {/* قسم المعلومات داخل البطاقة (اسم/سعر/تقييم/ألوان) — flex-1 يملأ الباقي فتتساوى البطاقات */}
       <div className="flex-1 px-3 pb-3 pt-2.5 text-start">
-        <h3 className="line-clamp-2 min-h-[2.6em] font-display font-semibold leading-snug text-stone-100">{product.name}</h3>
+        <h3 title={product.name} className="line-clamp-2 min-h-[2.6em] font-display font-semibold leading-snug text-stone-100">{product.name}</h3>
         <div className="mt-0.5 flex items-baseline gap-2">
           <span className="font-display text-lg font-bold text-wine">{t('common.currency')}{product.price}</span>
           {hasDiscount && <Strike className="text-xs text-stone-500">{t('common.currency')}{product.oldPrice}</Strike>}
