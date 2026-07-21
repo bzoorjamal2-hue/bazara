@@ -131,6 +131,8 @@ export default function StylistChat({ store, whatsapp = '', marketplace = false 
         type="button"
         onClick={() => setOpen(true)}
         aria-label={t('assistant.fab')}
+        // زر «العودة للأعلى» يقيس هذا العنصر ليجلس فوقه بلا تصادم — لا تُزل السمة
+        data-fab="stylist"
         className="group fixed start-5 z-40 flex h-14 w-14 items-center justify-center rounded-full ring-1 ring-white/30 transition-transform duration-300 hover:scale-110 active:scale-95"
         style={{
           bottom: 'calc(env(safe-area-inset-bottom, 0px) + 96px)',
