@@ -360,7 +360,10 @@ export default function CartDrawer() {
                             )}
                           </p>
                         )}
-                        <p className="mt-1 font-display font-bold text-gold-300">{t('common.currency')}{i.price}</p>
+                        <p className="mt-1 font-display font-bold text-gold-300">
+                          {t('common.currency')}{(i.price * i.qty).toFixed(2)}
+                          {i.qty > 1 && <span className="ms-1.5 text-xs font-normal text-stone-400">({t('common.currency')}{i.price} × {i.qty})</span>}
+                        </p>
                       </div>
                       <div className="flex flex-col items-end justify-between">
                         <button onClick={() => remove(i.key)} aria-label={t('common.remove')} className="text-stone-500 transition hover:text-red-400"><XIcon className="h-4 w-4" /></button>
