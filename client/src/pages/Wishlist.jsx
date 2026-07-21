@@ -11,7 +11,7 @@ import { goBack } from '../utils/nav.js';
 export default function Wishlist() {
   const { t, i18n } = useTranslation();
   const rtl = i18n.language !== 'en';
-  const { items } = useWishlist();
+  const { items, clear } = useWishlist();
   const navigate = useNavigate();
 
   return (
@@ -55,6 +55,11 @@ export default function Wishlist() {
           {items.map((p, i) => (
             <ProductCard key={p.id} product={p} index={i} whatsapp={p.storeWhatsapp || p.whatsapp} />
           ))}
+        </div>
+      )}
+      {items.length > 1 && (
+        <div className="mt-6 text-center">
+          <button onClick={clear} className="text-xs font-semibold text-stone-400 transition hover:text-red-400">{t('filters.clear')}</button>
         </div>
       )}
     </>

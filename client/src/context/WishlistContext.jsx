@@ -46,9 +46,10 @@ export function WishlistProvider({ children }) {
   };
 
   const remove = (id) => setItems((prev) => prev.filter((i) => i.id !== id));
+  const clear = () => setItems([]);
 
   return (
-    <WishlistContext.Provider value={{ items, has, toggle, remove, count: items.length, open, setOpen }}>
+    <WishlistContext.Provider value={{ items, has, toggle, remove, clear, count: items.length, open, setOpen }}>
       {children}
     </WishlistContext.Provider>
   );
