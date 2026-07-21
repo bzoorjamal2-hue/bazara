@@ -357,7 +357,7 @@ export default function ProductDetails() {
                   onClick={() => setActive(i)}
                   className={`h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border ${i === active ? 'border-gold-400' : 'border-transparent opacity-60'}`}
                 >
-                  <img src={g} alt="" className="h-full w-full object-cover" />
+                  <img src={cldThumb(g, 160)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
                 </button>
               ))}
             </div>
