@@ -99,6 +99,8 @@
   },
   "common": {
     "search": "بحث",
+    "showMore": "اقرأ المزيد",
+    "showLess": "عرض أقل",
     "all": "الكل",
     "save": "حفظ",
     "cancel": "إلغاء",

@@ -99,6 +99,8 @@
   },
   "common": {
     "search": "Search",
+    "showMore": "Read more",
+    "showLess": "Show less",
     "all": "All",
     "save": "Save",
     "cancel": "Cancel",

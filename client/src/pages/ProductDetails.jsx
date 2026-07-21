@@ -55,6 +55,7 @@ export default function ProductDetails() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product?.id]);
   const [lightbox, setLightbox] = useState(false);
+  const [descExp, setDescExp] = useState(false); // طيّ الوصف الطويل بـ«اقرأ المزيد»
   const [sizeGuide, setSizeGuide] = useState(false);
   const [notifyPhone, setNotifyPhone] = useState('');
   const [notifyBusy, setNotifyBusy] = useState(false);
@@ -477,7 +478,16 @@ export default function ProductDetails() {
             </div>
           )}
 
-          {product.description && <p className="mt-5 leading-relaxed text-stone-300">{product.description}</p>}
+          {product.description && (
+            <div className="mt-5">
+              <p className={`whitespace-pre-line leading-relaxed text-stone-300 ${!descExp && product.description.length > 240 ? 'line-clamp-4' : ''}`}>{product.description}</p>
+              {product.description.length > 240 && (
+                <button type="button" onClick={() => setDescExp((v) => !v)} className="mt-1.5 text-sm font-semibold text-wine transition hover:text-wine/70">
+                  {descExp ? t('common.showLess') : t('common.showMore')}
+                </button>
+              )}
+            </div>
+          )}
 
           {/* اللون — يُختار أولاً عند تتبّع المخزون لكل لون */}
           {colors.length > 0 && (
