@@ -38,6 +38,9 @@ export default function ProductsManager({ onCount }) {
   const flash = (m) => { setMsg(m); setTimeout(() => setMsg(''), 1800); };
 
   const handleSaved = (m) => { setModal(null); flash(m); load(); purgePublicCaches(); };
+  // نسخ منتج: نفتح النموذج مُعبّأً بكل تفاصيله بلا id (فيُنشأ منتج جديد عند الحفظ) —
+  // تسريع إضافة قطع مشابهة. نلحق "(نسخة)" بالاسم كي يميّزه صاحب المتجر
+  const duplicate = (p) => setModal({ ...p, id: undefined, name: `${p.name} ${t('dashboard.product.copySuffix')}` });
 
   const doRemove = async () => {
     if (!confirmDel) return;
@@ -145,6 +148,7 @@ export default function ProductsManager({ onCount }) {
                     <div className="flex justify-end gap-2">
                       <button onClick={() => shareProduct(p)} className="btn-ghost gap-1.5 !px-3 !py-1.5 text-xs" title={t('product.shareProduct')}><LinkIcon className="h-4 w-4" /> {t('product.shareProduct')}</button>
                       <button onClick={() => setModal(p)} className="btn-ghost !px-3 !py-1.5 text-xs">{t('common.edit')}</button>
+                      <button onClick={() => duplicate(p)} className="btn-ghost !px-3 !py-1.5 text-xs" title={t('dashboard.product.duplicate')}>{t('dashboard.product.duplicate')}</button>
                       <button onClick={() => setConfirmDel(p)} className="btn-danger !px-3 !py-1.5 text-xs">{t('common.delete')}</button>
                     </div>
                   </td>
@@ -163,6 +167,7 @@ export default function ProductsManager({ onCount }) {
                 </div>
                 <button onClick={() => shareProduct(p)} className="btn-ghost !px-2.5 !py-1.5 text-xs" title={t('product.shareProduct')} aria-label={t('product.shareProduct')}><LinkIcon className="h-4 w-4" /></button>
                 <button onClick={() => setModal(p)} className="btn-ghost !px-2.5 !py-1.5 text-xs">{t('common.edit')}</button>
+                <button onClick={() => duplicate(p)} className="btn-ghost !px-2.5 !py-1.5 text-xs" aria-label={t('dashboard.product.duplicate')} title={t('dashboard.product.duplicate')}>⧉</button>
                 <button onClick={() => setConfirmDel(p)} className="btn-danger !px-2.5 !py-1.5 text-xs">{t('common.delete')}</button>
               </div>
             ))}
@@ -171,7 +176,7 @@ export default function ProductsManager({ onCount }) {
       )}
 
       {modal !== null && (
-        <ProductForm initial={modal.id ? modal : null} onClose={() => setModal(null)} onSaved={handleSaved} />
+        <ProductForm initial={modal.id || modal.name ? modal : null} onClose={() => setModal(null)} onSaved={handleSaved} />
       )}
 
       <ConfirmModal
