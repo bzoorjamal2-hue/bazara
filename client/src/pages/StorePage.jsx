@@ -407,6 +407,30 @@ export default function StorePage() {
             <CategoryGrid onSelect={pickCategory} active={cat} cats={gridCats} />
           </section>
 
+          {/* قصة العلامة — كان وصف المتجر مدفوناً بالفوتر وحده. لمسة تحريرية تعرّف
+              الزائرة بالمتجر قبل التصفّح (تظهر فقط إن كتبت المالكة وصفاً) */}
+          {store.description && (
+            <section className="glass relative mb-10 overflow-hidden p-8 text-center">
+              <span className="dash-hairline absolute inset-x-0 top-0" />
+              {store.logoUrl && (
+                <img
+                  src={cldThumb(store.logoUrl, 160)}
+                  alt=""
+                  loading="lazy"
+                  className="mx-auto h-16 w-16 rounded-full bg-white object-cover shadow-md ring-2 ring-gold-400/50"
+                />
+              )}
+              <div className="mt-4 flex items-center justify-center gap-2.5 text-wine">
+                <span aria-hidden className="text-sm text-wine/40">❖</span>
+                <span className="h-px w-8 bg-gradient-to-r from-transparent to-wine/30" />
+                <h2 className="font-display text-xl font-bold">{store.name}</h2>
+                <span className="h-px w-8 bg-gradient-to-l from-transparent to-wine/30" />
+                <span aria-hidden className="text-sm text-wine/40">❖</span>
+              </div>
+              <p className="mx-auto mt-3 max-w-2xl whitespace-pre-line leading-relaxed text-stone-300">{store.description}</p>
+            </section>
+          )}
+
           <ProductSection title={t('store.newArrivals')} products={newest} wa={wa} />
           <ProductSection title={t('store.bestSellers')} products={bestSellers} wa={wa} ranked />
           {onSale.length > 0 && <ProductSection title={t('store.saleSection')} products={onSale} wa={wa} />}
