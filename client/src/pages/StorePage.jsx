@@ -152,7 +152,22 @@ export default function StorePage() {
       popular: (a, b) => (b.soldCount || 0) - (a.soldCount || 0),
       discount: (a, b) => ((b.oldPrice > b.price ? 1 - b.price / b.oldPrice : 0) - (a.oldPrice > a.price ? 1 - a.price / a.oldPrice : 0)),
     }[sort];
-    if (cmp) list = [...list].sort(cmp);
+    // نفد المخزون: صفر عام أو نفاد كل كميات الألوان/النمر (النموذج التفصيلي)
+    const soldOut = (p) => {
+      const cs = p?.colorStock && typeof p.colorStock === 'object' ? p.colorStock : null;
+      if (cs && Object.keys(cs).length) {
+        const v = Object.values(cs).flatMap((sz) => Object.values(sz || {})).filter((q) => typeof q === 'number');
+        return v.length > 0 && v.reduce((a, b) => a + b, 0) === 0;
+      }
+      const ss = p?.sizeStock && typeof p.sizeStock === 'object' ? p.sizeStock : null;
+      if (ss && Object.keys(ss).length) {
+        const v = Object.values(ss).filter((q) => typeof q === 'number');
+        return v.length > 0 && v.reduce((a, b) => a + b, 0) === 0;
+      }
+      return p?.stock === 0;
+    };
+    // المتوفّر أولاً دائماً، ثم الفرز المختار داخل كل مجموعة (المنتهي لأسفل)
+    list = [...list].sort((a, b) => (soldOut(a) - soldOut(b)) || (cmp ? cmp(a, b) : 0));
     return list;
   }, [data, q, cat, sizesSel, colorsSel, offersOnly, sort]);
 
