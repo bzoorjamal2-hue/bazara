@@ -293,19 +293,22 @@ export default function ProductCard({ product, index = 0, whatsapp = '' }) {
             {colorDots.slice(0, 5).map((d) => {
               const img = colorImageOf(d.name);
               const on = swatchColor === d.name;
+              // لون نفدت كل نمره → نقطة باهتة (مؤشّر سريع بلا فتح المنتج)
+              const cSz = product.colorStock && product.colorStock[d.name];
+              const cSoldOut = cSz && typeof cSz === 'object' && Object.keys(cSz).length > 0 && Object.values(cSz).every((q) => q === 0);
               return (
                 <button
                   key={d.name}
                   type="button"
-                  title={d.name}
-                  aria-label={d.name}
+                  title={cSoldOut ? `${d.name} — ${t('product.outOfStock')}` : d.name}
+                  aria-label={cSoldOut ? `${d.name} — ${t('product.outOfStock')}` : d.name}
                   onMouseEnter={() => img && setSwatchColor(d.name)}
                   onClick={(e) => {
                     // نقرة النقطة تفتح المنتج وهذا اللون محدّد مسبقاً (?color=) — أسرع من فتحه ثم الاختيار
                     e.preventDefault(); e.stopPropagation();
                     navigate(`/product/${product.id}?color=${encodeURIComponent(d.name)}`);
                   }}
-                  className={`h-3.5 w-3.5 shrink-0 cursor-pointer rounded-full transition hover:scale-110 ${on ? 'outline outline-2 outline-wine outline-offset-1' : ''}`}
+                  className={`h-3.5 w-3.5 shrink-0 cursor-pointer rounded-full transition hover:scale-110 ${on ? 'outline outline-2 outline-wine outline-offset-1' : ''} ${cSoldOut ? 'opacity-30' : ''}`}
                   style={{ background: d.css, boxShadow: '0 0 0 1px rgba(255,255,255,0.5), inset 0 0 0 1px rgba(0,0,0,0.12)' }}
                 />
               );
