@@ -177,7 +177,8 @@ export function CheckIcon({ className = 'h-5 w-5' }) { return svg(className, <pa
 export function GiftIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M4 11 H20 V20 H4 Z M12 8 V20 M4 8 H20 V11 H4 Z" /><path {...L} d="M12 8 C12 8 10.5 4 8.5 5 C6.5 6 8 8 12 8 C12 8 13.5 4 15.5 5 C17.5 6 16 8 12 8 Z" /></>); }
 export function BagIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M6 8 H18 L19 20 H5 Z" /><path {...L} d="M9 10 V7 A3 3 0 0 1 15 7 V10" /></>); }
 export function PinIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M12 21 C12 21 5 14.5 5 9.5 A7 7 0 0 1 19 9.5 C19 14.5 12 21 12 21 Z" /><circle {...L} cx="12" cy="9.5" r="2.4" /></>); }
-export function TicketIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M4 8 A2 2 0 0 0 4 8 H20 V11 A1.5 1.5 0 0 0 20 14 V16 H4 V14 A1.5 1.5 0 0 0 4 11 Z" />); }
+// تذكرة/كوبون: إطار بقصّتين نصف دائريتين على الجانبين + خط تخريم متقطّع
+export function TicketIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M4 7 H20 V10 A2 2 0 0 0 20 14 V17 H4 V14 A2 2 0 0 0 4 10 Z" /><path {...L} d="M14.5 8.4 V9.8 M14.5 11.3 V12.7 M14.5 14.2 V15.6" /></>); }
 export function ReceiptIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M6 3 H18 V21 L15 19 L12 21 L9 19 L6 21 Z" /><path {...L} d="M9 8 H15 M9 12 H15" /></>); }
 export function TruckIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M2 7 H14 V16 H2 Z M14 10 H18 L21 13 V16 H14 Z" /><circle {...L} cx="7" cy="18" r="1.6" /><circle {...L} cx="17" cy="18" r="1.6" /></>); }
 export function CashIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="3" y="6" width="18" height="12" rx="2" /><circle {...L} cx="12" cy="12" r="2.6" /></>); }
@@ -208,8 +209,10 @@ export function PlusIcon({ className = 'h-5 w-5' }) { return svg(className, <pat
 export function MailIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="3" y="5" width="18" height="14" rx="2" /><path {...L} d="M3.5 7 L12 13 L20.5 7" /></>); }
 export function SaveIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M5 4 H16 L20 8 V20 H5 Z" /><path {...L} d="M8 4 V9 H15 V4 M8 20 V14 H16 V20" /></>); }
 export function KeyIcon({ className = 'h-5 w-5' }) { return svg(className, <><circle {...L} cx="8" cy="8" r="4" /><path {...L} d="M11 11 L20 20 M17 17 L19 15 M15 15 L17 13" /></>); }
-export function CrownIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M4 18 H20 M4 18 L5 8 L9 12 L12 6 L15 12 L19 8 L20 18" />); }
-export function LinkIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M9 15 L15 9 M8 12 L6 14 A3 3 0 0 0 10 18 L12 16 M16 12 L18 10 A3 3 0 0 0 14 6 L12 8" />); }
+// تاج: مسار مقفل (كان مفتوحاً فتظهر القاعدة ناقصة) + شريط قاعدة منفصل
+export function CrownIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M4 17 L5 7.5 L9 11.5 L12 5.5 L15 11.5 L19 7.5 L20 17 Z" /><path {...L} d="M5 20 H19" /></>); }
+// رابط: حلقتا سلسلة متناظرتان (كانت شخطة مائلة بأقواس غير متناظرة)
+export function LinkIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M10.5 13.5 A3.6 3.6 0 0 0 15.6 13.5 L18.4 10.7 A3.6 3.6 0 0 0 13.3 5.6 L12.2 6.7" /><path {...L} d="M13.5 10.5 A3.6 3.6 0 0 0 8.4 10.5 L5.6 13.3 A3.6 3.6 0 0 0 10.7 18.4 L11.8 17.3" /></>); }
 export function CopyIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="9" y="9" width="11" height="11" rx="2" /><path {...L} d="M5 15 H4 A1 1 0 0 1 3 14 V4 A1 1 0 0 1 4 3 H14 A1 1 0 0 1 15 4 V5" /></>); }
 export function EditIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M4 20 H8 L18 10 L14 6 L4 16 Z M13 7 L17 11" />); }
 export function CardIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="3" y="5" width="18" height="14" rx="2" /><path {...L} d="M3 9 H21 M6 15 H10" /></>); }
@@ -221,7 +224,8 @@ export function FolderIcon({ className = 'h-5 w-5' }) { return svg(className, <p
 export function NoteIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M6 3 H15 L19 7 V21 H6 Z" /><path {...L} d="M9 9 H15 M9 13 H15 M9 17 H13" /></>); }
 export function TrophyIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M7 4 H17 V9 A5 5 0 0 1 7 9 Z" /><path {...L} d="M7 5 H4 V7 A3 3 0 0 0 7 10 M17 5 H20 V7 A3 3 0 0 1 17 10 M10 14 H14 L13 18 H11 Z M9 20 H15" /></>); }
 export function ClockIcon({ className = 'h-5 w-5' }) { return svg(className, <><circle {...L} cx="12" cy="12" r="8" /><path {...L} d="M12 8 V12 L15 14" /></>); }
-export function HourglassIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M6 4 H18 M6 20 H18 M7 4 C7 9 17 9 17 4 M7 20 C7 15 17 15 17 20" />); }
+// ساعة رملية: الجانبان يلتقيان فعلياً عند الخصر (كان بينهما فجوة)
+export function HourglassIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M6 3.5 H18 M6 20.5 H18" /><path {...L} d="M7.6 3.5 V6.2 C7.6 9.2 12 10.9 12 12 C12 13.1 7.6 14.8 7.6 17.8 V20.5" /><path {...L} d="M16.4 3.5 V6.2 C16.4 9.2 12 10.9 12 12 C12 13.1 16.4 14.8 16.4 17.8 V20.5" /></>); }
 export function WarnIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M12 4 L21 19 H3 Z" /><path {...L} d="M12 10 V14 M12 16.5 V16.6" /></>); }
 export function ArrowUpIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M12 5 V19 M6 11 L12 5 L18 11" />); }
 export function ArrowDownIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M12 5 V19 M6 13 L12 19 L18 13" />); }
