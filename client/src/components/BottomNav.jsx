@@ -129,7 +129,12 @@ export default function BottomNav() {
   const reelsActive = pathname.endsWith('/reels');
   // إغلاق أدراج السلة/المفضلة قبل الانتقال (الشريط يبقى ظاهراً فوق الأدراج)
   const closeDrawers = () => { setOpen(false); setWishOpen(false); };
-  const goto = (to) => { closeDrawers(); navigate(to); };
+  // الضغط على تبويب أنتِ عليه أصلاً يمرّر لأعلى (نفس سلوك الشعار) بدل ألا يفعل شيئاً
+  const goto = (to) => {
+    closeDrawers();
+    if (pathname === to.split('?')[0]) window.scrollTo({ top: 0, behavior: 'smooth' });
+    else navigate(to);
+  };
   // السلة والمفضّلة موجودتان بالشريط العلوي بحد الأفاتار، فنستبدلهما بوجهات أنفع.
   // الترتيب يتبع اتجاه اللغة تلقائياً: عربي (حسابي أولاً يميناً)، إنجليزي (يساراً).
   const items = [
