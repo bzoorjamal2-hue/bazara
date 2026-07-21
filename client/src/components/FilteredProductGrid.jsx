@@ -192,7 +192,14 @@ export default function FilteredProductGrid({ products, whatsapp, defaultSort = 
           {view.map((p, i) => <ProductCard key={p.id} product={p} index={i} whatsapp={whatsapp || p.storeWhatsapp} />)}
         </div>
       ) : (
-        <div className="glass p-10 text-center text-stone-400">{t('filters.none')}</div>
+        <div className="glass flex flex-col items-center gap-4 p-10 text-center text-stone-400">
+          <p>{t('filters.none')}</p>
+          {activeCount > 0 && (
+            <button type="button" onClick={clearAll} className="rounded-full border border-wine/30 px-5 py-2 text-sm font-bold text-wine transition hover:bg-wine hover:text-cream">
+              {t('filters.clear')}
+            </button>
+          )}
+        </div>
       )}
     </div>
   );
