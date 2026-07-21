@@ -852,3 +852,19 @@ html.dark .theme-pub .text-sky-700 { color: #7dd3fc; }
 html.dark .theme-pub .text-indigo-500,
 html.dark .theme-pub .text-indigo-600,
 html.dark .theme-pub .text-indigo-700 { color: #a5b4fc; }
+
+/* ===== منزلق نطاق السعر (مدخلا range متراكبان) =====
+   المسار لا يلتقط المؤشّر (pointer-events:none) ونُعيد الالتقاط للمقبض وحده،
+   وإلا حجب المدخل العلوي مقبض السفلي فما عاد يتحرّك إلا واحد منهما. */
+.range-dual { -webkit-appearance: none; appearance: none; background: transparent; pointer-events: none; }
+.range-dual:focus { outline: none; }
+.range-dual::-webkit-slider-thumb {
+  -webkit-appearance: none; pointer-events: auto; height: 18px; width: 18px;
+  border-radius: 9999px; background: #5e4636; border: 2px solid #F4EDE2;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25); cursor: pointer;
+}
+.range-dual::-moz-range-thumb {
+  pointer-events: auto; height: 18px; width: 18px; border: 2px solid #F4EDE2;
+  border-radius: 9999px; background: #5e4636; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25); cursor: pointer;
+}
+.range-dual::-moz-range-track { background: transparent; }

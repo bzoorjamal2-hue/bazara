@@ -185,16 +185,37 @@ export default function FilteredProductGrid({ products, whatsapp, defaultSort = 
               </div>
             </div>
           )}
-          {facets.max > facets.min && (
-            <div>
-              <p className="mb-2 text-sm font-semibold text-stone-300">{t('filters.price')}</p>
-              <div className="flex items-center gap-2">
-                <input type="number" inputMode="numeric" min="0" value={pmin} onChange={(e) => setPmin(e.target.value)} placeholder={`${t('filters.from')} ${facets.min}`} className="input w-28 !py-2" />
-                <span className="text-stone-400">—</span>
-                <input type="number" inputMode="numeric" min="0" value={pmax} onChange={(e) => setPmax(e.target.value)} placeholder={`${t('filters.to')} ${facets.max}`} className="input w-28 !py-2" />
+          {facets.max > facets.min && (() => {
+            const lo = pmin !== '' ? Math.max(facets.min, Number(pmin)) : facets.min;
+            const hi = pmax !== '' ? Math.min(facets.max, Number(pmax)) : facets.max;
+            const span = facets.max - facets.min || 1;
+            const pctOf = (v) => ((v - facets.min) / span) * 100;
+            return (
+              <div>
+                <p className="mb-2 text-sm font-semibold text-stone-300">{t('filters.price')}</p>
+                {/* dir=ltr مقصود: النطاقات الرقمية تُقرأ يسار→يمين عالمياً (الأصغر يساراً)
+                    حتى داخل واجهة عربية — وهذا أيضاً يجنّبنا انعكاس حساب النِسَب */}
+                <div dir="ltr" className="relative h-6 select-none">
+                  <span className="absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-wine/15" />
+                  <span className="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-wine" style={{ left: `${pctOf(lo)}%`, width: `${pctOf(hi) - pctOf(lo)}%` }} />
+                  <input
+                    type="range" min={facets.min} max={facets.max} value={lo} aria-label={t('filters.from')}
+                    onChange={(e) => setPmin(String(Math.min(Number(e.target.value), hi)))}
+                    className="range-dual absolute inset-x-0 top-1/2 h-6 w-full -translate-y-1/2"
+                  />
+                  <input
+                    type="range" min={facets.min} max={facets.max} value={hi} aria-label={t('filters.to')}
+                    onChange={(e) => setPmax(String(Math.max(Number(e.target.value), lo)))}
+                    className="range-dual absolute inset-x-0 top-1/2 h-6 w-full -translate-y-1/2"
+                  />
+                </div>
+                <div dir="ltr" className="mt-1.5 flex justify-between text-xs font-bold text-wine">
+                  <span>{t('common.currency')}{lo}</span>
+                  <span>{t('common.currency')}{hi}</span>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1">
             {facets.anySale && (
               <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-stone-200">
