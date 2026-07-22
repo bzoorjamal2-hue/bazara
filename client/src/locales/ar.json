@@ -749,7 +749,22 @@
     "yourRating": "تقييمك",
     "yourComment": "تعليقك",
     "submitReview": "إرسال التقييم",
-    "reviewAdded": "شكراً لتقييمك!"
+    "reviewAdded": "شكراً لتقييمك!",
+    "stockLeft_one": "متبقّي قطعة واحدة",
+    "stockLeft_two": "متبقّي قطعتان",
+    "stockLeft_few": "متبقّي {{count}} قطع",
+    "stockLeft_many": "متبقّي {{count}} قطعة",
+    "stockLeft_other": "متبقّي {{count}} قطعة",
+    "sizeStockLeft_one": "متبقّي قطعة واحدة من مقاس {{size}}",
+    "sizeStockLeft_two": "متبقّي قطعتان من مقاس {{size}}",
+    "sizeStockLeft_few": "متبقّي {{count}} قطع من مقاس {{size}}",
+    "sizeStockLeft_many": "متبقّي {{count}} قطعة من مقاس {{size}}",
+    "sizeStockLeft_other": "متبقّي {{count}} قطعة من مقاس {{size}}",
+    "lastFew_one": "آخر قطعة!",
+    "lastFew_two": "آخر قطعتين!",
+    "lastFew_few": "آخر {{count}} قطع!",
+    "lastFew_many": "آخر {{count}} قطعة!",
+    "lastFew_other": "آخر {{count}} قطعة!"
   },
   "store": {
     "products": "المنتجات",
