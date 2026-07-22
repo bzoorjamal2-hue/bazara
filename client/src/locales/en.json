@@ -662,6 +662,7 @@
       "deleted": "Product deleted.",
       "duplicate": "Duplicate",
       "copySuffix": "(copy)",
+      "lowStock": "Low stock",
       "deleteTitle": "Delete product",
       "deleteMsg": "Are you sure you want to delete this product? This cannot be undone.",
       "empty": "No products yet. Add your first one!"

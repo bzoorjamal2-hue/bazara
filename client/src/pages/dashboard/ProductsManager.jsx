@@ -22,6 +22,7 @@ export default function ProductsManager({ onCount }) {
   const [modal, setModal] = useState(null);
   const [confirmDel, setConfirmDel] = useState(null); // المنتج المراد حذفه
   const [delBusy, setDelBusy] = useState(false);
+  const [stockFilter, setStockFilter] = useState('all'); // all | low | out — متابعة سريعة للمخزون
 
   const load = useCallback(async () => {
     try {
@@ -110,12 +111,38 @@ export default function ProductsManager({ onCount }) {
     );
   };
 
+  // متابعة المخزون: "أوشك على النفاد" = 5 فأقل ولم ينفد بعد. نعتمد نفس remainingOf
+  // الذي تقوم عليه الشارات، فما تراه هنا يطابق ما تراه الزبونة تماماً.
+  const lowList = products.filter((p) => { const r = remainingOf(p); return r != null && r > 0 && r <= 5; });
+  const outList = products.filter((p) => remainingOf(p) === 0);
+  const shown = stockFilter === 'low' ? lowList : stockFilter === 'out' ? outList : products;
+  const Chip = ({ value, label, count, tone }) => (
+    <button
+      type="button"
+      onClick={() => setStockFilter(value)}
+      className={`rounded-full px-3.5 py-1.5 text-xs font-bold ring-1 transition ${
+        stockFilter === value ? 'bg-wine text-cream ring-wine' : `${tone} hover:brightness-110`
+      }`}
+    >
+      {label} ({count})
+    </button>
+  );
+
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-2xl font-bold gradient-text">{t('dashboard.myProducts')}</h1>
         <button onClick={() => setModal({})} className="btn-primary">＋ {t('dashboard.addProduct')}</button>
       </div>
+
+      {/* شرائح متابعة المخزون — تظهر فقط إن وُجد ما يستحق الانتباه */}
+      {(lowList.length > 0 || outList.length > 0) && (
+        <div className="flex flex-wrap items-center gap-2">
+          <Chip value="all" label={t('common.all')} count={products.length} tone="bg-wine/10 text-wine ring-wine/20" />
+          {lowList.length > 0 && <Chip value="low" label={t('dashboard.product.lowStock')} count={lowList.length} tone="bg-amber-500/15 text-amber-300 ring-amber-500/25" />}
+          {outList.length > 0 && <Chip value="out" label={t('product.outOfStock')} count={outList.length} tone="bg-red-500/15 text-red-300 ring-red-500/25" />}
+        </div>
+      )}
 
       {msg && <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-200">{msg}</div>}
       {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
@@ -134,7 +161,7 @@ export default function ProductsManager({ onCount }) {
               </tr>
             </thead>
             <tbody>
-              {products.map((p) => (
+              {shown.map((p) => (
                 <tr key={p.id} className="border-b border-white/5 last:border-0 hover:bg-white/5">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
@@ -158,7 +185,7 @@ export default function ProductsManager({ onCount }) {
           </table>
 
           <div className="divide-y divide-white/5 sm:hidden">
-            {products.map((p) => (
+            {shown.map((p) => (
               <div key={p.id} className="flex items-center gap-3 p-4">
                 <Thumb p={p} size="h-12 w-12" />
                 <div className="min-w-0 flex-1">
