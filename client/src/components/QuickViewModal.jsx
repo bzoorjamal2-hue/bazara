@@ -11,7 +11,7 @@ import { flyToCart } from '../utils/flyToCart.js';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { sizeLabel } from '../utils/sizes.js';
 import Strike from './Strike.jsx';
-import { setMySize } from '../utils/mySize.js';
+import { getMySize, setMySize } from '../utils/mySize.js';
 import ColorSwatches from './ColorSwatches.jsx';
 import SizeGuideModal from './SizeGuideModal.jsx';
 import CloseButton from './CloseButton.jsx';
@@ -53,6 +53,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
   const [err, setErr] = useState('');
   useEffect(() => { setQty(1); }, [color, size]); // لون/نمرة جديدة → كمية 1 (المتبقي يختلف)
   const [sizeGuide, setSizeGuide] = useState(false);
+  const [mySize] = useState(getMySize); // نميّز مقاسها المعتاد كبقية الأسطح
   // النمر المتاحة وكميتها حسب اللون المختار (عند المخزون لكل لون)
   const sizeStock = product.sizeStock && typeof product.sizeStock === 'object' ? product.sizeStock : {};
   const availSizes = hasColorStock ? (color ? Object.keys(colorStock[color] || {}) : []) : sizes;
@@ -236,7 +237,8 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
                         key={s}
                         disabled={soldOut}
                         onClick={() => { setSize(s); setMySize(s); setErr(''); }}
-                        className={`flex min-w-[3.5rem] flex-col items-center rounded-xl border px-3 py-1.5 text-center transition ${on ? 'border-wine bg-wine text-cream' : 'border-wine/25 text-wine hover:bg-wine/5'} ${soldOut ? 'cursor-not-allowed border-stone-300/50 text-stone-400 opacity-60' : ''}`}
+                        title={!on && !soldOut && mySize === s ? t('product.mySize') : undefined}
+                        className={`flex min-w-[3.5rem] flex-col items-center rounded-xl border px-3 py-1.5 text-center transition ${on ? 'border-wine bg-wine text-cream' : 'border-wine/25 text-wine hover:bg-wine/5'} ${soldOut ? 'cursor-not-allowed border-stone-300/50 text-stone-400 opacity-60' : ''} ${!on && !soldOut && mySize === s ? 'ring-2 ring-gold-400/70 ring-offset-1' : ''}`}
                       >
                         <span className={`text-sm font-bold leading-none ${soldOut ? 'strike' : ''}`}>{sizeLabel(s, t)}</span>
                         {qty != null && (
