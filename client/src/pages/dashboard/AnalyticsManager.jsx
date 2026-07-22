@@ -36,11 +36,21 @@ export default function AnalyticsManager() {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
 
-  useEffect(() => {
+  const load = () => {
+    setError('');
     api.get('/orders/stats').then((r) => setData(r.data)).catch((e) => setError(getErrorMessage(e)));
-  }, []);
+  };
+  useEffect(load, []);
 
-  if (error) return <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>;
+  // خطأ الشبكة كان يستبدل الصفحة بنص أحمر بلا مخرج — الحل الوحيد تحديث المتصفّح يدوياً
+  if (error) {
+    return (
+      <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-4 text-sm text-red-200">
+        <p>{error}</p>
+        <button type="button" onClick={load} className="btn-ghost mt-3 !px-4 !py-1.5 text-xs">{t('assistant.retry')}</button>
+      </div>
+    );
+  }
   if (!data) return <Spinner />;
 
   const maxDaily = Math.max(1, ...data.daily.map((d) => d.orders));
