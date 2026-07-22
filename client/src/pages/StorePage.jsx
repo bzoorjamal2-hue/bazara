@@ -20,6 +20,7 @@ import useScrollLock from '../hooks/useScrollLock.js';
 import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
 import { SIZES, sizeLabel } from '../utils/sizes.js';
+import { getMySize } from '../utils/mySize.js';
 import { productColors, colorToCss } from '../utils/colorDot.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { saveRef } from '../utils/referral.js';
@@ -70,6 +71,7 @@ export default function StorePage() {
   const [colorsSel, setColorsSel] = useState([]); // ألوان مختارة (متعدّد)
   const [offersOnly, setOffersOnly] = useState(false);
   const [stockOnly, setStockOnly] = useState(false); // إخفاء القطع المنتهية
+  const [mySize] = useState(getMySize); // مقاسها المعتاد — اختصار فلترة بضغطة
   const [openSheet, setOpenSheet] = useState(null); // 'sort' | 'size' | 'color' | 'offers'
   const [page, setPage] = useState(1);
   const [shareOpen, setShareOpen] = useState(false); // نافذة شاركي واربحي
@@ -186,6 +188,12 @@ export default function StorePage() {
     }
     return [...map.entries()].map(([name, css]) => ({ name, css }));
   }, [data]);
+
+  // هل يوفّر هذا المتجر مقاسها المعتاد؟ عندها نعرض اختصار «مقاسي» بشريط الفلاتر
+  const storeHasMySize = useMemo(() => {
+    if (!mySize) return false;
+    return (data?.products || []).some((p) => String(p.size || '').split(/[,،/|]/).map((s) => s.trim()).includes(mySize));
+  }, [data, mySize]);
 
   // متجر غير موجود/رابط خاطئ: بطاقة بمخرج واضح بدل نص عارٍ
   if (error) {
@@ -329,6 +337,15 @@ export default function StorePage() {
             <div className="mb-4 -mx-4 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
               <div className="flex w-max items-center gap-2">
                 <Chip onClick={() => setOpenSheet('sort')}>{t('store.sortBy')}: {t(SORT_LABEL[sort] || 'store.sortDefault')}</Chip>
+                {/* اختصار «مقاسي» — يظهر فقط إن كان هذا المتجر يوفّر مقاسها المعتاد */}
+                {storeHasMySize && (
+                  <Chip
+                    onClick={() => setSizesSel((prev) => (prev.length === 1 && prev[0] === mySize ? [] : [mySize]))}
+                    active={sizesSel.length === 1 && sizesSel[0] === mySize}
+                  >
+                    {t('filters.mySize', { size: sizeLabel(mySize, t) })}
+                  </Chip>
+                )}
                 <Chip onClick={() => setOpenSheet('size')} active={sizesSel.length > 0}>{t('store.sizeLabel')}{sizesSel.length ? ` (${sizesSel.length})` : ''}</Chip>
                 {storeColors.length >= 2 && (
                   <Chip onClick={() => setOpenSheet('color')} active={colorsSel.length > 0}>{t('store.colorLabel')}{colorsSel.length ? ` (${colorsSel.length})` : ''}</Chip>
