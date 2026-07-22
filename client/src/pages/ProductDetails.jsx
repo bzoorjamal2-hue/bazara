@@ -283,7 +283,10 @@ export default function ProductDetails() {
     window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
   };
   // الكمية تُقصّ على المتبقي من المقاس المختار (قد تتغيّر بعد ضبط العدّاد)
-  const buyQty = Math.max(1, Math.min(qty, selSizeQty ?? qty));
+  // سقف الكمية: كمية النمرة المختارة إن وُجدت، وإلا المخزون العام. الاحتياطي كان 99
+  // فمنتج بلا نمر (مخزونه 6) كان يسمح بطلب 99 بينما الشارة تقول "متبقّي 6".
+  const maxQty = selSizeQty ?? (typeof product.stock === 'number' ? product.stock : 99);
+  const buyQty = Math.max(1, Math.min(qty, maxQty));
   const handleAdd = () => { if (outOfStock) return; if (!validatePick()) { scrollToPick(); return; } add(cartProduct, buyQty); };
   const handleBuy = () => { if (outOfStock) return; if (!validatePick()) { scrollToPick(); return; } buyNow(cartProduct, buyQty); };
 
@@ -471,19 +474,19 @@ export default function ProductDetails() {
 
           {/* بلوك السعر الفاخر: سعر ضخم + القديم مشطوباً بالمنتصف + شارة توفير خمرية */}
           <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-            {/* الرقمان الجديد والقديم في مجموعة items-baseline → يقفان على نفس خط الأساس */}
-            <span className="flex items-baseline gap-x-3">
-              <span className="font-display text-4xl font-extrabold gradient-text">{t('common.currency')}{product.price}</span>
-              {hasDiscount && <Strike className="text-lg text-stone-500">{t('common.currency')}{product.oldPrice}</Strike>}
-            </span>
+            <span className="font-display text-4xl font-extrabold gradient-text">{t('common.currency')}{product.price}</span>
+            {/* التفاصيل الثلاث (القديم المشطوب + نسبة الخصم + مبلغ التوفير) في مجموعة
+                واحدة items-center وبنفس المقاس — كان القديم text-lg وعلى خط أساس السعر
+                الضخم، فتظهر الثلاثة بأحجام ومستويات مختلفة */}
             {hasDiscount && (
-              <span className="rounded-full bg-[#8a2438] px-2.5 py-1 text-xs font-bold text-[#F4EDE2] shadow-sm">
-                {t('product.savePct', { pct: Math.round((1 - product.price / product.oldPrice) * 100) })}
-              </span>
-            )}
-            {hasDiscount && (
-              <span className="text-xs font-semibold text-[#8a2438]">
-                {t('product.saveAmount', { amount: `${t('common.currency')}${(product.oldPrice - product.price).toFixed(2).replace(/\.00$/, '')}` })}
+              <span className="flex items-center gap-x-2.5">
+                <Strike className="text-xs text-stone-500">{t('common.currency')}{product.oldPrice}</Strike>
+                <span className="rounded-full bg-[#8a2438] px-2.5 py-1 text-xs font-bold leading-none text-[#F4EDE2] shadow-sm">
+                  {t('product.savePct', { pct: Math.round((1 - product.price / product.oldPrice) * 100) })}
+                </span>
+                <span className="text-xs font-semibold text-[#8a2438]">
+                  {t('product.saveAmount', { amount: `${t('common.currency')}${(product.oldPrice - product.price).toFixed(2).replace(/\.00$/, '')}` })}
+                </span>
               </span>
             )}
           </div>
@@ -650,7 +653,7 @@ export default function ProductDetails() {
                 <div className="flex items-center gap-0.5 rounded-full border border-wine/25 px-1.5 py-1">
                   <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))} disabled={!pickDone || qty <= 1} aria-label="-" className="flex h-8 w-8 items-center justify-center rounded-full text-lg leading-none text-wine transition hover:bg-wine/10 disabled:opacity-30">−</button>
                   <span className="w-7 text-center font-bold text-stone-100">{qty}</span>
-                  <button type="button" onClick={() => { if (!pickDone) { validatePick(); scrollToPick(); return; } setQty((q) => Math.min(selSizeQty ?? 99, q + 1)); }} disabled={pickDone && selSizeQty != null && qty >= selSizeQty} aria-label="+" className="flex h-8 w-8 items-center justify-center rounded-full text-lg leading-none text-wine transition hover:bg-wine/10 disabled:opacity-30">+</button>
+                  <button type="button" onClick={() => { if (!pickDone) { validatePick(); scrollToPick(); return; } setQty((q) => Math.min(maxQty, q + 1)); }} disabled={pickDone && qty >= maxQty} aria-label="+" className="flex h-8 w-8 items-center justify-center rounded-full text-lg leading-none text-wine transition hover:bg-wine/10 disabled:opacity-30">+</button>
                 </div>
               </div>
             );

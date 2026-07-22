@@ -267,7 +267,9 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
             const pickDone = hasColorStock
               ? (color && size && !sizeSoldOut(size))
               : ((!sizes.length || size) && (!colors.length || color));
-            const maxQ = typeof qtyFor(size) === 'number' ? qtyFor(size) : 99;
+            // احتياطي المخزون العام لا 99 — منتج بلا نمر (مخزونه 6) كان يسمح بطلب 99
+            const maxQ = typeof qtyFor(size) === 'number' ? qtyFor(size)
+              : (typeof product.stock === 'number' ? product.stock : 99);
             return (
               <div className={`mt-4 transition ${pickDone ? '' : 'opacity-45'}`}>
                 <p className="mb-1.5 text-sm font-semibold text-stone-700">{t('product.quantity')}</p>
