@@ -10,7 +10,7 @@ import Countdown from './Countdown.jsx';
 import { HeartIcon, CartIcon, XIcon, StarIcon, FireIcon } from './icons.jsx';
 import { cldVideoPoster, cldThumb, cldSrcSet, cldBlur } from '../utils/cloudinary.js';
 import { sizeLabel } from '../utils/sizes.js';
-import { setMySize } from '../utils/mySize.js';
+import { getMySize, setMySize } from '../utils/mySize.js';
 import { flyToCart } from '../utils/flyToCart.js';
 import { productColorDots } from '../utils/colorDot.js';
 import QuickViewModal from './QuickViewModal.jsx';
@@ -33,6 +33,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
   const imgRef = useRef(null);
   const lastSwatchImg = useRef(''); // آخر صورة لون معروضة — تبقى أثناء تلاشي الخروج
   const [quickOpen, setQuickOpen] = useState(false);
+  const [mySize] = useState(getMySize); // نميّز مقاسها المعتاد بالشريط السريع
   // ظهور ناعم للصورة: هيكل لامع ريثما تُحمّل ثم تتلاشى للداخل (بلا "طفرة")
   const [imgLoaded, setImgLoaded] = useState(false);
   useEffect(() => { if (imgRef.current?.complete) setImgLoaded(true); }, []);
@@ -113,6 +114,8 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
     && !(product.colorStock && Object.keys(product.colorStock).length);
   const quickSizes = !outOfStock && noColors
     ? String(product.size || '').split(/[,،/|]/).map((s) => s.trim()).filter(Boolean).filter((s) => sizeStockMap[s] !== 0)
+      // مقاسها المعتاد أولاً — كي لا يقع خارج الخمسة المعروضة فتظنّه غير متوفّر
+      .sort((a, b) => (a === mySize ? -1 : 0) - (b === mySize ? -1 : 0))
     : [];
 
   const addSize = (e, s) => {
@@ -307,8 +310,8 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
                   key={s}
                   type="button"
                   onClick={(e) => addSize(e, s)}
-                  title={`${t('product.addToCart')} — ${sizeLabel(s, t)}`}
-                  className="rounded-md bg-[#F4EDE2]/95 px-2 py-1 text-[11px] font-bold leading-none text-[#3f2e22] shadow-sm transition hover:bg-[#F4EDE2] active:scale-95"
+                  title={mySize === s ? t('product.mySize') : `${t('product.addToCart')} — ${sizeLabel(s, t)}`}
+                  className={`rounded-md bg-[#F4EDE2]/95 px-2 py-1 text-[11px] font-bold leading-none text-[#3f2e22] shadow-sm transition hover:bg-[#F4EDE2] active:scale-95 ${mySize === s ? 'ring-2 ring-gold-400' : ''}`}
                 >
                   {sizeLabel(s, t)}
                 </button>
