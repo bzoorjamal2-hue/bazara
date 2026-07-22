@@ -10,6 +10,7 @@ import Countdown from './Countdown.jsx';
 import { HeartIcon, CartIcon, XIcon, StarIcon, FireIcon } from './icons.jsx';
 import { cldVideoPoster, cldThumb, cldSrcSet, cldBlur } from '../utils/cloudinary.js';
 import { sizeLabel } from '../utils/sizes.js';
+import { setMySize } from '../utils/mySize.js';
 import { flyToCart } from '../utils/flyToCart.js';
 import { productColorDots } from '../utils/colorDot.js';
 import QuickViewModal from './QuickViewModal.jsx';
@@ -118,6 +119,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
     e.preventDefault();
     e.stopPropagation();
     flyToCart(imgRef.current, activeCover);
+    setMySize(s); // نتذكّره كبقية أماكن الاختيار (صفحة المنتج/النظرة السريعة/الريلز)
     add({ ...product, whatsapp, size: s, color: '' });
     setOpen(true);
   };
