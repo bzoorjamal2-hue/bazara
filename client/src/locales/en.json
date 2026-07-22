@@ -151,6 +151,7 @@
     "to": "To",
     "saleOnly": "On sale only",
     "stockOnly": "In stock only",
+    "mySize": "My size ({{size}})",
     "clear": "Clear all",
     "results": "{{count}} products",
     "none": "No products match your filters — try loosening them"

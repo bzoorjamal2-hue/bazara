@@ -5,6 +5,7 @@ import ProductCard from './ProductCard.jsx';
 import Select from './Select.jsx';
 import { productColors, colorToCss } from '../utils/colorDot.js';
 import { SIZES, sizeLabel } from '../utils/sizes.js';
+import { getMySize } from '../utils/mySize.js';
 
 // مقاسات المنتج المتاحة: من مخزون الألوان ثم مخزون النمر ثم الحقل النصّي
 const productSizes = (p) => {
@@ -51,6 +52,7 @@ export default function FilteredProductGrid({ products, whatsapp, defaultSort = 
   const [pmin, setPmin] = useState(saved.pmin ?? '');
   const [pmax, setPmax] = useState(saved.pmax ?? '');
   const [open, setOpen] = useState(false);
+  const [mySize] = useState(getMySize); // مقاسها المعتاد — لاختصار الفلترة بضغطة
   useEffect(() => {
     try { sessionStorage.setItem(memKey, JSON.stringify({ sort, selColors, selSizes, saleOnly, stockOnly, pmin, pmax })); } catch { /* تجاهل */ }
   }, [memKey, sort, selColors, selSizes, saleOnly, stockOnly, pmin, pmax]);
@@ -137,6 +139,21 @@ export default function FilteredProductGrid({ products, whatsapp, defaultSort = 
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" /></svg>
             {t('filters.title')}
             {activeCount > 0 && <span className={`flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1 text-xs font-bold ${open || activeCount ? 'bg-cream text-wine' : 'bg-wine text-cream'}`}>{activeCount}</span>}
+          </button>
+        )}
+        {/* اختصار «مقاسي»: يظهر فقط إن حفظنا مقاسها سابقاً وكان موجوداً بين هذه النتائج
+            — بضغطة ترى المتوفّر بمقاسها بدل فتح الفلاتر واختياره كل مرة */}
+        {mySize && facets.sizes.includes(mySize) && (
+          <button
+            type="button"
+            onClick={() => setSelSizes((prev) => (prev.length === 1 && prev[0] === mySize ? [] : [mySize]))}
+            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-semibold transition ${
+              selSizes.length === 1 && selSizes[0] === mySize
+                ? 'border-wine bg-wine text-cream'
+                : 'border-gold-400/40 bg-gold-400/10 text-wine hover:border-gold-400'
+            }`}
+          >
+            {t('filters.mySize', { size: sizeLabel(mySize, t) })}
           </button>
         )}
         <div className="ms-auto flex items-center gap-2">
