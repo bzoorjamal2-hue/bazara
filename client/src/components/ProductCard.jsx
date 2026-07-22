@@ -9,6 +9,7 @@ import StarRating from './StarRating.jsx';
 import Countdown from './Countdown.jsx';
 import { HeartIcon, CartIcon, XIcon, StarIcon, FireIcon } from './icons.jsx';
 import { cldVideoPoster, cldThumb, cldSrcSet, cldBlur } from '../utils/cloudinary.js';
+import { sizeLabel } from '../utils/sizes.js';
 import { flyToCart } from '../utils/flyToCart.js';
 import { productColorDots } from '../utils/colorDot.js';
 import QuickViewModal from './QuickViewModal.jsx';
@@ -101,6 +102,25 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
     (product.colorStock && typeof product.colorStock === 'object' && Object.keys(product.colorStock).length) ||
     (product.sizeStock && typeof product.sizeStock === 'object' && Object.keys(product.sizeStock).length)
   );
+
+  // ─── اختيار سريع للمقاس من البطاقة (أسلوب Zara/ASOS) ───
+  // شرط أساسي: المنتج بلا ألوان. مع وجود ألوان لا يكفي المقاس وحده لتحديد القطعة،
+  // فتبقى النظرة السريعة هي الطريق. نستبعد النمر المنتهية فلا تُعرض نمرة لا تُطلب.
+  const sizeStockMap = product.sizeStock && typeof product.sizeStock === 'object' ? product.sizeStock : {};
+  const noColors = colorDots.length === 0
+    && !(product.color && product.color.trim())
+    && !(product.colorStock && Object.keys(product.colorStock).length);
+  const quickSizes = !outOfStock && noColors
+    ? String(product.size || '').split(/[,،/|]/).map((s) => s.trim()).filter(Boolean).filter((s) => sizeStockMap[s] !== 0)
+    : [];
+
+  const addSize = (e, s) => {
+    e.preventDefault();
+    e.stopPropagation();
+    flyToCart(imgRef.current, activeCover);
+    add({ ...product, whatsapp, size: s, color: '' });
+    setOpen(true);
+  };
 
   const onAdd = (e) => {
     e.preventDefault();
@@ -270,6 +290,27 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
               </svg>
             </span>
           </span>
+        )}
+
+        {/* شريط المقاسات السريع: يظهر عند مرور المؤشّر (أجهزة اللمس مستثناة — لا مرور
+            عندها، وزر السلة يفتح النظرة السريعة كما كان). ضغطة واحدة = القطعة بمقاسها
+            في السلة بلا فتح أي نافذة. نترك مساحة لزر السلة (pe-14) فلا يتراكبان. */}
+        {quickSizes.length > 0 && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[6] hidden bg-gradient-to-t from-ink-950/85 via-ink-950/45 to-transparent pb-2.5 pe-14 ps-2.5 pt-8 opacity-0 transition-opacity duration-200 group-hover:opacity-100 md:block">
+            <div className="pointer-events-auto flex flex-wrap gap-1.5">
+              {quickSizes.slice(0, 5).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={(e) => addSize(e, s)}
+                  title={`${t('product.addToCart')} — ${sizeLabel(s, t)}`}
+                  className="rounded-md bg-[#F4EDE2]/95 px-2 py-1 text-[11px] font-bold leading-none text-[#3f2e22] shadow-sm transition hover:bg-[#F4EDE2] active:scale-95"
+                >
+                  {sizeLabel(s, t)}
+                </button>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* زر سلة دائري عائم على الصورة — بنّي عميق بنص عاجي (ثابت بالوضعين) */}
