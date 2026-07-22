@@ -35,12 +35,14 @@ export default function Track() {
     if (reordering) return;
     setReordering(o.reference);
     let added = 0;
-    for (const it of o.items || []) {
-      if (!it.id) continue;
-      try {
-        const r = await api.get(`/public/product/${it.id}`);
-        const p = r.data.product;
-        if (!p) continue;
+    const wanted = (o.items || []).filter((it) => it.id);
+    try {
+      // طلب واحد لكل القطع (كانت طلبات متسلسلة: قطعة تنتظر التي قبلها)
+      const r = await api.get(`/public/products?ids=${wanted.map((it) => it.id).join(',')}`);
+      const byId = new Map((r.data.products || []).map((p) => [p.id, p]));
+      for (const it of wanted) {
+        const p = byId.get(it.id);
+        if (!p) continue; // محذوف أو متجره غير فعّال — نتجاهله بهدوء
         // نفد المخزون: صفر عام أو نفاد كل كميات الألوان/النمر (النموذج التفصيلي)
         const detailed = p.colorStock && Object.keys(p.colorStock).length
           ? Object.values(p.colorStock).flatMap((sz) => Object.values(sz || {})).filter((q) => typeof q === 'number')
@@ -49,8 +51,8 @@ export default function Track() {
         if (soldOut) continue;
         add({ ...p, size: it.size || '', color: it.color || '', whatsapp: p.storeWhatsapp }, Math.max(1, Number(it.qty) || 1));
         added += 1;
-      } catch { /* منتج محذوف — نتجاهله */ }
-    }
+      }
+    } catch { /* فشل الجلب — نُظهر رسالة "لا يوجد ما يُعاد" أدناه */ }
     setReordering('');
     if (added > 0) setOpen(true);
     else setError(t('track.reorderEmpty'));
