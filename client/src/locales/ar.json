@@ -679,8 +679,6 @@
     "oneSize": "ون سايز",
     "lastFew": "آخر {{count}} قطع!",
     "bestSeller": "الأكثر مبيعاً",
-    "shareText": "{{name}} — ₪{{price}} 🤎",
-    "shareTextDeal": "{{name}} — خصم {{pct}}% 🔥 ₪{{price}} بدل ₪{{oldPrice}}",
     "customerPhotos": "صور من الزبائن",
     "trustDelivery": "توصيل لكل فلسطين",
     "trustCod": "الدفع عند الاستلام",

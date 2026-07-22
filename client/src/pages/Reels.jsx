@@ -536,11 +536,9 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   const share = async (e) => {
     e?.stopPropagation?.();
     const url = `${window.location.origin}/share/product/${p.id}`;
-    // نص مشاركة مغرٍ: مع خصم → النسبة والسعر القديم
-    const text = hasDiscount
-      ? t('product.shareTextDeal', { name: p.name, price: p.price, oldPrice: p.oldPrice, pct: discountPct })
-      : t('product.shareText', { name: p.name, price: p.price });
-    const data = { title: p.name, text, url };
+    // بلا text: عند اختيار "نسخ" من ورقة المشاركة يدمج النظام النص مع الرابط فيخرج
+    // ملوّثاً بكلام — ورابط /share/ يعرض صورة المنتج وسعره كمعاينة أصلاً
+    const data = { title: p.name, url };
     if (navigator.share) {
       try { await navigator.share(data); return; } catch (err) { if (err && err.name === 'AbortError') return; }
     }

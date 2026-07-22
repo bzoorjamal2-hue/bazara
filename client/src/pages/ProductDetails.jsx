@@ -135,13 +135,11 @@ export default function ProductDetails() {
   // (يحوّل تلقائياً لصفحة المنتج عند الفتح). واجهة المشاركة الأصلية إن توفّرت، وإلا نسخ الرابط.
   const shareProduct = async () => {
     const url = product?.id ? `${window.location.origin}/share/product/${product.id}` : window.location.href;
-    // نص مشاركة مغرٍ: مع خصم → النسبة والسعر القديم (مشاركات السوشال تجيب زبائن أكثر)
-    const deal = product?.oldPrice && product.oldPrice > product.price;
-    const text = deal
-      ? t('product.shareTextDeal', { name: product.name, price: product.price, oldPrice: product.oldPrice, pct: Math.round((1 - product.price / product.oldPrice) * 100) })
-      : t('product.shareText', { name: product?.name || '', price: product?.price || '' });
+    // لا نمرّر text لواجهة المشاركة: عند اختيار "نسخ" من ورقة المشاركة يدمج النظام
+    // النص مع الرابط فيخرج الرابط ملوّثاً بكلام. ورابط /share/ يعرض أصلاً صورة المنتج
+    // واسمه وسعره كمعاينة (OG) — فالنص كان تكراراً لما تُظهره المعاينة.
     if (navigator.share) {
-      try { await navigator.share({ title: product?.name, text, url }); return; } catch { /* أُلغيت */ }
+      try { await navigator.share({ title: product?.name, url }); return; } catch { /* أُلغيت */ }
     }
     try { await navigator.clipboard.writeText(url); setShared(true); setTimeout(() => setShared(false), 1800); } catch { /* تجاهل */ }
   };
