@@ -12,7 +12,7 @@ import useScrollLock from '../hooks/useScrollLock.js';
 import Spinner from '../components/Spinner.jsx';
 import Strike from '../components/Strike.jsx';
 import { sizeLabel } from '../utils/sizes.js';
-import { setMySize } from '../utils/mySize.js';
+import { getMySize, setMySize } from '../utils/mySize.js';
 import { goBack } from '../utils/nav.js';
 
 const MUTE_KEY = 'bz_reels_muted';
@@ -230,6 +230,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   const [pickMode, setPickMode] = useState('add'); // 'add' | 'buy' — أي زر فتح شيت الاختيار
   const [selSize, setSelSize] = useState('');
   const [selColor, setSelColor] = useState('');
+  const [mySize] = useState(getMySize); // نميّز مقاسها المعتاد كصفحة المنتج
   const vidRef = useRef(null);
   const hlsRef = useRef(null); // مشغّل hls.js (أندرويد/كروم) — iOS يشغّل HLS أصلياً
   const [useMp4, setUseMp4] = useState(false); // فشل HLS؟ → احتياط MP4 نظيف
@@ -725,7 +726,8 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
                       const on = selSize === s;
                       return (
                         <button key={s} onClick={() => { setSelSize(s); setMySize(s); }}
-                          className={`flex min-w-11 flex-col items-center rounded-xl border px-3.5 py-1.5 transition ${on ? 'border-wine bg-wine text-cream' : 'border-wine/30 text-wine hover:bg-wine/10'}`}>
+                          title={!on && mySize === s ? t('product.mySize') : undefined}
+                          className={`flex min-w-11 flex-col items-center rounded-xl border px-3.5 py-1.5 transition ${on ? 'border-wine bg-wine text-cream' : 'border-wine/30 text-wine hover:bg-wine/10'} ${!on && mySize === s ? 'ring-2 ring-gold-400/70 ring-offset-1' : ''}`}>
                           <span className="text-sm font-semibold leading-none">{sizeLabel(s, t)}</span>
                           {typeof q === 'number' && <span className={`mt-1 text-[10px] font-medium leading-none ${on ? 'text-cream/80' : 'text-wine/55'}`}>{t('product.leftShort', { count: q })}</span>}
                         </button>
