@@ -300,6 +300,8 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
         {quickSizes.length > 0 && (
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[6] hidden bg-gradient-to-t from-ink-950/85 via-ink-950/45 to-transparent pb-2.5 pe-14 ps-2.5 pt-8 opacity-0 transition-opacity duration-200 group-hover:opacity-100 md:block">
             <div className="pointer-events-auto flex flex-wrap gap-1.5">
+              {/* أكثر من 5 نمر: نعرض الخمس الأولى + مؤشّراً يفتح النظرة السريعة لبقيتها،
+                  بدل إخفائها بلا إشارة فتظن الزبونة أن مقاسها غير متوفّر */}
               {quickSizes.slice(0, 5).map((s) => (
                 <button
                   key={s}
@@ -311,6 +313,16 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
                   {sizeLabel(s, t)}
                 </button>
               ))}
+              {quickSizes.length > 5 && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setQuickOpen(true); }}
+                  title={t('product.quickView')}
+                  className="rounded-md bg-[#F4EDE2]/70 px-2 py-1 text-[11px] font-bold leading-none text-[#3f2e22] shadow-sm transition hover:bg-[#F4EDE2] active:scale-95"
+                >
+                  +{quickSizes.length - 5}
+                </button>
+              )}
             </div>
           </div>
         )}
