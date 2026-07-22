@@ -34,6 +34,26 @@ export function CartProvider({ children }) {
     return typeof p.stock === 'number' ? p.stock : null;
   };
 
+  // مزامنة السلة مع الخادم: عناصرها لقطة وقت الإضافة، وقد يتغيّر السعر أو ينقص المخزون
+  // قبل الإتمام. الطلب يُسعَّر على الخادم (نرسل المعرّف والكمية فقط)، فلو تُرك المعروض
+  // قديماً رأت الزبونة سعراً وأرسلت رسالة واتساب برقم يخالف المُدوَّن فعلاً.
+  const syncFromServer = (fresh) => {
+    if (!Array.isArray(fresh) || fresh.length === 0) return;
+    const byId = new Map(fresh.map((p) => [p.id, p]));
+    setItems((prev) => prev.map((i) => {
+      const p = byId.get(i.id);
+      if (!p) return i; // محذوف/متجر غير فعّال — نتركه كما هو ولا نحذف سلّتها فجأة
+      const maxQty = stockOf({ ...p, size: i.size, color: i.color });
+      return {
+        ...i,
+        price: p.price,
+        oldPrice: p.oldPrice,
+        maxQty,
+        qty: maxQty != null ? Math.min(i.qty, Math.max(1, maxQty)) : i.qty,
+      };
+    }));
+  };
+
   const add = (product, qty = 1) => {
     setItems((prev) => {
       // متجر مختلف عن السلة الحالية → نفرّغها أولاً (لا نخلط منتجات متجرين)
@@ -92,7 +112,7 @@ export function CartProvider({ children }) {
   const total = useMemo(() => items.reduce((s, i) => s + i.price * i.qty, 0), [items]);
 
   return (
-    <CartContext.Provider value={{ items, add, buyNow, remove, setQty, clear, ensureStore, count, total, open, setOpen, checkoutIntent, setCheckoutIntent }}>
+    <CartContext.Provider value={{ items, add, buyNow, remove, setQty, clear, syncFromServer, ensureStore, count, total, open, setOpen, checkoutIntent, setCheckoutIntent }}>
       {children}
     </CartContext.Provider>
   );

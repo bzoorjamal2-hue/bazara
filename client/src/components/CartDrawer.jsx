@@ -67,7 +67,7 @@ const AREAS = [
 export default function CartDrawer() {
   const { t, i18n } = useTranslation();
   const ar = i18n.language !== 'en';
-  const { items, open, setOpen, remove, setQty, total, count, clear, checkoutIntent, setCheckoutIntent } = useCart();
+  const { items, open, setOpen, remove, setQty, total, count, clear, syncFromServer, checkoutIntent, setCheckoutIntent } = useCart();
   const [view, setView] = useState('cart'); // 'cart' | 'checkout' | 'done'
   const [doneRef, setDoneRef] = useState(''); // رقم الطلب (المرجع) بعد النجاح
   const [refCopied, setRefCopied] = useState(false); // نُسخ رقم الطلب؟
@@ -110,6 +110,20 @@ export default function CartDrawer() {
       })
       .catch(() => { setStoreZones([]); setFreeOver(0); setFlash(null); });
   }, [open, storeSlug]);
+
+  // عند فتح السلة: نحدّث الأسعار والمتبقّي من الخادم بطلب واحد. عناصر السلة لقطة وقت
+  // الإضافة، والطلب يُسعَّر على الخادم — فبلا هذا قد ترى الزبونة سعراً قديماً وترسل
+  // رسالة واتساب برقم يخالف المُدوَّن. نتجاهل الفشل بهدوء (تبقى اللقطة المحفوظة).
+  const itemIds = items.map((i) => i.id).join(',');
+  useEffect(() => {
+    if (!open || !itemIds) return undefined;
+    let alive = true;
+    api.get(`/public/products?ids=${itemIds}`)
+      .then((r) => { if (alive) syncFromServer(r.data.products || []); })
+      .catch(() => { /* بلا اتصال — نُبقي المعروض كما هو */ });
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, itemIds]);
 
   // إنقاذ السلة المتروكة: بعد إدخال رقم هاتف صالح بشاشة الإتمام، نحفظ مسودة الطلب
   // عند الخادم (تُحدَّث مع كل تعديل بمهلة قصيرة). لو ما أكّدت الزبونة، يراها صاحب
