@@ -20,7 +20,11 @@ export default function ColorSwatches({
   if (!colors.length) return null;
   const display = hover || value;
   const headingCls = tone === 'dark' ? 'text-stone-300' : 'text-stone-700';
-  const nameCls = tone === 'dark' ? 'text-cream/60' : 'text-stone-500';
+  // اسم اللون كان text-cream/60 → يُحسب rgba(244,237,226,.6) وهو لون الخلفية الكريمية
+  // نفسه (تباين 1:1 = غير مرئي إطلاقاً). لا يصحّحه ثيم .theme-pub لأنه rgba صريحة،
+  // بعكس أصناف stone التي يعيد الثيم تعيينها لكل وضع. لذا نستعملها: تباين 4.15 بالفاتح
+  // و8.41 بالليلي — مقروء بالاثنين (مقيس فعلياً).
+  const nameCls = tone === 'dark' ? 'text-stone-400' : 'text-stone-500';
 
   return (
     <div>
