@@ -19,20 +19,21 @@ export default function SiteSliders() {
   const [banners, setBanners] = useState(null);
   const [ann, setAnn] = useState('');
   const [annEn, setAnnEn] = useState('');
+  const [cols, setCols] = useState([]);
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     api.get('/site/banners')
-      .then((r) => { setBanners(r.data.banners?.length ? r.data.banners : DEFAULT_SITE_SLIDES); setAnn(r.data.announcement || ''); setAnnEn(r.data.announcementEn || ''); })
+      .then((r) => { setBanners(r.data.banners?.length ? r.data.banners : DEFAULT_SITE_SLIDES); setAnn(r.data.announcement || ''); setAnnEn(r.data.announcementEn || ''); setCols(r.data.collections || []); })
       .catch((e) => setError(getErrorMessage(e)));
   }, []);
 
   const save = async () => {
     setMsg(''); setError(''); setBusy(true);
     try {
-      await api.put('/site/banners', { banners, announcement: ann, announcementEn: annEn });
+      await api.put('/site/banners', { banners, announcement: ann, announcementEn: annEn, collections: cols });
       // بانرات الرئيسية الجديدة تظهر فوراً: نفرّغ كاش الرئيسية + النسخة المحفوظة للظهور الفوري
       clearCachePrefixes(['home']);
       try { localStorage.removeItem('bz_home_banners'); } catch { /* تجاهل */ }
@@ -83,6 +84,41 @@ export default function SiteSliders() {
           className="input w-full"
         />
       </div>
+      {/* المجموعات التحريرية بالرئيسية: عنوان + صورة + كلمة بحث تفتحها البطاقة.
+          لا نطلب رابطاً — نبني /search من الكلمة، فلا مجال لرابط خاطئ أو خارجي */}
+      <div className="glass space-y-4 p-6">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="font-display text-lg font-bold text-gold-200">{t('admin.collections')}</h2>
+            <p className="mt-1 text-xs text-stone-400">{t('admin.collectionsHint')}</p>
+          </div>
+          {cols.length < 8 && (
+            <button type="button" onClick={() => setCols([...cols, { title: '', titleEn: '', image: '', q: '' }])} className="btn-ghost !px-4 !py-1.5 text-xs">
+              ＋ {t('common.add')}
+            </button>
+          )}
+        </div>
+        {cols.length === 0 ? (
+          <p className="text-sm text-stone-400">{t('admin.collectionsEmpty')}</p>
+        ) : (
+          cols.map((c, i) => (
+            <div key={i} className="grid gap-2 rounded-xl border border-gold-400/20 p-3 sm:grid-cols-2">
+              <input value={c.title} onChange={(e) => setCols(cols.map((x, k) => (k === i ? { ...x, title: e.target.value } : x)))}
+                placeholder={t('admin.collectionTitle')} maxLength={60} className="input" />
+              <input value={c.q} onChange={(e) => setCols(cols.map((x, k) => (k === i ? { ...x, q: e.target.value } : x)))}
+                placeholder={t('admin.collectionQuery')} maxLength={60} className="input" />
+              <input value={c.titleEn} onChange={(e) => setCols(cols.map((x, k) => (k === i ? { ...x, titleEn: e.target.value } : x)))}
+                placeholder={t('admin.collectionTitleEn')} maxLength={60} dir="ltr" className="input" />
+              <input value={c.image} onChange={(e) => setCols(cols.map((x, k) => (k === i ? { ...x, image: e.target.value } : x)))}
+                placeholder={t('admin.collectionImage')} dir="ltr" className="input" />
+              <button type="button" onClick={() => setCols(cols.filter((_, k) => k !== i))} className="btn-danger !px-3 !py-1.5 text-xs sm:col-span-2 sm:justify-self-start">
+                {t('common.delete')}
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+
       <button onClick={save} disabled={busy} className="btn-primary">{busy ? t('common.loading') : t('common.save')}</button>
     </div>
   );

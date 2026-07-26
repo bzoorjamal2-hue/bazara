@@ -124,11 +124,13 @@ export async function getHomeData(_req, res, next) {
     let homeBanners = [];
     let announcement = '';
     let announcementEn = '';
+    let collections = [];
     try {
-      const sb = await query('SELECT home_banners, announcement, announcement_en FROM site_settings WHERE id = 1');
+      const sb = await query('SELECT home_banners, announcement, announcement_en, collections FROM site_settings WHERE id = 1');
       homeBanners = Array.isArray(sb.rows[0]?.home_banners) ? sb.rows[0].home_banners : [];
       announcement = sb.rows[0]?.announcement || '';
       announcementEn = sb.rows[0]?.announcement_en || '';
+      collections = Array.isArray(sb.rows[0]?.collections) ? sb.rows[0].collections : [];
     } catch { /* الجدول/الأعمدة غير موجودة بعد */ }
 
     res.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300'); // كاش حافة Vercel
@@ -141,6 +143,7 @@ export async function getHomeData(_req, res, next) {
       homeBanners,
       announcement,
       announcementEn,
+      collections,
       trust,
     });
   } catch (err) {

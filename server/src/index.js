@@ -324,6 +324,8 @@ async function ensureColumns() {
     // شريط إعلان الصفحة الرئيسية (سطر لكل رسالة) — نفس فكرة إعلان المتجر لكن للمنصّة
     await pool.query("ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS announcement TEXT NOT NULL DEFAULT '';");
     await pool.query("ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS announcement_en TEXT NOT NULL DEFAULT '';");
+    // مجموعات تحريرية بالرئيسية (تسوّقي حسب المناسبة): عنوان + صورة + كلمة بحث
+    await pool.query("ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS collections JSONB NOT NULL DEFAULT '[]'::jsonb;");
     // فهارس أداء لاستعلامات العرض الأكثر تكراراً (الترتيب حسب المميّز/الأحدث) — تسرّع الصفحات العامة كلما زادت المنتجات
     await pool.query('CREATE INDEX IF NOT EXISTS idx_products_featured_created ON products(featured, created_at DESC);');
     await pool.query('CREATE INDEX IF NOT EXISTS idx_products_created ON products(created_at DESC);');

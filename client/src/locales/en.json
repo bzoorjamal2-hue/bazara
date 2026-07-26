@@ -227,7 +227,8 @@
     "feature2Title": "Luxury design",
     "feature2Desc": "Modern responsive UI with elegant gold accents.",
     "feature3Title": "Google visibility",
-    "feature3Desc": "Sitemap, meta tags, and IndexNow for fast indexing."
+    "feature3Desc": "Sitemap, meta tags, and IndexNow for fast indexing.",
+    "shopByOccasion": "Shop by occasion"
   },
   "auth": {
     "loginTitle": "Login",
@@ -1020,7 +1021,14 @@
     "announcement": "Announcement bar",
     "announcementHint": "Scrolls at the top of the home page. One line per message — leave empty to hide.",
     "announcementPlaceholder": "Delivery across Palestine\nCash on delivery\n7-day returns",
-    "announcementEnPlaceholder": "English (optional)"
+    "announcementEnPlaceholder": "English (optional)",
+    "collections": "Home collections",
+    "collectionsHint": "“Shop by occasion” cards. Each opens search results for its keyword — shown on the home page only if you add one.",
+    "collectionsEmpty": "No collections yet — add one to show it on the home page.",
+    "collectionTitle": "Title (e.g. Eid looks)",
+    "collectionTitleEn": "English title (optional)",
+    "collectionQuery": "Search keyword (e.g. evening dress)",
+    "collectionImage": "Image URL (https://…)"
   },
   "order": {
     "choose": "Choose order method",

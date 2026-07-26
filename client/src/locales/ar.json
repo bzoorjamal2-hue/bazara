@@ -227,7 +227,8 @@
     "feature2Title": "تصميم فاخر",
     "feature2Desc": "واجهة عصرية متجاوبة بلمسات ذهبية أنيقة.",
     "feature3Title": "ظهور في جوجل",
-    "feature3Desc": "خريطة موقع و meta tags و IndexNow لفهرسة سريعة."
+    "feature3Desc": "خريطة موقع و meta tags و IndexNow لفهرسة سريعة.",
+    "shopByOccasion": "تسوّقي حسب المناسبة"
   },
   "auth": {
     "loginTitle": "تسجيل الدخول",
@@ -1035,7 +1036,14 @@
     "announcement": "شريط الإعلان",
     "announcementHint": "يظهر متحرّكاً أعلى الصفحة الرئيسية. كل سطر إعلان مستقلّ — اتركه فارغاً لإخفائه.",
     "announcementPlaceholder": "توصيل لكل فلسطين\nالدفع عند الاستلام\nإرجاع خلال 7 أيام",
-    "announcementEnPlaceholder": "English (optional)"
+    "announcementEnPlaceholder": "English (optional)",
+    "collections": "مجموعات الرئيسية",
+    "collectionsHint": "بطاقات «تسوّقي حسب المناسبة». كل بطاقة تفتح نتائج البحث بكلمتها — تظهر بالرئيسية فقط إن أضفتَ مجموعة.",
+    "collectionsEmpty": "لا توجد مجموعات بعد — أضف واحدة لتظهر بالرئيسية.",
+    "collectionTitle": "العنوان (مثال: إطلالات العيد)",
+    "collectionTitleEn": "English title (optional)",
+    "collectionQuery": "كلمة البحث (مثال: فستان سهرة)",
+    "collectionImage": "رابط الصورة (https://…)"
   },
   "order": {
     "choose": "اختر طريقة الطلب",
