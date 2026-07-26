@@ -99,6 +99,28 @@ export async function getHomeData(_req, res, next) {
        ORDER BY p.sold_count DESC, p.created_at DESC LIMIT 10`
     );
     // بانرات الصفحة الرئيسية (يتحكّم بها المدير) — قد لا يوجد الجدول بعد على نسخ قديمة
+    // أرقام ثقة حقيقية من قاعدة البيانات (لا تقديرات): عدد المتاجر الفعّالة وقطعها،
+    // ومتوسط التقييم مع عدده. تُعرض بشرط عتبة أدنى في الواجهة — "4.8 من 3 تقييمات"
+    // يضرّ الثقة بدل أن يبنيها.
+    let trust = { stores: 0, products: 0, ratingAvg: 0, ratingCount: 0 };
+    try {
+      const tr = await query(
+        `SELECT
+           (SELECT COUNT(*)::int FROM stores s JOIN users u ON u.id = s.user_id WHERE ${active}) AS stores,
+           (SELECT COUNT(*)::int FROM products p
+              JOIN stores s ON s.id = p.store_id JOIN users u ON u.id = s.user_id WHERE ${active}) AS products,
+           (SELECT COUNT(*)::int FROM reviews) AS rating_count,
+           (SELECT COALESCE(ROUND(AVG(rating)::numeric, 1), 0) FROM reviews) AS rating_avg`
+      );
+      const r = tr.rows[0] || {};
+      trust = {
+        stores: Number(r.stores) || 0,
+        products: Number(r.products) || 0,
+        ratingCount: Number(r.rating_count) || 0,
+        ratingAvg: Number(r.rating_avg) || 0,
+      };
+    } catch { /* لا نكسر الرئيسية لأجل شريط ثقة */ }
+
     let homeBanners = [];
     let announcement = '';
     let announcementEn = '';
@@ -119,6 +141,7 @@ export async function getHomeData(_req, res, next) {
       homeBanners,
       announcement,
       announcementEn,
+      trust,
     });
   } catch (err) {
     next(err);

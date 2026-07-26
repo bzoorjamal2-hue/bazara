@@ -1045,5 +1045,12 @@
     "invalidEmail": "Invalid email address.",
     "notFound": "Page not found.",
     "storeNotFound": "Store not found."
+  },
+  "trust": {
+    "stores": "trusted stores",
+    "products": "pieces available",
+    "rating": "from {{count}} reviews",
+    "delivery": "Delivery across Palestine",
+    "cod": "Cash on delivery"
   }
 }

@@ -17,6 +17,7 @@ import InstallApp from '../components/InstallApp.jsx';
 import StoriesRow from '../components/StoriesRow.jsx';
 import FeaturesBar from '../components/FeaturesBar.jsx';
 import AnnouncementBar from '../components/AnnouncementBar.jsx';
+import TrustBar from '../components/TrustBar.jsx';
 import { BAZARA_WHATSAPP } from '../config/site.js';
 
 export default function Home() {
@@ -81,6 +82,9 @@ export default function Home() {
       ) : (
         <HomeHero banners={data ? data.homeBanners : persistedBanners || []} />
       )}
+
+      {/* شريط الثقة — أرقام حقيقية فوق الطية مباشرةً بعد الهيرو */}
+      <TrustBar trust={data?.trust} />
 
       {/* بطاقة تنزيل التطبيق (تظهر إن كان قابلاً للتثبيت وغير مثبّت) */}
       <InstallApp />
