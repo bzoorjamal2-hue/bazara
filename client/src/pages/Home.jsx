@@ -16,6 +16,7 @@ import StylistChat from '../components/StylistChat.jsx';
 import InstallApp from '../components/InstallApp.jsx';
 import StoriesRow from '../components/StoriesRow.jsx';
 import FeaturesBar from '../components/FeaturesBar.jsx';
+import AnnouncementBar from '../components/AnnouncementBar.jsx';
 import { BAZARA_WHATSAPP } from '../config/site.js';
 
 export default function Home() {
@@ -65,6 +66,12 @@ export default function Home() {
   return (
     <>
       <Seo title={t('app.name')} description={t('home.heroDesc')} />
+
+      {/* شريط إعلان المنصّة (يتحكّم به المدير) — أعلى الصفحة كالمتاجر العالمية:
+          توصيل مجاني/إرجاع/عروض. نفس مكوّن شريط المتاجر بعد استخراجه للمشترَك */}
+      {(data?.announcement || data?.announcementEn) && (
+        <AnnouncementBar ar={data.announcement} en={data.announcementEn} />
+      )}
 
       {/* Hero — سلايدر يتحكّم به المدير. نعرض هيكل تحميل ريثما نعرف البانرات (بدل وميض
           السلايدر الافتراضي القديم)، ونستخدم البانرات المحفوظة محلياً لظهورٍ فوري.

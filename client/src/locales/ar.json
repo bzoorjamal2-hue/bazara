@@ -1031,7 +1031,11 @@
     "daysPlaceholder": "أيام",
     "daysRange": "أدخل عدد أيام بين 1 و365.",
     "daysAdded": "تمت إضافة {{count}} يوم على الاشتراك.",
-    "noSubscribers": "لا يوجد مشتركون بعد."
+    "noSubscribers": "لا يوجد مشتركون بعد.",
+    "announcement": "شريط الإعلان",
+    "announcementHint": "يظهر متحرّكاً أعلى الصفحة الرئيسية. كل سطر إعلان مستقلّ — اتركه فارغاً لإخفائه.",
+    "announcementPlaceholder": "توصيل لكل فلسطين\nالدفع عند الاستلام\nإرجاع خلال 7 أيام",
+    "announcementEnPlaceholder": "English (optional)"
   },
   "order": {
     "choose": "اختر طريقة الطلب",

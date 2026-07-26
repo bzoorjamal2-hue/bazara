@@ -1016,7 +1016,11 @@
     "daysPlaceholder": "Days",
     "daysRange": "Enter a number of days between 1 and 365.",
     "daysAdded": "Added {{count}} day(s) to the subscription.",
-    "noSubscribers": "No subscribers yet."
+    "noSubscribers": "No subscribers yet.",
+    "announcement": "Announcement bar",
+    "announcementHint": "Scrolls at the top of the home page. One line per message — leave empty to hide.",
+    "announcementPlaceholder": "Delivery across Palestine\nCash on delivery\n7-day returns",
+    "announcementEnPlaceholder": "English (optional)"
   },
   "order": {
     "choose": "Choose order method",

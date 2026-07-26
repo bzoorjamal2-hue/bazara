@@ -17,20 +17,22 @@ const DEFAULT_SITE_SLIDES = [
 export default function SiteSliders() {
   const { t } = useTranslation();
   const [banners, setBanners] = useState(null);
+  const [ann, setAnn] = useState('');
+  const [annEn, setAnnEn] = useState('');
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     api.get('/site/banners')
-      .then((r) => setBanners(r.data.banners?.length ? r.data.banners : DEFAULT_SITE_SLIDES))
+      .then((r) => { setBanners(r.data.banners?.length ? r.data.banners : DEFAULT_SITE_SLIDES); setAnn(r.data.announcement || ''); setAnnEn(r.data.announcementEn || ''); })
       .catch((e) => setError(getErrorMessage(e)));
   }, []);
 
   const save = async () => {
     setMsg(''); setError(''); setBusy(true);
     try {
-      await api.put('/site/banners', { banners });
+      await api.put('/site/banners', { banners, announcement: ann, announcementEn: annEn });
       // بانرات الرئيسية الجديدة تظهر فوراً: نفرّغ كاش الرئيسية + النسخة المحفوظة للظهور الفوري
       clearCachePrefixes(['home']);
       try { localStorage.removeItem('bz_home_banners'); } catch { /* تجاهل */ }
@@ -54,6 +56,32 @@ export default function SiteSliders() {
       {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
       <div className="glass p-6">
         <BannerEditor banners={banners} onChange={setBanners} withButtons />
+      </div>
+
+      {/* شريط الإعلان أعلى الصفحة الرئيسية — سطر لكل رسالة، تُعرض بتتابع متحرّك.
+          يبقى مخفياً تماماً إن تُرك فارغاً */}
+      <div className="glass space-y-3 p-6">
+        <div>
+          <h2 className="font-display text-lg font-bold text-gold-200">{t('admin.announcement')}</h2>
+          <p className="mt-1 text-xs text-stone-400">{t('admin.announcementHint')}</p>
+        </div>
+        <textarea
+          value={ann}
+          onChange={(e) => setAnn(e.target.value)}
+          rows={3}
+          maxLength={400}
+          placeholder={t('admin.announcementPlaceholder')}
+          className="input w-full"
+        />
+        <textarea
+          value={annEn}
+          onChange={(e) => setAnnEn(e.target.value)}
+          rows={2}
+          maxLength={400}
+          dir="ltr"
+          placeholder={t('admin.announcementEnPlaceholder')}
+          className="input w-full"
+        />
       </div>
       <button onClick={save} disabled={busy} className="btn-primary">{busy ? t('common.loading') : t('common.save')}</button>
     </div>

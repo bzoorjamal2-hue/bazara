@@ -100,10 +100,14 @@ export async function getHomeData(_req, res, next) {
     );
     // بانرات الصفحة الرئيسية (يتحكّم بها المدير) — قد لا يوجد الجدول بعد على نسخ قديمة
     let homeBanners = [];
+    let announcement = '';
+    let announcementEn = '';
     try {
-      const sb = await query('SELECT home_banners FROM site_settings WHERE id = 1');
+      const sb = await query('SELECT home_banners, announcement, announcement_en FROM site_settings WHERE id = 1');
       homeBanners = Array.isArray(sb.rows[0]?.home_banners) ? sb.rows[0].home_banners : [];
-    } catch { /* الجدول غير موجود بعد */ }
+      announcement = sb.rows[0]?.announcement || '';
+      announcementEn = sb.rows[0]?.announcement_en || '';
+    } catch { /* الجدول/الأعمدة غير موجودة بعد */ }
 
     res.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300'); // كاش حافة Vercel
     res.json({
@@ -113,6 +117,8 @@ export async function getHomeData(_req, res, next) {
       deals: deals.rows.map(mapProduct),
       bestSellers: bestSellers.rows.map(mapProduct),
       homeBanners,
+      announcement,
+      announcementEn,
     });
   } catch (err) {
     next(err);
