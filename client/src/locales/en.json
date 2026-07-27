@@ -1060,5 +1060,13 @@
     "rating": "from {{count}} reviews",
     "delivery": "Delivery across Palestine",
     "cod": "Cash on delivery"
+  },
+  "newsletter": {
+    "title": "Be the first to know",
+    "desc": "New arrivals and offers before everyone else — no spam, unsubscribe anytime.",
+    "placeholder": "Your email or WhatsApp number",
+    "cta": "Subscribe",
+    "thanks": "You're in! 🌷",
+    "privacy": "We use your contact only to send offers — never shared with anyone."
   }
 }

@@ -326,6 +326,13 @@ async function ensureColumns() {
     await pool.query("ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS announcement_en TEXT NOT NULL DEFAULT '';");
     // مجموعات تحريرية بالرئيسية (تسوّقي حسب المناسبة): عنوان + صورة + كلمة بحث
     await pool.query("ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS collections JSONB NOT NULL DEFAULT '[]'::jsonb;");
+    // مشتركو النشرة — بريد أو رقم واتساب. لا نخزّن أكثر من وسيلة التواصل ومصدرها.
+    await pool.query(`CREATE TABLE IF NOT EXISTS subscribers (
+      id SERIAL PRIMARY KEY,
+      contact TEXT NOT NULL UNIQUE,
+      kind TEXT NOT NULL DEFAULT 'email',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );`);
     // فهارس أداء لاستعلامات العرض الأكثر تكراراً (الترتيب حسب المميّز/الأحدث) — تسرّع الصفحات العامة كلما زادت المنتجات
     await pool.query('CREATE INDEX IF NOT EXISTS idx_products_featured_created ON products(featured, created_at DESC);');
     await pool.query('CREATE INDEX IF NOT EXISTS idx_products_created ON products(created_at DESC);');

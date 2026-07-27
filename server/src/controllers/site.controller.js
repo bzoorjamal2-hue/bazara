@@ -64,3 +64,46 @@ export async function updateSiteBanners(req, res, next) {
     next(err);
   }
 }
+
+// ───── اشتراك النشرة (عام) ─────
+// نقبل بريداً أو رقم واتساب بحقل واحد. لا نخزّن اسماً ولا أي بيانات أخرى — وسيلة
+// التواصل ونوعها فقط. التكرار يُبتلع بهدوء (ON CONFLICT) فلا نكشف من اشترك سابقاً.
+const DIGITS = /^\+?[\d\s-]{9,20}$/;
+const EMAIL = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
+
+export async function subscribeNewsletter(req, res, next) {
+  try {
+    const raw = String(req.body?.contact ?? '').trim().slice(0, 120);
+    if (!raw) return res.status(400).json({ error: 'أدخلي بريدك أو رقمك.' });
+
+    let contact = raw;
+    let kind;
+    if (EMAIL.test(raw)) {
+      kind = 'email';
+      contact = raw.toLowerCase();
+    } else if (DIGITS.test(raw)) {
+      kind = 'phone';
+      contact = raw.replace(/[\s-]/g, ''); // نوحّد الصيغة كي لا يتكرّر الرقم بأشكال مختلفة
+    } else {
+      return res.status(400).json({ error: 'تأكّدي من البريد أو الرقم.' });
+    }
+
+    await query(
+      'INSERT INTO subscribers (contact, kind) VALUES ($1, $2) ON CONFLICT (contact) DO NOTHING',
+      [contact, kind]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// قائمة مشتركي النشرة (مدير) — غير مشتركي الاشتراكات المدفوعة
+export async function listNewsletter(_req, res, next) {
+  try {
+    const r = await query('SELECT contact, kind, created_at FROM subscribers ORDER BY created_at DESC LIMIT 5000');
+    res.json({ subscribers: r.rows, count: r.rowCount });
+  } catch (err) {
+    next(err);
+  }
+}

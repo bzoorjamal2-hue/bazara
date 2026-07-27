@@ -19,6 +19,7 @@ import FeaturesBar from '../components/FeaturesBar.jsx';
 import AnnouncementBar from '../components/AnnouncementBar.jsx';
 import TrustBar from '../components/TrustBar.jsx';
 import CollectionsRow from '../components/CollectionsRow.jsx';
+import NewsletterBox from '../components/NewsletterBox.jsx';
 import { BAZARA_WHATSAPP } from '../config/site.js';
 
 export default function Home() {
@@ -222,6 +223,9 @@ export default function Home() {
           </section>
         </>
       )}
+
+      {/* نشرة بازارا — قبل شريط المزايا مباشرةً بآخر الصفحة */}
+      <NewsletterBox />
 
       {/* شريط المزايا — بآخر الصفحة */}
       <FeaturesBar />

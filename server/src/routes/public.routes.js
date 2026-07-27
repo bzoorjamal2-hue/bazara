@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { param } from 'express-validator';
+import { subscribeNewsletter } from '../controllers/site.controller.js';
 import { getHomeData, getStoreBySlug, getStoreCheckout, getProductById, getProductsByIds, getByCategory, getOffers, getReels, getStoriesFeed, addReview, trackOrders, trackStoreVisit, loyaltyPreview, searchProducts } from '../controllers/public.controller.js';
 import { validateCoupon } from '../controllers/coupon.controller.js';
 import { createStockRequest } from '../controllers/stockRequest.controller.js';
@@ -55,6 +56,9 @@ router.post('/stock-request', reviewLimiter, createStockRequest);
 // لأنها تُستدعى مع التعديل المتكرر أثناء الكتابة)
 const abandonedLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 80, standardHeaders: true, legacyHeaders: false, message: { error: 'محاولات كثيرة.' } });
 router.post('/abandoned', abandonedLimiter, saveAbandoned);
+// اشتراك النشرة — حدّ صارم (نموذج عام مكشوف)
+const subscribeLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false, message: { error: 'محاولات كثيرة. حاولي لاحقاً.' } });
+router.post('/subscribe', subscribeLimiter, subscribeNewsletter);
 router.post('/assistant', assistantLimiter, chatAssistant);
 router.post('/referral', reviewLimiter, createReferral);
 router.get('/referral/:code', validateReferral);
