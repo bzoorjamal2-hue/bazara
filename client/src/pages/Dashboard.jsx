@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import Seo from '../components/Seo.jsx';
 import {
   UserIcon, DownloadIcon, HomeIcon, ChartIcon, GearIcon, BagIcon, ReceiptIcon,
-  TicketIcon, GiftIcon, BellIcon, UsersIcon, ShieldIcon, ImageIcon, StoreIcon, LinkIcon,
+  TicketIcon, GiftIcon, BellIcon, UsersIcon, ShieldIcon, ImageIcon, StoreIcon, LinkIcon, MailIcon,
 } from '../components/icons.jsx';
 import SubscriptionBanner from '../components/SubscriptionBanner.jsx';
 import Profile from './dashboard/Profile.jsx';
@@ -21,6 +21,7 @@ import StockRequestsManager from './dashboard/StockRequestsManager.jsx';
 import AdminRequests from './dashboard/AdminRequests.jsx';
 import SubscribersManager from './dashboard/SubscribersManager.jsx';
 import SiteSliders from './dashboard/SiteSliders.jsx';
+import NewsletterManager from './dashboard/NewsletterManager.jsx';
 
 // أقسام البائع (المشترك العادي) — الاستخدام اليومي أولاً (الطلبات/المنتجات)
 const SECTIONS = [
@@ -40,6 +41,7 @@ const ADMIN_SECTIONS = [
   { key: 'subscribers', Icon: UsersIcon },
   { key: 'admin', Icon: ShieldIcon },
   { key: 'siteSliders', Icon: ImageIcon },
+  { key: 'newsletter', Icon: MailIcon },
   { key: 'profile', Icon: UserIcon },
 ];
 
@@ -106,6 +108,7 @@ export default function Dashboard() {
         {section === 'subscribers' && isAdmin && <SubscribersManager />}
         {section === 'admin' && isAdmin && <AdminRequests />}
         {section === 'siteSliders' && isAdmin && <SiteSliders />}
+        {section === 'newsletter' && isAdmin && <NewsletterManager />}
       </div>
     </div>
   );

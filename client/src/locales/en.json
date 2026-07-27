@@ -1028,7 +1028,11 @@
     "collectionTitle": "Title (e.g. Eid looks)",
     "collectionTitleEn": "English title (optional)",
     "collectionQuery": "Search keyword (e.g. evening dress)",
-    "collectionImage": "Image URL (https://…)"
+    "collectionImage": "Image URL (https://…)",
+    "newsletter": "Newsletter",
+    "newsletterEmpty": "No subscribers yet.",
+    "newsletterTotal": "{{count}} subscribers",
+    "exportCsv": "Export CSV"
   },
   "order": {
     "choose": "Choose order method",

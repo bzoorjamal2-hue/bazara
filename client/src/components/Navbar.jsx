@@ -7,7 +7,7 @@ import api from '../api/client.js';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import LanguageSwitcher from './LanguageSwitcher.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
-import { CartIcon, HeartIcon, MenuIcon, UserIcon, SearchIcon } from './icons.jsx';
+import { CartIcon, HeartIcon, MenuIcon, UserIcon, SearchIcon, MailIcon } from './icons.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import NavBell from './NavBell.jsx';
 import CloseButton from './CloseButton.jsx';
@@ -201,6 +201,7 @@ export default function Navbar() {
         { key: 'subscribers', label: t('admin.subscribersNav'), Icon: UsersIcon },
         { key: 'admin', label: t('admin.nav'), Icon: ShieldCheckIcon },
         { key: 'siteSliders', label: t('admin.siteSliders'), Icon: GridIcon },
+        { key: 'newsletter', label: t('admin.newsletter'), Icon: MailIcon },
         { key: 'profile', label: t('dashboard.profile'), Icon: UserLineIcon },
       ]
     : [

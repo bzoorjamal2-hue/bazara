@@ -1043,7 +1043,11 @@
     "collectionTitle": "العنوان (مثال: إطلالات العيد)",
     "collectionTitleEn": "English title (optional)",
     "collectionQuery": "كلمة البحث (مثال: فستان سهرة)",
-    "collectionImage": "رابط الصورة (https://…)"
+    "collectionImage": "رابط الصورة (https://…)",
+    "newsletter": "مشتركو النشرة",
+    "newsletterEmpty": "ما في مشتركين بعد.",
+    "newsletterTotal": "{{count}} مشترك",
+    "exportCsv": "تصدير CSV"
   },
   "order": {
     "choose": "اختر طريقة الطلب",
