@@ -1063,13 +1063,6 @@
     "notFound": "Page not found.",
     "storeNotFound": "Store not found."
   },
-  "trust": {
-    "stores": "trusted stores",
-    "products": "pieces available",
-    "rating": "from {{count}} reviews",
-    "delivery": "Delivery across Palestine",
-    "cod": "Cash on delivery"
-  },
   "newsletter": {
     "title": "Be the first to know",
     "desc": "New arrivals and offers before everyone else — no spam, unsubscribe anytime.",
