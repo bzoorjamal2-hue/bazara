@@ -326,6 +326,8 @@ async function ensureColumns() {
     await pool.query("ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS announcement_en TEXT NOT NULL DEFAULT '';");
     // مجموعات تحريرية بالرئيسية (تسوّقي حسب المناسبة): عنوان + صورة + كلمة بحث
     await pool.query("ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS collections JSONB NOT NULL DEFAULT '[]'::jsonb;");
+    // مجموعات تحريرية لكل متجر (تسوّقي حسب المناسبة) — يحرّرها صاحب المتجر
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS collections JSONB NOT NULL DEFAULT '[]'::jsonb;");
     // لوك بوك الرئيسية: صورة إطلالة + معرّفات قطعها
     await pool.query("ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS lookbook JSONB NOT NULL DEFAULT '{}'::jsonb;");
     // مشتركو النشرة — بريد أو رقم واتساب. لا نخزّن أكثر من وسيلة التواصل ومصدرها.

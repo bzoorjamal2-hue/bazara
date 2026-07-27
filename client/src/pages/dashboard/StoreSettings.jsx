@@ -63,6 +63,7 @@ export default function StoreSettings() {
           welcomeOffer: s.welcomeOffer || '',
           categoryMeta: s.categoryMeta && typeof s.categoryMeta === 'object' ? s.categoryMeta : {},
           customCategories: Array.isArray(s.customCategories) ? s.customCategories : [],
+          collections: Array.isArray(s.collections) ? s.collections : [],
           fbPixel: s.fbPixel || '',
           tiktokPixel: s.tiktokPixel || '',
           gaId: s.gaId || '',
@@ -134,6 +135,12 @@ export default function StoreSettings() {
     setForm((f) => ({ ...f, customCategories: f.customCategories.map((c, i) => (i === idx ? { ...c, [key]: val } : c)) }));
   const removeCustomCat = (idx) =>
     setForm((f) => ({ ...f, customCategories: f.customCategories.filter((_, i) => i !== idx) }));
+  const addCollection = () =>
+    setForm((f) => ({ ...f, collections: [...(f.collections || []), { title: '', titleEn: '', image: '', q: '' }] }));
+  const setCollection = (idx, key, val) =>
+    setForm((f) => ({ ...f, collections: f.collections.map((c, i) => (i === idx ? { ...c, [key]: val } : c)) }));
+  const removeCollection = (idx) =>
+    setForm((f) => ({ ...f, collections: f.collections.filter((_, i) => i !== idx) }));
 
   return (
     <div className="space-y-6">
@@ -394,6 +401,38 @@ export default function StoreSettings() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* مجموعات المتجر: تسوّقي حسب المناسبة — صورة مرفوعة + كلمة بحث */}
+        <div className="glass space-y-4 p-6">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="font-display text-lg font-bold text-stone-100">{t('dashboard.store.collections')}</h2>
+              <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.collectionsHint')}</p>
+            </div>
+            {(form.collections || []).length < 12 && (
+              <button type="button" onClick={addCollection} className="btn-ghost !py-1.5 text-sm">＋ {t('common.add')}</button>
+            )}
+          </div>
+          {(form.collections || []).length === 0 ? (
+            <p className="rounded-xl border border-gold-400/15 bg-black/20 p-3 text-center text-xs text-stone-400">{t('dashboard.store.collectionsEmpty')}</p>
+          ) : (
+            <div className="space-y-3">
+              {form.collections.map((c, idx) => (
+                <div key={idx} className="rounded-xl border border-gold-400/15 bg-black/20 p-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-sm font-semibold text-gold-200">{c.title || t('dashboard.store.newCategory')}</span>
+                    <button type="button" onClick={() => removeCollection(idx)} className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-stone-400 hover:text-red-300"><TrashIcon className="h-3.5 w-3.5" /> {t('common.delete')}</button>
+                  </div>
+                  <div className="mb-2 grid gap-2 sm:grid-cols-2">
+                    <input type="text" maxLength={60} className="input" placeholder={t('dashboard.store.collectionTitle')} value={c.title} onChange={(e) => setCollection(idx, 'title', e.target.value)} />
+                    <input type="text" maxLength={60} className="input" placeholder={t('dashboard.store.collectionQuery')} value={c.q} onChange={(e) => setCollection(idx, 'q', e.target.value)} />
+                  </div>
+                  <ImageInput value={c.image || ''} onChange={(v) => setCollection(idx, 'image', v)} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* تسويق: شريط إعلانات + نافذة ترحيب */}

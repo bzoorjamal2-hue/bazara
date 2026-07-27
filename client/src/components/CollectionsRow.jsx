@@ -6,11 +6,13 @@ import { cldThumb, cldSrcSet } from '../utils/cloudinary.js';
 // كل بطاقة: صورة أجواء + عنوان فوقها، تفتح نتائج البحث بكلمتها.
 // لا نقبل روابط حرّة من الإدارة: نبني /search بأنفسنا من كلمة البحث (q) فلا يمكن
 // حقن رابط خارجي. ويُخفى القسم كلّه إن لم تُضف مجموعات — لا حشو ولا بطاقات وهمية.
-export default function CollectionsRow({ collections }) {
+// storeSlug: عند تمريره تفتح البطاقة بحث هذا المتجر فقط (?store=slug) بدل البحث الشامل.
+export default function CollectionsRow({ collections, storeSlug = '' }) {
   const { t, i18n } = useTranslation();
   const isEn = i18n.language === 'en';
   const list = (collections || []).filter((c) => c && c.title && c.q);
   if (list.length === 0) return null;
+  const linkFor = (q) => `/search?q=${encodeURIComponent(q)}${storeSlug ? `&store=${encodeURIComponent(storeSlug)}` : ''}`;
 
   return (
     <section className="mt-14">
@@ -28,7 +30,7 @@ export default function CollectionsRow({ collections }) {
           return (
             <Link
               key={`${c.q}-${i}`}
-              to={`/search?q=${encodeURIComponent(c.q)}`}
+              to={linkFor(c.q)}
               className="group animate-fade-up relative aspect-[4/3] overflow-hidden rounded-2xl bg-wine/10 shadow-sm ring-1 ring-wine/10 transition duration-300 hover:-translate-y-1 hover:shadow-glow"
               style={{ animationDelay: `${i * 60}ms` }}
             >

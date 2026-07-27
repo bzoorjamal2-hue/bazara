@@ -620,7 +620,12 @@
       "slideButton": "Slide button (optional)",
       "btnLabel": "Button text (e.g. Shop now)",
       "btnHref": "Button destination (link or path)",
-      "btnHrefHint": "Put a full URL (https://...) to open an external site, or an internal path like /shop, /category/dress, or /store/store-name."
+      "btnHrefHint": "Put a full URL (https://...) to open an external site, or an internal path like /shop, /category/dress, or /store/store-name.",
+      "collections": "Store collections",
+      "collectionsHint": "“Shop by occasion” cards on your store page. Each is an image + keyword that opens your store search.",
+      "collectionsEmpty": "No collections yet — add one to show on your store.",
+      "collectionTitle": "Title (e.g. Eid looks)",
+      "collectionQuery": "Search keyword (e.g. evening dress)"
     },
     "product": {
       "name": "Item name",

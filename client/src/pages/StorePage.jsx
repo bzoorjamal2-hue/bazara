@@ -10,6 +10,7 @@ import ProductCard from '../components/ProductCard.jsx';
 import CategoryGrid from '../components/CategoryGrid.jsx';
 import StoreHeader from '../components/StoreHeader.jsx';
 import FeaturesBar from '../components/FeaturesBar.jsx';
+import CollectionsRow from '../components/CollectionsRow.jsx';
 import AnnouncementBar from '../components/AnnouncementBar.jsx';
 import CatThumb from '../components/CatThumb.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
@@ -424,6 +425,10 @@ export default function StorePage() {
             <SectionTitle>{t('store.browseByCategory')}</SectionTitle>
             <CategoryGrid onSelect={pickCategory} active={cat} cats={gridCats} />
           </section>
+
+          {/* مجموعات المتجر التحريرية (تسوّقي حسب المناسبة) — تحرّرها المالكة، وتفتح
+              بحث هذا المتجر بكلمتها. تُخفى إن لم تُضف مجموعات */}
+          <CollectionsRow collections={store.collections} storeSlug={store.slug} />
 
           {/* قصة العلامة — كان وصف المتجر مدفوناً بالفوتر وحده. لمسة تحريرية تعرّف
               الزائرة بالمتجر قبل التصفّح (تظهر فقط إن كتبت المالكة وصفاً) */}

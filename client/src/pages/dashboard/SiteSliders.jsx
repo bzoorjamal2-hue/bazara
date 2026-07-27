@@ -4,6 +4,7 @@ import api, { getErrorMessage } from '../../api/client.js';
 import { clearCachePrefixes } from '../../utils/apiCache.js';
 import Spinner from '../../components/Spinner.jsx';
 import BannerEditor from '../../components/BannerEditor.jsx';
+import ImageInput from '../../components/ImageInput.jsx';
 import { ImageIcon } from '../../components/icons.jsx';
 
 // الشرائح الافتراضية الموجودة حالياً بالصفحة الرئيسية — تظهر للمدير ليعدّلها/يحذفها
@@ -110,8 +111,7 @@ export default function SiteSliders() {
                 placeholder={t('admin.collectionQuery')} maxLength={60} className="input" />
               <input value={c.titleEn} onChange={(e) => setCols(cols.map((x, k) => (k === i ? { ...x, titleEn: e.target.value } : x)))}
                 placeholder={t('admin.collectionTitleEn')} maxLength={60} dir="ltr" className="input" />
-              <input value={c.image} onChange={(e) => setCols(cols.map((x, k) => (k === i ? { ...x, image: e.target.value } : x)))}
-                placeholder={t('admin.collectionImage')} dir="ltr" className="input" />
+              <div className="sm:col-span-2"><ImageInput value={c.image} onChange={(v) => setCols(cols.map((x, k) => (k === i ? { ...x, image: v } : x)))} /></div>
               <button type="button" onClick={() => setCols(cols.filter((_, k) => k !== i))} className="btn-danger !px-3 !py-1.5 text-xs sm:col-span-2 sm:justify-self-start">
                 {t('common.delete')}
               </button>
@@ -126,7 +126,7 @@ export default function SiteSliders() {
           <h2 className="font-display text-lg font-bold text-gold-200">{t('admin.lookbook')}</h2>
           <p className="mt-1 text-xs text-stone-400">{t('admin.lookbookHint')}</p>
         </div>
-        <input value={lb.image} onChange={(e) => setLb({ ...lb, image: e.target.value })} dir="ltr" placeholder={t('admin.collectionImage')} className="input w-full" />
+        <ImageInput value={lb.image} onChange={(v) => setLb({ ...lb, image: v })} />
         <div className="grid gap-2 sm:grid-cols-2">
           <input value={lb.title} onChange={(e) => setLb({ ...lb, title: e.target.value })} maxLength={60} placeholder={t('admin.lookbookTitle')} className="input" />
           <input value={lb.titleEn} onChange={(e) => setLb({ ...lb, titleEn: e.target.value })} maxLength={60} dir="ltr" placeholder={t('admin.collectionTitleEn')} className="input" />

@@ -47,6 +47,7 @@ function mapStorePublic(s) {
     welcomeOffer: s.welcome_offer || '',
     categoryMeta: s.category_meta && typeof s.category_meta === 'object' ? s.category_meta : {},
     customCategories: Array.isArray(s.custom_categories) ? s.custom_categories : [],
+    collections: Array.isArray(s.collections) ? s.collections : [],
     ownerPhone: s.owner_phone || '', // رقم المالك من التسجيل (احتياطي للواتساب)
     // بكسلات تمويل المتجر — تُحقن بصفحات المتجر لتتبّع إعلانات المالك
     fbPixel: s.fb_pixel || '',

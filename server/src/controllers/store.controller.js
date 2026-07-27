@@ -31,6 +31,7 @@ function mapStore(s) {
     welcomeOffer: s.welcome_offer || '',
     categoryMeta: s.category_meta && typeof s.category_meta === 'object' ? s.category_meta : {},
     customCategories: Array.isArray(s.custom_categories) ? s.custom_categories : [],
+    collections: Array.isArray(s.collections) ? s.collections : [],
     fbPixel: s.fb_pixel || '',
     tiktokPixel: s.tiktok_pixel || '',
     gaId: s.ga_id || '',
@@ -154,6 +155,7 @@ export async function updateMyStore(req, res, next) {
   const welcomeOffer = String(req.body.welcomeOffer || '').slice(0, 300);
   const categoryMeta = sanitizeCategoryMeta(req.body.categoryMeta);
   const customCategories = sanitizeCustomCategories(req.body.customCategories);
+  const collections = sanitizeStoreCollections(req.body.collections);
   // بكسلات التمويل: معرّفات فقط (أرقام/حروف/شرطات) — تُحقن كسكربتات رسمية بالواجهة
   const pixelId = (v, max = 40) => String(v || '').trim().replace(/[^\w-]/g, '').slice(0, max);
   const fbPixel = pixelId(req.body.fbPixel);
@@ -202,6 +204,7 @@ export async function updateMyStore(req, res, next) {
          banners = $13::jsonb, delivery_zones = $14::jsonb, free_shipping_over = $15,
          size_chart = $16::jsonb, return_policy = $17, announcement = $18, welcome_offer = $19,
          category_meta = $20::jsonb, custom_categories = $21::jsonb, referral_percent = $23,
+         collections = $34::jsonb,
          announcement_en = $24, old_slugs = $25::text[], delivery_phone = $26,
          fb_pixel = $27, tiktok_pixel = $28, ga_id = $29,
          loyalty_every = $30, loyalty_percent = $31,
@@ -242,6 +245,7 @@ export async function updateMyStore(req, res, next) {
         loyaltyPercent,
         flashPercent,
         flashEndsAt,
+        JSON.stringify(collections),
       ]
     );
 
