@@ -228,7 +228,8 @@
     "feature2Desc": "واجهة عصرية متجاوبة بلمسات ذهبية أنيقة.",
     "feature3Title": "ظهور في جوجل",
     "feature3Desc": "خريطة موقع و meta tags و IndexNow لفهرسة سريعة.",
-    "shopByOccasion": "تسوّقي حسب المناسبة"
+    "shopByOccasion": "تسوّقي حسب المناسبة",
+    "lookbook": "إطلالة الأسبوع"
   },
   "auth": {
     "loginTitle": "تسجيل الدخول",
@@ -1047,7 +1048,11 @@
     "newsletter": "مشتركو النشرة",
     "newsletterEmpty": "ما في مشتركين بعد.",
     "newsletterTotal": "{{count}} مشترك",
-    "exportCsv": "تصدير CSV"
+    "exportCsv": "تصدير CSV",
+    "lookbook": "اللوك بوك",
+    "lookbookHint": "صورة إطلالة كاملة + أرقام القطع الظاهرة فيها. يُخفى من الرئيسية إن تُركت الصورة فارغة.",
+    "lookbookTitle": "العنوان (مثال: إطلالة الأسبوع)",
+    "lookbookIds": "أرقام المنتجات مفصولة بفواصل — مثال: 12, 34, 56"
   },
   "order": {
     "choose": "اختر طريقة الطلب",

@@ -20,20 +20,21 @@ export default function SiteSliders() {
   const [ann, setAnn] = useState('');
   const [annEn, setAnnEn] = useState('');
   const [cols, setCols] = useState([]);
+  const [lb, setLb] = useState({ image: '', title: '', titleEn: '', productIds: [] });
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     api.get('/site/banners')
-      .then((r) => { setBanners(r.data.banners?.length ? r.data.banners : DEFAULT_SITE_SLIDES); setAnn(r.data.announcement || ''); setAnnEn(r.data.announcementEn || ''); setCols(r.data.collections || []); })
+      .then((r) => { setBanners(r.data.banners?.length ? r.data.banners : DEFAULT_SITE_SLIDES); setAnn(r.data.announcement || ''); setAnnEn(r.data.announcementEn || ''); setCols(r.data.collections || []); setLb({ image: '', title: '', titleEn: '', productIds: [], ...(r.data.lookbook || {}) }); })
       .catch((e) => setError(getErrorMessage(e)));
   }, []);
 
   const save = async () => {
     setMsg(''); setError(''); setBusy(true);
     try {
-      await api.put('/site/banners', { banners, announcement: ann, announcementEn: annEn, collections: cols });
+      await api.put('/site/banners', { banners, announcement: ann, announcementEn: annEn, collections: cols, lookbook: lb });
       // بانرات الرئيسية الجديدة تظهر فوراً: نفرّغ كاش الرئيسية + النسخة المحفوظة للظهور الفوري
       clearCachePrefixes(['home']);
       try { localStorage.removeItem('bz_home_banners'); } catch { /* تجاهل */ }
@@ -117,6 +118,24 @@ export default function SiteSliders() {
             </div>
           ))
         )}
+      </div>
+
+      {/* اللوك بوك: صورة إطلالة + أرقام المنتجات الظاهرة فيها (بفواصل) */}
+      <div className="glass space-y-3 p-6">
+        <div>
+          <h2 className="font-display text-lg font-bold text-gold-200">{t('admin.lookbook')}</h2>
+          <p className="mt-1 text-xs text-stone-400">{t('admin.lookbookHint')}</p>
+        </div>
+        <input value={lb.image} onChange={(e) => setLb({ ...lb, image: e.target.value })} dir="ltr" placeholder={t('admin.collectionImage')} className="input w-full" />
+        <div className="grid gap-2 sm:grid-cols-2">
+          <input value={lb.title} onChange={(e) => setLb({ ...lb, title: e.target.value })} maxLength={60} placeholder={t('admin.lookbookTitle')} className="input" />
+          <input value={lb.titleEn} onChange={(e) => setLb({ ...lb, titleEn: e.target.value })} maxLength={60} dir="ltr" placeholder={t('admin.collectionTitleEn')} className="input" />
+        </div>
+        <input
+          value={(lb.productIds || []).join(', ')}
+          onChange={(e) => setLb({ ...lb, productIds: e.target.value.split(',').map((n) => Number(n.trim())).filter((n) => Number.isInteger(n) && n > 0) })}
+          dir="ltr" placeholder={t('admin.lookbookIds')} className="input w-full"
+        />
       </div>
 
       <button onClick={save} disabled={busy} className="btn-primary">{busy ? t('common.loading') : t('common.save')}</button>

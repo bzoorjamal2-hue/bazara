@@ -20,6 +20,7 @@ import AnnouncementBar from '../components/AnnouncementBar.jsx';
 import TrustBar from '../components/TrustBar.jsx';
 import CollectionsRow from '../components/CollectionsRow.jsx';
 import NewsletterBox from '../components/NewsletterBox.jsx';
+import LookbookSection from '../components/LookbookSection.jsx';
 import { BAZARA_WHATSAPP } from '../config/site.js';
 
 export default function Home() {
@@ -102,6 +103,9 @@ export default function Home() {
 
       {/* مجموعات تحريرية (تسوّقي حسب المناسبة) — يحرّرها المدير، ويُخفى القسم بلا محتوى */}
       <CollectionsRow collections={data?.collections} />
+
+      {/* لوك بوك: إطلالة كاملة + قطعها — يُخفى بلا صورة */}
+      <LookbookSection lookbook={data?.lookbook} />
 
       {/* شريط ترويجي (توصيل/دفع عند الاستلام) — طبق المرجع */}
       <PromoBanner />

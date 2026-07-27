@@ -3,13 +3,14 @@ import { sanitizeBanners } from './store.controller.js';
 
 // إعدادات الموقع العامة (صف واحد id=1) — يتحكّم بها المدير العام.
 async function readSettings() {
-  const r = await query('SELECT home_banners, announcement, announcement_en, collections FROM site_settings WHERE id = 1');
+  const r = await query('SELECT home_banners, announcement, announcement_en, collections, lookbook FROM site_settings WHERE id = 1');
   const row = r.rows[0];
   return {
     banners: Array.isArray(row?.home_banners) ? row.home_banners : [],
     announcement: row?.announcement || '',
     announcementEn: row?.announcement_en || '',
     collections: Array.isArray(row?.collections) ? row.collections : [],
+    lookbook: row?.lookbook && typeof row.lookbook === 'object' ? row.lookbook : {},
   };
 }
 
@@ -43,6 +44,20 @@ export async function getSiteBanners(_req, res, next) {
 }
 
 // تحديث بانرات الصفحة الرئيسية للموقع (مدير)
+// اللوك بوك: صورة إطلالة + معرّفات قطعها. لا نقبل إلا http(s) وأعداداً صحيحة.
+const sanitizeLookbook = (v) => {
+  if (!v || typeof v !== 'object') return {};
+  const image = /^https?:///i.test(String(v.image ?? '')) ? String(v.image).slice(0, 500) : '';
+  if (!image) return {}; // بلا صورة لا معنى للوك بوك
+  return {
+    image,
+    title: String(v.title ?? '').slice(0, 60).trim(),
+    titleEn: String(v.titleEn ?? '').slice(0, 60).trim(),
+    productIds: (Array.isArray(v.productIds) ? v.productIds : [])
+      .map((n) => Number(n)).filter((n) => Number.isInteger(n) && n > 0).slice(0, 12),
+  };
+};
+
 export async function updateSiteBanners(req, res, next) {
   try {
     const banners = sanitizeBanners(req.body.banners);
@@ -51,15 +66,16 @@ export async function updateSiteBanners(req, res, next) {
     const announcement = req.body.announcement === undefined ? cur.announcement : cleanAnnouncement(req.body.announcement);
     const announcementEn = req.body.announcementEn === undefined ? cur.announcementEn : cleanAnnouncement(req.body.announcementEn);
     const collections = req.body.collections === undefined ? cur.collections : sanitizeCollections(req.body.collections);
+    const lookbook = req.body.lookbook === undefined ? cur.lookbook : sanitizeLookbook(req.body.lookbook);
     await query(
-      `INSERT INTO site_settings (id, home_banners, announcement, announcement_en, collections, updated_at)
-       VALUES (1, $1::jsonb, $2, $3, $4::jsonb, now())
+      `INSERT INTO site_settings (id, home_banners, announcement, announcement_en, collections, lookbook, updated_at)
+       VALUES (1, $1::jsonb, $2, $3, $4::jsonb, $5::jsonb, now())
        ON CONFLICT (id) DO UPDATE SET home_banners = EXCLUDED.home_banners,
          announcement = EXCLUDED.announcement, announcement_en = EXCLUDED.announcement_en,
-         collections = EXCLUDED.collections, updated_at = now()`,
-      [JSON.stringify(banners), announcement, announcementEn, JSON.stringify(collections)]
+         collections = EXCLUDED.collections, lookbook = EXCLUDED.lookbook, updated_at = now()`,
+      [JSON.stringify(banners), announcement, announcementEn, JSON.stringify(collections), JSON.stringify(lookbook)]
     );
-    res.json({ banners, announcement, announcementEn, collections });
+    res.json({ banners, announcement, announcementEn, collections, lookbook });
   } catch (err) {
     next(err);
   }

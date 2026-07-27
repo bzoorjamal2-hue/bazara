@@ -228,7 +228,8 @@
     "feature2Desc": "Modern responsive UI with elegant gold accents.",
     "feature3Title": "Google visibility",
     "feature3Desc": "Sitemap, meta tags, and IndexNow for fast indexing.",
-    "shopByOccasion": "Shop by occasion"
+    "shopByOccasion": "Shop by occasion",
+    "lookbook": "Look of the week"
   },
   "auth": {
     "loginTitle": "Login",
@@ -1032,7 +1033,11 @@
     "newsletter": "Newsletter",
     "newsletterEmpty": "No subscribers yet.",
     "newsletterTotal": "{{count}} subscribers",
-    "exportCsv": "Export CSV"
+    "exportCsv": "Export CSV",
+    "lookbook": "Lookbook",
+    "lookbookHint": "A full-look image + the IDs of the pieces in it. Hidden from home if the image is empty.",
+    "lookbookTitle": "Title (e.g. Look of the week)",
+    "lookbookIds": "Product IDs, comma separated — e.g. 12, 34, 56"
   },
   "order": {
     "choose": "Choose order method",
