@@ -103,14 +103,12 @@ export async function getHomeData(_req, res, next) {
     let homeBanners = [];
     let announcement = '';
     let announcementEn = '';
-    let collections = [];
     let lookbook = null;
     try {
-      const sb = await query('SELECT home_banners, announcement, announcement_en, collections, lookbook FROM site_settings WHERE id = 1');
+      const sb = await query('SELECT home_banners, announcement, announcement_en, lookbook FROM site_settings WHERE id = 1');
       homeBanners = Array.isArray(sb.rows[0]?.home_banners) ? sb.rows[0].home_banners : [];
       announcement = sb.rows[0]?.announcement || '';
       announcementEn = sb.rows[0]?.announcement_en || '';
-      collections = Array.isArray(sb.rows[0]?.collections) ? sb.rows[0].collections : [];
       const lb = sb.rows[0]?.lookbook;
       lookbook = lb && typeof lb === 'object' && lb.image ? lb : null;
     } catch { /* الجدول/الأعمدة غير موجودة بعد */ }
@@ -125,7 +123,6 @@ export async function getHomeData(_req, res, next) {
       homeBanners,
       announcement,
       announcementEn,
-      collections,
       lookbook,
     });
   } catch (err) {

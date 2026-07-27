@@ -16,7 +16,6 @@ import StylistChat from '../components/StylistChat.jsx';
 import InstallApp from '../components/InstallApp.jsx';
 import FeaturesBar from '../components/FeaturesBar.jsx';
 import AnnouncementBar from '../components/AnnouncementBar.jsx';
-import CollectionsRow from '../components/CollectionsRow.jsx';
 import NewsletterBox from '../components/NewsletterBox.jsx';
 import LookbookSection from '../components/LookbookSection.jsx';
 import { BAZARA_WHATSAPP } from '../config/site.js';
@@ -94,8 +93,6 @@ export default function Home() {
         <CategoryGrid />
       </section>
 
-      {/* مجموعات تحريرية (تسوّقي حسب المناسبة) — يحرّرها المدير، ويُخفى القسم بلا محتوى */}
-      <CollectionsRow collections={data?.collections} />
 
       {/* لوك بوك: إطلالة كاملة + قطعها — يُخفى بلا صورة */}
       <LookbookSection lookbook={data?.lookbook} />
