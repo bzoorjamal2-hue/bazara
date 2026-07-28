@@ -878,3 +878,7 @@ html.dark .theme-pub .text-indigo-700 { color: #a5b4fc; }
 @media (prefers-reduced-motion: reduce) {
   .bz-reveal { opacity: 1; transform: none; transition: none; }
 }
+
+/* عنوان قسم فاخر بالرئيسية — تدرّج ذهبي-خمري ثابت (بلا حركة مستمرة = صفر استهلاك) */
+.bz-title { background: linear-gradient(100deg, #5e4636 0%, #8a6a4f 50%, #4a3526 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+html.dark .bz-title { background: linear-gradient(100deg, #e0c25f 0%, #f0dca6 50%, #c79a3a 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
