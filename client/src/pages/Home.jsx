@@ -18,6 +18,7 @@ import FeaturesBar from '../components/FeaturesBar.jsx';
 import AnnouncementBar from '../components/AnnouncementBar.jsx';
 import NewsletterBox from '../components/NewsletterBox.jsx';
 import LookbookSection from '../components/LookbookSection.jsx';
+import Reveal from '../components/Reveal.jsx';
 import { BAZARA_WHATSAPP } from '../config/site.js';
 
 export default function Home() {
@@ -88,11 +89,12 @@ export default function Home() {
       <InstallApp />
 
       {/* تصفّح حسب الفئة */}
-      <section className="mt-12">
-        <SectionTitle>{t('home.browseByCategory')}</SectionTitle>
-        <CategoryGrid />
-      </section>
-
+      <Reveal>
+        <section className="mt-12">
+          <SectionTitle>{t('home.browseByCategory')}</SectionTitle>
+          <CategoryGrid />
+        </section>
+      </Reveal>
 
       {/* لوك بوك: إطلالة كاملة + قطعها — يُخفى بلا صورة */}
       <LookbookSection lookbook={data?.lookbook} />
@@ -102,26 +104,28 @@ export default function Home() {
 
       {/* صفقات اليوم — أعلى الخصومات عبر المنصّة (أسلوب المتاجر الكبرى) */}
       {data?.deals?.length > 0 && (
-        <ProductRail
-          title={t('home.deals')}
-          icon={<BoltIcon className="h-5 w-5 shrink-0 text-gold-500" />}
-          products={data.deals}
-          action={
-            <Link to="/offers" className="inline-flex items-center gap-1 text-sm font-semibold text-gold-200 transition hover:opacity-80">
-              {t('store.viewAll')} <ForwardIcon className="h-4 w-4 rtl-flip" />
-            </Link>
-          }
-        />
+        <Reveal>
+          <ProductRail
+            title={t('home.deals')}
+            icon={<BoltIcon className="h-5 w-5 shrink-0 text-gold-500" />}
+            products={data.deals}
+            action={
+              <Link to="/offers" className="inline-flex items-center gap-1 text-sm font-semibold text-gold-200 transition hover:opacity-80">
+                {t('store.viewAll')} <ForwardIcon className="h-4 w-4 rtl-flip" />
+              </Link>
+            }
+          />
+        </Reveal>
       )}
 
       {/* الأكثر مبيعاً — إثبات اجتماعي حقيقي من المبيعات المؤكّدة */}
-      {data?.bestSellers?.length > 0 && <ProductRail title={t('home.bestSellers')} icon={<FireIcon className="h-5 w-5 shrink-0 text-[#8a2438]" />} products={data.bestSellers} />}
+      {data?.bestSellers?.length > 0 && <Reveal><ProductRail title={t('home.bestSellers')} icon={<FireIcon className="h-5 w-5 shrink-0 text-[#8a2438]" />} products={data.bestSellers} /></Reveal>}
 
       {/* مقترحات لكِ — تخصيص محلي من فئات ما شاهدته (يظهر فقط عند وجود ما يكفي) */}
       {forYou.length >= 3 && <ProductRail title={t('home.forYou')} icon={<SparkleIcon className="h-5 w-5 shrink-0 text-gold-500" />} products={forYou} />}
 
       {/* شاهدت مؤخراً */}
-      {recent.length > 0 && <ProductRail title={t('product.recentlyViewed')} products={recent} />}
+      {recent.length > 0 && <Reveal><ProductRail title={t('product.recentlyViewed')} products={recent} /></Reveal>}
 
       {loading ? (
         <section className="mt-14">
@@ -131,18 +135,20 @@ export default function Home() {
         <>
           {/* منتجات مميّزة */}
           {data.featured?.length > 0 && (
-            <section className="mt-14">
-              <SectionTitle>{t('home.featuredProducts')}</SectionTitle>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
-                {data.featured.map((p, i) => (
-                  <ProductCard key={p.id} product={p} index={i} />
-                ))}
-              </div>
-            </section>
+            <Reveal>
+              <section className="mt-14">
+                <SectionTitle>{t('home.featuredProducts')}</SectionTitle>
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
+                  {data.featured.map((p, i) => (
+                    <ProductCard key={p.id} product={p} index={i} />
+                  ))}
+                </div>
+              </section>
+            </Reveal>
           )}
 
           {/* متاجر مميزة */}
-          <section id="stores" className="mt-14">
+          <Reveal><section id="stores" className="mt-14">
             <SectionTitle>{t('home.featuredStores')}</SectionTitle>
             {data.stores.length === 0 ? (
               <p className="text-stone-400">{t('common.noResults')}</p>
@@ -179,26 +185,28 @@ export default function Home() {
                 })}
               </div>
             )}
-          </section>
+          </section></Reveal>
 
           {/* أحدث المنتجات */}
-          <section className="mt-14">
-            <SectionTitle>{t('home.latestProducts')}</SectionTitle>
-            {data.products.length === 0 ? (
-              <p className="text-stone-400">{t('common.noResults')}</p>
-            ) : (
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
-                {data.products.map((p, i) => (
-                  <ProductCard key={p.id} product={p} index={i} />
-                ))}
-              </div>
-            )}
-          </section>
+          <Reveal>
+            <section className="mt-14">
+              <SectionTitle>{t('home.latestProducts')}</SectionTitle>
+              {data.products.length === 0 ? (
+                <p className="text-stone-400">{t('common.noResults')}</p>
+              ) : (
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
+                  {data.products.map((p, i) => (
+                    <ProductCard key={p.id} product={p} index={i} />
+                  ))}
+                </div>
+              )}
+            </section>
+          </Reveal>
         </>
       )}
 
       {/* نشرة بازارا — قبل شريط المزايا مباشرةً بآخر الصفحة */}
-      <NewsletterBox />
+      <Reveal><NewsletterBox /></Reveal>
 
       {/* شريط المزايا — بآخر الصفحة */}
       <FeaturesBar />
