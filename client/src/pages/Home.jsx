@@ -19,6 +19,7 @@ import AnnouncementBar from '../components/AnnouncementBar.jsx';
 import NewsletterBox from '../components/NewsletterBox.jsx';
 import LookbookSection from '../components/LookbookSection.jsx';
 import Reveal from '../components/Reveal.jsx';
+import ScrollProgress from '../components/ScrollProgress.jsx';
 import { BAZARA_WHATSAPP } from '../config/site.js';
 
 export default function Home() {
@@ -68,6 +69,7 @@ export default function Home() {
   return (
     <>
       <Seo title={t('app.name')} description={t('home.heroDesc')} />
+      <ScrollProgress />
 
       {/* شريط إعلان المنصّة (يتحكّم به المدير) — أعلى الصفحة كالمتاجر العالمية:
           توصيل مجاني/إرجاع/عروض. نفس مكوّن شريط المتاجر بعد استخراجه للمشترَك */}
