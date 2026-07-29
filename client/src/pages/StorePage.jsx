@@ -435,7 +435,9 @@ export default function StorePage() {
 
           {/* مجموعات المتجر التحريرية (تسوّقي حسب المناسبة) — تحرّرها المالكة، وتفتح
               بحث هذا المتجر بكلمتها. تُخفى إن لم تُضف مجموعات */}
-          <CollectionsRow collections={store.collections} storeSlug={store.slug} />
+          {store.collections?.length > 0 && (
+            <Reveal><CollectionsRow collections={store.collections} storeSlug={store.slug} /></Reveal>
+          )}
 
           {/* قصة العلامة — كان وصف المتجر مدفوناً بالفوتر وحده. لمسة تحريرية تعرّف
               الزائرة بالمتجر قبل التصفّح (تظهر فقط إن كتبت المالكة وصفاً) */}
@@ -466,10 +468,10 @@ export default function StorePage() {
           {onSale.length > 0 && <ProductSection title={t('store.saleSection')} products={onSale} wa={wa} />}
 
           {data.products.length > 0 && (
-            <div className="mb-10 text-center">
+            <div className="mb-16 text-center sm:mb-20">
               <button
                 onClick={() => { setViewAll(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                className="rounded-full px-10 py-3.5 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
+                className="rounded-full px-10 py-3.5 font-bold text-cream ring-1 ring-[#e6c878]/35 transition duration-300 hover:-translate-y-0.5 hover:brightness-110"
                 style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)', boxShadow: '0 16px 34px -14px rgba(74, 19, 34, 0.65)' }}
               >
                 {t('store.viewAllProducts')}
