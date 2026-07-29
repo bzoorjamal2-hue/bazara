@@ -202,7 +202,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
           onLoad={() => setImgLoaded(true)}
           // مهم: نفرّغ srcset أيضاً — لو تُرك لبقي يتغلّب على src فلا تظهر الصورة البديلة
           onError={(e) => { e.currentTarget.srcset = ''; e.currentTarget.src = PLACEHOLDER; setImgLoaded(true); }}
-          className={`h-full w-full object-cover transition-[transform,opacity] duration-500 group-hover:scale-110 ${outOfStock ? 'opacity-50' : imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+          className={`h-full w-full object-cover transition-[transform,opacity] duration-700 ease-out group-hover:scale-105 ${outOfStock ? 'opacity-50' : imgLoaded ? 'opacity-100' : 'opacity-0'}`}
         />
         {/* طبقة صورة اللون فوق الأصلية — تلاشٍ ناعم للدخول والخروج عند تمرير/لمس نقطة لون */}
         {lastSwatchImg.current && (
@@ -212,7 +212,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
             aria-hidden="true"
             loading="lazy"
             decoding="async"
-            className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-opacity duration-300 group-hover:scale-110 ${swatchImg ? 'opacity-100' : 'opacity-0'}`}
+            className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-opacity duration-300 group-hover:scale-105 ${swatchImg ? 'opacity-100' : 'opacity-0'}`}
           />
         )}
 

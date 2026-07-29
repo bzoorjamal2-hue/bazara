@@ -168,11 +168,13 @@ export default function Home() {
                       style={{ animationDelay: `${i * 60}ms` }}
                     >
                       <span className="dash-hairline absolute inset-x-0 top-0" />
+                      {/* هالة ذهبية ناعمة تتوهّج خلف الشعار عند المرور — لمسة بوتيك راقية */}
+                      <span aria-hidden className="pointer-events-none absolute top-5 h-24 w-24 rounded-full bg-gold-400/25 opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100" />
                       <img
                         src={cldThumb(s.logoUrl, 160) || 'https://placehold.co/80x80/f1e9dd/5e4636?text=%F0%9F%91%91'}
                         alt={s.name}
                         loading="lazy"
-                        className="h-20 w-20 rounded-full bg-white object-cover shadow-md ring-2 ring-gold-400/50 transition group-hover:ring-gold-400"
+                        className="relative h-24 w-24 rounded-full bg-white object-cover shadow-md ring-2 ring-gold-400/50 transition duration-500 group-hover:scale-105 group-hover:ring-gold-400"
                       />
                       <h3 className="mt-3 w-full truncate font-display font-bold text-stone-100">{s.name}</h3>
                       <p className="mt-0.5 text-xs text-stone-400">{s.productsCount} {t('store.products')}</p>
