@@ -18,7 +18,7 @@ import { trackPixel } from '../utils/pixels.js';
 // بيانات الزبون المحفوظة محلياً — تعبّئ شاشة الإتمام تلقائياً بالطلبات القادمة
 const CUSTOMER_KEY = 'bz_customer_v1';
 const loadCustomer = () => {
-  try { return { name: '', phone: '', city: '', address: '', notes: '', ...JSON.parse(localStorage.getItem(CUSTOMER_KEY) || '{}'), notes: '' }; }
+  try { return { name: '', phone: '', city: '', address: '', notes: '', ...JSON.parse(localStorage.getItem(CUSTOMER_KEY) || '{}') }; }
   catch { return { name: '', phone: '', city: '', address: '', notes: '' }; }
 };
 const saveCustomer = (c) => {
