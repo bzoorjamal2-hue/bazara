@@ -18,6 +18,7 @@ import StylistChat from '../components/StylistChat.jsx';
 import ShareEarnModal from '../components/ShareEarnModal.jsx';
 import { WaveIcon, GiftIcon, CheckIcon, PlusIcon, BoltIcon } from '../components/icons.jsx';
 import CloseButton from '../components/CloseButton.jsx';
+import Reveal from '../components/Reveal.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
@@ -425,10 +426,12 @@ export default function StorePage() {
             </div>
           )}
 
-          <section className="mb-9 mt-7">
-            <SectionTitle>{t('store.browseByCategory')}</SectionTitle>
-            <CategoryGrid onSelect={pickCategory} active={cat} cats={gridCats} />
-          </section>
+          <Reveal>
+            <section className="mb-16 mt-10 sm:mb-20">
+              <SectionTitle>{t('store.browseByCategory')}</SectionTitle>
+              <CategoryGrid onSelect={pickCategory} active={cat} cats={gridCats} />
+            </section>
+          </Reveal>
 
           {/* مجموعات المتجر التحريرية (تسوّقي حسب المناسبة) — تحرّرها المالكة، وتفتح
               بحث هذا المتجر بكلمتها. تُخفى إن لم تُضف مجموعات */}
@@ -437,7 +440,7 @@ export default function StorePage() {
           {/* قصة العلامة — كان وصف المتجر مدفوناً بالفوتر وحده. لمسة تحريرية تعرّف
               الزائرة بالمتجر قبل التصفّح (تظهر فقط إن كتبت المالكة وصفاً) */}
           {store.description && (
-            <section className="glass relative mb-10 overflow-hidden p-8 text-center">
+            <Reveal><section className="glass relative mb-16 overflow-hidden p-8 text-center sm:mb-20">
               <span className="dash-hairline absolute inset-x-0 top-0" />
               {store.logoUrl && (
                 <img
@@ -455,7 +458,7 @@ export default function StorePage() {
                 <span aria-hidden className="text-sm text-[#c79a3a]/70">❖</span>
               </div>
               <p className="mx-auto mt-3 max-w-2xl whitespace-pre-line leading-relaxed text-stone-300">{store.description}</p>
-            </section>
+            </section></Reveal>
           )}
 
           <ProductSection title={t('store.newArrivals')} products={newest} wa={wa} />
@@ -720,14 +723,16 @@ function SectionTitle({ children }) {
 function ProductSection({ title, products, wa, ranked = false }) {
   if (!products || products.length === 0) return null;
   return (
-    <section className="mb-10">
-      <SectionTitle>{title}</SectionTitle>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
-        {products.map((p, i) => (
-          <ProductCard key={p.id} product={p} index={i} whatsapp={wa} rank={ranked && i < 3 ? i + 1 : 0} />
-        ))}
-      </div>
-    </section>
+    <Reveal>
+      <section className="mb-16 sm:mb-20">
+        <SectionTitle>{title}</SectionTitle>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
+          {products.map((p, i) => (
+            <ProductCard key={p.id} product={p} index={i} whatsapp={wa} rank={ranked && i < 3 ? i + 1 : 0} />
+          ))}
+        </div>
+      </section>
+    </Reveal>
   );
 }
 
