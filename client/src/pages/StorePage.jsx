@@ -529,8 +529,10 @@ function StoreFooter({ store, wa, onShare }) {
   ].filter(Boolean);
 
   return (
-    <footer className="pub-footer -mx-4 -mb-8 mt-10 sm:-mx-6">
-      <div className="mx-auto w-full max-w-6xl px-4 py-10 text-center sm:px-6">
+    <footer className="pub-footer relative -mx-4 -mb-8 mt-16 overflow-hidden sm:-mx-6 sm:mt-20">
+      {/* توهّج ذهبي ناعم بأعلى الفوتر — انتقال أنيق من المحتوى (كفوتر المنصّة) */}
+      <span aria-hidden className="pointer-events-none absolute -top-24 start-1/2 h-48 w-96 -translate-x-1/2 rounded-full bg-gold-400/10 blur-3xl" />
+      <div className="relative mx-auto w-full max-w-6xl px-4 py-10 text-center sm:px-6">
         <p className="font-display text-2xl font-bold text-cream">{store.name}</p>
         {store.description && <p className="mx-auto mt-2 max-w-md text-sm text-cream/70">{store.description}</p>}
         {socials.length > 0 && (
@@ -542,7 +544,7 @@ function StoreFooter({ store, wa, onShare }) {
                 target="_blank"
                 rel="noreferrer"
                 aria-label={s.label}
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-cream/25 text-cream/90 transition hover:bg-cream/10"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-cream/25 text-cream/90 transition duration-300 hover:-translate-y-0.5 hover:border-gold-400/60 hover:bg-cream/10 hover:text-gold-200"
               >
                 {s.icon}
               </a>
