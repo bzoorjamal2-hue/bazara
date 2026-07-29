@@ -345,7 +345,9 @@ export default function CartDrawer() {
           </div>
         ) : items.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center text-stone-400">
-            <BagIcon className="h-14 w-14 text-cream/25" />
+            <span className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-wine/20 to-gold-400/15 text-gold-200 ring-1 ring-gold-400/30">
+              <BagIcon className="h-9 w-9" />
+            </span>
             <p>{t('cart.empty')}</p>
             <button
               onClick={close}
