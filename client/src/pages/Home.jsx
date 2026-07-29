@@ -153,7 +153,12 @@ export default function Home() {
           <Reveal><section id="stores" className="mt-16 sm:mt-20">
             <SectionTitle>{t('home.featuredStores')}</SectionTitle>
             {data.stores.length === 0 ? (
-              <p className="text-stone-400">{t('common.noResults')}</p>
+              <EmptyState
+                icon={<SparkleIcon className="h-8 w-8" />}
+                text={t('home.emptyStores')}
+                ctaLabel={t('home.ctaStart')}
+                ctaTo="/register"
+              />
             ) : (
               // بطاقة بوتيك بغلاف (نمط أدلّة المتاجر العالمية): غلاف المتجر من بنراته،
               // تدرّج سفلي ليُقرأ أي نص فوق أي صورة، والشعار يجلس على حدّ الغلاف بحلقة كريمية.
@@ -203,7 +208,12 @@ export default function Home() {
             <section className="mt-16 sm:mt-20">
               <SectionTitle>{t('home.latestProducts')}</SectionTitle>
               {data.products.length === 0 ? (
-                <p className="text-stone-400">{t('common.noResults')}</p>
+                <EmptyState
+                  icon={<BoltIcon className="h-8 w-8" />}
+                  text={t('home.emptyProducts')}
+                  ctaLabel={t('home.ctaExplore')}
+                  ctaTo="/categories"
+                />
               ) : (
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
                   {data.products.map((p, i) => (
@@ -475,6 +485,25 @@ function PromoBanner() {
       {/* على الجوال: سهم صغير يوضّح أن البطاقة قابلة للنقر (الزر الكامل مخفي) */}
       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-wine/10 text-wine sm:hidden"><ForwardIcon className="h-4 w-4 rtl-flip" /></span>
     </Link>
+  );
+}
+
+// حالة فارغة أنيقة (بدل نص جافّ) — بطاقة زجاجية بأيقونة ذهبية ونداء اختياري.
+// تظهر على المنصّة الناشئة فتبدو مقصودة لا ناقصة.
+function EmptyState({ icon, text, ctaLabel, ctaTo }) {
+  return (
+    <div className="glass relative flex flex-col items-center overflow-hidden p-10 text-center">
+      <span className="dash-hairline absolute inset-x-0 top-0" />
+      <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-wine/12 to-gold-400/15 text-wine ring-1 ring-gold-400/40">
+        {icon}
+      </span>
+      <p className="mt-4 max-w-sm text-sm text-stone-400">{text}</p>
+      {ctaLabel && ctaTo && (
+        <Link to={ctaTo} className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-wine px-6 py-2.5 text-sm font-bold text-cream shadow-lg transition hover:-translate-y-0.5 hover:bg-wine-dark">
+          {ctaLabel} <ForwardIcon className="h-3.5 w-3.5 rtl-flip" />
+        </Link>
+      )}
+    </div>
   );
 }
 

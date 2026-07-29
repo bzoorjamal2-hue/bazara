@@ -222,6 +222,8 @@
     "visitStore": "Shop now",
     "featuredProducts": "Curated picks",
     "latestProducts": "Latest products",
+    "emptyStores": "No stores yet — be the first to open your boutique on Bazara and lead the front page.",
+    "emptyProducts": "No products yet — browse the categories and watch for the newest pieces soon.",
     "feature1Title": "Strong security",
     "feature1Desc": "Hashed passwords, secure sessions, and attack protection.",
     "feature2Title": "Luxury design",
