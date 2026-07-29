@@ -133,6 +133,8 @@ async function ensureColumns() {
     // رقم واتساب شركة التوصيل (لزر "أرسل للتوصيل")
     await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS delivery_phone VARCHAR(40) DEFAULT '';");
     await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS facebook VARCHAR(200) DEFAULT '';");
+    // متجر مميّز: يختاره المدير ليتصدّر «متاجر مميزة» بالرئيسية (بدل الترتيب التلقائي)
+    await pool.query('ALTER TABLE stores ADD COLUMN IF NOT EXISTS featured BOOLEAN NOT NULL DEFAULT false;');
     await pool.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS video_url TEXT DEFAULT '';");
     // كمية المخزون لكل مقاس (نمرة): {"38": 5, "40": 2, ...}
     await pool.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS size_stock JSONB DEFAULT '{}'::jsonb;");

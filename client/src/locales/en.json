@@ -1046,6 +1046,9 @@
     "socialHint": "Bazara's official accounts — shown in the footer of every public storefront page. Leave empty to hide the icon.",
     "searchSubscribers": "Search by name, email or store…",
     "filterAll": "All",
+    "feature": "Feature",
+    "unfeature": "Unfeature",
+    "featured": "Featured",
     "ov": {
       "nav": "Overview",
       "title": "Platform overview",

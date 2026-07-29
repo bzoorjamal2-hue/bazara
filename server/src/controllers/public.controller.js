@@ -84,7 +84,7 @@ export async function getHomeData(_req, res, next) {
        JOIN users u ON u.id = s.user_id
        LEFT JOIN products p ON p.store_id = s.id
        WHERE ${active}
-       GROUP BY s.id ORDER BY s.created_at DESC LIMIT 8`
+       GROUP BY s.id ORDER BY s.featured DESC, s.created_at DESC LIMIT 8`
     );
 
     const featured = await query(`${PRODUCT_SELECT} WHERE p.featured = true AND ${active} ORDER BY p.created_at DESC LIMIT 8`);

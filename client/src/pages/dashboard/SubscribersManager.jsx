@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
-import { CrownIcon, LinkIcon, BellIcon, SaveIcon, PlusIcon, MailIcon, TrashIcon } from '../../components/icons.jsx';
+import { CrownIcon, LinkIcon, BellIcon, SaveIcon, PlusIcon, MailIcon, TrashIcon, StarIcon } from '../../components/icons.jsx';
 
 function fmt(d) {
   return d ? new Date(d).toLocaleString() : '—';
@@ -21,6 +21,21 @@ function SubRow({ s, onDeleted, onUpdated }) {
   const [err, setErr] = useState('');
   const [confirmDel, setConfirmDel] = useState(false);
   const [delBusy, setDelBusy] = useState(false);
+  const [featBusy, setFeatBusy] = useState(false);
+
+  // تمييز/إلغاء تمييز المتجر — يتصدّر «متاجر مميزة» بالرئيسية
+  const toggleFeatured = async () => {
+    setErr(''); setFeatBusy(true);
+    const next = !s.featured;
+    try {
+      await api.post('/subscription/set-featured', { email: s.email, featured: next });
+      onUpdated?.(s.email, { featured: next });
+    } catch (e) {
+      setErr(getErrorMessage(e, t('errors.generic')));
+    } finally {
+      setFeatBusy(false);
+    }
+  };
 
   const send = async () => {
     setMsg(''); setErr(''); setBusy(true);
@@ -115,7 +130,19 @@ function SubRow({ s, onDeleted, onUpdated }) {
         </div>
         {/* المدير حساب تحكّم — بلا رابط متجر عام */}
         {!s.isAdmin && (
-          <a href={`/store/${s.storeSlug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-gold-300 hover:text-gold-200"><LinkIcon className="h-3.5 w-3.5" /> {t('admin.subStore')}</a>
+          <div className="flex items-center gap-3">
+            {/* تمييز المتجر ليتصدّر «متاجر مميزة» بالرئيسية */}
+            <button
+              onClick={toggleFeatured}
+              disabled={featBusy}
+              title={s.featured ? t('admin.unfeature') : t('admin.feature')}
+              aria-pressed={s.featured}
+              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold transition disabled:opacity-50 ${s.featured ? 'bg-gold-400 text-ink-950 shadow-sm' : 'border border-gold-400/30 text-stone-300 hover:bg-gold-400/10'}`}
+            >
+              <StarIcon className="h-3.5 w-3.5" filled={s.featured} /> {s.featured ? t('admin.featured') : t('admin.feature')}
+            </button>
+            <a href={`/store/${s.storeSlug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-gold-300 hover:text-gold-200"><LinkIcon className="h-3.5 w-3.5" /> {t('admin.subStore')}</a>
+          </div>
         )}
       </div>
 

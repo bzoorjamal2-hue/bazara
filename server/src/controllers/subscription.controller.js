@@ -1,6 +1,7 @@
 import { query } from '../config/db.js';
 import { isUserActive, daysRemaining, isAdminEmail, planPeriodEnd, adminEmails, activeStoreSql } from '../utils/subscription.js';
 import { sendMail, isMailConfigured } from '../utils/mail.js';
+import { clearPublicCache } from '../middleware/cache.js';
 
 const PLANS = { monthly: true, yearly: true };
 const planLabel = (p) => (p === 'yearly' ? 'سنوية' : 'شهرية');
@@ -244,12 +245,31 @@ export async function getAdminStats(_req, res, next) {
   }
 }
 
+// تمييز/إلغاء تمييز متجر (للمدير) — المتجر المميّز يتصدّر «متاجر مميزة» بالرئيسية.
+export async function setStoreFeatured(req, res, next) {
+  const email = (req.body.email || '').trim().toLowerCase();
+  const featured = Boolean(req.body.featured);
+  if (!email) return res.status(400).json({ error: 'البريد مطلوب.' });
+  if (isAdminEmail(email)) return res.status(400).json({ error: 'حساب المدير ليس متجراً.' });
+  try {
+    const r = await query(
+      'UPDATE stores SET featured = $1 WHERE user_id = (SELECT id FROM users WHERE lower(email) = $2) RETURNING id',
+      [featured, email]
+    );
+    if (r.rowCount === 0) return res.status(404).json({ error: 'لا يوجد متجر بهذا البريد.' });
+    clearPublicCache(); // الرئيسية تعكس التمييز فوراً
+    res.json({ ok: true, featured });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function listSubscribers(req, res, next) {
   try {
     const r = await query(
       `SELECT u.name, u.email, u.subscription_plan, u.subscription_status,
               u.subscription_started_at, u.current_period_end, u.created_at,
-              s.name AS store_name, s.slug AS store_slug,
+              s.name AS store_name, s.slug AS store_slug, s.featured AS store_featured,
               lr.plan AS requested_plan, lr.status AS requested_status
        FROM users u JOIN stores s ON s.user_id = u.id
        LEFT JOIN LATERAL (
@@ -272,6 +292,7 @@ export async function listSubscribers(req, res, next) {
         currentPeriodEnd: x.current_period_end,
         storeName: x.store_name,
         storeSlug: x.store_slug,
+        featured: Boolean(x.store_featured),
         active: isUserActive({ email: x.email, subscription_status: x.subscription_status, current_period_end: x.current_period_end }),
         isAdmin: isAdminEmail(x.email),
         lifetime: isAdminEmail(x.email),

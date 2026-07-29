@@ -16,6 +16,7 @@ import {
   setSubscription,
   addSubscriptionDays,
   getAdminStats,
+  setStoreFeatured,
 } from '../controllers/subscription.controller.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
 import { handleValidation, idParamRule } from '../middleware/validate.js';
@@ -36,6 +37,7 @@ router.get('/subscribers', requireAuth, requireAdmin, listSubscribers);
 router.post('/set-subscription', requireAuth, requireAdmin, setSubscription);
 router.post('/add-days', requireAuth, requireAdmin, addSubscriptionDays);
 router.post('/delete-subscriber', requireAuth, requireAdmin, deleteSubscriber);
+router.post('/set-featured', requireAuth, requireAdmin, setStoreFeatured);
 
 // للمدير
 router.get('/settings', requireAuth, requireAdmin, getSettings);
