@@ -1,5 +1,5 @@
 import { query } from '../config/db.js';
-import { isUserActive, daysRemaining, isAdminEmail, planPeriodEnd } from '../utils/subscription.js';
+import { isUserActive, daysRemaining, isAdminEmail, planPeriodEnd, adminEmails, activeStoreSql } from '../utils/subscription.js';
 import { sendMail, isMailConfigured } from '../utils/mail.js';
 
 const PLANS = { monthly: true, yearly: true };
@@ -200,6 +200,50 @@ export async function sendCodeToSubscriber(req, res, next) {
 }
 
 // قائمة المشتركين (للمدير)
+// نظرة عامة على المنصّة (للمدير): أرقام حقيقية مجمّعة — متاجر، اشتراكات، منتجات،
+// طلبات، مبيعات مؤكّدة، مشتركو نشرة، طلبات اشتراك معلّقة. حسابات المدير مستثناة من عدّ المتاجر.
+export async function getAdminStats(_req, res, next) {
+  try {
+    const admins = adminEmails();
+    const notAdmin = admins.length
+      ? `AND lower(u.email) NOT IN (${admins.map((e) => `'${e.replace(/'/g, "''")}'`).join(',')})`
+      : '';
+    const storesQ = await query(
+      `SELECT
+         COUNT(*)::int AS total_stores,
+         COUNT(*) FILTER (WHERE ${activeStoreSql('u')})::int AS active_subs,
+         COUNT(*) FILTER (WHERE u.created_at >= date_trunc('month', now()))::int AS new_this_month
+       FROM stores s JOIN users u ON u.id = s.user_id
+       WHERE TRUE ${notAdmin}`
+    );
+    const productsQ = await query('SELECT COUNT(*)::int AS c FROM products');
+    const ordersQ = await query(
+      `SELECT COUNT(*)::int AS total_orders,
+              COUNT(*) FILTER (WHERE status='new')::int AS new_orders,
+              COALESCE(SUM(total) FILTER (WHERE status IN ('confirmed','shipped','delivered')), 0) AS gmv
+       FROM orders`
+    );
+    const newsQ = await query('SELECT COUNT(*)::int AS c FROM subscribers');
+    const reqQ = await query("SELECT COUNT(*)::int AS c FROM subscription_requests WHERE status = 'pending'");
+    const s = storesQ.rows[0];
+    const o = ordersQ.rows[0];
+    res.json({
+      totalStores: s.total_stores,
+      activeSubs: s.active_subs,
+      expiredSubs: Math.max(0, s.total_stores - s.active_subs),
+      newStoresThisMonth: s.new_this_month,
+      totalProducts: productsQ.rows[0].c,
+      totalOrders: o.total_orders,
+      newOrders: o.new_orders,
+      gmv: Number(o.gmv) || 0,
+      newsletterSubscribers: newsQ.rows[0].c,
+      pendingRequests: reqQ.rows[0].c,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function listSubscribers(req, res, next) {
   try {
     const r = await query(

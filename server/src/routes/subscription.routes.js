@@ -15,6 +15,7 @@ import {
   deleteSubscriber,
   setSubscription,
   addSubscriptionDays,
+  getAdminStats,
 } from '../controllers/subscription.controller.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
 import { handleValidation, idParamRule } from '../middleware/validate.js';
@@ -30,6 +31,7 @@ router.post('/redeem', requireAuth, redeemCode);
 router.get('/codes', requireAuth, requireAdmin, listCodes);
 router.post('/codes', requireAuth, requireAdmin, generateCodes);
 router.post('/send-code', requireAuth, requireAdmin, sendCodeToSubscriber);
+router.get('/admin-stats', requireAuth, requireAdmin, getAdminStats);
 router.get('/subscribers', requireAuth, requireAdmin, listSubscribers);
 router.post('/set-subscription', requireAuth, requireAdmin, setSubscription);
 router.post('/add-days', requireAuth, requireAdmin, addSubscriptionDays);

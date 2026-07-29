@@ -198,6 +198,7 @@ export default function Navbar() {
   // أقسام لوحة التحكم (تظهر في قائمة المستخدم) — المدير: تحكّم فقط بلا بيع
   const sections = isAdmin
     ? [
+        { key: 'adminOverview', label: t('admin.ov.nav'), Icon: ChartIcon },
         { key: 'subscribers', label: t('admin.subscribersNav'), Icon: UsersIcon },
         { key: 'admin', label: t('admin.nav'), Icon: ShieldCheckIcon },
         { key: 'siteSliders', label: t('admin.siteSliders'), Icon: GridIcon },
@@ -357,7 +358,7 @@ export default function Navbar() {
             <nav className="mt-3 min-h-0 flex-1 space-y-1 overflow-y-auto">
               <NavBell variant="row" />
               {sections.map((s) => {
-                const curTab = new URLSearchParams(search).get('tab') || (isAdmin ? 'subscribers' : 'overview');
+                const curTab = new URLSearchParams(search).get('tab') || (isAdmin ? 'adminOverview' : 'overview');
                 const active = pathname.startsWith('/dashboard') && curTab === s.key;
                 return (
                   <Link

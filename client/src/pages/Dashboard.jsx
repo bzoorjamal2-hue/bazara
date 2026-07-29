@@ -17,6 +17,7 @@ import OrdersManager from './dashboard/OrdersManager.jsx';
 import CouponsManager from './dashboard/CouponsManager.jsx';
 import ReferralsManager from './dashboard/ReferralsManager.jsx';
 import AnalyticsManager from './dashboard/AnalyticsManager.jsx';
+import AdminOverview from './dashboard/AdminOverview.jsx';
 import StockRequestsManager from './dashboard/StockRequestsManager.jsx';
 import AdminRequests from './dashboard/AdminRequests.jsx';
 import SubscribersManager from './dashboard/SubscribersManager.jsx';
@@ -38,6 +39,7 @@ const SECTIONS = [
 
 // أقسام المدير (تحكّم فقط — بلا بيع/منتجات)
 const ADMIN_SECTIONS = [
+  { key: 'adminOverview', Icon: ChartIcon },
   { key: 'subscribers', Icon: UsersIcon },
   { key: 'admin', Icon: ShieldIcon },
   { key: 'siteSliders', Icon: ImageIcon },
@@ -53,7 +55,7 @@ export default function Dashboard() {
   const isAdmin = subscription?.isAdmin;
   // التنقّل بين الأقسام عبر قائمة ☰ (Navbar) — المصدر الوحيد بلا تكرار
   const allowed = (isAdmin ? ADMIN_SECTIONS : SECTIONS).map((s) => s.key);
-  const defaultTab = isAdmin ? 'subscribers' : 'overview';
+  const defaultTab = isAdmin ? 'adminOverview' : 'overview';
   const raw = params.get('tab') || defaultTab;
   // المدير لا يصل لأقسام البيع حتى عبر الرابط
   const section = allowed.includes(raw) ? raw : defaultTab;
@@ -105,6 +107,7 @@ export default function Dashboard() {
         {section === 'coupons' && !isAdmin && <CouponsManager />}
         {section === 'referrals' && !isAdmin && <ReferralsManager />}
         {section === 'stockRequests' && !isAdmin && <StockRequestsManager />}
+        {section === 'adminOverview' && isAdmin && <AdminOverview />}
         {section === 'subscribers' && isAdmin && <SubscribersManager />}
         {section === 'admin' && isAdmin && <AdminRequests />}
         {section === 'siteSliders' && isAdmin && <SiteSliders />}

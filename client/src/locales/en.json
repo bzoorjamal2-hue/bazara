@@ -1043,7 +1043,23 @@
     "lookbookHint": "A full-look image + the IDs of the pieces in it. Hidden from home if the image is empty.",
     "lookbookTitle": "Title (e.g. Look of the week)",
     "lookbookIds": "Product IDs, comma separated — e.g. 12, 34, 56",
-    "socialHint": "Bazara's official accounts — shown in the footer of every public storefront page. Leave empty to hide the icon."
+    "socialHint": "Bazara's official accounts — shown in the footer of every public storefront page. Leave empty to hide the icon.",
+    "ov": {
+      "nav": "Overview",
+      "title": "Platform overview",
+      "hint": "Live numbers across all of Bazara.",
+      "stores": "Stores",
+      "newThisMonth": "{{count}} new this month",
+      "activeSubs": "Active subscriptions",
+      "expiredSubs": "Expired subscriptions",
+      "products": "Total products",
+      "orders": "Total orders",
+      "newOrders": "{{count}} new pending",
+      "gmv": "Confirmed sales",
+      "newsletter": "Newsletter subscribers",
+      "pending": "{{count}} subscription request(s) awaiting review",
+      "pendingHint": "Tap to open the admin section to approve/reject."
+    }
   },
   "order": {
     "choose": "Choose order method",
