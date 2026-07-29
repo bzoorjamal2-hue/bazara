@@ -18,7 +18,12 @@ import { HelmetProvider } from 'react-helmet-async';
 import './i18n.js';
 import './index.css';
 import App from './App.jsx';
+import { applyPerfTier } from './utils/perfTier.js';
 import { registerSW } from 'virtual:pwa-register';
+
+// نحدّد مستوى أداء الجهاز قبل أول رسمة — فتبدأ الحركات مضبوطة من اللحظة الأولى
+// (بلا وميض تأثيرات ثقيلة ثم تخفيفها)
+applyPerfTier();
 import { AuthProvider } from './context/AuthContext.jsx';
 import { CartProvider } from './context/CartContext.jsx';
 import { WishlistProvider } from './context/WishlistContext.jsx';

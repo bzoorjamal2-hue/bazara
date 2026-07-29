@@ -25,10 +25,19 @@ export default function Reveal({ children, delay = 0, className = '' }) {
     return () => { io.disconnect(); clearTimeout(safety); };
   }, []);
 
+  // بعد انتهاء حركة الدخول نُسقط will-change: إبقاؤها على كل الأقسام يحجز طبقات
+  // رسم دائمة تستنزف ذاكرة وحدة الرسم وتُقطّع التمرير على الأجهزة الضعيفة.
+  const [done, setDone] = useState(false);
+  useEffect(() => {
+    if (!shown) return undefined;
+    const id = setTimeout(() => setDone(true), 800);
+    return () => clearTimeout(id);
+  }, [shown]);
+
   return (
     <div
       ref={ref}
-      className={`bz-reveal ${shown ? 'bz-reveal-in' : ''} ${className}`}
+      className={`bz-reveal ${shown ? 'bz-reveal-in' : ''} ${done ? 'bz-reveal-done' : ''} ${className}`}
       style={delay ? { transitionDelay: `${delay}ms` } : undefined}
     >
       {children}

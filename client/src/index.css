@@ -910,6 +910,20 @@ html.dark .theme-pub .text-indigo-700 { color: #a5b4fc; }
 @media (prefers-reduced-motion: reduce) {
   .bz-reveal { opacity: 1; transform: none; filter: none; transition: none; }
 }
+/* بعد اكتمال الدخول نُسقط will-change (يزيلها Reveal بالجافاسكربت) — إبقاؤها على
+   عشرات الأقسام يحجز طبقات رسم دائمة ويستنزف ذاكرة وحدة الرسم على الأجهزة الضعيفة */
+.bz-reveal-done { will-change: auto; }
+
+/* ───── وضع الجهاز الخفيف (bz-lite) ─────
+   نفس اللغة البصرية ونفس الحركات، لكن بلا العمليات المكلفة على وحدة الرسم:
+   ضبابية الدخول وطبقات الزجاج الشفّاف هي أغلى ما يُقطّع الملاحة على الأجهزة
+   الضعيفة. الانزلاق والتلاشي (transform/opacity) يبقيان — وهما ما يصنع الإحساس. */
+.bz-lite .bz-reveal { filter: none; transition: opacity .45s ease-out, transform .45s ease-out; }
+.bz-lite .glass,
+.bz-lite .glass-strong { backdrop-filter: none; -webkit-backdrop-filter: none; }
+.bz-lite .bz-hero-scrim { background: rgba(20, 12, 9, 0.5); }
+/* الهالات الضبابية الزخرفية (blur-3xl) مكلفة ولا تحمل معنى — نخفيها على الضعيف */
+.bz-lite .blur-3xl, .bz-lite .blur-2xl { filter: none; opacity: 0; }
 
 /* عنوان قسم فاخر بالرئيسية — تدرّج ذهبي-خمري ثابت (بلا حركة مستمرة = صفر استهلاك) */
 .bz-title { background: linear-gradient(100deg, #5e4636 0%, #8a6a4f 50%, #4a3526 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
