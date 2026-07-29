@@ -61,7 +61,7 @@ export default function InstallApp() {
         <div className="pointer-events-none absolute -end-10 -top-10 h-36 w-36 rounded-full bg-cream/10 blur-2xl" />
         <div className="pointer-events-none absolute -bottom-12 -start-8 h-32 w-32 rounded-full bg-cream/5 blur-2xl" />
         <div className="relative flex flex-col items-center gap-4 text-center sm:flex-row sm:text-start">
-          <img src="/icon-192.png?v=3" alt="Bazara" className="h-20 w-20 shrink-0 rounded-3xl shadow-lg ring-2 ring-cream/25" />
+          <img src="/icon-192.png" alt="Bazara" className="h-20 w-20 shrink-0 rounded-3xl shadow-lg ring-2 ring-cream/25" />
           <div className="min-w-0 flex-1">
             <h3 className="flex items-center gap-2 font-display text-xl font-extrabold text-cream"><InstallIcon className="h-5 w-5" /> {t('pwa.title')}</h3>
             <p className="mt-1.5 text-sm text-cream/75">{t('pwa.desc')}</p>
@@ -80,7 +80,7 @@ export default function InstallApp() {
         <div className="fixed inset-0 z-[90] flex items-center justify-center p-4" onClick={() => setHelp(null)}>
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           <div className="animate-fade-up relative w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <img src="/icon-192.png?v=3" alt="Bazara" className="mx-auto mb-3 h-14 w-14 rounded-2xl" />
+            <img src="/icon-192.png" alt="Bazara" className="mx-auto mb-3 h-14 w-14 rounded-2xl" />
 
             {help === 'desktop' ? (
               <>
