@@ -164,10 +164,17 @@ export default function Home() {
                     <Link
                       key={s.id}
                       to={`/store/${s.slug}`}
-                      className="glass group animate-fade-up relative flex flex-col items-center overflow-hidden p-5 text-center transition duration-300 hover:-translate-y-1.5 hover:shadow-glow"
+                      className={`glass group animate-fade-up relative flex flex-col items-center overflow-hidden p-5 text-center transition duration-300 hover:-translate-y-1.5 hover:shadow-glow ${s.featured ? 'ring-1 ring-gold-400/50' : ''}`}
                       style={{ animationDelay: `${i * 60}ms` }}
                     >
                       <span className="dash-hairline absolute inset-x-0 top-0" />
+                      {/* متجر مميّز يختاره المدير — شارة ذهبية بأعلى البطاقة */}
+                      {s.featured && (
+                        <span className="absolute end-2 top-2 z-[2] inline-flex items-center gap-1 rounded-full bg-gold-400 px-2.5 py-1 text-[10px] font-extrabold text-ink-950 shadow-sm">
+                          <svg viewBox="0 0 24 24" className="h-3 w-3" fill="currentColor" aria-hidden="true"><path d="M5 16L3 6l5.5 4L12 4l3.5 6L21 6l-2 10H5zm0 2h14v2H5z" /></svg>
+                          {t('product.featured')}
+                        </span>
+                      )}
                       {/* هالة ذهبية ناعمة تتوهّج خلف الشعار عند المرور — لمسة بوتيك راقية */}
                       <span aria-hidden className="pointer-events-none absolute top-5 h-24 w-24 rounded-full bg-gold-400/25 opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100" />
                       <img

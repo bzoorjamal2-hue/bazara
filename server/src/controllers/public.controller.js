@@ -59,6 +59,7 @@ function mapStorePublic(s) {
     // عرض الفلاش — بانر عدّاد تنازلي + خصم عند الطلب (نعرضه فقط ما دام فعّالاً)
     flashPercent: Number(s.flash_percent || 0),
     flashEndsAt: s.flash_ends_at,
+    featured: Boolean(s.featured), // متجر مميّز يختاره المدير — شارة ذهبية بالرئيسية
     createdAt: s.created_at,
   };
 }
