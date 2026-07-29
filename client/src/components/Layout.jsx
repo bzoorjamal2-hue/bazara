@@ -10,6 +10,7 @@ import OfflineBanner from './OfflineBanner.jsx';
 import BottomNav from './BottomNav.jsx';
 import ScrollToTopButton from './ScrollToTopButton.jsx';
 import PullToRefresh from './PullToRefresh.jsx';
+import SwipeBack from './SwipeBack.jsx';
 import { isStandalone } from '../utils/pwa.js';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
 import { WhatsAppIcon, InstagramIcon, FacebookIcon } from './icons.jsx';
@@ -52,6 +53,8 @@ export default function Layout({ children }) {
   return (
     <div className="app-bg theme-pub flex min-h-screen flex-col">
       <PullToRefresh />
+      {/* سحب من الحافة للرجوع (التطبيق المثبّت فقط) — إحساس أصلي كإنستغرام/iOS */}
+      <SwipeBack />
       {!hideChrome && <Navbar />}
       {/* عرض المحتوى ينمو مع الشاشة: كان محبوساً عند 1152px دائماً، فعلى شاشة 1920
           يبقى 384px فارغاً من كل جهة (٤٠٪ من العرض) وعلى آيباد أفقي 107px. نوسّعه
