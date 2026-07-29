@@ -28,12 +28,12 @@ export default function Offers() {
       <Seo title={t('offers.title')} description={t('offers.subtitle')} />
 
       <div className="mb-6 text-center">
-        <div className="flex items-center justify-center gap-2.5 text-wine">
-          <span aria-hidden className="text-sm text-wine/40">❖</span>
-          <span className="h-px w-8 bg-gradient-to-r from-transparent to-wine/30" />
-          <h1 className="flex items-center gap-2 font-display text-2xl font-bold"><TagIcon className="h-6 w-6" /> {t('offers.title')}</h1>
-          <span className="h-px w-8 bg-gradient-to-l from-transparent to-wine/30" />
-          <span aria-hidden className="text-sm text-wine/40">❖</span>
+        <div className="flex items-center justify-center gap-2.5 sm:gap-3">
+          <span aria-hidden className="text-sm text-[#c79a3a]/70">❖</span>
+          <span className="h-px w-7 bg-gradient-to-r from-transparent to-[#c79a3a]/45 sm:w-14" />
+          <h1 className="flex items-center gap-2 font-display text-2xl font-bold"><TagIcon className="h-6 w-6 text-wine" /> <span className="bz-title">{t('offers.title')}</span></h1>
+          <span className="h-px w-7 bg-gradient-to-l from-transparent to-[#c79a3a]/45 sm:w-14" />
+          <span aria-hidden className="text-sm text-[#c79a3a]/70">❖</span>
         </div>
         <p className="mt-1 text-sm text-wine/60">{t('offers.subtitle')}</p>
       </div>
@@ -61,7 +61,7 @@ export default function Offers() {
       ) : products.length === 0 ? (
         // حالة فراغ لائقة بأيقونة ومخرج — كباقي الصفحات، بدل نص عارٍ يترك الزائرة معلّقة
         <div className="glass mx-auto flex max-w-md flex-col items-center gap-4 p-10 text-center">
-          <span aria-hidden className="flex h-16 w-16 items-center justify-center rounded-full bg-wine/10 text-wine"><TagIcon className="h-8 w-8" /></span>
+          <span aria-hidden className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-wine/12 to-gold-400/15 text-wine ring-1 ring-gold-400/40"><TagIcon className="h-8 w-8" /></span>
           <p className="text-stone-300">{t('offers.empty')}</p>
           <Link
             to="/shop"

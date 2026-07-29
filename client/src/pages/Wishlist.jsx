@@ -85,15 +85,15 @@ export default function Wishlist() {
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={rtl ? 'm9 6 6 6-6 6' : 'm15 6-6 6 6 6'} /></svg>
         </button>
       </div>
-      <div className="mb-6 flex items-center justify-center gap-2.5 text-wine sm:gap-3">
-        <span aria-hidden className="text-sm text-wine/40">❖</span>
-        <span className="h-px w-7 bg-gradient-to-r from-transparent to-wine/30 sm:w-12" />
+      <div className="mb-8 flex items-center justify-center gap-2.5 sm:mb-10 sm:gap-3">
+        <span aria-hidden className="text-sm text-[#c79a3a]/70">❖</span>
+        <span className="h-px w-7 bg-gradient-to-r from-transparent to-[#c79a3a]/45 sm:w-14" />
         <h1 className="flex items-center gap-2 whitespace-nowrap font-display text-xl font-bold sm:text-2xl">
-          <HeartIcon className="h-6 w-6" filled /> {title}
-          {list?.length > 0 && <span className="rounded-full bg-wine/10 px-2 py-0.5 text-sm font-bold">{list.length}</span>}
+          <HeartIcon className="h-6 w-6 text-wine" filled /> <span className="bz-title">{title}</span>
+          {list?.length > 0 && <span className="rounded-full bg-gold-400/15 px-2 py-0.5 text-sm font-bold text-gold-300">{list.length}</span>}
         </h1>
-        <span className="h-px w-7 bg-gradient-to-l from-transparent to-wine/30 sm:w-12" />
-        <span aria-hidden className="text-sm text-wine/40">❖</span>
+        <span className="h-px w-7 bg-gradient-to-l from-transparent to-[#c79a3a]/45 sm:w-14" />
+        <span aria-hidden className="text-sm text-[#c79a3a]/70">❖</span>
       </div>
 
       {isShared ? (
@@ -102,7 +102,7 @@ export default function Wishlist() {
           <ProductGridSkeleton count={6} />
         ) : shared.length === 0 ? (
           <div className="glass flex flex-col items-center gap-4 p-12 text-center text-stone-400">
-            <HeartIcon className="h-14 w-14 text-wine/25" />
+            <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-wine/12 to-gold-400/15 text-wine ring-1 ring-gold-400/40"><HeartIcon className="h-8 w-8" filled /></span>
             <p>{t('wishlist.sharedGone')}</p>
             <Link to="/shop" className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110" style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)' }}>
               {t('co.doneKeepShopping')}
@@ -126,7 +126,7 @@ export default function Wishlist() {
         )
       ) : items.length === 0 ? (
         <div className="glass flex flex-col items-center gap-4 p-12 text-center text-stone-400">
-          <HeartIcon className="h-14 w-14 text-wine/25" />
+          <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-wine/12 to-gold-400/15 text-wine ring-1 ring-gold-400/40"><HeartIcon className="h-8 w-8" filled /></span>
           <p>{t('wishlist.empty')}</p>
           <Link
             to="/shop"
