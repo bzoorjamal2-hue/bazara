@@ -203,6 +203,7 @@ export default function Navbar() {
         { key: 'admin', label: t('admin.nav'), Icon: ShieldCheckIcon },
         { key: 'siteSliders', label: t('admin.siteSliders'), Icon: GridIcon },
         { key: 'newsletter', label: t('admin.newsletter'), Icon: MailIcon },
+        { key: 'broadcast', label: t('admin.bc.nav'), Icon: MailIcon },
         { key: 'profile', label: t('dashboard.profile'), Icon: UserLineIcon },
       ]
     : [

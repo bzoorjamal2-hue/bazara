@@ -1049,6 +1049,19 @@
     "feature": "Feature",
     "unfeature": "Unfeature",
     "featured": "Featured",
+    "bc": {
+      "nav": "Broadcast",
+      "title": "Broadcast message",
+      "hint": "Send one announcement email to all store owners or newsletter subscribers.",
+      "audStores": "Store owners",
+      "audNewsletter": "Newsletter",
+      "subject": "Subject",
+      "body": "Message…",
+      "review": "Review & send",
+      "confirmAsk": "Send to everyone?",
+      "confirmYes": "Send now",
+      "sent": "Sending started to {{count}} recipient(s). May take a few minutes."
+    },
     "ov": {
       "nav": "Overview",
       "title": "Platform overview",

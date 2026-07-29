@@ -18,6 +18,7 @@ import CouponsManager from './dashboard/CouponsManager.jsx';
 import ReferralsManager from './dashboard/ReferralsManager.jsx';
 import AnalyticsManager from './dashboard/AnalyticsManager.jsx';
 import AdminOverview from './dashboard/AdminOverview.jsx';
+import BroadcastManager from './dashboard/BroadcastManager.jsx';
 import StockRequestsManager from './dashboard/StockRequestsManager.jsx';
 import AdminRequests from './dashboard/AdminRequests.jsx';
 import SubscribersManager from './dashboard/SubscribersManager.jsx';
@@ -44,6 +45,7 @@ const ADMIN_SECTIONS = [
   { key: 'admin', Icon: ShieldIcon },
   { key: 'siteSliders', Icon: ImageIcon },
   { key: 'newsletter', Icon: MailIcon },
+  { key: 'broadcast', Icon: MailIcon },
   { key: 'profile', Icon: UserIcon },
 ];
 
@@ -112,6 +114,7 @@ export default function Dashboard() {
         {section === 'admin' && isAdmin && <AdminRequests />}
         {section === 'siteSliders' && isAdmin && <SiteSliders />}
         {section === 'newsletter' && isAdmin && <NewsletterManager />}
+        {section === 'broadcast' && isAdmin && <BroadcastManager />}
       </div>
     </div>
   );

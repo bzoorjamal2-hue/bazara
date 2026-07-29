@@ -245,6 +245,54 @@ export async function getAdminStats(_req, res, next) {
   }
 }
 
+// رسالة جماعية (للمدير): بريد إعلاني لكل أصحاب المتاجر أو مشتركي النشرة.
+// نُرسل بالخلفية بالتتابع بهدوء فلا نحبس الطلب ولا نتجاوز حدود Brevo، ونردّ فوراً بالعدد.
+const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function broadcastHtml(subject, body) {
+  const safe = escapeHtml(body).replace(/\n/g, '<br>');
+  return `<div style="font-family:system-ui,Segoe UI,Arial,sans-serif;max-width:560px;margin:auto;padding:24px;color:#2b2b2b">
+    <h2 style="color:#5e4636;margin:0 0 12px">${escapeHtml(subject)}</h2>
+    <div style="font-size:15px;line-height:1.7">${safe}</div>
+    <hr style="border:none;border-top:1px solid #eee;margin:24px 0">
+    <p style="font-size:12px;color:#999">Bazara — بازارا</p>
+  </div>`;
+}
+
+export async function broadcastMessage(req, res, next) {
+  const audience = req.body.audience === 'newsletter' ? 'newsletter' : 'subscribers';
+  const subject = String(req.body.subject || '').trim().slice(0, 160);
+  const body = String(req.body.body || '').trim().slice(0, 5000);
+  if (!subject || !body) return res.status(400).json({ error: 'العنوان والرسالة مطلوبان.' });
+  if (!isMailConfigured()) return res.status(400).json({ error: 'خدمة البريد غير مهيّأة على الخادم.' });
+  try {
+    let emails = [];
+    if (audience === 'newsletter') {
+      const r = await query("SELECT contact FROM subscribers WHERE kind = 'email'");
+      emails = r.rows.map((x) => x.contact);
+    } else {
+      const admins = adminEmails();
+      const notAdmin = admins.length
+        ? `AND lower(u.email) NOT IN (${admins.map((e) => `'${e.replace(/'/g, "''")}'`).join(',')})`
+        : '';
+      const r = await query(`SELECT DISTINCT lower(u.email) AS email FROM users u JOIN stores s ON s.user_id = u.id WHERE u.email <> '' ${notAdmin}`);
+      emails = r.rows.map((x) => x.email);
+    }
+    emails = [...new Set(emails.filter(Boolean))];
+    res.json({ queued: emails.length });
+
+    const html = broadcastHtml(subject, body);
+    (async () => {
+      for (const to of emails) {
+        try { await sendMail({ to, subject, html }); }
+        catch (e) { console.error('broadcast fail', to, e.message); }
+        await new Promise((r) => setTimeout(r, 120)); // هدنة بسيطة بين الرسائل
+      }
+    })();
+  } catch (err) {
+    next(err);
+  }
+}
+
 // تمييز/إلغاء تمييز متجر (للمدير) — المتجر المميّز يتصدّر «متاجر مميزة» بالرئيسية.
 export async function setStoreFeatured(req, res, next) {
   const email = (req.body.email || '').trim().toLowerCase();
