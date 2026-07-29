@@ -26,6 +26,9 @@ export default function Layout({ children }) {
   // الريلز = ملء الشاشة (كتيك توك) — الهيدر كان يظهر فوقها ويغطي المحتوى
   const isReels = pathname === '/reels';
   const hideChrome = isStorePage || isAppWelcome || isAuthFull || isReels;
+  // لوحة التحكم/الاشتراك: لها شريط وتنقّل عام لكن بلا فوتر المنصّة التسويقي (سياق إدارة لا تسوّق)
+  const isDashboard = /^\/dashboard/.test(pathname) || pathname === '/subscribe';
+  const showFooter = !hideChrome && !isDashboard;
   // شريط التنقّل السفلي يظهر داخل التطبيق المثبّت على كل الصفحات (بما فيها المتجر) عدا الترحيب/الدخول
   // الشريط السفلي يظهر على كل الأجهزة (جوال/آيباد/كمبيوتر) عدا شاشات الترحيب/الدخول
   const showBottomNav = !isAppWelcome && !isAuthFull;
@@ -52,8 +55,11 @@ export default function Layout({ children }) {
       {/* عرض المحتوى ينمو مع الشاشة: كان محبوساً عند 1152px دائماً، فعلى شاشة 1920
           يبقى 384px فارغاً من كل جهة (٤٠٪ من العرض) وعلى آيباد أفقي 107px. نوسّعه
           تدريجياً مع الحفاظ على سطر قراءة معقول (لا نمدّه لكامل العرض). */}
-      <main className={`mx-auto w-full max-w-6xl flex-1 px-4 pt-5 sm:px-6 xl:max-w-[1320px] 2xl:max-w-[1600px] ${showBottomNav ? 'pb-bottomnav' : 'pb-8'}`}>{children}</main>
-      {!hideChrome && !showBottomNav && <PublicFooter />}
+      {/* فوتر المنصّة يظهر على كل صفحات المتجر العام (زي فوتر المتاجر) — مع الشريط
+          السفلي أيضاً. عند ظهوره يحمل هو مسافة الشريط السفلي، فلا يبقى فراغ كبير
+          داخل main قبله ولا يغطّيه الشريط. */}
+      <main className={`mx-auto w-full max-w-6xl flex-1 px-4 pt-5 sm:px-6 xl:max-w-[1320px] 2xl:max-w-[1600px] ${showBottomNav && !showFooter ? 'pb-bottomnav' : 'pb-8'}`}>{children}</main>
+      {showFooter && <PublicFooter bottomNav={showBottomNav} />}
       <CartDrawer />
       <WishlistDrawer />
       {/* لا نُظهر تذكير السلة على صفحات الحساب/الترحيب (يغطّي النموذج) */}
@@ -65,10 +71,10 @@ export default function Layout({ children }) {
   );
 }
 
-function PublicFooter() {
+function PublicFooter({ bottomNav = false }) {
   const { t } = useTranslation();
   return (
-    <footer className="pub-footer mt-12">
+    <footer className={`pub-footer mt-16 sm:mt-20 ${bottomNav ? 'pb-bottomnav' : ''}`}>
       <div className="mx-auto w-full max-w-6xl px-4 py-10 text-center sm:px-6">
         <Link to="/" className="font-display text-2xl font-bold tracking-wide text-cream">
           {t('app.name')}
