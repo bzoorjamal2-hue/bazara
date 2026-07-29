@@ -362,7 +362,7 @@ export default function ProductDetails() {
                 وعلى الكمبيوتر تتبع حركة المؤشّر بتكبير عدسي. الغلاف يقصّ الزائد
                 (overflow) كي لا تتجاوز الصورة المكبّرة إطارها */}
             <span
-              className="block overflow-hidden rounded-2xl"
+              className="block overflow-hidden rounded-2xl ring-1 ring-gold-400/15"
               onMouseMove={onZoomMove}
               onMouseLeave={onZoomLeave}
             >
@@ -392,7 +392,7 @@ export default function ProductDetails() {
                 <button
                   key={i}
                   onClick={() => setActive(i)}
-                  className={`h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border ${i === active ? 'border-gold-400' : 'border-transparent opacity-60'}`}
+                  className={`h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl transition duration-300 ${i === active ? 'ring-2 ring-gold-400 ring-offset-1 ring-offset-transparent' : 'opacity-60 hover:opacity-100'}`}
                 >
                   <img src={cldThumb(g, 160)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
                 </button>
@@ -674,8 +674,10 @@ export default function ProductDetails() {
                 { label: t('product.trustCod'), d: <><rect x="2.5" y="6.5" width="19" height="11" rx="2" /><circle cx="12" cy="12" r="2.3" /></> },
                 { label: t('product.trustExchange'), d: <path d="M4 9h13l-3-3M20 15H7l3 3" /> },
               ].map((it, i) => (
-                <div key={i} className="flex flex-col items-center gap-1.5 rounded-xl border border-wine/12 bg-wine/[0.03] px-2 py-3 text-center">
-                  <svg viewBox="0 0 24 24" className="h-5 w-5 text-wine" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{it.d}</svg>
+                <div key={i} className="flex flex-col items-center gap-2 rounded-xl border border-gold-400/20 bg-gradient-to-b from-white to-cream/40 px-2 py-3 text-center">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-wine/12 to-gold-400/15 text-wine ring-1 ring-gold-400/40">
+                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{it.d}</svg>
+                  </span>
                   <span className="text-[11px] font-semibold leading-tight text-stone-300">{it.label}</span>
                 </div>
               ))}
