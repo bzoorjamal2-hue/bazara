@@ -1042,7 +1042,8 @@
     "lookbook": "Lookbook",
     "lookbookHint": "A full-look image + the IDs of the pieces in it. Hidden from home if the image is empty.",
     "lookbookTitle": "Title (e.g. Look of the week)",
-    "lookbookIds": "Product IDs, comma separated — e.g. 12, 34, 56"
+    "lookbookIds": "Product IDs, comma separated — e.g. 12, 34, 56",
+    "socialHint": "Bazara's official accounts — shown in the footer of every public storefront page. Leave empty to hide the icon."
   },
   "order": {
     "choose": "Choose order method",

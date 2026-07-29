@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router-dom';
+import api from '../api/client.js';
 import Navbar from './Navbar.jsx';
 import CartDrawer from './CartDrawer.jsx';
 import WishlistDrawer from './WishlistDrawer.jsx';
@@ -73,6 +74,22 @@ export default function Layout({ children }) {
 
 function PublicFooter({ bottomNav = false }) {
   const { t } = useTranslation();
+  // حسابات السوشيال يحرّرها المدير (لوحة الموقع) — نبدأ من كاش محلي فتظهر فوراً،
+  // ثم نحدّثها بالخلفية من نقطة عامة خفيفة. الإعدادات الثابتة احتياط أخير.
+  const [social, setSocial] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('bz_site_socials') || 'null') || {}; } catch { return {}; }
+  });
+  useEffect(() => {
+    api.get('/public/site-info')
+      .then((r) => {
+        const s = { instagram: r.data?.instagram || '', facebook: r.data?.facebook || '' };
+        setSocial(s);
+        try { localStorage.setItem('bz_site_socials', JSON.stringify(s)); } catch { /* تجاهل */ }
+      })
+      .catch(() => { /* الفوتر لا يكسر بلا سوشيال */ });
+  }, []);
+  const ig = social.instagram || BAZARA_INSTAGRAM;
+  const fb = social.facebook || BAZARA_FACEBOOK;
   return (
     <footer className={`pub-footer mt-16 sm:mt-20 ${bottomNav ? 'pb-bottomnav' : ''}`}>
       <div className="mx-auto w-full max-w-6xl px-4 py-10 text-center sm:px-6">
@@ -84,10 +101,10 @@ function PublicFooter({ bottomNav = false }) {
         <div className="mt-6 flex items-center justify-center gap-3">
           {[
             BAZARA_WHATSAPP && { label: 'WhatsApp', href: buildWhatsappLink(BAZARA_WHATSAPP), icon: <WhatsAppIcon className="h-5 w-5" /> },
-            BAZARA_INSTAGRAM && { label: 'Instagram', href: `https://instagram.com/${BAZARA_INSTAGRAM.replace(/^@/, '')}`, icon: <InstagramIcon className="h-5 w-5" /> },
-            BAZARA_FACEBOOK && {
+            ig && { label: 'Instagram', href: `https://instagram.com/${ig.replace(/^@/, '')}`, icon: <InstagramIcon className="h-5 w-5" /> },
+            fb && {
               label: 'Facebook',
-              href: /^https?:\/\//.test(BAZARA_FACEBOOK) ? BAZARA_FACEBOOK : `https://facebook.com/${BAZARA_FACEBOOK.replace(/^@/, '')}`,
+              href: /^https?:\/\//.test(fb) ? fb : `https://facebook.com/${fb.replace(/^@/, '')}`,
               icon: <FacebookIcon className="h-5 w-5" />,
             },
           ]

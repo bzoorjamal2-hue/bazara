@@ -21,23 +21,25 @@ export default function SiteSliders() {
   const [ann, setAnn] = useState('');
   const [annEn, setAnnEn] = useState('');
   const [lb, setLb] = useState({ image: '', title: '', titleEn: '', productIds: [] });
+  const [instagram, setInstagram] = useState('');
+  const [facebook, setFacebook] = useState('');
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     api.get('/site/banners')
-      .then((r) => { setBanners(r.data.banners?.length ? r.data.banners : DEFAULT_SITE_SLIDES); setAnn(r.data.announcement || ''); setAnnEn(r.data.announcementEn || ''); setLb({ image: '', title: '', titleEn: '', productIds: [], ...(r.data.lookbook || {}) }); })
+      .then((r) => { setBanners(r.data.banners?.length ? r.data.banners : DEFAULT_SITE_SLIDES); setAnn(r.data.announcement || ''); setAnnEn(r.data.announcementEn || ''); setLb({ image: '', title: '', titleEn: '', productIds: [], ...(r.data.lookbook || {}) }); setInstagram(r.data.instagram || ''); setFacebook(r.data.facebook || ''); })
       .catch((e) => setError(getErrorMessage(e)));
   }, []);
 
   const save = async () => {
     setMsg(''); setError(''); setBusy(true);
     try {
-      await api.put('/site/banners', { banners, announcement: ann, announcementEn: annEn, lookbook: lb });
+      await api.put('/site/banners', { banners, announcement: ann, announcementEn: annEn, lookbook: lb, instagram, facebook });
       // بانرات الرئيسية الجديدة تظهر فوراً: نفرّغ كاش الرئيسية + النسخة المحفوظة للظهور الفوري
       clearCachePrefixes(['home']);
-      try { localStorage.removeItem('bz_home_banners'); } catch { /* تجاهل */ }
+      try { localStorage.removeItem('bz_home_banners'); localStorage.removeItem('bz_site_socials'); } catch { /* تجاهل */ }
       setMsg(t('dashboard.store.saved'));
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (e) {
@@ -101,6 +103,18 @@ export default function SiteSliders() {
           onChange={(e) => setLb({ ...lb, productIds: e.target.value.split(',').map((n) => Number(n.trim())).filter((n) => Number.isInteger(n) && n > 0) })}
           dir="ltr" placeholder={t('admin.lookbookIds')} className="input w-full"
         />
+      </div>
+
+      {/* حسابات المنصّة الرسمية — تظهر في فوتر كل صفحات المتجر العام (زي سوشيال المتاجر) */}
+      <div className="glass space-y-3 p-6">
+        <div>
+          <h2 className="font-display text-lg font-bold text-gold-200">{t('dashboard.store.contact')}</h2>
+          <p className="mt-1 text-xs text-stone-400">{t('admin.socialHint')}</p>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <input value={instagram} onChange={(e) => setInstagram(e.target.value)} maxLength={200} dir="ltr" placeholder={t('dashboard.store.instagram')} className="input" />
+          <input value={facebook} onChange={(e) => setFacebook(e.target.value)} maxLength={200} dir="ltr" placeholder={t('dashboard.store.facebook')} className="input" />
+        </div>
       </div>
 
       <button onClick={save} disabled={busy} className="btn-primary">{busy ? t('common.loading') : t('common.save')}</button>

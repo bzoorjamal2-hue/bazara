@@ -1,9 +1,10 @@
 import { query } from '../config/db.js';
 import { sanitizeBanners } from './store.controller.js';
+import { clearPublicCache } from '../middleware/cache.js';
 
 // إعدادات الموقع العامة (صف واحد id=1) — يتحكّم بها المدير العام.
 async function readSettings() {
-  const r = await query('SELECT home_banners, announcement, announcement_en, collections, lookbook FROM site_settings WHERE id = 1');
+  const r = await query('SELECT home_banners, announcement, announcement_en, collections, lookbook, instagram, facebook FROM site_settings WHERE id = 1');
   const row = r.rows[0];
   return {
     banners: Array.isArray(row?.home_banners) ? row.home_banners : [],
@@ -11,8 +12,14 @@ async function readSettings() {
     announcementEn: row?.announcement_en || '',
     collections: Array.isArray(row?.collections) ? row.collections : [],
     lookbook: row?.lookbook && typeof row.lookbook === 'object' ? row.lookbook : {},
+    instagram: row?.instagram || '',
+    facebook: row?.facebook || '',
   };
 }
+
+// حساب سوشيال المنصّة: اسم مستخدم أو رابط — نقصّ الطول ونشذّب المسافات فقط.
+// الفوتر يبني رابط instagram.com/<user> بنفسه، والمدخل من المدير الموثوق (لوحة محميّة).
+const cleanHandle = (v) => String(v ?? '').trim().slice(0, 200);
 
 // تنقية المجموعات: عنوان + صورة + كلمة بحث. لا نقبل روابط حرّة (نبني /search بأنفسنا)
 // فلا يمكن حقن رابط خارجي أو javascript: من لوحة الإدارة.
@@ -67,15 +74,30 @@ export async function updateSiteBanners(req, res, next) {
     const announcementEn = req.body.announcementEn === undefined ? cur.announcementEn : cleanAnnouncement(req.body.announcementEn);
     const collections = req.body.collections === undefined ? cur.collections : sanitizeCollections(req.body.collections);
     const lookbook = req.body.lookbook === undefined ? cur.lookbook : sanitizeLookbook(req.body.lookbook);
+    const instagram = req.body.instagram === undefined ? cur.instagram : cleanHandle(req.body.instagram);
+    const facebook = req.body.facebook === undefined ? cur.facebook : cleanHandle(req.body.facebook);
     await query(
-      `INSERT INTO site_settings (id, home_banners, announcement, announcement_en, collections, lookbook, updated_at)
-       VALUES (1, $1::jsonb, $2, $3, $4::jsonb, $5::jsonb, now())
+      `INSERT INTO site_settings (id, home_banners, announcement, announcement_en, collections, lookbook, instagram, facebook, updated_at)
+       VALUES (1, $1::jsonb, $2, $3, $4::jsonb, $5::jsonb, $6, $7, now())
        ON CONFLICT (id) DO UPDATE SET home_banners = EXCLUDED.home_banners,
          announcement = EXCLUDED.announcement, announcement_en = EXCLUDED.announcement_en,
-         collections = EXCLUDED.collections, lookbook = EXCLUDED.lookbook, updated_at = now()`,
-      [JSON.stringify(banners), announcement, announcementEn, JSON.stringify(collections), JSON.stringify(lookbook)]
+         collections = EXCLUDED.collections, lookbook = EXCLUDED.lookbook,
+         instagram = EXCLUDED.instagram, facebook = EXCLUDED.facebook, updated_at = now()`,
+      [JSON.stringify(banners), announcement, announcementEn, JSON.stringify(collections), JSON.stringify(lookbook), instagram, facebook]
     );
-    res.json({ banners, announcement, announcementEn, collections, lookbook });
+    clearPublicCache(); // إبطال كاش الذاكرة فوراً (/home و/site-info) فتظهر التعديلات حالاً
+    res.json({ banners, announcement, announcementEn, collections, lookbook, instagram, facebook });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// معلومات المنصّة العامة (حسابات السوشيال) — للفوتر على كل الصفحات، بلا مصادقة.
+export async function getSiteInfo(_req, res, next) {
+  try {
+    const s = await readSettings();
+    res.set('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=600');
+    res.json({ instagram: s.instagram, facebook: s.facebook });
   } catch (err) {
     next(err);
   }
