@@ -66,7 +66,10 @@ export default function Layout({ children }) {
       {/* لا نُظهر تذكير السلة على صفحات الحساب/الترحيب (يغطّي النموذج) */}
       {!isAuthFull && !isAppWelcome && <CartReminder />}
       <OfflineBanner />
-      {!isReels && <ScrollToTopButton />}
+      {/* زر «العودة للأعلى» العائم بجهة البداية-الأسفل كان يطبق فوق زر الحفظ في نماذج
+          لوحة التحكم الطويلة (سلايدر الموقع، إعدادات المتجر...) فيغطّيه. نخفيه في لوحة
+          التحكم/الاشتراك — منطقة إدارة بهيكلها الخاص لا تحتاج زراً عائماً يزاحم الأزرار. */}
+      {!isReels && !isDashboard && <ScrollToTopButton />}
       {showBottomNav && <BottomNav />}
     </div>
   );
