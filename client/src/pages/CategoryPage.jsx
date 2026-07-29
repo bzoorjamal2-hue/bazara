@@ -48,8 +48,10 @@ export default function CategoryPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user, store } = useAuth();
-  // "الرئيسية": المشترك المسجّل يعود لمتجره العام (صفحته بحسابه)؛ الزائر لبازارا العام
-  const homeTo = user && store?.slug ? `/store/${store.slug}` : '/shop';
+  // زرّ "الرئيسية" يذهب دائماً للرئيسية العامة (/shop تعرض Home ولا تُرجع 404 أبداً).
+  // كان يوجّه المشترك المسجّل إلى /store/{slug}، فإن كان متجره غير فعّال (اشتراك منتهٍ)
+  // رجّع getStoreBySlug «المتجر غير موجود» عند الضغط على "الرئيسية" — عطل مربك.
+  const homeTo = '/shop';
   // المشترك المسجّل يرى منتجات متجره فقط (بلا خلط مع متاجر أخرى)
   const scopeSlug = user && store?.slug ? store.slug : '';
   // فئة مخصّصة؟ نأخذ اسمها وصورتها من إعدادات المتجر (نفس تجربة الفئات الأصلية)
