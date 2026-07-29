@@ -96,6 +96,24 @@ table { max-width: 100%; }
 }
 /* 4: حدّ ذهبي رفيع فاخر تحت الشريط العلوي */
 .app-navbar { border-bottom: 1px solid rgba(199, 154, 58, 0.22); }
+
+/* Hero عالمي: دخول نص متدرّج (kicker → عنوان → وصف → زر) مع تدرّج سينمائي فوق الوسائط.
+   يُطبَّق فقط على الشريحة الظاهرة فيبدو كافتتاحية أزياء راقية. */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes bz-hero-in {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .bz-hero-active .bz-hero-el { animation: bz-hero-in 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+  .bz-hero-active .bz-hero-el:nth-child(1) { animation-delay: 0.05s; }
+  .bz-hero-active .bz-hero-el:nth-child(2) { animation-delay: 0.16s; }
+  .bz-hero-active .bz-hero-el:nth-child(3) { animation-delay: 0.28s; }
+  .bz-hero-active .bz-hero-el:nth-child(4) { animation-delay: 0.40s; }
+}
+/* تدرّج سينمائي فوق صورة/فيديو الشريحة — يضمن قراءة النص فوق أي وسيط بأناقة */
+.bz-hero-scrim { background: linear-gradient(to top, rgba(20,12,9,0.72) 0%, rgba(20,12,9,0.20) 42%, rgba(20,12,9,0.38) 100%); }
+/* شارة ذهبية رفيعة (kicker) للشرائح — تباعد حروف واسع بأسلوب دور الأزياء */
+.bz-kicker { letter-spacing: 0.34em; }
 /* 6: تلميع الوضع الليلي — تباين أدفأ للبطاقات */
 html.dark .theme-pub .glass { box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5); }
 

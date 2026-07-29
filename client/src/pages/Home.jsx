@@ -92,7 +92,7 @@ export default function Home() {
 
       {/* تصفّح حسب الفئة */}
       <Reveal>
-        <section className="mt-12">
+        <section className="mt-16 sm:mt-20">
           <SectionTitle>{t('home.browseByCategory')}</SectionTitle>
           <CategoryGrid />
         </section>
@@ -130,7 +130,7 @@ export default function Home() {
       {recent.length > 0 && <Reveal><ProductRail title={t('product.recentlyViewed')} products={recent} /></Reveal>}
 
       {loading ? (
-        <section className="mt-14">
+        <section className="mt-16 sm:mt-20">
           <ProductGridSkeleton count={8} />
         </section>
       ) : (
@@ -138,7 +138,7 @@ export default function Home() {
           {/* منتجات مميّزة */}
           {data.featured?.length > 0 && (
             <Reveal>
-              <section className="mt-14">
+              <section className="mt-16 sm:mt-20">
                 <SectionTitle>{t('home.featuredProducts')}</SectionTitle>
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
                   {data.featured.map((p, i) => (
@@ -150,7 +150,7 @@ export default function Home() {
           )}
 
           {/* متاجر مميزة */}
-          <Reveal><section id="stores" className="mt-14">
+          <Reveal><section id="stores" className="mt-16 sm:mt-20">
             <SectionTitle>{t('home.featuredStores')}</SectionTitle>
             {data.stores.length === 0 ? (
               <p className="text-stone-400">{t('common.noResults')}</p>
@@ -191,7 +191,7 @@ export default function Home() {
 
           {/* أحدث المنتجات */}
           <Reveal>
-            <section className="mt-14">
+            <section className="mt-16 sm:mt-20">
               <SectionTitle>{t('home.latestProducts')}</SectionTitle>
               {data.products.length === 0 ? (
                 <p className="text-stone-400">{t('common.noResults')}</p>
@@ -365,15 +365,15 @@ function HomeHero({ banners = [] }) {
               return (
                 <div key={idx} className="w-full shrink-0" dir="rtl">
                   <div
-                    className={`relative isolate flex h-[340px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[420px] lg:h-[500px] 2xl:h-[580px] ${onMedia ? 'bg-[#241712]' : 'bg-gradient-to-br from-[#f6ecd9] via-[#efe1c6] to-[#f6ecd9]'}`}
+                    className={`relative isolate flex h-[340px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[420px] lg:h-[500px] 2xl:h-[580px] ${idx === i ? 'bz-hero-active' : ''} ${onMedia ? 'bg-[#241712]' : 'bg-gradient-to-br from-[#f6ecd9] via-[#efe1c6] to-[#f6ecd9]'}`}
                     style={isColor ? { background: s.bgValue } : isVideo ? { backgroundImage: `url("${vPoster}")`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
                   >
                     {isImage && (
-                      <img src={cldThumb(s.bgValue, 1280)} alt="" loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" style={{ filter: 'brightness(0.6)' }} className="absolute inset-0 -z-10 h-full w-full object-cover" />
+                      <img src={cldThumb(s.bgValue, 1280)} alt="" loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" style={{ filter: 'brightness(0.92) saturate(1.05)' }} className="absolute inset-0 -z-10 h-full w-full object-cover" />
                     )}
                     {isVideo && (
                       <>
-                        <img src={vPoster} alt="" aria-hidden loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" style={{ filter: 'brightness(0.6)', zIndex: -2 }} className="absolute inset-0 h-full w-full object-cover" />
+                        <img src={vPoster} alt="" aria-hidden loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" style={{ filter: 'brightness(0.92) saturate(1.05)', zIndex: -2 }} className="absolute inset-0 h-full w-full object-cover" />
                         <video
                           ref={(el) => { vidRefs.current[idx] = el; }}
                           src={s.bgValue}
@@ -383,14 +383,18 @@ function HomeHero({ banners = [] }) {
                           onEnded={(e) => { e.currentTarget.currentTime = 0; e.currentTarget.play().catch(() => {}); }}
                           onPause={(e) => { if (!document.hidden && iRef.current === idx && visRef.current) e.currentTarget.play().catch(() => {}); }}
                           onCanPlay={(e) => { e.currentTarget.style.opacity = '1'; }}
-                          style={{ filter: 'brightness(0.6)', opacity: 0, transition: 'opacity .35s ease', zIndex: -1 }}
+                          style={{ filter: 'brightness(0.92) saturate(1.05)', opacity: 0, transition: 'opacity .35s ease', zIndex: -1 }}
                           className="absolute inset-0 h-full w-full object-cover"
                         />
                       </>
                     )}
-                    {s.title && <h1 className={`font-display text-3xl font-extrabold leading-tight sm:text-5xl ${onMedia ? 'text-cream drop-shadow-lg' : 'text-[#5e4636]'}`}>{s.title}</h1>}
-                    {s.subtitle && <p className={`mx-auto mt-4 max-w-2xl sm:text-lg ${onMedia ? 'text-cream/85 drop-shadow' : 'text-[#6e5340]'}`}>{s.subtitle}</p>}
-                    {s.btnLabel && s.btnHref && <SlideButton href={s.btnHref} label={s.btnLabel} onLight={!onMedia} />}
+                    {/* تدرّج سينمائي فوق الوسائط الداكنة ليُقرأ النص بأناقة فوق أي صورة/فيديو */}
+                    {onMedia && <div aria-hidden className="bz-hero-scrim pointer-events-none absolute inset-0" />}
+                    {/* شارة ذهبية رفيعة تعطي إحساس دور الأزياء العالمية */}
+                    <span className={`bz-hero-el bz-kicker mb-4 text-[11px] font-semibold uppercase sm:text-xs ${onMedia ? 'text-gold-200/90' : 'text-[#a9812f]'}`}>Bazara</span>
+                    {s.title && <h1 className={`bz-hero-el font-display text-3xl font-extrabold leading-tight sm:text-5xl ${onMedia ? 'text-cream drop-shadow-lg' : 'text-[#5e4636]'}`}>{s.title}</h1>}
+                    {s.subtitle && <p className={`bz-hero-el mx-auto mt-4 max-w-2xl sm:text-lg ${onMedia ? 'text-cream/85 drop-shadow' : 'text-[#6e5340]'}`}>{s.subtitle}</p>}
+                    {s.btnLabel && s.btnHref && <div className="bz-hero-el"><SlideButton href={s.btnHref} label={s.btnLabel} onLight={!onMedia} /></div>}
                   </div>
                 </div>
               );
@@ -398,15 +402,15 @@ function HomeHero({ banners = [] }) {
             // الشريحة الافتراضية (نصّية) — كريمي فخم بنص خمري (بلا البني)
             return (
               <div key={idx} className="w-full shrink-0" dir="rtl">
-                <div className="relative flex h-[340px] flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#f6ecd9] via-[#efe1c6] to-[#f6ecd9] px-6 text-center sm:h-[420px] lg:h-[500px] 2xl:h-[580px]">
+                <div className={`relative flex h-[340px] flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#f6ecd9] via-[#efe1c6] to-[#f6ecd9] px-6 text-center sm:h-[420px] lg:h-[500px] 2xl:h-[580px] ${idx === i ? 'bz-hero-active' : ''}`}>
                   <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-wine/5 blur-3xl" />
-                  <p className="mb-3 text-sm font-semibold tracking-[0.3em] text-[#6e5340]">{s.eyebrow}</p>
-                  <h1 className="font-display text-3xl font-extrabold leading-tight text-[#5e4636] sm:text-5xl">
+                  <p className="bz-hero-el bz-kicker mb-4 text-[11px] font-semibold uppercase text-[#a9812f] sm:text-xs">{s.eyebrow}</p>
+                  <h1 className="bz-hero-el font-display text-3xl font-extrabold leading-tight text-[#5e4636] sm:text-5xl">
                     {s.title}
                     {s.highlight && <> <span className="underline decoration-[#c79a3a] decoration-2 underline-offset-8">{s.highlight}</span></>}
                   </h1>
-                  <p className="mx-auto mt-4 max-w-2xl text-[#6e5340] sm:text-lg">{s.desc}</p>
-                  <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+                  <p className="bz-hero-el mx-auto mt-4 max-w-2xl text-[#6e5340] sm:text-lg">{s.desc}</p>
+                  <div className="bz-hero-el mt-7 flex flex-wrap items-center justify-center gap-3">
                     <Link to="/register" className="inline-flex items-center rounded-xl bg-wine px-6 py-2.5 text-base font-semibold text-cream shadow-lg transition hover:-translate-y-0.5 hover:bg-wine-dark">
                       {t('home.ctaStart')}
                     </Link>
@@ -421,13 +425,13 @@ function HomeHero({ banners = [] }) {
         </div>
       </div>
 
-      <div dir="ltr" className="mt-5 flex items-center justify-center gap-2">
+      <div dir="ltr" className="mt-6 flex items-center justify-center gap-2">
         {slides.map((_, idx) => (
           <button
             key={idx}
             onClick={() => go(idx)}
             aria-label={`slide ${idx + 1}`}
-            className={`h-2 rounded-full transition-all ${idx === i ? 'w-6 bg-wine' : 'w-2 bg-wine/30'}`}
+            className={`h-1.5 rounded-full transition-all duration-500 ${idx === i ? 'w-8 bg-gradient-to-r from-gold-400 to-wine' : 'w-1.5 bg-wine/25 hover:bg-wine/40'}`}
           />
         ))}
       </div>
@@ -466,7 +470,7 @@ function PromoBanner() {
 // عنوان قسم مركزي بزخرفة أنيقة (طبق المرجع)
 function SectionTitle({ children }) {
   return (
-    <div className="mb-6 flex items-center justify-center gap-2.5 sm:gap-3">
+    <div className="mb-8 flex items-center justify-center gap-2.5 sm:mb-10 sm:gap-3">
       <span aria-hidden className="text-sm text-[#c79a3a]/70">❖</span>
       <span className="h-px w-7 bg-gradient-to-r from-transparent to-[#c79a3a]/45 sm:w-14" />
       <h2 className="bz-title whitespace-nowrap font-display text-xl font-bold sm:text-2xl">{children}</h2>
