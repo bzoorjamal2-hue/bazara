@@ -572,11 +572,27 @@ html.dark .theme-pub .app-navbar.shadow-md { box-shadow: 0 12px 28px -8px rgba(0
 .animate-heart-pop { animation: heart-pop 0.8s ease-out forwards; }
 
 /* تلاشي دخول الصفحات عند التنقّل — CSS خالص بدل framer-motion (أخف على المعالج) */
+/* انتقال الصفحات بإحساس التطبيقات الأصلية (نمط تطبيقات ميتا): المحتوى يصل سريعاً
+   ثم يستقرّ — تلاشٍ مع انزلاق صغير لأعلى بمنحنى تباطؤ حادّ. transform/opacity فقط
+   (وحدة الرسم وحدها) فلا يلمس الخيط الرئيسي ولا يُقطّع على أي جهاز.
+   الرجوع (POP) بلا حركة إطلاقاً — استعادة فورية كالتطبيقات. */
 @keyframes route-fade {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
 }
-.route-fade { animation: route-fade 0.2s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+.route-fade {
+  animation: route-fade 0.26s cubic-bezier(0.16, 0.84, 0.44, 1) both;
+  backface-visibility: hidden;
+}
+/* الأجهزة الضعيفة: نفس الإحساس بمسافة أقصر وزمن أقصر — وصول أسرع بلا كلفة */
+@keyframes route-fade-lite {
+  from { opacity: 0; transform: translate3d(0, 6px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+.bz-lite .route-fade { animation: route-fade-lite 0.18s cubic-bezier(0.16, 0.84, 0.44, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .route-fade { animation: none; }
+}
 
 /* رنّة الجرس لحظة تفعيل الإشعارات (NavBell) — تأرجح قصير حول محور التعليق */
 @keyframes bell-swing {
