@@ -1,10 +1,15 @@
 import axios from 'axios';
 
-// نستخدم دائماً نفس الأصل (/api):
-// - محلياً: وكيل Vite يحوّله إلى localhost:5000
-// - عند النشر: وكيل Vercel (rewrite) يحوّله إلى خادم Render
-// هذا يجعل الكوكيز "first-party" فتعمل على كل المتصفحات (Safari/iOS أيضاً).
-const baseURL = '/api';
+// وجهة الـAPI:
+// - افتراضياً نفس الأصل (/api): محلياً وكيل Vite → localhost:5000، وعند النشر
+//   وكيل Vercel (rewrite) → خادم Render.
+// - عند ضبط VITE_API_URL (مثل https://api.bazarastore.site/api) نكلّم الخادم
+//   مباشرةً. هذا يتجاوز جدار حماية Vercel تماماً، فلا تُحجب عمليات تسجيل الدخول
+//   ولا أي طلب عند تفعيل تحدّي DDoS/Attack Mode.
+//   شرط أساسي: أن يكون دوماً دوماً فرعياً من نفس نطاق الموقع (api.bazarastore.site)
+//   لا نطاقاً غريباً (onrender.com) — عندها تبقى الكوكيز "first-party" فتعمل على
+//   Safari/iOS التي تحجب كوكيز الطرف الثالث.
+const baseURL = import.meta.env.VITE_API_URL || '/api';
 
 const api = axios.create({
   baseURL,

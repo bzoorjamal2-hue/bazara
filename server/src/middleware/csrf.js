@@ -15,6 +15,8 @@ export function issueCsrfToken(req, res, next) {
       httpOnly: true,
       secure: process.env.COOKIE_SECURE === 'true',
       sameSite: process.env.COOKIE_SAMESITE || 'lax',
+      // يُشارَك مع دومين الـAPI الفرعي (انظر COOKIE_DOMAIN في auth.controller)
+      ...(process.env.COOKIE_DOMAIN ? { domain: process.env.COOKIE_DOMAIN } : {}),
       maxAge: 1000 * 60 * 60 * 24 * 7,
       path: '/',
     });

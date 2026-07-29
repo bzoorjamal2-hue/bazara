@@ -18,6 +18,10 @@ function cookieOptions() {
     httpOnly: true,
     secure: process.env.COOKIE_SECURE === 'true',
     sameSite: process.env.COOKIE_SAMESITE || 'lax',
+    // COOKIE_DOMAIN (مثل .bazarastore.site) يجعل الكوكي مشتركاً بين الموقع
+    // ودومين الـAPI الفرعي (api.bazarastore.site) — فيبقى "first-party" وتعمل
+    // الجلسة على Safari/iOS التي تحجب كوكيز الطرف الثالث. بدونه: السلوك كما هو.
+    ...(process.env.COOKIE_DOMAIN ? { domain: process.env.COOKIE_DOMAIN } : {}),
     maxAge: 1000 * 60 * 60 * 24 * SESSION_DAYS,
     path: '/',
   };
@@ -143,7 +147,11 @@ export async function loginWithCode(req, res, next) {
 }
 
 export function logout(_req, res) {
-  res.clearCookie('token', { path: '/' });
+  // نمسح بنفس خصائص الإنشاء (خاصةً domain) وإلا لا يُمسح الكوكي فيبقى المستخدم داخلاً
+  res.clearCookie('token', {
+    path: '/',
+    ...(process.env.COOKIE_DOMAIN ? { domain: process.env.COOKIE_DOMAIN } : {}),
+  });
   res.json({ message: 'تم تسجيل الخروج.' });
 }
 
