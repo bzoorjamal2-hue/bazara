@@ -456,13 +456,15 @@ function SlideButton({ href, label, onLight }) {
 function PromoBanner() {
   const { t } = useTranslation();
   return (
-    <Link to="/shop" className="mt-10 flex items-center gap-4 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-wine/10 transition hover:-translate-y-0.5 hover:shadow-md sm:p-5">
-      <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-cream text-wine"><GiftIcon className="h-7 w-7" /></span>
+    <Link to="/shop" className="group relative mt-10 flex items-center gap-4 overflow-hidden rounded-3xl bg-gradient-to-br from-white via-white to-cream p-4 shadow-sm ring-1 ring-gold-400/25 transition hover:-translate-y-0.5 hover:shadow-md sm:p-5">
+      {/* توهّج ذهبي خفيف يمسح البطاقة عند المرور — لمسة فخامة */}
+      <span aria-hidden className="pointer-events-none absolute -inset-y-8 -start-24 w-24 -skew-x-12 bg-gradient-to-r from-transparent via-gold-400/20 to-transparent transition-all duration-700 group-hover:start-[110%]" />
+      <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-cream text-wine ring-1 ring-gold-400/40 transition group-hover:ring-gold-400"><GiftIcon className="h-7 w-7" /></span>
       <div className="min-w-0 flex-1">
         <p className="font-display text-sm font-bold text-wine sm:text-lg">{t('home.promoTitle')}</p>
         <p className="mt-0.5 text-xs text-stone-500 sm:text-sm">{t('home.promoSub')}</p>
       </div>
-      <span className="hidden shrink-0 items-center gap-1 rounded-full bg-wine px-4 py-2 text-sm font-bold text-cream sm:inline-flex">{t('home.shopNow')} <ForwardIcon className="h-3.5 w-3.5 rtl-flip" /></span>
+      <span className="hidden shrink-0 items-center gap-1 rounded-full bg-wine px-4 py-2 text-sm font-bold text-cream shadow-sm transition group-hover:bg-wine-dark sm:inline-flex">{t('home.shopNow')} <ForwardIcon className="h-3.5 w-3.5 rtl-flip transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" /></span>
       {/* على الجوال: سهم صغير يوضّح أن البطاقة قابلة للنقر (الزر الكامل مخفي) */}
       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-wine/10 text-wine sm:hidden"><ForwardIcon className="h-4 w-4 rtl-flip" /></span>
     </Link>
