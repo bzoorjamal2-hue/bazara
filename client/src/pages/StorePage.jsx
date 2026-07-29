@@ -443,12 +443,12 @@ export default function StorePage() {
                   className="mx-auto h-16 w-16 rounded-full bg-white object-cover shadow-md ring-2 ring-gold-400/50"
                 />
               )}
-              <div className="mt-4 flex items-center justify-center gap-2.5 text-wine">
-                <span aria-hidden className="text-sm text-wine/40">❖</span>
-                <span className="h-px w-8 bg-gradient-to-r from-transparent to-wine/30" />
-                <h2 className="font-display text-xl font-bold">{store.name}</h2>
-                <span className="h-px w-8 bg-gradient-to-l from-transparent to-wine/30" />
-                <span aria-hidden className="text-sm text-wine/40">❖</span>
+              <div className="mt-4 flex items-center justify-center gap-2.5">
+                <span aria-hidden className="text-sm text-[#c79a3a]/70">❖</span>
+                <span className="h-px w-8 bg-gradient-to-r from-transparent to-[#c79a3a]/45" />
+                <h2 className="bz-title font-display text-xl font-bold">{store.name}</h2>
+                <span className="h-px w-8 bg-gradient-to-l from-transparent to-[#c79a3a]/45" />
+                <span aria-hidden className="text-sm text-[#c79a3a]/70">❖</span>
               </div>
               <p className="mx-auto mt-3 max-w-2xl whitespace-pre-line leading-relaxed text-stone-300">{store.description}</p>
             </section>
@@ -700,12 +700,12 @@ function HomeGlyph({ className = 'h-[18px] w-[18px]' }) {
 // عنوان قسم مركزي بزخرفة أنيقة (طبق المرجع — مطابق للصفحة الرئيسية)
 function SectionTitle({ children }) {
   return (
-    <div className="mb-6 flex items-center justify-center gap-2.5 text-wine sm:gap-3">
-      <span aria-hidden className="text-sm text-wine/40">❖</span>
-      <span className="h-px w-7 bg-gradient-to-r from-transparent to-wine/30 sm:w-12" />
-      <h2 className="whitespace-nowrap font-display text-xl font-bold sm:text-2xl">{children}</h2>
-      <span className="h-px w-7 bg-gradient-to-l from-transparent to-wine/30 sm:w-12" />
-      <span aria-hidden className="text-sm text-wine/40">❖</span>
+    <div className="mb-8 flex items-center justify-center gap-2.5 sm:mb-10 sm:gap-3">
+      <span aria-hidden className="text-sm text-[#c79a3a]/70">❖</span>
+      <span className="h-px w-7 bg-gradient-to-r from-transparent to-[#c79a3a]/45 sm:w-14" />
+      <h2 className="bz-title whitespace-nowrap font-display text-xl font-bold sm:text-2xl">{children}</h2>
+      <span className="h-px w-7 bg-gradient-to-l from-transparent to-[#c79a3a]/45 sm:w-14" />
+      <span aria-hidden className="text-sm text-[#c79a3a]/70">❖</span>
     </div>
   );
 }
@@ -980,7 +980,7 @@ function HeroSlider({ store }) {
                 <div
                   // الارتفاع ينمو مع العرض: كان يتوقّف عند 340px فيبدو شريطاً رفيعاً
                   // (نسبة ~5:1) على الشاشات العريضة بعد توسيع الحاوية
-                  className={`relative isolate flex h-[260px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[340px] lg:h-[420px] 2xl:h-[500px] ${custom ? 'bg-[#241712]' : 'bg-wine-dark pub-hero'}`}
+                  className={`relative isolate flex h-[260px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[340px] lg:h-[420px] 2xl:h-[500px] ${idx === i ? 'bz-hero-active' : ''} ${custom ? 'bg-[#241712]' : 'bg-wine-dark pub-hero'}`}
                   style={style}
                 >
                   {/* وسائط الشريحة (صورة أو فيديو) بنفس التعتيم تماماً — معتّمة من أول لحظة بلا وميض */}
@@ -990,14 +990,14 @@ function HeroSlider({ store }) {
                       alt=""
                       aria-hidden="true"
                       decoding="async"
-                      style={{ filter: 'brightness(0.6)' }}
+                      style={{ filter: 'brightness(0.92) saturate(1.05)' }}
                       className="absolute inset-0 z-0 h-full w-full object-cover"
                     />
                   )}
                   {isVideo && (
                     <>
                       {/* صورة أول لقطة دائمة خلف الفيديو → لا سواد أبداً */}
-                      <img src={posterImg} alt="" aria-hidden="true" loading={idx === 0 ? 'eager' : 'lazy'} style={{ filter: 'brightness(0.6)' }} className="absolute inset-0 z-0 h-full w-full object-cover" />
+                      <img src={posterImg} alt="" aria-hidden="true" loading={idx === 0 ? 'eager' : 'lazy'} style={{ filter: 'brightness(0.92) saturate(1.05)' }} className="absolute inset-0 z-0 h-full w-full object-cover" />
                       <video
                         ref={(el) => { vidRefs.current[idx] = el; }}
                         src={s.bgValue}
@@ -1010,12 +1010,13 @@ function HeroSlider({ store }) {
                         onEnded={(e) => { e.currentTarget.currentTime = 0; e.currentTarget.play().catch(() => {}); }}
                         onPause={(e) => { if (!document.hidden && iRef.current === idx && visRef.current) e.currentTarget.play().catch(() => {}); }}
                         onCanPlay={(e) => { e.currentTarget.style.opacity = '1'; }}
-                        style={{ filter: 'brightness(0.6)', opacity: 0, transition: 'opacity .35s ease' }}
+                        style={{ filter: 'brightness(0.92) saturate(1.05)', opacity: 0, transition: 'opacity .35s ease' }}
                         className="absolute inset-0 z-[1] h-full w-full object-cover"
                       />
                     </>
                   )}
-                  {/* طبقة تظليل موحّدة فوق الصورة/الفيديو — نفس الدرجة لكل الشرائح ليظهر النص بوضوح */}
+                  {/* تدرّج سينمائي فوق الوسائط الداكنة ليُقرأ النص بأناقة فوق أي صورة/فيديو */}
+                  {custom && <div aria-hidden className="bz-hero-scrim pointer-events-none absolute inset-0 z-[2]" />}
                   {!custom && <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-cream/10 blur-3xl" />}
 
                   {/* النص فوق الفيديو دائماً (طبقة GPU مستقلة لتفادي اختفائه على iOS أثناء الانتقال) */}
@@ -1023,16 +1024,16 @@ function HeroSlider({ store }) {
                     {s.fixed ? (
                       <>
                         {store.logoUrl && (
-                          <img src={store.logoUrl} alt={store.name} className="mx-auto mb-4 h-20 w-20 rounded-2xl border-2 border-cream/30 object-cover shadow-lg sm:h-24 sm:w-24" />
+                          <img src={store.logoUrl} alt={store.name} className="bz-hero-el mx-auto mb-4 h-20 w-20 rounded-2xl border-2 border-cream/30 object-cover shadow-lg sm:h-24 sm:w-24" />
                         )}
-                        <h1 className="font-display text-3xl font-extrabold text-cream sm:text-5xl">{store.name}</h1>
-                        <p className="mt-3 font-display text-lg text-cream/90 sm:text-2xl">أناقة · حشمة · تميّز</p>
-                        <p className="mt-1 text-xs tracking-[0.25em] text-cream/55 sm:text-sm">ELEGANCE · MODESTY · DISTINCTION</p>
+                        <h1 className="bz-hero-el font-display text-3xl font-extrabold text-cream sm:text-5xl">{store.name}</h1>
+                        <p className="bz-hero-el mt-3 font-display text-lg text-cream/90 sm:text-2xl">أناقة · حشمة · تميّز</p>
+                        <p className="bz-hero-el mt-1 text-xs tracking-[0.25em] text-cream/55 sm:text-sm">ELEGANCE · MODESTY · DISTINCTION</p>
                       </>
                     ) : (
                       <>
-                        <h2 className="font-display text-3xl font-extrabold text-cream drop-shadow sm:text-5xl">{s.title}</h2>
-                        {s.subtitle && <p className="mx-auto mt-3 max-w-xl text-cream/90 drop-shadow sm:text-lg">{s.subtitle}</p>}
+                        <h2 className="bz-hero-el font-display text-3xl font-extrabold text-cream drop-shadow sm:text-5xl">{s.title}</h2>
+                        {s.subtitle && <p className="bz-hero-el mx-auto mt-3 max-w-xl text-cream/90 drop-shadow sm:text-lg">{s.subtitle}</p>}
                       </>
                     )}
                   </div>
@@ -1045,13 +1046,13 @@ function HeroSlider({ store }) {
 
       {/* نقاط التنقّل */}
       {len > 1 && (
-        <div dir="ltr" className="mt-4 flex items-center justify-center gap-2">
+        <div dir="ltr" className="mt-6 flex items-center justify-center gap-2">
           {slides.map((_, idx) => (
             <button
               key={idx}
               onClick={() => go(idx)}
               aria-label={`slide ${idx + 1}`}
-              className={`h-2 rounded-full transition-all ${idx === i ? 'w-6 bg-wine' : 'w-2 bg-wine/30'}`}
+              className={`h-1.5 rounded-full transition-all duration-500 ${idx === i ? 'w-8 bg-gradient-to-r from-gold-400 to-wine' : 'w-1.5 bg-wine/25 hover:bg-wine/40'}`}
             />
           ))}
         </div>
