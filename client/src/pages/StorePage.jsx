@@ -362,8 +362,12 @@ export default function StorePage() {
           )}
 
           {filtered.length === 0 ? (
-            <div className="glass flex flex-col items-center gap-4 p-10 text-center text-stone-400">
-              <p>{data.products.length === 0 ? t('store.noProducts') : t('common.noResults')}</p>
+            <div className="glass relative flex flex-col items-center gap-4 overflow-hidden p-10 text-center text-stone-400">
+              <span className="dash-hairline absolute inset-x-0 top-0" />
+              <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-wine/12 to-gold-400/15 text-wine ring-1 ring-gold-400/40">
+                <BoltIcon className="h-8 w-8" />
+              </span>
+              <p className="max-w-sm text-sm">{data.products.length === 0 ? t('store.noProducts') : t('common.noResults')}</p>
               {/* عند وجود فلاتر نشطة نعطي مخرجاً بضغطة (بحث/فئة/مقاس/لون/عروض) */}
               {data.products.length > 0 && (q || cat !== 'all' || sizesSel.length || colorsSel.length || offersOnly || stockOnly) && (
                 <button
