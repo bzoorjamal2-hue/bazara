@@ -197,9 +197,12 @@ export default function Search() {
                   <FilteredProductGrid products={results.products} />
                 </section>
               ) : results.stores.length === 0 && !busy && (
-                <div className="rounded-2xl border border-wine/10 bg-white p-10 text-center">
-                  <p className="text-3xl">🔍</p>
-                  <p className="mt-3 font-semibold text-stone-200">{t('searchPage.noResults', { q })}</p>
+                <div className="glass relative overflow-hidden p-10 text-center">
+                  <span className="dash-hairline absolute inset-x-0 top-0" />
+                  <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-wine/12 to-gold-400/15 text-wine ring-1 ring-gold-400/40">
+                    <SearchIcon className="h-8 w-8" />
+                  </span>
+                  <p className="mt-4 font-semibold text-stone-200">{t('searchPage.noResults', { q })}</p>
                   <div className="mt-5 flex flex-wrap justify-center gap-2">
                     {CATS.slice(0, 4).map((c) => (
                       <Link key={c} to={catLink(c)}
