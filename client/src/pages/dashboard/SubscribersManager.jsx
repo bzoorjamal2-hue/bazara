@@ -202,6 +202,8 @@ export default function SubscribersManager() {
   const { t } = useTranslation();
   const [subs, setSubs] = useState(null);
   const [error, setError] = useState('');
+  const [q, setQ] = useState('');
+  const [filter, setFilter] = useState('all'); // all | active | expired | requested
 
   useEffect(() => {
     api.get('/subscription/subscribers').then((r) => setSubs(r.data.subscribers)).catch((e) => setError(getErrorMessage(e)));
@@ -209,17 +211,65 @@ export default function SubscribersManager() {
 
   if (subs === null && !error) return <Spinner />;
 
+  // فلترة محلية على القائمة المحمّلة — بحث بالاسم/الإيميل/اسم المتجر + حالة الاشتراك
+  const query = q.trim().toLowerCase();
+  const shown = (subs || []).filter((s) => {
+    if (query && !`${s.name} ${s.email} ${s.storeName || ''}`.toLowerCase().includes(query)) return false;
+    if (filter === 'active') return s.active;
+    if (filter === 'expired') return !s.active && !s.isAdmin;
+    if (filter === 'requested') return s.requestedStatus === 'pending';
+    return true;
+  });
+
+  const counts = {
+    all: subs?.length || 0,
+    active: (subs || []).filter((s) => s.active).length,
+    expired: (subs || []).filter((s) => !s.active && !s.isAdmin).length,
+    requested: (subs || []).filter((s) => s.requestedStatus === 'pending').length,
+  };
+  const chips = [
+    { key: 'all', label: t('admin.filterAll') },
+    { key: 'active', label: t('admin.statusActive') },
+    { key: 'expired', label: t('admin.statusLocked') },
+    { key: 'requested', label: t('admin.requested') },
+  ];
+
   return (
     <div className="space-y-5">
       <h1 className="font-display text-2xl font-bold gradient-text">{t('admin.subscribersTitle')}</h1>
       <p className="text-sm text-stone-400">{t('admin.subscribersHint')}</p>
       {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
 
+      {/* بحث + فلترة بالحالة — يصير ضرورياً مع كثرة المتاجر */}
+      {subs && subs.length > 0 && (
+        <div className="space-y-3">
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder={t('admin.searchSubscribers')}
+            className="input w-full"
+          />
+          <div className="flex flex-wrap gap-2">
+            {chips.map((c) => (
+              <button
+                key={c.key}
+                onClick={() => setFilter(c.key)}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${filter === c.key ? 'bg-gold-400 text-ink-950 shadow-sm' : 'border border-gold-400/25 text-stone-300 hover:bg-gold-400/10'}`}
+              >
+                {c.label} <span className={filter === c.key ? 'text-ink-950/70' : 'text-stone-500'}>({counts[c.key]})</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {subs && subs.length === 0 ? (
         <div className="glass p-10 text-center text-stone-400">{t('admin.noSubscribers')}</div>
+      ) : shown.length === 0 ? (
+        <div className="glass p-10 text-center text-stone-400">{t('common.noResults')}</div>
       ) : (
         <div className="space-y-3">
-          {subs?.map((s) => (
+          {shown.map((s) => (
             <SubRow
               key={s.email}
               s={s}

@@ -1044,6 +1044,8 @@
     "lookbookTitle": "Title (e.g. Look of the week)",
     "lookbookIds": "Product IDs, comma separated — e.g. 12, 34, 56",
     "socialHint": "Bazara's official accounts — shown in the footer of every public storefront page. Leave empty to hide the icon.",
+    "searchSubscribers": "Search by name, email or store…",
+    "filterAll": "All",
     "ov": {
       "nav": "Overview",
       "title": "Platform overview",
