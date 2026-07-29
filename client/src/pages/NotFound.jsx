@@ -11,11 +11,11 @@ export default function NotFound() {
       <Seo title="404" />
       <div className="glass animate-fade-up relative w-full max-w-md overflow-hidden p-10 text-center">
         <span className="dash-hairline absolute inset-x-0 top-0" />
-        <div className="mb-2 flex items-center justify-center gap-2.5 text-wine/40">
+        <div className="mb-2 flex items-center justify-center gap-2.5 text-[#c79a3a]/70">
           <span aria-hidden className="text-sm">❖</span>
-          <span className="h-px w-10 bg-gradient-to-r from-transparent to-wine/30" />
+          <span className="h-px w-10 bg-gradient-to-r from-transparent to-[#c79a3a]/45" />
           <span aria-hidden className="text-sm">❖</span>
-          <span className="h-px w-10 bg-gradient-to-l from-transparent to-wine/30" />
+          <span className="h-px w-10 bg-gradient-to-l from-transparent to-[#c79a3a]/45" />
           <span aria-hidden className="text-sm">❖</span>
         </div>
         <p className="font-display text-7xl font-extrabold gradient-text">404</p>
