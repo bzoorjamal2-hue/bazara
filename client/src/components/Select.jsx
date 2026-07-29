@@ -49,13 +49,15 @@ export default function Select({ value, onChange, options, className = '', place
     document.addEventListener('touchstart', onDoc);
     document.addEventListener('keydown', onKey);
     window.addEventListener('resize', reposition);
-    window.addEventListener('scroll', reposition, true); // capture: يلتقط تمرير الحاويات الداخلية
+    // capture: يلتقط تمرير الحاويات الداخلية — و passive كي لا ينتظر المتصفّح
+    // الجافاسكربت قبل التمرير (كان المستمع الوحيد غير الـpassive بالموقع)
+    window.addEventListener('scroll', reposition, { capture: true, passive: true });
     return () => {
       document.removeEventListener('mousedown', onDoc);
       document.removeEventListener('touchstart', onDoc);
       document.removeEventListener('keydown', onKey);
       window.removeEventListener('resize', reposition);
-      window.removeEventListener('scroll', reposition, true);
+      window.removeEventListener('scroll', reposition, { capture: true });
     };
   }, [open]);
 
