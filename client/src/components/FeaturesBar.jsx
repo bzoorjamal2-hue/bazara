@@ -98,17 +98,17 @@ export default function FeaturesBar() {
   };
 
   return (
-    <section className="mt-12">
+    <section className="mt-16 sm:mt-20">
       <div className="flex items-center gap-2 sm:gap-3">
         {hasNav && <Arrow dir="prev" onClick={() => go(-1)} />}
         <div className="grid flex-1 gap-3 sm:gap-4" style={{ gridTemplateColumns: `repeat(${perPage}, minmax(0,1fr))` }}>
           {shown.map(({ Icon, title }, i) => (
             <div
               key={i}
-              className="relative flex flex-col items-center gap-2 overflow-hidden rounded-2xl border border-wine/10 bg-white p-4 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-5"
+              className="group relative flex flex-col items-center gap-2 overflow-hidden rounded-2xl border border-gold-400/20 bg-gradient-to-b from-white to-cream/40 p-4 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-5"
             >
               <span className="dash-hairline absolute inset-x-0 top-0" />
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-wine/10 text-wine ring-1 ring-gold-400/40">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-wine/12 to-gold-400/15 text-wine ring-1 ring-gold-400/40 transition duration-500 group-hover:scale-110 group-hover:ring-gold-400">
                 <Icon className="h-6 w-6" />
               </span>
               <span className="text-xs font-bold leading-snug text-[#2b2b2b] sm:text-sm">{title}</span>
@@ -125,7 +125,7 @@ export default function FeaturesBar() {
               key={i}
               onClick={() => setPage(i)}
               aria-label={`page ${i + 1}`}
-              className={`h-1.5 rounded-full transition-all ${i === page ? 'w-5 bg-wine' : 'w-1.5 bg-wine/25'}`}
+              className={`h-1.5 rounded-full transition-all duration-500 ${i === page ? 'w-6 bg-gradient-to-r from-gold-400 to-wine' : 'w-1.5 bg-wine/25 hover:bg-wine/40'}`}
             />
           ))}
         </div>
