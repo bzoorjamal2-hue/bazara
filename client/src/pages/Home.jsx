@@ -357,12 +357,12 @@ function HomeHero({ banners = [] }) {
 
   return (
     <section className="relative">
+      {/* لا نوقف التقدّم التلقائي عند مرور الماوس — على اللابتوب المؤشّر يبقى فوق الهيرو
+          فكان «يضل واقف». يبقى الإيقاف أثناء السحب باللمس فقط (منطق onStart/onEnd). */}
       <div
         ref={containerRef}
         className="overflow-hidden rounded-3xl"
         style={{ touchAction: 'pan-y' }}
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
       >
         <div
           className="flex"
@@ -380,7 +380,7 @@ function HomeHero({ banners = [] }) {
               const isImage = s.bgType === 'image' && s.bgValue;
               const isVideo = s.bgType === 'video' && s.bgValue;
               const onMedia = isColor || isImage || isVideo; // وسائط داكنة → نص عاجي
-              const vPoster = isVideo ? cldThumb(cldVideoPoster(s.bgValue), 900) : ''; // poster مصغّر يحمّل فوراً
+              const vPoster = isVideo ? cldThumb(cldVideoPoster(s.bgValue), 1600) : ''; // poster عالي الدقة يملأ الهيرو العريض بلا تكبير مضبّب
               return (
                 <div key={idx} className="w-full shrink-0" dir="rtl">
                   <div
@@ -388,7 +388,7 @@ function HomeHero({ banners = [] }) {
                     style={isColor ? { background: s.bgValue } : isVideo ? { backgroundImage: `url("${vPoster}")`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
                   >
                     {isImage && (
-                      <img src={cldThumb(s.bgValue, 1280)} alt="" loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" style={{ filter: 'brightness(0.92) saturate(1.05)' }} className="absolute inset-0 -z-10 h-full w-full object-cover" />
+                      <img src={cldThumb(s.bgValue, 1920)} alt="" loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" style={{ filter: 'brightness(0.92) saturate(1.05)' }} className="absolute inset-0 -z-10 h-full w-full object-cover" />
                     )}
                     {isVideo && (
                       <>
