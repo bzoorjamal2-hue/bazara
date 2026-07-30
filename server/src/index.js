@@ -357,19 +357,20 @@ function start() {
   app.listen(PORT, () => {
     console.log(`🚀 الخادم يعمل على المنفذ ${PORT}`);
   });
-  // مزامنة خلفية لحالات شحنات أوبتيموس كل 10 دقائق — تُشعر المالك عند التغيّر
-  // حتى لو صفحة الطلبات مسكّرة (تعمل ما دام الخادم مستيقظاً).
-  const TEN_MIN = 10 * 60 * 1000;
-  setInterval(() => { syncAllConnectedStores().catch(() => {}); }, TEN_MIN);
-  setTimeout(() => { syncAllConnectedStores().catch(() => {}); }, 30 * 1000); // تشغيلة أولى بعد الإقلاع
-  // مزامنة شحنات EPS — احتياط عن الـ webhook (لو تعطّل أو تأخّر تفعيله عندهم)
-  setInterval(() => { syncAllEpsStores().catch(() => {}); }, TEN_MIN);
+  // مزامنة خلفية لحالات الشحنات — احتياط عن الـ webhooks (هي المصدر الفوري الأساسي).
+  // مهمّ لتوفير حوسبة Neon المجانية: كل تشغيلة توقظ القاعدة (Neon ينام بلا نشاط)، فكل
+  // 10 دقائق كان يبقيها صاحية ~نصف الوقت ويستنزف الحد الشهري. رفعناها للافتراضي 30
+  // دقيقة (قابل للضبط عبر BG_SYNC_MINUTES) — تبقى الحالات محدّثة عبر الـwebhooks لحظياً،
+  // والمزامنة مجرّد شبكة أمان أندر. النتيجة: هبوط كبير في ساعات الحوسبة.
+  const SYNC_MS = Math.max(5, Number(process.env.BG_SYNC_MINUTES) || 30) * 60 * 1000;
+  setInterval(() => { syncAllConnectedStores().catch(() => {}); }, SYNC_MS);
+  setTimeout(() => { syncAllConnectedStores().catch(() => {}); }, 45 * 1000); // تشغيلة أولى بعد الإقلاع
+  setInterval(() => { syncAllEpsStores().catch(() => {}); }, SYNC_MS);
   setTimeout(() => { syncAllEpsStores().catch(() => {}); }, 60 * 1000);
-  // مزامنة شحنات gobox — احتياط عن الـ webhook
-  setInterval(() => { syncAllGoboxStores().catch(() => {}); }, TEN_MIN);
-  setTimeout(() => { syncAllGoboxStores().catch(() => {}); }, 90 * 1000);
-  // إشعار جوال فوري للمالك عن السلات المتروكة الجديدة (بعد 10 دقائق من ترك الزبونة لها)
-  setInterval(() => { notifyAbandonedCheckouts().catch(() => {}); }, TEN_MIN);
+  setInterval(() => { syncAllGoboxStores().catch(() => {}); }, SYNC_MS);
+  setTimeout(() => { syncAllGoboxStores().catch(() => {}); }, 75 * 1000);
+  // إشعار المالك عن السلات المتروكة الجديدة — أندر أيضاً لتوفير الحوسبة (تأخير مقبول)
+  setInterval(() => { notifyAbandonedCheckouts().catch(() => {}); }, SYNC_MS);
   setTimeout(() => { notifyAbandonedCheckouts().catch(() => {}); }, 2 * 60 * 1000);
 }
 

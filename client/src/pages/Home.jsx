@@ -385,14 +385,14 @@ function HomeHero({ banners = [] }) {
                 <div key={idx} className="w-full shrink-0" dir="rtl">
                   <div
                     className={`relative isolate flex h-[340px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[420px] lg:h-[500px] 2xl:h-[580px] ${idx === i ? 'bz-hero-active' : ''} ${onMedia ? 'bg-[#241712]' : 'bg-gradient-to-br from-[#f6ecd9] via-[#efe1c6] to-[#f6ecd9]'}`}
-                    style={isColor ? { background: s.bgValue } : isVideo ? { background: `linear-gradient(rgba(20,12,9,0.5), rgba(20,12,9,0.5)), url("${vPoster}") center/cover` } : undefined}
+                    style={isColor ? { background: s.bgValue } : isVideo ? { backgroundImage: `url("${vPoster}")`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
                   >
                     {isImage && (
-                      <img src={cldThumb(s.bgValue, 1920)} alt="" loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" style={{ filter: 'brightness(0.92) saturate(1.05)' }} className="absolute inset-0 -z-10 h-full w-full object-cover" />
+                      <img src={cldThumb(s.bgValue, 1920)} alt="" loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" className="absolute inset-0 -z-10 h-full w-full object-cover" />
                     )}
                     {isVideo && (
                       <>
-                        <img src={vPoster} alt="" aria-hidden loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" style={{ filter: 'brightness(0.92) saturate(1.05)', zIndex: -2 }} className="absolute inset-0 h-full w-full object-cover" />
+                        <img src={vPoster} alt="" aria-hidden loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" style={{ zIndex: -2 }} className="absolute inset-0 h-full w-full object-cover" />
                         <video
                           ref={(el) => { vidRefs.current[idx] = el; }}
                           src={s.bgValue}
@@ -402,7 +402,7 @@ function HomeHero({ banners = [] }) {
                           onEnded={(e) => { e.currentTarget.currentTime = 0; e.currentTarget.play().catch(() => {}); }}
                           onPause={(e) => { if (!document.hidden && iRef.current === idx && visRef.current) e.currentTarget.play().catch(() => {}); }}
                           onCanPlay={(e) => { e.currentTarget.style.opacity = '1'; }}
-                          style={{ filter: 'brightness(0.92) saturate(1.05)', opacity: 0, transition: 'opacity .35s ease', zIndex: -1 }}
+                          style={{ opacity: 0, transition: 'opacity .35s ease', zIndex: -1 }}
                           className="absolute inset-0 h-full w-full object-cover"
                         />
                       </>

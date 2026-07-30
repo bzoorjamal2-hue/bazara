@@ -1005,12 +1005,12 @@ function HeroSlider({ store }) {
             // نضع صورة أول لقطة (poster) كخلفية الشريحة فوراً → الفيديو يظهر مباشرة بلا خلفية سوداء/بنّية
             // poster مصغّر (يحمّل فوراً) → لا يظهر سواد قبل الفيديو
             const posterImg = isVideo ? cldThumb(cldVideoPoster(s.bgValue), 1600) : isImage ? cldThumb(s.bgValue, 1920) : '';
-            // نخبز التعتيم داخل خلفية الحاوية (تدرّج داكن فوق البوستر) فتكون معتّمة من
-            // أول إطار تماماً كالوسيط + الحجاب — فلا "تضيء ثم تعتم" قبل تحميل الفيديو.
+            // خلفية الحاوية = البوستر فقط (بلا تعتيم هنا) — التعتيم كله من طبقة الحجاب
+            // الثابتة فوق كل الوسائط، فلا تعدّد طبقات ولا "يضيء ثم يعتم".
             const style = isColor
               ? { background: s.bgValue }
               : posterImg
-                ? { background: `linear-gradient(rgba(20,12,9,0.5), rgba(20,12,9,0.5)), url("${posterImg}") center/cover` }
+                ? { backgroundImage: `url("${posterImg}")`, backgroundSize: 'cover', backgroundPosition: 'center' }
                 : undefined;
             return (
               <div key={idx} className="w-full shrink-0" dir="rtl">
@@ -1027,14 +1027,13 @@ function HeroSlider({ store }) {
                       alt=""
                       aria-hidden="true"
                       decoding="async"
-                      style={{ filter: 'brightness(0.92) saturate(1.05)' }}
                       className="absolute inset-0 z-0 h-full w-full object-cover"
                     />
                   )}
                   {isVideo && (
                     <>
                       {/* صورة أول لقطة دائمة خلف الفيديو → لا سواد أبداً */}
-                      <img src={posterImg} alt="" aria-hidden="true" loading={idx === 0 ? 'eager' : 'lazy'} style={{ filter: 'brightness(0.92) saturate(1.05)' }} className="absolute inset-0 z-0 h-full w-full object-cover" />
+                      <img src={posterImg} alt="" aria-hidden="true" loading={idx === 0 ? 'eager' : 'lazy'} className="absolute inset-0 z-0 h-full w-full object-cover" />
                       <video
                         ref={(el) => { vidRefs.current[idx] = el; }}
                         src={s.bgValue}
@@ -1047,7 +1046,7 @@ function HeroSlider({ store }) {
                         onEnded={(e) => { e.currentTarget.currentTime = 0; e.currentTarget.play().catch(() => {}); }}
                         onPause={(e) => { if (!document.hidden && iRef.current === idx && visRef.current) e.currentTarget.play().catch(() => {}); }}
                         onCanPlay={(e) => { e.currentTarget.style.opacity = '1'; }}
-                        style={{ filter: 'brightness(0.92) saturate(1.05)', opacity: 0, transition: 'opacity .35s ease' }}
+                        style={{ opacity: 0, transition: 'opacity .35s ease' }}
                         className="absolute inset-0 z-[1] h-full w-full object-cover"
                       />
                     </>
