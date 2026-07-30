@@ -19,6 +19,7 @@ import AnnouncementBar from '../components/AnnouncementBar.jsx';
 import NewsletterBox from '../components/NewsletterBox.jsx';
 import LookbookSection from '../components/LookbookSection.jsx';
 import Reveal from '../components/Reveal.jsx';
+import useInViewOnce from '../hooks/useInViewOnce.js';
 import ScrollProgress from '../components/ScrollProgress.jsx';
 import { BAZARA_WHATSAPP } from '../config/site.js';
 
@@ -164,41 +165,7 @@ export default function Home() {
               // تدرّج سفلي ليُقرأ أي نص فوق أي صورة، والشعار يجلس على حدّ الغلاف بحلقة كريمية.
               // بلا غلاف نستخدم تدرّجاً خمرياً فاخراً — لا تظهر بطاقة فارغة أبداً.
               <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 2xl:grid-cols-5">
-                {data.stores.map((s, i) => {
-                  return (
-                    <Link
-                      key={s.id}
-                      to={`/store/${s.slug}`}
-                      className={`glass group animate-fade-up relative flex flex-col items-center overflow-hidden p-5 text-center transition duration-300 hover:-translate-y-1.5 hover:shadow-glow ${s.featured ? 'ring-1 ring-gold-400/50' : ''}`}
-                      style={{ animationDelay: `${i * 60}ms` }}
-                    >
-                      <span className="dash-hairline absolute inset-x-0 top-0" />
-                      {/* متجر مميّز يختاره المدير — شارة ذهبية بأعلى البطاقة */}
-                      {s.featured && (
-                        <span className="absolute end-2 top-2 z-[2] inline-flex items-center gap-1 rounded-full bg-gold-400 px-2.5 py-1 text-[10px] font-extrabold text-ink-950 shadow-sm">
-                          <svg viewBox="0 0 24 24" className="h-3 w-3" fill="currentColor" aria-hidden="true"><path d="M5 16L3 6l5.5 4L12 4l3.5 6L21 6l-2 10H5zm0 2h14v2H5z" /></svg>
-                          {t('product.featured')}
-                        </span>
-                      )}
-                      {/* هالة ذهبية ناعمة تتوهّج خلف الشعار عند المرور — لمسة بوتيك راقية */}
-                      <span aria-hidden className="pointer-events-none absolute top-5 h-24 w-24 rounded-full bg-gold-400/25 opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100" />
-                      <img
-                        src={cldThumb(s.logoUrl, 160) || 'https://placehold.co/80x80/f1e9dd/5e4636?text=%F0%9F%91%91'}
-                        alt={s.name}
-                        loading="lazy"
-                        className="relative h-24 w-24 rounded-full bg-white object-cover shadow-md ring-2 ring-gold-400/50 transition duration-500 group-hover:scale-105 group-hover:ring-gold-400"
-                      />
-                      <h3 className="mt-3 w-full truncate font-display font-bold text-stone-100">{s.name}</h3>
-                      <p className="mt-0.5 text-xs text-stone-400">{s.productsCount} {t('store.products')}</p>
-                      <span className="mt-3 inline-flex items-center gap-1 rounded-full border border-wine/25 px-4 py-1.5 text-[11px] font-bold text-wine transition group-hover:border-wine group-hover:bg-wine group-hover:text-cream">
-                        {t('home.visitStore')}
-                        <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <path d={rtl ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6'} />
-                        </svg>
-                      </span>
-                    </Link>
-                  );
-                })}
+                {data.stores.map((s, i) => <StoreCard key={s.id} s={s} index={i} rtl={rtl} />)}
               </div>
             )}
           </section></Reveal>
@@ -484,6 +451,45 @@ function PromoBanner() {
       <span className="hidden shrink-0 items-center gap-1 rounded-full bg-wine px-4 py-2 text-sm font-bold text-cream shadow-sm transition group-hover:bg-wine-dark sm:inline-flex">{t('home.shopNow')} <ForwardIcon className="h-3.5 w-3.5 rtl-flip transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" /></span>
       {/* على الجوال: سهم صغير يوضّح أن البطاقة قابلة للنقر (الزر الكامل مخفي) */}
       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-wine/10 text-wine sm:hidden"><ForwardIcon className="h-4 w-4 rtl-flip" /></span>
+    </Link>
+  );
+}
+
+// بطاقة متجر — تدخل بتتابع سينمائي عند التمرير إليها (كبطاقات المنتجات)، مع هالة
+// ذهبية عند المرور وشارة «مميّز» للمتاجر التي يختارها المدير.
+function StoreCard({ s, index = 0, rtl }) {
+  const { t } = useTranslation();
+  const [ref, inView] = useInViewOnce();
+  return (
+    <Link
+      ref={ref}
+      to={`/store/${s.slug}`}
+      className={`glass group relative flex flex-col items-center overflow-hidden p-5 text-center transition-[opacity,transform,box-shadow] duration-500 ease-out hover:!-translate-y-1.5 hover:shadow-glow ${inView ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0'} ${s.featured ? 'ring-1 ring-gold-400/50' : ''}`}
+      style={{ transitionDelay: inView ? `${(index % 5) * 55}ms` : '0ms' }}
+    >
+      <span className="dash-hairline absolute inset-x-0 top-0" />
+      {s.featured && (
+        <span className="absolute end-2 top-2 z-[2] inline-flex items-center gap-1 rounded-full bg-gold-400 px-2.5 py-1 text-[10px] font-extrabold text-ink-950 shadow-sm">
+          <svg viewBox="0 0 24 24" className="h-3 w-3" fill="currentColor" aria-hidden="true"><path d="M5 16L3 6l5.5 4L12 4l3.5 6L21 6l-2 10H5zm0 2h14v2H5z" /></svg>
+          {t('product.featured')}
+        </span>
+      )}
+      {/* هالة ذهبية ناعمة تتوهّج خلف الشعار عند المرور — لمسة بوتيك راقية */}
+      <span aria-hidden className="pointer-events-none absolute top-5 h-24 w-24 rounded-full bg-gold-400/25 opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100" />
+      <img
+        src={cldThumb(s.logoUrl, 160) || 'https://placehold.co/80x80/f1e9dd/5e4636?text=%F0%9F%91%91'}
+        alt={s.name}
+        loading="lazy"
+        className="relative h-24 w-24 rounded-full bg-white object-cover shadow-md ring-2 ring-gold-400/50 transition duration-500 group-hover:scale-105 group-hover:ring-gold-400"
+      />
+      <h3 className="mt-3 w-full truncate font-display font-bold text-stone-100">{s.name}</h3>
+      <p className="mt-0.5 text-xs text-stone-400">{s.productsCount} {t('store.products')}</p>
+      <span className="mt-3 inline-flex items-center gap-1 rounded-full border border-wine/25 px-4 py-1.5 text-[11px] font-bold text-wine transition group-hover:border-wine group-hover:bg-wine group-hover:text-cream">
+        {t('home.visitStore')}
+        <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d={rtl ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6'} />
+        </svg>
+      </span>
     </Link>
   );
 }
