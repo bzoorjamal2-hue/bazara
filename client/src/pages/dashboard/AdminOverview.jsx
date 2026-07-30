@@ -4,25 +4,7 @@ import { Link } from 'react-router-dom';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import { UsersIcon, BagIcon, ReceiptIcon, MailIcon, BellIcon, CrownIcon, ChartIcon } from '../../components/icons.jsx';
-
-// عدّاد تصاعدي ناعم — يعطي الأرقام إحساساً حيّاً عند فتح الصفحة (يحترم تقليل الحركة).
-function CountUp({ value, format = (n) => n.toLocaleString() }) {
-  const [n, setN] = useState(0);
-  useEffect(() => {
-    const target = Number(value) || 0;
-    if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { setN(target); return undefined; }
-    let raf; const dur = 750; const t0 = performance.now();
-    const tick = (now) => {
-      const p = Math.min(1, (now - t0) / dur);
-      const eased = 1 - Math.pow(1 - p, 3); // ease-out cubic
-      setN(Math.round(target * eased));
-      if (p < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [value]);
-  return <>{format(n)}</>;
-}
+import CountUp from '../../components/CountUp.jsx';
 
 // بطاقة إحصائية واحدة — رقم كبير + عنوان + أيقونة، بأسلوب لوحة المتاجر الكبرى.
 function Stat({ Icon, label, value, sub, tone = 'gold', to }) {
@@ -91,7 +73,7 @@ export default function AdminOverview() {
             <Stat Icon={BagIcon} tone="wine" label={t('admin.ov.products')} value={<CountUp value={data.totalProducts} />} />
             <Stat Icon={ReceiptIcon} tone="wine" label={t('admin.ov.orders')} value={<CountUp value={data.totalOrders} />}
               sub={data.newOrders > 0 ? t('admin.ov.newOrders', { count: data.newOrders }) : null} />
-            <Stat Icon={ChartIcon} tone="emerald" label={t('admin.ov.gmv')} value={<CountUp value={data.gmv} format={(x) => `${cur}${x.toLocaleString()}`} />} />
+            <Stat Icon={ChartIcon} tone="emerald" label={t('admin.ov.gmv')} value={<CountUp value={data.gmv} format={(x) => `${cur}${Math.round(x).toLocaleString()}`} />} />
             <Stat Icon={MailIcon} tone="gold" label={t('admin.ov.newsletter')} value={<CountUp value={data.newsletterSubscribers} />} to="/dashboard?tab=newsletter" />
           </div>
         </>

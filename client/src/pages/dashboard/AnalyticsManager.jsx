@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import { ChartIcon, WarnIcon, TrophyIcon } from '../../components/icons.jsx';
+import CountUp from '../../components/CountUp.jsx';
 
 const ic = (p) => ({ viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.9, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true, ...p });
 const I = {
@@ -67,10 +68,10 @@ export default function AnalyticsManager() {
 
       {/* البطاقات الرئيسية */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard icon="revenue" grad="from-emerald-500 to-emerald-700" accent="text-emerald-300" label={t('dashboard.analytics.revenue')} value={`${cur}${data.revenue.toFixed(0)}`} />
-        <StatCard icon="confirmed" grad="from-gold-400 to-amber-500" accent="text-gold-300" label={t('dashboard.analytics.confirmed')} value={data.confirmedOrders} />
-        <StatCard icon="newOrders" grad="from-amber-400 to-amber-600" accent="text-amber-700" label={t('dashboard.analytics.newOrders')} value={data.newOrders} />
-        <StatCard icon="products" grad="from-wine to-wine-dark" accent="text-stone-100" label={t('dashboard.productsCount')} value={data.productsCount} />
+        <StatCard icon="revenue" grad="from-emerald-500 to-emerald-700" accent="text-emerald-300" label={t('dashboard.analytics.revenue')} value={<CountUp value={data.revenue} format={(x) => `${cur}${Math.round(x).toLocaleString()}`} />} />
+        <StatCard icon="confirmed" grad="from-gold-400 to-amber-500" accent="text-gold-300" label={t('dashboard.analytics.confirmed')} value={<CountUp value={data.confirmedOrders} />} />
+        <StatCard icon="newOrders" grad="from-amber-400 to-amber-600" accent="text-amber-700" label={t('dashboard.analytics.newOrders')} value={<CountUp value={data.newOrders} />} />
+        <StatCard icon="products" grad="from-wine to-wine-dark" accent="text-stone-100" label={t('dashboard.productsCount')} value={<CountUp value={data.productsCount} />} />
       </div>
 
       {/* لوحة النمو: قمع التحويل الحقيقي — أين يتسرّب الزبائن قبل الشراء */}

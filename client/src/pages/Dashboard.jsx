@@ -19,6 +19,7 @@ import ReferralsManager from './dashboard/ReferralsManager.jsx';
 import AnalyticsManager from './dashboard/AnalyticsManager.jsx';
 import AdminOverview from './dashboard/AdminOverview.jsx';
 import BroadcastManager from './dashboard/BroadcastManager.jsx';
+import CountUp from '../components/CountUp.jsx';
 import StockRequestsManager from './dashboard/StockRequestsManager.jsx';
 import AdminRequests from './dashboard/AdminRequests.jsx';
 import SubscribersManager from './dashboard/SubscribersManager.jsx';
@@ -161,10 +162,10 @@ function Overview({ productsCount }) {
 
       {/* المؤشّرات الرئيسية — بطاقات موحّدة ببلاطة أيقونة متدرّجة (متناسقة مع الإحصائيات) */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <MetricCard label={t('dashboard.analytics.revenue')} value={stats ? `${cur}${fmt(stats.revenue)}` : '—'} Icon={WalletGlyph} grad="from-emerald-500 to-emerald-700" accent="text-emerald-300" />
-        <MetricCard label={t('dashboard.analytics.newOrders')} value={fmt(stats?.newOrders)} Icon={ReceiptIcon} grad="from-gold-400 to-amber-500" accent="text-gold-300" />
-        <MetricCard label={t('dashboard.visitors')} value={fmt(visitors)} Icon={UsersIcon} grad="from-[#8a6a4f] to-[#3f2e22]" accent="text-stone-100" />
-        <MetricCard label={t('dashboard.productsCount')} value={fmt(productCount)} Icon={BagIcon} grad="from-wine to-wine-dark" accent="text-stone-100" />
+        <MetricCard label={t('dashboard.analytics.revenue')} value={stats ? <CountUp value={stats.revenue} format={(x) => `${cur}${Math.round(x).toLocaleString()}`} /> : '—'} Icon={WalletGlyph} grad="from-emerald-500 to-emerald-700" accent="text-emerald-300" />
+        <MetricCard label={t('dashboard.analytics.newOrders')} value={stats ? <CountUp value={stats.newOrders} /> : '—'} Icon={ReceiptIcon} grad="from-gold-400 to-amber-500" accent="text-gold-300" />
+        <MetricCard label={t('dashboard.visitors')} value={visitors != null ? <CountUp value={visitors} /> : '—'} Icon={UsersIcon} grad="from-[#8a6a4f] to-[#3f2e22]" accent="text-stone-100" />
+        <MetricCard label={t('dashboard.productsCount')} value={productCount != null ? <CountUp value={productCount} /> : '—'} Icon={BagIcon} grad="from-wine to-wine-dark" accent="text-stone-100" />
       </div>
 
       {/* إجراءات سريعة — اختصارات لأكثر ما يستخدمه صاحب المتجر يومياً */}
