@@ -26,18 +26,20 @@ function CategoryCard({ cat }) {
   return (
     <div className="transition duration-300 group-hover:-translate-y-1">
       {/* بلا إطار/خلفية — يظهر شكل الأيقونة فقط (الصور بلا خلفية)، بحجم موحّد */}
-      <div className="flex aspect-square items-center justify-center overflow-hidden">
+      <div className="relative flex aspect-square items-center justify-center overflow-hidden">
+        {/* هالة ذهبية ناعمة تتوهّج خلف الأيقونة عند المرور — لمسة بوتيك راقية */}
+        <span aria-hidden className="pointer-events-none absolute inset-0 m-auto h-2/3 w-2/3 rounded-full bg-gold-400/25 opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100" />
         {src ? (
           <img
             src={src}
             alt={label}
             loading="eager"
             decoding="async"
-            className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
+            className="relative h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
           // فئة مخصّصة بلا صورة → أيقونة ملبس خطّية أنيقة بلون خمري
-          <svg viewBox="0 0 24 24" className="h-1/2 w-1/2 text-wine/70" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg viewBox="0 0 24 24" className="relative h-1/2 w-1/2 text-wine/70" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M9 4a3 3 0 0 0 6 0" />
             <path d="M12 4 4.5 9v3l3-1.5V20h9V10.5l3 1.5V9L12 4Z" />
           </svg>
