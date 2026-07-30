@@ -1005,10 +1005,12 @@ function HeroSlider({ store }) {
             // نضع صورة أول لقطة (poster) كخلفية الشريحة فوراً → الفيديو يظهر مباشرة بلا خلفية سوداء/بنّية
             // poster مصغّر (يحمّل فوراً) → لا يظهر سواد قبل الفيديو
             const posterImg = isVideo ? cldThumb(cldVideoPoster(s.bgValue), 1600) : isImage ? cldThumb(s.bgValue, 1920) : '';
+            // نخبز التعتيم داخل خلفية الحاوية (تدرّج داكن فوق البوستر) فتكون معتّمة من
+            // أول إطار تماماً كالوسيط + الحجاب — فلا "تضيء ثم تعتم" قبل تحميل الفيديو.
             const style = isColor
               ? { background: s.bgValue }
               : posterImg
-                ? { backgroundImage: `url("${posterImg}")`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                ? { background: `linear-gradient(rgba(20,12,9,0.5), rgba(20,12,9,0.5)), url("${posterImg}") center/cover` }
                 : undefined;
             return (
               <div key={idx} className="w-full shrink-0" dir="rtl">
