@@ -386,7 +386,9 @@ function start() {
 
 // الترقية التلقائية على الإنتاج فقط (Render). محلياً نشغّل مباشرة بلا لمس قاعدة البيانات.
 if (process.env.NODE_ENV === 'production') {
-  ensureColumns().finally(start);
+  // .catch إضافي: لو رجعت ensureColumns رفضاً لأي سبب نادر، نسجّله ونُقلع بأي حال —
+  // فلا يبقى رفض غير ملتقَط يوقف العملية عند الإقلاع.
+  ensureColumns().catch((e) => console.error('⚠️ ensureColumns rejected:', e?.message)).finally(start);
 } else {
   start();
 }
