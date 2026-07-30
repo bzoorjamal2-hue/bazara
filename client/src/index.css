@@ -579,9 +579,12 @@ html.dark .theme-pub .app-navbar.shadow-md { box-shadow: 0 12px 28px -8px rgba(0
    ثم يستقرّ — تلاشٍ مع انزلاق صغير لأعلى بمنحنى تباطؤ حادّ. transform/opacity فقط
    (وحدة الرسم وحدها) فلا يلمس الخيط الرئيسي ولا يُقطّع على أي جهاز.
    الرجوع (POP) بلا حركة إطلاقاً — استعادة فورية كالتطبيقات. */
+/* انتقال الصفحة بالشفافية فقط — بلا transform: أي transform (حتى الصفري) ينشئ
+   containing block فيكسر position:fixed للأزرار العائمة (واتساب/المساعِدة/العودة
+   للأعلى) فتنزاح لأسفل الصفحة. الشفافية وحدها تعطي نعومة الانتقال بلا هذا الأثر. */
 @keyframes route-fade {
-  from { opacity: 0; transform: translate3d(0, 10px, 0); }
-  to { opacity: 1; transform: translate3d(0, 0, 0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 .route-fade {
   animation: route-fade 0.26s cubic-bezier(0.16, 0.84, 0.44, 1) both;
@@ -589,8 +592,8 @@ html.dark .theme-pub .app-navbar.shadow-md { box-shadow: 0 12px 28px -8px rgba(0
 }
 /* الأجهزة الضعيفة: نفس الإحساس بمسافة أقصر وزمن أقصر — وصول أسرع بلا كلفة */
 @keyframes route-fade-lite {
-  from { opacity: 0; transform: translate3d(0, 6px, 0); }
-  to { opacity: 1; transform: translate3d(0, 0, 0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 .bz-lite .route-fade { animation: route-fade-lite 0.18s cubic-bezier(0.16, 0.84, 0.44, 1) both; }
 @media (prefers-reduced-motion: reduce) {
