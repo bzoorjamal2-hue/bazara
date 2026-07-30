@@ -5,12 +5,19 @@ dotenv.config();
 
 const { Pool } = pg;
 
-// نبني إعدادات الاتصال إما من DATABASE_URL أو من المتغيرات المنفصلة
-const useSsl = process.env.PGSSL === 'true' || /sslmode=require/.test(process.env.DATABASE_URL || '');
+// نبني إعدادات الاتصال إما من DATABASE_URL أو من المتغيرات المنفصلة.
+// نتحكّم بالـ SSL عبر كائن ssl صراحةً، ونزيل sslmode من الرابط لتفادي تحذير pg الحديث
+// (يعامل prefer/require/verify-ca كـ verify-full). Neon يتطلّب SSL، وrejectUnauthorized:false
+// يقبل شهادته. تحذير أمني عابر لا يؤثّر على العمل، لكن إزالته تُبقي اللوق نظيفاً.
+const rawUrl = process.env.DATABASE_URL || '';
+const useSsl = process.env.PGSSL === 'true' || /sslmode=(require|prefer|verify-ca|verify-full)/i.test(rawUrl);
+const stripSslMode = (url) => {
+  try { const u = new URL(url); u.searchParams.delete('sslmode'); return u.toString(); } catch { return url; }
+};
 
-const pool = process.env.DATABASE_URL
+const pool = rawUrl
   ? new Pool({
-      connectionString: process.env.DATABASE_URL,
+      connectionString: stripSslMode(rawUrl),
       ssl: useSsl ? { rejectUnauthorized: false } : false,
     })
   : new Pool({
