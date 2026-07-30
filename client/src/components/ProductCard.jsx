@@ -15,6 +15,7 @@ import { flyToCart } from '../utils/flyToCart.js';
 import { productColorDots } from '../utils/colorDot.js';
 import QuickViewModal from './QuickViewModal.jsx';
 import Strike from './Strike.jsx';
+import useInViewOnce from '../hooks/useInViewOnce.js';
 
 
 const PLACEHOLDER =
@@ -31,6 +32,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
   const { add, setOpen } = useCart();
   const { has, toggle } = useWishlist();
   const imgRef = useRef(null);
+  const [inViewRef, inView] = useInViewOnce(); // دخول سينمائي عند التمرير للبطاقة
   const lastSwatchImg = useRef(''); // آخر صورة لون معروضة — تبقى أثناء تلاشي الخروج
   const [quickOpen, setQuickOpen] = useState(false);
   const [mySize] = useState(getMySize); // نميّز مقاسها المعتاد بالشريط السريع
@@ -168,9 +170,10 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
   return (
     <>
     <Link
+      ref={inViewRef}
       to={`/product/${product.id}`}
-      className="group relative block h-full animate-fade-up transition-transform duration-300 ease-out hover:-translate-y-1.5 active:scale-[0.99]"
-      style={{ animationDelay: `${Math.min(index, 8) * 60}ms` }}
+      className={`group relative block h-full transition-[opacity,transform] duration-500 ease-out ${inView ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0'} hover:!-translate-y-1.5 active:scale-[0.99]`}
+      style={{ transitionDelay: inView ? `${(index % 5) * 55}ms` : '0ms' }}
       onMouseEnter={() => product.videoUrl && setHovering(true)}
       onMouseLeave={() => { setHovering(false); setSwatchColor(''); }}
       onTouchStart={startPress}
