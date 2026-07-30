@@ -60,8 +60,14 @@ export default function StorePage() {
   const [error, setError] = useState('');
   // بكسلات تمويل المتجر: تُحقن مرة واحدة عند توفّر بيانات المتجر (PageView تلقائي)
   useEffect(() => { if (data?.store) initPixels(data.store); }, [data?.store]);
-  const [q, setQ] = useState('');
-  const [sort, setSort] = useState('default');
+  // حفظ فلاتر المتجر أثناء الجلسة: عند الرجوع للمتجر تبقى فلاترك كما تركتها (إحساس
+  // تطبيق أصلي). sessionStorage لا localStorage — تُمسح عند إغلاق التطبيق فلا تَقدَم.
+  const FKEY = `bz_sf_${slug}`;
+  const savedF = useMemo(() => {
+    try { return JSON.parse(sessionStorage.getItem(FKEY) || 'null') || {}; } catch { return {}; }
+  }, [FKEY]);
+  const [q, setQ] = useState(savedF.q || '');
+  const [sort, setSort] = useState(savedF.sort || 'default');
   // حدث بكسل "بحث" بعد توقف الكتابة — إشارة اهتمام تفيد استهداف الإعلانات.
   // (يجب أن يبقى بعد تعريف q أعلاه — وضعه قبله سبّب انهيار الصفحة بالكامل TDZ)
   useEffect(() => {
@@ -70,15 +76,25 @@ export default function StorePage() {
     const idT = setTimeout(() => trackPixel('Search', { search_string: term }), 900);
     return () => clearTimeout(idT);
   }, [q]);
-  const [sizesSel, setSizesSel] = useState([]); // مقاسات مختارة (متعدّد)
-  const [colorsSel, setColorsSel] = useState([]); // ألوان مختارة (متعدّد)
-  const [offersOnly, setOffersOnly] = useState(false);
-  const [stockOnly, setStockOnly] = useState(false); // إخفاء القطع المنتهية
+  const [sizesSel, setSizesSel] = useState(() => (Array.isArray(savedF.sizesSel) ? savedF.sizesSel : [])); // مقاسات مختارة (متعدّد)
+  const [colorsSel, setColorsSel] = useState(() => (Array.isArray(savedF.colorsSel) ? savedF.colorsSel : [])); // ألوان مختارة (متعدّد)
+  const [offersOnly, setOffersOnly] = useState(Boolean(savedF.offersOnly));
+  const [stockOnly, setStockOnly] = useState(Boolean(savedF.stockOnly)); // إخفاء القطع المنتهية
   const [mySize] = useState(getMySize); // مقاسها المعتاد — اختصار فلترة بضغطة
   const [openSheet, setOpenSheet] = useState(null); // 'sort' | 'size' | 'color' | 'offers'
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(savedF.page || 1);
   const [shareOpen, setShareOpen] = useState(false); // نافذة شاركي واربحي
   const [stories, setStories] = useState([]); // ستوريات المتجر الفعّالة
+
+  // نحفظ الفلاتر الحالية للجلسة كلما تغيّرت — فتُستعاد عند الرجوع للمتجر
+  useEffect(() => {
+    try {
+      const f = { q, sort, sizesSel, colorsSel, offersOnly, stockOnly, page };
+      const empty = !q && sort === 'default' && !sizesSel.length && !colorsSel.length && !offersOnly && !stockOnly && page <= 1;
+      if (empty) sessionStorage.removeItem(FKEY); // لا نُبقي قمامة فارغة
+      else sessionStorage.setItem(FKEY, JSON.stringify(f));
+    } catch { /* تجاهل */ }
+  }, [FKEY, q, sort, sizesSel, colorsSel, offersOnly, stockOnly, page]);
 
   // الفئة و"عرض الكل" جزء من الرابط (search params) كي يحفظهما زرّ الرجوع:
   // تختار فئة ← تدخل منتج ← ترجع → ترجع لنفس الفئة وموضعها (بدل القفز للرئيسية).
@@ -129,7 +145,13 @@ export default function StorePage() {
     api.post(`/public/store/${s.slug}/visit`).catch(() => {});
   }, [data?.store?.slug, isOwner]);
 
-  useEffect(() => setPage(1), [cat, q, sort, sizesSel, colorsSel, offersOnly, stockOnly]);
+  // نُصفّر "عرض المزيد" عند تغيّر أي فلتر — لكن نتجاهل التشغيل الأول (التركيب) كي لا
+  // نمسح الصفحة المُستعادة من الجلسة عند الرجوع للمتجر (وإلا لا يُستعاد موضع التمرير).
+  const firstFilterRun = useRef(true);
+  useEffect(() => {
+    if (firstFilterRun.current) { firstFilterRun.current = false; return; }
+    setPage(1);
+  }, [cat, q, sort, sizesSel, colorsSel, offersOnly, stockOnly]);
   useEffect(() => { setStories(data?.stories || []); }, [data]); // مزامنة الستوريات
   // تحويل لرابط المتجر الجديد إن فُتح برابط قديم (عشان يبقى الرابط الرسمي نظيفاً)
   useEffect(() => {
