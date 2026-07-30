@@ -33,6 +33,16 @@ import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 dotenv.config();
 
+// حرّاس انهيار — يمنعان أي خطأ غير ملتقَط (مهمة خلفية/webhook/رفض وعد) من قتل
+// العملية كلها (Exited with status 1) وإسقاط كل الطلبات الجارية (مثل حفظ الإعدادات).
+// نسجّل الخطأ ونُبقي الخادم حيّاً — استقرار أهم بكثير من الخروج على خطأ عابر.
+process.on('unhandledRejection', (reason) => {
+  console.error('⚠️ unhandledRejection (تم تجاهله للإبقاء على الخادم):', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('⚠️ uncaughtException (تم تجاهله للإبقاء على الخادم):', err);
+});
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
