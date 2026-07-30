@@ -67,6 +67,22 @@ function sanitizeCustomCategories(raw) {
   return out;
 }
 
+// تنقية مجموعات المتجر التحريرية (تسوّقي حسب المناسبة): عنوان + صورة + كلمة بحث.
+// لا روابط حرّة (الواجهة تبني /search بكلمة البحث) فلا حقن. الصورة رابط أو مضمّنة.
+// (كانت مستدعاة بلا تعريف → ReferenceError يُسقط كل حفظ إعدادات + ينهار الخادم.)
+function sanitizeStoreCollections(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .slice(0, 8)
+    .map((c) => ({
+      title: String(c?.title ?? '').slice(0, 60).trim(),
+      titleEn: String(c?.titleEn ?? '').slice(0, 60).trim(),
+      image: typeof c?.image === 'string' ? c.image.trim().slice(0, 2000) : '',
+      q: String(c?.q ?? '').slice(0, 60).trim(),
+    }))
+    .filter((c) => c.title && c.q); // بلا عنوان أو كلمة بحث لا معنى للبطاقة
+}
+
 // تنقية تخصيص الفئات: {"dress": {image, name}} — مفاتيح معروفة فقط، نصوص آمنة
 function sanitizeCategoryMeta(raw) {
   if (!raw || typeof raw !== 'object') return {};
