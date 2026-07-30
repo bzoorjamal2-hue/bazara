@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import ImageInput from './ImageInput.jsx';
 import VideoInput from './VideoInput.jsx';
@@ -9,8 +10,22 @@ const MAX_BANNERS = 5;
 // محرّر شرايح السلايدر — مشترك بين إعدادات المتجر وتحكّم المدير بالصفحة الرئيسية.
 export default function BannerEditor({ banners = [], onChange, withButtons = false }) {
   const { t } = useTranslation();
+  const listRef = useRef(null);
+  const justAdded = useRef(false); // بعد الإضافة: ننزل للشريحة الجديدة ونركّز أول حقل فيها
   const setBanner = (idx, key, val) => onChange(banners.map((b, i) => (i === idx ? { ...b, [key]: val } : b)));
-  const addBanner = () => onChange([...banners, { title: '', subtitle: '', bgType: '', bgValue: '' }]);
+  const addBanner = () => { justAdded.current = true; onChange([...banners, { title: '', subtitle: '', bgType: '', bgValue: '' }]); };
+
+  // عند إضافة شريحة: ننزل إليها بسلاسة ونركّز أول حقل ليكتب المالك بياناته فوراً
+  useEffect(() => {
+    if (!justAdded.current) return;
+    justAdded.current = false;
+    const cards = listRef.current?.children;
+    const last = cards && cards[cards.length - 1];
+    if (last) {
+      last.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => last.querySelector('input, textarea')?.focus({ preventScroll: true }), 300);
+    }
+  }, [banners.length]);
   const removeBanner = (idx) => onChange(banners.filter((_, i) => i !== idx));
   const setBannerBg = (idx, bgType) => onChange(banners.map((b, i) => (i === idx ? { ...b, bgType, bgValue: '' } : b)));
 
@@ -26,7 +41,7 @@ export default function BannerEditor({ banners = [], onChange, withButtons = fal
       {banners.length === 0 ? (
         <p className="rounded-xl border border-gold-400/15 bg-black/20 p-4 text-center text-sm text-stone-400">{t('dashboard.store.noBanners')}</p>
       ) : (
-        <div className="space-y-3">
+        <div ref={listRef} className="space-y-3">
           {banners.map((b, idx) => (
             <div key={idx} className="rounded-xl border border-gold-400/15 bg-black/20 p-3">
               <div className="mb-2 flex items-center justify-between">
