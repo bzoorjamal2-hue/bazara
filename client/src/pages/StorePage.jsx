@@ -1005,12 +1005,13 @@ function HeroSlider({ store }) {
             // نضع صورة أول لقطة (poster) كخلفية الشريحة فوراً → الفيديو يظهر مباشرة بلا خلفية سوداء/بنّية
             // poster مصغّر (يحمّل فوراً) → لا يظهر سواد قبل الفيديو
             const posterImg = isVideo ? cldThumb(cldVideoPoster(s.bgValue), 1600) : isImage ? cldThumb(s.bgValue, 1920) : '';
-            // خلفية الحاوية = البوستر فقط (بلا تعتيم هنا) — التعتيم كله من طبقة الحجاب
-            // الثابتة فوق كل الوسائط، فلا تعدّد طبقات ولا "يضيء ثم يعتم".
+            // خلفية الحاوية = البوستر مخبوز فوقه تعتيم داكن (تدرّج ثابت) — فتظهر معتّمة
+            // كخلفية واحدة من أول إطار، حتى قبل رسم الوسيط/الحجاب. هذا يمنع ومضة
+            // "يضيء ثم يعتم" على شرائح الفيديو نهائياً (خلفية الحاوية المضيئة كانت تظهر لحظة).
             const style = isColor
               ? { background: s.bgValue }
               : posterImg
-                ? { backgroundImage: `url("${posterImg}")`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                ? { background: `linear-gradient(rgba(15,10,7,0.5), rgba(15,10,7,0.5)), url("${posterImg}") center/cover` }
                 : undefined;
             return (
               <div key={idx} className="w-full shrink-0" dir="rtl">
@@ -1021,19 +1022,23 @@ function HeroSlider({ store }) {
                   style={style}
                 >
                   {/* وسائط الشريحة (صورة أو فيديو) بنفس التعتيم تماماً — معتّمة من أول لحظة بلا وميض */}
+                  {/* التعتيم مخبوز في الوسيط نفسه (filter) لا كطبقة منفصلة — الفيديو المُسرّع
+                      على iOS قد يخترق أي طبقة فوقه فيظهر مضيئاً؛ تعتيمه من مصدره يمنع ذلك
+                      تماماً. مع خلفية الحاوية المخبوزة داكنة = خلفية واحدة معتّمة بلا وميض. */}
                   {isImage && (
                     <img
                       src={cldThumb(s.bgValue, 1920)}
                       alt=""
                       aria-hidden="true"
                       decoding="async"
+                      style={{ filter: 'brightness(0.6)' }}
                       className="absolute inset-0 z-0 h-full w-full object-cover"
                     />
                   )}
                   {isVideo && (
                     <>
                       {/* صورة أول لقطة دائمة خلف الفيديو → لا سواد أبداً */}
-                      <img src={posterImg} alt="" aria-hidden="true" loading={idx === 0 ? 'eager' : 'lazy'} className="absolute inset-0 z-0 h-full w-full object-cover" />
+                      <img src={posterImg} alt="" aria-hidden="true" loading={idx === 0 ? 'eager' : 'lazy'} style={{ filter: 'brightness(0.6)' }} className="absolute inset-0 z-0 h-full w-full object-cover" />
                       <video
                         ref={(el) => { vidRefs.current[idx] = el; }}
                         src={s.bgValue}
@@ -1046,13 +1051,11 @@ function HeroSlider({ store }) {
                         onEnded={(e) => { e.currentTarget.currentTime = 0; e.currentTarget.play().catch(() => {}); }}
                         onPause={(e) => { if (!document.hidden && iRef.current === idx && visRef.current) e.currentTarget.play().catch(() => {}); }}
                         onCanPlay={(e) => { e.currentTarget.style.opacity = '1'; }}
-                        style={{ opacity: 0, transition: 'opacity .35s ease' }}
+                        style={{ filter: 'brightness(0.6)', opacity: 0, transition: 'opacity .35s ease' }}
                         className="absolute inset-0 z-[1] h-full w-full object-cover"
                       />
                     </>
                   )}
-                  {/* تدرّج سينمائي فوق الوسائط الداكنة ليُقرأ النص بأناقة فوق أي صورة/فيديو */}
-                  {custom && <div aria-hidden className="bz-hero-scrim pointer-events-none absolute inset-0 z-[2]" />}
                   {!custom && <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-cream/10 blur-3xl" />}
 
                   {/* النص فوق الفيديو دائماً (طبقة GPU مستقلة لتفادي اختفائه على iOS أثناء الانتقال) */}
