@@ -882,8 +882,9 @@ function OffersSheet({ value, onClose, onApply }) {
 // تشغيل تلقائي + سحب باللمس + نقاط تنقّل.
 function HeroSlider({ store }) {
   const banners = Array.isArray(store.banners) ? store.banners.filter(Boolean) : [];
-  // كل الشرائح من بانرات المالك (يتحكم بالأولى وكلها). لو ما في بانرات نعرض شريحة افتراضية باسم المتجر.
-  const slides = banners.length ? banners : [{ fixed: true }];
+  // شريحة اسم المتجر الذهبية تتصدّر دائماً (كشريحة Bazara بالموقع العام) — فيظهر اسم
+  // كل متجر باللون الذهبي على سلايدره حتى لو أضاف المالك بانراته، ثم تتبعها بانراته.
+  const slides = [{ fixed: true }, ...banners];
   const len = slides.length;
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
