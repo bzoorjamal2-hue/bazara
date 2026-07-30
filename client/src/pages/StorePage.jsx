@@ -980,12 +980,12 @@ function HeroSlider({ store }) {
 
   return (
     <section className="relative mb-5">
+      {/* لا نوقف التقدّم التلقائي عند مرور الماوس — على اللابتوب المؤشّر يبقى فوقه
+          فكان «يضل واقف». يبقى الإيقاف أثناء السحب باللمس فقط. */}
       <div
         ref={containerRef}
         className="overflow-hidden rounded-3xl"
         style={{ touchAction: 'pan-y' }}
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
       >
         {/* المسار: نفرضه LTR لتفادي مشاكل اتجاه RTL مع الإزاحة */}
         <div
@@ -1004,7 +1004,7 @@ function HeroSlider({ store }) {
             const custom = isColor || isImage || isVideo;
             // نضع صورة أول لقطة (poster) كخلفية الشريحة فوراً → الفيديو يظهر مباشرة بلا خلفية سوداء/بنّية
             // poster مصغّر (يحمّل فوراً) → لا يظهر سواد قبل الفيديو
-            const posterImg = isVideo ? cldThumb(cldVideoPoster(s.bgValue), 900) : isImage ? cldThumb(s.bgValue, 1280) : '';
+            const posterImg = isVideo ? cldThumb(cldVideoPoster(s.bgValue), 1600) : isImage ? cldThumb(s.bgValue, 1920) : '';
             const style = isColor
               ? { background: s.bgValue }
               : posterImg
@@ -1021,7 +1021,7 @@ function HeroSlider({ store }) {
                   {/* وسائط الشريحة (صورة أو فيديو) بنفس التعتيم تماماً — معتّمة من أول لحظة بلا وميض */}
                   {isImage && (
                     <img
-                      src={cldThumb(s.bgValue, 1280)}
+                      src={cldThumb(s.bgValue, 1920)}
                       alt=""
                       aria-hidden="true"
                       decoding="async"
