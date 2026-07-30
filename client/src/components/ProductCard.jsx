@@ -169,7 +169,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
     <>
     <Link
       to={`/product/${product.id}`}
-      className="group relative block h-full animate-fade-up transition-transform duration-300 ease-out will-change-transform hover:-translate-y-1.5 active:scale-[0.99]"
+      className="group relative block h-full animate-fade-up transition-transform duration-300 ease-out hover:-translate-y-1.5 active:scale-[0.99]"
       style={{ animationDelay: `${Math.min(index, 8) * 60}ms` }}
       onMouseEnter={() => product.videoUrl && setHovering(true)}
       onMouseLeave={() => { setHovering(false); setSwatchColor(''); }}
@@ -182,7 +182,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
           واحدة بحدود ذهبية خفيفة وظل ناعم — glass بيضاء نهاراً وداكنة أنيقة ليلاً */}
       {/* flex عمودي بارتفاع كامل: كل بطاقات الصف تتساوى طولاً مهما اختلف محتواها
           (نقاط ألوان/تقييم موجودة أو لا) — الشبكة تظل مصفوفة ومنسّقة */}
-      <div className="glass flex h-full flex-col overflow-hidden !p-0 transition-shadow duration-300 group-hover:shadow-[0_22px_44px_-18px_rgba(46,33,24,0.35)]">
+      <div className="glass flex h-full flex-col overflow-hidden !p-0 ring-1 ring-transparent transition duration-300 group-hover:shadow-[0_22px_44px_-18px_rgba(46,33,24,0.35)] group-hover:ring-gold-400/30">
       {/* نسخة ضبابية ضئيلة خلف الصورة حتى تجهز (blur-up) — ملامح القطعة وألوانها
           تظهر فوراً فيبدو التحميل أنعم من مربّع رمادي. نُبقي الهيكل اللامع للصور
           غير المستضافة على Cloudinary (لا نسخة ضبابية لها) */}
@@ -191,6 +191,8 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
         style={blurUrl && !imgLoaded ? { backgroundImage: `url("${blurUrl}")` } : undefined}
       >
         {!imgLoaded && !blurUrl && <div className="skeleton absolute inset-0" aria-hidden="true" />}
+        {/* لمعة ذهبية تمرّ على الصورة عند المرور — إحساس بوتيك راقٍ (سطح لامع) */}
+        <span aria-hidden className="pointer-events-none absolute inset-y-0 -left-1/3 z-[5] w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 transition-all duration-700 ease-out group-hover:left-[110%] group-hover:opacity-100" />
         <img
           ref={imgRef}
           src={cover}
