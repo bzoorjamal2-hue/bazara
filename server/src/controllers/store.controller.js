@@ -142,6 +142,9 @@ export async function getMyStore(req, res, next) {
 
 // تحديث إعدادات المتجر (المالك فقط)
 export async function updateMyStore(req, res, next) {
+  // كل المعالجة داخل try — كانت التنقية تُنفَّذ قبل try، فأي خطأ فيها يهرب كرفض غير
+  // ملتقَط ويُسقط الاتصال ("فقدت الاتصال") بدل إرجاع خطأ نظيف. الآن كل شيء محاط.
+  try {
   const { name, description, logoUrl, phone, whatsapp, instagram, facebook, tiktok, themeColor, deliveryInfo, paymentInfo } = req.body;
   const deliveryPhone = String(req.body.deliveryPhone || '').replace(/[^\d+]/g, '').slice(0, 40);
   const banners = sanitizeBanners(req.body.banners);
@@ -168,7 +171,6 @@ export async function updateMyStore(req, res, next) {
   const flashPercent = Math.min(90, Math.max(0, Number(req.body.flashPercent) || 0));
   const flashEndsRaw = req.body.flashEndsAt ? new Date(req.body.flashEndsAt) : null;
   const flashEndsAt = flashEndsRaw && !Number.isNaN(flashEndsRaw.getTime()) ? flashEndsRaw : null;
-  try {
     const current = await query('SELECT id, name, slug, old_slugs FROM stores WHERE user_id = $1', [req.user.id]);
     const store = current.rows[0];
     if (!store) return res.status(404).json({ error: 'لا يوجد متجر لهذا المستخدم.' });
