@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import Seo from '../components/Seo.jsx';
+import StoreHeader from '../components/StoreHeader.jsx';
 import StoreFooter from '../components/StoreFooter.jsx';
 import { PackageIcon, CheckIcon, SearchIcon, TruckIcon, CartIcon } from '../components/icons.jsx';
 import { goBack } from '../utils/nav.js';
@@ -103,17 +104,32 @@ export default function Track() {
   return (
     <>
       <Seo title={t('track.title')} />
+      {/* بنطاق متجر: نلبس هيدر المتجر (اسمه/شعاره/بحثه) بدل شريط بازارا العام —
+          الزبونة تبقى داخل المتجر بصرياً من الهيدر حتى الفوتر. */}
+      {storeObj && (
+        <StoreHeader
+          store={storeObj}
+          q=""
+          setQ={() => {}}
+          cat="all"
+          setCat={(c) => navigate(c && c !== 'all' ? `/store/${storeScope}?cat=${encodeURIComponent(c)}` : `/store/${storeScope}`)}
+          products={[]}
+        />
+      )}
       <div className="mx-auto w-full max-w-2xl">
-        {/* رجوع + عنوان مزخرف مركزي (بنفس روح عناوين المتجر) */}
-        <div className="mb-2 flex items-center">
-          <button
-            onClick={() => goBack(navigate, storeScope ? `/store/${storeScope}` : '/shop')}
-            aria-label={t('common.back')}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-wine/10 text-wine transition hover:bg-wine hover:text-cream"
-          >
-            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={rtl ? 'M9 6l6 6-6 6' : 'M15 6l-6 6 6 6'} /></svg>
-          </button>
-        </div>
+        {/* رجوع + عنوان مزخرف مركزي (بنفس روح عناوين المتجر). زر الرجوع للموقع العام
+            فقط — داخل المتجر يتكفّل هيدر المتجر/الشريط السفلي بالتنقّل. */}
+        {!storeObj && (
+          <div className="mb-2 flex items-center">
+            <button
+              onClick={() => goBack(navigate, '/shop')}
+              aria-label={t('common.back')}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-wine/10 text-wine transition hover:bg-wine hover:text-cream"
+            >
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={rtl ? 'M9 6l6 6-6 6' : 'M15 6l-6 6 6 6'} /></svg>
+            </button>
+          </div>
+        )}
         <div className="mb-1 flex items-center justify-center gap-2 text-wine sm:gap-2.5">
           <span aria-hidden className="text-sm text-wine/40">❖</span>
           <span className="h-px w-5 bg-gradient-to-r from-transparent to-wine/30 sm:w-8" />

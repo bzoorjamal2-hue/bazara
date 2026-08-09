@@ -70,6 +70,7 @@ export default function CartDrawer() {
   const { items, open, setOpen, remove, setQty, total, count, clear, syncFromServer, checkoutIntent, setCheckoutIntent } = useCart();
   const [view, setView] = useState('cart'); // 'cart' | 'checkout' | 'done'
   const [doneRef, setDoneRef] = useState(''); // رقم الطلب (المرجع) بعد النجاح
+  const [doneStore, setDoneStore] = useState(''); // متجر الطلب — لإبقاء التتبّع بهويته
   const [refCopied, setRefCopied] = useState(false); // نُسخ رقم الطلب؟
   const [cust, setCust] = useState(loadCustomer); // مسبقة التعبئة من آخر طلب (إن وُجد)
   const [loyalty, setLoyalty] = useState(null); // { percent } خصم ولاء مستحق لهذا الطلب
@@ -179,7 +180,7 @@ export default function CartDrawer() {
 
   if (!open) return null;
 
-  const close = () => { setOpen(false); setView('cart'); setErr(''); setDoneRef(''); };
+  const close = () => { setOpen(false); setView('cart'); setErr(''); setDoneRef(''); setDoneStore(''); };
   // قائمة المناطق: مناطق المتجر المخصّصة إن وُجدت، وإلا القائمة الافتراضية
   const areaList = (storeZones && storeZones.length)
     ? storeZones.map((z) => ({ name: z.name, fee: Number(z.fee) || 0 }))
@@ -267,6 +268,7 @@ export default function CartDrawer() {
       trackPixel('Purchase', { value: grand, num_items: items.reduce((s, i) => s + i.qty, 0), content_ids: items.map((i) => i.id), content_type: 'product' });
     } catch { /* تجاهل — نكمل لواتساب على أي حال */ }
     setPlacing(false);
+    setDoneStore(storeSlug); // نلتقط سلاِگ المتجر قبل تفريغ السلة كي يبقى التتبّع بهويته
     clear();
     // ثم نفتح واتساب (نوجّه النافذة المفتوحة، أو ننتقل إن تعذّر فتحها)
     if (waWin && !waWin.closed) {
@@ -331,7 +333,7 @@ export default function CartDrawer() {
             )}
             <div className="mt-2 flex w-full flex-col gap-2">
               <Link
-                to="/track"
+                to={doneStore ? `/track?store=${doneStore}` : '/track'}
                 onClick={close}
                 className="w-full rounded-full py-3.5 text-center font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
                 style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)' }}

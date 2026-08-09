@@ -40,9 +40,10 @@ export default function StoreFooter({ store, wa, onShare }) {
             ))}
           </div>
         )}
-        {/* تتبّع الطلب — بنفس نمط "شاركي واربحي" (شفّاف بنص كريمي واضح بالوضعين) */}
+        {/* تتبّع الطلب — بنفس نمط "شاركي واربحي" (شفّاف بنص كريمي واضح بالوضعين).
+            نحمل نطاق المتجر (?store=) كي تبقى صفحة التتبّع بهوية المتجر لا الموقع العام. */}
         <Link
-          to="/track"
+          to={`/track?store=${store.slug}`}
           className="group mx-auto mt-7 flex w-full max-w-sm items-center gap-3 rounded-2xl border border-cream/30 px-5 py-3.5 text-start text-cream transition hover:-translate-y-0.5 hover:bg-cream/10"
         >
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-cream/15 text-cream">

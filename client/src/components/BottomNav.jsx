@@ -132,10 +132,11 @@ export default function BottomNav() {
   // "الرئيسية": داخل متجر → رئيسيته؛ المدير العام → الموقع؛ المشترك → متجره؛ الزائر → بازارا العام
   const homeTo = inStore ? `/store/${scopeSlug}` : (isAdmin ? '/shop' : user && store?.slug ? `/store/${store.slug}` : '/shop');
   const homeActive = pathname === homeTo.split('?')[0] && !/[?&](view|offers|cat)=/.test(search);
-  // التصنيفات داخل المتجر تفتح درج فئات المتجر مباشرةً (بدل صفحة تصنيفات بازارا العامة)
-  const categoriesActive = !inStore && (pathname === '/categories' || pathname.startsWith('/category/'));
-  // هل هناك هيدر متجر مركّب بالصفحة الحالية يمكنه فتح الدرج فوراً؟ (متجر/منتج/بحث المتجر)
-  const onStoreHeaderPage = Boolean(viewingStoreSlug) || pathname.startsWith('/product/') || (pathname === '/search' && Boolean(searchStoreSlug));
+  // التصنيفات داخل المتجر تفتح صفحة تصنيفات المتجر (?cats=1) بهوية المتجر — لا صفحة
+  // بازارا العامة ولا درج جانبي. تبقى مفعّلة على تلك الصفحة، وعلى فئة/تصنيفات العام.
+  const categoriesActive = inStore
+    ? /[?&]cats=1/.test(search)
+    : (pathname === '/categories' || pathname.startsWith('/category/'));
   // العروض/التتبّع داخل المتجر تبقى ضمنه (بدل صفحات بازارا العامة)
   const offersTo = inStore ? `/store/${scopeSlug}?offers=1` : '/offers';
   const offersActive = inStore ? /[?&]offers=1/.test(search) : pathname === '/offers';
@@ -154,14 +155,9 @@ export default function BottomNav() {
     if (pathname + search === to) window.scrollTo({ top: 0, behavior: 'smooth' });
     else navigate(to);
   };
-  // "التصنيفات" داخل متجر → يفتح درج فئات المتجر: إن كان هيدر المتجر مركّباً بالصفحة
-  // نُطلق حدثاً يفتحه فوراً؛ وإلا ننتقل لرئيسية المتجر مع علم يفتح الدرج فور تركيبه.
-  const openStoreCategories = () => {
-    closeDrawers();
-    try { sessionStorage.setItem('bz_open_drawer', '1'); } catch { /* تجاهل */ }
-    if (onStoreHeaderPage) window.dispatchEvent(new Event('bz:store-drawer'));
-    else navigate(`/store/${scopeSlug}`);
-  };
+  // "التصنيفات" داخل متجر → صفحة تصنيفات المتجر (?cats=1): تلبس هيدر/فوتر المتجر
+  // وتعرض شبكة فئاته كصفحة كاملة، فلا يخرج الزبون للموقع العام ولا يفتح درجاً.
+  const categoriesTo = inStore ? `/store/${scopeSlug}?cats=1` : '/categories';
   // السلة والمفضّلة موجودتان بالشريط العلوي بحد الأفاتار، فنستبدلهما بوجهات أنفع.
   // الترتيب يتبع اتجاه اللغة تلقائياً: عربي (حسابي أولاً يميناً)، إنجليزي (يساراً).
   const items = [
@@ -169,7 +165,7 @@ export default function BottomNav() {
     { key: 'track', label: t('nav.track'), Icon: TrackIcon, active: !cartOpen && !wishOpen && pathname === '/track', onClick: () => goto(trackTo) },
     { key: 'offers', label: t('nav.offers'), Icon: OffersIcon, active: !cartOpen && !wishOpen && offersActive, onClick: () => goto(offersTo) },
     { key: 'reels', label: t('reels.title'), Icon: ReelsIcon, active: !cartOpen && !wishOpen && reelsActive, onClick: () => goto(reelsTo) },
-    { key: 'categories', label: t('nav.categories'), Icon: CategoriesIcon, active: !cartOpen && !wishOpen && categoriesActive, onClick: inStore ? openStoreCategories : () => goto('/categories') },
+    { key: 'categories', label: t('nav.categories'), Icon: CategoriesIcon, active: !cartOpen && !wishOpen && categoriesActive, onClick: () => goto(categoriesTo) },
     { key: 'home', label: t('nav.home'), Icon: HomeIcon, active: !cartOpen && !wishOpen && homeActive, onClick: () => goto(homeTo) },
   ];
 

@@ -57,15 +57,6 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
   }, []);
   useScrollLock(drawer);
 
-  // فتح درج الفئات من زرّ "التصنيفات" بالشريط السفلي: حدث فوري إن كنّا على صفحة فيها
-  // هيدر متجر، أو علم بالجلسة يُفتح فور تركيب الهيدر عند الوصول من صفحة أخرى.
-  useEffect(() => {
-    const openDrawer = () => { setDrawer(true); try { sessionStorage.removeItem('bz_open_drawer'); } catch { /* تجاهل */ } };
-    window.addEventListener('bz:store-drawer', openDrawer);
-    try { if (sessionStorage.getItem('bz_open_drawer')) openDrawer(); } catch { /* تجاهل */ }
-    return () => window.removeEventListener('bz:store-drawer', openDrawer);
-  }, []);
-
   // طيّ الهيدر عند التمرير عبر تبديل حالة واحدة + انتقال CSS سلس (بدون تحريك التخطيط
   // كل فريم → بلا تعليق على كل الأجهزة). هيستيريسيس يمنع الرفرفة عند الحدّ.
   useEffect(() => {
@@ -289,9 +280,9 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
                 </button>
               ))}
               <div className="my-2 h-px bg-cream/15" />
-              {/* تتبّع الطلب */}
+              {/* تتبّع الطلب — بنطاق المتجر كي تبقى صفحته بهوية المتجر لا الموقع العام */}
               <Link
-                to="/track"
+                to={`/track?store=${store.slug}`}
                 onClick={() => setDrawer(false)}
                 className="flex w-full items-center gap-3 rounded-xl border border-cream/25 bg-cream/10 px-3 py-3 text-start text-base font-bold text-cream transition hover:bg-cream/20"
               >

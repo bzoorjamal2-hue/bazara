@@ -104,6 +104,9 @@ export default function StorePage() {
   // عرض عروض المتجر (?offers=1) — وجهة زرّ "العروض" بالشريط السفلي داخل المتجر،
   // كي لا يخرج الزبون لصفحة العروض العامة. يعرض شبكة المتجر بفلتر الخصومات مفعّلاً.
   const offersView = searchParams.get('offers') === '1';
+  // عرض صفحة التصنيفات (?cats=1) — وجهة زرّ "التصنيفات" بالشريط السفلي داخل المتجر،
+  // فتظهر فئات المتجر كصفحة كاملة بهيدر/فوتر المتجر بدل صفحة بازارا العامة أو درج.
+  const catsView = searchParams.get('cats') === '1';
   const setCat = (c) => setSearchParams(c && c !== 'all' ? { cat: c } : {});
   const setViewAll = (v) => setSearchParams(v ? { view: 'all' } : {});
 
@@ -335,7 +338,17 @@ export default function StorePage() {
         </div>
       )}
 
-      {searching || cat !== 'all' || viewAll || offersView ? (
+      {catsView ? (
+        /* صفحة التصنيفات — شبكة فئات المتجر بهوية المتجر (زرّ "التصنيفات" السفلي) */
+        <>
+          <nav className="mb-4 mt-2 flex items-center gap-2 text-sm">
+            <CrumbLogo store={store} onClick={() => pickCategory('all')} />
+            <Crumb />
+            <span className="font-display text-lg font-bold text-wine">{t('nav.categories')}</span>
+          </nav>
+          <CategoryGrid onSelect={pickCategory} active={cat} cats={gridCats} />
+        </>
+      ) : searching || cat !== 'all' || viewAll || offersView ? (
         /* عرض الشبكة: نتائج بحث / فئة / كل المنتجات / عروض المتجر */
         <>
           {searching ? (
