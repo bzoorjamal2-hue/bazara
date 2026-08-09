@@ -18,16 +18,20 @@ import { BAZARA_WHATSAPP, BAZARA_INSTAGRAM, BAZARA_FACEBOOK } from '../config/si
 
 // الهوية الخمرية/العاجية الفاخرة مطبّقة على كل الموقع (متجر عام + لوحة تحكم لكل المشتركين).
 export default function Layout({ children }) {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   // صفحات المتجر العامة لها هيدر وفوتر خاص بالمتجر بدل شريط/فوتر Bazara العام
   const isStorePage = /^\/store\//.test(pathname);
+  // صفحة المنتج تلبس هوية متجرها (StoreHeader/StoreFooter داخلها) — فنخفي شريط بازارا.
+  const isProduct = /^\/product\//.test(pathname);
+  // البحث بنطاق متجر (?store=slug): نخفي شريط بازارا كي لا يظهر اسمه/درج التحكم داخل المتجر
+  const isStoreSearch = pathname === '/search' && Boolean(new URLSearchParams(search).get('store'));
   // شاشة افتتاح التطبيق المثبّت (الجذر) — بلا شريط/فوتر ليبدو كتطبيق كامل
   const isAppWelcome = pathname === '/' && isStandalone();
   // صفحات الحساب — تصميم بملء الشاشة (هيرو + نموذج) بلا شريط/فوتر
   const isAuthFull = ['/login', '/register', '/forgot-password', '/reset'].includes(pathname);
   // الريلز = ملء الشاشة (كتيك توك) — الهيدر كان يظهر فوقها ويغطي المحتوى
   const isReels = pathname === '/reels';
-  const hideChrome = isStorePage || isAppWelcome || isAuthFull || isReels;
+  const hideChrome = isStorePage || isProduct || isStoreSearch || isAppWelcome || isAuthFull || isReels;
   // لوحة التحكم/الاشتراك: لها شريط وتنقّل عام لكن بلا فوتر المنصّة التسويقي (سياق إدارة لا تسوّق)
   const isDashboard = /^\/dashboard/.test(pathname) || pathname === '/subscribe';
   const showFooter = !hideChrome && !isDashboard;

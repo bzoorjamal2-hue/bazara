@@ -7,6 +7,8 @@ import { ProductDetailsSkeleton } from '../components/Skeleton.jsx';
 import StarRating from '../components/StarRating.jsx';
 import Lightbox from '../components/Lightbox.jsx';
 import ProductRail from '../components/ProductRail.jsx';
+import StoreHeader from '../components/StoreHeader.jsx';
+import StoreFooter from '../components/StoreFooter.jsx';
 import Strike from '../components/Strike.jsx';
 import { getMySize, setMySize } from '../utils/mySize.js';
 import { useCart } from '../context/CartContext.jsx';
@@ -34,6 +36,12 @@ export default function ProductDetails() {
   const { has, toggle, remove: removeWish } = useWishlist();
   const [product, setProduct] = useState(() => getCache(`product:${id}`)?.product || null);
   const [reviews, setReviews] = useState(() => getCache(`product:${id}`)?.reviews || []);
+  // كائن المتجر الكامل (اسم/شعار/فئات/إحالة) — كي تلبس صفحة المنتج هوية المتجر
+  // (هيدر + درج فئات + فوتر) بدل هيدر/فوتر بازارا العام. يبدأ من الكاش فيظهر فوراً.
+  const [storeObj, setStoreObj] = useState(() => {
+    const slug = getCache(`product:${id}`)?.product?.storeSlug;
+    return (slug && getCache(`store:${slug}`)?.store) || null;
+  });
   const [related, setRelated] = useState([]);
   const [complementary, setComplementary] = useState([]);
   const [recent, setRecent] = useState([]);
@@ -178,6 +186,7 @@ export default function ProductDetails() {
   const fetchRelated = (p) => {
     if (!p?.storeSlug) return;
     const apply = (data) => {
+      if (data.store) setStoreObj(data.store); // هوية المتجر للهيدر/الفوتر
       const all = (data.products || [])
         .filter((x) => x.id !== p.id)
         .map((x) => ({ ...x, storeSlug: p.storeSlug }));
@@ -335,9 +344,19 @@ export default function ProductDetails() {
       : {}),
   };
 
+  // هوية المتجر للهيدر/الفوتر: الكامل إن حُمّل، وإلا الحدّ الأدنى من المنتج (اسم/سلاِگ)
+  const headerStore = storeObj || { slug: product.storeSlug, name: product.storeName };
+  // ضغط فئة بدرج المتجر ينقل لصفحة المتجر على تلك الفئة (بلا فلترة داخل صفحة المنتج)
+  const goToStoreCat = (c) => navigate(`/store/${headerStore.slug}${c && c !== 'all' ? `?cat=${encodeURIComponent(c)}` : ''}`);
+
   return (
     <>
       <Seo title={product.name} description={product.description || product.name} image={gallery[0]} type="product" jsonLd={productLd} />
+
+      {/* هيدر المتجر نفسه (اسم/شعار + درج فئاته + بحثه) — كي لا يظهر هيدر بازارا العام */}
+      {headerStore.slug && (
+        <StoreHeader store={headerStore} q="" setQ={() => {}} cat="all" setCat={goToStoreCat} />
+      )}
 
       {/* رجوع للصفحة السابقة (الفئة/المتجر/البحث) — وإن لم يوجد سجلّ نرجع للمتجر */}
       <button
@@ -745,6 +764,9 @@ export default function ProductDetails() {
 
       {/* شاهدت مؤخراً */}
       <ProductRail title={t('product.recentlyViewed')} products={recent} currentId={product.id} />
+
+      {/* فوتر المتجر نفسه — بدل فوتر بازارا العام (هوية المتجر حتى النهاية) */}
+      {headerStore.slug && <StoreFooter store={headerStore} wa={product.storeWhatsapp} />}
 
       {/* شريط الشراء الثابت — يظهر عند التمرير تحت زر الشراء ويحلّ محلّ شريط التنقّل (أسلوب المتاجر العالمية) */}
       {showBuyBar && !outOfStock && (
