@@ -83,6 +83,9 @@ export default function ProductDetails() {
   };
   const [sizeGuide, setSizeGuide] = useState(false);
   const [notifyPhone, setNotifyPhone] = useState('');
+  const [notifyName, setNotifyName] = useState('');
+  const [notifyCity, setNotifyCity] = useState('');
+  const [notifyAddress, setNotifyAddress] = useState('');
   const [notifyBusy, setNotifyBusy] = useState(false);
   const [notifySent, setNotifySent] = useState(false);
   // شريط الشراء الثابت: يظهر عند التمرير تحت زر الشراء الأساسي (يحلّ محلّ شريط التنقّل)
@@ -291,10 +294,19 @@ export default function ProductDetails() {
   // تنبيه التوفّر: يظهر عند نفاد المنتج كلياً أو نفاد المقاس المختار
   const showNotify = outOfStock || (selSize && sizeSoldOut(selSize));
   const submitNotify = async () => {
+    if (!notifyName.trim()) { setPickErr(t('product.notifyNameRequired')); return; }
     if (notifyPhone.replace(/\D/g, '').length < 6) { setPickErr(t('product.notifyInvalid')); return; }
     setNotifyBusy(true); setPickErr('');
     try {
-      await api.post('/public/stock-request', { productId: product.id, color: selColor, size: selSize, phone: notifyPhone.trim() });
+      await api.post('/public/stock-request', {
+        productId: product.id,
+        color: selColor,
+        size: selSize,
+        phone: notifyPhone.trim(),
+        name: notifyName.trim(),
+        city: notifyCity.trim(),
+        address: notifyAddress.trim(),
+      });
       setNotifySent(true);
     } catch (err) {
       setPickErr(getErrorMessage(err, t('errors.generic')));
@@ -618,18 +630,40 @@ export default function ProductDetails() {
                 <p className="text-center text-sm font-semibold text-emerald-600">{t('product.notifySent')}</p>
               ) : (
                 <>
-                  <p className="mb-2 flex items-center gap-1.5 text-sm font-bold text-wine"><BellIcon className="h-4 w-4" /> {t('product.notifyTitle')}</p>
-                  <div className="flex gap-2">
+                  <p className="flex items-center gap-1.5 text-sm font-bold text-wine"><BellIcon className="h-4 w-4" /> {t('product.notifyTitle')}</p>
+                  <p className="mb-3 mt-1 text-xs text-wine/70">{t('product.notifyHint')}</p>
+                  <div className="space-y-2">
+                    <input
+                      autoComplete="name"
+                      className="input w-full !rounded-xl"
+                      placeholder={t('product.notifyNamePlaceholder')}
+                      value={notifyName}
+                      onChange={(e) => setNotifyName(e.target.value)}
+                    />
                     <input
                       dir="ltr"
                       inputMode="tel"
                       autoComplete="tel"
-                      className="input flex-1 !rounded-xl text-end"
+                      className="input w-full !rounded-xl text-end"
                       placeholder={t('product.notifyPhonePlaceholder')}
                       value={notifyPhone}
                       onChange={(e) => setNotifyPhone(e.target.value)}
                     />
-                    <button onClick={submitNotify} disabled={notifyBusy} className="shrink-0 rounded-xl bg-wine px-5 font-bold text-cream transition hover:bg-wine-dark disabled:opacity-60">
+                    <input
+                      autoComplete="address-level2"
+                      className="input w-full !rounded-xl"
+                      placeholder={t('product.notifyCityPlaceholder')}
+                      value={notifyCity}
+                      onChange={(e) => setNotifyCity(e.target.value)}
+                    />
+                    <input
+                      autoComplete="street-address"
+                      className="input w-full !rounded-xl"
+                      placeholder={t('product.notifyAddressPlaceholder')}
+                      value={notifyAddress}
+                      onChange={(e) => setNotifyAddress(e.target.value)}
+                    />
+                    <button onClick={submitNotify} disabled={notifyBusy} className="w-full rounded-xl bg-wine px-5 py-3 font-bold text-cream transition hover:bg-wine-dark disabled:opacity-60">
                       {notifyBusy ? '…' : t('product.notifySend')}
                     </button>
                   </div>

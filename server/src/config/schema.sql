@@ -213,4 +213,8 @@ CREATE TABLE IF NOT EXISTS stock_requests (
     created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ALTER TABLE stock_requests ADD COLUMN IF NOT EXISTS order_id UUID REFERENCES orders(id) ON DELETE SET NULL; -- حُوّل لطلب حقيقي
+-- بيانات الزبونة الكاملة (تُجمع عند الطلب كأنه طلب عادي) → يعرفها المتجر ويحوّلها بضغطة
+ALTER TABLE stock_requests ADD COLUMN IF NOT EXISTS customer_name VARCHAR(100) DEFAULT '';
+ALTER TABLE stock_requests ADD COLUMN IF NOT EXISTS city VARCHAR(80) DEFAULT '';
+ALTER TABLE stock_requests ADD COLUMN IF NOT EXISTS address TEXT DEFAULT '';
 CREATE INDEX IF NOT EXISTS idx_stockreq_store ON stock_requests(store_id);

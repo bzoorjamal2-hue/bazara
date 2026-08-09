@@ -205,6 +205,14 @@ function RequestCard({ r, zones, couriers, busy, formOpen, onToggleForm, onConve
               )}
             </div>
             {variant && <p className="mt-0.5 text-xs text-gold-200">{variant}</p>}
+            {/* بيانات الزبونة التي أدخلتها عند الطلب — يعرفها المتجر مباشرة */}
+            {!o && (r.customerName || r.city) && (
+              <p className="mt-0.5 text-xs text-stone-300">
+                {r.customerName && <span className="font-semibold">{r.customerName}</span>}
+                {r.city && <>{r.customerName ? ' · ' : ''}<PinIcon className="inline h-3.5 w-3.5" /> {r.city}</>}
+                {r.address ? <span className="text-stone-400"> — {r.address}</span> : null}
+              </p>
+            )}
             <p className="mt-0.5 text-xs text-stone-400">
               <a href={`tel:${String(r.phone).replace(/\s/g, '')}`} dir="ltr" className="underline-offset-2 hover:text-gold-200 hover:underline">{r.phone}</a>
               {' · '}{new Date(r.createdAt).toLocaleDateString()}
@@ -283,9 +291,9 @@ function RequestCard({ r, zones, couriers, busy, formOpen, onToggleForm, onConve
 function ConvertForm({ r, zones, busy, onSubmit }) {
   const { t } = useTranslation();
   const [f, setF] = useState({
-    name: '',
-    city: '',
-    address: '',
+    name: r.customerName || '',
+    city: r.city || '',
+    address: r.address || '',
     qty: 1,
     price: r.price != null ? String(r.price) : '',
     deliveryFee: '',
@@ -297,6 +305,16 @@ function ConvertForm({ r, zones, busy, onSubmit }) {
     const z = zones.find((x) => x.name === name);
     setF((p) => ({ ...p, city: name, deliveryFee: z?.fee != null && z.fee !== '' ? String(z.fee) : p.deliveryFee }));
   };
+  // إن كانت مدينة الزبونة تطابق منطقة توصيل معرّفة → نملأ أجرتها تلقائياً عند وصول المناطق
+  useEffect(() => {
+    if (!f.deliveryFee && f.city) {
+      const z = zones.find((x) => x.name === f.city);
+      if (z?.fee != null && z.fee !== '') setF((p) => ({ ...p, deliveryFee: String(z.fee) }));
+    }
+  }, [zones]); // eslint-disable-line react-hooks/exhaustive-deps
+  // خيارات المدينة: مناطق المتجر + مدينة الزبونة إن لم تكن ضمنها (حتى لا تختفي من القائمة)
+  const cityOptions = zones.map((z) => ({ value: z.name, label: `${z.name}${z.fee ? ` — ${t('common.currency')}${z.fee}` : ''}` }));
+  if (f.city && !zones.some((z) => z.name === f.city)) cityOptions.unshift({ value: f.city, label: f.city });
   const total = (Number(f.price) || 0) * (Math.max(1, parseInt(f.qty, 10) || 1)) + (Number(f.deliveryFee) || 0);
 
   return (
@@ -311,7 +329,7 @@ function ConvertForm({ r, zones, busy, onSubmit }) {
         <div>
           <label className="mb-1 block text-[11px] text-stone-400">{t('dashboard.ordersSection.deliveryTo')}</label>
           {zones.length > 0 ? (
-            <Select value={f.city} onChange={pickZone} placeholder={t('dashboard.opost.choose')} options={zones.map((z) => ({ value: z.name, label: `${z.name}${z.fee ? ` — ${t('common.currency')}${z.fee}` : ''}` }))} />
+            <Select value={f.city} onChange={pickZone} placeholder={t('dashboard.opost.choose')} options={cityOptions} />
           ) : (
             <input className="input" value={f.city} onChange={set('city')} />
           )}

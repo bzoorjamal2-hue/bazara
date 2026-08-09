@@ -13,6 +13,10 @@ export async function createStockRequest(req, res, next) {
   const phone = String(req.body.phone || '').replace(/[^\d+]/g, '');
   const color = String(req.body.color || '').trim().slice(0, 50);
   const size = String(req.body.size || '').trim().slice(0, 20);
+  // بيانات الزبونة الكاملة (كأنه طلب عادي) — يعرفها المتجر ويحوّلها بضغطة
+  const name = String(req.body.name || '').trim().slice(0, 100);
+  const city = String(req.body.city || '').trim().slice(0, 80);
+  const address = String(req.body.address || '').trim().slice(0, 300);
   if (!productId || phone.replace(/\D/g, '').length < 6) {
     return res.status(400).json({ error: 'بيانات ناقصة.' });
   }
@@ -21,24 +25,31 @@ export async function createStockRequest(req, res, next) {
     const product = p.rows[0];
     if (!product) return res.status(404).json({ error: 'المنتج غير موجود.' });
 
-    // تفادي التكرار: نفس الرقم لنفس المنتج/اللون/النمرة
+    // تفادي التكرار: نفس الرقم لنفس المنتج/اللون/النمرة — نحدّث بياناتها إن أُعيد الطلب
     const dup = await query(
       'SELECT id FROM stock_requests WHERE product_id = $1 AND phone = $2 AND color = $3 AND size = $4',
       [productId, phone, color, size]
     );
-    if (dup.rows.length) return res.json({ ok: true });
+    if (dup.rows.length) {
+      await query(
+        'UPDATE stock_requests SET customer_name = $1, city = $2, address = $3 WHERE id = $4',
+        [name, city, address, dup.rows[0].id]
+      );
+      return res.json({ ok: true });
+    }
 
     await query(
-      'INSERT INTO stock_requests (store_id, product_id, product_name, color, size, phone) VALUES ($1,$2,$3,$4,$5,$6)',
-      [product.store_id, productId, product.name, color, size, phone]
+      'INSERT INTO stock_requests (store_id, product_id, product_name, color, size, phone, customer_name, city, address) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)',
+      [product.store_id, productId, product.name, color, size, phone, name, city, address]
     );
     res.status(201).json({ ok: true });
 
     // إشعار المالك بطلب توفّر جديد (بالخلفية)
     const variant = [color, size].filter(Boolean).join(' - ');
+    const who = name ? `${name} — ${phone}` : phone;
     notifyStoreOwner(product.store_id, {
       title: `🔔 طلب توفّر — ${product.name}`,
-      body: `زبون ينتظر توفّر${variant ? ` (${variant})` : ''} — ${phone}`,
+      body: `${who} ينتظر توفّر${variant ? ` (${variant})` : ''}`,
       url: '/dashboard?tab=stockRequests',
     });
   } catch (err) {
@@ -104,6 +115,7 @@ export async function listMyStockRequests(req, res, next) {
     if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
     const r = await query(
       `SELECT sr.id, sr.product_id, sr.product_name, sr.color, sr.size, sr.phone, sr.created_at,
+              sr.customer_name, sr.city, sr.address,
               p.stock, p.size_stock, p.color_stock, p.price, p.image_url, p.images,
               ${orderCols('o.')}
        FROM stock_requests sr
@@ -121,6 +133,9 @@ export async function listMyStockRequests(req, res, next) {
       color: x.color || '',
       size: x.size || '',
       phone: x.phone,
+      customerName: x.customer_name || '',
+      city: x.city || '',
+      address: x.address || '',
       createdAt: x.created_at,
       inStock: variantInStock(x, x.color, x.size), // رجع متوفّراً → نبّهي الزبونة
       order: mapOrder(x), // حُوّل لطلب حقيقي؟ نرجّعه كاملاً بحالته وشحنته
@@ -139,13 +154,9 @@ export async function listMyStockRequests(req, res, next) {
 // (أوبتيموس/EPS/gobox) بنفس أزرار صفحة الطلبات، ويظهر أيضاً ضمن الطلبات والإحصائيات.
 export async function convertStockRequest(req, res, next) {
   const { id } = req.params;
-  const name = String(req.body.name || '').trim().slice(0, 100);
-  const city = String(req.body.city || '').trim().slice(0, 80);
-  const address = String(req.body.address || '').trim().slice(0, 300);
   const notes = String(req.body.notes || '').trim().slice(0, 500);
   const qty = Math.max(1, parseInt(req.body.qty, 10) || 1);
   const deliveryFee = Math.max(0, Number(req.body.deliveryFee) || 0);
-  if (!name) return res.status(400).json({ error: 'اسم الزبونة مطلوب.' });
   try {
     const store = await getUserStore(req.user.id);
     if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
@@ -158,6 +169,13 @@ export async function convertStockRequest(req, res, next) {
     );
     const sr = r.rows[0];
     if (!sr) return res.status(404).json({ error: 'الطلب غير موجود.' });
+
+    // بيانات التوصيل: ما أدخله المتجر إن عدّل، وإلا ما تركته الزبونة عند الطلب
+    const has = (v) => v !== undefined && v !== null && String(v).trim() !== '';
+    const name = (has(req.body.name) ? String(req.body.name) : (sr.customer_name || '')).trim().slice(0, 100);
+    const city = (has(req.body.city) ? String(req.body.city) : (sr.city || '')).trim().slice(0, 80);
+    const address = (has(req.body.address) ? String(req.body.address) : (sr.address || '')).trim().slice(0, 300);
+    if (!name) return res.status(400).json({ error: 'اسم الزبونة مطلوب.' });
 
     // حُوّل سابقاً → نُرجع الطلب نفسه بلا إنشاء نسخة ثانية (نقرة مكرّرة/إنترنت متقطّع)
     if (sr.order_id) {
