@@ -3,8 +3,10 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import Seo from '../components/Seo.jsx';
+import StoreFooter from '../components/StoreFooter.jsx';
 import { PackageIcon, CheckIcon, SearchIcon, TruckIcon, CartIcon } from '../components/icons.jsx';
 import { goBack } from '../utils/nav.js';
+import { getCache, setCache } from '../utils/apiCache.js';
 import { useCart } from '../context/CartContext.jsx';
 
 const STEPS = ['new', 'confirmed', 'shipped', 'delivered'];
@@ -20,8 +22,18 @@ export default function Track() {
   const { t, i18n } = useTranslation();
   const rtl = i18n.language !== 'en';
   const navigate = useNavigate();
-  // نطاق متجر (?store=slug): جاء المستخدم من متجر — فرجوعه إليه لا للموقع العام
+  // نطاق متجر (?store=slug): جاء المستخدم من متجر — فرجوعه إليه لا للموقع العام،
+  // ونعرض فوتر المتجر بأسفل الصفحة (هوية المتجر حتى النهاية زي صفحة المنتج).
   const storeScope = (new URLSearchParams(useLocation().search).get('store') || '').trim();
+  const [storeObj, setStoreObj] = useState(() => (storeScope && getCache(`store:${storeScope}`)?.store) || null);
+  useEffect(() => {
+    if (!storeScope) { setStoreObj(null); return; }
+    const cached = getCache(`store:${storeScope}`);
+    if (cached?.store) setStoreObj(cached.store);
+    api.get(`/public/store/${storeScope}`)
+      .then((r) => { setCache(`store:${storeScope}`, r.data); setStoreObj(r.data.store); })
+      .catch(() => { /* الفوتر لا يظهر إن فشل الجلب */ });
+  }, [storeScope]);
   const [phone, setPhone] = useState('');
   const [orders, setOrders] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -273,6 +285,9 @@ export default function Track() {
           )
         )}
       </div>
+
+      {/* فوتر المتجر — يظهر فقط عند الدخول من متجر (?store=) فتبقى هوية المتجر حتى النهاية */}
+      {storeObj && <StoreFooter store={storeObj} wa={storeObj.whatsapp || storeObj.ownerPhone || ''} />}
     </>
   );
 }
