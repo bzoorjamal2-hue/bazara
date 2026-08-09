@@ -116,7 +116,7 @@ export default function Track() {
           products={[]}
         />
       )}
-      <div className="mx-auto w-full max-w-2xl">
+      <div className={`mx-auto w-full max-w-2xl${storeObj ? ' flex-1' : ''}`}>
         {/* رجوع + عنوان مزخرف مركزي (بنفس روح عناوين المتجر). زر الرجوع للموقع العام
             فقط — داخل المتجر يتكفّل هيدر المتجر/الشريط السفلي بالتنقّل. */}
         {!storeObj && (

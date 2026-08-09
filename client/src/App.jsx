@@ -83,6 +83,10 @@ if (typeof history !== 'undefined' && 'scrollRestoration' in history) {
 function AnimatedRoutes() {
   const location = useLocation();
   const navType = useNavigationType(); // POP عند الرجوع/التقدّم
+  // صفحة التتبّع بنطاق متجر (?store=) تعرض فوتر المتجر بأسفلها؛ نجعل غلاف المسار يملأ
+  // ارتفاع الشاشة (flex عمودي) كي يُدفع الفوتر للأسفل بدل ما يطفو لأعلى مع فراغ تحته.
+  const fillStore = location.pathname === '/track'
+    && Boolean(new URLSearchParams(location.search).get('store'));
 
   // نحفظ موضع التمرير الحالي باستمرار لمفتاح هذه الصفحة، ونلتقطه أيضاً لحظة المغادرة
   // (في التنظيف) كي يبقى الموضع مضموناً حتى لو لم يُطلق حدث تمرير قبل الانتقال — هذا
@@ -194,7 +198,7 @@ function AnimatedRoutes() {
   // كان التلاشي + قفزة التمرير بنفس اللحظة يعطيان إحساس "تعليق" عند كل رجوع.
   return (
     <Suspense fallback={<Spinner full />}>
-      <div key={location.pathname} className={navType === 'POP' ? undefined : 'route-fade'}>
+      <div key={location.pathname} className={`${fillStore ? 'flex min-h-full flex-col ' : ''}${navType === 'POP' ? '' : 'route-fade'}`.trim() || undefined}>
         <Routes location={location}>
           <Route path="/" element={<Root />} />
           <Route path="/shop" element={<Home />} />

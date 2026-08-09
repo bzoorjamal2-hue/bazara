@@ -1,14 +1,28 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Seo from '../components/Seo.jsx';
+import api from '../api/client.js';
+import { getCache, setCache } from '../utils/apiCache.js';
+import { cldThumb } from '../utils/cloudinary.js';
 
 const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
 
-// صفحة تصنيفات الموقع العام (بازارا) — فئات بازارا الأصلية فقط، بلا أي تخصيص أو فئات
-// خاصّة بمتجر مشترك حتى لو كان صاحب متجر مسجّلاً دخوله (الصفحة العامة تبقى بازارا خالصة).
+// صفحة تصنيفات الموقع العام (بازارا) — فئات بازارا الأصلية + الفئات المخصّصة المجمّعة من
+// كل المتاجر (يعيدها /public/categories). أي فئة يضيفها أي متجر تظهر هنا تلقائياً بنفس
+// شكل الفئات الأصلية. لا تعتمد على متجر صاحب الحساب المسجّل (الصفحة تبقى بازارا خالصة).
 export default function Categories() {
   const { t } = useTranslation();
-  const items = CATS.map((c) => ({ key: c, name: t(`categories.${c}`), to: `/category/${c}`, img: `/categories/${c}.png` }));
+  const [custom, setCustom] = useState(() => getCache('publicCats') || []);
+  useEffect(() => {
+    api.get('/public/categories')
+      .then((r) => { const c = r.data.customCategories || []; setCustom(c); setCache('publicCats', c); })
+      .catch(() => { /* الفئات المخصّصة اختيارية — الأصلية تكفي */ });
+  }, []);
+  const items = [
+    ...CATS.map((c) => ({ key: c, name: t(`categories.${c}`), to: `/category/${c}`, img: `/categories/${c}.png` })),
+    ...custom.map((c) => ({ key: c.key, name: c.name, to: `/category/${c.key}`, img: c.image || '' })),
+  ];
 
   return (
     <>

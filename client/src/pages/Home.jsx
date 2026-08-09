@@ -25,6 +25,8 @@ import useInViewOnce from '../hooks/useInViewOnce.js';
 import ScrollProgress from '../components/ScrollProgress.jsx';
 import { BAZARA_WHATSAPP } from '../config/site.js';
 
+const BUILTIN_CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
+
 export default function Home() {
   const { t, i18n } = useTranslation();
   const rtl = i18n.language !== 'en';
@@ -39,6 +41,13 @@ export default function Home() {
     setSearchParams(c && c !== 'all' ? { cat: c } : {});
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+  // الفئات المخصّصة المجمّعة من كل المتاجر (يعيدها /public/home) — تظهر بشبكة فئات
+  // الرئيسية العامة كفئات بازارا الأصلية، والضغط عليها يفتح منتجاتها من كل المتاجر.
+  const customCats = Array.isArray(data?.customCategories) ? data.customCategories : [];
+  const gridCats = [
+    ...BUILTIN_CATS.map((k) => ({ key: k, builtin: true })),
+    ...customCats.map((c) => ({ key: c.key, name: c.name, image: c.image, builtin: false })),
+  ];
 
   // "مقترحات لكِ": نتعلّم الفئة الأكثر مشاهدة من تصفّحها ونجلب منتجاتها (تخصيص محلي بلا حساب)
   const [forYou, setForYou] = useState(() => getCache('forYou') || []);
@@ -78,7 +87,7 @@ export default function Home() {
   }, []);
 
   // فئة مختارة → عرض شبكة منتجات الفئة (بكل المتاجر) داخل الرئيسية نفسها (بعد كل الـhooks)
-  if (cat) return <HomeCategoryView cat={cat} onHome={() => pickCat('all')} />;
+  if (cat) return <HomeCategoryView cat={cat} custom={customCats} onHome={() => pickCat('all')} />;
 
   return (
     <>
@@ -108,7 +117,7 @@ export default function Home() {
       <Reveal>
         <section className="mt-16 sm:mt-20">
           <SectionTitle>{t('home.browseByCategory')}</SectionTitle>
-          <CategoryGrid onSelect={pickCat} active={cat} />
+          <CategoryGrid onSelect={pickCat} active={cat} cats={gridCats} />
         </section>
       </Reveal>
 
@@ -251,10 +260,12 @@ function Crumb({ className = 'h-4 w-4' }) {
 
 // عرض فئة داخل الرئيسية العامة (بازارا) — يبقيكِ بالرئيسية بلا انتقال لصفحة منفصلة.
 // نفس شبكة/فلاتر صفحة الفئة، ومنتجات الفئة من كل المتاجر (بازارا خالصة).
-function HomeCategoryView({ cat, onHome }) {
+function HomeCategoryView({ cat, onHome, custom = [] }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const label = t(`categories.${cat}`);
+  // فئة مخصّصة؟ نأخذ اسمها وصورتها من القائمة المجمّعة (وإلا فئة أصلية باسمها المترجَم)
+  const info = custom.find((c) => c.key === cat);
+  const label = info ? info.name : t(`categories.${cat}`);
   const cacheKey = `cat:${cat}`;
   const [products, setProducts] = useState(() => getCache(cacheKey) || null);
   const [error, setError] = useState('');
@@ -296,7 +307,11 @@ function HomeCategoryView({ cat, onHome }) {
         </button>
         <Crumb />
         <span className="flex items-center gap-2 rounded-full bg-wine/10 px-2.5 py-1 font-display text-base font-bold text-wine">
-          <CatThumb cat={cat} className="h-7 w-7" />
+          {info ? (
+            info.image ? <img src={cldThumb(info.image, 96)} alt="" className="h-7 w-7 shrink-0 rounded object-contain" /> : null
+          ) : (
+            <CatThumb cat={cat} className="h-7 w-7" />
+          )}
           {label}
           {products?.length > 0 && <span className="text-xs font-medium text-wine/50">· {products.length} {t('store.products')}</span>}
         </span>

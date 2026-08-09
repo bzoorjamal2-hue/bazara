@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { param } from 'express-validator';
 import { subscribeNewsletter, getSiteInfo } from '../controllers/site.controller.js';
-import { getHomeData, getStoreBySlug, getStoreCheckout, getProductById, getProductsByIds, getByCategory, getOffers, getReels, getStoriesFeed, addReview, trackOrders, trackStoreVisit, loyaltyPreview, searchProducts } from '../controllers/public.controller.js';
+import { getHomeData, getPublicCategories, getStoreBySlug, getStoreCheckout, getProductById, getProductsByIds, getByCategory, getOffers, getReels, getStoriesFeed, addReview, trackOrders, trackStoreVisit, loyaltyPreview, searchProducts } from '../controllers/public.controller.js';
 import { validateCoupon } from '../controllers/coupon.controller.js';
 import { createStockRequest } from '../controllers/stockRequest.controller.js';
 import { saveAbandoned } from '../controllers/abandoned.controller.js';
@@ -37,6 +37,7 @@ const assistantLimiter = rateLimit({
 router.get('/home', cacheGet(30), getHomeData);
 router.get('/site-info', cacheGet(120), getSiteInfo); // حسابات المنصّة للفوتر (كاش أطول — نادر التغيّر)
 router.get('/search', cacheGet(15), searchProducts); // بحث شامل عبر المنصّة (كاش أقصر — استعلامات متنوعة)
+router.get('/categories', cacheGet(60), getPublicCategories); // فئات مخصّصة مجمّعة لصفحة التصنيفات العامة
 router.get('/category/:cat', cacheGet(30), getByCategory);
 router.get('/offers', cacheGet(30), getOffers);
 router.get('/reels', cacheGet(30), getReels);

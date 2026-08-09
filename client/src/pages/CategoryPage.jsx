@@ -7,6 +7,7 @@ import { ProductGridSkeleton } from '../components/Skeleton.jsx';
 import FilteredProductGrid from '../components/FilteredProductGrid.jsx';
 import CatThumb from '../components/CatThumb.jsx';
 import { getCache, setCache } from '../utils/apiCache.js';
+import { cldThumb } from '../utils/cloudinary.js';
 import { smartNav } from '../utils/nav.js';
 
 // لوقو بيت أنيق (زر العودة للصفحة الرئيسية)
@@ -49,10 +50,18 @@ export default function CategoryPage() {
   // صفحة عامة (بازارا) خالصة: تعرض منتجات هذه الفئة من كل المتاجر بلا أي تخصيص بمتجر
   // مشترك — حتى لو كان صاحب متجر مسجّلاً دخوله (هويّته لا تتسرّب للصفحة العامة).
   const homeTo = '/shop';
-  const label = t(`categories.${cat}`);
   const cacheKey = `cat:${cat}`;
   const [products, setProducts] = useState(() => getCache(cacheKey) || null);
   const [error, setError] = useState('');
+  // فئة مخصّصة؟ نحلّ اسمها/صورتها من الفئات المجمّعة (تُعامَل كفئة أصلية بالموقع العام)
+  const [custom, setCustom] = useState(() => getCache('publicCats') || []);
+  useEffect(() => {
+    api.get('/public/categories')
+      .then((r) => { const c = r.data.customCategories || []; setCustom(c); setCache('publicCats', c); })
+      .catch(() => { /* الأصلية تكفي */ });
+  }, []);
+  const info = custom.find((c) => c.key === cat);
+  const label = info ? info.name : t(`categories.${cat}`);
 
   useEffect(() => {
     const cached = getCache(cacheKey);
@@ -94,7 +103,11 @@ export default function CategoryPage() {
         </button>
         <Crumb />
         <span className="flex items-center gap-2 rounded-full bg-wine/10 px-2.5 py-1 font-display text-base font-bold text-wine">
-          <CatThumb cat={cat} className="h-7 w-7" />
+          {info ? (
+            info.image ? <img src={cldThumb(info.image, 96)} alt="" className="h-7 w-7 shrink-0 rounded object-contain" /> : null
+          ) : (
+            <CatThumb cat={cat} className="h-7 w-7" />
+          )}
           {label}
           {products?.length > 0 && <span className="text-xs font-medium text-wine/50">· {products.length} {t('store.products')}</span>}
         </span>

@@ -77,6 +77,36 @@ function mapStory(s) {
   };
 }
 
+// الفئات المخصّصة عبر كل المتاجر الفعّالة، مجمّعة وموحّدة بالمفتاح (أول ظهور يفوز).
+// تُعامَل كفئات بازارا الأصلية: تظهر بالرئيسية العامة وصفحة التصنيفات، والضغط عليها
+// يفتح منتجاتها من كل المتاجر. هكذا أي فئة يضيفها أي متجر تنتشر تلقائياً بالموقع العام.
+async function aggregateCustomCategories() {
+  const active = activeStoreSql('u');
+  const r = await query(
+    `SELECT s.custom_categories FROM stores s JOIN users u ON u.id = s.user_id
+     WHERE ${active} AND s.custom_categories IS NOT NULL`
+  );
+  const map = new Map();
+  for (const row of r.rows) {
+    const arr = Array.isArray(row.custom_categories) ? row.custom_categories : [];
+    for (const c of arr) {
+      if (c && c.key && !map.has(c.key)) map.set(c.key, { key: c.key, name: c.name || c.key, image: c.image || '' });
+    }
+  }
+  return [...map.values()];
+}
+
+// نقطة خفيفة لصفحة التصنيفات العامة: تعيد الفئات المخصّصة المجمّعة (الأصلية ثابتة بالواجهة)
+export async function getPublicCategories(_req, res, next) {
+  try {
+    const customCategories = await aggregateCustomCategories();
+    res.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300');
+    res.json({ customCategories });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function getHomeData(_req, res, next) {
   try {
     const active = activeStoreSql('u');
@@ -115,6 +145,9 @@ export async function getHomeData(_req, res, next) {
       lookbook = lb && typeof lb === 'object' && lb.image ? lb : null;
     } catch { /* الجدول/الأعمدة غير موجودة بعد */ }
 
+    // الفئات المخصّصة المجمّعة عبر المتاجر — تظهر بشبكة فئات الرئيسية كفئات بازارا الأصلية
+    const customCategories = await aggregateCustomCategories();
+
     res.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300'); // كاش حافة Vercel
     res.json({
       stores: stores.rows.map((s) => ({ ...mapStorePublic(s), productsCount: s.products_count })),
@@ -122,6 +155,7 @@ export async function getHomeData(_req, res, next) {
       products: latest.rows.map(mapProduct),
       deals: deals.rows.map(mapProduct),
       bestSellers: bestSellers.rows.map(mapProduct),
+      customCategories,
       homeBanners,
       announcement,
       announcementEn,
@@ -337,15 +371,30 @@ export async function getByCategory(req, res, next) {
   const builtin = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
   try {
     const active = activeStoreSql('u');
-    // فئة مخصّصة (غير الأصلية): لازم تكون ضمن متجر محدّد يملك هذه الفئة
+    // فئة مخصّصة (غير الأصلية):
     if (!builtin.includes(cat)) {
-      if (!storeSlug) return res.status(400).json({ error: 'فئة غير صالحة.' });
-      const sc = await query('SELECT custom_categories FROM stores WHERE slug = $1', [storeSlug]);
-      const cats = Array.isArray(sc.rows[0]?.custom_categories) ? sc.rows[0].custom_categories : [];
-      if (!cats.some((c) => c && c.key === cat)) return res.status(400).json({ error: 'فئة غير صالحة.' });
+      if (storeSlug) {
+        // ضمن متجر محدّد يملك هذه الفئة (تجربة داخل المتجر)
+        const sc = await query('SELECT custom_categories FROM stores WHERE slug = $1', [storeSlug]);
+        const cats = Array.isArray(sc.rows[0]?.custom_categories) ? sc.rows[0].custom_categories : [];
+        if (!cats.some((c) => c && c.key === cat)) return res.status(400).json({ error: 'فئة غير صالحة.' });
+        const rc = await query(
+          `${PRODUCT_SELECT} WHERE p.category = $1 AND s.slug = $2 AND ${active} ORDER BY p.featured DESC, p.created_at DESC LIMIT 60`,
+          [cat, storeSlug]
+        );
+        return res.json({ category: cat, products: rc.rows.map(mapProduct) });
+      }
+      // بلا متجر (الموقع العام): نتحقق أنها فئة مخصّصة لدى أي متجر فعّال، ثم نعرض
+      // منتجاتها من كل المتاجر — فتُعامَل كفئة بازارا الأصلية بالضبط.
+      const exists = await query(
+        `SELECT 1 FROM stores s JOIN users u ON u.id = s.user_id
+         WHERE ${active} AND s.custom_categories @> $1::jsonb LIMIT 1`,
+        [JSON.stringify([{ key: cat }])]
+      );
+      if (!exists.rows.length) return res.status(400).json({ error: 'فئة غير صالحة.' });
       const rc = await query(
-        `${PRODUCT_SELECT} WHERE p.category = $1 AND s.slug = $2 AND ${active} ORDER BY p.featured DESC, p.created_at DESC LIMIT 60`,
-        [cat, storeSlug]
+        `${PRODUCT_SELECT} WHERE p.category = $1 AND ${active} ORDER BY p.featured DESC, p.created_at DESC LIMIT 60`,
+        [cat]
       );
       return res.json({ category: cat, products: rc.rows.map(mapProduct) });
     }
