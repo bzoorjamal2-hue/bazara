@@ -96,7 +96,10 @@ export const productRules = [
   body('description').optional({ nullable: true }).trim().isLength({ max: 2000 }).withMessage('الوصف طويل جداً.'),
   body('size').optional({ nullable: true }).trim().isLength({ max: 50 }),
   body('color').optional({ nullable: true }).trim().isLength({ max: 50 }),
-  body('category').isIn(CATEGORIES).withMessage('فئة غير صالحة.'),
+  // الفئة: إمّا واحدة من الأصلية، أو مفتاح فئة مخصّصة للمتجر (حروف/أرقام/شرطة سفلية)
+  body('category')
+    .custom((v) => CATEGORIES.includes(v) || (typeof v === 'string' && /^[a-z0-9_]{2,50}$/i.test(v)))
+    .withMessage('فئة غير صالحة.'),
   body('imageUrl').optional({ nullable: true, checkFalsy: true }).custom(isUrlOrDataImage).withMessage('صورة غير صالحة.'),
   body('images').optional({ nullable: true }).isArray({ max: 6 }).withMessage('عدد الصور كثير (6 كحد أقصى).'),
   body('images.*').optional().custom(isUrlOrDataImage).withMessage('إحدى الصور غير صالحة.'),
