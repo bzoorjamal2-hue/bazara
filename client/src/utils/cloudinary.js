@@ -44,27 +44,29 @@ export function cldBlur(url, width = 32) {
   return url.replace('/upload/', `/upload/f_auto,q_auto:low,w_${width},e_blur:600,c_limit/`);
 }
 
-// رفع ملف (صورة/فيديو) مباشرة من جهاز المستخدم إلى Cloudinary، ويعيد الرابط الآمن.
-// resourceType: 'video' | 'image' | 'auto'
-export async function uploadToCloudinary(file, resourceType = 'auto', onProgress) {
-  if (!cloudinaryEnabled) throw new Error('الرفع المباشر غير مُهيّأ.');
+// رسالة خطأ ودّية بالعربي بدل رسائل Cloudinary التقنية (خاصة تجاوز الحجم)
+function friendlyUploadError(msg) {
+  if (typeof msg === 'string' && /(file size too large|maximum is|too large)/i.test(msg)) {
+    return 'حجم الفيديو كبير جداً على باقة الرفع الحالية. جرّبي فيديو أقصر أو بجودة أقل.';
+  }
+  return msg || 'فشل الرفع.';
+}
 
-  const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/${resourceType}/upload`;
+// رفعة HTTP واحدة (جزء أو ملف كامل) عبر XHR — تدعم شريط التقدّم وترويسات الرفع المجزّأ.
+function xhrUpload(url, blob, { headers = {}, onProgress } = {}) {
   const form = new FormData();
-  form.append('file', file);
+  form.append('file', blob);
   form.append('upload_preset', CLOUDINARY_PRESET);
-
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', url);
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
-    };
+    for (const [k, v] of Object.entries(headers)) xhr.setRequestHeader(k, v);
+    xhr.upload.onprogress = (e) => { if (e.lengthComputable && onProgress) onProgress(e.loaded, e.total); };
     xhr.onload = () => {
       try {
         const res = JSON.parse(xhr.responseText);
-        if (xhr.status >= 200 && xhr.status < 300 && res.secure_url) resolve(res.secure_url);
-        else reject(new Error(res?.error?.message || 'فشل الرفع.'));
+        if (xhr.status >= 200 && xhr.status < 300) resolve(res);
+        else reject(new Error(friendlyUploadError(res?.error?.message)));
       } catch {
         reject(new Error('فشل الرفع.'));
       }
@@ -72,4 +74,43 @@ export async function uploadToCloudinary(file, resourceType = 'auto', onProgress
     xhr.onerror = () => reject(new Error('تعذّر الاتصال بخادم الرفع.'));
     xhr.send(form);
   });
+}
+
+// رفع ملف (صورة/فيديو) مباشرة من جهاز المستخدم إلى Cloudinary، ويعيد الرابط الآمن.
+// الملفات الكبيرة (خاصة فيديو الآيفون MOV) تُرفَع مجزّأة (Content-Range) لتجاوز
+// حدّ الطلب الواحد (~100MB) الذي كان يُفشل رفع الفيديوهات الكبيرة عند إضافة منتج.
+// resourceType: 'video' | 'image' | 'auto'
+export async function uploadToCloudinary(file, resourceType = 'auto', onProgress) {
+  if (!cloudinaryEnabled) throw new Error('الرفع المباشر غير مُهيّأ.');
+
+  const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/${resourceType}/upload`;
+  const CHUNK = 20 * 1024 * 1024; // 20MB لكل جزء (أكبر من حدّ Cloudinary الأدنى 5MB)
+
+  // ملف صغير: رفعة واحدة عادية
+  if (file.size <= CHUNK) {
+    const res = await xhrUpload(url, file, { onProgress: (l, tt) => onProgress && onProgress(Math.round((l / tt) * 100)) });
+    if (!res.secure_url) throw new Error('فشل الرفع.');
+    return res.secure_url;
+  }
+
+  // ملف كبير: رفع مجزّأ متسلسل — كل الأجزاء تشترك بمعرّف واحد، والأخير يعيد الرابط
+  const uniqueId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const total = file.size;
+  let start = 0;
+  let last = null;
+  while (start < total) {
+    const end = Math.min(start + CHUNK, total);
+    const chunk = file.slice(start, end);
+    const chunkStart = start;
+    last = await xhrUpload(url, chunk, {
+      headers: {
+        'X-Unique-Upload-Id': uniqueId,
+        'Content-Range': `bytes ${chunkStart}-${end - 1}/${total}`,
+      },
+      onProgress: (loaded) => { if (onProgress) onProgress(Math.round(((chunkStart + loaded) / total) * 100)); },
+    });
+    start = end;
+  }
+  if (!last?.secure_url) throw new Error('فشل الرفع.');
+  return last.secure_url;
 }
