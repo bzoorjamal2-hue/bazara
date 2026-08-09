@@ -92,7 +92,8 @@ function sanitizeCategoryMeta(raw) {
     if (!m || typeof m !== 'object') continue;
     const image = typeof m.image === 'string' ? m.image.trim().slice(0, 2000) : '';
     const name = typeof m.name === 'string' ? m.name.trim().slice(0, 40) : '';
-    if (image || name) out[c] = { image, name };
+    const hidden = m.hidden === true || m.hidden === 'true';
+    if (image || name || hidden) out[c] = { image, name, ...(hidden ? { hidden: true } : {}) };
   }
   return out;
 }

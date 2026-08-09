@@ -274,7 +274,8 @@ export default function StorePage() {
   }
   // قائمة الفئات للشبكة: الأصلية الخمس + المخصّصة
   const gridCats = [
-    ...CATS.map((k) => ({ key: k, name: catNames[k], image: catImages[k], builtin: true })),
+    // نستثني الفئات الأصلية التي أخفتها المالكة من إعدادات المتجر
+    ...CATS.filter((k) => !catMeta[k]?.hidden).map((k) => ({ key: k, name: catNames[k], image: catImages[k], builtin: true })),
     ...customCats.map((cc) => ({ key: cc.key, name: cc.name, image: catImages[cc.key], builtin: false })),
   ];
   const searching = q.trim().length > 0;

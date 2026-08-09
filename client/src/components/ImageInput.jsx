@@ -5,7 +5,9 @@ import { uploadToCloudinary, cldOptimized, cloudinaryEnabled } from '../utils/cl
 import { UploadIcon, LinkIcon, ImageIcon } from './icons.jsx';
 
 // حقل صورة موحّد: رفع من الجهاز أو لصق رابط. القيمة سلسلة نصية (رابط أو data URL).
-export default function ImageInput({ value, onChange, round = false, label }) {
+// placeholderImg: صورة افتراضية تُعرَض عند عدم وجود قيمة (لإظهار اللوقو الحالي للفئة).
+// contain: يُظهر الصورة كاملة بلا قصّ (للوقوهات بلا خلفية) بدل قصّها (object-cover).
+export default function ImageInput({ value, onChange, round = false, label, placeholderImg = '', contain = false }) {
   const { t } = useTranslation();
   const [tab, setTab] = useState('upload');
   const [busy, setBusy] = useState(false);
@@ -58,8 +60,16 @@ export default function ImageInput({ value, onChange, round = false, label }) {
           <img
             src={value}
             alt="preview"
-            className={`h-20 w-20 flex-shrink-0 border border-gold-400/30 object-cover ${round ? 'rounded-full' : 'rounded-xl'}`}
+            className={`h-20 w-20 flex-shrink-0 border border-gold-400/30 ${contain ? 'object-contain p-1.5' : 'object-cover'} ${round ? 'rounded-full' : 'rounded-xl'}`}
             onError={(e) => (e.currentTarget.style.opacity = '0.3')}
+          />
+        ) : placeholderImg ? (
+          // اللوقو الافتراضي الحالي — يظهر كاملاً حتى تعرف المالكة الشكل قبل تغييره
+          <img
+            src={placeholderImg}
+            alt="current"
+            className={`h-20 w-20 flex-shrink-0 border border-dashed border-gold-400/30 object-contain p-1.5 opacity-90 ${round ? 'rounded-full' : 'rounded-xl'}`}
+            onError={(e) => { e.currentTarget.style.display = 'none'; }}
           />
         ) : (
           <div className={`flex h-20 w-20 flex-shrink-0 items-center justify-center border border-dashed border-gold-400/30 text-stone-600 ${round ? 'rounded-full' : 'rounded-xl'}`}>

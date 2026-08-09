@@ -245,14 +245,14 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
                 {t('store.allProducts')}
               </button>
               <div className="my-2 h-px bg-cream/15" />
-              {CATS.map((c) => (
+              {CATS.filter((c) => !store.categoryMeta?.[c]?.hidden).map((c) => (
                 <button
                   key={c}
                   onClick={() => pick(c)}
                   className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-base transition hover:bg-cream/10 ${cat === c ? 'font-bold text-cream' : 'text-cream/85'}`}
                 >
                   <CatThumb cat={c} className="h-9 w-9" />
-                  {t(`categories.${c}`)}
+                  {store.categoryMeta?.[c]?.name?.trim() || t(`categories.${c}`)}
                 </button>
               ))}
               <div className="my-2 h-px bg-cream/15" />

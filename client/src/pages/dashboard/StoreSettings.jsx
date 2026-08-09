@@ -10,6 +10,20 @@ import OpostConnect from '../../components/OpostConnect.jsx';
 import EpsConnect from '../../components/EpsConnect.jsx';
 import GoboxConnect from '../../components/GoboxConnect.jsx';
 import { SaveIcon, TruckIcon, ImageIcon, XIcon, GiftIcon, FolderIcon, TrashIcon, MegaphoneIcon, RulerIcon, ShieldIcon } from '../../components/icons.jsx';
+import { cldThumb } from '../../utils/cloudinary.js';
+
+// أيقونتا إخفاء/إظهار (عين مشطوبة / عين) — للتحكم بظهور الفئة بالمتجر
+const EyeOffGlyph = (p) => (
+  <svg viewBox="0 0 24 24" className={p.className} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M9.9 4.24A9.1 9.1 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19M6.6 6.6A18.6 18.6 0 0 0 2 12s3 8 10 8a9.3 9.3 0 0 0 5.4-1.6" />
+    <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2M2 2l20 20" />
+  </svg>
+);
+const EyeGlyph = (p) => (
+  <svg viewBox="0 0 24 24" className={p.className} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M2 12s3-8 10-8 10 8 10 8-3 8-10 8-10-8-10-8Z" /><circle cx="12" cy="12" r="3" />
+  </svg>
+);
 
 const EMPTY = {
   name: '', slug: '', description: '', logoUrl: '', phone: '', whatsapp: '', deliveryPhone: '',
@@ -361,18 +375,43 @@ export default function StoreSettings() {
           <div className="space-y-3">
             {STORE_CATS.map((c) => {
               const meta = form.categoryMeta?.[c] || {};
+              const hidden = !!meta.hidden;
+              // الاسم الظاهر: اسم المالكة إن وُجد وإلا الافتراضي — يُعرَض مرّة واحدة بالعنوان
+              const displayName = (meta.name || '').trim() || t(`categories.${c}`);
+              // اللوقو الحالي: صورة المالكة إن رفعتها وإلا الأيقونة الثابتة
+              const logo = meta.image ? cldThumb(meta.image, 120) : `/categories/${c}.png`;
               return (
-                <div key={c} className="rounded-xl border border-gold-400/15 bg-black/20 p-3">
-                  <p className="mb-2 text-sm font-semibold text-gold-200">{t(`categories.${c}`)}</p>
-                  <ImageInput value={meta.image || ''} onChange={(v) => setCatMeta(c, 'image', v)} />
-                  <input
-                    type="text"
-                    maxLength={40}
-                    className="input mt-2"
-                    placeholder={t('dashboard.store.categoryNamePlaceholder', { name: t(`categories.${c}`) })}
-                    value={meta.name || ''}
-                    onChange={(e) => setCatMeta(c, 'name', e.target.value)}
-                  />
+                <div key={c} className={`rounded-xl border border-gold-400/15 bg-black/20 p-3 transition ${hidden ? 'opacity-60' : ''}`}>
+                  {/* العنوان: لوقو + اسم واحد + زر إخفاء/إظهار — بلا تكرار للاسم */}
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <span className="flex min-w-0 items-center gap-2">
+                      <img src={logo} alt="" className="h-8 w-8 shrink-0 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                      <span className="truncate text-sm font-semibold text-gold-200">{displayName}</span>
+                      {hidden && <span className="shrink-0 rounded-full bg-black/40 px-2 py-0.5 text-[10px] text-stone-400">{t('dashboard.store.hiddenBadge')}</span>}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setCatMeta(c, 'hidden', !hidden)}
+                      className={`inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-xs transition ${hidden ? 'text-gold-200 hover:text-gold-100' : 'text-stone-400 hover:text-red-300'}`}
+                    >
+                      {hidden
+                        ? <><EyeGlyph className="h-3.5 w-3.5" /> {t('dashboard.store.showCategory')}</>
+                        : <><EyeOffGlyph className="h-3.5 w-3.5" /> {t('dashboard.store.hideCategory')}</>}
+                    </button>
+                  </div>
+                  {!hidden && (
+                    <>
+                      <ImageInput value={meta.image || ''} onChange={(v) => setCatMeta(c, 'image', v)} placeholderImg={`/categories/${c}.png`} contain />
+                      <input
+                        type="text"
+                        maxLength={40}
+                        className="input mt-2"
+                        placeholder={t('dashboard.store.renameCategory')}
+                        value={meta.name || ''}
+                        onChange={(e) => setCatMeta(c, 'name', e.target.value)}
+                      />
+                    </>
+                  )}
                 </div>
               );
             })}
@@ -390,12 +429,15 @@ export default function StoreSettings() {
               <div className="space-y-3">
                 {form.customCategories.map((cc, idx) => (
                   <div key={cc.key || idx} className="rounded-xl border border-gold-400/15 bg-black/20 p-3">
-                    <div className="mb-2 flex items-center justify-between">
-                      <span className="text-sm font-semibold text-gold-200">{cc.name || t('dashboard.store.newCategory')}</span>
-                      <button type="button" onClick={() => removeCustomCat(idx)} className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-stone-400 hover:text-red-300"><TrashIcon className="h-3.5 w-3.5" /> {t('common.delete')}</button>
+                    {/* بلا تكرار للاسم: خانة الاسم تحته هي المصدر — بالأعلى لوقو (إن وُجد) + حذف فقط */}
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                      {cc.image
+                        ? <img src={cldThumb(cc.image, 120)} alt="" className="h-8 w-8 shrink-0 rounded object-contain" />
+                        : <span />}
+                      <button type="button" onClick={() => removeCustomCat(idx)} className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-xs text-stone-400 hover:text-red-300"><TrashIcon className="h-3.5 w-3.5" /> {t('common.delete')}</button>
                     </div>
                     <input type="text" maxLength={40} className="input mb-2" placeholder={t('dashboard.store.categoryNameField')} value={cc.name} onChange={(e) => setCustomCat(idx, 'name', e.target.value)} />
-                    <ImageInput value={cc.image || ''} onChange={(v) => setCustomCat(idx, 'image', v)} />
+                    <ImageInput value={cc.image || ''} onChange={(v) => setCustomCat(idx, 'image', v)} contain />
                   </div>
                 ))}
               </div>
