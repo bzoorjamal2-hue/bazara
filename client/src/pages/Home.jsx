@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import api from '../api/client.js';
+import api, { getErrorMessage } from '../api/client.js';
 import Seo from '../components/Seo.jsx';
 import { ProductGridSkeleton } from '../components/Skeleton.jsx';
 import ProductCard from '../components/ProductCard.jsx';
+import FilteredProductGrid from '../components/FilteredProductGrid.jsx';
+import CatThumb from '../components/CatThumb.jsx';
 import ProductRail from '../components/ProductRail.jsx';
 import { getRecent } from '../utils/recentlyViewed.js';
 import { getCache, setCache } from '../utils/apiCache.js';
@@ -29,6 +31,14 @@ export default function Home() {
   const [data, setData] = useState(() => getCache('home') || null);
   const [loading, setLoading] = useState(() => !getCache('home'));
   const recent = getRecent();
+  // الفئة المختارة جزء من رابط الرئيسية (?cat=) — فالضغط على فئة يبقيكِ بالرئيسية
+  // (بازارا) ويعرض منتجاتها بمكانها بدل الانتقال لصفحة منفصلة تُخرجك من الرئيسية.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const cat = searchParams.get('cat') || '';
+  const pickCat = (c) => {
+    setSearchParams(c && c !== 'all' ? { cat: c } : {});
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // "مقترحات لكِ": نتعلّم الفئة الأكثر مشاهدة من تصفّحها ونجلب منتجاتها (تخصيص محلي بلا حساب)
   const [forYou, setForYou] = useState(() => getCache('forYou') || []);
@@ -67,6 +77,9 @@ export default function Home() {
       .finally(() => setLoading(false));
   }, []);
 
+  // فئة مختارة → عرض شبكة منتجات الفئة (بكل المتاجر) داخل الرئيسية نفسها (بعد كل الـhooks)
+  if (cat) return <HomeCategoryView cat={cat} onHome={() => pickCat('all')} />;
+
   return (
     <>
       <Seo title={t('app.name')} description={t('home.heroDesc')} />
@@ -95,7 +108,7 @@ export default function Home() {
       <Reveal>
         <section className="mt-16 sm:mt-20">
           <SectionTitle>{t('home.browseByCategory')}</SectionTitle>
-          <CategoryGrid />
+          <CategoryGrid onSelect={pickCat} active={cat} />
         </section>
       </Reveal>
 
@@ -205,7 +218,125 @@ export default function Home() {
   );
 }
 
-// سلايدر الـ Hero للصفحة الرئيسية: شريحة ثابتة + شريحتين، تحريك تلقائي + سحب باللمس
+// أيقونة بيت (زر العودة للرئيسية)
+function HomeGlyph({ className = 'h-[18px] w-[18px]' }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3.2 11.3 12 4l8.8 7.3" />
+      <path d="M5.2 9.8V19a1 1 0 0 0 1 1h3.3v-4.6a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1V20h3.3a1 1 0 0 0 1-1V9.8" />
+    </svg>
+  );
+}
+// أيقونة التصنيفات (شبكة)
+function GridGlyph({ className = 'h-[18px] w-[18px]' }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3.5" y="3.5" width="7" height="7" rx="1.6" />
+      <rect x="13.5" y="3.5" width="7" height="7" rx="1.6" />
+      <rect x="3.5" y="13.5" width="7" height="7" rx="1.6" />
+      <rect x="13.5" y="13.5" width="7" height="7" rx="1.6" />
+    </svg>
+  );
+}
+// فاصل مسار التنقّل — يتبع اتجاه اللغة
+function Crumb({ className = 'h-4 w-4' }) {
+  const { i18n } = useTranslation();
+  const rtl = i18n.language !== 'en';
+  return (
+    <svg viewBox="0 0 24 24" className={`${className} shrink-0 text-wine/35`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={rtl ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6'} />
+    </svg>
+  );
+}
+
+// عرض فئة داخل الرئيسية العامة (بازارا) — يبقيكِ بالرئيسية بلا انتقال لصفحة منفصلة.
+// نفس شبكة/فلاتر صفحة الفئة، ومنتجات الفئة من كل المتاجر (بازارا خالصة).
+function HomeCategoryView({ cat, onHome }) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const label = t(`categories.${cat}`);
+  const cacheKey = `cat:${cat}`;
+  const [products, setProducts] = useState(() => getCache(cacheKey) || null);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const cached = getCache(cacheKey);
+    setProducts(cached || null);
+    setError('');
+    api
+      .get(`/public/category/${cat}`)
+      .then((r) => { setProducts(r.data.products); setCache(cacheKey, r.data.products); })
+      .catch((err) => { if (!cached) setError(getErrorMessage(err)); });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cat]);
+
+  return (
+    <>
+      <Seo title={label} />
+      {/* مسار التنقّل: الرئيسية ← التصنيفات ← الفئة (أيقونات دائرية لا نصّاً) */}
+      <nav className="mb-5 mt-1 flex flex-wrap items-center gap-1.5 text-sm">
+        <button
+          type="button"
+          onClick={onHome}
+          aria-label={t('nav.home')}
+          title={t('nav.home')}
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-wine/10 text-wine shadow-sm ring-1 ring-wine/15 transition hover:bg-wine hover:text-cream"
+        >
+          <HomeGlyph />
+        </button>
+        <Crumb />
+        <button
+          type="button"
+          onClick={() => navigate('/categories')}
+          aria-label={t('nav.categories')}
+          title={t('nav.categories')}
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-wine/10 text-wine shadow-sm ring-1 ring-wine/15 transition hover:bg-wine hover:text-cream"
+        >
+          <GridGlyph />
+        </button>
+        <Crumb />
+        <span className="flex items-center gap-2 rounded-full bg-wine/10 px-2.5 py-1 font-display text-base font-bold text-wine">
+          <CatThumb cat={cat} className="h-7 w-7" />
+          {label}
+          {products?.length > 0 && <span className="text-xs font-medium text-wine/50">· {products.length} {t('store.products')}</span>}
+        </span>
+      </nav>
+
+      {error ? (
+        <div className="glass mx-auto flex max-w-md flex-col items-center gap-4 p-10 text-center">
+          <p className="text-stone-300">{error}</p>
+          <button
+            type="button"
+            onClick={onHome}
+            className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
+            style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)' }}
+          >
+            {t('nav.home')}
+          </button>
+        </div>
+      ) : !products ? (
+        <ProductGridSkeleton count={8} />
+      ) : products.length === 0 ? (
+        <div className="glass mx-auto flex max-w-md flex-col items-center gap-4 p-10 text-center">
+          <span aria-hidden className="flex h-16 w-16 items-center justify-center rounded-full bg-wine/10 text-wine"><GridGlyph className="h-8 w-8" /></span>
+          <p className="text-stone-300">{t('common.noResults')}</p>
+          <button
+            type="button"
+            onClick={onHome}
+            className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
+            style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)' }}
+          >
+            {t('nav.home')}
+          </button>
+        </div>
+      ) : (
+        <FilteredProductGrid products={products} />
+      )}
+    </>
+  );
+}
+
+// سلايدر الـ Hero للصفحة الرئيسية: شريحة ثابتة + شريحتين, تحريك تلقائي + سحب باللمس
 function HomeHero({ banners = [] }) {
   const { t } = useTranslation();
   // بانرات المدير (إن وُجدت) تطغى على الشرائح الافتراضية
