@@ -341,16 +341,12 @@ export default function StorePage() {
       {catsView ? (
         /* صفحة التصنيفات — شبكة فئات المتجر بهوية المتجر (زرّ "التصنيفات" السفلي) */
         <>
-          <nav className="mb-4 mt-2 flex items-center gap-2 text-sm">
+          <nav className="mb-4 mt-2 flex flex-wrap items-center gap-1.5 text-sm">
+            {/* شعار المتجر (الرئيسية) › بطاقة التصنيفات بأيقونتها — لوقوهات لا نصّاً مجرّداً */}
             <CrumbLogo store={store} onClick={() => pickCategory('all')} />
             <Crumb />
-            <span className="flex items-center gap-2 font-display text-lg font-bold text-wine">
-              <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <rect x="3" y="3" width="7.5" height="7.5" rx="1.6" />
-                <rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6" />
-                <rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6" />
-                <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6" />
-              </svg>
+            <span className="flex items-center gap-2 rounded-full bg-wine/10 px-2.5 py-1 font-display text-base font-bold text-wine">
+              <GridGlyph className="h-5 w-5" />
               {t('nav.categories')}
             </span>
           </nav>
@@ -415,27 +411,23 @@ export default function StorePage() {
               <span className="font-display text-lg font-bold text-wine">{t('store.specialOffers')}</span>
             </nav>
           ) : (
-            <nav className="mb-4 mt-2 flex items-center gap-2 text-sm">
-              {/* الرئيسية (شعار المتجر) › التصنيفات › الفئة المفتوحة */}
+            <nav className="mb-4 mt-2 flex flex-wrap items-center gap-1.5 text-sm">
+              {/* مسار متتابع بأيقونات دائرية (لوقوهات لا نصّ) — نفس نمط الموقع العام تماماً:
+                  شعار المتجر (الرئيسية) › أيقونة التصنيفات › بطاقة الفئة المفتوحة بأيقونتها */}
               <CrumbLogo store={store} onClick={() => pickCategory('all')} />
               <Crumb />
               <button
                 type="button"
                 onClick={() => { setSearchParams({ cats: '1' }); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                className="flex shrink-0 items-center gap-1.5 font-display font-bold text-wine/60 transition hover:text-wine"
+                aria-label={t('nav.categories')}
+                title={t('nav.categories')}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-wine/10 text-wine shadow-sm ring-1 ring-wine/15 transition hover:bg-wine hover:text-cream"
               >
-                {/* أيقونة التصنيفات (نفس أيقونة تبويب الشريط السفلي) — كي تظهر بلوقو لا نصّاً فقط */}
-                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <rect x="3" y="3" width="7.5" height="7.5" rx="1.6" />
-                  <rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6" />
-                  <rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6" />
-                  <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6" />
-                </svg>
-                {t('nav.categories')}
+                <GridGlyph className="h-[18px] w-[18px]" />
               </button>
               <Crumb />
-              <span className="flex items-center gap-2 font-display text-lg font-bold text-wine">
-                <CatThumb cat={cat} className="h-8 w-8" />
+              <span className="flex items-center gap-2 rounded-full bg-wine/10 px-2.5 py-1 font-display text-base font-bold text-wine">
+                <CatThumb cat={cat} className="h-7 w-7" />
                 {catLabel(cat)}
               </span>
             </nav>
@@ -713,6 +705,18 @@ function HomeGlyph({ className = 'h-[18px] w-[18px]' }) {
     <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M3.2 11.3 12 4l8.8 7.3" />
       <path d="M5.2 9.8V19a1 1 0 0 0 1 1h3.3v-4.6a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1V20h3.3a1 1 0 0 0 1-1V9.8" />
+    </svg>
+  );
+}
+
+// أيقونة التصنيفات (شبكة) — تظهر بمسار التنقّل كلوقو دائري لا نصّاً، مطابقة للموقع العام
+function GridGlyph({ className = 'h-[18px] w-[18px]' }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3.5" y="3.5" width="7" height="7" rx="1.6" />
+      <rect x="13.5" y="3.5" width="7" height="7" rx="1.6" />
+      <rect x="3.5" y="13.5" width="7" height="7" rx="1.6" />
+      <rect x="13.5" y="13.5" width="7" height="7" rx="1.6" />
     </svg>
   );
 }

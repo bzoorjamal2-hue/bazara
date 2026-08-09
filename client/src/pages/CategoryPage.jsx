@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
-import { useAuth } from '../context/AuthContext.jsx';
 import Seo from '../components/Seo.jsx';
 import { ProductGridSkeleton } from '../components/Skeleton.jsx';
 import FilteredProductGrid from '../components/FilteredProductGrid.jsx';
@@ -47,17 +46,11 @@ export default function CategoryPage() {
   const { cat } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { user, store } = useAuth();
-  // زرّ "الرئيسية" يذهب دائماً للرئيسية العامة (/shop تعرض Home ولا تُرجع 404 أبداً).
-  // كان يوجّه المشترك المسجّل إلى /store/{slug}، فإن كان متجره غير فعّال (اشتراك منتهٍ)
-  // رجّع getStoreBySlug «المتجر غير موجود» عند الضغط على "الرئيسية" — عطل مربك.
+  // صفحة عامة (بازارا) خالصة: تعرض منتجات هذه الفئة من كل المتاجر بلا أي تخصيص بمتجر
+  // مشترك — حتى لو كان صاحب متجر مسجّلاً دخوله (هويّته لا تتسرّب للصفحة العامة).
   const homeTo = '/shop';
-  // المشترك المسجّل يرى منتجات متجره فقط (بلا خلط مع متاجر أخرى)
-  const scopeSlug = user && store?.slug ? store.slug : '';
-  // فئة مخصّصة؟ نأخذ اسمها وصورتها من إعدادات المتجر (نفس تجربة الفئات الأصلية)
-  const customCat = (store?.customCategories || []).find((c) => c.key === cat);
-  const label = customCat?.name || t(`categories.${cat}`);
-  const cacheKey = `cat:${cat}:${scopeSlug}`;
+  const label = t(`categories.${cat}`);
+  const cacheKey = `cat:${cat}`;
   const [products, setProducts] = useState(() => getCache(cacheKey) || null);
   const [error, setError] = useState('');
 
@@ -66,11 +59,11 @@ export default function CategoryPage() {
     setProducts(cached || null); // عرض فوري من المخزّن عند الرجوع، ثم تحديث بالخلفية
     setError('');
     api
-      .get(`/public/category/${cat}${scopeSlug ? `?store=${scopeSlug}` : ''}`)
+      .get(`/public/category/${cat}`)
       .then((r) => { setProducts(r.data.products); setCache(cacheKey, r.data.products); })
       .catch((err) => { if (!cached) setError(getErrorMessage(err)); });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cat, scopeSlug]);
+  }, [cat]);
 
   return (
     <>
@@ -101,11 +94,7 @@ export default function CategoryPage() {
         </button>
         <Crumb />
         <span className="flex items-center gap-2 rounded-full bg-wine/10 px-2.5 py-1 font-display text-base font-bold text-wine">
-          {customCat ? (
-            customCat.image ? <img src={customCat.image} alt="" className="h-7 w-7 shrink-0 rounded object-contain" /> : null
-          ) : (
-            <CatThumb cat={cat} className="h-7 w-7" />
-          )}
+          <CatThumb cat={cat} className="h-7 w-7" />
           {label}
           {products?.length > 0 && <span className="text-xs font-medium text-wine/50">· {products.length} {t('store.products')}</span>}
         </span>

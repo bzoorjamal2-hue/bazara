@@ -1,23 +1,14 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Seo from '../components/Seo.jsx';
-import { useAuth } from '../context/AuthContext.jsx';
-import { cldThumb } from '../utils/cloudinary.js';
 
 const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
 
-// صفحة التصنيفات — الفئات الأصلية + الفئات المخصّصة لصاحب المتجر (تظهر تلقائياً)
+// صفحة تصنيفات الموقع العام (بازارا) — فئات بازارا الأصلية فقط، بلا أي تخصيص أو فئات
+// خاصّة بمتجر مشترك حتى لو كان صاحب متجر مسجّلاً دخوله (الصفحة العامة تبقى بازارا خالصة).
 export default function Categories() {
   const { t } = useTranslation();
-  const { store } = useAuth();
-  const customCats = Array.isArray(store?.customCategories) ? store.customCategories : [];
-  const catMeta = store?.categoryMeta || {};
-  const items = [
-    // نحترم تخصيص المالكة: الاسم المخصّص، الصورة المخصّصة، وإخفاء الفئات غير المرغوبة
-    ...CATS.filter((c) => !catMeta[c]?.hidden).map((c) => ({ key: c, name: catMeta[c]?.name?.trim() || t(`categories.${c}`), to: `/category/${c}`, img: catMeta[c]?.image || `/categories/${c}.png` })),
-    // الفئات المخصّصة: نفس صفحة الفئة (CategoryPage) — بالـbreadcrumbs والرجوع والأيقونة
-    ...(store?.slug ? customCats.map((cc) => ({ key: cc.key, name: cc.name, to: `/category/${cc.key}`, img: cc.image || '' })) : []),
-  ];
+  const items = CATS.map((c) => ({ key: c, name: t(`categories.${c}`), to: `/category/${c}`, img: `/categories/${c}.png` }));
 
   return (
     <>
