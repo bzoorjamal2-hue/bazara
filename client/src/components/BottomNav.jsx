@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { getStoreScope, subscribeStoreScope } from '../utils/storeScope.js';
 import { useTranslation } from 'react-i18next';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
@@ -61,7 +62,7 @@ function ReelsIcon({ className = 'h-6 w-6' }) {
 // شريط تنقّل سفلي بأسلوب التطبيقات (يظهر داخل التطبيق المثبّت فقط).
 export default function BottomNav() {
   const { t } = useTranslation();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const navigate = useNavigate();
   const { count, setOpen, open: cartOpen } = useCart();
   const { count: wishCount, setOpen: setWishOpen, open: wishOpen } = useWishlist();
@@ -119,12 +120,26 @@ export default function BottomNav() {
   // الطلبات (كان يفتحه تلقائياً عند وجود طلبات جديدة فيبدو وكأنه عالق عليه).
   // الشارة الحمراء تكفي للتنبيه، والإشعارات توصله للطلبات مباشرة عند الحاجة.
   const accountTo = user ? '/dashboard' : '/login';
-  // "الرئيسية": المدير العام → الصفحة الرئيسية للموقع (ليعاين تعديلاته)؛ المشترك → متجره؛ الزائر → بازارا العام
-  const homeTo = isAdmin ? '/shop' : user && store?.slug ? `/store/${store.slug}` : '/shop';
-  const homeActive = homeTo === '/shop' ? pathname === '/shop' : pathname === homeTo;
-  // ريلز: المتجر الذي تتصفّحه الآن، أو متجر المشترك نفسه، أو العام (كل متجر له ريلز خاص)
+  // المتجر الذي يتصفّحه الزائر الآن: من الرابط (/store/:slug)، أو ?store= (بحث/فئة/تتبّع)،
+  // أو من ذاكرة الجلسة لصفحة المنتج (رابطها لا يحمل السلاِگ). عند وجوده تبقى كل وجهات
+  // الشريط داخل المتجر — فلا يخرج الزبون لصفحات بازارا العامة إطلاقاً.
   const viewingStoreSlug = (pathname.match(/^\/store\/([^/]+)/) || [])[1] || '';
-  const reelsStoreSlug = viewingStoreSlug || (user && store?.slug && !isAdmin ? store.slug : '');
+  const searchStoreSlug = new URLSearchParams(search).get('store') || '';
+  const productScope = useSyncExternalStore(subscribeStoreScope, getStoreScope);
+  const scopeSlug = viewingStoreSlug || searchStoreSlug || (pathname.startsWith('/product/') ? productScope : '');
+  const inStore = Boolean(scopeSlug);
+
+  // "الرئيسية": داخل متجر → رئيسيته؛ المدير العام → الموقع؛ المشترك → متجره؛ الزائر → بازارا العام
+  const homeTo = inStore ? `/store/${scopeSlug}` : (isAdmin ? '/shop' : user && store?.slug ? `/store/${store.slug}` : '/shop');
+  const homeActive = pathname === homeTo.split('?')[0] && !/[?&](view|offers|cat)=/.test(search);
+  // التصنيفات/العروض/التتبّع داخل المتجر تبقى ضمنه (بدل صفحات بازارا العامة)
+  const categoriesTo = inStore ? `/store/${scopeSlug}?view=all` : '/categories';
+  const categoriesActive = inStore ? /[?&]view=all/.test(search) && pathname === `/store/${scopeSlug}` : (pathname === '/categories' || pathname.startsWith('/category/'));
+  const offersTo = inStore ? `/store/${scopeSlug}?offers=1` : '/offers';
+  const offersActive = inStore ? /[?&]offers=1/.test(search) : pathname === '/offers';
+  const trackTo = inStore ? `/track?store=${scopeSlug}` : '/track';
+  // ريلز: متجر التصفّح الحالي، أو متجر المشترك نفسه، أو العام (كل متجر له ريلز خاص)
+  const reelsStoreSlug = scopeSlug || (user && store?.slug && !isAdmin ? store.slug : '');
   const reelsTo = reelsStoreSlug ? `/store/${reelsStoreSlug}/reels` : '/reels';
   const reelsActive = pathname.endsWith('/reels');
   // إغلاق أدراج السلة/المفضلة قبل الانتقال (الشريط يبقى ظاهراً فوق الأدراج)
@@ -132,17 +147,19 @@ export default function BottomNav() {
   // الضغط على تبويب أنتِ عليه أصلاً يمرّر لأعلى (نفس سلوك الشعار) بدل ألا يفعل شيئاً
   const goto = (to) => {
     closeDrawers();
-    if (pathname === to.split('?')[0]) window.scrollTo({ top: 0, behavior: 'smooth' });
+    // نقارن الرابط كاملاً (مع الاستعلام) — كي ينتقل من رئيسية المتجر إلى ?offers=1/?view=all
+    // بدل أن يكتفي بالتمرير لأعلى لتطابق المسار وحده.
+    if (pathname + search === to) window.scrollTo({ top: 0, behavior: 'smooth' });
     else navigate(to);
   };
   // السلة والمفضّلة موجودتان بالشريط العلوي بحد الأفاتار، فنستبدلهما بوجهات أنفع.
   // الترتيب يتبع اتجاه اللغة تلقائياً: عربي (حسابي أولاً يميناً)، إنجليزي (يساراً).
   const items = [
     { key: 'account', label: t('nav.account') || 'حسابي', Icon: UserIcon, active: !cartOpen && !wishOpen && pathname.startsWith('/dashboard'), badge: newOrders, onClick: () => goto(accountTo) },
-    { key: 'track', label: t('nav.track'), Icon: TrackIcon, active: !cartOpen && !wishOpen && pathname === '/track', onClick: () => goto('/track') },
-    { key: 'offers', label: t('nav.offers'), Icon: OffersIcon, active: !cartOpen && !wishOpen && pathname === '/offers', onClick: () => goto('/offers') },
+    { key: 'track', label: t('nav.track'), Icon: TrackIcon, active: !cartOpen && !wishOpen && pathname === '/track', onClick: () => goto(trackTo) },
+    { key: 'offers', label: t('nav.offers'), Icon: OffersIcon, active: !cartOpen && !wishOpen && offersActive, onClick: () => goto(offersTo) },
     { key: 'reels', label: t('reels.title'), Icon: ReelsIcon, active: !cartOpen && !wishOpen && reelsActive, onClick: () => goto(reelsTo) },
-    { key: 'categories', label: t('nav.categories'), Icon: CategoriesIcon, active: !cartOpen && !wishOpen && (pathname === '/categories' || pathname.startsWith('/category/')), onClick: () => goto('/categories') },
+    { key: 'categories', label: t('nav.categories'), Icon: CategoriesIcon, active: !cartOpen && !wishOpen && categoriesActive, onClick: () => goto(categoriesTo) },
     { key: 'home', label: t('nav.home'), Icon: HomeIcon, active: !cartOpen && !wishOpen && homeActive, onClick: () => goto(homeTo) },
   ];
 

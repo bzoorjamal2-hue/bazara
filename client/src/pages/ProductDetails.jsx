@@ -24,6 +24,7 @@ import { goBack } from '../utils/nav.js';
 import SizeGuideModal from '../components/SizeGuideModal.jsx';
 import ImageInput from '../components/ImageInput.jsx';
 import { initPixels, trackPixel } from '../utils/pixels.js';
+import { setStoreScope } from '../utils/storeScope.js';
 
 const PH = 'https://placehold.co/600x600/121214/d4af37?text=%F0%9F%91%97';
 
@@ -101,6 +102,10 @@ export default function ProductDetails() {
   const [showBuyBar, setShowBuyBar] = useState(false);
   const pickRef = useRef(null); // قسم اختيار اللون/المقاس — ننزلق إليه عند الضغط بلا اختيار
   const galTouch = useRef(null); // بداية لمسة معرض الصور (للسحب بين الصور)
+
+  // نُعلِم الشريط السفلي أنّنا داخل هذا المتجر — فتبقى وجهاته (رئيسية/تصنيفات/عروض/
+  // ريلز/تتبّع) ضمن المتجر ولا تخرج للموقع العام (رابط صفحة المنتج لا يحمل السلاِگ)
+  useEffect(() => { if (product?.storeSlug) setStoreScope(product.storeSlug); }, [product?.storeSlug]);
 
   // بكسلات تمويل المتجر: تُحقن عند الهبوط المباشر من إعلان + حدث "مشاهدة منتج"
   useEffect(() => {

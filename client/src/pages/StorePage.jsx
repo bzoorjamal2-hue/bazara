@@ -101,6 +101,9 @@ export default function StorePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const cat = searchParams.get('cat') || 'all';
   const viewAll = searchParams.get('view') === 'all';
+  // عرض عروض المتجر (?offers=1) — وجهة زرّ "العروض" بالشريط السفلي داخل المتجر،
+  // كي لا يخرج الزبون لصفحة العروض العامة. يعرض شبكة المتجر بفلتر الخصومات مفعّلاً.
+  const offersView = searchParams.get('offers') === '1';
   const setCat = (c) => setSearchParams(c && c !== 'all' ? { cat: c } : {});
   const setViewAll = (v) => setSearchParams(v ? { view: 'all' } : {});
 
@@ -153,6 +156,8 @@ export default function StorePage() {
     setPage(1);
   }, [cat, q, sort, sizesSel, colorsSel, offersOnly, stockOnly]);
   useEffect(() => { setStories(data?.stories || []); }, [data]); // مزامنة الستوريات
+  // دخول عبر رابط العروض (?offers=1) يُفعّل فلتر الخصومات تلقائياً
+  useEffect(() => { if (offersView) setOffersOnly(true); }, [offersView]);
   // تحويل لرابط المتجر الجديد إن فُتح برابط قديم (عشان يبقى الرابط الرسمي نظيفاً)
   useEffect(() => {
     if (data?.store?.slug && data.store.slug !== slug) {
@@ -330,26 +335,30 @@ export default function StorePage() {
         </div>
       )}
 
-      {searching || cat !== 'all' || viewAll ? (
-        /* عرض الشبكة: نتائج بحث / فئة / كل المنتجات */
+      {searching || cat !== 'all' || viewAll || offersView ? (
+        /* عرض الشبكة: نتائج بحث / فئة / كل المنتجات / عروض المتجر */
         <>
           {searching ? (
             <nav className="mb-4 mt-2 flex items-center gap-2 text-sm">
-              <button onClick={clearSearch} className="flex h-8 w-8 items-center justify-center rounded-full bg-wine/10 text-wine shadow-sm ring-1 ring-wine/15 transition hover:bg-wine hover:text-cream" aria-label="home"><HomeGlyph /></button>
+              <CrumbLogo store={store} onClick={clearSearch} />
               <Crumb />
               <span className="font-display text-lg font-bold text-wine">{t('store.searchResults')} «{q.trim()}»</span>
             </nav>
           ) : viewAll ? (
             <nav className="mb-4 mt-2 flex items-center gap-2 text-sm">
-              <button onClick={() => { setViewAll(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="flex h-8 w-8 items-center justify-center rounded-full bg-wine/10 text-wine shadow-sm ring-1 ring-wine/15 transition hover:bg-wine hover:text-cream" aria-label="home"><HomeGlyph /></button>
+              <CrumbLogo store={store} onClick={() => { setViewAll(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
               <Crumb />
               <span className="font-display text-lg font-bold text-wine">{t('store.allProducts')}</span>
             </nav>
+          ) : offersView ? (
+            <nav className="mb-4 mt-2 flex items-center gap-2 text-sm">
+              <CrumbLogo store={store} onClick={() => pickCategory('all')} />
+              <Crumb />
+              <span className="font-display text-lg font-bold text-wine">{t('store.specialOffers')}</span>
+            </nav>
           ) : (
             <nav className="mb-4 mt-2 flex items-center gap-2 text-sm">
-              <button onClick={() => pickCategory('all')} className="flex h-8 w-8 items-center justify-center rounded-full bg-wine/10 text-wine shadow-sm ring-1 ring-wine/15 transition hover:bg-wine hover:text-cream" aria-label="home"><HomeGlyph /></button>
-              <Crumb />
-              <button onClick={() => pickCategory('all')} className="text-wine/70 hover:text-wine">{t('store.storeRoot')}</button>
+              <CrumbLogo store={store} onClick={() => pickCategory('all')} />
               <Crumb />
               <span className="flex items-center gap-2 font-display text-lg font-bold text-wine">
                 <CatThumb cat={cat} className="h-8 w-8" />
@@ -607,6 +616,23 @@ function Crumb({ className = 'h-4 w-4' }) {
 }
 
 // قالب النافذة السفلية
+// زر بداية مسار التنقّل = شعار المتجر نفسه (بدل أيقونة بيت عامة + كلمة "المتجر")
+// يعطي إحساس متجر خاص متناسق بكل صفحات الشبكة، والضغط يعود لرئيسية المتجر.
+function CrumbLogo({ store, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={store?.name || 'store'}
+      className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-sm ring-1 ring-gold-400/45 transition hover:ring-gold-400/80"
+    >
+      {store?.logoUrl
+        ? <img src={cldThumb(store.logoUrl, 96)} alt={store.name || ''} className="h-full w-full object-cover" />
+        : <span className="flex h-full w-full items-center justify-center bg-wine/10 text-wine"><HomeGlyph className="h-4 w-4" /></span>}
+    </button>
+  );
+}
+
 // لوقو بيت أنيق (زر العودة للصفحة الرئيسية للمتجر)
 function HomeGlyph({ className = 'h-[18px] w-[18px]' }) {
   return (

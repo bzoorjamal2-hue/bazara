@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import Seo from '../components/Seo.jsx';
@@ -20,6 +20,8 @@ export default function Track() {
   const { t, i18n } = useTranslation();
   const rtl = i18n.language !== 'en';
   const navigate = useNavigate();
+  // نطاق متجر (?store=slug): جاء المستخدم من متجر — فرجوعه إليه لا للموقع العام
+  const storeScope = (new URLSearchParams(useLocation().search).get('store') || '').trim();
   const [phone, setPhone] = useState('');
   const [orders, setOrders] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -93,7 +95,7 @@ export default function Track() {
         {/* رجوع + عنوان مزخرف مركزي (بنفس روح عناوين المتجر) */}
         <div className="mb-2 flex items-center">
           <button
-            onClick={() => goBack(navigate, '/shop')}
+            onClick={() => goBack(navigate, storeScope ? `/store/${storeScope}` : '/shop')}
             aria-label={t('common.back')}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-wine/10 text-wine transition hover:bg-wine hover:text-cream"
           >
