@@ -7,66 +7,9 @@ import { buildWhatsappLink, waCandidates } from '../../utils/whatsapp.js';
 import { getCache, setCache } from '../../utils/apiCache.js';
 import { PinIcon, NoteIcon, TicketIcon, WhatsAppIcon, TruckIcon, BellIcon, TrashIcon, BagIcon } from '../../components/icons.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
-import OpostSend from '../../components/OpostSend.jsx';
-import EpsSend from '../../components/EpsSend.jsx';
-import GoboxSend from '../../components/GoboxSend.jsx';
+import { useCouriers, syncCourierStatuses, courierOf, CourierLock, CourierSend } from '../../components/couriers.jsx';
 
 const FLOW = ['new', 'confirmed', 'shipped', 'delivered', 'cancelled'];
-
-// خريطة حالات أوبتيموس (snake_case مؤكّدة من الـ API + القياسية) → عربي،
-// لعرض نفس مسمّى حالة تطبيق أوبتيموس بصفحة الطلبات.
-const OPOST_STATUS_AR = {
-  draft: 'مسودّة',
-  submitted: 'قيد التجهيز', created: 'قيد التجهيز', new: 'قيد التجهيز', processing: 'قيد التجهيز',
-  ready: 'جاهزة للاستلام', ready_for_pickup: 'جاهزة للاستلام', confirmed: 'جاهزة للاستلام',
-  awaiting_pickup: 'بانتظار التحميل', waiting_pickup: 'بانتظار التحميل', assigned: 'بانتظار التحميل',
-  picked_up: 'تم التحميل', pickedup: 'تم التحميل', loaded: 'تم التحميل', received: 'تم التحميل',
-  in_transit: 'جاري التسليم', out_for_delivery: 'جاري التسليم', delivering: 'جاري التسليم', dispatched: 'جاري التسليم', shipped: 'جاري التسليم',
-  cod_pickup: 'تم التحصيل', collected: 'تم التحصيل', cod_collected: 'تم التحصيل',
-  delivered: 'تم التسليم', completed: 'تم التسليم',
-  returned: 'مرتجع', return: 'مرتجع', returned_to_business: 'مرتجع',
-  cancelled: 'ملغاة', canceled: 'ملغاة',
-  pending: 'عالق', stuck: 'عالق', postponed: 'مؤجّلة', rejected: 'مرفوض',
-};
-const opostLabel = (raw) => {
-  const key = String(raw || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
-  return OPOST_STATUS_AR[key] || String(raw || '').trim();
-};
-
-// خريطة حالات EPS (نظام LogesTechs — أكواد UPPER_SNAKE من توثيقهم الرسمي) → عربي
-const EPS_STATUS_AR = {
-  DRAFT: 'مسودّة',
-  PENDING_CUSTOMER_CARE_APPROVAL: 'طلب جديد',
-  APPROVED_BY_CUSTOMER_CARE_AND_WAITING_FOR_DISPATCHER: 'بانتظار تعيين سائق',
-  ASSIGNED_TO_DRIVER_AND_PENDING_APPROVAL: 'بانتظار موافقة السائق',
-  REJECTED_BY_DRIVER_AND_PENDING_MANGEMENT: 'رفضها السائق',
-  ACCEPTED_BY_DRIVER_AND_PENDING_PICKUP: 'بانتظار التحميل',
-  SCANNED_BY_DRIVER_AND_IN_CAR: 'بالمركبة',
-  SCANNED_BY_HANDLER_AND_UNLOADED: 'وصلت مركز الفرز',
-  MOVED_TO_SHELF_AND_OUT_OF_HANDLER_CUSTODY: 'على الرفوف',
-  OPENED_ISSUE_AND_WAITING_FOR_MANAGEMENT: 'بانتظار مراجعة الإدارة',
-  OUT_FOR_DELIVERY: 'جاري التسليم',
-  POSTPONED_DELIVERY: 'مؤجّلة',
-  FAILED: 'فشل التوصيل',
-  DELIVERED_TO_RECIPIENT: 'تم التوصيل',
-  PARTIALLY_DELIVERED: 'تسليم جزئي',
-  COMPLETED: 'مغلقة',
-  CANCELLED: 'ملغاة',
-  RETURNED_BY_RECIPIENT: 'مرتجعة',
-  DELIVERED_TO_SENDER: 'مسلّمة للمرسل',
-  TRANSFERRED_OUT: 'مصدرة لشريك',
-  EXPORTED_TO_THIRD_PARTY: 'مصدرة لطرف ثالث',
-  SWAPPED: 'تم تبديلها',
-  BROUGHT: 'تم إحضارها',
-  LOST: 'مفقودة',
-  DAMAGED: 'تالفة',
-};
-const epsLabel = (raw) => {
-  const key = String(raw || '').trim().toUpperCase().replace(/[\s-]+/g, '_');
-  return EPS_STATUS_AR[key] || String(raw || '').trim();
-};
-// gobox على نفس نظام LogesTechs → نفس أسماء الحالات
-const goboxLabel = epsLabel;
 
 // مفتاح اليوم (سنة-شهر-يوم) لفصل الطلبات اليومية، ووصف بشري له (اليوم/أمس/تاريخ)
 const dayKey = (d) => { const x = new Date(d); return `${x.getFullYear()}-${x.getMonth()}-${x.getDate()}`; };
@@ -95,12 +38,8 @@ export default function OrdersManager() {
   const [orders, setOrders] = useState(null);
   const [error, setError] = useState('');
   const [savingId, setSavingId] = useState('');
-  // ربط أوبتيموس: نجلب الحالة + المدن + أنواع الشحن مرّة واحدة (لا لكل طلب) — يقلّل استهلاك الـ API
-  const [opost, setOpost] = useState({ connected: false, cities: [], types: [], defaultType: '' });
-  // ربط EPS (LogesTechs): الحالة + المدن مرّة واحدة
-  const [eps, setEps] = useState({ connected: false, cities: [] });
-  // ربط gobox (LogesTechs بالقرى): حالة الربط فقط — القرى تُبحث عند الإرسال
-  const [gobox, setGobox] = useState({ connected: false });
+  // ربط شركات التوصيل (أوبتيموس/EPS/gobox): حالة الربط + المدن/الأنواع مرّة واحدة للصفحة
+  const couriers = useCouriers();
   // طلبات لم تكتمل (سلات متروكة ببيانات تواصل) — لمتابعتها برسالة وإنقاذ البيع
   const [abandoned, setAbandoned] = useState([]);
   // فلترة وبحث بالطلبات: حالة + اسم/هاتف/رقم طلب — للوصول لأي طلب بثوانٍ
@@ -134,62 +73,10 @@ export default function OrdersManager() {
       const list = r.data.orders;
       setOrders(list);
       if (store?.id) setCache(`myorders:${store.id}`, list);
-      // مزامنة حالة الطلبات المُرسلة لأوبتيموس مع حالتها الحيّة هناك
-      if (list.some((o) => o.opostTracking)) {
-        try {
-          const s = await api.get('/opost/sync');
-          const m = s.data.statuses || {};
-          if (on) setOrders((prev) => prev.map((o) => (m[o.id] != null ? { ...o, opostStatus: m[o.id] } : o)));
-        } catch { /* تجاهل */ }
-      }
-      // ونفس الشي لشحنات EPS
-      if (list.some((o) => o.epsTracking)) {
-        try {
-          const s = await api.get('/eps/sync');
-          const m = s.data.statuses || {};
-          if (on) setOrders((prev) => prev.map((o) => (m[o.id] != null ? { ...o, epsStatus: m[o.id] } : o)));
-        } catch { /* تجاهل */ }
-      }
-      // ونفس الشي لشحنات gobox
-      if (list.some((o) => o.goboxTracking)) {
-        try {
-          const s = await api.get('/gobox/sync');
-          const m = s.data.statuses || {};
-          if (on) setOrders((prev) => prev.map((o) => (m[o.id] != null ? { ...o, goboxStatus: m[o.id] } : o)));
-        } catch { /* تجاهل */ }
-      }
+      // مزامنة حالة الشحنات المُرسلة (أوبتيموس/EPS/gobox) مع حالتها الحيّة هناك
+      const patch = await syncCourierStatuses(list);
+      if (on && patch) setOrders((prev) => prev.map((o) => (patch[o.id] ? { ...o, ...patch[o.id] } : o)));
     }).catch((e) => on && setError(getErrorMessage(e)));
-    return () => { on = false; };
-  }, []);
-
-  useEffect(() => {
-    let on = true;
-    api.get('/eps/status').then(async (r) => {
-      if (!on || !r.data.connected) return;
-      const c = await api.get('/eps/cities').catch(() => ({ data: { cities: [] } }));
-      if (on) setEps({ connected: true, cities: c.data.cities || [] });
-    }).catch(() => {});
-    return () => { on = false; };
-  }, []);
-
-  useEffect(() => {
-    let on = true;
-    api.get('/gobox/status').then((r) => {
-      if (on && r.data.connected) setGobox({ connected: true });
-    }).catch(() => {});
-    return () => { on = false; };
-  }, []);
-
-  useEffect(() => {
-    let on = true;
-    api.get('/opost/status').then(async (r) => {
-      if (!on || !r.data.connected) return;
-      const [c, ty] = await Promise.all([
-        api.get('/opost/cities').catch(() => ({ data: { cities: [] } })),
-        api.get('/opost/shipment-types').catch(() => ({ data: { types: [] } })),
-      ]);
-      if (on) setOpost({ connected: true, cities: c.data.cities || [], types: ty.data.types || [], defaultType: r.data.shipmentType || '' });
-    }).catch(() => {});
     return () => { on = false; };
   }, []);
 
@@ -198,16 +85,9 @@ export default function OrdersManager() {
   const pingOrdersChanged = () => { try { window.dispatchEvent(new Event('bz:orders-changed')); } catch { /* ignore */ } };
 
   // بعد إرسال طلب لشركة توصيل: نحفظ رقم التتبّع ونحوّل الحالة لـ"تم الشحن" محلياً (مُقفلة)
-  const markSent = (id, tracking) => {
-    setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, opostTracking: tracking || '✓', status: 'shipped' } : o)));
-    pingOrdersChanged();
-  };
-  const markSentEps = (id, tracking) => {
-    setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, epsTracking: tracking || '✓', status: 'shipped' } : o)));
-    pingOrdersChanged();
-  };
-  const markSentGobox = (id, tracking) => {
-    setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, goboxTracking: tracking || '✓', status: 'shipped' } : o)));
+  const markSent = (id, tracking, courier) => {
+    const field = courier === 'eps' ? 'epsTracking' : courier === 'gobox' ? 'goboxTracking' : 'opostTracking';
+    setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, [field]: tracking || '✓', status: 'shipped' } : o)));
     pingOrdersChanged();
   };
 
@@ -248,8 +128,9 @@ export default function OrdersManager() {
   // رسالة جاهزة للزبون عن حالة طلبه الحالية (مع شركة التوصيل ورقم التتبّع إن وُجدا)
   const orderStatusMsg = (o) => {
     const st = FLOW.includes(o.status) ? o.status : 'new';
-    const courier = o.opostTracking ? 'أوبتيموس' : o.epsTracking ? 'EPS' : o.goboxTracking ? 'gobox' : '';
-    const tracking = o.opostTracking || o.epsTracking || o.goboxTracking || '';
+    const c = courierOf(o);
+    const courier = c?.name || '';
+    const tracking = c?.tracking || '';
     const lines = [
       t('dashboard.ordersSection.waStatus.greet', { name: o.customerName || '', store: store?.name || '' }),
       t(`dashboard.ordersSection.waStatus.${st}`),
@@ -490,21 +371,9 @@ export default function OrdersManager() {
                 {/* تحديث الحالة + تواصل */}
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <span className="text-xs text-stone-400">{t('dashboard.ordersSection.updateStatus')}:</span>
-                  {o.opostTracking ? (
-                    // الطلب بعهدة أوبتيموس → الحالة مُقفلة (تُدار عبر شركة التوصيل)
-                    <span className="inline-flex items-center gap-1 rounded-xl bg-wine/10 px-3 py-1.5 text-xs font-semibold text-wine">
-                      🔒 {o.opostStatus ? opostLabel(o.opostStatus) : t(`dashboard.ordersSection.${FLOW.includes(o.status) ? o.status : 'shipped'}`)} · {t('dashboard.opost.managed')}
-                    </span>
-                  ) : o.epsTracking ? (
-                    // الطلب بعهدة EPS → الحالة مُقفلة (تُدار عبر شركة التوصيل)
-                    <span className="inline-flex items-center gap-1 rounded-xl bg-wine/10 px-3 py-1.5 text-xs font-semibold text-wine">
-                      🔒 {o.epsStatus ? epsLabel(o.epsStatus) : t(`dashboard.ordersSection.${FLOW.includes(o.status) ? o.status : 'shipped'}`)} · {t('dashboard.eps.managed')}
-                    </span>
-                  ) : o.goboxTracking ? (
-                    // الطلب بعهدة gobox → الحالة مُقفلة (تُدار عبر شركة التوصيل)
-                    <span className="inline-flex items-center gap-1 rounded-xl bg-wine/10 px-3 py-1.5 text-xs font-semibold text-wine">
-                      🔒 {o.goboxStatus ? goboxLabel(o.goboxStatus) : t(`dashboard.ordersSection.${FLOW.includes(o.status) ? o.status : 'shipped'}`)} · {t('dashboard.gobox.managed')}
-                    </span>
+                  {courierOf(o) ? (
+                    // الطلب بعهدة شركة التوصيل → الحالة مُقفلة (تُدار من عندهم)
+                    <CourierLock order={o} fallbackLabel={t(`dashboard.ordersSection.${FLOW.includes(o.status) ? o.status : 'shipped'}`)} />
                   ) : (
                     <div className="min-w-[140px]">
                       <Select
@@ -536,15 +405,7 @@ export default function OrdersManager() {
                       <TruckIcon className="inline h-4 w-4" /> {t('dashboard.ordersSection.sendDelivery')}
                     </button>
                   )}
-                  {(opost.connected || o.opostTracking) && !o.epsTracking && !o.goboxTracking && (
-                    <OpostSend order={o} cities={opost.cities} types={opost.types} defaultType={opost.defaultType} onSent={markSent} />
-                  )}
-                  {(eps.connected || o.epsTracking) && !o.opostTracking && !o.goboxTracking && (
-                    <EpsSend order={o} cities={eps.cities} onSent={markSentEps} />
-                  )}
-                  {(gobox.connected || o.goboxTracking) && !o.opostTracking && !o.epsTracking && (
-                    <GoboxSend order={o} onSent={markSentGobox} />
-                  )}
+                  <CourierSend order={o} couriers={couriers} onSent={markSent} />
                 </div>
               </div>
               </Fragment>

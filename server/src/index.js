@@ -213,6 +213,8 @@ async function ensureColumns() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );`);
     await pool.query('CREATE INDEX IF NOT EXISTS idx_stockreq_store ON stock_requests(store_id);');
+    // طلب التوفّر بعد تحويله لطلب حقيقي (يُدار بالكامل: حالة + إرسال لشركة توصيل)
+    await pool.query('ALTER TABLE stock_requests ADD COLUMN IF NOT EXISTS order_id UUID REFERENCES orders(id) ON DELETE SET NULL;');
     // طلبات لم تكتمل (سلات متروكة ببيانات تواصل): صف واحد لكل (متجر، هاتف) يُحدَّث
     // مع كل تعديل، ويُحذف عند إتمام الطلب فعلياً — لمتابعة صاحب المتجر وإنقاذ البيع
     await pool.query(`CREATE TABLE IF NOT EXISTS abandoned_checkouts (

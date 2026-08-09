@@ -474,7 +474,22 @@
       "notifyReady": "Notify 💬",
       "inStockNow": "In stock now ✅",
       "stillOut": "Still out",
-      "waMsg": "Hello 🌸 Good news! «{{name}}»{{variant}} you asked to be notified about is back in stock. Order it before it runs out:\n{{link}}"
+      "waMsg": "Hello 🌸 Good news! «{{name}}»{{variant}} you asked to be notified about is back in stock. Order it before it runs out:\n{{link}}",
+      "searchPlaceholder": "Search by product name or phone…",
+      "noResults": "No requests match your search or filter.",
+      "filters": {
+        "ready": "In stock now",
+        "waiting": "Still out",
+        "converted": "Turned into order"
+      },
+      "convert": "Turn into order 🛍️",
+      "convertTitle": "Turn this into a real order",
+      "convertHint": "Fill in the delivery details and it becomes a fully managed order: status, and sending to your courier (Opost/EPS/gobox) right from here.",
+      "namePlaceholder": "Customer name",
+      "qty": "Qty",
+      "unitPrice": "Unit price",
+      "createOrder": "Create order",
+      "needName": "Customer name is required."
     },
     "analytics": {
       "title": "Analytics",

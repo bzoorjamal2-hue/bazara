@@ -212,4 +212,5 @@ CREATE TABLE IF NOT EXISTS stock_requests (
     phone        VARCHAR(40) NOT NULL,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+ALTER TABLE stock_requests ADD COLUMN IF NOT EXISTS order_id UUID REFERENCES orders(id) ON DELETE SET NULL; -- حُوّل لطلب حقيقي
 CREATE INDEX IF NOT EXISTS idx_stockreq_store ON stock_requests(store_id);
