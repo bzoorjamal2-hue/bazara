@@ -344,7 +344,15 @@ export default function StorePage() {
           <nav className="mb-4 mt-2 flex items-center gap-2 text-sm">
             <CrumbLogo store={store} onClick={() => pickCategory('all')} />
             <Crumb />
-            <span className="font-display text-lg font-bold text-wine">{t('nav.categories')}</span>
+            <span className="flex items-center gap-2 font-display text-lg font-bold text-wine">
+              <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="3" y="3" width="7.5" height="7.5" rx="1.6" />
+                <rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6" />
+                <rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6" />
+                <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6" />
+              </svg>
+              {t('nav.categories')}
+            </span>
           </nav>
           {/* بطاقات فاخرة (صورة + اسم + "تسوّقي الآن") — نفس تصميم بطاقات التصنيفات
               الموحّد بكل الحسابات، لكن الضغط يفتح فئة هذا المتجر (لا يخرج للعام) */}
@@ -414,8 +422,15 @@ export default function StorePage() {
               <button
                 type="button"
                 onClick={() => { setSearchParams({ cats: '1' }); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                className="shrink-0 font-display font-bold text-wine/60 transition hover:text-wine"
+                className="flex shrink-0 items-center gap-1.5 font-display font-bold text-wine/60 transition hover:text-wine"
               >
+                {/* أيقونة التصنيفات (نفس أيقونة تبويب الشريط السفلي) — كي تظهر بلوقو لا نصّاً فقط */}
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="3" width="7.5" height="7.5" rx="1.6" />
+                  <rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6" />
+                  <rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6" />
+                  <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6" />
+                </svg>
                 {t('nav.categories')}
               </button>
               <Crumb />
