@@ -346,7 +346,7 @@ export default function StorePage() {
             <Crumb />
             <span className="font-display text-lg font-bold text-wine">{t('nav.categories')}</span>
           </nav>
-          <CategoryGrid onSelect={pickCategory} active={cat} cats={gridCats} />
+          <CategoryGrid grid onSelect={pickCategory} active={cat} cats={gridCats} />
         </>
       ) : searching || cat !== 'all' || viewAll || offersView ? (
         /* عرض الشبكة: نتائج بحث / فئة / كل المنتجات / عروض المتجر */

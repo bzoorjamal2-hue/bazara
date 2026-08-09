@@ -74,7 +74,8 @@ function Arrow({ dir, rtl, onClick }) {
 
 // شبكة/كاروسيل الفئات — تظهر بعدد متجاوب مع الشاشة، مع أسهم ونقاط عند الحاجة.
 // cats: قائمة كائنات {key, name, image, builtin}. إن لم تُمرَّر، نبني من الفئات الأصلية الخمس.
-export default function CategoryGrid({ onSelect, active, images = {}, names = {}, cats }) {
+// grid=true: تعرض كل الفئات دفعةً واحدةً كشبكة كاملة (صفحة التصنيفات) بلا كاروسيل/أسهم.
+export default function CategoryGrid({ onSelect, active, images = {}, names = {}, cats, grid = false }) {
   const { i18n } = useTranslation();
   const rtl = i18n.language !== 'en';
   const list = cats && cats.length
@@ -111,6 +112,15 @@ export default function CategoryGrid({ onSelect, active, images = {}, names = {}
       </Link>
     );
   };
+
+  // وضع الشبكة الكاملة: كل الفئات دفعةً واحدةً (صفحة التصنيفات) — بلا أسهم/نقاط/ترقيم
+  if (grid) {
+    return (
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 2xl:grid-cols-5">
+        {list.map((cat) => <Item key={cat.key} cat={cat} />)}
+      </div>
+    );
+  }
 
   return (
     <div>
