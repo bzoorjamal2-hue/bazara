@@ -131,7 +131,8 @@ export default function BottomNav() {
 
   // "الرئيسية": داخل متجر → رئيسيته؛ المدير العام → الموقع؛ المشترك → متجره؛ الزائر → بازارا العام
   const homeTo = inStore ? `/store/${scopeSlug}` : (isAdmin ? '/shop' : user && store?.slug ? `/store/${store.slug}` : '/shop');
-  const homeActive = pathname === homeTo.split('?')[0] && !/[?&](view|offers|cat)=/.test(search);
+  // نستثني cats=1 أيضاً (صفحة التصنيفات) — وإلا تبقى "الرئيسية" مضلّلة فوقها. cats? يمسك cat= وcats=
+  const homeActive = pathname === homeTo.split('?')[0] && !/[?&](view|offers|cats?)=/.test(search);
   // التصنيفات داخل المتجر تفتح صفحة تصنيفات المتجر (?cats=1) بهوية المتجر — لا صفحة
   // بازارا العامة ولا درج جانبي. تبقى مفعّلة على تلك الصفحة، وعلى فئة/تصنيفات العام.
   const categoriesActive = inStore
