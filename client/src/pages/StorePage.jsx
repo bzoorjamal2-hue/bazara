@@ -346,7 +346,44 @@ export default function StorePage() {
             <Crumb />
             <span className="font-display text-lg font-bold text-wine">{t('nav.categories')}</span>
           </nav>
-          <CategoryGrid grid onSelect={pickCategory} active={cat} cats={gridCats} />
+          {/* بطاقات فاخرة (صورة + اسم + "تسوّقي الآن") — نفس تصميم بطاقات التصنيفات
+              الموحّد بكل الحسابات، لكن الضغط يفتح فئة هذا المتجر (لا يخرج للعام) */}
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
+            {gridCats.map((c, i) => {
+              const src = c.image ? cldThumb(c.image, 400) : c.builtin ? `/categories/${c.key}.png` : '';
+              return (
+                <button
+                  key={c.key}
+                  type="button"
+                  onClick={() => pickCategory(c.key)}
+                  className="glass group animate-fade-up relative flex flex-col items-center overflow-hidden p-4 text-center transition duration-300 hover:-translate-y-1.5 hover:shadow-glow"
+                  style={{ animationDelay: `${Math.min(i, 8) * 60}ms` }}
+                >
+                  <span className="dash-hairline absolute inset-x-0 top-0" />
+                  <div className="flex aspect-square w-full items-center justify-center overflow-hidden">
+                    {src ? (
+                      <img
+                        src={src}
+                        alt={catLabel(c.key)}
+                        loading="eager"
+                        decoding="async"
+                        className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <svg viewBox="0 0 24 24" className="h-1/2 w-1/2 text-wine/60" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M9 4a3 3 0 0 0 6 0" />
+                        <path d="M12 4 4.5 9v3l3-1.5V20h9V10.5l3 1.5V9L12 4Z" />
+                      </svg>
+                    )}
+                  </div>
+                  <span className="mt-2 font-display text-sm font-bold text-wine">{catLabel(c.key)}</span>
+                  <span className="mt-2 inline-flex items-center gap-1 rounded-full border border-wine/25 px-3.5 py-1 text-[11px] font-bold text-wine transition group-hover:border-wine group-hover:bg-wine group-hover:text-cream">
+                    {t('home.shopNow')}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </>
       ) : searching || cat !== 'all' || viewAll || offersView ? (
         /* عرض الشبكة: نتائج بحث / فئة / كل المنتجات / عروض المتجر */
