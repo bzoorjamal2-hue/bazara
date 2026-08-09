@@ -32,7 +32,7 @@ function MenuBtn({ onOpen }) {
 
 // هيدر صفحة المتجر — صف 1: شعار/اسم المتجر + قائمة (☰). صف 2: بحث + سلة (تحت زر القائمة تماماً).
 // عند التمرير: الشعار يتقلّص بنعومة، ويظهر زر قائمة مُصغّر بحركة scale ناعمة (بلا قصّ ولا قفز).
-export default function StoreHeader({ store, q, setQ, cat, setCat, products = [], onShare, stories = [], isOwner = false, onStoryAdded, onStoryDeleted }) {
+export default function StoreHeader({ store, q, setQ, cat, setCat, products = [], onShare, stories = [], isOwner = false, onStoryAdded, onStoryDeleted, hideSearch = false }) {
   const { t, i18n } = useTranslation();
   const ltr = i18n.language !== 'ar';
   const { count, setOpen } = useCart();
@@ -133,6 +133,10 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
           >
             <MenuBtn onOpen={openMenu} />
           </div>
+          {hideSearch ? (
+            /* الصفحة نفسها حقل بحث (صفحة البحث) — نُخفي حقل الهيدر ونُبقي مباعِداً كي تبقى السلة/المفضّلة بالنهاية */
+            <div className="flex-1" />
+          ) : (
           <div className="relative flex-1">
             <span className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-wine/50">
               <SearchIcon className="h-5 w-5" />
@@ -171,6 +175,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
               </div>
             )}
           </div>
+          )}
 
           {/* السلة */}
           <button

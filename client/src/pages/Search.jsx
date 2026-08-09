@@ -4,9 +4,11 @@ import { useTranslation } from 'react-i18next';
 import api from '../api/client.js';
 import Seo from '../components/Seo.jsx';
 import FilteredProductGrid from '../components/FilteredProductGrid.jsx';
+import StoreHeader from '../components/StoreHeader.jsx';
 import { ProductGridSkeleton } from '../components/Skeleton.jsx';
 import { SearchIcon, StoreIcon, XIcon } from '../components/icons.jsx';
 import { cldThumb } from '../utils/cloudinary.js';
+import { getCache, setCache } from '../utils/apiCache.js';
 import { goBack } from '../utils/nav.js';
 
 // البحث الشامل عبر المنصّة (أسلوب المتاجر الكبرى): الاستعلام بالرابط (?q=)
@@ -33,6 +35,19 @@ export default function Search() {
   // نطاق متجر مشترِكة (?store=slug): نفس تجربة البحث الشامل لكن نتائج هذا المتجر فقط
   const storeScope = (params.get('store') || '').trim();
   const withScope = (obj) => (storeScope ? { ...obj, store: storeScope } : obj);
+  // كائن المتجر — كي تلبس صفحة البحث هوية المتجر (هيدره ودرج فئاته) بدل شريط بازارا.
+  // يبدأ من الكاش (المستخدمة غالباً جاية من المتجر) فيظهر فوراً، ثم يُحدَّث بالخلفية.
+  const [storeObj, setStoreObj] = useState(() => (storeScope && getCache(`store:${storeScope}`)?.store) || null);
+  useEffect(() => {
+    if (!storeScope) { setStoreObj(null); return; }
+    const cached = getCache(`store:${storeScope}`);
+    if (cached?.store) setStoreObj(cached.store);
+    api.get(`/public/store/${storeScope}`)
+      .then((r) => { setCache(`store:${storeScope}`, r.data); setStoreObj(r.data.store); })
+      .catch(() => { /* الهيدر يظهر بالحدّ الأدنى إن فشل الجلب */ });
+  }, [storeScope]);
+  // درج هيدر المتجر: "الكل" → صفحة المتجر، وأي فئة → صفحة الفئة بنطاق المتجر
+  const goStoreCat = (c) => navigate(c && c !== 'all' ? `/category/${c}?store=${encodeURIComponent(storeScope)}` : `/store/${storeScope}`);
   const [input, setInput] = useState(q);
   const [results, setResults] = useState(null); // { products, stores } | null = لم يبحث بعد
   const [busy, setBusy] = useState(false);
@@ -86,6 +101,19 @@ export default function Search() {
   const catLink = (c) => `/category/${c}${storeScope ? `?store=${encodeURIComponent(storeScope)}` : ''}`;
 
   return (
+    <>
+      {/* نطاق متجر: هيدر المتجر نفسه (اسم/شعار + درج فئاته + سلة) بلا حقل بحث مكرّر —
+          فلا يظهر شريط بازارا العام ولا درج التحكم داخل تجربة المتجر */}
+      {storeScope && (
+        <StoreHeader
+          store={storeObj || { slug: storeScope, name: '' }}
+          q=""
+          setQ={() => {}}
+          cat="all"
+          setCat={goStoreCat}
+          hideSearch
+        />
+      )}
     <div className="mx-auto w-full max-w-5xl">
       <Seo title={`${t('searchPage.title')} — Bazara`} />
 
@@ -218,5 +246,6 @@ export default function Search() {
         </div>
       )}
     </div>
+    </>
   );
 }
