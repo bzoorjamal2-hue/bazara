@@ -496,16 +496,6 @@ export default function ProductDetails() {
             </button>
           )}
 
-          {/* عدّاد المبيعات الحقيقي — دليل اجتماعي يطمئن الزبونة (يزيد عند تأكيد كل طلب) */}
-          {product.soldCount > 0 && (
-            <p className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-emerald-700">
-              <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" />
-              </svg>
-              {t('product.soldCount', { count: product.soldCount })}
-            </p>
-          )}
-
           {/* بلوك السعر الفاخر: سعر ضخم + القديم مشطوباً بالمنتصف + شارة توفير خمرية */}
           <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
             <span className="font-display text-4xl font-extrabold gradient-text">{t('common.currency')}{product.price}</span>

@@ -360,17 +360,12 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
             <FireIcon className="h-3.5 w-3.5 shrink-0" /> {t('product.lastFew', { count: remaining })}
           </p>
         )}
-        {/* دليل اجتماعي (أسلوب المتاجر الكبرى): تقييم بنجمة + عدد المبيعات بسطر واحد */}
-        {(product.ratingCount > 0 || product.soldCount > 0) && (
+        {/* دليل اجتماعي: تقييم بنجمة (عدد المبيعات مُزال بطلب المالكة) */}
+        {product.ratingCount > 0 && (
           <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-            {product.ratingCount > 0 && (
-              <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-gold-200">
-                <StarIcon className="h-3 w-3" /> {product.ratingAvg} <span className="font-normal text-stone-500">({product.ratingCount})</span>
-              </span>
-            )}
-            {product.soldCount > 0 && (
-              <span className="text-[11px] font-medium text-emerald-700">{t('product.soldCount', { count: product.soldCount })}</span>
-            )}
+            <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-gold-200">
+              <StarIcon className="h-3 w-3" /> {product.ratingAvg} <span className="font-normal text-stone-500">({product.ratingCount})</span>
+            </span>
           </div>
         )}
         {/* نقاط الألوان المتوفرة — لمحة سريعة عن التشكيلة. عند وجود صور لون: تمرير/لمس

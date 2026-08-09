@@ -635,11 +635,12 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
           </div>
         )}
 
-        {/* شارات: خصم + عدد المبيعات */}
-        <div className="absolute start-3 z-20 flex flex-col items-start gap-2" style={{ top: 'calc(env(safe-area-inset-top,0px) + 64px)' }}>
-          {hasDiscount && <span className="rounded-full bg-[#8a2438] px-2.5 py-1 text-xs font-extrabold text-[#F4EDE2] shadow">-{discountPct}%</span>}
-          {p.soldCount > 0 && <span className="rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-semibold text-white">{t('product.soldCount', { count: p.soldCount })}</span>}
-        </div>
+        {/* شارة الخصم (عدد المبيعات مُزال بطلب المالكة) */}
+        {hasDiscount && (
+          <div className="absolute start-3 z-20 flex flex-col items-start gap-2" style={{ top: 'calc(env(safe-area-inset-top,0px) + 64px)' }}>
+            <span className="rounded-full bg-[#8a2438] px-2.5 py-1 text-xs font-extrabold text-[#F4EDE2] shadow">-{discountPct}%</span>
+          </div>
+        )}
 
         {/* مفضّلة + مشاركة */}
         <div className="absolute bottom-40 end-3 z-20 flex flex-col items-center gap-4">
