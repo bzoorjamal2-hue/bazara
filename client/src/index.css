@@ -122,6 +122,11 @@ table { max-width: 100%; }
 .bz-hero-scrim { background: linear-gradient(to top, rgba(15,10,7,0.66) 0%, rgba(15,10,7,0.46) 48%, rgba(15,10,7,0.56) 100%); }
 /* شارة ذهبية رفيعة (kicker) للشرائح — تباعد حروف واسع بأسلوب دور الأزياء */
 .bz-kicker { letter-spacing: 0.34em; }
+/* نطّة أيقونة التبويب لحظة تفعيله (الشريط السفلي) — إحساس التطبيقات الأصلية */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes bz-tab-pop { 0% { transform: scale(1); } 45% { transform: scale(1.22); } 100% { transform: scale(1); } }
+  .animate-tab-pop { animation: bz-tab-pop 0.34s cubic-bezier(0.34, 1.56, 0.64, 1); }
+}
 /* اسم المتجر الذهبي على السلايدر — تدرّج ذهبي دائم (غير متأثّر بالثيم) فوق الحجاب
    الداكن، مع بريق خفيف يمرّ عليه لإحساس فخم. */
 .bz-gold-name {

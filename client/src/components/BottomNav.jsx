@@ -163,8 +163,9 @@ export default function BottomNav() {
             }`}
           >
             {/* تظليل التبويب الفعّال: حبّة خمرية حول الأيقونة ليعرف المستخدم مكانه */}
-            <span className={`relative flex items-center justify-center rounded-2xl px-3.5 py-1 transition-colors duration-200 ${active ? 'bg-wine text-cream shadow-sm' : ''}`}>
-              <Icon className="h-6 w-6" filled={active} />
+            <span className={`relative flex items-center justify-center rounded-2xl px-3.5 py-1 transition-all duration-200 active:scale-90 ${active ? 'bg-wine text-cream shadow-sm' : ''}`}>
+              {/* نطّة صغيرة للأيقونة لحظة تفعيل التبويب — إحساس أصلي كإنستغرام */}
+              <Icon className={`h-6 w-6 transition-transform duration-300 ${active ? 'animate-tab-pop' : ''}`} filled={active} />
               {badge > 0 && (
                 // شارة فاخرة: هالة نابضة خلفها لجذب الانتباه + حبّة ذهبية متدرّجة بحدّ عاجي
                 <span className="absolute -end-1 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center">
