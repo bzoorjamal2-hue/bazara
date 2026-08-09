@@ -8,7 +8,7 @@ import { useWishlist } from '../context/WishlistContext.jsx';
 import StarRating from './StarRating.jsx';
 import Countdown from './Countdown.jsx';
 import { HeartIcon, CartIcon, XIcon, StarIcon, FireIcon } from './icons.jsx';
-import { cldVideoPoster, cldThumb, cldSrcSet, cldBlur } from '../utils/cloudinary.js';
+import { cldVideoPoster, cldThumb, cldSrcSet, cldBlur, cldVideoMp4 } from '../utils/cloudinary.js';
 import { sizeLabel } from '../utils/sizes.js';
 import { getMySize, setMySize } from '../utils/mySize.js';
 import { flyToCart } from '../utils/flyToCart.js';
@@ -277,7 +277,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
         {/* معاينة الفيديو عند مرور الماوس (كمبيوتر) — صامتة وناعمة */}
         {product.videoUrl && hovering && (
           <video
-            src={product.videoUrl}
+            src={cldVideoMp4(product.videoUrl)}
             poster={videoPoster}
             autoPlay
             muted
@@ -418,7 +418,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
       <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/85 p-4 animate-fade-in" onClick={closeVideo}>
         <button onClick={closeVideo} aria-label="close" className="absolute end-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur transition hover:bg-white/25"><XIcon className="h-5 w-5" /></button>
         <video
-          src={product.videoUrl}
+          src={cldVideoMp4(product.videoUrl)}
           poster={videoPoster}
           autoPlay
           loop

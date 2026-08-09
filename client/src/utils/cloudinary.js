@@ -12,12 +12,31 @@ export function cldVideoPoster(url) {
   return poster;
 }
 
+// يفكّك رابط فيديو Cloudinary لأجزائه (القاعدة + المعرّف) متجاهلاً أي تحويلات قديمة
+function cldVideoParts(url) {
+  const m = String(url || '').match(/^(https?:\/\/[^/]+\/[^/]+\/video\/upload\/)(.+)$/);
+  if (!m) return null;
+  const segs = m[2].split('/');
+  let vi = segs.findIndex((s) => /^v\d+$/.test(s)); // جزء الإصدار v123… — ما قبله تحويلات قديمة نتجاهلها
+  if (vi === -1) vi = segs.length - 1;
+  return { base: m[1], rest: segs.slice(vi).join('/').replace(/\.[a-z0-9]+(\?.*)?$/i, '') };
+}
+
+// رابط فيديو متوافق مع كل المتصفّحات وiOS: mp4 بترميز H.264. كثير من فيديوهات
+// الآيفون تُرفَع بصيغة MOV/HEVC لا يشغّلها المتصفّح (معاينة سوداء)، فنجبر التسليم mp4.
+// idempotent: يعمل على الروابط الأصلية والمحوّلة سابقاً على حدٍّ سواء.
+export function cldVideoMp4(url, width = 1080) {
+  const p = cldVideoParts(url);
+  if (!p) return url; // رابط غير كلاوديناري — كما هو
+  return `${p.base}f_mp4,vc_h264,q_auto,w_${width},c_limit/${p.rest}.mp4`;
+}
+
 // رابط محسّن بجودة عالية (صيغة تلقائية + أعلى جودة بصرية، بدون فقدان ملحوظ)
 export function cldOptimized(url, kind = 'image') {
   if (typeof url !== 'string' || !url.includes('/upload/')) return url;
-  // الفيديو: جودة متوازنة تلقائية لتحميل أسرع | الصور: أعلى جودة
-  const tr = kind === 'video' ? 'f_auto,q_auto' : 'f_auto,q_auto:best,dpr_auto';
-  return url.replace('/upload/', `/upload/${tr}/`);
+  // الفيديو: نُجبر mp4/H.264 ليشتغل على كل الأجهزة (خاصة MOV/HEVC من الآيفون)
+  if (kind === 'video') return cldVideoMp4(url);
+  return url.replace('/upload/', `/upload/f_auto,q_auto:best,dpr_auto/`);
 }
 
 // صورة مصغّرة محسّنة للشبكات (بطاقات المنتجات) — تقلّل الحجم كثيراً وتسرّع التحميل.

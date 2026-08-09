@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { uploadToCloudinary, cldOptimized, cloudinaryEnabled } from '../utils/cloudinary.js';
+import { uploadToCloudinary, cldOptimized, cldVideoMp4, cloudinaryEnabled } from '../utils/cloudinary.js';
 
 function UploadIcon({ className = 'h-4 w-4' }) {
   return (
@@ -111,7 +111,7 @@ export default function VideoInput({ value, onChange, label }) {
       {value && (
         <div className="mt-3">
           {/* معاينة تتكرر تلقائياً */}
-          <video src={value} autoPlay loop muted playsInline controls className="max-h-52 w-full rounded-2xl bg-black/30" />
+          <video src={cldVideoMp4(value)} autoPlay loop muted playsInline controls className="max-h-52 w-full rounded-2xl bg-black/30" />
           <button type="button" onClick={() => onChange('')} className="mt-1.5 text-xs text-stone-400 transition hover:text-red-400">
             {t('image.remove')}
           </button>

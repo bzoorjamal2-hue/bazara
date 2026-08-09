@@ -20,7 +20,7 @@ import { WaveIcon, GiftIcon, CheckIcon, PlusIcon, BoltIcon } from '../components
 import CloseButton from '../components/CloseButton.jsx';
 import Reveal from '../components/Reveal.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
-import { cldVideoPoster, cldThumb } from '../utils/cloudinary.js';
+import { cldVideoPoster, cldThumb, cldVideoMp4 } from '../utils/cloudinary.js';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
 import { SIZES, sizeLabel } from '../utils/sizes.js';
 import { getMySize } from '../utils/mySize.js';
@@ -1043,7 +1043,7 @@ function HeroSlider({ store }) {
                       <img src={posterImg} alt="" aria-hidden="true" loading={idx === 0 ? 'eager' : 'lazy'} style={{ filter: 'brightness(0.6)' }} className="absolute inset-0 z-0 h-full w-full object-cover" />
                       <video
                         ref={(el) => { vidRefs.current[idx] = el; }}
-                        src={s.bgValue}
+                        src={cldVideoMp4(s.bgValue)}
                         poster={posterImg}
                         autoPlay={idx === 0}
                         muted

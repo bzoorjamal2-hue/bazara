@@ -11,7 +11,7 @@ import Strike from '../components/Strike.jsx';
 import { getMySize, setMySize } from '../utils/mySize.js';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
-import { cldVideoPoster, cldThumb, cldSrcSet } from '../utils/cloudinary.js';
+import { cldVideoPoster, cldThumb, cldSrcSet, cldVideoMp4 } from '../utils/cloudinary.js';
 import { pushRecent, getRecent, removeRecent } from '../utils/recentlyViewed.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { sizeLabel } from '../utils/sizes.js';
@@ -415,7 +415,7 @@ export default function ProductDetails() {
           {/* فيديو المنتج — يتأقلم مع مقاسه (9:16) بلا سواد حوله */}
           {product.videoUrl && (
             <video
-              src={product.videoUrl}
+              src={cldVideoMp4(product.videoUrl)}
               poster={cldVideoPoster(product.videoUrl)}
               controls
               playsInline

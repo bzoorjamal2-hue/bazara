@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import { HeartIcon, CartIcon, BagIcon, HandIcon, ForwardIcon } from './icons.jsx';
-import { cldVideoPoster, cldThumb, cldSrcSet } from '../utils/cloudinary.js';
+import { cldVideoPoster, cldThumb, cldSrcSet, cldVideoMp4 } from '../utils/cloudinary.js';
 import { flyToCart } from '../utils/flyToCart.js';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { sizeLabel } from '../utils/sizes.js';
@@ -141,7 +141,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
           >
             {hasVideo ? (
               <video
-                src={product.videoUrl}
+                src={cldVideoMp4(product.videoUrl)}
                 poster={poster}
                 autoPlay
                 loop
