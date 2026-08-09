@@ -430,7 +430,7 @@ export default function ProductDetails() {
             ببداية العمود (لا نمدّه لملء المساحة لمجرّد وجودها). */}
         <div className="flex w-full flex-col 2xl:max-w-[620px]">
           <div className="flex items-start justify-between gap-3">
-            <span className="badge bg-gold-400/10 text-gold-200">{t(`categories.${product.category}`)}</span>
+            <span className="badge bg-gold-400/10 text-gold-200">{product.categoryName || t(`categories.${product.category}`)}</span>
             <div className="flex items-center gap-2">
               {/* مشاركة المنتج */}
               <div className="relative">

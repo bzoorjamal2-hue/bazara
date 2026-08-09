@@ -11,6 +11,7 @@ const PRODUCT_SELECT = `
          s.whatsapp AS store_whatsapp, s.instagram AS store_instagram, s.phone AS store_phone,
          s.size_chart AS store_size_chart, s.return_policy AS store_return_policy,
          s.fb_pixel AS store_fb_pixel, s.tiktok_pixel AS store_tiktok_pixel, s.ga_id AS store_ga_id,
+         s.custom_categories AS store_custom_categories, s.category_meta AS store_category_meta,
          COALESCE(r.avg, 0) AS rating_avg, COALESCE(r.cnt, 0) AS rating_count
   FROM products p
   JOIN stores s ON s.id = p.store_id

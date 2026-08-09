@@ -189,6 +189,16 @@ export function mapProduct(p) {
     price = oldPrice; // انتهى العرض → السعر الأصلي
     oldPrice = null;
   }
+  // اسم الفئة الظاهر: مخصّصة → اسمها من إعدادات المتجر؛ أصلية مُعاد تسميتها → اسمها المخصّص.
+  // (فارغ للأصلية غير المعدّلة → العميل يترجمها) — حتى تتصرّف الفئات الجديدة مثل الأصلية تماماً.
+  let categoryName = '';
+  const customCats = Array.isArray(p.store_custom_categories) ? p.store_custom_categories : [];
+  const cc = customCats.find((c) => c && c.key === p.category);
+  if (cc) categoryName = cc.name || '';
+  if (!categoryName && p.store_category_meta && typeof p.store_category_meta === 'object') {
+    const m = p.store_category_meta[p.category];
+    if (m && m.name) categoryName = m.name;
+  }
   return {
     id: p.id,
     name: p.name,
@@ -199,6 +209,7 @@ export function mapProduct(p) {
     size: p.size,
     color: p.color,
     category: p.category,
+    categoryName,
     imageUrl: p.image_url,
     images: p.images || [],
     videoUrl: p.video_url || '',

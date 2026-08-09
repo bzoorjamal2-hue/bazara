@@ -255,6 +255,25 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
                   {store.categoryMeta?.[c]?.name?.trim() || t(`categories.${c}`)}
                 </button>
               ))}
+              {/* الفئات المخصّصة الجديدة — تظهر بالدرج تماماً مثل الأصلية */}
+              {(Array.isArray(store.customCategories) ? store.customCategories : []).map((cc) => (
+                <button
+                  key={cc.key}
+                  onClick={() => pick(cc.key)}
+                  className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-base transition hover:bg-cream/10 ${cat === cc.key ? 'font-bold text-cream' : 'text-cream/85'}`}
+                >
+                  {cc.image ? (
+                    <img src={cldThumb(cc.image, 80)} alt="" className="h-9 w-9 shrink-0 rounded object-contain" />
+                  ) : (
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center">
+                      <svg viewBox="0 0 24 24" className="h-6 w-6 text-cream/70" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M9 4a3 3 0 0 0 6 0" /><path d="M12 4 4.5 9v3l3-1.5V20h9V10.5l3 1.5V9L12 4Z" />
+                      </svg>
+                    </span>
+                  )}
+                  {cc.name}
+                </button>
+              ))}
               <div className="my-2 h-px bg-cream/15" />
               {/* تتبّع الطلب */}
               <Link
