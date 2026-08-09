@@ -3,13 +3,13 @@ import { CLOUDINARY_CLOUD, CLOUDINARY_PRESET } from '../config/site.js';
 // هل الرفع المباشر مفعّل؟ (تمّت تهيئة Cloudinary)
 export const cloudinaryEnabled = Boolean(CLOUDINARY_CLOUD && CLOUDINARY_PRESET);
 
-// صورة غلاف (أول لقطة) من فيديو Cloudinary — تظهر بكل الأجهزة بما فيها iOS
-export function cldVideoPoster(url) {
-  if (typeof url !== 'string') return '';
-  if (!/res\.cloudinary\.com\/.+\/video\/upload\//.test(url)) return '';
-  let poster = url.replace(/\.(mp4|mov|webm|m4v|avi|mkv|ogv)(\?.*)?$/i, '.jpg');
-  poster = poster.replace('/upload/', '/upload/so_0/'); // اللقطة عند الثانية 0
-  return poster;
+// صورة غلاف (أول لقطة) من فيديو Cloudinary — تظهر بكل الأجهزة بما فيها iOS.
+// نبنيها من قاعدة الفيديو النظيفة حتى لا تتضارب مع تحويلات الفيديو (f_mp4/vc_h264)
+// التي كانت تُنتج رابطاً معطوباً (صورة سوداء/علامة استفهام).
+export function cldVideoPoster(url, width = 800) {
+  const p = cldVideoParts(url);
+  if (!p) return '';
+  return `${p.base}so_0,f_jpg,q_auto,w_${width},c_limit/${p.rest}.jpg`; // لقطة الثانية 0 كـ jpg مُهيّأة الحجم
 }
 
 // يفكّك رابط فيديو Cloudinary لأجزائه (القاعدة + المعرّف) متجاهلاً أي تحويلات قديمة
@@ -43,6 +43,7 @@ export function cldOptimized(url, kind = 'image') {
 // width بالبكسل (الحد الأقصى)؛ المتصفّح يصغّرها للعرض المطلوب.
 export function cldThumb(url, width = 500) {
   if (typeof url !== 'string' || !url.includes('/upload/')) return url;
+  if (url.includes('/video/upload/')) return url; // بوستر الفيديو مُهيّأ الحجم مسبقاً — لا نضاعف التحويلات
   return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width},c_limit,dpr_auto/`);
 }
 
@@ -51,6 +52,7 @@ export function cldThumb(url, width = 500) {
 // بلا dpr_auto عمداً — واصفات w تتكفّل بالكثافة، وجمعهما معاً يضاعف الحجم بلا داعٍ.
 export function cldSrcSet(url, widths = [200, 300, 400, 600, 800]) {
   if (typeof url !== 'string' || !url.includes('/upload/')) return undefined;
+  if (url.includes('/video/upload/')) return undefined; // بوستر الفيديو مُهيّأ مسبقاً
   return widths
     .map((w) => `${url.replace('/upload/', `/upload/f_auto,q_auto,w_${w},c_limit/`)} ${w}w`)
     .join(', ');
@@ -60,6 +62,7 @@ export function cldSrcSet(url, widths = [200, 300, 400, 600, 800]) {
 // (بضعة كيلوبايت) فترى الزبونة ملامح القطعة وألوانها فوراً بدل مربّع رمادي.
 export function cldBlur(url, width = 32) {
   if (typeof url !== 'string' || !url.includes('/upload/')) return undefined;
+  if (url.includes('/video/upload/')) return undefined; // بوستر الفيديو — بلا نسخة ضبابية مشتقّة
   return url.replace('/upload/', `/upload/f_auto,q_auto:low,w_${width},e_blur:600,c_limit/`);
 }
 

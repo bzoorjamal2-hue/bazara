@@ -7,6 +7,10 @@ import ConfirmModal from '../../components/ConfirmModal.jsx';
 import { StarIcon, LinkIcon } from '../../components/icons.jsx';
 import { cldVideoPoster } from '../../utils/cloudinary.js';
 import { clearCachePrefixes } from '../../utils/apiCache.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+
+// الفئات الأصلية السبع — ما عداها فئة مخصّصة للمتجر نجلب اسمها من إعداداته
+const BUILTIN_CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
 
 // بعد حذف/تعديل/إضافة منتج: نفرّغ كاش الصفحات العامة كي يختفي/يظهر التغيير فوراً
 // (الرئيسية، صفحة المتجر، الفئات، العروض، المقترحات، وصفحة المنتج نفسها)
@@ -16,6 +20,13 @@ const PH = 'https://placehold.co/48x48/121214/d4af37?text=%F0%9F%91%97';
 
 export default function ProductsManager({ onCount }) {
   const { t } = useTranslation();
+  const { store } = useAuth();
+  // اسم الفئة الظاهر: أصلية → ترجمة، مخصّصة → اسمها من إعدادات المتجر، وإلا المفتاح نفسه
+  const catLabel = (key) => {
+    if (BUILTIN_CATS.includes(key)) return t(`categories.${key}`);
+    const cc = (store?.customCategories || []).find((c) => c.key === key);
+    return cc?.name || key;
+  };
   const [products, setProducts] = useState(null);
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');
@@ -169,7 +180,7 @@ export default function ProductsManager({ onCount }) {
                       <span className="font-medium text-stone-100">{p.name}<Badges p={p} /></span>
                     </div>
                   </td>
-                  <td className="p-4 text-stone-300">{t(`categories.${p.category}`)}</td>
+                  <td className="p-4 text-stone-300">{catLabel(p.category)}</td>
                   <td className="p-4 font-semibold text-gold-300">{t('common.currency')}{p.price}</td>
                   <td className="p-4">
                     <div className="flex justify-end gap-2">
@@ -190,7 +201,7 @@ export default function ProductsManager({ onCount }) {
                 <Thumb p={p} size="h-12 w-12" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium text-stone-100">{p.name}</p>
-                  <p className="text-xs text-stone-400">{t(`categories.${p.category}`)} · <span className="text-gold-300">{t('common.currency')}{p.price}</span></p>
+                  <p className="text-xs text-stone-400">{catLabel(p.category)} · <span className="text-gold-300">{t('common.currency')}{p.price}</span></p>
                 </div>
                 <button onClick={() => shareProduct(p)} className="btn-ghost !px-2.5 !py-1.5 text-xs" title={t('product.shareProduct')} aria-label={t('product.shareProduct')}><LinkIcon className="h-4 w-4" /></button>
                 <button onClick={() => setModal(p)} className="btn-ghost !px-2.5 !py-1.5 text-xs">{t('common.edit')}</button>
