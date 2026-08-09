@@ -15,7 +15,7 @@ export default function CollectionsRow({ collections, storeSlug = '' }) {
   const linkFor = (q) => `/search?q=${encodeURIComponent(q)}${storeSlug ? `&store=${encodeURIComponent(storeSlug)}` : ''}`;
 
   return (
-    <section className="mt-14">
+    <section className="mt-14 mb-16 sm:mb-20">
       <div className="mb-6 flex items-center justify-center gap-2.5 text-wine sm:gap-3">
         <span aria-hidden className="text-sm text-wine/40">❖</span>
         <span className="h-px w-7 bg-gradient-to-r from-transparent to-wine/30 sm:w-12" />

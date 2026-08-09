@@ -49,8 +49,8 @@ export default function StoreFooter({ store, wa, onShare }) {
             <TruckGlyph />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block font-display text-base font-bold leading-tight">{t('nav.track')}</span>
-            <span className="block truncate text-xs text-cream/70">{t('track.hint')}</span>
+            <span className="block font-display text-base font-bold leading-snug">{t('nav.track')}</span>
+            <span className="mt-1 line-clamp-2 text-xs leading-snug text-cream/70">{t('track.hint')}</span>
           </span>
           <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0 text-cream/60 transition group-hover:text-cream" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d={ltr ? 'M9 6l6 6-6 6' : 'M15 6l-6 6 6 6'} />
@@ -65,8 +65,8 @@ export default function StoreFooter({ store, wa, onShare }) {
           >
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-cream/15" aria-hidden="true"><GiftIcon className="h-5 w-5" /></span>
             <span className="min-w-0 flex-1">
-              <span className="block font-display text-base font-bold leading-tight">{t('referral.shareTitle')}</span>
-              <span className="block truncate text-xs text-cream/70">{t('referral.shareDesc', { percent: Number(store.referralPercent) })}</span>
+              <span className="block font-display text-base font-bold leading-snug">{t('referral.shareTitle')}</span>
+              <span className="mt-1 line-clamp-2 text-xs leading-snug text-cream/70">{t('referral.shareDesc', { percent: Number(store.referralPercent) })}</span>
             </span>
             <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0 text-cream/60 transition group-hover:text-cream" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d={ltr ? 'M9 6l6 6-6 6' : 'M15 6l-6 6 6 6'} />
