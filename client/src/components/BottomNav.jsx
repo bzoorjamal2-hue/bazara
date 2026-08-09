@@ -127,10 +127,19 @@ export default function BottomNav() {
   const searchStoreSlug = new URLSearchParams(search).get('store') || '';
   const productScope = useSyncExternalStore(subscribeStoreScope, getStoreScope);
   const scopeSlug = viewingStoreSlug || searchStoreSlug || (pathname.startsWith('/product/') ? productScope : '');
-  const inStore = Boolean(scopeSlug);
+  const inStore = Boolean(scopeSlug); // نحن فعلاً داخل سياق متجر الآن (يُستخدم لتفعيل التبويبات)
+  // متجر المشترك نفسه — المدير مستثنى (يدير المنصّة لا متجراً)، والاشتراك المنتهي مستثنى
+  // (متجره مُطفأ يرجّع «غير موجود»، فنُبقي وجهاته على بازارا العام بدل صفحة خطأ).
+  const ownStore = user && store?.slug && !isAdmin && subscription?.active ? store.slug : '';
+  // وجهة "متجري": المتجر المتصفَّح حالياً، وإلا متجر المشترك نفسه. هكذا تبقى كل وجهات
+  // الشريط (رئيسية/عروض/تتبّع/تصنيفات/ريلز) ضمن متجر المشترك بهويّته — حتى قبل أن يفتح
+  // صفحة متجره — فلا تظهر شعارات بازارا العامة داخل حسابه. الزائر/الزبون بلا متجر تبقى
+  // وجهاته عامة إلا وهو داخل متجر فعلاً.
+  const destSlug = scopeSlug || ownStore;
+  const inDest = Boolean(destSlug);
 
-  // "الرئيسية": داخل متجر → رئيسيته؛ المدير العام → الموقع؛ المشترك → متجره؛ الزائر → بازارا العام
-  const homeTo = inStore ? `/store/${scopeSlug}` : (isAdmin ? '/shop' : user && store?.slug ? `/store/${store.slug}` : '/shop');
+  // "الرئيسية": متجري (المتصفَّح أو متجر المشترك) وإلا بازارا العام (زائر/مدير)
+  const homeTo = inDest ? `/store/${destSlug}` : '/shop';
   // داخل متجر: نستثني view/offers/cats=1 كي لا تبقى "الرئيسية" مضلّلة فوقها.
   // بالموقع العام: /shop?cat= يعرض الفئة داخل الرئيسية نفسها → تبقى "الرئيسية" مفعّلة.
   const homeActive = pathname === homeTo.split('?')[0]
@@ -140,13 +149,12 @@ export default function BottomNav() {
   const categoriesActive = inStore
     ? /[?&]cats=1/.test(search)
     : (pathname === '/categories' || pathname.startsWith('/category/'));
-  // العروض/التتبّع داخل المتجر تبقى ضمنه (بدل صفحات بازارا العامة)
-  const offersTo = inStore ? `/store/${scopeSlug}?offers=1` : '/offers';
+  // العروض/التتبّع/التصنيفات تبقى ضمن متجري (بدل صفحات بازارا العامة) طالما لي متجر
+  const offersTo = inDest ? `/store/${destSlug}?offers=1` : '/offers';
   const offersActive = inStore ? /[?&]offers=1/.test(search) : pathname === '/offers';
-  const trackTo = inStore ? `/track?store=${scopeSlug}` : '/track';
+  const trackTo = inDest ? `/track?store=${destSlug}` : '/track';
   // ريلز: متجر التصفّح الحالي، أو متجر المشترك نفسه، أو العام (كل متجر له ريلز خاص)
-  const reelsStoreSlug = scopeSlug || (user && store?.slug && !isAdmin ? store.slug : '');
-  const reelsTo = reelsStoreSlug ? `/store/${reelsStoreSlug}/reels` : '/reels';
+  const reelsTo = destSlug ? `/store/${destSlug}/reels` : '/reels';
   const reelsActive = pathname.endsWith('/reels');
   // إغلاق أدراج السلة/المفضلة قبل الانتقال (الشريط يبقى ظاهراً فوق الأدراج)
   const closeDrawers = () => { setOpen(false); setWishOpen(false); };
@@ -160,7 +168,7 @@ export default function BottomNav() {
   };
   // "التصنيفات" داخل متجر → صفحة تصنيفات المتجر (?cats=1): تلبس هيدر/فوتر المتجر
   // وتعرض شبكة فئاته كصفحة كاملة، فلا يخرج الزبون للموقع العام ولا يفتح درجاً.
-  const categoriesTo = inStore ? `/store/${scopeSlug}?cats=1` : '/categories';
+  const categoriesTo = inDest ? `/store/${destSlug}?cats=1` : '/categories';
   // السلة والمفضّلة موجودتان بالشريط العلوي بحد الأفاتار، فنستبدلهما بوجهات أنفع.
   // الترتيب يتبع اتجاه اللغة تلقائياً: عربي (حسابي أولاً يميناً)، إنجليزي (يساراً).
   const items = [
