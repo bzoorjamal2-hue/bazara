@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { uploadToCloudinary, cldOptimized, cldVideoMp4, cloudinaryEnabled } from '../utils/cloudinary.js';
 
@@ -32,12 +32,19 @@ export default function VideoInput({ value, onChange, label }) {
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
   const [err, setErr] = useState('');
+  // معاينة محلّية من الجهاز — تظهر فوراً بلا انتظار معالجة السحابة (يشغّلها المتصفّح مباشرة)
+  const [localPreview, setLocalPreview] = useState('');
   const fileRef = useRef(null);
+
+  // تحرير رابط المعاينة المحلّية عند تغييره أو تفكيك المكوّن (منع تسريب الذاكرة)
+  useEffect(() => () => { if (localPreview) URL.revokeObjectURL(localPreview); }, [localPreview]);
 
   const handleFile = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('video/')) { setErr(t('video.notVideo')); return; }
+    // نعرض الفيديو من الجهاز مباشرة — تظهر المعاينة قبل انتهاء الرفع وبلا اعتماد على التحويل السحابي
+    setLocalPreview((prev) => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(file); });
     setErr('');
     setBusy(true);
     setProgress(0);
@@ -46,6 +53,7 @@ export default function VideoInput({ value, onChange, label }) {
       onChange(cldOptimized(link, 'video'));
     } catch (er) {
       setErr(er.message);
+      setLocalPreview((prev) => { if (prev) URL.revokeObjectURL(prev); return ''; });
     } finally {
       setBusy(false);
     }
@@ -108,11 +116,20 @@ export default function VideoInput({ value, onChange, label }) {
         />
       )}
 
-      {value && (
+      {(localPreview || value) && (
         <div className="mt-3">
-          {/* معاينة تتكرر تلقائياً */}
-          <video src={cldVideoMp4(value)} autoPlay loop muted playsInline controls className="max-h-52 w-full rounded-2xl bg-black/30" />
-          <button type="button" onClick={() => onChange('')} className="mt-1.5 text-xs text-stone-400 transition hover:text-red-400">
+          {/* المعاينة: ملف الجهاز مباشرة إن وُجد (فوري)، وإلا الرابط السحابي بصيغة mp4 */}
+          <video
+            key={localPreview || value}
+            src={localPreview || cldVideoMp4(value)}
+            autoPlay loop muted playsInline controls
+            className="max-h-52 w-full rounded-2xl bg-black/30"
+          />
+          <button
+            type="button"
+            onClick={() => { setLocalPreview((prev) => { if (prev) URL.revokeObjectURL(prev); return ''; }); onChange(''); }}
+            className="mt-1.5 text-xs text-stone-400 transition hover:text-red-400"
+          >
             {t('image.remove')}
           </button>
         </div>
