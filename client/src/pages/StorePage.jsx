@@ -408,7 +408,16 @@ export default function StorePage() {
             </nav>
           ) : (
             <nav className="mb-4 mt-2 flex items-center gap-2 text-sm">
+              {/* الرئيسية (شعار المتجر) › التصنيفات › الفئة المفتوحة */}
               <CrumbLogo store={store} onClick={() => pickCategory('all')} />
+              <Crumb />
+              <button
+                type="button"
+                onClick={() => { setSearchParams({ cats: '1' }); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                className="shrink-0 font-display font-bold text-wine/60 transition hover:text-wine"
+              >
+                {t('nav.categories')}
+              </button>
               <Crumb />
               <span className="flex items-center gap-2 font-display text-lg font-bold text-wine">
                 <CatThumb cat={cat} className="h-8 w-8" />
