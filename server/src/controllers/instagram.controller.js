@@ -203,8 +203,14 @@ export async function igConnect(req, res, next) {
       return res.json({ pages: pages.map((p) => ({ pageId: p.pageId, name: p.pageName, username: p.igUsername })) });
     }
 
-    // اشتراك الـ webhook لهذه الصفحة (بدونه لا تصلنا رسائل)
-    await subscribePageMessages(chosen.pageId, chosen.pageToken);
+    // اشتراك الـ webhook لهذه الصفحة — أفضل جهد. لو نقصت صلاحية pages_manage_metadata
+    // لا نُفشل الربط: الاشتراك بحقل «messages» على مستوى تطبيق إنستغرام (بلوحة Meta)
+    // يكفي لوصول الرسائل لكل حساب مربوط، فنتجاهل فشل اشتراك الصفحة بهدوء.
+    try {
+      await subscribePageMessages(chosen.pageId, chosen.pageToken);
+    } catch (e) {
+      console.error('ig subscribe page (تم تجاهله):', e.message);
+    }
 
     await query(
       `UPDATE stores SET ig_user_id = $1, ig_username = $2, ig_page_id = $3,
