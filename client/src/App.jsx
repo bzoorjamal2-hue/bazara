@@ -46,6 +46,7 @@ const Offers = lazy(() => import('./pages/Offers.jsx'));
 const Reels = lazy(() => import('./pages/Reels.jsx'));
 const Track = lazy(() => import('./pages/Track.jsx'));
 const PaymentCallback = lazy(() => import('./pages/PaymentCallback.jsx'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy.jsx'));
 const NotFound = lazy(() => import('./pages/NotFound.jsx'));
 // معاينة تطويرية لنموذج المنتج (DEV فقط — يزيلها البناء نهائياً)
 const DevProductForm = lazy(() =>
@@ -212,6 +213,7 @@ function AnimatedRoutes() {
           <Route path="/reels" element={<Reels />} />
           <Route path="/track" element={<Track />} />
           <Route path="/payment/callback" element={<PaymentCallback />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
           {/* معاينة نموذج المنتج أثناء التطوير فقط — لا يدخل بنسخة الإنتاج (يُحذف بالبناء) */}
           {import.meta.env.DEV && <Route path="/__dev/product-form" element={<DevProductForm />} />}
           <Route
