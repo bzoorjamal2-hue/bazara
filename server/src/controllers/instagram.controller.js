@@ -9,6 +9,8 @@ import {
   VERIFY_TOKEN,
   APP_ID,
   GRAPH_VERSION,
+  LOGIN_CONFIG_ID,
+  exchangeCodeForToken,
   exchangeLongLivedToken,
   getManagedPages,
   subscribePageMessages,
@@ -145,36 +147,61 @@ export async function igStatus(req, res, next) {
       enabled: isInstagramConfigured(),
       connected: Boolean(store.ig_connected),
       username: store.ig_username || '',
-      appId: APP_ID, // عام — لتهيئة FB JS SDK بالواجهة
+      appId: APP_ID, // عام — لبناء رابط تسجيل الدخول بالواجهة
       graphVersion: GRAPH_VERSION,
+      configId: LOGIN_CONFIG_ID, // إعداد تسجيل الدخول للأعمال (عام)
     });
   } catch (err) {
     next(err);
   }
 }
 
-// POST /api/instagram/connect — { userToken } من تسجيل دخول فيسبوك بالواجهة
+// POST /api/instagram/connect — تدفّق إعادة التوجيه (Facebook Login for Business):
+//   • الخطوة 1: { code, redirectUri } → نبدّل الرمز بتوكن، نجلب الصفحات.
+//       - صفحة واحدة → نربطها فوراً.
+//       - عدّة صفحات → نخزّن التوكن (طويل العمر) مؤقّتاً ونُعيد القائمة ليختار.
+//   • الخطوة 2: { pageId } فقط → نستأنف بالتوكن المخزّن مؤقّتاً ونربط الصفحة المختارة.
 export async function igConnect(req, res, next) {
   if (!isInstagramConfigured()) {
     return res.status(503).json({ error: 'ربط إنستغرام غير مُفعّل بعد على المنصّة. تواصل مع الدعم.' });
   }
-  const userToken = String(req.body.userToken || '').trim();
-  if (!userToken) return res.status(400).json({ error: 'توكن الدخول مطلوب.' });
+  const code = String(req.body.code || '').trim();
+  const redirectUri = String(req.body.redirectUri || '').trim();
+  const pageId = String(req.body.pageId || '').trim();
+  const rawUserToken = String(req.body.userToken || '').trim(); // مسار قديم (احتياطي)
 
   try {
     const store = await getUserStore(req.user.id);
     if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
 
-    const longLived = await exchangeLongLivedToken(userToken);
+    // نحصل على توكن طويل العمر: من الرمز، أو من توكن مباشر، أو من المخزّن مؤقّتاً (اختيار صفحة).
+    let longLived;
+    if (code && redirectUri) {
+      const userToken = await exchangeCodeForToken(code, redirectUri);
+      longLived = await exchangeLongLivedToken(userToken);
+    } else if (rawUserToken) {
+      longLived = await exchangeLongLivedToken(rawUserToken);
+    } else if (pageId && !store.ig_connected && store.ig_access_token) {
+      longLived = decrypt(store.ig_access_token); // التوكن المؤقّت من الخطوة 1
+    }
+    if (!longLived) return res.status(400).json({ error: 'انتهت جلسة الربط. أعد المحاولة من زر الربط.' });
+
     const pages = await getManagedPages(longLived);
     if (!pages.length) {
       return res.status(400).json({
-        error: 'ما لقينا حساب إنستغرام Business مربوط بصفحة فيسبوك. تأكّد أنّ حسابك Business ومربوط بصفحة.',
+        error: 'ما لقينا حساب إنستغرام Business مربوط بصفحة فيسبوك. تأكّد أنّ حسابك Business ومربوط بصفحة تديرها.',
       });
     }
-    // لو أرسلت الواجهة معرّف صفحة محدّدة نأخذها، وإلا أول صفحة مربوطة بإنستغرام
-    const wanted = String(req.body.pageId || '').trim();
-    const chosen = pages.find((p) => p.pageId === wanted) || pages[0];
+
+    // صفحة واحدة → تلقائي. عدّة صفحات بلا اختيار → نخزّن التوكن مؤقّتاً ونُعيد القائمة.
+    const chosen = pages.find((p) => p.pageId === pageId) || (pages.length === 1 ? pages[0] : null);
+    if (!chosen) {
+      await query(
+        "UPDATE stores SET ig_access_token = $1, ig_connected = false WHERE id = $2",
+        [encrypt(longLived), store.id]
+      );
+      return res.json({ pages: pages.map((p) => ({ pageId: p.pageId, name: p.pageName, username: p.igUsername })) });
+    }
 
     // اشتراك الـ webhook لهذه الصفحة (بدونه لا تصلنا رسائل)
     await subscribePageMessages(chosen.pageId, chosen.pageToken);
@@ -185,12 +212,7 @@ export async function igConnect(req, res, next) {
       [chosen.igUserId, chosen.igUsername, chosen.pageId, encrypt(chosen.pageToken), store.id]
     );
 
-    res.json({
-      connected: true,
-      username: chosen.igUsername,
-      // لو عنده أكثر من صفحة نرجّعها ليختار (الواجهة تعيد الطلب بـ pageId)
-      pages: pages.length > 1 ? pages.map((p) => ({ pageId: p.pageId, name: p.pageName, username: p.igUsername })) : undefined,
-    });
+    res.json({ connected: true, username: chosen.igUsername });
   } catch (err) {
     if (err.status) return res.status(400).json({ error: err.body?.error?.message || 'تعذّر الربط مع إنستغرام.' });
     next(err);

@@ -4,17 +4,37 @@ import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
 import { InstagramIcon, BagIcon, BackIcon, CheckIcon, TrashIcon, PlusIcon } from '../../components/icons.jsx';
-import { loadFbSdk, fbLogin } from '../../utils/fbSdk.js';
+import { startFbLogin, igRedirectUri } from '../../utils/fbSdk.js';
 import { cldThumb } from '../../utils/cloudinary.js';
+
+// ننظّف رابط الصفحة من بارامترات العودة (code/state) بعد معالجتها
+function cleanOauthUrl() {
+  try { window.history.replaceState({}, '', '/dashboard?tab=instagram'); } catch { /* تجاهل */ }
+}
 
 export default function InstagramInbox() {
   const { t } = useTranslation();
   const [status, setStatus] = useState(null);
   const [error, setError] = useState('');
+  const [pendingPages, setPendingPages] = useState(null); // عدّة صفحات بعد العودة من فيسبوك
 
   const loadStatus = () =>
     api.get('/instagram/status').then((r) => setStatus(r.data)).catch((e) => setError(getErrorMessage(e)));
-  useEffect(() => { loadStatus(); }, []);
+
+  // عند التحميل: لو رجعنا من فيسبوك (?code=) نكمّل الربط، وإلا نجلب الحالة عادةً.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (params.get('error')) { setError(t('dashboard.instagram.loginCancelled')); cleanOauthUrl(); loadStatus(); return; }
+    if (code) {
+      api.post('/instagram/connect', { code, redirectUri: igRedirectUri() })
+        .then((r) => { if (r.data.pages) setPendingPages(r.data.pages); })
+        .catch((e) => setError(getErrorMessage(e)))
+        .finally(() => { cleanOauthUrl(); loadStatus(); });
+      return;
+    }
+    loadStatus();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!status && !error) return <Spinner />;
 
@@ -30,7 +50,7 @@ export default function InstagramInbox() {
       {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
 
       {status && !status.connected ? (
-        <ConnectCard status={status} onConnected={loadStatus} />
+        <ConnectCard status={status} pendingPages={pendingPages} onConnected={() => { setPendingPages(null); loadStatus(); }} />
       ) : status ? (
         <Inbox username={status.username} onDisconnected={loadStatus} />
       ) : null}
@@ -38,25 +58,27 @@ export default function InstagramInbox() {
   );
 }
 
-// ───────── بطاقة الربط (تسجيل دخول فيسبوك) ─────────
-function ConnectCard({ status, onConnected }) {
+// ───────── بطاقة الربط (تسجيل دخول فيسبوك بإعادة توجيه) ─────────
+function ConnectCard({ status, pendingPages, onConnected }) {
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [pages, setPages] = useState(null); // لو المستخدم عنده أكثر من صفحة يختار
+  const pages = pendingPages; // تظهر بعد العودة من فيسبوك لو عنده عدّة صفحات
 
-  const connect = async (pageId) => {
+  // الزر الأساسي: يوجّه لفيسبوك (الصفحة تروح وترجع بـ ?code=) — بلا نوافذ منبثقة.
+  const start = () => {
+    setError('');
+    startFbLogin({ appId: status.appId, configId: status.configId, graphVersion: status.graphVersion });
+  };
+
+  // اختيار صفحة معيّنة (خطوة ثانية): يكمّل الربط بالتوكن المخزّن مؤقّتاً بالخادم.
+  const pick = async (pageId) => {
     setBusy(true); setError('');
     try {
-      await loadFbSdk(status.appId, status.graphVersion);
-      const userToken = await fbLogin();
-      const res = await api.post('/instagram/connect', { userToken, pageId });
-      if (res.data.pages && !pageId) { setPages(res.data.pages); setBusy(false); return; }
+      await api.post('/instagram/connect', { pageId });
       onConnected();
     } catch (e) {
-      if (e.message === 'cancelled') setError(t('dashboard.instagram.loginCancelled'));
-      else if (e.message === 'sdk_load_failed') setError(t('dashboard.instagram.sdkFailed'));
-      else setError(getErrorMessage(e));
+      setError(getErrorMessage(e));
       setBusy(false);
     }
   };
@@ -84,13 +106,13 @@ function ConnectCard({ status, onConnected }) {
 
       {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
 
-      {pages ? (
+      {pages && pages.length ? (
         <div className="space-y-2">
           <p className="text-xs font-semibold text-stone-300">{t('dashboard.instagram.choosePage')}</p>
           {pages.map((p) => (
             <button
               key={p.pageId}
-              onClick={() => connect(p.pageId)}
+              onClick={() => pick(p.pageId)}
               disabled={busy}
               className="flex w-full items-center justify-between rounded-xl bg-white/5 px-4 py-3 text-sm text-stone-100 ring-1 ring-white/10 transition hover:bg-white/10 disabled:opacity-50"
             >
@@ -100,8 +122,8 @@ function ConnectCard({ status, onConnected }) {
           ))}
         </div>
       ) : (
-        <button onClick={() => connect()} disabled={busy} className="btn-primary gap-2">
-          <InstagramIcon className="h-5 w-5" /> {busy ? t('common.loading') : t('dashboard.instagram.connectBtn')}
+        <button onClick={start} disabled={busy} className="btn-primary gap-2">
+          <InstagramIcon className="h-5 w-5" /> {t('dashboard.instagram.connectBtn')}
         </button>
       )}
 

@@ -11,9 +11,12 @@ dotenv.config();
 // إصدار Graph API — ثابت حتى لا يتغيّر السلوك فجأة عند ترقية Meta لواجهتها.
 export const GRAPH = `https://graph.facebook.com/${process.env.IG_GRAPH_VERSION || 'v21.0'}`;
 
-// معرّف التطبيق عام (يُستخدم بواجهة FB JS SDK) فلا بأس بكشفه للواجهة. السرّ يبقى خادمياً فقط.
+// معرّف التطبيق عام (يُستخدم بتدفّق تسجيل الدخول بالواجهة) فلا بأس بكشفه. السرّ يبقى خادمياً فقط.
 export const APP_ID = process.env.IG_APP_ID || '';
 export const GRAPH_VERSION = process.env.IG_GRAPH_VERSION || 'v21.0';
+// معرّف إعداد «تسجيل الدخول للأعمال» (Facebook Login for Business) — هذا النوع من
+// التطبيقات لا يقبل scope القديم، بل يتطلّب config_id يجمع الصلاحيات والأصول. عام أيضاً.
+export const LOGIN_CONFIG_ID = process.env.IG_LOGIN_CONFIG_ID || '';
 const APP_SECRET = process.env.IG_APP_SECRET || '';
 // نستخدمه للتحقق من طلب اشتراك الـ webhook (GET) — نضبطه نفسه في لوحة Meta.
 export const VERIFY_TOKEN = process.env.IG_VERIFY_TOKEN || '';
@@ -59,6 +62,20 @@ async function graph(path, { method = 'GET', token, params, body } = {}) {
 // الواجهة تسجّل دخول فيسبوك (FB JS SDK) وتُرسل لنا توكن المستخدم قصير العمر. نحوّله
 // لتوكن طويل العمر، نجلب صفحات المستخدم وحساب إنستغرام المرتبط بكل صفحة، ثم نشترك
 // بالـ webhook لتلك الصفحة. توكن الصفحة (طويل العمر) هو ما نخزّنه ونرسل به الردود.
+
+// 0) تبديل رمز التفويض (code) القادم من إعادة التوجيه بتوكن مستخدم — redirect_uri
+// يجب أن يطابق تماماً الذي طُلب به الدخول، وإلا ترفض Meta التبديل.
+export async function exchangeCodeForToken(code, redirectUri) {
+  const data = await graph('/oauth/access_token', {
+    params: {
+      client_id: APP_ID,
+      client_secret: APP_SECRET,
+      redirect_uri: redirectUri,
+      code,
+    },
+  });
+  return data.access_token;
+}
 
 // 1) توكن مستخدم قصير → طويل العمر (~60 يوم)
 export async function exchangeLongLivedToken(userToken) {

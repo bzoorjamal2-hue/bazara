@@ -1,44 +1,41 @@
-// تحميل Facebook JS SDK عند الحاجة فقط (ربط إنستغرام) — لا نحمّله بكل زيارة.
-let sdkPromise = null;
+// تسجيل الدخول لفيسبوك بطريقة «إعادة التوجيه» (Redirect) — لا نوافذ منبثقة، فتشتغل
+// على iOS والتطبيق المثبّت وكل المتصفّحات. تطبيقات «Facebook Login for Business»
+// تتطلّب config_id (لا scope القديم) + response_type=code.
 
-export function loadFbSdk(appId, version = 'v21.0') {
-  if (window.FB) return Promise.resolve(window.FB);
-  if (sdkPromise) return sdkPromise;
-  sdkPromise = new Promise((resolve, reject) => {
-    window.fbAsyncInit = function () {
-      window.FB.init({ appId, cookie: false, xfbml: false, version });
-      resolve(window.FB);
-    };
-    const s = document.createElement('script');
-    s.src = 'https://connect.facebook.net/en_US/sdk.js';
-    s.async = true;
-    s.defer = true;
-    s.crossOrigin = 'anonymous';
-    s.onerror = () => { sdkPromise = null; reject(new Error('sdk_load_failed')); };
-    document.head.appendChild(s);
-  });
-  return sdkPromise;
+// المسار الذي نعود إليه بعد موافقة فيسبوك — يجب تسجيله في إعدادات تسجيل الدخول عند Meta.
+export const IG_REDIRECT_PATH = '/dashboard?tab=instagram';
+
+export function igRedirectUri() {
+  return `${window.location.origin}${IG_REDIRECT_PATH}`;
 }
 
-// نافذة تسجيل دخول فيسبوك → توكن المستخدم قصير العمر (نرسله للخادم ليكمل الربط).
-// الصلاحيات المطلوبة لرسائل إنستغرام Business.
+// صلاحيات احتياطية للمسار القديم فقط — التطبيق التجاري يعتمد config_id.
 const SCOPES = [
   'instagram_basic',
   'instagram_manage_messages',
   'pages_show_list',
-  'pages_manage_metadata',
+  'pages_read_engagement',
   'business_management',
 ].join(',');
 
-export function fbLogin() {
-  return new Promise((resolve, reject) => {
-    window.FB.login(
-      (resp) => {
-        const token = resp?.authResponse?.accessToken;
-        if (token) resolve(token);
-        else reject(new Error('cancelled'));
-      },
-      { scope: SCOPES, auth_type: 'rerequest', return_scopes: true }
-    );
+// يبدأ الدخول: يوجّه الصفحة كاملةً لنافذة فيسبوك. بعد الموافقة يرجّع فيسبوك المستخدم
+// إلى IG_REDIRECT_PATH مع ?code=… فنكمّل الربط من هناك.
+export function startFbLogin({ appId, configId, graphVersion = 'v21.0' }) {
+  const state = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  try { sessionStorage.setItem('ig_oauth_state', state); } catch { /* تجاهل */ }
+
+  const p = new URLSearchParams({
+    client_id: appId,
+    redirect_uri: igRedirectUri(),
+    response_type: 'code',
+    state,
   });
+  if (configId) {
+    // تسجيل الدخول للأعمال: config_id بدل scope + تجاوز نوع الردّ الافتراضي
+    p.set('config_id', configId);
+    p.set('override_default_response_type', 'true');
+  } else {
+    p.set('scope', SCOPES); // احتياطي (تطبيق دخول عادي)
+  }
+  window.location.href = `https://www.facebook.com/${graphVersion}/dialog/oauth?${p.toString()}`;
 }
