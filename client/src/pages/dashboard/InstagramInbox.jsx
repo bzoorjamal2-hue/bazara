@@ -49,6 +49,9 @@ export default function InstagramInbox() {
 
       {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
 
+      {/* حلّ عملي فوري: تسجيل طلب من محادثة يدوياً — يعمل الآن بلا انتظار موافقة Meta */}
+      <ManualOrderPanel />
+
       {status && !status.connected ? (
         <ConnectCard status={status} pendingPages={pendingPages} onConnected={() => { setPendingPages(null); loadStatus(); }} />
       ) : status ? (
@@ -399,6 +402,141 @@ function ConvertForm({ convId, defaultName, onDone }) {
       ))}
 
       {/* بيانات الزبون */}
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <input className="input" placeholder={t('dashboard.instagram.custName')} value={f.name} onChange={set('name')} />
+        <input className="input" placeholder={t('dashboard.instagram.custPhone')} value={f.phone} onChange={set('phone')} dir="ltr" />
+        <input className="input" placeholder={t('dashboard.ordersSection.deliveryTo')} value={f.city} onChange={set('city')} />
+        <input className="input" type="number" min="0" step="0.5" inputMode="decimal" placeholder={t('dashboard.ordersSection.delivery')} value={f.deliveryFee} onChange={set('deliveryFee')} />
+        <input className="input sm:col-span-2" placeholder={t('dashboard.ordersSection.address')} value={f.address} onChange={set('address')} />
+        <input className="input sm:col-span-2" placeholder={t('dashboard.ordersSection.notes')} value={f.notes} onChange={set('notes')} />
+      </div>
+
+      {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs text-red-200">{error}</div>}
+
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={submit} disabled={busy} className="btn-primary gap-1.5 !px-3 !py-1.5 text-xs disabled:opacity-50">
+          {busy ? t('common.loading') : <><BagIcon className="h-4 w-4" /> {t('dashboard.instagram.createOrder')}</>}
+        </button>
+        <span className="text-xs text-stone-400">
+          {t('dashboard.ordersSection.total')}: <span className="font-display text-sm font-bold text-gold-300">{t('common.currency')}{total.toFixed(2)}</span>
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ───────── حلّ عملي: تسجيل طلب من محادثة يدوياً (يعمل الآن بلا Meta) ─────────
+function ManualOrderPanel() {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const [done, setDone] = useState(null); // { reference }
+
+  return (
+    <div className="glass overflow-hidden">
+      <div className="flex items-start gap-3 p-4">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-400 to-amber-500 text-wine-dark shadow-md">
+          <BagIcon className="h-5 w-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="font-display text-base font-bold text-gold-200">{t('dashboard.instagram.manualTitle')}</p>
+          <p className="mt-1 text-xs leading-relaxed text-stone-400">{t('dashboard.instagram.manualNote')}</p>
+        </div>
+        <button
+          onClick={() => { setOpen((v) => !v); setDone(null); }}
+          className="btn-primary shrink-0 gap-1 !px-3 !py-1.5 text-xs"
+        >
+          <PlusIcon className="h-4 w-4" /> {open ? t('common.cancel') : t('dashboard.instagram.newOrder')}
+        </button>
+      </div>
+
+      {done && (
+        <div className="mx-4 mb-4 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-200">
+          {t('dashboard.instagram.orderCreated')} — <span dir="ltr" className="font-mono font-bold">{done.reference}</span>
+        </div>
+      )}
+
+      {open && <ManualOrderForm onDone={(reference) => { setOpen(false); setDone({ reference }); }} />}
+    </div>
+  );
+}
+
+// نفس منطق نموذج التحويل، لكنه ينشئ طلباً مباشرةً عبر /orders/cod (بلا محادثة مربوطة)
+function ManualOrderForm({ onDone }) {
+  const { t } = useTranslation();
+  const [products, setProducts] = useState(null);
+  const [picked, setPicked] = useState([]);
+  const [q, setQ] = useState('');
+  const [f, setF] = useState({ name: '', phone: '', city: '', address: '', deliveryFee: '', notes: '' });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    api.get('/products').then((r) => setProducts(r.data.products || [])).catch(() => setProducts([]));
+  }, []);
+
+  const set = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }));
+  const add = (p) => {
+    if (picked.some((x) => x.id === p.id)) return;
+    setPicked((prev) => [...prev, { id: p.id, name: p.name, price: Number(p.price) || 0, qty: 1, size: '', color: '' }]);
+    setQ('');
+  };
+  const setItem = (id, patch) => setPicked((prev) => prev.map((x) => (x.id === id ? { ...x, ...patch } : x)));
+  const removeItem = (id) => setPicked((prev) => prev.filter((x) => x.id !== id));
+
+  const results = useMemo(() => {
+    const term = q.trim().toLowerCase();
+    if (!term) return [];
+    return (products || []).filter((p) => (p.name || '').toLowerCase().includes(term)).slice(0, 6);
+  }, [q, products]);
+
+  const subtotal = picked.reduce((s, x) => s + x.price * Math.max(1, x.qty), 0);
+  const total = subtotal + (Number(f.deliveryFee) || 0);
+
+  const submit = async () => {
+    if (!picked.length) { setError(t('dashboard.instagram.needProduct')); return; }
+    if (!f.name.trim() || !f.phone.trim()) { setError(t('dashboard.instagram.needCustomer')); return; }
+    setBusy(true); setError('');
+    try {
+      const res = await api.post('/orders/cod', {
+        items: picked.map((x) => ({ id: x.id, qty: x.qty, size: x.size, color: x.color })),
+        customer: { name: f.name, phone: f.phone, city: f.city, address: f.address, deliveryFee: f.deliveryFee, notes: f.notes },
+      });
+      try { window.dispatchEvent(new Event('bz:orders-changed')); } catch { /* تجاهل */ }
+      onDone(res.data.reference || '');
+    } catch (e) {
+      setError(getErrorMessage(e));
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="space-y-3 border-t border-white/5 bg-gold-400/5 p-3">
+      {/* اختيار المنتجات */}
+      <div className="relative">
+        <input className="input" placeholder={t('dashboard.instagram.searchProduct')} value={q} onChange={(e) => setQ(e.target.value)} />
+        {results.length > 0 && (
+          <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl bg-[#241a15] shadow-xl ring-1 ring-white/10">
+            {results.map((p) => (
+              <button key={p.id} onClick={() => add(p)} className="flex w-full items-center gap-2 px-3 py-2 text-start text-sm text-stone-100 transition hover:bg-white/10">
+                {p.images?.[0] ? <img src={cldThumb(p.images[0], 80)} alt="" className="h-8 w-8 rounded object-cover" /> : <span className="flex h-8 w-8 items-center justify-center rounded bg-white/5"><BagIcon className="h-4 w-4 text-stone-500" /></span>}
+                <span className="min-w-0 flex-1 truncate">{p.name}</span>
+                <span className="text-gold-300">{t('common.currency')}{Number(p.price).toFixed(0)}</span>
+                <PlusIcon className="h-4 w-4 text-gold-300" />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {picked.map((x) => (
+        <div key={x.id} className="flex items-center gap-2 rounded-xl bg-black/20 px-2.5 py-2 ring-1 ring-white/5">
+          <span className="min-w-0 flex-1 truncate text-sm text-stone-100">{x.name}</span>
+          <input className="input !w-24 !py-1 text-xs" placeholder={t('dashboard.instagram.size')} value={x.size} onChange={(e) => setItem(x.id, { size: e.target.value })} />
+          <input className="input !w-16 !py-1 text-center text-xs" type="number" min="1" inputMode="numeric" value={x.qty} onChange={(e) => setItem(x.id, { qty: Math.max(1, parseInt(e.target.value, 10) || 1) })} />
+          <button onClick={() => removeItem(x.id)} className="rounded-lg p-1.5 text-stone-400 hover:text-red-300"><TrashIcon className="h-4 w-4" /></button>
+        </div>
+      ))}
+
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <input className="input" placeholder={t('dashboard.instagram.custName')} value={f.name} onChange={set('name')} />
         <input className="input" placeholder={t('dashboard.instagram.custPhone')} value={f.phone} onChange={set('phone')} dir="ltr" />

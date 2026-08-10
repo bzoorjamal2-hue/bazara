@@ -315,7 +315,11 @@
       "custPhone": "Phone number",
       "needProduct": "Add at least one product.",
       "needCustomer": "Customer name and phone are required.",
-      "createOrder": "Create order"
+      "createOrder": "Create order",
+      "manualTitle": "Log an order from a chat",
+      "manualNote": "Automatic Instagram message sync is under Meta review. Until it's approved, log your chat orders (Instagram/WhatsApp) manually here — they go straight into your Orders and ship like any order.",
+      "newOrder": "New order",
+      "orderCreated": "Order created and added to your Orders"
     },
     "addProduct": "Add new product",
     "ordersSection": {
