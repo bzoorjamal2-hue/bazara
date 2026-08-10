@@ -187,9 +187,9 @@ export default function Navbar() {
   const standalone = isStandalone(); // داخل التطبيق المثبّت: الدخول من شاشة الترحيب فقط
   const isAdmin = subscription?.isAdmin;
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     setMenuOpen(false);
-    await logout();
+    logout(); // يُفرِغ الجلسة محلياً فوراً (نداء الخادم بالخلفية) — لا ننتظره
     // بعد الخروج نذهب للصفحة العامة (بازارا) صراحةً — /shop تعرض الرئيسية العامة في
     // المتصفّح والتطبيق المثبّت معاً (بينما '/' في المثبّت تعرض شاشة الترحيب). replace كي
     // لا تبقى الصفحة المحمية "ميتة" في التاريخ. هكذا لا يعلق المشترك السابق داخل متجره.

@@ -50,12 +50,15 @@ export function AuthProvider({ children }) {
     return await refresh();
   };
 
-  const logout = async () => {
-    try { await api.post('/auth/logout'); } catch { /* تجاهل */ }
+  const logout = () => {
+    // نُفرِغ الجلسة محلياً فوراً ثم نُبلغ الخادم بالخلفية (بلا await) — كي لا يعلّق الخروج
+    // على خادم Render البطيء/النائم: كان await للخادم يؤخّر التنقّل للصفحة العامة ثوانيَ
+    // طويلة (بدا وكأنّ الخروج لا يوجّه للرئيسية).
     clearAuthToken();
     setUser(null);
     setStore(null);
     setSubscription(null);
+    api.post('/auth/logout').catch(() => { /* الكوكي يُمسح لاحقاً؛ الجلسة المحلية مُفرَّغة */ });
   };
 
   const updateProfile = async (payload) => {

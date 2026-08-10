@@ -198,7 +198,7 @@ function AnimatedRoutes() {
   // كان التلاشي + قفزة التمرير بنفس اللحظة يعطيان إحساس "تعليق" عند كل رجوع.
   return (
     <Suspense fallback={<Spinner full />}>
-      <div key={location.pathname} className={`${fillStore ? 'flex min-h-full flex-col ' : ''}${navType === 'POP' ? '' : 'route-fade'}`.trim() || undefined}>
+      <div key={location.pathname} className={`${fillStore ? 'flex flex-1 flex-col min-h-0 ' : ''}${navType === 'POP' ? '' : 'route-fade'}`.trim() || undefined}>
         <Routes location={location}>
           <Route path="/" element={<Root />} />
           <Route path="/shop" element={<Home />} />

@@ -68,7 +68,9 @@ export default function Layout({ children }) {
       {/* فوتر المنصّة يظهر على كل صفحات المتجر العام (زي فوتر المتاجر) — مع الشريط
           السفلي أيضاً. عند ظهوره يحمل هو مسافة الشريط السفلي، فلا يبقى فراغ كبير
           داخل main قبله ولا يغطّيه الشريط. */}
-      <main className={`mx-auto w-full max-w-6xl flex-1 px-4 pt-5 sm:px-6 xl:max-w-[1320px] 2xl:max-w-[1600px] ${showBottomNav && !showFooter ? 'pb-bottomnav' : 'pb-8'}`}>{children}</main>
+      {/* صفحة تتبّع المتجر: نجعل main عموداً مرناً كي يملأ غلاف المسار الارتفاع
+          (flex-1) فيلتصق فوتر المتجر بالأسفل بدل طفوه لأعلى — flex-grow لا نسبة % */}
+      <main className={`mx-auto w-full max-w-6xl flex-1 px-4 pt-5 sm:px-6 xl:max-w-[1320px] 2xl:max-w-[1600px] ${isStoreTrack ? 'flex flex-col' : ''} ${showBottomNav && !showFooter ? 'pb-bottomnav' : 'pb-8'}`}>{children}</main>
       {showFooter && <PublicFooter bottomNav={showBottomNav} />}
       <CartDrawer />
       <WishlistDrawer />
