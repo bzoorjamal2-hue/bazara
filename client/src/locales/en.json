@@ -311,6 +311,7 @@
       "convertTitle": "Convert conversation to an order",
       "searchProduct": "Search for a product to add...",
       "size": "Size",
+      "color": "Color",
       "custName": "Customer name",
       "custPhone": "Phone number",
       "needProduct": "Add at least one product.",
