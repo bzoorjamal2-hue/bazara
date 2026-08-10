@@ -6,7 +6,7 @@ import Select from '../../components/Select.jsx';
 import { sizeLabel } from '../../utils/sizes.js';
 import { InstagramIcon, BagIcon, BackIcon, CheckIcon, TrashIcon, PlusIcon } from '../../components/icons.jsx';
 import { startFbLogin, igRedirectUri } from '../../utils/fbSdk.js';
-import { cldThumb } from '../../utils/cloudinary.js';
+import { cldThumb, cldVideoPoster } from '../../utils/cloudinary.js';
 
 // ننظّف رابط الصفحة من بارامترات العودة (code/state) بعد معالجتها
 function cleanOauthUrl() {
@@ -337,37 +337,91 @@ function sizesFor(p, color) {
   if (hasColorStock) return color ? Object.keys(colorStock[color] || {}) : [];
   return sizes;
 }
+// صورة المنتج — نفس ترتيب صفحة المنتج (imageUrl ثم أول صورة ثم بوستر الفيديو)
+function productImg(p, w = 96) {
+  const raw = p?.imageUrl || p?.images?.[0] || (p?.videoUrl ? cldVideoPoster(p.videoUrl) : '');
+  return raw ? cldThumb(raw, w) : '';
+}
 
-// صف منتج مختار: يعرض ألوان ونمَر المنتج الفعلية ليختار منها التاجر (Select نهاري)
+// صف منتج مختار — يظهر زي بند طلب حقيقي: صورة + لون + نمرة + كمية + إجمالي السطر
 function PickedRow({ item, onChange, onRemove }) {
   const { t } = useTranslation();
   const { colors, hasColorStock } = productOptions(item.product);
   const sizes = sizesFor(item.product, item.color);
+  const img = productImg(item.product);
+  const line = Number(item.price) * Math.max(1, item.qty);
   return (
-    <div className="space-y-2 rounded-xl bg-black/20 p-2.5 ring-1 ring-white/5">
-      <div className="flex items-center gap-2">
-        <span className="min-w-0 flex-1 truncate text-sm text-stone-100">{item.name}</span>
-        <span className="shrink-0 text-xs text-gold-300">{t('common.currency')}{Number(item.price).toFixed(0)}</span>
-        <button onClick={onRemove} className="rounded-lg p-1.5 text-stone-400 hover:text-red-300"><TrashIcon className="h-4 w-4" /></button>
+    <div className="flex gap-2.5 rounded-xl bg-black/20 p-2.5 ring-1 ring-white/5">
+      {img ? (
+        <img src={img} alt="" className="h-16 w-14 shrink-0 rounded-lg object-cover ring-1 ring-white/10" />
+      ) : (
+        <span className="flex h-16 w-14 shrink-0 items-center justify-center rounded-lg bg-white/5 text-stone-500"><BagIcon className="h-5 w-5" /></span>
+      )}
+      <div className="min-w-0 flex-1 space-y-1.5">
+        <div className="flex items-start gap-2">
+          <span className="min-w-0 flex-1 truncate text-sm font-semibold text-stone-100">{item.name}</span>
+          <button onClick={onRemove} className="-me-1 rounded-lg p-1 text-stone-400 hover:text-red-300"><TrashIcon className="h-4 w-4" /></button>
+        </div>
+        {(colors.length > 0 || sizes.length > 0) && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {colors.length > 0 && (
+              <div className="min-w-[6rem] flex-1">
+                <Select value={item.color} placeholder={t('dashboard.instagram.color')}
+                  options={colors.map((c) => ({ value: c, label: c }))}
+                  onChange={(c) => onChange({ color: c, size: hasColorStock ? '' : item.size })} />
+              </div>
+            )}
+            {sizes.length > 0 && (
+              <div className="min-w-[5rem] flex-1">
+                <Select value={item.size} placeholder={t('dashboard.instagram.size')}
+                  options={sizes.map((s) => ({ value: s, label: sizeLabel(s, t) }))}
+                  onChange={(s) => onChange({ size: s })} />
+              </div>
+            )}
+            <input className="input !w-14 !py-1.5 text-center" type="number" min="1" inputMode="numeric" value={item.qty}
+              onChange={(e) => onChange({ qty: Math.max(1, parseInt(e.target.value, 10) || 1) })} />
+          </div>
+        )}
+        <div className="text-xs text-stone-400">
+          {t('common.currency')}{Number(item.price).toFixed(0)}{item.qty > 1 ? ` × ${item.qty}` : ''}
+          {' = '}<span className="font-display text-sm font-bold text-gold-300">{t('common.currency')}{line.toFixed(2)}</span>
+        </div>
       </div>
-      {(colors.length > 0 || sizes.length > 0) && (
-        <div className="flex flex-wrap items-center gap-2">
-          {colors.length > 0 && (
-            <div className="min-w-[7rem] flex-1">
-              <Select value={item.color} placeholder={t('dashboard.instagram.color')}
-                options={colors.map((c) => ({ value: c, label: c }))}
-                onChange={(c) => onChange({ color: c, size: hasColorStock ? '' : item.size })} />
-            </div>
-          )}
-          {sizes.length > 0 && (
-            <div className="min-w-[6rem] flex-1">
-              <Select value={item.size} placeholder={t('dashboard.instagram.size')}
-                options={sizes.map((s) => ({ value: s, label: sizeLabel(s, t) }))}
-                onChange={(s) => onChange({ size: s })} />
-            </div>
-          )}
-          <input className="input !w-16 !py-2 text-center" type="number" min="1" inputMode="numeric" value={item.qty}
-            onChange={(e) => onChange({ qty: Math.max(1, parseInt(e.target.value, 10) || 1) })} />
+    </div>
+  );
+}
+
+// خانة بحث للمنطقة: يكتب فيفلتر مناطق المتجر ويظهر سعر كل منطقة؛ اختيارها يملأ الأجرة.
+function RegionField({ zones, value, onPick, onText }) {
+  const { t } = useTranslation();
+  const [q, setQ] = useState(value || '');
+  const [open, setOpen] = useState(false);
+  useEffect(() => { setQ(value || ''); }, [value]);
+  const term = q.trim().toLowerCase();
+  const results = zones.filter((z) => (z.name || '').toLowerCase().includes(term)).slice(0, 8);
+  return (
+    <div className="relative flex-1">
+      <input
+        className="input w-full"
+        placeholder={t('dashboard.ordersSection.deliveryTo')}
+        value={q}
+        onChange={(e) => { setQ(e.target.value); onText(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+      />
+      {open && results.length > 0 && (
+        <div className="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-2xl border border-wine/15 bg-white p-1.5 shadow-2xl">
+          {results.map((z) => (
+            <button
+              key={z.name}
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); onPick(z.name); setQ(z.name); setOpen(false); }}
+              className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-start text-sm text-[#2b2b2b] transition hover:bg-wine/5"
+            >
+              <span className="min-w-0 truncate font-medium">{z.name}</span>
+              {z.fee ? <span className="shrink-0 font-semibold text-wine">{t('common.currency')}{z.fee}</span> : null}
+            </button>
+          ))}
         </div>
       )}
     </div>
@@ -413,9 +467,6 @@ function OrderComposer({ defaultName = '', onSubmit }) {
     return (products || []).filter((p) => (p.name || '').toLowerCase().includes(term)).slice(0, 6);
   }, [q, products]);
 
-  const cityOptions = zones.map((z) => ({ value: z.name, label: `${z.name}${z.fee ? ` — ${t('common.currency')}${z.fee}` : ''}` }));
-  if (f.city && !zones.some((z) => z.name === f.city)) cityOptions.unshift({ value: f.city, label: f.city });
-
   const subtotal = picked.reduce((s, x) => s + x.price * Math.max(1, x.qty), 0);
   const total = subtotal + (Number(f.deliveryFee) || 0);
 
@@ -442,10 +493,10 @@ function OrderComposer({ defaultName = '', onSubmit }) {
         {results.length > 0 && (
           <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-2xl border border-wine/15 bg-white p-1.5 shadow-2xl">
             {results.map((p) => {
-              const img = p.images?.[0] || p.imageUrl;
+              const img = productImg(p);
               return (
                 <button key={p.id} onClick={() => add(p)} className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-start text-sm text-[#2b2b2b] transition hover:bg-wine/5">
-                  {img ? <img src={cldThumb(img, 80)} alt="" className="h-9 w-9 rounded-lg object-cover ring-1 ring-black/5" /> : <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-wine/5 text-wine/50"><BagIcon className="h-4 w-4" /></span>}
+                  {img ? <img src={img} alt="" className="h-9 w-9 rounded-lg object-cover ring-1 ring-black/5" /> : <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-wine/5 text-wine/50"><BagIcon className="h-4 w-4" /></span>}
                   <span className="min-w-0 flex-1 truncate font-medium">{p.name}</span>
                   <span className="shrink-0 font-semibold text-wine">{t('common.currency')}{Number(p.price).toFixed(0)}</span>
                   <PlusIcon className="h-4 w-4 shrink-0 text-wine" />
@@ -464,12 +515,18 @@ function OrderComposer({ defaultName = '', onSubmit }) {
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <input className="input" placeholder={t('dashboard.instagram.custName')} value={f.name} onChange={set('name')} />
         <input className="input" placeholder={t('dashboard.instagram.custPhone')} value={f.phone} onChange={set('phone')} dir="ltr" />
-        {zones.length > 0 ? (
-          <Select value={f.city} placeholder={t('dashboard.ordersSection.deliveryTo')} options={cityOptions} onChange={pickZone} />
-        ) : (
-          <input className="input" placeholder={t('dashboard.ordersSection.deliveryTo')} value={f.city} onChange={set('city')} />
-        )}
-        <input className="input" type="number" min="0" step="0.5" inputMode="decimal" placeholder={t('dashboard.ordersSection.delivery')} value={f.deliveryFee} onChange={set('deliveryFee')} />
+        {/* التوصيل: خانة بحث للمنطقة + سعرها بجنبها (يتعبّى تلقائياً) */}
+        <div className="flex gap-2 sm:col-span-2">
+          {zones.length > 0 ? (
+            <RegionField zones={zones} value={f.city} onPick={pickZone} onText={(v) => setF((p) => ({ ...p, city: v }))} />
+          ) : (
+            <input className="input flex-1" placeholder={t('dashboard.ordersSection.deliveryTo')} value={f.city} onChange={set('city')} />
+          )}
+          <div className="relative w-28 shrink-0">
+            <input className="input w-full pe-6 text-center" type="number" min="0" step="0.5" inputMode="decimal" placeholder={t('dashboard.ordersSection.delivery')} value={f.deliveryFee} onChange={set('deliveryFee')} />
+            <span className="pointer-events-none absolute inset-y-0 end-2 flex items-center text-xs text-stone-400">{t('common.currency')}</span>
+          </div>
+        </div>
         <input className="input sm:col-span-2" placeholder={t('dashboard.ordersSection.address')} value={f.address} onChange={set('address')} />
         <input className="input sm:col-span-2" placeholder={t('dashboard.ordersSection.notes')} value={f.notes} onChange={set('notes')} />
       </div>
