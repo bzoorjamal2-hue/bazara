@@ -27,6 +27,8 @@ import epsRoutes from './routes/eps.routes.js';
 import { epsWebhook, syncAllEpsStores } from './controllers/eps.controller.js';
 import goboxRoutes from './routes/gobox.routes.js';
 import { goboxWebhook, syncAllGoboxStores } from './controllers/gobox.controller.js';
+import instagramRoutes from './routes/instagram.routes.js';
+import { verifyWebhook, receiveWebhook } from './controllers/instagram.controller.js';
 import { robots, sitemap, indexNowKey, shareProduct, shareStore, shareStory } from './controllers/seo.controller.js';
 import { issueCsrfToken, verifyCsrf, getCsrfToken } from './middleware/csrf.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
@@ -76,7 +78,14 @@ app.use(
   })
 );
 
-app.use(express.json({ limit: '12mb' })); // يتسع لصور مرفوعة (base64) بعد التصغير
+// نحتفظ بالجسم الخام لِـ webhook إنستغرام فقط — للتحقق من توقيع Meta (HMAC).
+// نحصره بمسار الـ webhook حتى لا نضاعف ذاكرة كل طلب JSON عادي.
+app.use(express.json({
+  limit: '12mb', // يتسع لصور مرفوعة (base64) بعد التصغير
+  verify: (req, _res, buf) => {
+    if (req.originalUrl === '/api/instagram/webhook') req.rawBody = buf;
+  },
+}));
 app.use(cookieParser());
 if (process.env.NODE_ENV !== 'production') app.use(morgan('dev'));
 
@@ -98,6 +107,10 @@ app.use(issueCsrfToken);
 app.post('/api/eps/webhook', epsWebhook);
 // webhook تحديثات شحنات gobox (نفس نظام LogesTechs) — قبل CSRF أيضاً، يطابق بالباركود فقط.
 app.post('/api/gobox/webhook', goboxWebhook);
+// webhook رسائل إنستغرام — يأتي من خوادم Meta (بلا كوكي/CSRF). GET للتأكيد الأولي،
+// POST للأحداث. آمن: نتحقق من توقيع Meta (HMAC) داخل المعالج قبل قبول أي رسالة.
+app.get('/api/instagram/webhook', verifyWebhook);
+app.post('/api/instagram/webhook', receiveWebhook);
 app.use('/api', verifyCsrf);
 
 // فحص صحة الخادم + مسار توكن CSRF
@@ -120,6 +133,7 @@ app.use('/api/site', siteRoutes);
 app.use('/api/opost', opostRoutes);
 app.use('/api/eps', epsRoutes);
 app.use('/api/gobox', goboxRoutes);
+app.use('/api/instagram', instagramRoutes);
 
 // مسارات SEO (على الجذر)
 app.get('/robots.txt', robots);
@@ -364,6 +378,40 @@ async function ensureColumns() {
     await pool.query('CREATE INDEX IF NOT EXISTS idx_products_category_created ON products(category, created_at DESC);');
     // فهرس جزئي للعروض (منتجات مخفّضة فقط) — يسرّع صفحة العروض
     await pool.query('CREATE INDEX IF NOT EXISTS idx_products_offers ON products(created_at DESC) WHERE old_price IS NOT NULL AND old_price > price;');
+    // ربط رسائل إنستغرام المباشرة (Instagram Messaging API) — لكل متجر حسابه:
+    // معرّف حساب إنستغرام Business + الصفحة المربوطة + توكن الصفحة (مشفّر).
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS ig_user_id VARCHAR(60) DEFAULT '';");
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS ig_username VARCHAR(120) DEFAULT '';");
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS ig_page_id VARCHAR(60) DEFAULT '';");
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS ig_access_token TEXT DEFAULT '';");
+    await pool.query('ALTER TABLE stores ADD COLUMN IF NOT EXISTS ig_connected BOOLEAN NOT NULL DEFAULT false;');
+    // محادثات إنستغرام: صف لكل (متجر، مُرسِل) — يحمل آخر رسالة وعدّاد غير المقروء
+    // وربطاً بالطلب إن حُوّلت المحادثة لطلب. نطابق المتجر بحساب إنستغرام في الـ webhook.
+    await pool.query(`CREATE TABLE IF NOT EXISTS ig_conversations (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+      ig_sender_id VARCHAR(60) NOT NULL,
+      customer_name VARCHAR(120) DEFAULT '',
+      customer_username VARCHAR(120) DEFAULT '',
+      last_message TEXT DEFAULT '',
+      last_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      unread INTEGER NOT NULL DEFAULT 0,
+      order_id UUID REFERENCES orders(id) ON DELETE SET NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      UNIQUE (store_id, ig_sender_id)
+    );`);
+    await pool.query('CREATE INDEX IF NOT EXISTS idx_ig_conv_store ON ig_conversations(store_id, last_at DESC);');
+    // رسائل المحادثة (واردة/صادرة) — mid فريد لمنع تكرار نفس رسالة الـ webhook
+    await pool.query(`CREATE TABLE IF NOT EXISTS ig_messages (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      conversation_id UUID NOT NULL REFERENCES ig_conversations(id) ON DELETE CASCADE,
+      mid VARCHAR(255) UNIQUE,
+      direction VARCHAR(4) NOT NULL,
+      text TEXT DEFAULT '',
+      attachment_url TEXT DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );`);
+    await pool.query('CREATE INDEX IF NOT EXISTS idx_ig_msg_conv ON ig_messages(conversation_id, created_at);');
   } catch (err) {
     console.error('⚠️ تعذّر تطبيق الترقيات:', err.message);
   }

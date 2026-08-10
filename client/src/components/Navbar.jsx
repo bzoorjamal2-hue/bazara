@@ -7,7 +7,7 @@ import api from '../api/client.js';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import LanguageSwitcher from './LanguageSwitcher.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
-import { CartIcon, HeartIcon, MenuIcon, UserIcon, SearchIcon, MailIcon } from './icons.jsx';
+import { CartIcon, HeartIcon, MenuIcon, UserIcon, SearchIcon, MailIcon, InstagramIcon } from './icons.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import NavBell from './NavBell.jsx';
 import CloseButton from './CloseButton.jsx';
@@ -213,6 +213,7 @@ export default function Navbar() {
         { key: 'profile', label: t('dashboard.profile'), Icon: UserLineIcon },
         { key: 'storeSettings', label: t('dashboard.storeSettings'), Icon: StoreIcon },
         { key: 'myProducts', label: t('dashboard.myProducts'), Icon: BagIcon },
+        { key: 'instagram', label: t('dashboard.instagram.title'), Icon: InstagramIcon },
         { key: 'myOrders', label: t('dashboard.myOrders'), Icon: ReceiptIcon },
         { key: 'coupons', label: t('dashboard.coupons.title'), Icon: TicketIcon },
         { key: 'referrals', label: t('dashboard.referrals.title'), Icon: UserLineIcon },
