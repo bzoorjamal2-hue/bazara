@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
+import CitySearch from '../../components/CitySearch.jsx';
 import { sizeLabel } from '../../utils/sizes.js';
 import { InstagramIcon, BagIcon, BackIcon, CheckIcon, TrashIcon, PlusIcon } from '../../components/icons.jsx';
 import { startFbLogin, igRedirectUri } from '../../utils/fbSdk.js';
@@ -391,49 +392,12 @@ function PickedRow({ item, onChange, onRemove }) {
   );
 }
 
-// خانة بحث للمنطقة: يكتب فيفلتر مناطق المتجر ويظهر سعر كل منطقة؛ اختيارها يملأ الأجرة.
-function RegionField({ zones, value, onPick, onText }) {
-  const { t } = useTranslation();
-  const [q, setQ] = useState(value || '');
-  const [open, setOpen] = useState(false);
-  useEffect(() => { setQ(value || ''); }, [value]);
-  const term = q.trim().toLowerCase();
-  const results = zones.filter((z) => (z.name || '').toLowerCase().includes(term)).slice(0, 8);
-  return (
-    <div className="relative flex-1">
-      <input
-        className="input w-full"
-        placeholder={t('dashboard.ordersSection.deliveryTo')}
-        value={q}
-        onChange={(e) => { setQ(e.target.value); onText(e.target.value); setOpen(true); }}
-        onFocus={() => setOpen(true)}
-        onBlur={() => setTimeout(() => setOpen(false), 150)}
-      />
-      {open && results.length > 0 && (
-        <div className="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-2xl border border-wine/15 bg-white p-1.5 shadow-2xl">
-          {results.map((z) => (
-            <button
-              key={z.name}
-              type="button"
-              onMouseDown={(e) => { e.preventDefault(); onPick(z.name); setQ(z.name); setOpen(false); }}
-              className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-start text-sm text-[#2b2b2b] transition hover:bg-wine/5"
-            >
-              <span className="min-w-0 truncate font-medium">{z.name}</span>
-              {z.fee ? <span className="shrink-0 font-semibold text-wine">{t('common.currency')}{z.fee}</span> : null}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // المكوّن الموحّد لإنشاء طلب: منتجات (بألوان/نمَر) + منطقة توصيل بسعر تلقائي + بيانات الزبون.
 // onSubmit يستقبل { items, customer } ويرمي خطأً عند الفشل (نعرضه هنا)؛ النجاح يتكفّل به الأب.
 function OrderComposer({ defaultName = '', onSubmit }) {
   const { t } = useTranslation();
   const [products, setProducts] = useState(null);
-  const [zones, setZones] = useState([]);
+  const [cities, setCities] = useState([]);
   const [picked, setPicked] = useState([]);
   const [q, setQ] = useState('');
   const [f, setF] = useState({ name: defaultName, phone: '', city: '', address: '', deliveryFee: '', notes: '' });
@@ -442,7 +406,7 @@ function OrderComposer({ defaultName = '', onSubmit }) {
 
   useEffect(() => {
     api.get('/products').then((r) => setProducts(r.data.products || [])).catch(() => setProducts([]));
-    api.get('/stores/me').then((r) => setZones(Array.isArray(r.data.store?.deliveryZones) ? r.data.store.deliveryZones : [])).catch(() => {});
+    api.get('/stores/me').then((r) => setCities(Array.isArray(r.data.cities) ? r.data.cities : [])).catch(() => {});
   }, []);
 
   const set = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }));
@@ -455,10 +419,9 @@ function OrderComposer({ defaultName = '', onSubmit }) {
   const patchItem = (id, patch) => setPicked((prev) => prev.map((x) => (x.id === id ? { ...x, ...patch } : x)));
   const removeItem = (id) => setPicked((prev) => prev.filter((x) => x.id !== id));
 
-  // اختيار منطقة توصيل معرّفة بالمتجر يملأ المدينة وأجرتها تلقائياً (نفس حساب السلة)
-  const pickZone = (name) => {
-    const z = zones.find((x) => x.name === name);
-    setF((p) => ({ ...p, city: name, deliveryFee: z && z.fee != null && z.fee !== '' ? String(z.fee) : p.deliveryFee }));
+  // اختيار مدينة من قائمة البحث يملأ المدينة وأجرتها تلقائياً (نفس حساب السلة)
+  const pickCity = (name, fee) => {
+    setF((p) => ({ ...p, city: name, deliveryFee: fee != null && fee !== '' ? String(fee) : p.deliveryFee }));
   };
 
   const results = useMemo(() => {
@@ -515,13 +478,15 @@ function OrderComposer({ defaultName = '', onSubmit }) {
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <input className="input" placeholder={t('dashboard.instagram.custName')} value={f.name} onChange={set('name')} />
         <input className="input" placeholder={t('dashboard.instagram.custPhone')} value={f.phone} onChange={set('phone')} dir="ltr" />
-        {/* التوصيل: خانة بحث للمنطقة + سعرها بجنبها (يتعبّى تلقائياً) */}
+        {/* التوصيل: بحث عن المدينة (كل المدن بأجرتها) + السعر بجنبها (يتعبّى تلقائياً) */}
         <div className="flex gap-2 sm:col-span-2">
-          {zones.length > 0 ? (
-            <RegionField zones={zones} value={f.city} onPick={pickZone} onText={(v) => setF((p) => ({ ...p, city: v }))} />
-          ) : (
-            <input className="input flex-1" placeholder={t('dashboard.ordersSection.deliveryTo')} value={f.city} onChange={set('city')} />
-          )}
+          <div className="flex-1">
+            {cities.length > 0 ? (
+              <CitySearch value={f.city} options={cities} onPick={pickCity} onClear={() => setF((p) => ({ ...p, city: '' }))} />
+            ) : (
+              <input className="input w-full" placeholder={t('dashboard.ordersSection.deliveryTo')} value={f.city} onChange={set('city')} />
+            )}
+          </div>
           <div className="relative w-28 shrink-0">
             <input className="input w-full pe-6 text-center" type="number" min="0" step="0.5" inputMode="decimal" placeholder={t('dashboard.ordersSection.delivery')} value={f.deliveryFee} onChange={set('deliveryFee')} />
             <span className="pointer-events-none absolute inset-y-0 end-2 flex items-center text-xs text-stone-400">{t('common.currency')}</span>

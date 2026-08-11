@@ -6,6 +6,7 @@ import { useCart } from '../context/CartContext.jsx';
 import { buildWhatsappCheckout } from '../utils/whatsapp.js';
 import useScrollLock from '../hooks/useScrollLock.js';
 import CloseButton from './CloseButton.jsx';
+import CitySearch from './CitySearch.jsx';
 import { CartIcon, BagIcon, XIcon, PinIcon, GiftIcon, TicketIcon, CheckIcon, ReceiptIcon, PartyIcon, TruckIcon, CashIcon, WhatsAppIcon, ForwardIcon, BackIcon, CopyIcon } from './icons.jsx';
 import api from '../api/client.js';
 import { sizeLabel } from '../utils/sizes.js';
@@ -62,53 +63,6 @@ const AREAS = [
   // غير ذلك — يحدّده المتجر
   { ar: 'أخرى', en: 'Other', fee: 0 },
 ];
-
-// خانة بحث عن المدينة: تكتب فتفلتر كل المدن ويظهر سعر التوصيل لكل مدينة؛ اختيارها يملأ الأجرة.
-function CitySearch({ value, onPick, options, invalid, onClear }) {
-  const { t } = useTranslation();
-  const [q, setQ] = useState(value || '');
-  const [open, setOpen] = useState(false);
-  useEffect(() => { setQ(value || ''); }, [value]);
-  const term = q.trim().toLowerCase();
-  const results = (term
-    ? options.filter((z) => `${z.name || ''} ${z.region || ''}`.toLowerCase().includes(term))
-    : options).slice(0, 40);
-  const pick = (z) => { onPick(z.name, z.fee); setQ(z.name); setOpen(false); };
-  return (
-    <div className="relative">
-      <div className="relative">
-        <input
-          className={`input !rounded-2xl pe-9 ${invalid ? 'ring-1 ring-red-400/70' : ''}`}
-          placeholder={t('co.selectCity')}
-          value={q}
-          onChange={(e) => { setQ(e.target.value); setOpen(true); if (value) onClear(); }}
-          onFocus={() => setOpen(true)}
-          onBlur={() => setTimeout(() => setOpen(false), 150)}
-        />
-        <PinIcon className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-wine/50" />
-      </div>
-      {open && results.length > 0 && (
-        <ul className="animate-pop absolute z-[60] mt-1 max-h-64 w-full overflow-auto rounded-2xl border border-wine/15 bg-white p-1.5 shadow-2xl">
-          {results.map((z) => (
-            <li key={z.name}>
-              <button
-                type="button"
-                onMouseDown={(e) => { e.preventDefault(); pick(z); }}
-                className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-start transition hover:bg-wine/5"
-              >
-                <span className="min-w-0">
-                  <span className="block text-sm text-[#2b2b2b]">{z.name}</span>
-                  {z.region ? <span className="block text-[11px] text-stone-400">{z.region}</span> : null}
-                </span>
-                {z.fee ? <span className="shrink-0 font-semibold text-wine">{t('common.currency')}{z.fee}</span> : null}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
 
 export default function CartDrawer() {
   const { t, i18n } = useTranslation();

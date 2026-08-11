@@ -3,7 +3,7 @@ import slugify from 'slugify';
 import { generateUniqueStoreSlug } from '../utils/slug.js';
 import { pingIndexNow } from '../utils/indexnow.js';
 import { toHostedUrl } from '../utils/hostImage.js';
-import { normalizeTiers } from '../config/deliveryCities.js';
+import { normalizeTiers, citiesWithFees } from '../config/deliveryCities.js';
 
 function mapStore(s) {
   return {
@@ -153,6 +153,8 @@ export async function getMyStore(req, res, next) {
     res.json({
       store: mapStore(store),
       stats: { productsCount: countResult.rows[0].count },
+      // قائمة المدن الموحّدة بأجرتها — لخانة البحث بنموذج إنشاء الطلب اليدوي
+      cities: citiesWithFees(store.delivery_tiers, Array.isArray(store.delivery_zones) ? store.delivery_zones : []),
     });
   } catch (err) {
     next(err);
