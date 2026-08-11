@@ -70,7 +70,9 @@ function CitySearch({ value, onPick, options, invalid, onClear }) {
   const [open, setOpen] = useState(false);
   useEffect(() => { setQ(value || ''); }, [value]);
   const term = q.trim().toLowerCase();
-  const results = (term ? options.filter((z) => (z.name || '').toLowerCase().includes(term)) : options).slice(0, 10);
+  const results = (term
+    ? options.filter((z) => `${z.name || ''} ${z.region || ''}`.toLowerCase().includes(term))
+    : options).slice(0, 40);
   const pick = (z) => { onPick(z.name, z.fee); setQ(z.name); setOpen(false); };
   return (
     <div className="relative">
@@ -83,19 +85,22 @@ function CitySearch({ value, onPick, options, invalid, onClear }) {
           onFocus={() => setOpen(true)}
           onBlur={() => setTimeout(() => setOpen(false), 150)}
         />
-        <PinIcon className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gold-300/70" />
+        <PinIcon className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-wine/50" />
       </div>
       {open && results.length > 0 && (
-        <ul className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-2xl border border-white/10 bg-stone-900/95 p-1 shadow-2xl backdrop-blur">
+        <ul className="animate-pop absolute z-[60] mt-1 max-h-64 w-full overflow-auto rounded-2xl border border-wine/15 bg-white p-1.5 shadow-2xl">
           {results.map((z) => (
             <li key={z.name}>
               <button
                 type="button"
                 onMouseDown={(e) => { e.preventDefault(); pick(z); }}
-                className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-sm text-stone-100 transition hover:bg-white/10"
+                className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-start transition hover:bg-wine/5"
               >
-                <span>{z.name}</span>
-                {z.fee ? <span className="shrink-0 font-semibold text-gold-300">{t('common.currency')}{z.fee}</span> : null}
+                <span className="min-w-0">
+                  <span className="block text-sm text-[#2b2b2b]">{z.name}</span>
+                  {z.region ? <span className="block text-[11px] text-stone-400">{z.region}</span> : null}
+                </span>
+                {z.fee ? <span className="shrink-0 font-semibold text-wine">{t('common.currency')}{z.fee}</span> : null}
               </button>
             </li>
           ))}
@@ -227,10 +232,10 @@ export default function CartDrawer() {
   // قائمة المناطق: مناطق المتجر المخصّصة إن وُجدت، وإلا القائمة الافتراضية
   // قائمة المدن: الموحّدة من الخادم (كل المدن بأجرتها) أولاً، ثم مناطق المتجر، ثم الافتراضية
   const areaList = (storeCities && storeCities.length)
-    ? storeCities.map((z) => ({ name: z.name, fee: Number(z.fee) || 0 }))
+    ? storeCities.map((z) => ({ name: z.name, fee: Number(z.fee) || 0, region: z.region || '' }))
     : (storeZones && storeZones.length)
-      ? storeZones.map((z) => ({ name: z.name, fee: Number(z.fee) || 0 }))
-      : AREAS.map((a) => ({ name: ar ? a.ar : a.en, fee: a.fee }));
+      ? storeZones.map((z) => ({ name: z.name, fee: Number(z.fee) || 0, region: '' }))
+      : AREAS.map((a) => ({ name: ar ? a.ar : a.en, fee: a.fee, region: '' }));
   const cityOpt = areaList.find((z) => z.name === cust.city);
   // الأولوية (لا تُجمع الخصومات): كوبون > فلاش > إحالة > ولاء — نفس ترتيب الخادم (الحكم)
   const flashActive = flash && flash.percent > 0 && flash.endsAt && new Date(flash.endsAt).getTime() > Date.now();
