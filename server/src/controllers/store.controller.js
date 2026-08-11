@@ -3,6 +3,7 @@ import slugify from 'slugify';
 import { generateUniqueStoreSlug } from '../utils/slug.js';
 import { pingIndexNow } from '../utils/indexnow.js';
 import { toHostedUrl } from '../utils/hostImage.js';
+import { normalizeTiers } from '../config/deliveryCities.js';
 
 function mapStore(s) {
   return {
@@ -22,6 +23,7 @@ function mapStore(s) {
     deliveryPhone: s.delivery_phone || '',
     banners: Array.isArray(s.banners) ? s.banners : [],
     deliveryZones: Array.isArray(s.delivery_zones) ? s.delivery_zones : [],
+    deliveryTiers: normalizeTiers(s.delivery_tiers),
     freeShippingOver: Number(s.free_shipping_over || 0),
     referralPercent: Number(s.referral_percent || 0),
     sizeChart: s.size_chart && typeof s.size_chart === 'object' ? s.size_chart : {},
@@ -166,6 +168,7 @@ export async function updateMyStore(req, res, next) {
   const deliveryPhone = String(req.body.deliveryPhone || '').replace(/[^\d+]/g, '').slice(0, 40);
   const banners = sanitizeBanners(req.body.banners);
   const deliveryZones = sanitizeZones(req.body.deliveryZones);
+  const deliveryTiers = normalizeTiers(req.body.deliveryTiers);
   const freeShippingOver = Math.max(0, Number(req.body.freeShippingOver) || 0);
   const referralPercent = Math.min(90, Math.max(0, Number(req.body.referralPercent) || 0));
   const sizeChart = sanitizeSizeChart(req.body.sizeChart);
@@ -227,7 +230,7 @@ export async function updateMyStore(req, res, next) {
          announcement_en = $24, old_slugs = $25::text[], delivery_phone = $26,
          fb_pixel = $27, tiktok_pixel = $28, ga_id = $29,
          loyalty_every = $30, loyalty_percent = $31,
-         flash_percent = $32, flash_ends_at = $33, updated_at = now()
+         flash_percent = $32, flash_ends_at = $33, delivery_tiers = $35::jsonb, updated_at = now()
        WHERE id = $22
        RETURNING *`,
       [
@@ -265,6 +268,7 @@ export async function updateMyStore(req, res, next) {
         flashPercent,
         flashEndsAt,
         JSON.stringify(collections),
+        JSON.stringify(deliveryTiers),
       ]
     );
 

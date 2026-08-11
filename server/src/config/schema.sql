@@ -51,6 +51,8 @@ ALTER TABLE stores ADD COLUMN IF NOT EXISTS banners       JSONB DEFAULT '[]'::js
 -- مناطق التوصيل المخصّصة [{name, fee}] + شحن مجاني فوق مبلغ (0 = معطّل)
 ALTER TABLE stores ADD COLUMN IF NOT EXISTS delivery_zones     JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE stores ADD COLUMN IF NOT EXISTS free_shipping_over NUMERIC(10,2) DEFAULT 0;
+-- أسعار شرائح التوصيل القابلة للتعديل {"wb":30,"quds":40,"dakhel":80} تُطبَّق على قائمة المدن الموحّدة
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS delivery_tiers     JSONB DEFAULT '{}'::jsonb;
 
 CREATE INDEX IF NOT EXISTS idx_stores_slug ON stores(slug);
 

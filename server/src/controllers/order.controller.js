@@ -6,6 +6,7 @@ import { clearAbandoned } from './abandoned.controller.js';
 import { sendMail, isMailConfigured } from '../utils/mail.js';
 import { sendPushToUser } from '../config/push.js';
 import { sendNativeToUser } from '../config/nativePush.js';
+import { feeForCity } from '../config/deliveryCities.js';
 
 // إشعار صاحب المتجر (بريد + إشعار دفع على الجوال) عند وصول طلب جديد — بالخلفية
 async function notifyOwnerNewOrder(storeId, info) {
@@ -199,7 +200,12 @@ export async function createCodOrder(req, res, next) {
       .filter(Boolean);
     if (orderItems.length === 0 || subtotal <= 0) return res.status(400).json({ error: 'طلب غير صالح.' });
 
-    const deliveryFee = Math.max(0, Number(customer?.deliveryFee) || 0);
+    // رسوم التوصيل تُحسب على الخادم من مدينة الزبون وشرائح المتجر (لا نثق برقم الواجهة).
+    // استثناء المتجر لمدينة معيّنة له الأولوية، ثم سعر الشريحة. الشحن المجاني يُطبَّق بعد الخصم.
+    const dcfg = await query('SELECT delivery_tiers, delivery_zones, free_shipping_over FROM stores WHERE id = $1', [storeId]);
+    const dsettings = dcfg.rows[0] || {};
+    const dZones = Array.isArray(dsettings.delivery_zones) ? dsettings.delivery_zones : [];
+    let deliveryFee = feeForCity(customer?.city, dsettings.delivery_tiers, dZones);
 
     // كوبون الخصم (إن وُجد): نتحقّق منه من قاعدة البيانات ونحسب الخصم على المجموع الفرعي
     const couponCode = String(req.body?.coupon?.code || customer?.couponCode || '').trim().toUpperCase();
@@ -267,6 +273,10 @@ export async function createCodOrder(req, res, next) {
         }
       }
     }
+
+    // شحن مجاني فوق مبلغ (بعد الخصم) إن فعّله المتجر
+    const freeOver = Math.max(0, Number(dsettings.free_shipping_over) || 0);
+    if (freeOver > 0 && Math.max(0, subtotal - discount) >= freeOver) deliveryFee = 0;
 
     const total = Math.max(0, subtotal - discount) + deliveryFee;
     const reference = 'BZ-' + crypto.randomBytes(5).toString('hex').toUpperCase();

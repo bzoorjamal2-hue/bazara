@@ -68,6 +68,7 @@ export default function StoreSettings() {
           deliveryInfo: s.deliveryInfo || '', paymentInfo: s.paymentInfo || '',
           banners: Array.isArray(s.banners) && s.banners.length ? s.banners : DEFAULT_BANNERS,
           deliveryZones: Array.isArray(s.deliveryZones) ? s.deliveryZones : [],
+          deliveryTiers: s.deliveryTiers && typeof s.deliveryTiers === 'object' ? s.deliveryTiers : { wb: 30, quds: 40, dakhel: 80 },
           freeShippingOver: s.freeShippingOver ? String(s.freeShippingOver) : '',
           referralPercent: s.referralPercent ? String(s.referralPercent) : '',
           sizeChart: s.sizeChart && typeof s.sizeChart === 'object' ? s.sizeChart : {},
@@ -132,6 +133,7 @@ export default function StoreSettings() {
   const setZone = (idx, key, val) =>
     setForm((f) => ({ ...f, deliveryZones: f.deliveryZones.map((z, i) => (i === idx ? { ...z, [key]: val } : z)) }));
   const addZone = () => setForm((f) => ({ ...f, deliveryZones: [...f.deliveryZones, { name: '', fee: '' }] }));
+  const setTier = (key) => (e) => setForm((f) => ({ ...f, deliveryTiers: { ...f.deliveryTiers, [key]: e.target.value === '' ? '' : Math.max(0, Number(e.target.value) || 0) } }));
   const removeZone = (idx) => setForm((f) => ({ ...f, deliveryZones: f.deliveryZones.filter((_, i) => i !== idx) }));
 
   // التحكم بدليل المقاسات المخصّص: {"38": {bust, waist, hips}}
@@ -249,6 +251,20 @@ export default function StoreSettings() {
             <h2 className="flex items-center gap-1.5 font-display text-lg font-bold text-stone-100"><TruckIcon className="h-5 w-5" /> {t('dashboard.store.zones')}</h2>
             <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.zonesHint')}</p>
           </div>
+
+          {/* أسعار الشرائح: تُطبَّق تلقائياً على كل المدن (يبحث عنها الزبون بالسلة) */}
+          <div className="grid grid-cols-3 gap-2">
+            {[['wb', t('dashboard.store.tierWb')], ['quds', t('dashboard.store.tierQuds')], ['dakhel', t('dashboard.store.tierDakhel')]].map(([key, label]) => (
+              <div key={key}>
+                <label className="mb-1 block text-xs text-stone-400">{label}</label>
+                <div className="relative">
+                  <input className="input pe-7 text-center" type="number" min="0" step="1" value={form.deliveryTiers?.[key] ?? ''} onChange={setTier(key)} />
+                  <span className="pointer-events-none absolute inset-y-0 end-2 flex items-center text-xs text-stone-400">₪</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-stone-400">{t('dashboard.store.overridesHint')}</p>
 
           {form.deliveryZones.length > 0 && (
             <div className="space-y-2">

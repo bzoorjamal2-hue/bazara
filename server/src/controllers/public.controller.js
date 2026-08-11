@@ -4,6 +4,7 @@ import { activeStoreSql } from '../utils/subscription.js';
 import { notifyStoreOwner } from '../utils/notify.js';
 import { statusLabelAr as opostStatusLabelAr } from '../config/opost.js';
 import { epsStatusLabelAr } from '../config/eps.js';
+import { citiesWithFees, normalizeTiers } from '../config/deliveryCities.js';
 
 // أعمدة المنتج + بيانات المتجر + تجميع التقييمات. نربط users لفلترة المشتركين الفعّالين.
 const PRODUCT_SELECT = `
@@ -278,16 +279,21 @@ export async function getStoreCheckout(req, res, next) {
   const { slug } = req.params;
   try {
     const r = await query(
-      'SELECT whatsapp, delivery_zones, free_shipping_over, flash_percent, flash_ends_at FROM stores WHERE slug = $1',
+      'SELECT whatsapp, delivery_zones, delivery_tiers, free_shipping_over, flash_percent, flash_ends_at FROM stores WHERE slug = $1',
       [slug]
     );
     const s = r.rows[0];
     if (!s) return res.status(404).json({ error: 'المتجر غير موجود.' });
     // عرض الفلاش الفعّال فقط (لم ينتهِ بعد) — كي تعرضه السلة وتطبّق خصمه للعرض
     const flashActive = Number(s.flash_percent || 0) > 0 && s.flash_ends_at && new Date(s.flash_ends_at).getTime() > Date.now();
+    const zones = Array.isArray(s.delivery_zones) ? s.delivery_zones : [];
+    const tiers = normalizeTiers(s.delivery_tiers);
     res.json({
       whatsapp: s.whatsapp || '',
-      deliveryZones: Array.isArray(s.delivery_zones) ? s.delivery_zones : [],
+      deliveryZones: zones,
+      deliveryTiers: tiers,
+      // قائمة المدن الموحّدة (كل المدن) مع أجرة كل مدينة محسوبة من الشرائح + استثناءات المتجر
+      cities: citiesWithFees(tiers, zones),
       freeShippingOver: Number(s.free_shipping_over || 0),
       flashPercent: flashActive ? Number(s.flash_percent) : 0,
       flashEndsAt: flashActive ? s.flash_ends_at : null,

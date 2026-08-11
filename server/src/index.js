@@ -173,6 +173,8 @@ async function ensureColumns() {
     // مناطق التوصيل القابلة للتخصيص + شحن مجاني فوق مبلغ
     await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS delivery_zones JSONB DEFAULT '[]'::jsonb;");
     await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS free_shipping_over NUMERIC(10,2) DEFAULT 0;");
+    // أسعار شرائح التوصيل القابلة للتعديل: {"wb":30,"quds":40,"dakhel":80} — تُطبَّق على قائمة المدن الموحّدة
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS delivery_tiers JSONB DEFAULT '{}'::jsonb;");
     // دليل المقاسات المخصّص لكل متجر: {"38": {"bust":88,"waist":70,"hips":94}, ...}
     await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS size_chart JSONB DEFAULT '{}'::jsonb;");
     // سياسة الإرجاع والتبديل (نص يظهر للزبون بصفحة المنتج)

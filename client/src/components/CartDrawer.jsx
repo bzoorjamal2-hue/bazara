@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext.jsx';
 import { buildWhatsappCheckout } from '../utils/whatsapp.js';
 import useScrollLock from '../hooks/useScrollLock.js';
-import Select from './Select.jsx';
 import CloseButton from './CloseButton.jsx';
 import { CartIcon, BagIcon, XIcon, PinIcon, GiftIcon, TicketIcon, CheckIcon, ReceiptIcon, PartyIcon, TruckIcon, CashIcon, WhatsAppIcon, ForwardIcon, BackIcon, CopyIcon } from './icons.jsx';
 import api from '../api/client.js';
@@ -64,6 +63,48 @@ const AREAS = [
   { ar: 'أخرى', en: 'Other', fee: 0 },
 ];
 
+// خانة بحث عن المدينة: تكتب فتفلتر كل المدن ويظهر سعر التوصيل لكل مدينة؛ اختيارها يملأ الأجرة.
+function CitySearch({ value, onPick, options, invalid, onClear }) {
+  const { t } = useTranslation();
+  const [q, setQ] = useState(value || '');
+  const [open, setOpen] = useState(false);
+  useEffect(() => { setQ(value || ''); }, [value]);
+  const term = q.trim().toLowerCase();
+  const results = (term ? options.filter((z) => (z.name || '').toLowerCase().includes(term)) : options).slice(0, 10);
+  const pick = (z) => { onPick(z.name, z.fee); setQ(z.name); setOpen(false); };
+  return (
+    <div className="relative">
+      <div className="relative">
+        <input
+          className={`input !rounded-2xl pe-9 ${invalid ? 'ring-1 ring-red-400/70' : ''}`}
+          placeholder={t('co.selectCity')}
+          value={q}
+          onChange={(e) => { setQ(e.target.value); setOpen(true); if (value) onClear(); }}
+          onFocus={() => setOpen(true)}
+          onBlur={() => setTimeout(() => setOpen(false), 150)}
+        />
+        <PinIcon className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gold-300/70" />
+      </div>
+      {open && results.length > 0 && (
+        <ul className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-2xl border border-white/10 bg-stone-900/95 p-1 shadow-2xl backdrop-blur">
+          {results.map((z) => (
+            <li key={z.name}>
+              <button
+                type="button"
+                onMouseDown={(e) => { e.preventDefault(); pick(z); }}
+                className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-sm text-stone-100 transition hover:bg-white/10"
+              >
+                <span>{z.name}</span>
+                {z.fee ? <span className="shrink-0 font-semibold text-gold-300">{t('common.currency')}{z.fee}</span> : null}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export default function CartDrawer() {
   const { t, i18n } = useTranslation();
   const ar = i18n.language !== 'en';
@@ -83,6 +124,7 @@ export default function CartDrawer() {
   const [placing, setPlacing] = useState(false); // جارٍ حفظ الطلب
   const [invalid, setInvalid] = useState({}); // الحقول الناقصة/الخاطئة — لتمييزها بإطار أحمر
   const [storeZones, setStoreZones] = useState(null); // مناطق المتجر المخصّصة (إن وُجدت)
+  const [storeCities, setStoreCities] = useState([]); // قائمة المدن الموحّدة بأجرتها من الخادم
   const [freeOver, setFreeOver] = useState(0); // شحن مجاني فوق هذا المبلغ (0 = معطّل)
   const [referral, setReferral] = useState(null); // { code, percent, referrerName } خصم إحالة تلقائي
   useScrollLock(open);
@@ -105,11 +147,12 @@ export default function CartDrawer() {
     api.get(`/public/store/${storeSlug}/checkout`)
       .then((r) => {
         setStoreZones(Array.isArray(r.data.deliveryZones) ? r.data.deliveryZones : []);
+        setStoreCities(Array.isArray(r.data.cities) ? r.data.cities : []);
         setFreeOver(Number(r.data.freeShippingOver) || 0);
         // عرض الفلاش الفعّال (الخادم يرجّعه فقط ما دام لم ينتهِ) — للعرض؛ الخادم هو الحكم
         setFlash(Number(r.data.flashPercent) > 0 ? { percent: Number(r.data.flashPercent), endsAt: r.data.flashEndsAt } : null);
       })
-      .catch(() => { setStoreZones([]); setFreeOver(0); setFlash(null); });
+      .catch(() => { setStoreZones([]); setStoreCities([]); setFreeOver(0); setFlash(null); });
   }, [open, storeSlug]);
 
   // عند فتح السلة: نحدّث الأسعار والمتبقّي من الخادم بطلب واحد. عناصر السلة لقطة وقت
@@ -182,9 +225,12 @@ export default function CartDrawer() {
 
   const close = () => { setOpen(false); setView('cart'); setErr(''); setDoneRef(''); setDoneStore(''); };
   // قائمة المناطق: مناطق المتجر المخصّصة إن وُجدت، وإلا القائمة الافتراضية
-  const areaList = (storeZones && storeZones.length)
-    ? storeZones.map((z) => ({ name: z.name, fee: Number(z.fee) || 0 }))
-    : AREAS.map((a) => ({ name: ar ? a.ar : a.en, fee: a.fee }));
+  // قائمة المدن: الموحّدة من الخادم (كل المدن بأجرتها) أولاً، ثم مناطق المتجر، ثم الافتراضية
+  const areaList = (storeCities && storeCities.length)
+    ? storeCities.map((z) => ({ name: z.name, fee: Number(z.fee) || 0 }))
+    : (storeZones && storeZones.length)
+      ? storeZones.map((z) => ({ name: z.name, fee: Number(z.fee) || 0 }))
+      : AREAS.map((a) => ({ name: ar ? a.ar : a.en, fee: a.fee }));
   const cityOpt = areaList.find((z) => z.name === cust.city);
   // الأولوية (لا تُجمع الخصومات): كوبون > فلاش > إحالة > ولاء — نفس ترتيب الخادم (الحكم)
   const flashActive = flash && flash.percent > 0 && flash.endsAt && new Date(flash.endsAt).getTime() > Date.now();
@@ -460,12 +506,13 @@ export default function CartDrawer() {
                       {/* autocomplete: الجوال يقترح الاسم/الهاتف/العنوان المحفوظين — تعبئة أسرع = إتمام أكثر */}
                       <input className={`input !rounded-2xl ${invalid.name ? 'ring-1 ring-red-400/70' : ''}`} autoComplete="name" placeholder={t('co.name')} value={cust.name} onChange={(e) => { setCust({ ...cust, name: e.target.value }); if (invalid.name) setInvalid((v) => ({ ...v, name: false })); }} />
                       <input className={`input !rounded-2xl ${invalid.phone ? 'ring-1 ring-red-400/70' : ''}`} dir="ltr" inputMode="tel" autoComplete="tel" placeholder={t('co.phone')} value={cust.phone} onChange={(e) => { setCust({ ...cust, phone: e.target.value }); if (invalid.phone) setInvalid((v) => ({ ...v, phone: false })); }} />
-                      <Select
+                      {/* المدينة: بحث من كل المدن بسعرها. القرية/الشارع بالعنوان التفصيلي تحت */}
+                      <CitySearch
                         value={cust.city}
-                        onChange={(v) => { setCust({ ...cust, city: v }); if (invalid.city) setInvalid((p) => ({ ...p, city: false })); }}
-                        placeholder={t('co.selectCity')}
-                        className={`!rounded-2xl ${invalid.city ? 'ring-1 ring-red-400/70' : ''}`}
-                        options={areaList.map((z) => ({ value: z.name, label: `${z.name}${z.fee ? ` — ₪${z.fee}` : ''}` }))}
+                        options={areaList}
+                        invalid={invalid.city}
+                        onClear={() => setCust((p) => ({ ...p, city: '' }))}
+                        onPick={(name) => { setCust((p) => ({ ...p, city: name })); if (invalid.city) setInvalid((p) => ({ ...p, city: false })); }}
                       />
                       <input className="input !rounded-2xl" autoComplete="street-address" placeholder={t('co.address')} value={cust.address} onChange={(e) => setCust({ ...cust, address: e.target.value })} />
                       <textarea className="input !rounded-2xl" rows={2} placeholder={t('co.notes')} value={cust.notes} onChange={(e) => setCust({ ...cust, notes: e.target.value })} />
