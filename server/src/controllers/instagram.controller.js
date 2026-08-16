@@ -363,10 +363,10 @@ export async function convertToOrder(req, res, next) {
     const reference = 'BZ-' + crypto.randomBytes(5).toString('hex').toUpperCase();
 
     const ins = await query(
-      `INSERT INTO orders (store_id, customer_name, customer_email, customer_phone, items, total, currency, status, reference, city, address, notes, delivery_fee)
-       VALUES ($1, $2, '', $3, $4, $5, 'ILS', 'new', $6, $7, $8, $9, $10) RETURNING id`,
+      `INSERT INTO orders (store_id, customer_name, customer_email, customer_phone, items, total, currency, status, reference, city, area, address, notes, delivery_fee)
+       VALUES ($1, $2, '', $3, $4, $5, 'ILS', 'new', $6, $7, $8, $9, $10, $11) RETURNING id`,
       [conv.store_id, name, phone, JSON.stringify(orderItems), total, reference,
-        (customer?.city || '').trim(), (customer?.address || '').trim(),
+        (customer?.city || '').trim(), (customer?.area || '').trim(), (customer?.address || '').trim(),
         `طلب من رسائل إنستغرام${customer?.notes ? ' — ' + String(customer.notes).slice(0, 400) : ''}`, deliveryFee]
     );
 

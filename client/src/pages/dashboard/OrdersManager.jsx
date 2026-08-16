@@ -115,6 +115,7 @@ export default function OrdersManager() {
       `الزبونة: ${o.customerName || ''}`,
       `الهاتف: ${o.customerPhone || ''}`,
       o.city ? `المدينة: ${o.city}` : '',
+      o.area ? `القرية/المنطقة: ${o.area}` : '',
       o.address ? `العنوان: ${o.address}` : '',
       '',
       items,
@@ -156,7 +157,7 @@ export default function OrdersManager() {
       new Date(o.createdAt).toLocaleString(),
       o.customerName || '',
       o.customerPhone || '',
-      o.city || '',
+      [o.city, o.area && o.area !== o.city ? o.area : ''].filter(Boolean).join(' - '),
       o.address || '',
       (o.items || []).map((it) => `${it.name}${it.size ? ` (${it.size})` : ''}${it.color ? ` - ${it.color}` : ''} x${it.qty}`).join(' | '),
       (o.total - (o.deliveryFee || 0) + (o.discount || 0)).toFixed(2),
@@ -351,7 +352,7 @@ export default function OrdersManager() {
                 {/* التوصيل */}
                 {(o.city || o.address) && (
                   <p className="mt-2 text-xs text-stone-400">
-                    <PinIcon className="inline h-4 w-4" /> {t('dashboard.ordersSection.deliveryTo')}: <span className="text-stone-200">{o.city}</span>
+                    <PinIcon className="inline h-4 w-4" /> {t('dashboard.ordersSection.deliveryTo')}: <span className="text-stone-200">{[o.city, o.area && o.area !== o.city ? o.area : ''].filter(Boolean).join(' - ')}</span>
                     {o.address ? <span className="text-stone-300"> — {o.address}</span> : null}
                   </p>
                 )}

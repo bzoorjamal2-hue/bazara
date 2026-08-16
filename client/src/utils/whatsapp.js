@@ -75,6 +75,7 @@ export function buildWhatsappCheckout(number, items, customer, lang = 'ar') {
         `الاسم: ${customer.name}`,
         `الهاتف: ${customer.phone}`,
         `المدينة: ${customer.city}`,
+        ...(customer.area ? [`القرية/المنطقة: ${customer.area}`] : []),
         ...(customer.address ? [`العنوان: ${customer.address}`] : []),
         ...(customer.notes ? [`ملاحظات: ${customer.notes}`] : []),
       ]
@@ -94,6 +95,7 @@ export function buildWhatsappCheckout(number, items, customer, lang = 'ar') {
         `Name: ${customer.name}`,
         `Phone: ${customer.phone}`,
         `City: ${customer.city}`,
+        ...(customer.area ? [`Area: ${customer.area}`] : []),
         ...(customer.address ? [`Address: ${customer.address}`] : []),
         ...(customer.notes ? [`Notes: ${customer.notes}`] : []),
       ];

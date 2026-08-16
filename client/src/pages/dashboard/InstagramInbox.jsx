@@ -398,15 +398,19 @@ function OrderComposer({ defaultName = '', onSubmit }) {
   const { t } = useTranslation();
   const [products, setProducts] = useState(null);
   const [cities, setCities] = useState([]);
+  const [villages, setVillages] = useState({}); // { المدينة: [قراها] }
   const [picked, setPicked] = useState([]);
   const [q, setQ] = useState('');
-  const [f, setF] = useState({ name: defaultName, phone: '', city: '', address: '', deliveryFee: '', notes: '' });
+  const [f, setF] = useState({ name: defaultName, phone: '', city: '', area: '', address: '', deliveryFee: '', notes: '' });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     api.get('/products').then((r) => setProducts(r.data.products || [])).catch(() => setProducts([]));
-    api.get('/stores/me').then((r) => setCities(Array.isArray(r.data.cities) ? r.data.cities : [])).catch(() => {});
+    api.get('/stores/me').then((r) => {
+      setCities(Array.isArray(r.data.cities) ? r.data.cities : []);
+      setVillages(r.data.villages && typeof r.data.villages === 'object' ? r.data.villages : {});
+    }).catch(() => {});
   }, []);
 
   const set = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }));
@@ -421,8 +425,12 @@ function OrderComposer({ defaultName = '', onSubmit }) {
 
   // اختيار مدينة من قائمة البحث يملأ المدينة وأجرتها تلقائياً (نفس حساب السلة)
   const pickCity = (name, fee) => {
-    setF((p) => ({ ...p, city: name, deliveryFee: fee != null && fee !== '' ? String(fee) : p.deliveryFee }));
+    setF((p) => ({ ...p, city: name, area: '', deliveryFee: fee != null && fee !== '' ? String(fee) : p.deliveryFee }));
   };
+  // قرى المدينة المختارة (أول خيار: المدينة نفسها) — القرية تروح لحقلها بالطلب
+  const villageList = f.city
+    ? [{ name: f.city, region: t('co.inCity') }, ...(villages[f.city] || []).map((v) => ({ name: v }))]
+    : [];
 
   const results = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -440,7 +448,7 @@ function OrderComposer({ defaultName = '', onSubmit }) {
     try {
       await onSubmit({
         items: picked.map((x) => ({ id: x.id, qty: x.qty, size: x.size, color: x.color })),
-        customer: { name: f.name, phone: f.phone, city: f.city, address: f.address, deliveryFee: f.deliveryFee, notes: f.notes },
+        customer: { name: f.name, phone: f.phone, city: f.city, area: f.area, address: f.address, deliveryFee: f.deliveryFee, notes: f.notes },
       });
     } catch (e) {
       setError(getErrorMessage(e));
@@ -492,6 +500,18 @@ function OrderComposer({ defaultName = '', onSubmit }) {
             <span className="pointer-events-none absolute inset-y-0 end-2 flex items-center text-xs text-stone-400">{t('common.currency')}</span>
           </div>
         </div>
+        {/* القرية/المنطقة داخل المدينة — تُرسل كحقل مستقل لشركة التوصيل */}
+        {f.city && (
+          <div className="sm:col-span-2">
+            <CitySearch
+              value={f.area}
+              options={villageList}
+              placeholder={t('co.village')}
+              onText={(txt) => setF((p) => ({ ...p, area: txt }))}
+              onPick={(name) => setF((p) => ({ ...p, area: name }))}
+            />
+          </div>
+        )}
         <input className="input sm:col-span-2" placeholder={t('dashboard.ordersSection.address')} value={f.address} onChange={set('address')} />
         <input className="input sm:col-span-2" placeholder={t('dashboard.ordersSection.notes')} value={f.notes} onChange={set('notes')} />
       </div>

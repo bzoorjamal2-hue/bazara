@@ -6,7 +6,7 @@ import { clearAbandoned } from './abandoned.controller.js';
 import { sendMail, isMailConfigured } from '../utils/mail.js';
 import { sendPushToUser } from '../config/push.js';
 import { sendNativeToUser } from '../config/nativePush.js';
-import { feeForCity } from '../config/deliveryCities.js';
+import { feeForCity, cityOfVillage } from '../config/deliveryCities.js';
 
 // إشعار صاحب المتجر (بريد + إشعار دفع على الجوال) عند وصول طلب جديد — بالخلفية
 async function notifyOwnerNewOrder(storeId, info) {
@@ -205,7 +205,13 @@ export async function createCodOrder(req, res, next) {
     const dcfg = await query('SELECT delivery_tiers, delivery_zones, free_shipping_over FROM stores WHERE id = $1', [storeId]);
     const dsettings = dcfg.rows[0] || {};
     const dZones = Array.isArray(dsettings.delivery_zones) ? dsettings.delivery_zones : [];
-    let deliveryFee = feeForCity(customer?.city, dsettings.delivery_tiers, dZones);
+    // المدينة والقرية: نسخة قديمة من التطبيق (كاش الـPWA) قد ترسل اسم قرية بحقل
+    // المدينة — نُرجّعها لمدينتها ونضع القرية بحقلها، فتظل الأجرة والإرسال للتوصيل صح.
+    let cityName = String(customer?.city || '').trim();
+    let areaName = String(customer?.area || '').trim();
+    const parent = cityOfVillage(cityName);
+    if (parent) { if (!areaName) areaName = cityName; cityName = parent; }
+    let deliveryFee = feeForCity(cityName, dsettings.delivery_tiers, dZones);
 
     // كوبون الخصم (إن وُجد): نتحقّق منه من قاعدة البيانات ونحسب الخصم على المجموع الفرعي
     const couponCode = String(req.body?.coupon?.code || customer?.couponCode || '').trim().toUpperCase();
@@ -282,10 +288,10 @@ export async function createCodOrder(req, res, next) {
     const reference = 'BZ-' + crypto.randomBytes(5).toString('hex').toUpperCase();
 
     const ins = await query(
-      `INSERT INTO orders (store_id, customer_name, customer_email, customer_phone, items, total, currency, status, reference, city, address, notes, delivery_fee, coupon_code, discount, referral_code)
-       VALUES ($1, $2, '', $3, $4, $5, 'ILS', 'new', $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`,
+      `INSERT INTO orders (store_id, customer_name, customer_email, customer_phone, items, total, currency, status, reference, city, area, address, notes, delivery_fee, coupon_code, discount, referral_code)
+       VALUES ($1, $2, '', $3, $4, $5, 'ILS', 'new', $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING id`,
       [storeId, name, phone, JSON.stringify(orderItems), total, reference,
-        (customer?.city || '').trim(), (customer?.address || '').trim(), (customer?.notes || '').trim().slice(0, 500), deliveryFee,
+        cityName, areaName, (customer?.address || '').trim(), (customer?.notes || '').trim().slice(0, 500), deliveryFee,
         appliedCoupon, discount, referralCode]
     );
 
@@ -298,7 +304,7 @@ export async function createCodOrder(req, res, next) {
     clearAbandoned(storeId, phone);
 
     // إشعار صاحب المتجر بالبريد (بالخلفية)
-    notifyOwnerNewOrder(storeId, { name, phone, city: (customer?.city || '').trim(), items: orderItems, total })
+    notifyOwnerNewOrder(storeId, { name, phone, city: [cityName, areaName].filter(Boolean).join(' - '), items: orderItems, total })
       .catch((e) => console.error('notify:', e.message));
   } catch (err) {
     next(err);
@@ -566,7 +572,7 @@ export async function listMyOrders(req, res, next) {
     if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
     const r = await query(
       `SELECT id, customer_name, customer_phone, items, total, currency, status, created_at,
-              city, address, notes, delivery_fee, coupon_code, discount,
+              city, area, address, notes, delivery_fee, coupon_code, discount,
               opost_tracking, opost_status, eps_barcode, eps_status, gobox_barcode, gobox_status
        FROM orders WHERE store_id = $1 ORDER BY created_at DESC LIMIT 200`,
       [store.id]
@@ -584,6 +590,7 @@ export async function listMyOrders(req, res, next) {
         currency: o.currency,
         status: o.status,
         city: o.city || '',
+        area: o.area || '',
         address: o.address || '',
         notes: o.notes || '',
         opostTracking: o.opost_tracking || '',

@@ -5,7 +5,9 @@ import { PinIcon } from './icons.jsx';
 // خانة بحث عن المدينة: تكتب فتفلتر كل المدن (بالاسم أو المنطقة) ويظهر سعر التوصيل لكل مدينة؛
 // اختيارها يملأ الأجرة. لا تُغلق عند فقدان التركيز (كي لا تختفي عند التمرير/إخفاء الكيبورد على
 // الموبايل) — تُغلق فقط عند الضغط خارجها، تماماً مثل مكوّن Select.
-export default function CitySearch({ value, onPick, onClear, options, invalid, placeholder }) {
+// onText (اختياري): يسمح بكتابة قيمة حرّة غير موجودة بالقائمة (لخانة القرية/المنطقة —
+// قد تكون قرية صغيرة ما إلها ذكر بالقائمة، فما منوقّف الزبونة عند حدّ القائمة).
+export default function CitySearch({ value, onPick, onClear, onText, options, invalid, placeholder }) {
   const { t } = useTranslation();
   const [q, setQ] = useState(value || '');
   const [open, setOpen] = useState(false);
@@ -40,7 +42,12 @@ export default function CitySearch({ value, onPick, onClear, options, invalid, p
           className={`input !rounded-2xl pe-9 ${invalid ? 'ring-1 ring-red-400/70' : ''}`}
           placeholder={placeholder || t('co.selectCity')}
           value={q}
-          onChange={(e) => { setQ(e.target.value); setOpen(true); if (value && onClear) onClear(); }}
+          onChange={(e) => {
+            setQ(e.target.value);
+            setOpen(true);
+            if (onText) onText(e.target.value);
+            else if (value && onClear) onClear();
+          }}
           onFocus={() => setOpen(true)}
         />
         <PinIcon className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-wine/50" />

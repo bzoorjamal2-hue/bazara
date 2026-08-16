@@ -4,7 +4,7 @@ import { activeStoreSql } from '../utils/subscription.js';
 import { notifyStoreOwner } from '../utils/notify.js';
 import { statusLabelAr as opostStatusLabelAr } from '../config/opost.js';
 import { epsStatusLabelAr } from '../config/eps.js';
-import { citiesWithFees, normalizeTiers } from '../config/deliveryCities.js';
+import { citiesWithFees, normalizeTiers, villagesByCity } from '../config/deliveryCities.js';
 
 // أعمدة المنتج + بيانات المتجر + تجميع التقييمات. نربط users لفلترة المشتركين الفعّالين.
 const PRODUCT_SELECT = `
@@ -292,8 +292,10 @@ export async function getStoreCheckout(req, res, next) {
       whatsapp: s.whatsapp || '',
       deliveryZones: zones,
       deliveryTiers: tiers,
-      // قائمة المدن الموحّدة (كل المدن) مع أجرة كل مدينة محسوبة من الشرائح + استثناءات المتجر
+      // قائمة المدن الرئيسية مع أجرة كل مدينة محسوبة من الشرائح + استثناءات المتجر،
+      // وقرى/مناطق كل مدينة (يختارها الزبون بعد المدينة — نفس تقسيم أوبتيموس)
       cities: citiesWithFees(tiers, zones),
+      villages: villagesByCity(),
       freeShippingOver: Number(s.free_shipping_over || 0),
       flashPercent: flashActive ? Number(s.flash_percent) : 0,
       flashEndsAt: flashActive ? s.flash_ends_at : null,

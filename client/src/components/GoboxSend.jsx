@@ -79,7 +79,8 @@ export default function GoboxSend({ order, onSent }) {
       {error && <div className="rounded-lg bg-red-500/10 px-3 py-1.5 text-xs text-red-200">{error}</div>}
       <div>
         <label className="mb-1 block text-[11px] text-stone-400">{t('dashboard.gobox.village')}</label>
-        <VillageSearch value="" onPick={setVillage} initialQuery={order.city || ''} placeholder={t('dashboard.gobox.villagePh')} />
+        {/* نعبّئ البحث بقرية الزبون (الأدقّ) وإلا بمدينته */}
+        <VillageSearch value="" onPick={setVillage} initialQuery={order.area || order.city || ''} placeholder={t('dashboard.gobox.villagePh')} />
       </div>
       <div className="flex items-center gap-2">
         <button

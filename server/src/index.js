@@ -194,6 +194,9 @@ async function ensureColumns() {
     // طلبات الدفع عند الاستلام (واتساب): حقول التوصيل
     await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS city VARCHAR(80) DEFAULT '';");
     await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS address TEXT DEFAULT '';");
+    // القرية/المنطقة داخل المدينة — حقل مستقل يطابق "area" عند شركات التوصيل،
+    // فيروح الطلب لأوبتيموس بضغطة بلا مطابقة تخمينية من العنوان الحرّ
+    await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS area VARCHAR(80) DEFAULT '';");
     await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT '';");
     await pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_fee NUMERIC(10,2) DEFAULT 0;");
     // الكوبونات: كود الخصم وقيمته المطبّقة على الطلب

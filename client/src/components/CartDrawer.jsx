@@ -18,11 +18,11 @@ import { trackPixel } from '../utils/pixels.js';
 // بيانات الزبون المحفوظة محلياً — تعبّئ شاشة الإتمام تلقائياً بالطلبات القادمة
 const CUSTOMER_KEY = 'bz_customer_v1';
 const loadCustomer = () => {
-  try { return { name: '', phone: '', city: '', address: '', notes: '', ...JSON.parse(localStorage.getItem(CUSTOMER_KEY) || '{}') }; }
-  catch { return { name: '', phone: '', city: '', address: '', notes: '' }; }
+  try { return { name: '', phone: '', city: '', area: '', address: '', notes: '', ...JSON.parse(localStorage.getItem(CUSTOMER_KEY) || '{}') }; }
+  catch { return { name: '', phone: '', city: '', area: '', address: '', notes: '' }; }
 };
 const saveCustomer = (c) => {
-  try { localStorage.setItem(CUSTOMER_KEY, JSON.stringify({ name: c.name, phone: c.phone, city: c.city, address: c.address })); }
+  try { localStorage.setItem(CUSTOMER_KEY, JSON.stringify({ name: c.name, phone: c.phone, city: c.city, area: c.area, address: c.address })); }
   catch { /* تجاهل */ }
 };
 
@@ -83,7 +83,8 @@ export default function CartDrawer() {
   const [placing, setPlacing] = useState(false); // جارٍ حفظ الطلب
   const [invalid, setInvalid] = useState({}); // الحقول الناقصة/الخاطئة — لتمييزها بإطار أحمر
   const [storeZones, setStoreZones] = useState(null); // مناطق المتجر المخصّصة (إن وُجدت)
-  const [storeCities, setStoreCities] = useState([]); // قائمة المدن الموحّدة بأجرتها من الخادم
+  const [storeCities, setStoreCities] = useState([]); // قائمة المدن الرئيسية بأجرتها من الخادم
+  const [villages, setVillages] = useState({}); // { المدينة: [قراها] } — تظهر بعد اختيار المدينة
   const [freeOver, setFreeOver] = useState(0); // شحن مجاني فوق هذا المبلغ (0 = معطّل)
   const [referral, setReferral] = useState(null); // { code, percent, referrerName } خصم إحالة تلقائي
   useScrollLock(open);
@@ -107,12 +108,23 @@ export default function CartDrawer() {
       .then((r) => {
         setStoreZones(Array.isArray(r.data.deliveryZones) ? r.data.deliveryZones : []);
         setStoreCities(Array.isArray(r.data.cities) ? r.data.cities : []);
+        setVillages(r.data.villages && typeof r.data.villages === 'object' ? r.data.villages : {});
         setFreeOver(Number(r.data.freeShippingOver) || 0);
         // عرض الفلاش الفعّال (الخادم يرجّعه فقط ما دام لم ينتهِ) — للعرض؛ الخادم هو الحكم
         setFlash(Number(r.data.flashPercent) > 0 ? { percent: Number(r.data.flashPercent), endsAt: r.data.flashEndsAt } : null);
       })
-      .catch(() => { setStoreZones([]); setStoreCities([]); setFreeOver(0); setFlash(null); });
+      .catch(() => { setStoreZones([]); setStoreCities([]); setVillages({}); setFreeOver(0); setFlash(null); });
   }, [open, storeSlug]);
+
+  // الزبونة القديمة محفوظ عندها اسم قرية بخانة "المدينة" (قبل فصل الحقلين) — نُرجّعها
+  // لمدينتها ونحطّ القرية بخانتها تلقائياً، فتشوف الأجرة صح بلا ما تعيد التعبئة.
+  useEffect(() => {
+    const names = Object.keys(villages);
+    if (!names.length || !cust.city) return;
+    if (names.includes(cust.city)) return;
+    const parent = names.find((cty) => (villages[cty] || []).includes(cust.city));
+    if (parent) setCust((p) => ({ ...p, city: parent, area: p.area || p.city }));
+  }, [villages, cust.city]);
 
   // عند فتح السلة: نحدّث الأسعار والمتبقّي من الخادم بطلب واحد. عناصر السلة لقطة وقت
   // الإضافة، والطلب يُسعَّر على الخادم — فبلا هذا قد ترى الزبونة سعراً قديماً وترسل
@@ -137,7 +149,7 @@ export default function CartDrawer() {
     const id = setTimeout(() => {
       api.post('/public/abandoned', {
         slug: storeSlug,
-        customer: { name: cust.name, phone: cust.phone, city: cust.city, address: cust.address },
+        customer: { name: cust.name, phone: cust.phone, city: [cust.city, cust.area].filter(Boolean).join(' - '), address: cust.address },
         items: items.map((i) => ({ name: i.name, qty: i.qty, price: i.price, size: i.size || '', color: i.color || '' })),
         total, // مجموع القطع (بلا توصيل/خصم — تقديري يكفي للمتابعة)
       }).catch(() => { /* صامت — ميزة مساعدة لا توقف الشراء */ });
@@ -191,6 +203,12 @@ export default function CartDrawer() {
       ? storeZones.map((z) => ({ name: z.name, fee: Number(z.fee) || 0, region: '' }))
       : AREAS.map((a) => ({ name: ar ? a.ar : a.en, fee: a.fee, region: '' }));
   const cityOpt = areaList.find((z) => z.name === cust.city);
+  // قرى المدينة المختارة: أول خيار "المدينة نفسها" لمن يسكن داخلها، ثم كل قراها.
+  // اسم القرية يروح لحقل مستقل بالطلب (يطابق area عند أوبتيموس) — والعنوان
+  // التفصيلي يبقى للشارع/العلامة المميّزة فقط.
+  const villageList = cust.city
+    ? [{ name: cust.city, region: t('co.inCity') }, ...(villages[cust.city] || []).map((v) => ({ name: v }))]
+    : [];
   // الأولوية (لا تُجمع الخصومات): كوبون > فلاش > إحالة > ولاء — نفس ترتيب الخادم (الحكم)
   const flashActive = flash && flash.percent > 0 && flash.endsAt && new Date(flash.endsAt).getTime() > Date.now();
   const flashDiscount = (!coupon && flashActive)
@@ -242,9 +260,11 @@ export default function CartDrawer() {
     if (!cust.name.trim()) bad.name = true;
     if (cust.phone.replace(/\D/g, '').length < 9) bad.phone = true;
     if (!cust.city) bad.city = true;
+    // القرية/المنطقة مطلوبة — هي اللي بتوصل الطلب لشركة التوصيل بلا سؤال ولا تخمين
+    if (cust.city && !cust.area.trim()) bad.area = true;
     if (Object.keys(bad).length) {
       setInvalid(bad);
-      setErr(bad.phone && cust.phone.trim() && !bad.name && !bad.city ? t('co.phoneInvalid') : t('co.required'));
+      setErr(bad.phone && cust.phone.trim() && !bad.name && !bad.city && !bad.area ? t('co.phoneInvalid') : t('co.required'));
       return;
     }
     setInvalid({});
@@ -264,7 +284,7 @@ export default function CartDrawer() {
     try {
       const r = await api.post('/orders/cod', {
         items: items.map((i) => ({ id: i.id, qty: i.qty, size: i.size, color: i.color })),
-        customer: { name: cust.name, phone: cust.phone, city: cust.city, address: cust.address, notes: cust.notes, deliveryFee: delivery },
+        customer: { name: cust.name, phone: cust.phone, city: cust.city, area: cust.area, address: cust.address, notes: cust.notes, deliveryFee: delivery },
         coupon: coupon ? { code: coupon.code } : undefined,
         referralCode: (!coupon && refDiscount > 0) ? referral?.code : undefined,
       });
@@ -465,14 +485,25 @@ export default function CartDrawer() {
                       {/* autocomplete: الجوال يقترح الاسم/الهاتف/العنوان المحفوظين — تعبئة أسرع = إتمام أكثر */}
                       <input className={`input !rounded-2xl ${invalid.name ? 'ring-1 ring-red-400/70' : ''}`} autoComplete="name" placeholder={t('co.name')} value={cust.name} onChange={(e) => { setCust({ ...cust, name: e.target.value }); if (invalid.name) setInvalid((v) => ({ ...v, name: false })); }} />
                       <input className={`input !rounded-2xl ${invalid.phone ? 'ring-1 ring-red-400/70' : ''}`} dir="ltr" inputMode="tel" autoComplete="tel" placeholder={t('co.phone')} value={cust.phone} onChange={(e) => { setCust({ ...cust, phone: e.target.value }); if (invalid.phone) setInvalid((v) => ({ ...v, phone: false })); }} />
-                      {/* المدينة: بحث من كل المدن بسعرها. القرية/الشارع بالعنوان التفصيلي تحت */}
+                      {/* المدينة: المدن الرئيسية فقط بسعرها (نفس تقسيم شركات التوصيل) */}
                       <CitySearch
                         value={cust.city}
                         options={areaList}
                         invalid={invalid.city}
-                        onClear={() => setCust((p) => ({ ...p, city: '' }))}
-                        onPick={(name) => { setCust((p) => ({ ...p, city: name })); if (invalid.city) setInvalid((p) => ({ ...p, city: false })); }}
+                        onClear={() => setCust((p) => ({ ...p, city: '', area: '' }))}
+                        onPick={(name) => { setCust((p) => ({ ...p, city: name, area: '' })); if (invalid.city) setInvalid((p) => ({ ...p, city: false })); }}
                       />
+                      {/* القرية/المنطقة داخل المدينة — تظهر بعد اختيار المدينة، وتقبل الكتابة الحرّة */}
+                      {cust.city && (
+                        <CitySearch
+                          value={cust.area}
+                          options={villageList}
+                          invalid={invalid.area}
+                          placeholder={t('co.village')}
+                          onText={(txt) => { setCust((p) => ({ ...p, area: txt })); if (invalid.area) setInvalid((p) => ({ ...p, area: false })); }}
+                          onPick={(name) => { setCust((p) => ({ ...p, area: name })); if (invalid.area) setInvalid((p) => ({ ...p, area: false })); }}
+                        />
+                      )}
                       <input className="input !rounded-2xl" autoComplete="street-address" placeholder={t('co.address')} value={cust.address} onChange={(e) => setCust({ ...cust, address: e.target.value })} />
                       <textarea className="input !rounded-2xl" rows={2} placeholder={t('co.notes')} value={cust.notes} onChange={(e) => setCust({ ...cust, notes: e.target.value })} />
                     </div>

@@ -57,7 +57,7 @@ export default function OpostSend({ order, cities = [], types = [], defaultType 
   // العنوان التفصيلي = عنوان الزبون بعد إزالة اسم المدينة والقرية (اللي راحوا لحقلَي
   // المدينة والمنطقة) — يبقى الوصف الإضافي فقط بلا تكرار. اسم القرية نمرّره لتنظيفه.
   const detailFor = (areaName) =>
-    stripNames(order.address, [order.city, areaName].filter(Boolean)) || '';
+    stripNames(order.address, [order.city, order.area, areaName].filter(Boolean)) || '';
 
   const doSend = async (c, a, ty, detail) => {
     setBusy(true); setError('');
@@ -92,9 +92,14 @@ export default function OpostSend({ order, cities = [], types = [], defaultType 
     // بحقلها، وإبقاء اسمها (جنين) كان يخلّي مناطق تحمل اسم المحافظة
     // ("جنين البلد") تتفوّق على القرية الصحيحة (رابا) — وهذا بالضبط ما أرسل
     // شحنة رابا إلى جنين البلد.
+    // الطلبات الجديدة فيها القرية بحقلها المستقل (order.area) — الزبون اختارها من
+    // قائمة قرى مدينته، فالمطابقة تكون بالاسم مباشرة وترسل الشحنة بضغطة بلا سؤال.
+    const byField = order.area ? bestMatchScored(order.area, list) : null;
     const rawExact = bestMatchScored(order.address, list);
     const areaText = stripNames(`${order.address || ''} ${order.city || ''}`, [city.name]);
-    const m = rawExact?.score === 100 ? rawExact : bestMatchScored(areaText, list);
+    const m = (byField && byField.score >= 60) ? byField
+      : rawExact?.score === 100 ? rawExact
+        : bestMatchScored(areaText, list);
     // ثقة كافية (تطابق كلمات كامل أو تامّ) → إرسال مباشر بلا فتح اللوحة
     if (m && m.score >= 60) { await doSend(String(city.id), String(m.it.id), typeId, detailFor(m.it.name)); return; }
     // غير مؤكّد: نفتح اللوحة مع أفضل ترشيح لتأكيد بضغطة
