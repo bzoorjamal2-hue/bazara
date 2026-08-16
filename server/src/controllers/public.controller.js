@@ -4,7 +4,9 @@ import { activeStoreSql } from '../utils/subscription.js';
 import { notifyStoreOwner } from '../utils/notify.js';
 import { statusLabelAr as opostStatusLabelAr } from '../config/opost.js';
 import { epsStatusLabelAr } from '../config/eps.js';
-import { citiesWithFees, normalizeTiers, villagesByCity } from '../config/deliveryCities.js';
+import { citiesWithFees, normalizeTiers, villagesByCity, externalCitiesWithFees, sameName } from '../config/deliveryCities.js';
+import { fetchCities, fetchAreas } from '../config/opost.js';
+import { ensureToken } from './opost.controller.js';
 
 // أعمدة المنتج + بيانات المتجر + تجميع التقييمات. نربط users لفلترة المشتركين الفعّالين.
 const PRODUCT_SELECT = `
@@ -274,12 +276,59 @@ export async function loyaltyPreview(req, res, next) {
   }
 }
 
+// مدن المتجر: قائمة أوبتيموس الحيّة (مخزّنة ٦ ساعات بذاكرة الخادم) للمتاجر المربوطة،
+// وإلا قائمتنا الداخلية. أي فشل بالاتصال يرجع للقائمة الداخلية بهدوء — الشراء ما بيوقف.
+async function citiesForStore(s, tiers, zones) {
+  if (s.opost_connected) {
+    try {
+      const token = await ensureToken(s);
+      const list = await fetchCities(token);
+      const mapped = externalCitiesWithFees(list, tiers, zones);
+      if (mapped.length) return mapped;
+    } catch { /* نرجع للقائمة الداخلية */ }
+  }
+  return citiesWithFees(tiers, zones);
+}
+
+// ───────── GET /api/public/store/:slug/areas?city=<اسم المدينة> ─────────
+// مناطق/قرى مدينة معيّنة: من أوبتيموس للمتاجر المربوطة (كل مناطق الشركة بلا نقصان)،
+// وإلا قرى المدينة من قائمتنا. تُستدعى بعد اختيار الزبون لمدينته.
+export async function getStoreAreas(req, res, next) {
+  const { slug } = req.params;
+  const cityName = String(req.query.city || '').trim();
+  try {
+    if (!cityName) return res.json({ areas: [] });
+    const r = await query(
+      `SELECT id, opost_connected, opost_access_token, opost_refresh_token, opost_token_expires
+       FROM stores WHERE slug = $1`,
+      [slug]
+    );
+    const s = r.rows[0];
+    if (!s) return res.status(404).json({ error: 'المتجر غير موجود.' });
+    const fallback = () => res.json({ areas: (villagesByCity()[cityName] || []).map((n) => ({ name: n })) });
+    if (!s.opost_connected) return fallback();
+    try {
+      const token = await ensureToken(s);
+      const city = (await fetchCities(token)).find((x) => sameName(x.name, cityName));
+      if (!city) return fallback();
+      const areas = (await fetchAreas(token, city.id)).map((a) => ({ name: String(a.name || '').trim() })).filter((a) => a.name);
+      return areas.length ? res.json({ areas }) : fallback();
+    } catch {
+      return fallback();
+    }
+  } catch (err) {
+    next(err);
+  }
+}
+
 // بيانات خفيفة للسلة: مناطق التوصيل + شحن مجاني + واتساب (بلا تحميل المنتجات)
 export async function getStoreCheckout(req, res, next) {
   const { slug } = req.params;
   try {
     const r = await query(
-      'SELECT whatsapp, delivery_zones, delivery_tiers, free_shipping_over, flash_percent, flash_ends_at FROM stores WHERE slug = $1',
+      `SELECT id, whatsapp, delivery_zones, delivery_tiers, free_shipping_over, flash_percent, flash_ends_at,
+              opost_connected, opost_access_token, opost_refresh_token, opost_token_expires
+       FROM stores WHERE slug = $1`,
       [slug]
     );
     const s = r.rows[0];
@@ -292,10 +341,14 @@ export async function getStoreCheckout(req, res, next) {
       whatsapp: s.whatsapp || '',
       deliveryZones: zones,
       deliveryTiers: tiers,
-      // قائمة المدن الرئيسية مع أجرة كل مدينة محسوبة من الشرائح + استثناءات المتجر،
-      // وقرى/مناطق كل مدينة (يختارها الزبون بعد المدينة — نفس تقسيم أوبتيموس)
-      cities: citiesWithFees(tiers, zones),
+      // المدن: من أوبتيموس نفسه إن كان المتجر مربوطاً (المصدر الحقيقي — فما تضيع
+      // مدينة ولا تظهر وحدة الشركة ما بتوصلها)، وإلا قائمتنا الداخلية.
+      cities: await citiesForStore(s, tiers, zones),
+      // قرى كل مدينة من قائمتنا — تخدم البحث حتى لو كتب الزبون اسم قرية بخانة
+      // المدينة، وتُستخدم كبديل لو ما كان المتجر مربوطاً بأوبتيموس
       villages: villagesByCity(),
+      // هل نجلب مناطق المدينة من أوبتيموس عند اختيارها؟ (قائمة الشركة أدقّ وأشمل)
+      liveAreas: Boolean(s.opost_connected),
       freeShippingOver: Number(s.free_shipping_over || 0),
       flashPercent: flashActive ? Number(s.flash_percent) : 0,
       flashEndsAt: flashActive ? s.flash_ends_at : null,

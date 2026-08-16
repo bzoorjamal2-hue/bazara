@@ -42,7 +42,7 @@ async function saveTokens(storeId, tok) {
 }
 
 // يُرجّع توكناً صالحاً: يعيد استخدام المخزّن، ويجدّده تلقائياً عند قرب انتهائه (يقلّل استهلاك الـ API)
-async function ensureToken(store) {
+export async function ensureToken(store) {
   const exp = store.opost_token_expires ? new Date(store.opost_token_expires).getTime() : 0;
   const access = decrypt(store.opost_access_token);
   if (access && exp - Date.now() > 60 * 1000) return access; // ما زال صالحاً

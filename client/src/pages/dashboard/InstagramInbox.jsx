@@ -5,6 +5,7 @@ import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
 import CitySearch from '../../components/CitySearch.jsx';
 import { sizeLabel } from '../../utils/sizes.js';
+import { norm } from '../../utils/match.js';
 import { InstagramIcon, BagIcon, BackIcon, CheckIcon, TrashIcon, PlusIcon } from '../../components/icons.jsx';
 import { startFbLogin, igRedirectUri } from '../../utils/fbSdk.js';
 import { cldThumb, cldVideoPoster } from '../../utils/cloudinary.js';
@@ -424,13 +425,33 @@ function OrderComposer({ defaultName = '', onSubmit }) {
   const removeItem = (id) => setPicked((prev) => prev.filter((x) => x.id !== id));
 
   // اختيار مدينة من قائمة البحث يملأ المدينة وأجرتها تلقائياً (نفس حساب السلة)
-  const pickCity = (name, fee) => {
-    setF((p) => ({ ...p, city: name, area: '', deliveryFee: fee != null && fee !== '' ? String(fee) : p.deliveryFee }));
+  const pickCity = (name, fee, opt) => {
+    // اختيار قرية من نتائج البحث → مدينتها بخانة المدينة وهي بخانة القرية
+    setF((p) => ({
+      ...p,
+      city: opt?.parent || name,
+      area: opt?.parent ? name : '',
+      deliveryFee: fee != null && fee !== '' ? String(fee) : p.deliveryFee,
+    }));
   };
   // قرى المدينة المختارة (أول خيار: المدينة نفسها) — القرية تروح لحقلها بالطلب
   const villageList = f.city
     ? [{ name: f.city, region: t('co.inCity') }, ...(villages[f.city] || []).map((v) => ({ name: v }))]
     : [];
+  // خانة المدينة تبحث كذلك بأسماء القرى/البلدات — اختيار قرية يملأ مدينتها والقرية معاً
+  const cityChoices = useMemo(() => {
+    const hints = [];
+    for (const [cty, list] of Object.entries(villages)) {
+      const nc = norm(cty);
+      const parent = cities.find((x) => {
+        const nx = norm(x.name);
+        return nx === nc || nx.includes(nc) || nc.includes(nx);
+      });
+      if (!parent) continue;
+      for (const v of list) hints.push({ name: v, region: parent.name, fee: parent.fee, parent: parent.name });
+    }
+    return [...cities, ...hints];
+  }, [cities, villages]);
 
   const results = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -490,7 +511,7 @@ function OrderComposer({ defaultName = '', onSubmit }) {
         <div className="flex gap-2 sm:col-span-2">
           <div className="flex-1">
             {cities.length > 0 ? (
-              <CitySearch value={f.city} options={cities} onPick={pickCity} onClear={() => setF((p) => ({ ...p, city: '' }))} />
+              <CitySearch value={f.city} options={cityChoices} onPick={pickCity} onClear={() => setF((p) => ({ ...p, city: '', area: '' }))} />
             ) : (
               <input className="input w-full" placeholder={t('dashboard.ordersSection.deliveryTo')} value={f.city} onChange={set('city')} />
             )}

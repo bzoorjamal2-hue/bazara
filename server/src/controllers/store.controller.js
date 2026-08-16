@@ -3,7 +3,9 @@ import slugify from 'slugify';
 import { generateUniqueStoreSlug } from '../utils/slug.js';
 import { pingIndexNow } from '../utils/indexnow.js';
 import { toHostedUrl } from '../utils/hostImage.js';
-import { normalizeTiers, citiesWithFees, villagesByCity } from '../config/deliveryCities.js';
+import { normalizeTiers, citiesWithFees, villagesByCity, externalCitiesWithFees } from '../config/deliveryCities.js';
+import { fetchCities } from '../config/opost.js';
+import { ensureToken } from './opost.controller.js';
 
 function mapStore(s) {
   return {
@@ -141,6 +143,21 @@ export function sanitizeBanners(raw) {
     .filter((b) => b.title || b.subtitle || b.bgValue);
 }
 
+// مدن المتجر: قائمة أوبتيموس الحيّة (مخزّنة بالذاكرة ٦ ساعات) إن كان مربوطاً، وإلا
+// قائمتنا الداخلية. أي فشل يرجع للداخلية بهدوء.
+async function citiesForStoreRow(store) {
+  const tiers = store.delivery_tiers;
+  const zones = Array.isArray(store.delivery_zones) ? store.delivery_zones : [];
+  if (store.opost_connected) {
+    try {
+      const list = await fetchCities(await ensureToken(store));
+      const mapped = externalCitiesWithFees(list, tiers, zones);
+      if (mapped.length) return mapped;
+    } catch { /* نرجع للقائمة الداخلية */ }
+  }
+  return citiesWithFees(tiers, zones);
+}
+
 // جلب متجر المستخدم الحالي مع إحصائيات بسيطة
 export async function getMyStore(req, res, next) {
   try {
@@ -153,9 +170,11 @@ export async function getMyStore(req, res, next) {
     res.json({
       store: mapStore(store),
       stats: { productsCount: countResult.rows[0].count },
-      // قائمة المدن الرئيسية بأجرتها + قرى كل مدينة — لخانتَي البحث بنموذج إنشاء الطلب اليدوي
-      cities: citiesWithFees(store.delivery_tiers, Array.isArray(store.delivery_zones) ? store.delivery_zones : []),
+      // المدن (من أوبتيموس إن كان المتجر مربوطاً) + قرى كل مدينة — لخانتَي البحث
+      // بنموذج إنشاء الطلب اليدوي، فتطابق ما يستقبله التوصيل تماماً
+      cities: await citiesForStoreRow(store),
       villages: villagesByCity(),
+      liveAreas: Boolean(store.opost_connected),
     });
   } catch (err) {
     next(err);

@@ -33,7 +33,8 @@ export default function CitySearch({ value, onPick, onClear, onText, options, in
   const results = (term
     ? options.filter((z) => `${z.name || ''} ${z.region || ''}`.toLowerCase().includes(term))
     : options).slice(0, 60);
-  const pick = (z) => { onPick(z.name, z.fee); setQ(z.name); setOpen(false); };
+  // نمرّر العنصر كاملاً كوسيط ثالث — خانة المدينة تستعمله لتعرف مدينة القرية المختارة
+  const pick = (z) => { onPick(z.name, z.fee, z); setQ(z.name); setOpen(false); };
 
   return (
     <div ref={boxRef} className="relative">
@@ -58,7 +59,7 @@ export default function CitySearch({ value, onPick, onClear, onText, options, in
           onMouseDown={(e) => e.preventDefault()}
         >
           {results.map((z) => (
-            <li key={z.name}>
+            <li key={`${z.name}|${z.region || ''}`}>
               <button
                 type="button"
                 onClick={() => pick(z)}

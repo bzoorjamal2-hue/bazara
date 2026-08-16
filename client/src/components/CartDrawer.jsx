@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,6 +13,7 @@ import { sizeLabel } from '../utils/sizes.js';
 import { colorToCss } from '../utils/colorDot.js';
 import { cldThumb } from '../utils/cloudinary.js';
 import { getRef, clearRef } from '../utils/referral.js';
+import { norm } from '../utils/match.js';
 import { trackPixel } from '../utils/pixels.js';
 
 // بيانات الزبون المحفوظة محلياً — تعبّئ شاشة الإتمام تلقائياً بالطلبات القادمة
@@ -84,7 +85,9 @@ export default function CartDrawer() {
   const [invalid, setInvalid] = useState({}); // الحقول الناقصة/الخاطئة — لتمييزها بإطار أحمر
   const [storeZones, setStoreZones] = useState(null); // مناطق المتجر المخصّصة (إن وُجدت)
   const [storeCities, setStoreCities] = useState([]); // قائمة المدن الرئيسية بأجرتها من الخادم
-  const [villages, setVillages] = useState({}); // { المدينة: [قراها] } — تظهر بعد اختيار المدينة
+  const [villages, setVillages] = useState({}); // { المدينة: [قراها] } — قائمتنا الداخلية
+  const [liveAreas, setLiveAreas] = useState(false); // المتجر مربوط بأوبتيموس → نجلب مناطقه الحيّة
+  const [cityAreas, setCityAreas] = useState(null); // مناطق المدينة المختارة من الشركة (null = بعدها)
   const [freeOver, setFreeOver] = useState(0); // شحن مجاني فوق هذا المبلغ (0 = معطّل)
   const [referral, setReferral] = useState(null); // { code, percent, referrerName } خصم إحالة تلقائي
   useScrollLock(open);
@@ -109,12 +112,24 @@ export default function CartDrawer() {
         setStoreZones(Array.isArray(r.data.deliveryZones) ? r.data.deliveryZones : []);
         setStoreCities(Array.isArray(r.data.cities) ? r.data.cities : []);
         setVillages(r.data.villages && typeof r.data.villages === 'object' ? r.data.villages : {});
+        setLiveAreas(Boolean(r.data.liveAreas));
         setFreeOver(Number(r.data.freeShippingOver) || 0);
         // عرض الفلاش الفعّال (الخادم يرجّعه فقط ما دام لم ينتهِ) — للعرض؛ الخادم هو الحكم
         setFlash(Number(r.data.flashPercent) > 0 ? { percent: Number(r.data.flashPercent), endsAt: r.data.flashEndsAt } : null);
       })
-      .catch(() => { setStoreZones([]); setStoreCities([]); setVillages({}); setFreeOver(0); setFlash(null); });
+      .catch(() => { setStoreZones([]); setStoreCities([]); setVillages({}); setLiveAreas(false); setFreeOver(0); setFlash(null); });
   }, [open, storeSlug]);
+
+  // مناطق المدينة المختارة من شركة التوصيل نفسها (كل مناطقها بلا نقصان) — تُجلب عند
+  // اختيار المدينة فقط، ومخزّنة على الخادم، فما تثقل فتح السلة. الفشل يرجع لقائمتنا.
+  useEffect(() => {
+    if (!liveAreas || !storeSlug || !cust.city) { setCityAreas(null); return undefined; }
+    let alive = true;
+    api.get(`/public/store/${storeSlug}/areas`, { params: { city: cust.city } })
+      .then((r) => { if (alive) setCityAreas(Array.isArray(r.data.areas) ? r.data.areas.map((a) => a.name).filter(Boolean) : null); })
+      .catch(() => { if (alive) setCityAreas(null); });
+    return () => { alive = false; };
+  }, [liveAreas, storeSlug, cust.city]);
 
   // الزبونة القديمة محفوظ عندها اسم قرية بخانة "المدينة" (قبل فصل الحقلين) — نُرجّعها
   // لمدينتها ونحطّ القرية بخانتها تلقائياً، فتشوف الأجرة صح بلا ما تعيد التعبئة.
@@ -203,11 +218,30 @@ export default function CartDrawer() {
       ? storeZones.map((z) => ({ name: z.name, fee: Number(z.fee) || 0, region: '' }))
       : AREAS.map((a) => ({ name: ar ? a.ar : a.en, fee: a.fee, region: '' }));
   const cityOpt = areaList.find((z) => z.name === cust.city);
-  // قرى المدينة المختارة: أول خيار "المدينة نفسها" لمن يسكن داخلها، ثم كل قراها.
-  // اسم القرية يروح لحقل مستقل بالطلب (يطابق area عند أوبتيموس) — والعنوان
-  // التفصيلي يبقى للشارع/العلامة المميّزة فقط.
+  // خانة المدينة تبحث بالمدن + بأسماء القرى/البلدات كاختصار: لو كتبت الزبونة "بيرزيت"
+  // أو "دورا" بتطلع مع مدينتها، واختيارها بيحطّ المدينة بخانتها والقرية بخانتها —
+  // فما بتضيع منها أي بلدة لمجرّد أن القائمة صارت بمستوى المدينة.
+  const cityChoices = useMemo(() => {
+    const hints = [];
+    for (const [cty, list] of Object.entries(villages)) {
+      // نطابق مدينتنا بمدينة القائمة المعروضة حتى لو اختلفت الصياغة
+      // (مثلاً "رام الله" عند شركة التوصيل مقابل "رام الله والبيرة" عندنا)
+      const nc = norm(cty);
+      const parent = areaList.find((x) => {
+        const nx = norm(x.name);
+        return nx === nc || nx.includes(nc) || nc.includes(nx);
+      });
+      if (!parent) continue;
+      for (const v of list) hints.push({ name: v, region: parent.name, fee: parent.fee, parent: parent.name });
+    }
+    return [...areaList, ...hints];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [villages, storeCities, storeZones, ar]);
+  // قرى المدينة المختارة: أول خيار "المدينة نفسها" لمن يسكن داخلها، ثم مناطق شركة
+  // التوصيل نفسها (إن توفّرت) وإلا قرى المدينة من قائمتنا. اسم القرية يروح لحقل
+  // مستقل بالطلب (يطابق area عند أوبتيموس) والعنوان التفصيلي للشارع فقط.
   const villageList = cust.city
-    ? [{ name: cust.city, region: t('co.inCity') }, ...(villages[cust.city] || []).map((v) => ({ name: v }))]
+    ? [{ name: cust.city, region: t('co.inCity') }, ...(cityAreas || villages[cust.city] || []).map((v) => ({ name: v }))]
     : [];
   // الأولوية (لا تُجمع الخصومات): كوبون > فلاش > إحالة > ولاء — نفس ترتيب الخادم (الحكم)
   const flashActive = flash && flash.percent > 0 && flash.endsAt && new Date(flash.endsAt).getTime() > Date.now();
@@ -488,10 +522,14 @@ export default function CartDrawer() {
                       {/* المدينة: المدن الرئيسية فقط بسعرها (نفس تقسيم شركات التوصيل) */}
                       <CitySearch
                         value={cust.city}
-                        options={areaList}
+                        options={cityChoices}
                         invalid={invalid.city}
                         onClear={() => setCust((p) => ({ ...p, city: '', area: '' }))}
-                        onPick={(name) => { setCust((p) => ({ ...p, city: name, area: '' })); if (invalid.city) setInvalid((p) => ({ ...p, city: false })); }}
+                        onPick={(name, fee, opt) => {
+                          // اختيار قرية من نتائج البحث → مدينتها بخانة المدينة وهي بخانة القرية
+                          setCust((p) => (opt?.parent ? { ...p, city: opt.parent, area: name } : { ...p, city: name, area: '' }));
+                          setInvalid((p) => ({ ...p, city: false, area: false }));
+                        }}
                       />
                       {/* القرية/المنطقة داخل المدينة — تظهر بعد اختيار المدينة، وتقبل الكتابة الحرّة */}
                       {cust.city && (

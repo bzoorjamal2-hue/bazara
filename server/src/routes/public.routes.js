@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { param } from 'express-validator';
 import { subscribeNewsletter, getSiteInfo } from '../controllers/site.controller.js';
-import { getHomeData, getPublicCategories, getStoreBySlug, getStoreCheckout, getProductById, getProductsByIds, getByCategory, getOffers, getReels, getStoriesFeed, addReview, trackOrders, trackStoreVisit, loyaltyPreview, searchProducts } from '../controllers/public.controller.js';
+import { getHomeData, getPublicCategories, getStoreBySlug, getStoreCheckout, getStoreAreas, getProductById, getProductsByIds, getByCategory, getOffers, getReels, getStoriesFeed, addReview, trackOrders, trackStoreVisit, loyaltyPreview, searchProducts } from '../controllers/public.controller.js';
 import { validateCoupon } from '../controllers/coupon.controller.js';
 import { createStockRequest } from '../controllers/stockRequest.controller.js';
 import { saveAbandoned } from '../controllers/abandoned.controller.js';
@@ -45,6 +45,8 @@ router.get('/stories', cacheGet(30), getStoriesFeed);
 router.post('/story/:id/view', viewStory);
 router.get('/store/:slug', cacheGet(30), getStoreBySlug);
 router.get('/store/:slug/checkout', getStoreCheckout);
+// قرى/مناطق مدينة معيّنة (من أوبتيموس للمتاجر المربوطة) — تُطلب بعد اختيار المدينة
+router.get('/store/:slug/areas', cacheGet(300), getStoreAreas);
 router.post('/store/:slug/visit', trackStoreVisit);
 // منتجات متعدّدة بطلب واحد (?ids=1,2,3) — تستخدمها المفضّلة بدل طلب لكل قطعة
 router.get('/products', cacheGet(15), getProductsByIds);

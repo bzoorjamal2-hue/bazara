@@ -146,9 +146,9 @@ export function feeForCity(cityName, tiers, overrides) {
   const name = NAME_TIER.has(raw) ? raw : (VILLAGE_CITY.get(raw) || raw);
   const ov = Array.isArray(overrides) ? overrides.find((z) => z && (z.name === raw || z.name === name)) : null;
   if (ov && ov.fee != null && ov.fee !== '') return Math.max(0, Number(ov.fee) || 0);
-  const tier = NAME_TIER.get(name);
+  // الشريحة: من المدن المعروفة، وإلا نصنّف الاسم (يشمل مدن أوبتيموس غير الموجودة بشجرتنا)
   const tt = normalizeTiers(tiers);
-  return tier ? tt[tier] : tt.wb;
+  return tt[NAME_TIER.get(name) || tierForName(name)];
 }
 
 // المدن الرئيسية فقط مع أجرتها — هي اللي تظهر ببحث المدينة عند الزبون والتاجر
@@ -167,4 +167,66 @@ export function villagesByCity() {
 // المدينة التي تتبع لها قرية معيّنة (أو '' إن كانت غير معروفة)
 export function cityOfVillage(name) {
   return VILLAGE_CITY.get(String(name || '').trim()) || '';
+}
+
+// ───────── تصنيف اسم أي مدينة (حتى القادمة من أوبتيموس) لشريحة سعر ─────────
+// تطبيع مبسّط للمطابقة بالعربية (نفس منطق utils/match على الواجهة)
+const nrm = (s) => String(s || '')
+  .replace(/[ً-ْ]/g, '')
+  .replace(/\(.*?\)/g, ' ')
+  .replace(/[أإآ]/g, 'ا')
+  .replace(/ى/g, 'ي')
+  .replace(/ة/g, 'ه')
+  .replace(/(^|\s)ال/g, '$1')
+  .replace(/[-_،,.]/g, ' ')
+  .replace(/\s+/g, ' ')
+  .trim();
+
+// خريطة (اسم مطبَّع لأي مدينة أو قرية) → شريحتها
+const NORM_TIER = new Map();
+for (const x of _TREE) {
+  NORM_TIER.set(nrm(x.name), x.tier);
+  NORM_TIER.set(nrm(x.region), x.tier);
+  for (const v of x.villages) if (!NORM_TIER.has(nrm(v))) NORM_TIER.set(nrm(v), x.tier);
+}
+
+// هل الاسمان لنفس المكان؟ (تطبيع عربي: الهمزات/التاء المربوطة/أل التعريف/الأقواس)
+export function sameName(a, b) {
+  const x = nrm(a);
+  return Boolean(x) && x === nrm(b);
+}
+
+export const TIER_LABEL_AR ={ wb: 'الضفة الغربية', quds: 'القدس', dakhel: 'الداخل (48)' };
+
+// شريحة أي اسم مدينة: من الخريطة، وإلا شريحة الضفة (أوبتيموس شركة فلسطينية،
+// فالمدن اللي ما منعرفها غالباً بالضفة/غزة لا بالداخل — والتاجر يقدر يستثنيها بسعر خاص).
+export function tierForName(name) {
+  return NORM_TIER.get(nrm(name)) || 'wb';
+}
+
+// مدن قطاع غزة — للتسمية فقط (سعرها على شريحة الضفة، والتاجر يقدر يستثنيها)
+const GAZA = new Set([
+  'غزه', 'خان يونس', 'خانيونس', 'رفح', 'دير البلح', 'جباليا', 'بيت لاهيا', 'بيت حانون',
+  'النصيرات', 'نصيرات', 'البريج', 'المغازي', 'الزوايده', 'القراره', 'بني سهيلا', 'عبسان',
+  'الشمال', 'شمال غزه', 'الوسطى', 'المحافظه الوسطى',
+].map((x) => nrm(x)));
+
+// اسم المنطقة المعروض تحت المدينة (للبحث والتمييز) — '' لو ما منعرفها، فما نقول معلومة غلط
+function regionLabelForName(name) {
+  const k = nrm(name);
+  if (GAZA.has(k)) return 'قطاع غزة';
+  return NORM_TIER.has(k) ? (TIER_LABEL_AR[NORM_TIER.get(k)] || '') : '';
+}
+
+// تحويل قائمة مدن أوبتيموس (المصدر الحقيقي) لقائمة بأجرتها — تُستخدم بشاشة
+// إتمام الطلب عند المتاجر المربوطة، فيطابق ما يعرضه للزبون ما تستقبله الشركة تماماً.
+export function externalCitiesWithFees(list, tiers, overrides) {
+  const tt = normalizeTiers(tiers);
+  return (Array.isArray(list) ? list : []).map((cty) => {
+    const name = String(cty.name || '').trim();
+    const tier = tierForName(name);
+    const ov = Array.isArray(overrides) ? overrides.find((z) => z && z.name === name) : null;
+    const fee = (ov && ov.fee != null && ov.fee !== '') ? Math.max(0, Number(ov.fee) || 0) : tt[tier];
+    return { id: cty.id, name, tier, region: regionLabelForName(name), fee };
+  }).filter((x) => x.name);
 }
