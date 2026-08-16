@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -221,22 +221,20 @@ export default function CartDrawer() {
   // خانة المدينة تبحث بالمدن + بأسماء القرى/البلدات كاختصار: لو كتبت الزبونة "بيرزيت"
   // أو "دورا" بتطلع مع مدينتها، واختيارها بيحطّ المدينة بخانتها والقرية بخانتها —
   // فما بتضيع منها أي بلدة لمجرّد أن القائمة صارت بمستوى المدينة.
-  const cityChoices = useMemo(() => {
-    const hints = [];
-    for (const [cty, list] of Object.entries(villages)) {
-      // نطابق مدينتنا بمدينة القائمة المعروضة حتى لو اختلفت الصياغة
-      // (مثلاً "رام الله" عند شركة التوصيل مقابل "رام الله والبيرة" عندنا)
-      const nc = norm(cty);
-      const parent = areaList.find((x) => {
-        const nx = norm(x.name);
-        return nx === nc || nx.includes(nc) || nc.includes(nx);
-      });
-      if (!parent) continue;
-      for (const v of list) hints.push({ name: v, region: parent.name, fee: parent.fee, parent: parent.name });
-    }
-    return [...areaList, ...hints];
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [villages, storeCities, storeZones, ar]);
+  // ملاحظة: هذه ليست hook (تقع بعد الـ early return أعلاه) — حساب عادي مثل areaList
+  const cityHints = [];
+  for (const [cty, list] of Object.entries(villages)) {
+    // نطابق مدينتنا بمدينة القائمة المعروضة حتى لو اختلفت الصياغة
+    // (مثلاً "رام الله" عند شركة التوصيل مقابل "رام الله والبيرة" عندنا)
+    const nc = norm(cty);
+    const parent = areaList.find((x) => {
+      const nx = norm(x.name);
+      return nx === nc || nx.includes(nc) || nc.includes(nx);
+    });
+    if (!parent) continue;
+    for (const v of list) cityHints.push({ name: v, region: parent.name, fee: parent.fee, parent: parent.name });
+  }
+  const cityChoices = [...areaList, ...cityHints];
   // قرى المدينة المختارة: أول خيار "المدينة نفسها" لمن يسكن داخلها، ثم مناطق شركة
   // التوصيل نفسها (إن توفّرت) وإلا قرى المدينة من قائمتنا. اسم القرية يروح لحقل
   // مستقل بالطلب (يطابق area عند أوبتيموس) والعنوان التفصيلي للشارع فقط.
