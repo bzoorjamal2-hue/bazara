@@ -200,10 +200,29 @@ export function sameName(a, b) {
 
 export const TIER_LABEL_AR ={ wb: 'الضفة الغربية', quds: 'القدس', dakhel: 'الداخل (48)' };
 
-// شريحة أي اسم مدينة: من الخريطة، وإلا شريحة الضفة (أوبتيموس شركة فلسطينية،
-// فالمدن اللي ما منعرفها غالباً بالضفة/غزة لا بالداخل — والتاجر يقدر يستثنيها بسعر خاص).
+// تصنيف واثق لاسم مكان إلى شريحته، أو null لو غير معروف. نتجاوز الخريطة الثابتة
+// لأن أوبتيموس يسمّي مناطق الداخل بأسماء إقليمية (مثل "جنوب الداخل"/"شمال الداخل")
+// ليست مدناً مفردة، فكانت تسقط للافتراضي (الضفة) وتأخذ سعرها الغلط. نكشف الكلمات
+// المفتاحية الصريحة: "الداخل"/"48"/"الخط الأخضر" → الداخل، و"القدس" → القدس، ثم
+// نطابق كلمةً كلمةً بأسماء المدن/المحافظات المعروفة.
+function classifyTier(name) {
+  const k = nrm(name);
+  if (!k) return null;
+  const direct = NORM_TIER.get(k);
+  if (direct) return direct;
+  if (k.includes('داخل') || k.includes('48') || k.includes('خط اخضر')) return 'dakhel';
+  if (k.includes('قدس')) return 'quds';
+  for (const w of k.split(' ')) {
+    const t = NORM_TIER.get(w);
+    if (t) return t;
+  }
+  return null;
+}
+
+// شريحة أي اسم مدينة: التصنيف الواثق، وإلا شريحة الضفة كافتراضي (أوبتيموس شركة
+// فلسطينية، فالمدن غير المعروفة غالباً بالضفة/غزة — والتاجر يقدر يستثنيها بسعر خاص).
 export function tierForName(name) {
-  return NORM_TIER.get(nrm(name)) || 'wb';
+  return classifyTier(name) || 'wb';
 }
 
 // مدن قطاع غزة — للتسمية فقط (سعرها على شريحة الضفة، والتاجر يقدر يستثنيها)
@@ -217,7 +236,8 @@ const GAZA = new Set([
 function regionLabelForName(name) {
   const k = nrm(name);
   if (GAZA.has(k)) return 'قطاع غزة';
-  return NORM_TIER.has(k) ? (TIER_LABEL_AR[NORM_TIER.get(k)] || '') : '';
+  const t = classifyTier(name);
+  return t ? TIER_LABEL_AR[t] : '';
 }
 
 // تحويل قائمة مدن أوبتيموس (المصدر الحقيقي) لقائمة بأجرتها — تُستخدم بشاشة
