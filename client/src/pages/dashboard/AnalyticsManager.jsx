@@ -15,6 +15,10 @@ const I = {
   newOrders: (c) => (<svg {...ic({ className: c })}><path d="M6 3h9l4 4v13.2a.8.8 0 0 1-1.2.7L16 20l-1.8 1-1.8-1-1.8 1-1.8-1-1.8.9A.8.8 0 0 1 6 20.2Z" /><path d="M14 3v4h4" /><path d="M9.5 12h6M9.5 15h4" /></svg>),
   // منتجات (صندوق)
   products: (c) => (<svg {...ic({ className: c })}><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5Z" /><path d="m3.5 7.5 8.5 4.5 8.5-4.5" /><path d="M12 21v-9" /></svg>),
+  // متوسّط قيمة الطلب (وسم سعر)
+  aov: (c) => (<svg {...ic({ className: c })}><path d="M3 12V5.5A1.5 1.5 0 0 1 4.5 4H11l9 9-7 7-9-9Z" /><circle cx="7.5" cy="8.5" r="1.3" /></svg>),
+  // زبائن مكرّرون (سهم دائري)
+  repeat: (c) => (<svg {...ic({ className: c })}><path d="M4 8a8 8 0 0 1 13.5-3L20 7" /><path d="M20 4v3h-3" /><path d="M20 16a8 8 0 0 1-13.5 3L4 17" /><path d="M4 20v-3h3" /></svg>),
 };
 
 // بطاقة إحصاء عصرية: بلاطة أيقونة متدرّجة + رقم بارز.
@@ -72,6 +76,22 @@ export default function AnalyticsManager() {
         <StatCard icon="confirmed" grad="from-gold-400 to-amber-500" accent="text-gold-300" label={t('dashboard.analytics.confirmed')} value={<CountUp value={data.confirmedOrders} />} />
         <StatCard icon="newOrders" grad="from-amber-400 to-amber-600" accent="text-amber-700" label={t('dashboard.analytics.newOrders')} value={<CountUp value={data.newOrders} />} />
         <StatCard icon="products" grad="from-wine to-wine-dark" accent="text-stone-100" label={t('dashboard.productsCount')} value={<CountUp value={data.productsCount} />} />
+      </div>
+
+      {/* رؤى العمل: متوسّط الطلب · إيراد الشهر مع النموّ · نسبة الزبائن المكرّرين */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <StatCard icon="aov" grad="from-sky-500 to-blue-600" accent="text-sky-300" label={t('dashboard.analytics.aov')} value={<CountUp value={data.aov || 0} format={(x) => `${cur}${Math.round(x).toLocaleString()}`} />} />
+        <div className="glass overflow-hidden p-5">
+          <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-md">{I.revenue('h-[22px] w-[22px]')}</span>
+          <p className="mt-3 text-xs font-medium text-stone-400">{t('dashboard.analytics.thisMonth')}</p>
+          <p className="mt-1 flex items-center gap-2 font-display text-3xl font-extrabold leading-tight text-emerald-300">
+            {cur}{Math.round(data.thisMonth || 0).toLocaleString()}
+            {typeof data.monthGrowth === 'number' && (data.thisMonth > 0 || data.lastMonth > 0) && (
+              <span className={`text-xs font-bold ${data.monthGrowth >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{data.monthGrowth >= 0 ? '▲' : '▼'} {Math.abs(data.monthGrowth)}%</span>
+            )}
+          </p>
+        </div>
+        <StatCard icon="repeat" grad="from-fuchsia-500 to-purple-600" accent="text-fuchsia-300" label={t('dashboard.analytics.repeatRate')} value={<><CountUp value={data.repeatRate || 0} />%</>} />
       </div>
 
       {/* لوحة النمو: قمع التحويل الحقيقي — أين يتسرّب الزبائن قبل الشراء */}
@@ -189,6 +209,32 @@ export default function AnalyticsManager() {
           </div>
         )}
       </div>
+
+      {/* أعلى مدن التوصيل — أين يتركّز زبائنك (عدد الطلبات + المبلغ) */}
+      {data.topCities?.length > 0 && (
+        <div className="glass p-5">
+          <h2 className="mb-4 flex items-center gap-1.5 font-display text-lg font-bold text-stone-100">📍 {t('dashboard.analytics.topCities')}</h2>
+          <div className="space-y-3">
+            {(() => {
+              const maxCity = Math.max(1, ...data.topCities.map((c) => c.orders));
+              return data.topCities.map((c, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <span className="w-5 shrink-0 text-center text-sm font-bold text-gold-300">{i + 1}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-1 flex items-center justify-between gap-2">
+                      <span className="truncate text-sm text-stone-200">{c.city}</span>
+                      <span className="shrink-0 text-xs font-bold text-stone-300">{t('dashboard.analytics.cityOrders', { count: c.orders })} · <span className="text-gold-200">{cur}{Math.round(c.amount).toLocaleString()}</span></span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-white/5">
+                      <div className="h-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600" style={{ width: `${(c.orders / maxCity) * 100}%` }} />
+                    </div>
+                  </div>
+                </div>
+              ));
+            })()}
+          </div>
+        </div>
+      )}
 
       {/* الأكثر مبيعاً */}
       <div className="glass p-5">

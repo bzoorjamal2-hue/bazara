@@ -450,14 +450,45 @@ export async function getStats(req, res, next) {
     );
 
     const daily = await query(
-      `SELECT to_char(d, 'YYYY-MM-DD') AS day, COALESCE(c.orders, 0)::int AS orders
+      `SELECT to_char(d, 'YYYY-MM-DD') AS day, COALESCE(c.orders, 0)::int AS orders,
+              COALESCE(c.revenue, 0) AS revenue
        FROM generate_series((now() - interval '6 days')::date, now()::date, '1 day') d
        LEFT JOIN (
-         SELECT created_at::date AS day, COUNT(*) AS orders
+         SELECT created_at::date AS day, COUNT(*) AS orders,
+                SUM(total) FILTER (WHERE ${PAID}) AS revenue
          FROM orders WHERE store_id = $1 AND created_at >= (now() - interval '6 days')::date
          GROUP BY created_at::date
        ) c ON c.day = d::date
        ORDER BY day`,
+      [sid]
+    );
+
+    // إيراد هذا الشهر مقابل الشهر الماضي (نموّ %) — نبضة صحّة العمل بلمحة
+    const months = await query(
+      `SELECT
+         COALESCE(SUM(total) FILTER (WHERE ${PAID} AND created_at >= date_trunc('month', now())), 0) AS this_month,
+         COALESCE(SUM(total) FILTER (WHERE ${PAID} AND created_at >= date_trunc('month', now()) - interval '1 month'
+                                       AND created_at < date_trunc('month', now())), 0) AS last_month
+       FROM orders WHERE store_id = $1`,
+      [sid]
+    );
+
+    // أعلى مدن التوصيل (طلبات مؤكّدة) — عدد ومبلغ، لتركيز التسويق/التسعير
+    const cities = await query(
+      `SELECT city, COUNT(*)::int AS orders, COALESCE(SUM(total), 0) AS amount
+       FROM orders WHERE store_id = $1 AND ${PAID} AND COALESCE(city, '') <> ''
+       GROUP BY city ORDER BY orders DESC, amount DESC LIMIT 6`,
+      [sid]
+    );
+
+    // الزبائن المكرّرون: نسبة من طلبوا أكثر من مرة (بالهاتف) — مؤشّر الولاء/الاحتفاظ
+    const repeat = await query(
+      `SELECT COUNT(*)::int AS customers, COUNT(*) FILTER (WHERE cnt > 1)::int AS repeaters
+       FROM (
+         SELECT regexp_replace(customer_phone, '\\D', '', 'g') AS ph, COUNT(*) AS cnt
+         FROM orders WHERE store_id = $1 AND ${PAID} AND COALESCE(customer_phone, '') <> ''
+         GROUP BY 1
+       ) x`,
       [sid]
     );
 
@@ -509,6 +540,14 @@ export async function getStats(req, res, next) {
     const visitors = visitsRow.rows[0]?.v || 0;
     const abandonedCount = aband.rows[0].cnt;
     const abandonedValue = Number(aband.rows[0].val);
+    // متوسّط قيمة الطلب (على الطلبات المؤكّدة)
+    const aov = t.confirmed_orders > 0 ? Number(t.revenue) / t.confirmed_orders : 0;
+    // نموّ الإيراد شهرياً (%): موجب = ارتفاع. لو الشهر الماضي صفر ولدينا إيراد الآن → 100%
+    const thisMonth = Number(months.rows[0].this_month);
+    const lastMonth = Number(months.rows[0].last_month);
+    const monthGrowth = lastMonth > 0 ? Math.round(((thisMonth - lastMonth) / lastMonth) * 100) : (thisMonth > 0 ? 100 : 0);
+    const rp = repeat.rows[0];
+    const repeatRate = rp.customers > 0 ? Math.round((rp.repeaters / rp.customers) * 100) : 0;
     // قمع التحويل: زوّار → بدؤوا الطلب (سلة متروكة + طلبات فعلية) → أتمّوا الطلب →
     // تسلّموا. أرقام حقيقية من بياناتك — تُظهر أين يتسرّب الزبائن قبل الشراء.
     const funnel = {
@@ -530,9 +569,17 @@ export async function getStats(req, res, next) {
       abandonedValue,
       funnel,
       topProducts: top.rows.map((r) => ({ name: r.name, qty: r.qty })),
-      daily: daily.rows.map((r) => ({ day: r.day, orders: r.orders })),
+      daily: daily.rows.map((r) => ({ day: r.day, orders: r.orders, revenue: Number(r.revenue) })),
       lowStock,
       courierMonth: courier.rows.map((r) => ({ courier: r.courier, orders: r.orders, amount: Number(r.amount) })),
+      aov,
+      thisMonth,
+      lastMonth,
+      monthGrowth,
+      topCities: cities.rows.map((r) => ({ city: r.city, orders: r.orders, amount: Number(r.amount) })),
+      repeatRate,
+      repeatCustomers: rp.repeaters,
+      totalCustomers: rp.customers,
     });
   } catch (err) {
     next(err);
