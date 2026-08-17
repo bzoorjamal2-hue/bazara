@@ -210,8 +210,9 @@ export default function StoreSettings() {
         </div>
       </div>
 
-      {/* شريط تنقّل + حفظ ثابت أعلى الصفحة — قفز لأي قسم، إبراز القسم الظاهر، وحفظ من أي مكان */}
-      <div className="sticky top-16 z-20 flex items-center gap-2 rounded-2xl border border-white/10 bg-wine-dark/70 px-2 py-2 backdrop-blur">
+      {/* شريط تنقّل + حفظ ثابت أعلى الصفحة — قفز لأي قسم، إبراز القسم الظاهر، وحفظ من أي مكان.
+          glass = خلفية متكيّفة مع النهاري/الليلي، والأصناف المُعاد تعيينها تضمن نصاً مقروءاً بالوضعين */}
+      <div className="glass sticky top-14 z-20 flex items-center gap-2 p-2">
         <div className="flex flex-1 gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {NAV.map(([id, label]) => {
             const on = activeSec === id;
@@ -222,8 +223,8 @@ export default function StoreSettings() {
                 onClick={() => jump(id)}
                 className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
                   on
-                    ? 'border-gold-400/50 bg-gold-400/15 text-gold-200'
-                    : 'border-white/10 bg-white/5 text-stone-300 hover:border-gold-400/40 hover:bg-gold-400/10 hover:text-gold-200'
+                    ? 'border-gold-400 bg-gold-400 text-wine-dark'
+                    : 'border-gold-400/30 bg-gold-400/5 text-stone-300 hover:bg-gold-400/10 hover:text-gold-300'
                 }`}
               >
                 {label}
@@ -235,7 +236,7 @@ export default function StoreSettings() {
           form="store-settings-form"
           type="submit"
           disabled={busy}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-r from-wine to-wine-dark px-4 py-1.5 text-xs font-bold text-cream shadow transition hover:brightness-110 disabled:opacity-60"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-wine px-4 py-1.5 text-xs font-bold text-cream shadow-sm transition hover:bg-wine-dark disabled:opacity-60"
         >
           <SaveIcon className="h-3.5 w-3.5" /> {busy ? t('common.loading') : t('common.save')}
         </button>
