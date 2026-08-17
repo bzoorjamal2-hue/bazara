@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,6 +14,7 @@ import { colorToCss } from '../utils/colorDot.js';
 import { cldThumb } from '../utils/cloudinary.js';
 import { getRef, clearRef } from '../utils/referral.js';
 import { trackPixel } from '../utils/pixels.js';
+import { isValidMobile } from '../utils/phone.js';
 
 // بيانات الزبون المحفوظة محلياً — تعبّئ شاشة الإتمام تلقائياً بالطلبات القادمة
 const CUSTOMER_KEY = 'bz_customer_v1';
@@ -86,7 +87,17 @@ export default function CartDrawer() {
   const [localities, setLocalities] = useState([]); // قائمة مسطّحة: كل مدينة/قرية بندٌ مستقل بسعره
   const [freeOver, setFreeOver] = useState(0); // شحن مجاني فوق هذا المبلغ (0 = معطّل)
   const [referral, setReferral] = useState(null); // { code, percent, referrerName } خصم إحالة تلقائي
+  const nameRef = useRef(null); // للتركيز التلقائي على أول حقل عند فتح شاشة الإتمام
+  const formRef = useRef(null); // حاوية الحقول — للتمرير لأول حقل ناقص عند الخطأ
   useScrollLock(open);
+  // #9: تركيز تلقائي على أول حقل (الاسم) عند دخول شاشة الإتمام — تعبئة أسرع
+  useEffect(() => {
+    if (open && view === 'checkout') {
+      const id = setTimeout(() => nameRef.current?.focus(), 150);
+      return () => clearTimeout(id);
+    }
+    return undefined;
+  }, [open, view]);
   // إغلاق بمفتاح Escape (سلوك قياسي للنوافذ) — يعيد العرض لقائمة السلة
   useEffect(() => {
     if (!open) return undefined;
@@ -196,14 +207,19 @@ export default function CartDrawer() {
   // قائمة الأماكن المسطّحة (كل مدينة/قرية بندٌ مستقل بسعره) من الخادم، وإلا مناطق
   // المتجر المخصّصة، وإلا القائمة الافتراضية. كل عنصر: { name, parent, region, fee }.
   const cityChoices = (localities && localities.length)
-    ? localities.map((z) => ({ name: z.name, parent: z.parent || z.name, region: z.region || '', fee: Number(z.fee) || 0 }))
+    ? localities.map((z) => ({ name: z.name, parent: z.parent || z.name, region: z.region || '', fee: Number(z.fee) || 0, tier: z.tier || '' }))
     : (storeZones && storeZones.length)
-      ? storeZones.map((z) => ({ name: z.name, parent: z.name, fee: Number(z.fee) || 0, region: '' }))
-      : AREAS.map((a) => ({ name: ar ? a.ar : a.en, parent: ar ? a.ar : a.en, fee: a.fee, region: '' }));
+      ? storeZones.map((z) => ({ name: z.name, parent: z.name, fee: Number(z.fee) || 0, region: '', tier: '' }))
+      : AREAS.map((a) => ({ name: ar ? a.ar : a.en, parent: ar ? a.ar : a.en, fee: a.fee, region: '', tier: '' }));
   // العنصر المختار: نطابق القرية (area) ضمن محافظتها (city)، وإلا المدينة نفسها
   const pickedLoc = cust.area
     ? cityChoices.find((z) => z.name === cust.area && z.parent === cust.city) || cityChoices.find((z) => z.name === cust.area)
     : cityChoices.find((z) => z.name === cust.city);
+  // #3: صحّة رقم الموبايل لحظياً (05XXXXXXXX) — لعرض علامة صح/خطأ فورية
+  const phoneOk = isValidMobile(cust.phone);
+  // #1: مدة التوصيل المتوقعة حسب شريحة المكان المختار (ضفة/قدس/داخل)
+  const etaTier = pickedLoc?.tier;
+  const eta = etaTier ? t(`co.eta.${etaTier}`, { defaultValue: '' }) : '';
   // الأولوية (لا تُجمع الخصومات): كوبون > فلاش > إحالة > ولاء — نفس ترتيب الخادم (الحكم)
   const flashActive = flash && flash.percent > 0 && flash.endsAt && new Date(flash.endsAt).getTime() > Date.now();
   const flashDiscount = (!coupon && flashActive)
@@ -253,11 +269,14 @@ export default function CartDrawer() {
     // تحقّق حقلي واضح: نميّز الحقل الناقص بإطار أحمر، ونتأكّد أن الهاتف أرقام كافية
     const bad = {};
     if (!cust.name.trim()) bad.name = true;
-    if (cust.phone.replace(/\D/g, '').length < 9) bad.phone = true;
+    if (!isValidMobile(cust.phone)) bad.phone = true; // #3: لازم موبايل صحيح 05XXXXXXXX
     if (!cust.city && !cust.area) bad.city = true; // المكان (مدينة أو قرية) مطلوب
     if (Object.keys(bad).length) {
       setInvalid(bad);
       setErr(bad.phone && cust.phone.trim() && !bad.name && !bad.city ? t('co.phoneInvalid') : t('co.required'));
+      // #9: تمرير سلس لأول حقل ناقص كي تراه الزبونة فوراً
+      const first = ['name', 'phone', 'city'].find((k) => bad[k]);
+      if (first) requestAnimationFrame(() => formRef.current?.querySelector(`[data-field="${first}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' }));
       return;
     }
     setInvalid({});
@@ -470,29 +489,48 @@ export default function CartDrawer() {
               </motion.div>
             ) : (
               <motion.div key="checkout" initial={{ opacity: 0, x: ar ? -16 : 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: ar ? 16 : -16 }} transition={{ duration: 0.2 }} className="flex min-h-0 flex-1 flex-col">
-                <div className="flex-1 space-y-4 overflow-y-auto p-4">
+                <div ref={formRef} className="flex-1 space-y-4 overflow-y-auto p-4">
                   {/* بيانات التوصيل */}
                   <div>
                     <h3 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-gold-200"><PinIcon className="h-4 w-4" /> {t('co.customer')}</h3>
                     <div className="space-y-2.5">
                       {/* autocomplete: الجوال يقترح الاسم/الهاتف/العنوان المحفوظين — تعبئة أسرع = إتمام أكثر */}
-                      <input className={`input !rounded-2xl ${invalid.name ? 'ring-1 ring-red-400/70' : ''}`} autoComplete="name" placeholder={t('co.name')} value={cust.name} onChange={(e) => { setCust({ ...cust, name: e.target.value }); if (invalid.name) setInvalid((v) => ({ ...v, name: false })); }} />
-                      <input className={`input !rounded-2xl ${invalid.phone ? 'ring-1 ring-red-400/70' : ''}`} dir="ltr" inputMode="tel" autoComplete="tel" placeholder={t('co.phone')} value={cust.phone} onChange={(e) => { setCust({ ...cust, phone: e.target.value }); if (invalid.phone) setInvalid((v) => ({ ...v, phone: false })); }} />
+                      <input ref={nameRef} data-field="name" className={`input !rounded-2xl ${invalid.name ? 'ring-1 ring-red-400/70' : ''}`} autoComplete="name" placeholder={t('co.name')} value={cust.name} onChange={(e) => { setCust({ ...cust, name: e.target.value }); if (invalid.name) setInvalid((v) => ({ ...v, name: false })); }} />
+                      {/* #3: تحقّق فوري لرقم الموبايل — علامة صح خضراء لمّا يصحّ، وتلميح لمّا يكون ناقصاً */}
+                      <div data-field="phone">
+                        <div className="relative">
+                          <input
+                            className={`input !rounded-2xl pe-9 ${invalid.phone ? 'ring-1 ring-red-400/70' : phoneOk ? 'ring-1 ring-emerald-400/60' : ''}`}
+                            dir="ltr" inputMode="tel" autoComplete="tel" placeholder={t('co.phone')} value={cust.phone}
+                            onChange={(e) => { setCust({ ...cust, phone: e.target.value }); if (invalid.phone) setInvalid((v) => ({ ...v, phone: false })); }}
+                          />
+                          {phoneOk && <CheckIcon className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-400" />}
+                        </div>
+                        {cust.phone.trim() && !phoneOk && <p className="mt-1 text-xs text-red-300">{t('co.phoneExample')}</p>}
+                      </div>
                       {/* المكان: قائمة مسطّحة — كل مدينة وقرية بندٌ مستقل بسعره (بلا تجميع).
                           اختيار قرية يضبط محافظتها (parent) داخلياً لإرسال دقيق لشركة التوصيل */}
-                      <CitySearch
-                        value={cust.area || cust.city}
-                        options={cityChoices}
-                        invalid={invalid.city}
-                        onClear={() => setCust((p) => ({ ...p, city: '', area: '' }))}
-                        onText={(txt) => { setCust((p) => ({ ...p, city: txt, area: '' })); if (invalid.city) setInvalid((p) => ({ ...p, city: false })); }}
-                        onPick={(name, fee, opt) => {
-                          const parent = opt?.parent || name;
-                          // القرية تروح لحقل area والمحافظة لحقل city (يطابق city/area بأوبتيموس)
-                          setCust((p) => ({ ...p, city: parent, area: parent === name ? '' : name }));
-                          setInvalid((p) => ({ ...p, city: false }));
-                        }}
-                      />
+                      <div data-field="city">
+                        <CitySearch
+                          value={cust.area || cust.city}
+                          options={cityChoices}
+                          invalid={invalid.city}
+                          onClear={() => setCust((p) => ({ ...p, city: '', area: '' }))}
+                          onText={(txt) => { setCust((p) => ({ ...p, city: txt, area: '' })); if (invalid.city) setInvalid((p) => ({ ...p, city: false })); }}
+                          onPick={(name, fee, opt) => {
+                            const parent = opt?.parent || name;
+                            // القرية تروح لحقل area والمحافظة لحقل city (يطابق city/area بأوبتيموس)
+                            setCust((p) => ({ ...p, city: parent, area: parent === name ? '' : name }));
+                            setInvalid((p) => ({ ...p, city: false }));
+                          }}
+                        />
+                        {/* #1: مدة التوصيل المتوقعة تحت المكان المختار — يقلّل التردّد */}
+                        {eta && (
+                          <p className="mt-1 flex items-center gap-1 text-xs font-medium text-emerald-300">
+                            <TruckIcon className="h-3.5 w-3.5 shrink-0" /> {eta}
+                          </p>
+                        )}
+                      </div>
                       <input className="input !rounded-2xl" autoComplete="street-address" placeholder={t('co.address')} value={cust.address} onChange={(e) => setCust({ ...cust, address: e.target.value })} />
                       <textarea className="input !rounded-2xl" rows={2} placeholder={t('co.notes')} value={cust.notes} onChange={(e) => setCust({ ...cust, notes: e.target.value })} />
                     </div>
