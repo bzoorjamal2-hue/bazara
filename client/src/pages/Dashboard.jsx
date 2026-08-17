@@ -26,6 +26,7 @@ import SubscribersManager from './dashboard/SubscribersManager.jsx';
 import SiteSliders from './dashboard/SiteSliders.jsx';
 import NewsletterManager from './dashboard/NewsletterManager.jsx';
 import InstagramInbox from './dashboard/InstagramInbox.jsx';
+import CampaignManager from './dashboard/CampaignManager.jsx';
 
 // أقسام البائع (المشترك العادي) — الاستخدام اليومي أولاً (الطلبات/المنتجات)
 const SECTIONS = [
@@ -36,6 +37,7 @@ const SECTIONS = [
   { key: 'analytics', Icon: ChartIcon },
   { key: 'coupons', Icon: TicketIcon },
   { key: 'referrals', Icon: GiftIcon },
+  { key: 'campaign', Icon: BellIcon },
   { key: 'stockRequests', Icon: BellIcon },
   { key: 'storeSettings', Icon: GearIcon },
   { key: 'profile', Icon: UserIcon },
@@ -112,6 +114,7 @@ export default function Dashboard() {
         {section === 'myOrders' && !isAdmin && <OrdersManager />}
         {section === 'coupons' && !isAdmin && <CouponsManager />}
         {section === 'referrals' && !isAdmin && <ReferralsManager />}
+        {section === 'campaign' && !isAdmin && <CampaignManager />}
         {section === 'stockRequests' && !isAdmin && <StockRequestsManager />}
         {section === 'adminOverview' && isAdmin && <AdminOverview />}
         {section === 'subscribers' && isAdmin && <SubscribersManager />}

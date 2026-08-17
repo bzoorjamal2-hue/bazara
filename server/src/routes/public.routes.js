@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { param } from 'express-validator';
 import { subscribeNewsletter, getSiteInfo } from '../controllers/site.controller.js';
-import { getHomeData, getPublicCategories, getStoreBySlug, getStoreCheckout, getStoreAreas, getProductById, getProductsByIds, getByCategory, getOffers, getReels, getStoriesFeed, addReview, trackOrders, trackStoreVisit, loyaltyPreview, searchProducts } from '../controllers/public.controller.js';
+import { getHomeData, getPublicCategories, getStoreBySlug, getStoreCheckout, getStoreAreas, getProductById, getProductsByIds, getByCategory, getOffers, getReels, getStoriesFeed, addReview, trackOrders, trackStoreVisit, loyaltyPreview, searchProducts, followStore, unfollowStore } from '../controllers/public.controller.js';
 import { validateCoupon } from '../controllers/coupon.controller.js';
 import { createStockRequest } from '../controllers/stockRequest.controller.js';
 import { saveAbandoned } from '../controllers/abandoned.controller.js';
@@ -45,6 +45,9 @@ router.get('/stories', cacheGet(30), getStoriesFeed);
 router.post('/story/:id/view', viewStory);
 router.get('/store/:slug', cacheGet(30), getStoreBySlug);
 router.get('/store/:slug/checkout', getStoreCheckout);
+// متابعة إشعارات المتجر (Web Push، بلا تسجيل دخول)
+router.post('/store/:slug/follow', followStore);
+router.post('/store/:slug/unfollow', unfollowStore);
 // قرى/مناطق مدينة معيّنة (من أوبتيموس للمتاجر المربوطة) — تُطلب بعد اختيار المدينة
 router.get('/store/:slug/areas', cacheGet(300), getStoreAreas);
 router.post('/store/:slug/visit', trackStoreVisit);

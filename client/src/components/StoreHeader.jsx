@@ -12,6 +12,7 @@ import useScrollLock from '../hooks/useScrollLock.js';
 import { MenuIcon, SearchIcon, CartIcon, HeartIcon, PackageIcon, GiftIcon } from './icons.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import StoryBar from './StoryBar.jsx';
+import StoreFollowButton from './StoreFollowButton.jsx';
 import { cldThumb } from '../utils/cloudinary.js';
 import { productThumb } from '../utils/recentlyViewed.js';
 import { norm } from '../utils/match.js';
@@ -288,6 +289,8 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
               >
                 <PackageIcon className="h-5 w-5 shrink-0" /> {t('nav.track')}
               </Link>
+              {/* فعّلي إشعارات المتجر — يوصلك الجديد والخصومات (Web Push، بلا حساب) */}
+              <StoreFollowButton slug={store.slug} />
               {/* شاركي واربحي — يظهر فقط إن فعّل المتجر برنامج الإحالة */}
               {Number(store.referralPercent) > 0 && onShare && (
                 <button

@@ -27,6 +27,28 @@
     "banner": "Congrats! 🎁 You reached the loyal-customer reward — {{percent}}% off applied automatically to this order",
     "discountLine": "Loyalty discount"
   },
+  "storeFollow": {
+    "follow": "Get store notifications",
+    "following": "Notifications on ✓"
+  },
+  "campaign": {
+    "title": "Push campaign",
+    "hint": "Send a notification to everyone following your store (new arrivals, sales).",
+    "followers": "followers",
+    "noFollowers": "No followers yet — invite customers to enable store notifications from the menu.",
+    "notifTitle": "Notification title",
+    "notifBody": "Notification text",
+    "link": "Tap destination (optional)",
+    "linkStore": "Store page",
+    "linkOffers": "Offers page",
+    "send": "Send campaign",
+    "sending": "Sending…",
+    "sent": "Delivered to {{count}} devices",
+    "lastSent": "Last: {{title}} — {{count}} devices",
+    "cooldown": "You can send another campaign in {{mins}} min",
+    "disabled": "Push isn't enabled on the server yet.",
+    "confirm": "Send this notification to all followers?"
+  },
   "referral": {
     "discountLine": "Referral discount",
     "welcome": "Your {{percent}}% welcome discount is applied 🌷",

@@ -115,6 +115,56 @@ async function pushStatusWeb() {
   }
 }
 
+// ====================== متابعة إشعارات متجر (Web Push، بلا تسجيل دخول) ======================
+// نفس اشتراك Web Push لكن مربوط بمتجر معيّن على الخادم، فيقدر صاحبه يبعث حملات.
+// نتذكّر المتاجر المُتابَعة محلياً لعرض حالة الزر فوراً بلا نداء خادم.
+const FOLLOW_KEY = 'bz_followed_stores';
+const followedSet = () => {
+  try { return new Set(JSON.parse(localStorage.getItem(FOLLOW_KEY) || '[]')); } catch { return new Set(); }
+};
+const saveFollowed = (set) => {
+  try { localStorage.setItem(FOLLOW_KEY, JSON.stringify([...set])); } catch { /* تجاهل */ }
+};
+
+// المتابعة متاحة على الويب/PWA (اشتراك مربوط بمتجر). التطبيق الأصلي توكنه مربوط
+// بالحساب لا بالمتجر، فنكتفي فيه بإشعارات الحساب.
+export function storeFollowSupported() {
+  return !isNative && webSupported();
+}
+
+export function isFollowingStore(slug) {
+  return followedSet().has(slug);
+}
+
+export async function followStore(slug) {
+  if (!storeFollowSupported()) throw new Error('unsupported');
+  const { data } = await api.get('/push/public-key');
+  if (!data.enabled || !data.key) throw new Error('not-configured');
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') throw new Error('denied');
+  const reg = await navigator.serviceWorker.ready;
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) {
+    sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(data.key),
+    });
+  }
+  await api.post(`/public/store/${encodeURIComponent(slug)}/follow`, { subscription: sub.toJSON() });
+  const set = followedSet(); set.add(slug); saveFollowed(set);
+  return true;
+}
+
+export async function unfollowStore(slug) {
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    const sub = reg && (await reg.pushManager.getSubscription());
+    await api.post(`/public/store/${encodeURIComponent(slug)}/unfollow`, { endpoint: sub?.endpoint || '' }).catch(() => {});
+  } catch { /* تجاهل */ }
+  const set = followedSet(); set.delete(slug); saveFollowed(set);
+  return true;
+}
+
 // ====================== الواجهة الموحّدة (تختار المسار تلقائياً) ======================
 export function pushSupported() {
   return isNative || webSupported();

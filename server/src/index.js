@@ -327,6 +327,30 @@ async function ensureColumns() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );`);
     await pool.query('CREATE INDEX IF NOT EXISTS idx_push_user ON push_subscriptions(user_id);');
+    // متابِعو المتجر (Web Push بلا تسجيل دخول): كل زبونة تفعّل إشعارات متجر معيّن
+    // فيقدر صاحبه يبعث لها حملات (وصل جديد/خصم). مفصولة عن اشتراكات المستخدمين لأنها
+    // مربوطة بالمتجر لا بحساب، وتشمل الضيوف (معظم الزباين بلا حساب).
+    await pool.query(`CREATE TABLE IF NOT EXISTS store_followers (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+      endpoint TEXT NOT NULL,
+      p256dh TEXT NOT NULL,
+      auth TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      UNIQUE (store_id, endpoint)
+    );`);
+    await pool.query('CREATE INDEX IF NOT EXISTS idx_store_followers_store ON store_followers(store_id);');
+    // سجلّ حملات الإشعارات لكل متجر — لعرض "آخر حملة" وعدد المُرسَل، ولتحديد فترة التهدئة
+    await pool.query(`CREATE TABLE IF NOT EXISTS store_campaigns (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+      title TEXT NOT NULL DEFAULT '',
+      body TEXT NOT NULL DEFAULT '',
+      url TEXT NOT NULL DEFAULT '',
+      sent_count INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );`);
+    await pool.query('CREATE INDEX IF NOT EXISTS idx_store_campaigns_store ON store_campaigns(store_id, created_at DESC);');
     // توكنات الأجهزة الأصلية (APNs لِـ iOS / FCM لِـ Android) — للتطبيق المغلّف بـ Capacitor
     await pool.query(`CREATE TABLE IF NOT EXISTS native_push_tokens (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

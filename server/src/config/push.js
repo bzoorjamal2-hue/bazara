@@ -24,6 +24,33 @@ export function getPublicKey() {
   return PUBLIC;
 }
 
+// إرسال حملة لمتابِعي متجر (Web Push) — يحذف الاشتراكات المنتهية ويُرجّع عدد الناجح
+export async function sendToStoreFollowers(storeId, payload) {
+  if (!configured || !storeId) return 0;
+  let sent = 0;
+  try {
+    const r = await query('SELECT id, endpoint, p256dh, auth FROM store_followers WHERE store_id = $1', [storeId]);
+    await Promise.all(
+      r.rows.map(async (s) => {
+        try {
+          await webpush.sendNotification(
+            { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
+            JSON.stringify(payload)
+          );
+          sent += 1;
+        } catch (err) {
+          if (err.statusCode === 404 || err.statusCode === 410) {
+            await query('DELETE FROM store_followers WHERE id = $1', [s.id]).catch(() => {});
+          }
+        }
+      })
+    );
+  } catch (err) {
+    console.error('sendToStoreFollowers:', err.message);
+  }
+  return sent;
+}
+
 // إرسال إشعار لكل أجهزة مستخدم — يحذف الاشتراكات المنتهية تلقائياً
 export async function sendPushToUser(userId, payload) {
   if (!configured || !userId) return;

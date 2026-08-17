@@ -320,6 +320,43 @@ export async function getStoreAreas(req, res, next) {
   }
 }
 
+// ───────── متابعة إشعارات متجر (Web Push، بلا تسجيل دخول) ─────────
+// POST /api/public/store/:slug/follow — تسجّل اشتراك الجهاز لمتجر معيّن
+export async function followStore(req, res, next) {
+  const { slug } = req.params;
+  const sub = req.body.subscription;
+  if (!sub?.endpoint || !sub?.keys?.p256dh || !sub?.keys?.auth) {
+    return res.status(400).json({ error: 'اشتراك غير صالح.' });
+  }
+  try {
+    const r = await query('SELECT id FROM stores WHERE slug = $1', [slug]);
+    if (!r.rows[0]) return res.status(404).json({ error: 'المتجر غير موجود.' });
+    await query(
+      `INSERT INTO store_followers (store_id, endpoint, p256dh, auth)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (store_id, endpoint) DO UPDATE SET p256dh = EXCLUDED.p256dh, auth = EXCLUDED.auth`,
+      [r.rows[0].id, sub.endpoint, sub.keys.p256dh, sub.keys.auth]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// POST /api/public/store/:slug/unfollow — يلغي متابعة الجهاز
+export async function unfollowStore(req, res, next) {
+  const { slug } = req.params;
+  const endpoint = req.body.endpoint || '';
+  try {
+    const r = await query('SELECT id FROM stores WHERE slug = $1', [slug]);
+    if (!r.rows[0]) return res.status(404).json({ error: 'المتجر غير موجود.' });
+    await query('DELETE FROM store_followers WHERE store_id = $1 AND endpoint = $2', [r.rows[0].id, endpoint]);
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+}
+
 // بيانات خفيفة للسلة: مناطق التوصيل + شحن مجاني + واتساب (بلا تحميل المنتجات)
 export async function getStoreCheckout(req, res, next) {
   const { slug } = req.params;

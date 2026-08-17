@@ -123,6 +123,9 @@ function ChartIcon({ className = 'h-5 w-5' }) {
 function BellIcon({ className = 'h-5 w-5' }) {
   return (<svg {...I({ className })}><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 0 1-3.4 0" /></svg>);
 }
+function MegaphoneIcon({ className = 'h-5 w-5' }) {
+  return (<svg {...I({ className })}><path d="M4 10 V14 H7 L16 19 V5 L7 10 Z" /><path d="M18 9 A4 4 0 0 1 18 15" /></svg>);
+}
 
 export default function Navbar() {
   const { t, i18n } = useTranslation();
@@ -217,6 +220,7 @@ export default function Navbar() {
         { key: 'myOrders', label: t('dashboard.myOrders'), Icon: ReceiptIcon },
         { key: 'coupons', label: t('dashboard.coupons.title'), Icon: TicketIcon },
         { key: 'referrals', label: t('dashboard.referrals.title'), Icon: UserLineIcon },
+        { key: 'campaign', label: t('campaign.title'), Icon: MegaphoneIcon },
         { key: 'stockRequests', label: t('dashboard.stockRequests.title'), Icon: BellIcon },
       ];
 
