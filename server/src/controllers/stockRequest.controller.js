@@ -59,7 +59,7 @@ export async function createStockRequest(req, res, next) {
 
 // قائمة طلبات التوفّر لمتجر المشترك
 // هل المتغيّر المطلوب (لون/نمرة) متوفّر الآن؟ نطابق منطق صفحة المنتج للزبون.
-function variantInStock(p, color, size) {
+export function variantInStock(p, color, size) {
   if (!p) return false; // المنتج محذوف
   const sizeStock = p.size_stock && typeof p.size_stock === 'object' ? p.size_stock : {};
   const colorStock = p.color_stock && typeof p.color_stock === 'object' ? p.color_stock : {};
@@ -208,6 +208,36 @@ export async function convertStockRequest(req, res, next) {
     res.status(201).json({ order });
   } catch (err) {
     next(err);
+  }
+}
+
+// تنبيه استباقي للمالكة عند إعادة تخزين منتج: لو صار متغيّرٌ (لون/مقاس) تنتظره
+// زبونة متوفّراً، نُشعرها مرة واحدة (restocked_at) بعدد المنتظِرات لتبلّغهن بضغطة واتساب
+// (الأزرار جاهزة بتبويب طلبات التوفّر). يُستدعى بالخلفية بعد تعديل المنتج — لا يفشل الحفظ.
+export async function alertOwnerOnRestock(productId) {
+  try {
+    if (!productId) return;
+    const pr = await query(
+      'SELECT id, store_id, name, stock, size_stock, color_stock FROM products WHERE id = $1',
+      [productId]
+    );
+    const p = pr.rows[0];
+    if (!p) return;
+    const rr = await query(
+      'SELECT id, color, size FROM stock_requests WHERE product_id = $1 AND order_id IS NULL AND restocked_at IS NULL',
+      [productId]
+    );
+    const back = rr.rows.filter((r) => variantInStock(p, r.color, r.size));
+    if (!back.length) return;
+    await query('UPDATE stock_requests SET restocked_at = now() WHERE id = ANY($1::uuid[])', [back.map((r) => r.id)]);
+    const n = back.length;
+    await notifyStoreOwner(p.store_id, {
+      title: 'رجع متوفّر 🎉',
+      body: `${p.name} — ${n === 1 ? 'زبونة واحدة تنتظره' : `${n} زبونات ينتظرنه`}. بلّغيهنّ الآن.`,
+      url: '/dashboard?tab=stockRequests',
+    });
+  } catch (e) {
+    console.error('alertOwnerOnRestock:', e.message);
   }
 }
 

@@ -238,6 +238,8 @@ async function ensureColumns() {
     await pool.query("ALTER TABLE stock_requests ADD COLUMN IF NOT EXISTS customer_name VARCHAR(100) DEFAULT '';");
     await pool.query("ALTER TABLE stock_requests ADD COLUMN IF NOT EXISTS city VARCHAR(80) DEFAULT '';");
     await pool.query("ALTER TABLE stock_requests ADD COLUMN IF NOT EXISTS address TEXT DEFAULT '';");
+    // متى نبّهنا المالكة أن هذا الطلب رجع متوفّراً (تنبيه استباقي مرة واحدة عند إعادة التخزين)
+    await pool.query('ALTER TABLE stock_requests ADD COLUMN IF NOT EXISTS restocked_at TIMESTAMPTZ;');
     // طلبات لم تكتمل (سلات متروكة ببيانات تواصل): صف واحد لكل (متجر، هاتف) يُحدَّث
     // مع كل تعديل، ويُحذف عند إتمام الطلب فعلياً — لمتابعة صاحب المتجر وإنقاذ البيع
     await pool.query(`CREATE TABLE IF NOT EXISTS abandoned_checkouts (

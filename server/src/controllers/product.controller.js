@@ -1,5 +1,6 @@
 import { query } from '../config/db.js';
 import { pingIndexNow } from '../utils/indexnow.js';
+import { alertOwnerOnRestock } from './stockRequest.controller.js';
 
 async function getUserStore(userId) {
   const r = await query('SELECT id, slug FROM stores WHERE user_id = $1', [userId]);
@@ -67,6 +68,8 @@ export async function updateProduct(req, res, next) {
       [p.name, p.price, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, p.videoUrl, JSON.stringify(p.sizeStock), p.saleEndsAt, JSON.stringify(p.colorStock), JSON.stringify(p.colorImages), id, store.id]
     );
     res.json({ product: mapProduct(result.rows[0]) });
+    // تنبيه استباقي (بالخلفية): لو رجع متغيّرٌ تنتظره زبونة متوفّراً، نُشعر المالكة لتبلّغها
+    alertOwnerOnRestock(id).catch(() => {});
   } catch (err) {
     next(err);
   }
