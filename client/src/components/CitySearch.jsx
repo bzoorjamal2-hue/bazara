@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PinIcon } from './icons.jsx';
+import { norm } from '../utils/match.js';
 
 // خانة بحث عن المدينة: تكتب فتفلتر كل المدن (بالاسم أو المنطقة) ويظهر سعر التوصيل لكل مدينة؛
 // اختيارها يملأ الأجرة. لا تُغلق عند فقدان التركيز (كي لا تختفي عند التمرير/إخفاء الكيبورد على
@@ -29,9 +30,15 @@ export default function CitySearch({ value, onPick, onClear, onText, options, in
     };
   }, [open]);
 
-  const term = q.trim().toLowerCase();
-  const results = (term
-    ? options.filter((z) => `${z.name || ''} ${z.region || ''}`.toLowerCase().includes(term))
+  // مطابقة عربية متسامحة: تطبيع الهمزات/التاء المربوطة/أل التعريف على الطرفين، فتلاقي
+  // "بير السبع" ⇄ "بئر السبع" و"الرام" ⇄ "رام". نطابق كل كلمة بحث على حدة (ترتيب حرّ).
+  const term = norm(q);
+  const words = term.split(' ').filter(Boolean);
+  const results = (words.length
+    ? options.filter((z) => {
+      const hay = norm(`${z.name || ''} ${z.region || ''}`);
+      return words.every((w) => hay.includes(w));
+    })
     : options).slice(0, 60);
   // نمرّر العنصر كاملاً كوسيط ثالث — خانة المدينة تستعمله لتعرف مدينة القرية المختارة
   const pick = (z) => { onPick(z.name, z.fee, z); setQ(z.name); setOpen(false); };

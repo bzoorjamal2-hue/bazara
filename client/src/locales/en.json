@@ -893,7 +893,7 @@
     "name": "Full name",
     "phone": "Phone number",
     "city": "City / area",
-    "selectCity": "Search your city…",
+    "selectCity": "Search your city or village…",
     "village": "Search your village / area…",
     "inCity": "In the city",
     "address": "Detailed address (street/nearest landmark)",

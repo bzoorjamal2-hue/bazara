@@ -3,8 +3,8 @@ import slugify from 'slugify';
 import { generateUniqueStoreSlug } from '../utils/slug.js';
 import { pingIndexNow } from '../utils/indexnow.js';
 import { toHostedUrl } from '../utils/hostImage.js';
-import { normalizeTiers, citiesWithFees, villagesByCity, externalCitiesWithFees } from '../config/deliveryCities.js';
-import { fetchCities } from '../config/opost.js';
+import { normalizeTiers, flatInternalLocalities, mapExternalLocalities } from '../config/deliveryCities.js';
+import { cachedLocalities, fetchAllLocalities } from '../config/opost.js';
 import { ensureToken } from './opost.controller.js';
 
 function mapStore(s) {
@@ -143,19 +143,17 @@ export function sanitizeBanners(raw) {
     .filter((b) => b.title || b.subtitle || b.bgValue);
 }
 
-// مدن المتجر: قائمة أوبتيموس الحيّة (مخزّنة بالذاكرة ٦ ساعات) إن كان مربوطاً، وإلا
-// قائمتنا الداخلية. أي فشل يرجع للداخلية بهدوء.
-async function citiesForStoreRow(store) {
+// قائمة الأماكن المسطّحة للمتجر (كل مدينة وقرية بندٌ مستقل): قائمة أوبتيموس الكاملة
+// إن كانت مخزّنة، وإلا قائمتنا الداخلية فوراً مع بناء أوبتيموس بالخلفية (بلا تأخير).
+async function localitiesForStoreRow(store) {
   const tiers = store.delivery_tiers;
   const zones = Array.isArray(store.delivery_zones) ? store.delivery_zones : [];
   if (store.opost_connected) {
-    try {
-      const list = await fetchCities(await ensureToken(store));
-      const mapped = externalCitiesWithFees(list, tiers, zones);
-      if (mapped.length) return mapped;
-    } catch { /* نرجع للقائمة الداخلية */ }
+    const cached = cachedLocalities();
+    if (cached && cached.length) return mapExternalLocalities(cached, tiers, zones);
+    ensureToken(store).then((token) => fetchAllLocalities(token)).catch(() => {});
   }
-  return citiesWithFees(tiers, zones);
+  return flatInternalLocalities(tiers, zones);
 }
 
 // جلب متجر المستخدم الحالي مع إحصائيات بسيطة
@@ -170,11 +168,8 @@ export async function getMyStore(req, res, next) {
     res.json({
       store: mapStore(store),
       stats: { productsCount: countResult.rows[0].count },
-      // المدن (من أوبتيموس إن كان المتجر مربوطاً) + قرى كل مدينة — لخانتَي البحث
-      // بنموذج إنشاء الطلب اليدوي، فتطابق ما يستقبله التوصيل تماماً
-      cities: await citiesForStoreRow(store),
-      villages: villagesByCity(),
-      liveAreas: Boolean(store.opost_connected),
+      // قائمة مسطّحة: كل مدينة وقرية بندٌ مستقل بسعره — لخانة البحث بنموذج الطلب اليدوي
+      localities: await localitiesForStoreRow(store),
     });
   } catch (err) {
     next(err);

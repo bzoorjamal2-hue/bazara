@@ -175,6 +175,9 @@ const nrm = (s) => String(s || '')
   .replace(/[ً-ْ]/g, '')
   .replace(/\(.*?\)/g, ' ')
   .replace(/[أإآ]/g, 'ا')
+  .replace(/ئ/g, 'ي') // بئر ⇄ بير
+  .replace(/ؤ/g, 'و')
+  .replace(/ء/g, '')
   .replace(/ى/g, 'ي')
   .replace(/ة/g, 'ه')
   .replace(/(^|\s)ال/g, '$1')
@@ -229,4 +232,52 @@ export function externalCitiesWithFees(list, tiers, overrides) {
     const fee = (ov && ov.fee != null && ov.fee !== '') ? Math.max(0, Number(ov.fee) || 0) : tt[tier];
     return { id: cty.id, name, tier, region: regionLabelForName(name), fee };
   }).filter((x) => x.name);
+}
+
+// ───────── قائمة مسطّحة: كل مدينة وكل قرية بندٌ مستقل قابل للاختيار (بلا تجميع) ─────────
+// السعر يُحسب بشريحة المحافظة (يحدّدها صاحب المتجر بالإعدادات)، و region = اسم المحافظة
+// للتمييز فقط (مثلاً "رابا" تحتها "جنين") — ليست تجميعاً، كل بلدة تُختار وحدها.
+export function flatInternalLocalities(tiers, overrides) {
+  const tt = normalizeTiers(tiers);
+  const seen = new Set();
+  const out = [];
+  const push = (name, parent, tier) => {
+    const key = `${nrm(name)}|${nrm(parent)}`;
+    if (!name || seen.has(key)) return;
+    seen.add(key);
+    const ov = Array.isArray(overrides) ? overrides.find((z) => z && (z.name === name || z.name === parent)) : null;
+    const fee = (ov && ov.fee != null && ov.fee !== '') ? Math.max(0, Number(ov.fee) || 0) : tt[tier];
+    out.push({ name, parent, region: name === parent ? (TIER_LABEL_AR[tier] || '') : parent, tier, fee });
+  };
+  for (const x of _TREE) {
+    push(x.name, x.name, x.tier);
+    for (const v of x.villages) push(v, x.name, x.tier);
+  }
+  return out;
+}
+
+// تحويل قائمة أوبتيموس المسطّحة (مدينة + مناطقها) لقائمة بأجرتها. كل عنصر يحمل
+// اسمه ومحافظته ومعرّفاتها بأوبتيموس (cityId/areaId) فيروح الطلب للشركة مباشرة بلا تخمين.
+export function mapExternalLocalities(list, tiers, overrides) {
+  const tt = normalizeTiers(tiers);
+  const seen = new Set();
+  const out = [];
+  for (const e of (Array.isArray(list) ? list : [])) {
+    const name = String(e.name || '').trim();
+    const parent = String(e.parent || e.city || name).trim();
+    if (!name) continue;
+    const key = `${nrm(name)}|${nrm(parent)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const tier = tierForName(parent || name);
+    const ov = Array.isArray(overrides) ? overrides.find((z) => z && (z.name === name || z.name === parent)) : null;
+    const fee = (ov && ov.fee != null && ov.fee !== '') ? Math.max(0, Number(ov.fee) || 0) : tt[tier];
+    out.push({
+      name, parent, tier, fee,
+      region: name === parent ? regionLabelForName(name) : parent,
+      cityId: e.cityId != null ? e.cityId : undefined,
+      areaId: e.areaId != null ? e.areaId : undefined,
+    });
+  }
+  return out;
 }

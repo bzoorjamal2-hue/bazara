@@ -4,8 +4,8 @@ import { activeStoreSql } from '../utils/subscription.js';
 import { notifyStoreOwner } from '../utils/notify.js';
 import { statusLabelAr as opostStatusLabelAr } from '../config/opost.js';
 import { epsStatusLabelAr } from '../config/eps.js';
-import { citiesWithFees, normalizeTiers, villagesByCity, externalCitiesWithFees, sameName } from '../config/deliveryCities.js';
-import { fetchCities, fetchAreas } from '../config/opost.js';
+import { normalizeTiers, villagesByCity, flatInternalLocalities, mapExternalLocalities, sameName } from '../config/deliveryCities.js';
+import { fetchCities, fetchAreas, cachedLocalities, fetchAllLocalities } from '../config/opost.js';
 import { ensureToken } from './opost.controller.js';
 
 // أعمدة المنتج + بيانات المتجر + تجميع التقييمات. نربط users لفلترة المشتركين الفعّالين.
@@ -276,18 +276,18 @@ export async function loyaltyPreview(req, res, next) {
   }
 }
 
-// مدن المتجر: قائمة أوبتيموس الحيّة (مخزّنة ٦ ساعات بذاكرة الخادم) للمتاجر المربوطة،
-// وإلا قائمتنا الداخلية. أي فشل بالاتصال يرجع للقائمة الداخلية بهدوء — الشراء ما بيوقف.
-async function citiesForStore(s, tiers, zones) {
+// قائمة الأماكن المسطّحة للمتجر: كل مدينة وكل قرية بندٌ مستقل قابل للاختيار.
+// للمتاجر المربوطة: قائمة أوبتيموس الكاملة (مدن + مناطق) — المصدر الحقيقي. البناء
+// ثقيل فلا نؤخّر الزبون: إن كانت مخزّنة نستعملها فوراً، وإلا نطلق بناءها بالخلفية
+// ونرجّع قائمتنا الداخلية (شاملة كفاية) الآن؛ الزبون التالي يشوف قائمة أوبتيموس.
+async function localitiesForStore(s, tiers, zones) {
   if (s.opost_connected) {
-    try {
-      const token = await ensureToken(s);
-      const list = await fetchCities(token);
-      const mapped = externalCitiesWithFees(list, tiers, zones);
-      if (mapped.length) return mapped;
-    } catch { /* نرجع للقائمة الداخلية */ }
+    const cached = cachedLocalities();
+    if (cached && cached.length) return mapExternalLocalities(cached, tiers, zones);
+    // كاش فاضٍ: ابنِ بالخلفية (بلا await) وارجع القائمة الداخلية الآن
+    ensureToken(s).then((token) => fetchAllLocalities(token)).catch(() => {});
   }
-  return citiesWithFees(tiers, zones);
+  return flatInternalLocalities(tiers, zones);
 }
 
 // ───────── GET /api/public/store/:slug/areas?city=<اسم المدينة> ─────────
@@ -341,14 +341,9 @@ export async function getStoreCheckout(req, res, next) {
       whatsapp: s.whatsapp || '',
       deliveryZones: zones,
       deliveryTiers: tiers,
-      // المدن: من أوبتيموس نفسه إن كان المتجر مربوطاً (المصدر الحقيقي — فما تضيع
-      // مدينة ولا تظهر وحدة الشركة ما بتوصلها)، وإلا قائمتنا الداخلية.
-      cities: await citiesForStore(s, tiers, zones),
-      // قرى كل مدينة من قائمتنا — تخدم البحث حتى لو كتب الزبون اسم قرية بخانة
-      // المدينة، وتُستخدم كبديل لو ما كان المتجر مربوطاً بأوبتيموس
-      villages: villagesByCity(),
-      // هل نجلب مناطق المدينة من أوبتيموس عند اختيارها؟ (قائمة الشركة أدقّ وأشمل)
-      liveAreas: Boolean(s.opost_connected),
+      // قائمة مسطّحة: كل مدينة وكل قرية بندٌ مستقل بسعره (شريحة المحافظة اللي يحدّدها
+      // صاحب المتجر). للمتاجر المربوطة = قائمة أوبتيموس الكاملة (مدن + مناطق).
+      localities: await localitiesForStore(s, tiers, zones),
       freeShippingOver: Number(s.free_shipping_over || 0),
       flashPercent: flashActive ? Number(s.flash_percent) : 0,
       flashEndsAt: flashActive ? s.flash_ends_at : null,

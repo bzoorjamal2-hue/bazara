@@ -5,7 +5,6 @@ import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
 import CitySearch from '../../components/CitySearch.jsx';
 import { sizeLabel } from '../../utils/sizes.js';
-import { norm } from '../../utils/match.js';
 import { InstagramIcon, BagIcon, BackIcon, CheckIcon, TrashIcon, PlusIcon } from '../../components/icons.jsx';
 import { startFbLogin, igRedirectUri } from '../../utils/fbSdk.js';
 import { cldThumb, cldVideoPoster } from '../../utils/cloudinary.js';
@@ -398,8 +397,7 @@ function PickedRow({ item, onChange, onRemove }) {
 function OrderComposer({ defaultName = '', onSubmit }) {
   const { t } = useTranslation();
   const [products, setProducts] = useState(null);
-  const [cities, setCities] = useState([]);
-  const [villages, setVillages] = useState({}); // { المدينة: [قراها] }
+  const [localities, setLocalities] = useState([]); // قائمة مسطّحة: كل مدينة/قرية بندٌ مستقل
   const [picked, setPicked] = useState([]);
   const [q, setQ] = useState('');
   const [f, setF] = useState({ name: defaultName, phone: '', city: '', area: '', address: '', deliveryFee: '', notes: '' });
@@ -409,8 +407,7 @@ function OrderComposer({ defaultName = '', onSubmit }) {
   useEffect(() => {
     api.get('/products').then((r) => setProducts(r.data.products || [])).catch(() => setProducts([]));
     api.get('/stores/me').then((r) => {
-      setCities(Array.isArray(r.data.cities) ? r.data.cities : []);
-      setVillages(r.data.villages && typeof r.data.villages === 'object' ? r.data.villages : {});
+      setLocalities(Array.isArray(r.data.localities) ? r.data.localities : []);
     }).catch(() => {});
   }, []);
 
@@ -424,34 +421,22 @@ function OrderComposer({ defaultName = '', onSubmit }) {
   const patchItem = (id, patch) => setPicked((prev) => prev.map((x) => (x.id === id ? { ...x, ...patch } : x)));
   const removeItem = (id) => setPicked((prev) => prev.filter((x) => x.id !== id));
 
-  // اختيار مدينة من قائمة البحث يملأ المدينة وأجرتها تلقائياً (نفس حساب السلة)
+  // اختيار مكان من القائمة المسطّحة: المحافظة (parent) لحقل city والقرية لحقل area،
+  // والأجرة تُملأ تلقائياً (نفس حساب السلة). الكتابة الحرّة تُعامل كمدينة.
   const pickCity = (name, fee, opt) => {
-    // اختيار قرية من نتائج البحث → مدينتها بخانة المدينة وهي بخانة القرية
+    const parent = opt?.parent || name;
     setF((p) => ({
       ...p,
-      city: opt?.parent || name,
-      area: opt?.parent ? name : '',
+      city: parent,
+      area: parent === name ? '' : name,
       deliveryFee: fee != null && fee !== '' ? String(fee) : p.deliveryFee,
     }));
   };
-  // قرى المدينة المختارة (أول خيار: المدينة نفسها) — القرية تروح لحقلها بالطلب
-  const villageList = f.city
-    ? [{ name: f.city, region: t('co.inCity') }, ...(villages[f.city] || []).map((v) => ({ name: v }))]
-    : [];
-  // خانة المدينة تبحث كذلك بأسماء القرى/البلدات — اختيار قرية يملأ مدينتها والقرية معاً
-  const cityChoices = useMemo(() => {
-    const hints = [];
-    for (const [cty, list] of Object.entries(villages)) {
-      const nc = norm(cty);
-      const parent = cities.find((x) => {
-        const nx = norm(x.name);
-        return nx === nc || nx.includes(nc) || nc.includes(nx);
-      });
-      if (!parent) continue;
-      for (const v of list) hints.push({ name: v, region: parent.name, fee: parent.fee, parent: parent.name });
-    }
-    return [...cities, ...hints];
-  }, [cities, villages]);
+  // قائمة مسطّحة: كل مدينة/قرية بندٌ مستقل بسعره
+  const cityChoices = useMemo(
+    () => localities.map((z) => ({ name: z.name, parent: z.parent || z.name, region: z.region || '', fee: Number(z.fee) || 0 })),
+    [localities],
+  );
 
   const results = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -507,11 +492,17 @@ function OrderComposer({ defaultName = '', onSubmit }) {
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <input className="input" placeholder={t('dashboard.instagram.custName')} value={f.name} onChange={set('name')} />
         <input className="input" placeholder={t('dashboard.instagram.custPhone')} value={f.phone} onChange={set('phone')} dir="ltr" />
-        {/* التوصيل: بحث عن المدينة (كل المدن بأجرتها) + السعر بجنبها (يتعبّى تلقائياً) */}
+        {/* التوصيل: بحث مسطّح عن المكان (كل مدينة/قرية بندٌ مستقل بسعره) + السعر بجنبه */}
         <div className="flex gap-2 sm:col-span-2">
           <div className="flex-1">
-            {cities.length > 0 ? (
-              <CitySearch value={f.city} options={cityChoices} onPick={pickCity} onClear={() => setF((p) => ({ ...p, city: '', area: '' }))} />
+            {cityChoices.length > 0 ? (
+              <CitySearch
+                value={f.area || f.city}
+                options={cityChoices}
+                onPick={pickCity}
+                onText={(txt) => setF((p) => ({ ...p, city: txt, area: '' }))}
+                onClear={() => setF((p) => ({ ...p, city: '', area: '' }))}
+              />
             ) : (
               <input className="input w-full" placeholder={t('dashboard.ordersSection.deliveryTo')} value={f.city} onChange={set('city')} />
             )}
@@ -521,18 +512,6 @@ function OrderComposer({ defaultName = '', onSubmit }) {
             <span className="pointer-events-none absolute inset-y-0 end-2 flex items-center text-xs text-stone-400">{t('common.currency')}</span>
           </div>
         </div>
-        {/* القرية/المنطقة داخل المدينة — تُرسل كحقل مستقل لشركة التوصيل */}
-        {f.city && (
-          <div className="sm:col-span-2">
-            <CitySearch
-              value={f.area}
-              options={villageList}
-              placeholder={t('co.village')}
-              onText={(txt) => setF((p) => ({ ...p, area: txt }))}
-              onPick={(name) => setF((p) => ({ ...p, area: name }))}
-            />
-          </div>
-        )}
         <input className="input sm:col-span-2" placeholder={t('dashboard.ordersSection.address')} value={f.address} onChange={set('address')} />
         <input className="input sm:col-span-2" placeholder={t('dashboard.ordersSection.notes')} value={f.notes} onChange={set('notes')} />
       </div>

@@ -13,7 +13,6 @@ import { sizeLabel } from '../utils/sizes.js';
 import { colorToCss } from '../utils/colorDot.js';
 import { cldThumb } from '../utils/cloudinary.js';
 import { getRef, clearRef } from '../utils/referral.js';
-import { norm } from '../utils/match.js';
 import { trackPixel } from '../utils/pixels.js';
 
 // بيانات الزبون المحفوظة محلياً — تعبّئ شاشة الإتمام تلقائياً بالطلبات القادمة
@@ -84,10 +83,7 @@ export default function CartDrawer() {
   const [placing, setPlacing] = useState(false); // جارٍ حفظ الطلب
   const [invalid, setInvalid] = useState({}); // الحقول الناقصة/الخاطئة — لتمييزها بإطار أحمر
   const [storeZones, setStoreZones] = useState(null); // مناطق المتجر المخصّصة (إن وُجدت)
-  const [storeCities, setStoreCities] = useState([]); // قائمة المدن الرئيسية بأجرتها من الخادم
-  const [villages, setVillages] = useState({}); // { المدينة: [قراها] } — قائمتنا الداخلية
-  const [liveAreas, setLiveAreas] = useState(false); // المتجر مربوط بأوبتيموس → نجلب مناطقه الحيّة
-  const [cityAreas, setCityAreas] = useState(null); // مناطق المدينة المختارة من الشركة (null = بعدها)
+  const [localities, setLocalities] = useState([]); // قائمة مسطّحة: كل مدينة/قرية بندٌ مستقل بسعره
   const [freeOver, setFreeOver] = useState(0); // شحن مجاني فوق هذا المبلغ (0 = معطّل)
   const [referral, setReferral] = useState(null); // { code, percent, referrerName } خصم إحالة تلقائي
   useScrollLock(open);
@@ -110,36 +106,23 @@ export default function CartDrawer() {
     api.get(`/public/store/${storeSlug}/checkout`)
       .then((r) => {
         setStoreZones(Array.isArray(r.data.deliveryZones) ? r.data.deliveryZones : []);
-        setStoreCities(Array.isArray(r.data.cities) ? r.data.cities : []);
-        setVillages(r.data.villages && typeof r.data.villages === 'object' ? r.data.villages : {});
-        setLiveAreas(Boolean(r.data.liveAreas));
+        setLocalities(Array.isArray(r.data.localities) ? r.data.localities : []);
         setFreeOver(Number(r.data.freeShippingOver) || 0);
         // عرض الفلاش الفعّال (الخادم يرجّعه فقط ما دام لم ينتهِ) — للعرض؛ الخادم هو الحكم
         setFlash(Number(r.data.flashPercent) > 0 ? { percent: Number(r.data.flashPercent), endsAt: r.data.flashEndsAt } : null);
       })
-      .catch(() => { setStoreZones([]); setStoreCities([]); setVillages({}); setLiveAreas(false); setFreeOver(0); setFlash(null); });
+      .catch(() => { setStoreZones([]); setLocalities([]); setFreeOver(0); setFlash(null); });
   }, [open, storeSlug]);
 
-  // مناطق المدينة المختارة من شركة التوصيل نفسها (كل مناطقها بلا نقصان) — تُجلب عند
-  // اختيار المدينة فقط، ومخزّنة على الخادم، فما تثقل فتح السلة. الفشل يرجع لقائمتنا.
+  // زبونة قديمة محفوظ عندها اسم مكان بخانة "المدينة" فقط (قبل فصل المحافظة/القرية):
+  // نطابقه بالقائمة المسطّحة ونضبط المحافظة (parent) والقرية تلقائياً فتظهر الأجرة صح.
   useEffect(() => {
-    if (!liveAreas || !storeSlug || !cust.city) { setCityAreas(null); return undefined; }
-    let alive = true;
-    api.get(`/public/store/${storeSlug}/areas`, { params: { city: cust.city } })
-      .then((r) => { if (alive) setCityAreas(Array.isArray(r.data.areas) ? r.data.areas.map((a) => a.name).filter(Boolean) : null); })
-      .catch(() => { if (alive) setCityAreas(null); });
-    return () => { alive = false; };
-  }, [liveAreas, storeSlug, cust.city]);
-
-  // الزبونة القديمة محفوظ عندها اسم قرية بخانة "المدينة" (قبل فصل الحقلين) — نُرجّعها
-  // لمدينتها ونحطّ القرية بخانتها تلقائياً، فتشوف الأجرة صح بلا ما تعيد التعبئة.
-  useEffect(() => {
-    const names = Object.keys(villages);
-    if (!names.length || !cust.city) return;
-    if (names.includes(cust.city)) return;
-    const parent = names.find((cty) => (villages[cty] || []).includes(cust.city));
-    if (parent) setCust((p) => ({ ...p, city: parent, area: p.area || p.city }));
-  }, [villages, cust.city]);
+    if (!localities.length || !cust.city || cust.area) return;
+    const hit = localities.find((l) => l.name === cust.city);
+    if (hit && hit.parent && hit.parent !== hit.name) {
+      setCust((p) => ({ ...p, city: hit.parent, area: hit.name }));
+    }
+  }, [localities, cust.city, cust.area]);
 
   // عند فتح السلة: نحدّث الأسعار والمتبقّي من الخادم بطلب واحد. عناصر السلة لقطة وقت
   // الإضافة، والطلب يُسعَّر على الخادم — فبلا هذا قد ترى الزبونة سعراً قديماً وترسل
@@ -210,37 +193,17 @@ export default function CartDrawer() {
   if (!open) return null;
 
   const close = () => { setOpen(false); setView('cart'); setErr(''); setDoneRef(''); setDoneStore(''); };
-  // قائمة المناطق: مناطق المتجر المخصّصة إن وُجدت، وإلا القائمة الافتراضية
-  // قائمة المدن: الموحّدة من الخادم (كل المدن بأجرتها) أولاً، ثم مناطق المتجر، ثم الافتراضية
-  const areaList = (storeCities && storeCities.length)
-    ? storeCities.map((z) => ({ name: z.name, fee: Number(z.fee) || 0, region: z.region || '' }))
+  // قائمة الأماكن المسطّحة (كل مدينة/قرية بندٌ مستقل بسعره) من الخادم، وإلا مناطق
+  // المتجر المخصّصة، وإلا القائمة الافتراضية. كل عنصر: { name, parent, region, fee }.
+  const cityChoices = (localities && localities.length)
+    ? localities.map((z) => ({ name: z.name, parent: z.parent || z.name, region: z.region || '', fee: Number(z.fee) || 0 }))
     : (storeZones && storeZones.length)
-      ? storeZones.map((z) => ({ name: z.name, fee: Number(z.fee) || 0, region: '' }))
-      : AREAS.map((a) => ({ name: ar ? a.ar : a.en, fee: a.fee, region: '' }));
-  const cityOpt = areaList.find((z) => z.name === cust.city);
-  // خانة المدينة تبحث بالمدن + بأسماء القرى/البلدات كاختصار: لو كتبت الزبونة "بيرزيت"
-  // أو "دورا" بتطلع مع مدينتها، واختيارها بيحطّ المدينة بخانتها والقرية بخانتها —
-  // فما بتضيع منها أي بلدة لمجرّد أن القائمة صارت بمستوى المدينة.
-  // ملاحظة: هذه ليست hook (تقع بعد الـ early return أعلاه) — حساب عادي مثل areaList
-  const cityHints = [];
-  for (const [cty, list] of Object.entries(villages)) {
-    // نطابق مدينتنا بمدينة القائمة المعروضة حتى لو اختلفت الصياغة
-    // (مثلاً "رام الله" عند شركة التوصيل مقابل "رام الله والبيرة" عندنا)
-    const nc = norm(cty);
-    const parent = areaList.find((x) => {
-      const nx = norm(x.name);
-      return nx === nc || nx.includes(nc) || nc.includes(nx);
-    });
-    if (!parent) continue;
-    for (const v of list) cityHints.push({ name: v, region: parent.name, fee: parent.fee, parent: parent.name });
-  }
-  const cityChoices = [...areaList, ...cityHints];
-  // قرى المدينة المختارة: أول خيار "المدينة نفسها" لمن يسكن داخلها، ثم مناطق شركة
-  // التوصيل نفسها (إن توفّرت) وإلا قرى المدينة من قائمتنا. اسم القرية يروح لحقل
-  // مستقل بالطلب (يطابق area عند أوبتيموس) والعنوان التفصيلي للشارع فقط.
-  const villageList = cust.city
-    ? [{ name: cust.city, region: t('co.inCity') }, ...(cityAreas || villages[cust.city] || []).map((v) => ({ name: v }))]
-    : [];
+      ? storeZones.map((z) => ({ name: z.name, parent: z.name, fee: Number(z.fee) || 0, region: '' }))
+      : AREAS.map((a) => ({ name: ar ? a.ar : a.en, parent: ar ? a.ar : a.en, fee: a.fee, region: '' }));
+  // العنصر المختار: نطابق القرية (area) ضمن محافظتها (city)، وإلا المدينة نفسها
+  const pickedLoc = cust.area
+    ? cityChoices.find((z) => z.name === cust.area && z.parent === cust.city) || cityChoices.find((z) => z.name === cust.area)
+    : cityChoices.find((z) => z.name === cust.city);
   // الأولوية (لا تُجمع الخصومات): كوبون > فلاش > إحالة > ولاء — نفس ترتيب الخادم (الحكم)
   const flashActive = flash && flash.percent > 0 && flash.endsAt && new Date(flash.endsAt).getTime() > Date.now();
   const flashDiscount = (!coupon && flashActive)
@@ -257,7 +220,7 @@ export default function CartDrawer() {
   const discount = coupon ? coupon.discount : (flashDiscount || refDiscount || loyaltyDiscount);
   const afterDiscount = Math.max(0, total - discount);
   const freeShip = freeOver > 0 && afterDiscount >= freeOver;
-  const delivery = freeShip ? 0 : (cityOpt ? cityOpt.fee : 0);
+  const delivery = freeShip ? 0 : (pickedLoc ? pickedLoc.fee : 0);
   const grand = afterDiscount + delivery;
 
   // التحقّق من كوبون الخصم مع الخادم
@@ -291,12 +254,10 @@ export default function CartDrawer() {
     const bad = {};
     if (!cust.name.trim()) bad.name = true;
     if (cust.phone.replace(/\D/g, '').length < 9) bad.phone = true;
-    if (!cust.city) bad.city = true;
-    // القرية/المنطقة مطلوبة — هي اللي بتوصل الطلب لشركة التوصيل بلا سؤال ولا تخمين
-    if (cust.city && !cust.area.trim()) bad.area = true;
+    if (!cust.city && !cust.area) bad.city = true; // المكان (مدينة أو قرية) مطلوب
     if (Object.keys(bad).length) {
       setInvalid(bad);
-      setErr(bad.phone && cust.phone.trim() && !bad.name && !bad.city && !bad.area ? t('co.phoneInvalid') : t('co.required'));
+      setErr(bad.phone && cust.phone.trim() && !bad.name && !bad.city ? t('co.phoneInvalid') : t('co.required'));
       return;
     }
     setInvalid({});
@@ -517,29 +478,21 @@ export default function CartDrawer() {
                       {/* autocomplete: الجوال يقترح الاسم/الهاتف/العنوان المحفوظين — تعبئة أسرع = إتمام أكثر */}
                       <input className={`input !rounded-2xl ${invalid.name ? 'ring-1 ring-red-400/70' : ''}`} autoComplete="name" placeholder={t('co.name')} value={cust.name} onChange={(e) => { setCust({ ...cust, name: e.target.value }); if (invalid.name) setInvalid((v) => ({ ...v, name: false })); }} />
                       <input className={`input !rounded-2xl ${invalid.phone ? 'ring-1 ring-red-400/70' : ''}`} dir="ltr" inputMode="tel" autoComplete="tel" placeholder={t('co.phone')} value={cust.phone} onChange={(e) => { setCust({ ...cust, phone: e.target.value }); if (invalid.phone) setInvalid((v) => ({ ...v, phone: false })); }} />
-                      {/* المدينة: المدن الرئيسية فقط بسعرها (نفس تقسيم شركات التوصيل) */}
+                      {/* المكان: قائمة مسطّحة — كل مدينة وقرية بندٌ مستقل بسعره (بلا تجميع).
+                          اختيار قرية يضبط محافظتها (parent) داخلياً لإرسال دقيق لشركة التوصيل */}
                       <CitySearch
-                        value={cust.city}
+                        value={cust.area || cust.city}
                         options={cityChoices}
                         invalid={invalid.city}
                         onClear={() => setCust((p) => ({ ...p, city: '', area: '' }))}
+                        onText={(txt) => { setCust((p) => ({ ...p, city: txt, area: '' })); if (invalid.city) setInvalid((p) => ({ ...p, city: false })); }}
                         onPick={(name, fee, opt) => {
-                          // اختيار قرية من نتائج البحث → مدينتها بخانة المدينة وهي بخانة القرية
-                          setCust((p) => (opt?.parent ? { ...p, city: opt.parent, area: name } : { ...p, city: name, area: '' }));
-                          setInvalid((p) => ({ ...p, city: false, area: false }));
+                          const parent = opt?.parent || name;
+                          // القرية تروح لحقل area والمحافظة لحقل city (يطابق city/area بأوبتيموس)
+                          setCust((p) => ({ ...p, city: parent, area: parent === name ? '' : name }));
+                          setInvalid((p) => ({ ...p, city: false }));
                         }}
                       />
-                      {/* القرية/المنطقة داخل المدينة — تظهر بعد اختيار المدينة، وتقبل الكتابة الحرّة */}
-                      {cust.city && (
-                        <CitySearch
-                          value={cust.area}
-                          options={villageList}
-                          invalid={invalid.area}
-                          placeholder={t('co.village')}
-                          onText={(txt) => { setCust((p) => ({ ...p, area: txt })); if (invalid.area) setInvalid((p) => ({ ...p, area: false })); }}
-                          onPick={(name) => { setCust((p) => ({ ...p, area: name })); if (invalid.area) setInvalid((p) => ({ ...p, area: false })); }}
-                        />
-                      )}
                       <input className="input !rounded-2xl" autoComplete="street-address" placeholder={t('co.address')} value={cust.address} onChange={(e) => setCust({ ...cust, address: e.target.value })} />
                       <textarea className="input !rounded-2xl" rows={2} placeholder={t('co.notes')} value={cust.notes} onChange={(e) => setCust({ ...cust, notes: e.target.value })} />
                     </div>

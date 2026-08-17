@@ -171,6 +171,37 @@ export async function fetchShipmentTypes(token) {
   return list;
 }
 
+// ───────── القائمة المسطّحة: كل مدينة + كل مناطقها بندٌ واحد لكلٍّ (لبحث الزبون) ─────────
+// بيانات أوبتيموس عامّة (نفسها لكل المتاجر) فنُخزّنها عالمياً ٦ ساعات. البناء ثقيل (طلب
+// لمناطق كل مدينة) فنمنع تشغيله مرّتين معاً، ونُرجّع المخزّن فوراً إن كان جاهزاً.
+const flat = { list: null, at: 0, building: null };
+
+export function cachedLocalities() {
+  return (flat.list && Date.now() - flat.at < TTL) ? flat.list : null;
+}
+
+export async function fetchAllLocalities(token) {
+  const cached = cachedLocalities();
+  if (cached) return cached;
+  if (flat.building) return flat.building; // بناء جارٍ — انتظر نفسه بدل إطلاق ثانٍ
+  flat.building = (async () => {
+    const cities = await fetchCities(token);
+    const out = [];
+    for (const c of cities) {
+      out.push({ name: String(c.name || '').trim(), parent: String(c.name || '').trim(), cityId: c.id, areaId: null });
+      let areas = [];
+      try { areas = await fetchAreas(token, c.id); } catch { /* مدينة بلا مناطق */ }
+      for (const a of areas) {
+        out.push({ name: String(a.name || '').trim(), parent: String(c.name || '').trim(), cityId: c.id, areaId: a.id });
+      }
+    }
+    if (out.length) { flat.list = out; flat.at = Date.now(); }
+    return flat.list || out;
+  })();
+  try { return await flat.building; }
+  finally { flat.building = null; }
+}
+
 export function createShipment(token, payload) {
   return opostApi('/api/resources/shipments', token, { method: 'POST', form: payload });
 }
