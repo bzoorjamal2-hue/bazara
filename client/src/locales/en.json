@@ -708,6 +708,8 @@
       "newCategory": "New category",
       "categoryNameField": "Category name (e.g. Kaftan, Pants...)",
       "settingsHint": "Customize your store: logo, contact, slider, categories, delivery and more.",
+      "basics": "Basics",
+      "deliveryPayment": "Delivery & payment",
       "slideButton": "Slide button (optional)",
       "btnLabel": "Button text (e.g. Shop now)",
       "btnHref": "Button destination (link or path)",

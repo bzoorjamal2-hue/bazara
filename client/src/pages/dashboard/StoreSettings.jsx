@@ -9,7 +9,7 @@ import BannerEditor from '../../components/BannerEditor.jsx';
 import OpostConnect from '../../components/OpostConnect.jsx';
 import EpsConnect from '../../components/EpsConnect.jsx';
 import GoboxConnect from '../../components/GoboxConnect.jsx';
-import { SaveIcon, TruckIcon, ImageIcon, GiftIcon, FolderIcon, TrashIcon, MegaphoneIcon, RulerIcon, ShieldIcon } from '../../components/icons.jsx';
+import { SaveIcon, TruckIcon, ImageIcon, GiftIcon, FolderIcon, TrashIcon, MegaphoneIcon, RulerIcon, ShieldIcon, StoreIcon, PhoneIcon, BoltIcon, ChartIcon, TagIcon, CardIcon } from '../../components/icons.jsx';
 import { cldThumb } from '../../utils/cloudinary.js';
 
 // أيقونتا إخفاء/إظهار (عين مشطوبة / عين) — للتحكم بظهور الفئة بالمتجر
@@ -24,6 +24,28 @@ const EyeGlyph = (p) => (
     <path d="M2 12s3-8 10-8 10 8 10 8-3 8-10 8-10-8-10-8Z" /><circle cx="12" cy="12" r="3" />
   </svg>
 );
+
+// رأس قسم موحّد: بلاطة أيقونة ذهبية + عنوان + وصف اختياري — لمظهر متناسق عبر كل الأقسام
+function SectionHead({ icon, title, desc }) {
+  return (
+    <div className="flex items-start gap-2.5">
+      <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gold-400/10 text-gold-300 ring-1 ring-gold-400/20">{icon}</span>
+      <div className="min-w-0">
+        <h2 className="font-display text-lg font-bold text-stone-100">{title}</h2>
+        {desc && <p className="mt-0.5 text-xs text-stone-400">{desc}</p>}
+      </div>
+    </div>
+  );
+}
+
+// أقسام الإعدادات بالترتيب: [معرّف المرساة، مفتاح الترجمة تحت dashboard.store]
+// مصدر واحد لشريط التنقّل ومراقبة القسم النشط
+const SECTIONS = [
+  ['s-basics', 'basics'], ['s-contact', 'contact'], ['s-banners', 'banners'],
+  ['s-zones', 'zones'], ['s-flash', 'flashTitle'], ['s-ads', 'adsTitle'],
+  ['s-categories', 'categories'], ['s-collections', 'collections'], ['s-marketing', 'marketing'],
+  ['s-sizechart', 'sizeChart'], ['s-return', 'returnPolicy'], ['s-delivery', 'deliveryPayment'],
+];
 
 const EMPTY = {
   name: '', slug: '', description: '', logoUrl: '', phone: '', whatsapp: '', deliveryPhone: '',
@@ -55,6 +77,7 @@ export default function StoreSettings() {
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [activeSec, setActiveSec] = useState('s-basics'); // القسم الظاهر حالياً — يُبرَز بشريط التنقّل
 
   useEffect(() => {
     api
@@ -90,6 +113,21 @@ export default function StoreSettings() {
       })
       .catch((err) => setError(getErrorMessage(err)));
   }, []);
+
+  // إبراز القسم الظاهر بشريط التنقّل — نراقب دخول الأقسام لنطاق الرؤية (بعد تحميل النموذج)
+  const loaded = form !== null;
+  useEffect(() => {
+    if (!loaded) return undefined;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const vis = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (vis[0]) setActiveSec(vis[0].target.id);
+      },
+      { rootMargin: '-15% 0px -75% 0px', threshold: 0 }
+    );
+    SECTIONS.forEach(([id]) => { const el = document.getElementById(id); if (el) obs.observe(el); });
+    return () => obs.disconnect();
+  }, [loaded]);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -153,6 +191,10 @@ export default function StoreSettings() {
   const removeCollection = (idx) =>
     setForm((f) => ({ ...f, collections: f.collections.filter((_, i) => i !== idx) }));
 
+  // تنقّل سريع بين أقسام الإعدادات — القفز لقسم مع محاذاته تحت الشريط العلوي (scroll-mt)
+  const jump = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const NAV = SECTIONS.map(([id, key]) => [id, t(`dashboard.store.${key}`)]);
+
   return (
     <div className="space-y-6">
       {/* رأس فخم */}
@@ -168,12 +210,44 @@ export default function StoreSettings() {
         </div>
       </div>
 
+      {/* شريط تنقّل + حفظ ثابت أعلى الصفحة — قفز لأي قسم، إبراز القسم الظاهر، وحفظ من أي مكان */}
+      <div className="sticky top-16 z-20 flex items-center gap-2 rounded-2xl border border-white/10 bg-wine-dark/70 px-2 py-2 backdrop-blur">
+        <div className="flex flex-1 gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {NAV.map(([id, label]) => {
+            const on = activeSec === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => jump(id)}
+                className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                  on
+                    ? 'border-gold-400/50 bg-gold-400/15 text-gold-200'
+                    : 'border-white/10 bg-white/5 text-stone-300 hover:border-gold-400/40 hover:bg-gold-400/10 hover:text-gold-200'
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+        <button
+          form="store-settings-form"
+          type="submit"
+          disabled={busy}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-r from-wine to-wine-dark px-4 py-1.5 text-xs font-bold text-cream shadow transition hover:brightness-110 disabled:opacity-60"
+        >
+          <SaveIcon className="h-3.5 w-3.5" /> {busy ? t('common.loading') : t('common.save')}
+        </button>
+      </div>
+
       {msg && <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-200">{msg}</div>}
       {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
 
-      <form onSubmit={submit} className="space-y-5">
+      <form id="store-settings-form" onSubmit={submit} className="space-y-5">
         {/* الأساسيات */}
-        <div className="glass space-y-4 p-6">
+        <div id="s-basics" className="glass space-y-4 p-6 scroll-mt-24">
+          <SectionHead icon={<StoreIcon className="h-5 w-5" />} title={t('dashboard.store.basics')} />
           <div>
             <ImageInput label={t('dashboard.store.logo')} value={form.logoUrl} onChange={(v) => setForm({ ...form, logoUrl: v })} />
             <button type="button" onClick={saveLogo} className="btn-ghost mt-3 gap-1.5 text-sm"><SaveIcon className="h-4 w-4" /> {t('image.saveImage')}</button>
@@ -202,8 +276,8 @@ export default function StoreSettings() {
         </div>
 
         {/* التواصل */}
-        <div className="glass space-y-4 p-6">
-          <h2 className="font-display text-lg font-bold text-stone-100">{t('dashboard.store.contact')}</h2>
+        <div id="s-contact" className="glass space-y-4 p-6 scroll-mt-24">
+          <SectionHead icon={<PhoneIcon className="h-5 w-5" />} title={t('dashboard.store.contact')} />
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="label">{t('dashboard.store.whatsapp')}</label>
@@ -235,17 +309,14 @@ export default function StoreSettings() {
         </div>
 
         {/* بانرات السلايدر */}
-        <div className="glass space-y-4 p-6">
-          <h2 className="flex items-center gap-1.5 font-display text-lg font-bold text-stone-100"><ImageIcon className="h-5 w-5" /> {t('dashboard.store.banners')}</h2>
+        <div id="s-banners" className="glass space-y-4 p-6 scroll-mt-24">
+          <SectionHead icon={<ImageIcon className="h-5 w-5" />} title={t('dashboard.store.banners')} />
           <BannerEditor banners={form.banners} onChange={(b) => setForm((f) => ({ ...f, banners: b }))} />
         </div>
 
         {/* مناطق التوصيل ورسومها */}
-        <div className="glass space-y-3 p-6">
-          <div>
-            <h2 className="flex items-center gap-1.5 font-display text-lg font-bold text-stone-100"><TruckIcon className="h-5 w-5" /> {t('dashboard.store.zones')}</h2>
-            <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.zonesHint')}</p>
-          </div>
+        <div id="s-zones" className="glass space-y-3 p-6 scroll-mt-24">
+          <SectionHead icon={<TruckIcon className="h-5 w-5" />} title={t('dashboard.store.zones')} desc={t('dashboard.store.zonesHint')} />
 
           {/* أسعار الشرائح: تُطبَّق تلقائياً على كل المدن (يبحث عنها الزبون بالسلة) */}
           <div className="grid grid-cols-3 gap-2">
@@ -295,11 +366,8 @@ export default function StoreSettings() {
         </div>
 
         {/* عرض الفلاش: خصم مؤقّت على كل المتجر بعدّاد تنازلي — إلحاح يرفع مبيعات الحملات */}
-        <div className="glass space-y-4 p-6">
-          <div>
-            <h2 className="flex items-center gap-1.5 font-display text-lg font-bold text-stone-100">⚡ {t('dashboard.store.flashTitle')}</h2>
-            <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.flashHint')}</p>
-          </div>
+        <div id="s-flash" className="glass space-y-4 p-6 scroll-mt-24">
+          <SectionHead icon={<BoltIcon className="h-5 w-5" />} title={t('dashboard.store.flashTitle')} desc={t('dashboard.store.flashHint')} />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="label">{t('dashboard.store.flashPercent')}</label>
@@ -321,14 +389,8 @@ export default function StoreSettings() {
         </div>
 
         {/* التمويل والإعلانات: بكسلات تتبّع لإعلانات المالك الممولة */}
-        <div className="glass space-y-4 p-6">
-          <div>
-            <h2 className="flex items-center gap-1.5 font-display text-lg font-bold text-stone-100">
-              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 17 9 11l4 4 8-8" /><path d="M15 7h6v6" /></svg>
-              {t('dashboard.store.adsTitle')}
-            </h2>
-            <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.adsHint')}</p>
-          </div>
+        <div id="s-ads" className="glass space-y-4 p-6 scroll-mt-24">
+          <SectionHead icon={<ChartIcon className="h-5 w-5" />} title={t('dashboard.store.adsTitle')} desc={t('dashboard.store.adsHint')} />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
               <label className="label">{t('dashboard.store.fbPixel')}</label>
@@ -349,11 +411,8 @@ export default function StoreSettings() {
         </div>
 
         {/* تخصيص الفئات — صورة واقعية + اسم لكل فئة */}
-        <div className="glass space-y-4 p-6">
-          <div>
-            <h2 className="flex items-center gap-1.5 font-display text-lg font-bold text-stone-100"><FolderIcon className="h-5 w-5" /> {t('dashboard.store.categories')}</h2>
-            <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.categoriesHint')}</p>
-          </div>
+        <div id="s-categories" className="glass space-y-4 p-6 scroll-mt-24">
+          <SectionHead icon={<FolderIcon className="h-5 w-5" />} title={t('dashboard.store.categories')} desc={t('dashboard.store.categoriesHint')} />
           <div className="space-y-3">
             {STORE_CATS.map((c) => {
               const meta = form.categoryMeta?.[c] || {};
@@ -428,12 +487,9 @@ export default function StoreSettings() {
         </div>
 
         {/* مجموعات المتجر: تسوّقي حسب المناسبة — صورة مرفوعة + كلمة بحث */}
-        <div className="glass space-y-4 p-6">
+        <div id="s-collections" className="glass space-y-4 p-6 scroll-mt-24">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h2 className="font-display text-lg font-bold text-stone-100">{t('dashboard.store.collections')}</h2>
-              <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.collectionsHint')}</p>
-            </div>
+            <SectionHead icon={<TagIcon className="h-5 w-5" />} title={t('dashboard.store.collections')} desc={t('dashboard.store.collectionsHint')} />
             {(form.collections || []).length < 12 && (
               <button type="button" onClick={addCollection} className="btn-ghost !py-1.5 text-sm">＋ {t('common.add')}</button>
             )}
@@ -460,8 +516,8 @@ export default function StoreSettings() {
         </div>
 
         {/* تسويق: شريط إعلانات + نافذة ترحيب */}
-        <div className="glass space-y-4 p-6">
-          <h2 className="flex items-center gap-1.5 font-display text-lg font-bold text-stone-100"><MegaphoneIcon className="h-5 w-5" /> {t('dashboard.store.marketing')}</h2>
+        <div id="s-marketing" className="glass space-y-4 p-6 scroll-mt-24">
+          <SectionHead icon={<MegaphoneIcon className="h-5 w-5" />} title={t('dashboard.store.marketing')} />
           <div>
             <label className="label">{t('dashboard.store.announcement')}</label>
             <textarea rows={3} maxLength={500} className="input resize-none" placeholder={t('dashboard.store.announcementPlaceholder')} value={form.announcement} onChange={set('announcement')} />
@@ -480,11 +536,8 @@ export default function StoreSettings() {
         </div>
 
         {/* دليل المقاسات المخصّص */}
-        <div className="glass space-y-3 p-6">
-          <div>
-            <h2 className="flex items-center gap-1.5 font-display text-lg font-bold text-stone-100"><RulerIcon className="h-5 w-5" /> {t('dashboard.store.sizeChart')}</h2>
-            <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.sizeChartHint')}</p>
-          </div>
+        <div id="s-sizechart" className="glass space-y-3 p-6 scroll-mt-24">
+          <SectionHead icon={<RulerIcon className="h-5 w-5" />} title={t('dashboard.store.sizeChart')} desc={t('dashboard.store.sizeChartHint')} />
           <table className="w-full table-fixed border-collapse text-center text-[clamp(0.72rem,3.2vw,0.875rem)]">
             <thead>
               <tr className="text-stone-400">
@@ -518,14 +571,14 @@ export default function StoreSettings() {
         </div>
 
         {/* سياسة الإرجاع والتبديل */}
-        <div className="glass space-y-2 p-6">
-          <label className="label flex items-center gap-1.5"><ShieldIcon className="h-4 w-4" /> {t('dashboard.store.returnPolicy')}</label>
-          <p className="text-xs text-stone-400">{t('dashboard.store.returnPolicyHint')}</p>
+        <div id="s-return" className="glass space-y-3 p-6 scroll-mt-24">
+          <SectionHead icon={<ShieldIcon className="h-5 w-5" />} title={t('dashboard.store.returnPolicy')} desc={t('dashboard.store.returnPolicyHint')} />
           <textarea rows={3} className="input resize-none" maxLength={2000} placeholder={t('product.returnPolicyDefault')} value={form.returnPolicy} onChange={set('returnPolicy')} />
         </div>
 
         {/* التوصيل والدفع */}
-        <div className="glass space-y-4 p-6">
+        <div id="s-delivery" className="glass space-y-4 p-6 scroll-mt-24">
+          <SectionHead icon={<CardIcon className="h-5 w-5" />} title={t('dashboard.store.deliveryPayment')} />
           <div>
             <label className="label">{t('dashboard.store.delivery')}</label>
             <textarea rows={2} className="input resize-none" value={form.deliveryInfo} onChange={set('deliveryInfo')} />
