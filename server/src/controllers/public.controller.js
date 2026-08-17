@@ -436,8 +436,15 @@ export async function getProductById(req, res, next) {
       [id]
     );
 
+    // كم زبونة تنتظر توفّر هذا المنتج (طلبات لم تُحوّل بعد) — إثبات طلب للزائر عند نفاده
+    const waiting = await query(
+      "SELECT COUNT(*)::int AS c FROM stock_requests WHERE product_id = $1 AND order_id IS NULL",
+      [id]
+    );
+
     res.json({
       product: mapProduct(product),
+      waitingCount: waiting.rows[0]?.c || 0,
       viewing, // عدد من شاهدوا المنتج خلال آخر 30 دقيقة (حقيقي، بالذاكرة)
       reviews: reviews.rows.map((r) => ({
         id: r.id,

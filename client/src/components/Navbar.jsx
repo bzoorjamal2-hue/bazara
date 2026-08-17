@@ -143,11 +143,16 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [noAnim, setNoAnim] = useState(false); // إلغاء حركة الهيدر لحظة تغيّر الصفحة
   const [newOrders, setNewOrders] = useState(0); // شارة الطلبات الجديدة داخل قائمة الحساب
+  const [stockReady, setStockReady] = useState(0); // شارة طلبات التوفّر التي رجعت متوفّرة
 
   // نجلب عدد الطلبات الجديدة عند فتح القائمة → نُظهر شارة على "الطلبات" ليعرف المالك مصدر الإشعار
   useEffect(() => {
     if (!user || !store?.slug || subscription?.isAdmin) return undefined;
-    const load = () => api.get('/orders/new-count').then((r) => setNewOrders(r.data.count || 0)).catch(() => {});
+    const load = () => {
+      api.get('/orders/new-count').then((r) => setNewOrders(r.data.count || 0)).catch(() => {});
+      // طلبات التوفّر الجاهزة (رجعت متوفّرة) — شارة على تبويب "طلبات التوفّر"
+      api.get('/stock-requests/counts').then((r) => setStockReady(r.data.ready || 0)).catch(() => {});
+    };
     if (menuOpen) load();
     // تحديث فوري عند تأكيد/شحن طلب — الشارة تنقص مباشرةً بلا انتظار
     window.addEventListener('bz:orders-changed', load);
@@ -383,6 +388,12 @@ export default function Navbar() {
                       <span className="relative flex h-6 min-w-6 items-center justify-center">
                         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gold-400/50" style={{ animationDuration: '1.8s' }} />
                         <span className="relative flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-extrabold text-wine-dark shadow-sm ring-1 ring-cream/50" style={{ background: 'linear-gradient(135deg, #f4e0a4 0%, #e6c878 55%, #d4af37 100%)' }}>{newOrders > 99 ? '99+' : newOrders}</span>
+                      </span>
+                    )}
+                    {s.key === 'stockRequests' && stockReady > 0 && (
+                      <span className="relative flex h-6 min-w-6 items-center justify-center">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/50" style={{ animationDuration: '1.8s' }} />
+                        <span className="relative flex h-6 min-w-6 items-center justify-center rounded-full bg-emerald-500 px-1.5 text-xs font-extrabold text-white shadow-sm ring-1 ring-cream/50">{stockReady > 99 ? '99+' : stockReady}</span>
                       </span>
                     )}
                   </Link>

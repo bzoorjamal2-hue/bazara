@@ -150,6 +150,26 @@ export async function listMyStockRequests(req, res, next) {
   }
 }
 
+// عدّاد سريع لشارة القائمة: كم طلب توفّر معلّق (لم يُحوّل)، وكم منها رجع متوفّراً
+// وجاهز لتنبيه الزبونة الآن. خفيف — يُستدعى عند فتح قائمة الحساب فقط.
+export async function stockRequestCounts(req, res, next) {
+  try {
+    const store = await getUserStore(req.user.id);
+    if (!store) return res.json({ ready: 0, pending: 0 });
+    const r = await query(
+      `SELECT sr.color, sr.size, p.stock, p.size_stock, p.color_stock
+       FROM stock_requests sr LEFT JOIN products p ON p.id = sr.product_id
+       WHERE sr.store_id = $1 AND sr.order_id IS NULL`,
+      [store.id]
+    );
+    const pending = r.rows.length;
+    const ready = r.rows.filter((x) => variantInStock(x, x.color, x.size)).length;
+    res.json({ ready, pending });
+  } catch (err) {
+    next(err);
+  }
+}
+
 // تحويل طلب توفّر إلى طلب حقيقي بالمتجر — يصبح له حالة، ويُرسَل لشركة التوصيل
 // (أوبتيموس/EPS/gobox) بنفس أزرار صفحة الطلبات، ويظهر أيضاً ضمن الطلبات والإحصائيات.
 export async function convertStockRequest(req, res, next) {

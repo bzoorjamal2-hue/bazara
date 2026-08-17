@@ -7,6 +7,7 @@ import { sendMail, isMailConfigured } from '../utils/mail.js';
 import { sendPushToUser } from '../config/push.js';
 import { sendNativeToUser } from '../config/nativePush.js';
 import { feeForCity, cityOfVillage } from '../config/deliveryCities.js';
+import { variantInStock } from './stockRequest.controller.js';
 
 // إشعار صاحب المتجر (بريد + إشعار دفع على الجوال) عند وصول طلب جديد — بالخلفية
 async function notifyOwnerNewOrder(storeId, info) {
@@ -441,6 +442,16 @@ export async function getStats(req, res, next) {
       [sid]
     );
 
+    // طلبات التوفّر المعلّقة (لم تُحوّل) — كم منها رجع متوفّراً وجاهز لتنبيه الزبونة
+    const stockReq = await query(
+      `SELECT sr.color, sr.size, p.stock, p.size_stock, p.color_stock
+       FROM stock_requests sr LEFT JOIN products p ON p.id = sr.product_id
+       WHERE sr.store_id = $1 AND sr.order_id IS NULL`,
+      [sid]
+    );
+    const stockRequestsPending = stockReq.rows.length;
+    const stockRequestsReady = stockReq.rows.filter((x) => variantInStock(x, x.color, x.size)).length;
+
     const top = await query(
       `SELECT it->>'name' AS name, SUM((it->>'qty')::int)::int AS qty
        FROM orders o, jsonb_array_elements(o.items) it
@@ -580,6 +591,8 @@ export async function getStats(req, res, next) {
       repeatRate,
       repeatCustomers: rp.repeaters,
       totalCustomers: rp.customers,
+      stockRequestsPending,
+      stockRequestsReady,
     });
   } catch (err) {
     next(err);

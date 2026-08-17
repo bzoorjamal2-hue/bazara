@@ -163,6 +163,7 @@ export default function ProductDetails() {
   // دليل اجتماعي حقيقي: عدد من شاهدوا المنتج خلال آخر 30 دقيقة (يحسبه الخادم
   // فعلياً بالذاكرة) — بدل الرقم الثابت التقديري السابق المشتق من معرّف المنتج.
   const [viewers, setViewers] = useState(0);
+  const [waiting, setWaiting] = useState(() => Number(getCache(`product:${id}`)?.waitingCount) || 0);
 
   const fetchData = () => {
     api
@@ -171,6 +172,7 @@ export default function ProductDetails() {
         const p = res.data.product;
         setProduct(p);
         setViewers(Number(res.data.viewing) || 0);
+        setWaiting(Number(res.data.waitingCount) || 0);
         setReviews(res.data.reviews || []);
         setActive(0);
         pushRecent(p);
@@ -646,6 +648,12 @@ export default function ProductDetails() {
                 <>
                   <p className="flex items-center gap-1.5 text-sm font-bold text-wine"><BellIcon className="h-4 w-4" /> {t('product.notifyTitle')}</p>
                   <p className="mb-3 mt-1 text-xs text-wine/70">{t('product.notifyHint')}</p>
+                  {waiting > 0 && (
+                    <p className="mb-3 -mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-wine/10 px-2.5 py-1 text-[11px] font-semibold text-wine ring-1 ring-wine/15">
+                      <span className="relative flex h-1.5 w-1.5"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-wine/60" /><span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-wine" /></span>
+                      {t('product.notifyWaiting', { count: waiting })}
+                    </p>
+                  )}
                   <div className="space-y-2">
                     <input
                       autoComplete="name"

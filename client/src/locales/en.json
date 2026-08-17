@@ -549,7 +549,12 @@
       "qty": "Qty",
       "unitPrice": "Unit price",
       "createOrder": "Create order",
-      "needName": "Customer name is required."
+      "needName": "Customer name is required.",
+      "overviewReady_one": "1 stock request is back in stock — notify the customer now 🎉",
+      "overviewReady_other": "{{count}} stock requests are back in stock — notify customers now 🎉",
+      "overviewPending_one": "1 customer is waiting for a product to restock",
+      "overviewPending_other": "{{count}} customers are waiting for products to restock",
+      "overviewCta": "Open stock requests to manage and notify in one tap"
     },
     "analytics": {
       "title": "Analytics",
@@ -791,6 +796,8 @@
     "notifySend": "Reserve & notify me",
     "notifySent": "Done! 💜 We've saved it for you and will reach out when it's back",
     "notifyInvalid": "Enter a valid phone number",
+    "notifyWaiting_one": "1 shopper is waiting for this — reserve yours too",
+    "notifyWaiting_other": "{{count}} shoppers are waiting for this — reserve yours too",
     "addToCart": "Add to cart",
     "buyNow": "Order now",
     "shopNow": "Shop now",

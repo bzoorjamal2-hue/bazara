@@ -174,6 +174,31 @@ function Overview({ productsCount }) {
         <MetricCard label={t('dashboard.productsCount')} value={productCount != null ? <CountUp value={productCount} /> : '—'} Icon={BagIcon} grad="from-wine to-wine-dark" accent="text-stone-100" />
       </div>
 
+      {/* تنبيه طلبات التوفّر — يظهر فقط عند وجود ما يستدعي التصرّف. الأخضر (رجع متوفّر
+          وجاهز للتنبيه) أولوية على الرمادي (لسه ينتظرون) — بضغطة يفتح تبويب الطلبات */}
+      {(stats?.stockRequestsReady > 0 || stats?.stockRequestsPending > 0) && (
+        <Link
+          to="/dashboard?tab=stockRequests"
+          className={`group flex items-center gap-3 rounded-2xl p-4 ring-1 transition hover:-translate-y-0.5 ${
+            stats.stockRequestsReady > 0
+              ? 'bg-emerald-500/10 ring-emerald-400/30'
+              : 'bg-white/5 ring-white/10'
+          }`}
+        >
+          <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white shadow-md ${stats.stockRequestsReady > 0 ? 'bg-gradient-to-br from-emerald-400 to-emerald-600' : 'bg-gradient-to-br from-[#8a6a4f] to-[#3f2e22]'}`}>
+            <BellIcon className="h-[22px] w-[22px]" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className={`text-sm font-bold ${stats.stockRequestsReady > 0 ? 'text-emerald-200' : 'text-stone-200'}`}>
+              {stats.stockRequestsReady > 0
+                ? t('dashboard.stockRequests.overviewReady', { count: stats.stockRequestsReady })
+                : t('dashboard.stockRequests.overviewPending', { count: stats.stockRequestsPending })}
+            </p>
+            <p className="mt-0.5 truncate text-xs text-stone-400">{t('dashboard.stockRequests.overviewCta')}</p>
+          </div>
+        </Link>
+      )}
+
       {/* إجراءات سريعة — اختصارات لأكثر ما يستخدمه صاحب المتجر يومياً */}
       <div>
         <h2 className="mb-3 text-sm font-bold text-stone-300">{t('dashboard.quickActions')}</h2>
