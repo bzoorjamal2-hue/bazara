@@ -24,7 +24,6 @@ function mapStore(s) {
     paymentInfo: s.payment_info,
     deliveryPhone: s.delivery_phone || '',
     banners: Array.isArray(s.banners) ? s.banners : [],
-    deliveryZones: Array.isArray(s.delivery_zones) ? s.delivery_zones : [],
     deliveryTiers: normalizeTiers(s.delivery_tiers),
     freeShippingOver: Number(s.free_shipping_over || 0),
     referralPercent: Number(s.referral_percent || 0),
@@ -116,15 +115,6 @@ function sanitizeSizeChart(raw) {
   return out;
 }
 
-// تنقية مناطق التوصيل [{name, fee}] — حد أقصى 60 منطقة
-function sanitizeZones(raw) {
-  if (!Array.isArray(raw)) return [];
-  return raw
-    .slice(0, 60)
-    .map((z) => ({ name: String(z?.name || '').trim().slice(0, 60), fee: Math.max(0, Number(z?.fee) || 0) }))
-    .filter((z) => z.name);
-}
-
 // تنقية شرايح البانر القادمة من النموذج (حد أقصى 5، نص آمن + خلفية مخصّصة)
 export function sanitizeBanners(raw) {
   if (!Array.isArray(raw)) return [];
@@ -147,13 +137,12 @@ export function sanitizeBanners(raw) {
 // إن كانت مخزّنة، وإلا قائمتنا الداخلية فوراً مع بناء أوبتيموس بالخلفية (بلا تأخير).
 async function localitiesForStoreRow(store) {
   const tiers = store.delivery_tiers;
-  const zones = Array.isArray(store.delivery_zones) ? store.delivery_zones : [];
   if (store.opost_connected) {
     const cached = cachedLocalities();
-    if (cached && cached.length) return mapExternalLocalities(cached, tiers, zones);
+    if (cached && cached.length) return mapExternalLocalities(cached, tiers);
     ensureToken(store).then((token) => fetchAllLocalities(token)).catch(() => {});
   }
-  return flatInternalLocalities(tiers, zones);
+  return flatInternalLocalities(tiers);
 }
 
 // جلب متجر المستخدم الحالي مع إحصائيات بسيطة
@@ -184,7 +173,7 @@ export async function updateMyStore(req, res, next) {
   const { name, description, logoUrl, phone, whatsapp, instagram, facebook, tiktok, themeColor, deliveryInfo, paymentInfo } = req.body;
   const deliveryPhone = String(req.body.deliveryPhone || '').replace(/[^\d+]/g, '').slice(0, 40);
   const banners = sanitizeBanners(req.body.banners);
-  const deliveryZones = sanitizeZones(req.body.deliveryZones);
+  const deliveryZones = []; // النظام صار ثلاث شرائح ثابتة فقط (بلا استثناءات نصية) — العمود يبقى فارغاً
   const deliveryTiers = normalizeTiers(req.body.deliveryTiers);
   const freeShippingOver = Math.max(0, Number(req.body.freeShippingOver) || 0);
   const referralPercent = Math.min(90, Math.max(0, Number(req.body.referralPercent) || 0));

@@ -41,7 +41,6 @@ function mapStorePublic(s) {
     deliveryInfo: s.delivery_info,
     paymentInfo: s.payment_info,
     banners: Array.isArray(s.banners) ? s.banners : [],
-    deliveryZones: Array.isArray(s.delivery_zones) ? s.delivery_zones : [],
     freeShippingOver: Number(s.free_shipping_over || 0),
     referralPercent: Number(s.referral_percent || 0),
     sizeChart: s.size_chart && typeof s.size_chart === 'object' ? s.size_chart : {},
@@ -280,14 +279,14 @@ export async function loyaltyPreview(req, res, next) {
 // للمتاجر المربوطة: قائمة أوبتيموس الكاملة (مدن + مناطق) — المصدر الحقيقي. البناء
 // ثقيل فلا نؤخّر الزبون: إن كانت مخزّنة نستعملها فوراً، وإلا نطلق بناءها بالخلفية
 // ونرجّع قائمتنا الداخلية (شاملة كفاية) الآن؛ الزبون التالي يشوف قائمة أوبتيموس.
-async function localitiesForStore(s, tiers, zones) {
+async function localitiesForStore(s, tiers) {
   if (s.opost_connected) {
     const cached = cachedLocalities();
-    if (cached && cached.length) return mapExternalLocalities(cached, tiers, zones);
+    if (cached && cached.length) return mapExternalLocalities(cached, tiers);
     // كاش فاضٍ: ابنِ بالخلفية (بلا await) وارجع القائمة الداخلية الآن
     ensureToken(s).then((token) => fetchAllLocalities(token)).catch(() => {});
   }
-  return flatInternalLocalities(tiers, zones);
+  return flatInternalLocalities(tiers);
 }
 
 // ───────── GET /api/public/store/:slug/areas?city=<اسم المدينة> ─────────
@@ -326,7 +325,7 @@ export async function getStoreCheckout(req, res, next) {
   const { slug } = req.params;
   try {
     const r = await query(
-      `SELECT id, whatsapp, delivery_zones, delivery_tiers, free_shipping_over, flash_percent, flash_ends_at,
+      `SELECT id, whatsapp, delivery_tiers, free_shipping_over, flash_percent, flash_ends_at,
               opost_connected, opost_access_token, opost_refresh_token, opost_token_expires
        FROM stores WHERE slug = $1`,
       [slug]
@@ -335,15 +334,13 @@ export async function getStoreCheckout(req, res, next) {
     if (!s) return res.status(404).json({ error: 'المتجر غير موجود.' });
     // عرض الفلاش الفعّال فقط (لم ينتهِ بعد) — كي تعرضه السلة وتطبّق خصمه للعرض
     const flashActive = Number(s.flash_percent || 0) > 0 && s.flash_ends_at && new Date(s.flash_ends_at).getTime() > Date.now();
-    const zones = Array.isArray(s.delivery_zones) ? s.delivery_zones : [];
     const tiers = normalizeTiers(s.delivery_tiers);
     res.json({
       whatsapp: s.whatsapp || '',
-      deliveryZones: zones,
       deliveryTiers: tiers,
       // قائمة مسطّحة: كل مدينة وكل قرية بندٌ مستقل بسعره (شريحة المحافظة اللي يحدّدها
       // صاحب المتجر). للمتاجر المربوطة = قائمة أوبتيموس الكاملة (مدن + مناطق).
-      localities: await localitiesForStore(s, tiers, zones),
+      localities: await localitiesForStore(s, tiers),
       freeShippingOver: Number(s.free_shipping_over || 0),
       flashPercent: flashActive ? Number(s.flash_percent) : 0,
       flashEndsAt: flashActive ? s.flash_ends_at : null,

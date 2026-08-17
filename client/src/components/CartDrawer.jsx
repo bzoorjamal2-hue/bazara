@@ -83,7 +83,6 @@ export default function CartDrawer() {
   const [couponBusy, setCouponBusy] = useState(false);
   const [placing, setPlacing] = useState(false); // جارٍ حفظ الطلب
   const [invalid, setInvalid] = useState({}); // الحقول الناقصة/الخاطئة — لتمييزها بإطار أحمر
-  const [storeZones, setStoreZones] = useState(null); // مناطق المتجر المخصّصة (إن وُجدت)
   const [localities, setLocalities] = useState([]); // قائمة مسطّحة: كل مدينة/قرية بندٌ مستقل بسعره
   const [freeOver, setFreeOver] = useState(0); // شحن مجاني فوق هذا المبلغ (0 = معطّل)
   const [referral, setReferral] = useState(null); // { code, percent, referrerName } خصم إحالة تلقائي
@@ -116,13 +115,12 @@ export default function CartDrawer() {
     if (!open || !storeSlug) return;
     api.get(`/public/store/${storeSlug}/checkout`)
       .then((r) => {
-        setStoreZones(Array.isArray(r.data.deliveryZones) ? r.data.deliveryZones : []);
         setLocalities(Array.isArray(r.data.localities) ? r.data.localities : []);
         setFreeOver(Number(r.data.freeShippingOver) || 0);
         // عرض الفلاش الفعّال (الخادم يرجّعه فقط ما دام لم ينتهِ) — للعرض؛ الخادم هو الحكم
         setFlash(Number(r.data.flashPercent) > 0 ? { percent: Number(r.data.flashPercent), endsAt: r.data.flashEndsAt } : null);
       })
-      .catch(() => { setStoreZones([]); setLocalities([]); setFreeOver(0); setFlash(null); });
+      .catch(() => { setLocalities([]); setFreeOver(0); setFlash(null); });
   }, [open, storeSlug]);
 
   // زبونة قديمة محفوظ عندها اسم مكان بخانة "المدينة" فقط (قبل فصل المحافظة/القرية):
@@ -204,13 +202,11 @@ export default function CartDrawer() {
   if (!open) return null;
 
   const close = () => { setOpen(false); setView('cart'); setErr(''); setDoneRef(''); setDoneStore(''); };
-  // قائمة الأماكن المسطّحة (كل مدينة/قرية بندٌ مستقل بسعره) من الخادم، وإلا مناطق
-  // المتجر المخصّصة، وإلا القائمة الافتراضية. كل عنصر: { name, parent, region, fee }.
+  // قائمة الأماكن المسطّحة (كل مدينة/قرية بندٌ مستقل بسعره) من الخادم، وإلا القائمة
+  // الافتراضية. كل عنصر: { name, parent, region, fee }.
   const cityChoices = (localities && localities.length)
     ? localities.map((z) => ({ name: z.name, parent: z.parent || z.name, region: z.region || '', fee: Number(z.fee) || 0, tier: z.tier || '' }))
-    : (storeZones && storeZones.length)
-      ? storeZones.map((z) => ({ name: z.name, parent: z.name, fee: Number(z.fee) || 0, region: '', tier: '' }))
-      : AREAS.map((a) => ({ name: ar ? a.ar : a.en, parent: ar ? a.ar : a.en, fee: a.fee, region: '', tier: '' }));
+    : AREAS.map((a) => ({ name: ar ? a.ar : a.en, parent: ar ? a.ar : a.en, fee: a.fee, region: '', tier: '' }));
   // العنصر المختار: نطابق القرية (area) ضمن محافظتها (city)، وإلا المدينة نفسها
   const pickedLoc = cust.area
     ? cityChoices.find((z) => z.name === cust.area && z.parent === cust.city) || cityChoices.find((z) => z.name === cust.area)
@@ -498,10 +494,13 @@ export default function CartDrawer() {
                       <input ref={nameRef} data-field="name" className={`input !rounded-2xl ${invalid.name ? 'ring-1 ring-red-400/70' : ''}`} autoComplete="name" placeholder={t('co.name')} value={cust.name} onChange={(e) => { setCust({ ...cust, name: e.target.value }); if (invalid.name) setInvalid((v) => ({ ...v, name: false })); }} />
                       {/* #3: تحقّق فوري لرقم الموبايل — علامة صح خضراء لمّا يصحّ، وتلميح لمّا يكون ناقصاً */}
                       <div data-field="phone">
-                        <div className="relative">
+                        {/* dir="ltr" على الحاوية نفسها (مش الحقل لحاله) — الرقم بيتّجه يسار-يمين
+                            دايماً، فلازم "end-3" تتحسب بنفس الاتجاه حتى ما تتراكب علامة الصح فوق
+                            أول رقم (الصفر) لما تنعكس start/end بصفحة عربية RTL */}
+                        <div className="relative" dir="ltr">
                           <input
                             className={`input !rounded-2xl pe-9 ${invalid.phone ? 'ring-1 ring-red-400/70' : phoneOk ? 'ring-1 ring-emerald-400/60' : ''}`}
-                            dir="ltr" inputMode="tel" autoComplete="tel" placeholder={t('co.phone')} value={cust.phone}
+                            inputMode="tel" autoComplete="tel" placeholder={t('co.phone')} value={cust.phone}
                             onChange={(e) => { setCust({ ...cust, phone: e.target.value }); if (invalid.phone) setInvalid((v) => ({ ...v, phone: false })); }}
                           />
                           {phoneOk && <CheckIcon className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-400" />}

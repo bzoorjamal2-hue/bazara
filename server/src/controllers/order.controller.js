@@ -200,18 +200,17 @@ export async function createCodOrder(req, res, next) {
       .filter(Boolean);
     if (orderItems.length === 0 || subtotal <= 0) return res.status(400).json({ error: 'طلب غير صالح.' });
 
-    // رسوم التوصيل تُحسب على الخادم من مدينة الزبون وشرائح المتجر (لا نثق برقم الواجهة).
-    // استثناء المتجر لمدينة معيّنة له الأولوية، ثم سعر الشريحة. الشحن المجاني يُطبَّق بعد الخصم.
-    const dcfg = await query('SELECT delivery_tiers, delivery_zones, free_shipping_over FROM stores WHERE id = $1', [storeId]);
+    // رسوم التوصيل تُحسب على الخادم من مدينة الزبون وشرائح المتجر الثلاث (لا نثق برقم
+    // الواجهة). الشحن المجاني يُطبَّق بعد الخصم.
+    const dcfg = await query('SELECT delivery_tiers, free_shipping_over FROM stores WHERE id = $1', [storeId]);
     const dsettings = dcfg.rows[0] || {};
-    const dZones = Array.isArray(dsettings.delivery_zones) ? dsettings.delivery_zones : [];
     // المدينة والقرية: نسخة قديمة من التطبيق (كاش الـPWA) قد ترسل اسم قرية بحقل
     // المدينة — نُرجّعها لمدينتها ونضع القرية بحقلها، فتظل الأجرة والإرسال للتوصيل صح.
     let cityName = String(customer?.city || '').trim();
     let areaName = String(customer?.area || '').trim();
     const parent = cityOfVillage(cityName);
     if (parent) { if (!areaName) areaName = cityName; cityName = parent; }
-    let deliveryFee = feeForCity(cityName, dsettings.delivery_tiers, dZones);
+    let deliveryFee = feeForCity(cityName, dsettings.delivery_tiers);
 
     // كوبون الخصم (إن وُجد): نتحقّق منه من قاعدة البيانات ونحسب الخصم على المجموع الفرعي
     const couponCode = String(req.body?.coupon?.code || customer?.couponCode || '').trim().toUpperCase();

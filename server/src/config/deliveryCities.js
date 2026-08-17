@@ -138,23 +138,22 @@ export function normalizeTiers(raw) {
   };
 }
 
-// أجرة مدينة: استثناء المتجر (zones) أولاً، ثم سعر الشريحة، ثم شريحة الضفة كافتراضي.
-// لو وصل اسم قرية (طلب قديم) نُرجعه لمدينته قبل الحساب.
-export function feeForCity(cityName, tiers, overrides) {
+// أجرة مدينة: سعر شريحتها الثلاث (الضفة/القدس/الداخل) يحدّده صاحب المتجر بالإعدادات
+// مباشرة — بلا أي استثناء نصي لمدينة/منطقة بعينها. لو وصل اسم قرية (طلب قديم)
+// نُرجعه لمدينته قبل التصنيف.
+export function feeForCity(cityName, tiers) {
   const raw = String(cityName || '').trim();
   if (!raw) return 0;
-  const name = NAME_TIER.has(raw) ? raw : (VILLAGE_CITY.get(raw) || raw);
-  const ov = Array.isArray(overrides) ? overrides.find((z) => z && (z.name === raw || z.name === name)) : null;
-  if (ov && ov.fee != null && ov.fee !== '') return Math.max(0, Number(ov.fee) || 0);
-  // الشريحة: من المدن المعروفة، وإلا نصنّف الاسم (يشمل مدن أوبتيموس غير الموجودة بشجرتنا)
+  const parentName = NAME_TIER.has(raw) ? raw : (VILLAGE_CITY.get(raw) || raw);
   const tt = normalizeTiers(tiers);
-  return tt[NAME_TIER.get(name) || tierForName(name)];
+  // الشريحة: من المدن المعروفة، وإلا نصنّف الاسم (يشمل مدن أوبتيموس غير الموجودة بشجرتنا)
+  return tt[NAME_TIER.get(parentName) || tierForName(parentName)];
 }
 
 // المدن الرئيسية فقط مع أجرتها — هي اللي تظهر ببحث المدينة عند الزبون والتاجر
-export function citiesWithFees(tiers, overrides) {
+export function citiesWithFees(tiers) {
   const tt = normalizeTiers(tiers);
-  return _TREE.map((x) => ({ name: x.name, tier: x.tier, region: x.region, fee: feeForCity(x.name, tt, overrides) }));
+  return _TREE.map((x) => ({ name: x.name, tier: x.tier, region: x.region, fee: feeForCity(x.name, tt) }));
 }
 
 // خريطة { اسم المدينة: [قراها] } — تُرسل للواجهة ليختار الزبون قريته بعد المدينة
@@ -223,21 +222,19 @@ function regionLabelForName(name) {
 
 // تحويل قائمة مدن أوبتيموس (المصدر الحقيقي) لقائمة بأجرتها — تُستخدم بشاشة
 // إتمام الطلب عند المتاجر المربوطة، فيطابق ما يعرضه للزبون ما تستقبله الشركة تماماً.
-export function externalCitiesWithFees(list, tiers, overrides) {
+export function externalCitiesWithFees(list, tiers) {
   const tt = normalizeTiers(tiers);
   return (Array.isArray(list) ? list : []).map((cty) => {
     const name = String(cty.name || '').trim();
     const tier = tierForName(name);
-    const ov = Array.isArray(overrides) ? overrides.find((z) => z && z.name === name) : null;
-    const fee = (ov && ov.fee != null && ov.fee !== '') ? Math.max(0, Number(ov.fee) || 0) : tt[tier];
-    return { id: cty.id, name, tier, region: regionLabelForName(name), fee };
+    return { id: cty.id, name, tier, region: regionLabelForName(name), fee: tt[tier] };
   }).filter((x) => x.name);
 }
 
 // ───────── قائمة مسطّحة: كل مدينة وكل قرية بندٌ مستقل قابل للاختيار (بلا تجميع) ─────────
 // السعر يُحسب بشريحة المحافظة (يحدّدها صاحب المتجر بالإعدادات)، و region = اسم المحافظة
 // للتمييز فقط (مثلاً "رابا" تحتها "جنين") — ليست تجميعاً، كل بلدة تُختار وحدها.
-export function flatInternalLocalities(tiers, overrides) {
+export function flatInternalLocalities(tiers) {
   const tt = normalizeTiers(tiers);
   const seen = new Set();
   const out = [];
@@ -245,9 +242,7 @@ export function flatInternalLocalities(tiers, overrides) {
     const key = `${nrm(name)}|${nrm(parent)}`;
     if (!name || seen.has(key)) return;
     seen.add(key);
-    const ov = Array.isArray(overrides) ? overrides.find((z) => z && (z.name === name || z.name === parent)) : null;
-    const fee = (ov && ov.fee != null && ov.fee !== '') ? Math.max(0, Number(ov.fee) || 0) : tt[tier];
-    out.push({ name, parent, region: name === parent ? (TIER_LABEL_AR[tier] || '') : parent, tier, fee });
+    out.push({ name, parent, region: name === parent ? (TIER_LABEL_AR[tier] || '') : parent, tier, fee: tt[tier] });
   };
   for (const x of _TREE) {
     push(x.name, x.name, x.tier);
@@ -258,7 +253,7 @@ export function flatInternalLocalities(tiers, overrides) {
 
 // تحويل قائمة أوبتيموس المسطّحة (مدينة + مناطقها) لقائمة بأجرتها. كل عنصر يحمل
 // اسمه ومحافظته ومعرّفاتها بأوبتيموس (cityId/areaId) فيروح الطلب للشركة مباشرة بلا تخمين.
-export function mapExternalLocalities(list, tiers, overrides) {
+export function mapExternalLocalities(list, tiers) {
   const tt = normalizeTiers(tiers);
   const seen = new Set();
   const out = [];
@@ -270,10 +265,8 @@ export function mapExternalLocalities(list, tiers, overrides) {
     if (seen.has(key)) continue;
     seen.add(key);
     const tier = tierForName(parent || name);
-    const ov = Array.isArray(overrides) ? overrides.find((z) => z && (z.name === name || z.name === parent)) : null;
-    const fee = (ov && ov.fee != null && ov.fee !== '') ? Math.max(0, Number(ov.fee) || 0) : tt[tier];
     out.push({
-      name, parent, tier, fee,
+      name, parent, tier, fee: tt[tier],
       region: name === parent ? regionLabelForName(name) : parent,
       cityId: e.cityId != null ? e.cityId : undefined,
       areaId: e.areaId != null ? e.areaId : undefined,

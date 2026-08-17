@@ -26,7 +26,7 @@ export default function StockRequestsManager() {
   const [q, setQ] = useState('');
   const [openForm, setOpenForm] = useState(''); // id طلب التوفّر المفتوح نموذج تحويله
   const [busy, setBusy] = useState('');
-  // مناطق التوصيل وأجورها (نفس ما يراه الزبون بالسلة) — تُجلب عند أول فتح لنموذج التحويل
+  // قائمة الأماكن وأجورها (نفس ما يراه الزبون بالسلة) — تُجلب عند أول فتح لنموذج التحويل
   const [zones, setZones] = useState(null);
   // شركات التوصيل (نفس صفحة الطلبات تماماً) — حالة الربط والمدن مرّة واحدة
   const couriers = useCouriers();
@@ -46,7 +46,7 @@ export default function StockRequestsManager() {
     setOpenForm((cur) => (cur === id ? '' : id));
     if (zones === null) {
       setZones([]); // لا نكرّر الجلب
-      api.get('/stores/me').then((r) => setZones(Array.isArray(r.data.store?.deliveryZones) ? r.data.store.deliveryZones : [])).catch(() => {});
+      api.get('/stores/me').then((r) => setZones(Array.isArray(r.data.localities) ? r.data.localities : [])).catch(() => {});
     }
   };
 

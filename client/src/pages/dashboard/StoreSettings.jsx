@@ -9,7 +9,7 @@ import BannerEditor from '../../components/BannerEditor.jsx';
 import OpostConnect from '../../components/OpostConnect.jsx';
 import EpsConnect from '../../components/EpsConnect.jsx';
 import GoboxConnect from '../../components/GoboxConnect.jsx';
-import { SaveIcon, TruckIcon, ImageIcon, XIcon, GiftIcon, FolderIcon, TrashIcon, MegaphoneIcon, RulerIcon, ShieldIcon } from '../../components/icons.jsx';
+import { SaveIcon, TruckIcon, ImageIcon, GiftIcon, FolderIcon, TrashIcon, MegaphoneIcon, RulerIcon, ShieldIcon } from '../../components/icons.jsx';
 import { cldThumb } from '../../utils/cloudinary.js';
 
 // أيقونتا إخفاء/إظهار (عين مشطوبة / عين) — للتحكم بظهور الفئة بالمتجر
@@ -67,7 +67,6 @@ export default function StoreSettings() {
           facebook: s.facebook || '', tiktok: s.tiktok || '', themeColor: s.themeColor || '#d4af37',
           deliveryInfo: s.deliveryInfo || '', paymentInfo: s.paymentInfo || '',
           banners: Array.isArray(s.banners) && s.banners.length ? s.banners : DEFAULT_BANNERS,
-          deliveryZones: Array.isArray(s.deliveryZones) ? s.deliveryZones : [],
           deliveryTiers: s.deliveryTiers && typeof s.deliveryTiers === 'object' ? s.deliveryTiers : { wb: 30, quds: 40, dakhel: 80 },
           freeShippingOver: s.freeShippingOver ? String(s.freeShippingOver) : '',
           referralPercent: s.referralPercent ? String(s.referralPercent) : '',
@@ -129,12 +128,8 @@ export default function StoreSettings() {
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
 
-  // التحكم بمناطق التوصيل [{name, fee}]
-  const setZone = (idx, key, val) =>
-    setForm((f) => ({ ...f, deliveryZones: f.deliveryZones.map((z, i) => (i === idx ? { ...z, [key]: val } : z)) }));
-  const addZone = () => setForm((f) => ({ ...f, deliveryZones: [...f.deliveryZones, { name: '', fee: '' }] }));
+  // التحكم بأسعار الشرائح الثلاث (الضفة/القدس/الداخل)
   const setTier = (key) => (e) => setForm((f) => ({ ...f, deliveryTiers: { ...f.deliveryTiers, [key]: e.target.value === '' ? '' : Math.max(0, Number(e.target.value) || 0) } }));
-  const removeZone = (idx) => setForm((f) => ({ ...f, deliveryZones: f.deliveryZones.filter((_, i) => i !== idx) }));
 
   // التحكم بدليل المقاسات المخصّص: {"38": {bust, waist, hips}}
   const setChartCell = (size, key, val) =>
@@ -264,35 +259,6 @@ export default function StoreSettings() {
               </div>
             ))}
           </div>
-          <p className="text-xs text-stone-400">{t('dashboard.store.overridesHint')}</p>
-
-          {form.deliveryZones.length > 0 && (
-            <div className="space-y-2">
-              {form.deliveryZones.map((z, idx) => (
-                <div key={idx} className="flex items-center gap-2">
-                  <input
-                    className="input flex-1"
-                    placeholder={t('dashboard.store.zoneName')}
-                    value={z.name}
-                    onChange={(e) => setZone(idx, 'name', e.target.value)}
-                  />
-                  <div className="relative w-28 shrink-0">
-                    <input
-                      className="input pe-8"
-                      type="number" min="0" step="1"
-                      placeholder={t('dashboard.store.zoneFee')}
-                      value={z.fee}
-                      onChange={(e) => setZone(idx, 'fee', e.target.value)}
-                    />
-                    <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-stone-400">₪</span>
-                  </div>
-                  <button type="button" onClick={() => removeZone(idx)} className="rounded-lg p-2 text-stone-400 hover:text-red-300" aria-label="remove"><XIcon className="h-4 w-4" /></button>
-                </div>
-              ))}
-            </div>
-          )}
-          <button type="button" onClick={addZone} className="btn-ghost w-full text-sm">＋ {t('dashboard.store.addZone')}</button>
-
           <div className="border-t border-white/5 pt-3">
             <label className="label">{t('dashboard.store.freeShippingOver')}</label>
             <div className="relative w-40">
