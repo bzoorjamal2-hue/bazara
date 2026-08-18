@@ -9,7 +9,7 @@ import BannerEditor from '../../components/BannerEditor.jsx';
 import OpostConnect from '../../components/OpostConnect.jsx';
 import EpsConnect from '../../components/EpsConnect.jsx';
 import GoboxConnect from '../../components/GoboxConnect.jsx';
-import { SaveIcon, TruckIcon, ImageIcon, GiftIcon, FolderIcon, TrashIcon, MegaphoneIcon, RulerIcon, ShieldIcon, StoreIcon, PhoneIcon, BoltIcon, ChartIcon, TagIcon, CardIcon } from '../../components/icons.jsx';
+import { SaveIcon, TruckIcon, ImageIcon, GiftIcon, FolderIcon, TrashIcon, MegaphoneIcon, RulerIcon, ShieldIcon, StoreIcon, PhoneIcon, BoltIcon, ChartIcon, TagIcon, CardIcon, GearIcon } from '../../components/icons.jsx';
 import { cldThumb } from '../../utils/cloudinary.js';
 
 // أيقونتا إخفاء/إظهار (عين مشطوبة / عين) — للتحكم بظهور الفئة بالمتجر
@@ -200,9 +200,7 @@ export default function StoreSettings() {
       {/* رأس فخم */}
       <div className="flex items-center gap-3">
         <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-400 to-amber-500 text-white shadow-md">
-          <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M4 9.5 5.2 5h13.6L20 9.5a2.4 2.4 0 0 1-4.8.3 2.4 2.4 0 0 1-4.8 0 2.4 2.4 0 0 1-4.8 0A2.4 2.4 0 0 1 4 9.5Z" /><path d="M5.5 11v8a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-8" />
-          </svg>
+          <GearIcon className="h-6 w-6" />
         </span>
         <div className="min-w-0">
           <h1 className="font-display text-2xl font-bold leading-tight gradient-text">{t('dashboard.storeSettings')}</h1>
