@@ -210,9 +210,9 @@ export default function StoreSettings() {
         </div>
       </div>
 
-      {/* شريط تنقّل + حفظ ثابت أعلى الصفحة — قفز لأي قسم، إبراز القسم الظاهر، وحفظ من أي مكان.
-          glass = خلفية متكيّفة مع النهاري/الليلي، والأصناف المُعاد تعيينها تضمن نصاً مقروءاً بالوضعين */}
-      <div className="glass sticky top-14 z-20 flex items-center gap-2 p-2">
+      {/* شريط تنقّل + حفظ: قفز لأي قسم، إبراز القسم الظاهر، وحفظ من أعلى الصفحة.
+          غير لاصق (كان sticky يتراكب مع الهيدر العلوي) — glass يتكيّف نهاري/ليلي */}
+      <div className="glass flex items-center gap-2 p-2">
         <div className="flex flex-1 gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {NAV.map(([id, label]) => {
             const on = activeSec === id;

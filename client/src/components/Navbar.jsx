@@ -7,7 +7,7 @@ import api from '../api/client.js';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import LanguageSwitcher from './LanguageSwitcher.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
-import { CartIcon, HeartIcon, MenuIcon, UserIcon, SearchIcon, MailIcon, InstagramIcon } from './icons.jsx';
+import { CartIcon, HeartIcon, MenuIcon, UserIcon, SearchIcon, MailIcon, InstagramIcon, GridIcon, StoreIcon, BagIcon, ReceiptIcon, UsersIcon, TicketIcon, ChartIcon, BellIcon, MegaphoneIcon, GearIcon } from './icons.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import NavBell from './NavBell.jsx';
 import CloseButton from './CloseButton.jsx';
@@ -88,47 +88,14 @@ function AccountMenu({ user, store, subscription, isAdmin, onClose, onLogout }) 
 
 const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
 
-// أيقونات خطّية أنيقة لقائمة الحساب (بديل الإيموجي)
+// أيقونات خطّية أنيقة لقائمة الحساب (بديل الإيموجي).
+// معظمها موحّد الآن باستيراد من icons.jsx — هنا فقط ما لا مقابل له فيه.
 const I = (p) => ({ viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true, ...p });
-function GridIcon({ className = 'h-5 w-5' }) {
-  return (<svg {...I({ className })}><rect x="3" y="3" width="7.5" height="7.5" rx="1.6" /><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6" /><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6" /><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6" /></svg>);
-}
-function UserLineIcon({ className = 'h-5 w-5' }) {
-  return (<svg {...I({ className })}><circle cx="12" cy="8" r="3.6" /><path d="M4.5 20c0-3.7 3.4-5.6 7.5-5.6S19.5 16.3 19.5 20" /></svg>);
-}
-function StoreIcon({ className = 'h-5 w-5' }) {
-  return (<svg {...I({ className })}><path d="M4 9.5 5.2 5h13.6L20 9.5a2.4 2.4 0 0 1-4.8.3 2.4 2.4 0 0 1-4.8 0 2.4 2.4 0 0 1-4.8 0A2.4 2.4 0 0 1 4 9.5Z" /><path d="M5.5 11v8a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-8" /><path d="M10 20v-4.5h4V20" /></svg>);
-}
-function BagIcon({ className = 'h-5 w-5' }) {
-  return (<svg {...I({ className })}><path d="M6.5 8h11l-.9 11.2a1.6 1.6 0 0 1-1.6 1.5H9a1.6 1.6 0 0 1-1.6-1.5L6.5 8Z" /><path d="M9.3 8V6.2a2.7 2.7 0 0 1 5.4 0V8" /></svg>);
-}
-function ReceiptIcon({ className = 'h-5 w-5' }) {
-  return (<svg {...I({ className })}><path d="M6.5 3h11v18l-2.2-1.4L13 21l-2.3-1.4L8.4 21l-1.9-1.4V3Z" /><path d="M9.5 7.5h5M9.5 11h5M9.5 14.5h3" /></svg>);
-}
-function UsersIcon({ className = 'h-5 w-5' }) {
-  return (<svg {...I({ className })}><circle cx="9" cy="8" r="3.2" /><path d="M3.2 19c0-3.2 3-4.8 5.8-4.8S14.8 15.8 14.8 19" /><path d="M16.2 5.4a3.1 3.1 0 0 1 0 5.7M17 14.4c2 .6 3.6 2 3.6 4.6" /></svg>);
-}
 function ShieldCheckIcon({ className = 'h-5 w-5' }) {
   return (<svg {...I({ className })}><path d="M12 3l7.5 2.8v5.1c0 4.4-3 7.6-7.5 9.6-4.5-2-7.5-5.2-7.5-9.6V5.8L12 3z" /><path d="M9 12l2 2 4-4" /></svg>);
 }
 function LogoutIcon({ className = 'h-5 w-5' }) {
   return (<svg {...I({ className })}><path d="M14 4h3.5A1.5 1.5 0 0 1 19 5.5v13a1.5 1.5 0 0 1-1.5 1.5H14" /><path d="M9.5 8 5.5 12l4 4" /><path d="M5.5 12H15" /></svg>);
-}
-function TicketIcon({ className = 'h-5 w-5' }) {
-  return (<svg {...I({ className })}><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h13A1.5 1.5 0 0 1 20 8.5v2a2 2 0 0 0 0 4v2a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 16.5v-2a2 2 0 0 0 0-4Z" /><path d="M13 7v10" strokeDasharray="2 2" /></svg>);
-}
-function ChartIcon({ className = 'h-5 w-5' }) {
-  return (<svg {...I({ className })}><path d="M4 20V4" /><path d="M4 20h16" /><rect x="7" y="12" width="3" height="5" rx="0.6" /><rect x="12" y="8" width="3" height="9" rx="0.6" /><rect x="17" y="14" width="3" height="3" rx="0.6" /></svg>);
-}
-function BellIcon({ className = 'h-5 w-5' }) {
-  return (<svg {...I({ className })}><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 0 1-3.4 0" /></svg>);
-}
-function MegaphoneIcon({ className = 'h-5 w-5' }) {
-  return (<svg {...I({ className })}><path d="M4 10 V14 H7 L16 19 V5 L7 10 Z" /><path d="M18 9 A4 4 0 0 1 18 15" /></svg>);
-}
-// مسنّن إعدادات حقيقي — نفس أيقونة icons.jsx (كانت هنا نسخة «شمس» محلية مختلفة)
-function GearIcon({ className = 'h-5 w-5' }) {
-  return (<svg {...I({ className })}><path d="M19.49 10.20 L22.10 10.58 L22.10 13.42 L19.49 13.80 L18.57 16.02 L20.15 18.14 L18.14 20.15 L16.02 18.57 L13.80 19.49 L13.42 22.10 L10.58 22.10 L10.20 19.49 L7.98 18.57 L5.86 20.15 L3.85 18.14 L5.43 16.02 L4.51 13.80 L1.90 13.42 L1.90 10.58 L4.51 10.20 L5.43 7.98 L3.85 5.86 L5.86 3.85 L7.98 5.43 L10.20 4.51 L10.58 1.90 L13.42 1.90 L13.80 4.51 L16.02 5.43 L18.14 3.85 L20.15 5.86 L18.57 7.98 Z" /><circle cx="12" cy="12" r="3" /></svg>);
 }
 
 export default function Navbar() {
@@ -217,18 +184,18 @@ export default function Navbar() {
         { key: 'siteSliders', label: t('admin.siteSliders'), Icon: GridIcon },
         { key: 'newsletter', label: t('admin.newsletter'), Icon: MailIcon },
         { key: 'broadcast', label: t('admin.bc.nav'), Icon: MailIcon },
-        { key: 'profile', label: t('dashboard.profile'), Icon: UserLineIcon },
+        { key: 'profile', label: t('dashboard.profile'), Icon: UserIcon },
       ]
     : [
         { key: 'overview', label: t('dashboard.overview'), Icon: GridIcon },
         { key: 'analytics', label: t('dashboard.analytics.title'), Icon: ChartIcon },
-        { key: 'profile', label: t('dashboard.profile'), Icon: UserLineIcon },
+        { key: 'profile', label: t('dashboard.profile'), Icon: UserIcon },
         { key: 'storeSettings', label: t('dashboard.storeSettings'), Icon: GearIcon },
         { key: 'myProducts', label: t('dashboard.myProducts'), Icon: BagIcon },
         { key: 'instagram', label: t('dashboard.instagram.title'), Icon: InstagramIcon },
         { key: 'myOrders', label: t('dashboard.myOrders'), Icon: ReceiptIcon },
         { key: 'coupons', label: t('dashboard.coupons.title'), Icon: TicketIcon },
-        { key: 'referrals', label: t('dashboard.referrals.title'), Icon: UserLineIcon },
+        { key: 'referrals', label: t('dashboard.referrals.title'), Icon: UserIcon },
         { key: 'campaign', label: t('campaign.title'), Icon: MegaphoneIcon },
         { key: 'stockRequests', label: t('dashboard.stockRequests.title'), Icon: BellIcon },
       ];
@@ -315,7 +282,7 @@ export default function Navbar() {
               </div>
             ) : (
               <Link to="/login" className="rounded-full p-2 text-wine transition hover:bg-wine/10" title={t('nav.account')} aria-label={t('nav.account')}>
-                <UserLineIcon className="h-[22px] w-[22px]" />
+                <UserIcon className="h-[22px] w-[22px]" />
               </Link>
             )}
           </div>
