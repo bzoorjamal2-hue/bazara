@@ -126,8 +126,9 @@ function BellIcon({ className = 'h-5 w-5' }) {
 function MegaphoneIcon({ className = 'h-5 w-5' }) {
   return (<svg {...I({ className })}><path d="M4 10 V14 H7 L16 19 V5 L7 10 Z" /><path d="M18 9 A4 4 0 0 1 18 15" /></svg>);
 }
+// مسنّن إعدادات حقيقي — نفس أيقونة icons.jsx (كانت هنا نسخة «شمس» محلية مختلفة)
 function GearIcon({ className = 'h-5 w-5' }) {
-  return (<svg {...I({ className })}><circle cx="12" cy="12" r="3.2" /><path d="M12 2.5v2.4M12 19.1v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7" /></svg>);
+  return (<svg {...I({ className })}><path d="M19.49 10.20 L22.10 10.58 L22.10 13.42 L19.49 13.80 L18.57 16.02 L20.15 18.14 L18.14 20.15 L16.02 18.57 L13.80 19.49 L13.42 22.10 L10.58 22.10 L10.20 19.49 L7.98 18.57 L5.86 20.15 L3.85 18.14 L5.43 16.02 L4.51 13.80 L1.90 13.42 L1.90 10.58 L4.51 10.20 L5.43 7.98 L3.85 5.86 L5.86 3.85 L7.98 5.43 L10.20 4.51 L10.58 1.90 L13.42 1.90 L13.80 4.51 L16.02 5.43 L18.14 3.85 L20.15 5.86 L18.57 7.98 Z" /><circle cx="12" cy="12" r="3" /></svg>);
 }
 
 export default function Navbar() {
