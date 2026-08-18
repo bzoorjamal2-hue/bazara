@@ -138,6 +138,31 @@ table { max-width: 100%; }
   .bz-hero-active .bz-gold-name { animation: bz-gold-shine 3.2s ease-in-out 0.6s infinite; }
 }
 @keyframes bz-gold-shine { 0%, 100% { background-position: 0% center; } 50% { background-position: 100% center; } }
+
+/* ===== لمسات سينمائية عصرية على سلايدر المتجر (الهيرو) ===== */
+/* إطار ذهبي داخلي رفيع — إحساس couture حول الشريحة */
+.bz-hero-frame { box-shadow: inset 0 0 0 1px rgba(230, 200, 120, 0.18), inset 0 0 40px rgba(0, 0, 0, 0.35); }
+/* زوايا ذهبية مضيئة (L-shape) بأركان الشريحة الثابتة */
+.bz-hero-corner { border-color: rgba(230, 200, 120, 0.55); }
+@media (prefers-reduced-motion: no-preference) {
+  /* تكبير سينمائي بطيء (Ken Burns) للوسيط على الشريحة الظاهرة فقط */
+  @keyframes bz-kenburns { from { transform: scale(1.03); } to { transform: scale(1.13); } }
+  .bz-hero-active .bz-kenburns { animation: bz-kenburns 7s ease-out both; }
+
+  /* مسحة ضوء ذهبية قطرية تعبر الشريحة الثابتة دورياً */
+  @keyframes bz-hero-sweep {
+    0%   { transform: translateX(-160%) skewX(-14deg); opacity: 0; }
+    12%  { opacity: 0.5; }
+    32%  { transform: translateX(160%) skewX(-14deg); opacity: 0; }
+    100% { transform: translateX(160%) skewX(-14deg); opacity: 0; }
+  }
+  .bz-hero-active .bz-hero-sweep { animation: bz-hero-sweep 6.5s ease-in-out 0.9s infinite; }
+
+  /* توهّج نابض خلف الشعار */
+  @keyframes bz-halo-pulse { 0%, 100% { opacity: 0.45; transform: scale(1); } 50% { opacity: 0.85; transform: scale(1.1); } }
+  .bz-hero-active .bz-logo-halo { animation: bz-halo-pulse 4s ease-in-out infinite; }
+}
+
 /* 6: تلميع الوضع الليلي — تباين أدفأ للبطاقات */
 html.dark .theme-pub .glass { box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5); }
 

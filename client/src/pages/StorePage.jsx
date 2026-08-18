@@ -1024,13 +1024,13 @@ function HeroSlider({ store }) {
                       aria-hidden="true"
                       decoding="async"
                       style={{ filter: 'brightness(0.6)' }}
-                      className="absolute inset-0 z-0 h-full w-full object-cover"
+                      className="bz-kenburns absolute inset-0 z-0 h-full w-full object-cover"
                     />
                   )}
                   {isVideo && (
                     <>
                       {/* صورة أول لقطة دائمة خلف الفيديو → لا سواد أبداً */}
-                      <img src={posterImg} alt="" aria-hidden="true" loading={idx === 0 ? 'eager' : 'lazy'} style={{ filter: 'brightness(0.6)' }} className="absolute inset-0 z-0 h-full w-full object-cover" />
+                      <img src={posterImg} alt="" aria-hidden="true" loading={idx === 0 ? 'eager' : 'lazy'} style={{ filter: 'brightness(0.6)' }} className="bz-kenburns absolute inset-0 z-0 h-full w-full object-cover" />
                       <video
                         ref={(el) => { vidRefs.current[idx] = el; }}
                         src={cldVideoMp4(s.bgValue)}
@@ -1044,18 +1044,38 @@ function HeroSlider({ store }) {
                         onPause={(e) => { if (!document.hidden && iRef.current === idx && visRef.current) e.currentTarget.play().catch(() => {}); }}
                         onCanPlay={(e) => { e.currentTarget.style.opacity = '1'; }}
                         style={{ filter: 'brightness(0.6)', opacity: 0, transition: 'opacity .35s ease' }}
-                        className="absolute inset-0 z-[1] h-full w-full object-cover"
+                        className="bz-kenburns absolute inset-0 z-[1] h-full w-full object-cover"
                       />
                     </>
                   )}
-                  {!custom && <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-cream/10 blur-3xl" />}
+                  {/* الشريحة الثابتة (اسم المتجر): خلفية حيّة فاخرة — فقاعات ذهبية/عاجية
+                      طافية بسرعات مختلفة + مسحة ضوء قطرية + إطار ذهبي بزوايا مضيئة */}
+                  {!custom && (
+                    <>
+                      <div className="pointer-events-none absolute -top-16 start-[14%] h-48 w-48 animate-float rounded-full bg-gold-400/20 blur-3xl" style={{ animationDuration: '7s' }} />
+                      <div className="pointer-events-none absolute -bottom-20 end-[8%] h-56 w-56 animate-float rounded-full bg-cream/12 blur-3xl" style={{ animationDuration: '9s', animationDelay: '1.2s' }} />
+                      <div className="pointer-events-none absolute top-1/4 end-1/4 h-24 w-24 animate-float rounded-full bg-[#e6c25f]/15 blur-2xl" style={{ animationDuration: '6s', animationDelay: '.6s' }} />
+                      {/* مسحة ضوء ذهبية قطرية تمرّ دورياً */}
+                      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                        <div className="bz-hero-sweep absolute inset-y-0 -inset-x-1/4 m-auto w-1/4 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+                      </div>
+                      {/* إطار ذهبي داخلي + زوايا مضيئة (خصائص منطقية تتبع اتجاه النص) */}
+                      <div className="bz-hero-frame pointer-events-none absolute inset-3 rounded-2xl sm:inset-4" />
+                      <span className="bz-hero-corner pointer-events-none absolute start-4 top-4 h-5 w-5 rounded-ss-lg border-s-2 border-t-2 sm:start-5 sm:top-5" />
+                      <span className="bz-hero-corner pointer-events-none absolute end-4 bottom-4 h-5 w-5 rounded-ee-lg border-e-2 border-b-2 sm:end-5 sm:bottom-5" />
+                    </>
+                  )}
 
                   {/* النص فوق الفيديو دائماً (طبقة GPU مستقلة لتفادي اختفائه على iOS أثناء الانتقال) */}
                   <div className="relative z-10" style={{ transform: 'translateZ(0)' }}>
                     {s.fixed ? (
                       <>
                         {store.logoUrl && (
-                          <img src={store.logoUrl} alt={store.name} className="bz-hero-el mx-auto mb-4 h-20 w-20 rounded-2xl border-2 border-cream/30 object-cover shadow-lg sm:h-24 sm:w-24" />
+                          <div className="relative mx-auto mb-4 h-20 w-20 sm:h-24 sm:w-24">
+                            {/* هالة ذهبية نابضة خلف الشعار */}
+                            <span aria-hidden className="bz-logo-halo pointer-events-none absolute -inset-3 rounded-full blur-md" style={{ background: 'radial-gradient(circle, rgba(230,200,120,0.55), transparent 70%)' }} />
+                            <img src={store.logoUrl} alt={store.name} className="bz-hero-el relative h-full w-full rounded-2xl border-2 border-cream/30 object-cover shadow-lg" />
+                          </div>
                         )}
                         <h1 className="bz-hero-el bz-gold-name font-display text-3xl font-extrabold sm:text-5xl">{store.name}</h1>
                         <p className="bz-hero-el mt-3 font-display text-lg text-cream/90 sm:text-2xl">أناقة · حشمة · تميّز</p>
