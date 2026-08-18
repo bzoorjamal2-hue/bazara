@@ -721,6 +721,15 @@ function GridGlyph({ className = 'h-[18px] w-[18px]' }) {
   );
 }
 
+// سهم تنقّل السلايدر (يشير لليسار افتراضياً؛ يُقلَب للتالي عبر -scale-x-100)
+function ChevronGlyph({ className = 'h-5 w-5' }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M15 5l-7 7 7 7" />
+    </svg>
+  );
+}
+
 // عنوان قسم مركزي بزخرفة أنيقة (طبق المرجع — مطابق للصفحة الرئيسية)
 function SectionTitle({ children }) {
   return (
@@ -971,12 +980,12 @@ function HeroSlider({ store }) {
   }, [len, i]);
 
   return (
-    <section className="relative mb-5">
+    <section className="group relative mb-5">
       {/* لا نوقف التقدّم التلقائي عند مرور الماوس — على اللابتوب المؤشّر يبقى فوقه
           فكان «يضل واقف». يبقى الإيقاف أثناء السحب باللمس فقط. */}
       <div
         ref={containerRef}
-        className="overflow-hidden rounded-3xl"
+        className="relative overflow-hidden rounded-3xl"
         style={{ touchAction: 'pan-y' }}
       >
         {/* المسار: نفرضه LTR لتفادي مشاكل اتجاه RTL مع الإزاحة */}
@@ -1093,9 +1102,32 @@ function HeroSlider({ store }) {
             );
           })}
         </div>
+
+        {/* أسهم تنقّل للديسكتوب — تظهر عند مرور الماوس (الجوال يعتمد السحب).
+            يسار/يمين فيزيائيان ليطابقا اتجاه انزلاق المسار (LTR دائماً). */}
+        {len > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={() => go(i - 1)}
+              aria-label="previous slide"
+              className="absolute left-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/25 text-cream opacity-0 ring-1 ring-cream/25 backdrop-blur-sm transition hover:bg-black/45 group-hover:opacity-100 md:flex"
+            >
+              <ChevronGlyph className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => go(i + 1)}
+              aria-label="next slide"
+              className="absolute right-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/25 text-cream opacity-0 ring-1 ring-cream/25 backdrop-blur-sm transition hover:bg-black/45 group-hover:opacity-100 md:flex"
+            >
+              <ChevronGlyph className="h-5 w-5 -scale-x-100" />
+            </button>
+          </>
+        )}
       </div>
 
-      {/* نقاط التنقّل */}
+      {/* نقاط التنقّل — النشطة شريط يمتلئ ذهبياً كمؤقّت مرئي للانتقال التالي */}
       {len > 1 && (
         <div dir="ltr" className="mt-6 flex items-center justify-center gap-2">
           {slides.map((_, idx) => (
@@ -1103,8 +1135,16 @@ function HeroSlider({ store }) {
               key={idx}
               onClick={() => go(idx)}
               aria-label={`slide ${idx + 1}`}
-              className={`h-1.5 rounded-full transition-all duration-500 ${idx === i ? 'w-8 bg-gradient-to-r from-gold-400 to-wine' : 'w-1.5 bg-wine/25 hover:bg-wine/40'}`}
-            />
+              className={`relative h-1.5 overflow-hidden rounded-full transition-all duration-500 ${idx === i ? 'w-8 bg-wine/20' : 'w-1.5 bg-wine/25 hover:bg-wine/40'}`}
+            >
+              {idx === i && (
+                <span
+                  key={i}
+                  className="bz-dot-progress absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-gold-400 to-wine"
+                  style={{ animationPlayState: paused ? 'paused' : 'running' }}
+                />
+              )}
+            </button>
           ))}
         </div>
       )}

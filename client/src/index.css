@@ -161,7 +161,13 @@ table { max-width: 100%; }
   /* توهّج نابض خلف الشعار */
   @keyframes bz-halo-pulse { 0%, 100% { opacity: 0.45; transform: scale(1); } 50% { opacity: 0.85; transform: scale(1.1); } }
   .bz-hero-active .bz-logo-halo { animation: bz-halo-pulse 4s ease-in-out infinite; }
+
+  /* نقطة التقدّم: تمتلئ خلال مدّة الانتقال (٥ ثوانٍ) كمؤقّت مرئي للشريحة التالية */
+  @keyframes bz-dot-progress { from { width: 0%; } to { width: 100%; } }
+  .bz-dot-progress { animation: bz-dot-progress 5s linear both; }
 }
+/* بلا حركة: النقطة النشطة تبقى ممتلئة (لا مؤقّت متحرّك) */
+.bz-dot-progress { width: 100%; }
 
 /* 6: تلميع الوضع الليلي — تباين أدفأ للبطاقات */
 html.dark .theme-pub .glass { box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5); }
