@@ -38,7 +38,12 @@ function cldVideoParts(url) {
 // الممولة يفتحون منها، فنعطيهم MP4 تقدّمياً مباشرة (الأكثر توافقاً، بلا انحشار).
 const IN_APP_BROWSER = typeof navigator !== 'undefined'
   && /FBAN|FBAV|FB_IAB|FBIOS|Instagram|Threads|TikTok|Snapchat|Line\//i.test(navigator.userAgent);
-const reelHls = (url) => { if (IN_APP_BROWSER) return ''; const p = cldVideoParts(url); return p ? `${p.base}sp_auto/${p.rest}.m3u8` : ''; };
+// كان HLS المتكيّف (sp_auto) هو المصدر الأساسي، لكنه على الريلز القصيرة يبدأ بدقة
+// منخفضة ولا "يرتقي" قبل انتهاء المقطع (جودة رديئة)، وكلاودينري يولّد نسخه عند أول
+// طلب (بطء تحميل)، والبطء نفسه يمنع التشغيل بالصوت داخل نافذة إيماءة iOS (قطع صوت).
+// نعطّله ونعتمد MP4 تقدّمياً بجودة كاملة فوراً — أوضح وأسرع على الشبكات الجيدة، والبث
+// التقدّمي يبدأ العرض قبل اكتمال التنزيل. (الدالة تُبقي توقيعها لتفادي تغيير المستدعين.)
+const reelHls = () => '';
 // MP4 بجودة عالية (1080p) — الريلز قصيرة فلا وقت للبث المتكيّف كي "يرتقي" بالدقة،
 // وكانت النتيجة مشاهدة معظم الريل بدقة متدنية. q_auto:good عند 1080 حادّ وواضح.
 const reelMp4 = (url) => { const p = cldVideoParts(url); return p ? `${p.base}f_mp4,vc_h264,q_auto:good,w_1080,c_limit/${p.rest}.mp4` : url; };
@@ -647,17 +652,16 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
           <div ref={progressRef} className="h-full bg-white/90 transition-[width] duration-150 ease-linear" style={{ width: '0%' }} />
         </div>
 
-        {/* الشرائح البعيدة تعرض الصورة فقط (لا عنصر فيديو) → تمرير أسلس وأسرع بلا تعليق.
-            الفيديو يُحمّل للنشطة والتالية فقط. */}
-        {(!preload || errored) ? (
-          <img src={cldThumb(poster, 720)} alt={p.name} className="h-full w-full object-cover" />
-        ) : (
+        {/* بوستر ثابت خلف الفيديو دائماً → لا سواد أثناء تحميل الريل أو الانتقال إليه.
+            الفيديو يُحمّل للنشطة والتالية فقط ويطبع فوق البوستر عند جاهزيته. */}
+        <img src={cldThumb(poster, 720)} alt={p.name} className="absolute inset-0 z-0 h-full w-full object-cover" />
+        {preload && !errored && (
           <video
             ref={vidRef}
             poster={poster}
             muted={muted}
             playsInline
-            preload={isActive ? 'auto' : 'metadata'}
+            preload="auto"
             onTimeUpdate={onTimeUpdate}
             onEnded={onVidEnded}
             onPause={ensurePlaying}
@@ -666,7 +670,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
             onCanPlay={() => { setBuffering(false); ensurePlaying(); }}
             onError={() => { if (!useMp4) setUseMp4(true); else setErrored(true); }}
             style={{ touchAction: 'pan-y' }}
-            className="h-full w-full object-cover"
+            className="absolute inset-0 z-[1] h-full w-full object-cover"
           />
         )}
 
