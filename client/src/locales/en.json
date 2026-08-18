@@ -102,7 +102,11 @@
     "add": "Add to cart",
     "size": "Size",
     "color": "Color",
-    "soundHint": "Tap for sound"
+    "soundHint": "Tap for sound",
+    "more": "more",
+    "less": "less",
+    "saved": "Saved to wishlist ✓",
+    "removed": "Removed from wishlist"
   },
   "story": {
     "yours": "Your story",

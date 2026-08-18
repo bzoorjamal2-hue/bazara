@@ -193,25 +193,37 @@ export default function Reels() {
           <button onClick={goBackFn} className="rounded-full bg-white/15 px-5 py-2 text-sm font-semibold backdrop-blur transition hover:bg-white/25">{t('reels.back')}</button>
         </div>
       ) : (
-        <div ref={feedRef}
-          className="h-[100dvh] w-full snap-y snap-mandatory overflow-y-scroll overscroll-y-contain [&::-webkit-scrollbar]:hidden"
-          style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
-          {items.map((p, i) => (
-            <ReelSlide
-              key={`${p.id}-${i}`}
-              p={p}
-              muted={muted}
-              rtl={rtl}
-              t={t}
-              hint={i === 0}
-              isActive={i === active}
-              preload={i === active || i === active + 1}
-              isLast={i === items.length - 1}
-              onUnmute={() => setMutedPersist(false)}
-              onEnded={() => goNext(i)}
-            />
-          ))}
-        </div>
+        <>
+          <div ref={feedRef}
+            className="h-[100dvh] w-full snap-y snap-mandatory overflow-y-scroll overscroll-y-contain [&::-webkit-scrollbar]:hidden"
+            style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
+            {items.map((p, i) => (
+              <ReelSlide
+                key={`${p.id}-${i}`}
+                p={p}
+                muted={muted}
+                rtl={rtl}
+                t={t}
+                hint={i === 0}
+                isActive={i === active}
+                preload={i === active || i === active + 1}
+                isLast={i === items.length - 1}
+                onUnmute={() => setMutedPersist(false)}
+                onEnded={() => goNext(i)}
+              />
+            ))}
+          </div>
+
+          {/* مؤشّر موضع عمودي — مقبض ذهبي يتحرّك على مسار حسب الريل الحالي */}
+          {items.length > 1 && (
+            <div className="pointer-events-none absolute start-2 top-1/2 z-30 h-32 w-[3px] -translate-y-1/2 overflow-hidden rounded-full bg-white/15">
+              <div
+                className="absolute inset-x-0 h-6 rounded-full bg-gradient-to-b from-[#e6c878] to-white/90 transition-[top] duration-300 ease-out"
+                style={{ top: `${(active / Math.max(1, items.length - 1)) * (128 - 24)}px` }}
+              />
+            </div>
+          )}
+        </>
       )}
     </div>
   );
@@ -222,6 +234,8 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   const { has, toggle } = useWishlist();
   const liked = has(p.id);
   const [copied, setCopied] = useState(false);
+  const [descOpen, setDescOpen] = useState(false); // توسيع وصف المنتج
+  const [wishMsg, setWishMsg] = useState(''); // توست إضافة/إزالة المفضّلة
   const progressRef = useRef(null); // شريط التقدّم يُحدَّث بالـDOM مباشرة (بلا re-render كل timeupdate = تعليق)
   const [burst, setBurst] = useState(0);
   const [buffering, setBuffering] = useState(false);
@@ -660,8 +674,11 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
 
         {hint && (
-          <div className="pointer-events-none absolute inset-x-0 top-1/2 flex animate-bounce justify-center text-white/70">
-            <span className="rounded-full bg-black/45 px-3 py-1 text-xs">{t('reels.swipeHint')} ↑</span>
+          <div className="pointer-events-none absolute inset-x-0 bottom-56 flex animate-bounce flex-col items-center gap-1 text-white/80">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-black/50 px-3.5 py-1.5 text-xs font-semibold backdrop-blur-sm ring-1 ring-white/15">
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M6 11l6-6 6 6" /></svg>
+              {t('reels.swipeHint')}
+            </span>
           </div>
         )}
 
@@ -678,11 +695,26 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
           </div>
         )}
 
+        {/* توست المفضّلة */}
+        {wishMsg && (
+          <div className="pointer-events-none absolute inset-x-0 top-20 z-30 flex justify-center">
+            <span className="animate-toast-top rounded-full bg-black/75 px-4 py-2 text-xs font-semibold text-white">{wishMsg}</span>
+          </div>
+        )}
+
         {/* مفضّلة + مشاركة */}
         <div className="absolute bottom-40 end-3 z-20 flex flex-col items-center gap-4">
-          <button type="button" onClick={() => { if (!liked && navigator.vibrate) navigator.vibrate(18); toggle(p); }} aria-label="wishlist"
+          <button type="button"
+            onClick={() => {
+              const willSave = !liked;
+              if (willSave && navigator.vibrate) navigator.vibrate(18);
+              toggle(p);
+              setWishMsg(willSave ? t('reels.saved') : t('reels.removed'));
+              setTimeout(() => setWishMsg(''), 1600);
+            }}
+            aria-label="wishlist"
             className={`flex h-12 w-12 items-center justify-center rounded-full ring-1 ring-white/20 transition active:scale-90 ${liked ? 'bg-red-500/90 text-white' : 'bg-black/50 text-white hover:bg-black/65'}`}>
-            <HeartIcon className="h-6 w-6" filled={liked} />
+            <HeartIcon className={`h-6 w-6 transition-transform ${liked ? 'scale-110' : ''}`} filled={liked} />
           </button>
           <button type="button" onClick={share} aria-label="share"
             className="flex h-12 w-12 items-center justify-center rounded-full bg-black/50 text-white ring-1 ring-white/20 transition hover:bg-black/65 active:scale-90">
@@ -702,7 +734,18 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
           </Link>
           {/* اسم بخط العرض الفاخر + سعر ذهبي بحبة عصرية (بلا blur — تمرير أسلس) */}
           <h2 className="line-clamp-2 font-display text-lg font-bold leading-snug drop-shadow-lg">{p.name}</h2>
-          {p.description && <p className="line-clamp-1 text-xs text-white/75 drop-shadow">{p.description}</p>}
+          {p.description && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setDescOpen((o) => !o); }}
+              className="max-w-full text-start"
+            >
+              <span className={`block text-xs leading-relaxed text-white/80 drop-shadow ${descOpen ? '' : 'line-clamp-1'}`}>{p.description}</span>
+              {p.description.length > 55 && (
+                <span className="text-[11px] font-bold text-gold-200 drop-shadow">{descOpen ? t('reels.less') : `… ${t('reels.more')}`}</span>
+              )}
+            </button>
+          )}
           <div className="flex items-baseline gap-2">
             <span className="rounded-full bg-black/50 px-3 py-1 font-display text-lg font-extrabold text-gold-200 ring-1 ring-[#e6c878]/30">{t('common.currency')}{p.price}</span>
             {hasDiscount && <Strike className="text-sm text-white/70">{t('common.currency')}{p.oldPrice}</Strike>}
