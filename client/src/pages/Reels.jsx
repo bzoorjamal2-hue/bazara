@@ -40,9 +40,8 @@ const IN_APP_BROWSER = typeof navigator !== 'undefined'
   && /FBAN|FBAV|FB_IAB|FBIOS|Instagram|Threads|TikTok|Snapchat|Line\//i.test(navigator.userAgent);
 // كان HLS المتكيّف (sp_auto) هو المصدر الأساسي، لكنه على الريلز القصيرة يبدأ بدقة
 // منخفضة ولا "يرتقي" قبل انتهاء المقطع (جودة رديئة)، وكلاودينري يولّد نسخه عند أول
-// طلب (بطء تحميل)، والبطء نفسه يمنع التشغيل بالصوت داخل نافذة إيماءة iOS (قطع صوت).
-// نعطّله ونعتمد MP4 تقدّمياً بجودة كاملة فوراً — أوضح وأسرع على الشبكات الجيدة، والبث
-// التقدّمي يبدأ العرض قبل اكتمال التنزيل. (الدالة تُبقي توقيعها لتفادي تغيير المستدعين.)
+// طلب (بطء تحميل). نعطّله ونعتمد MP4 تقدّمياً بجودة كاملة يبدأ العرض فوراً.
+// (الدالة تُبقي توقيعها لتفادي تغيير المستدعين.)
 const reelHls = () => '';
 // MP4 بجودة عالية (1080p) — الريلز قصيرة فلا وقت للبث المتكيّف كي "يرتقي" بالدقة،
 // وكانت النتيجة مشاهدة معظم الريل بدقة متدنية. q_auto:good عند 1080 حادّ وواضح.
@@ -50,12 +49,15 @@ const reelMp4 = (url) => { const p = cldVideoParts(url); return p ? `${p.base}f_
 // سفاري/iOS يشغّل HLS أصلياً (بلا hls.js) — نكشفه مرة واحدة على مستوى الوحدة
 const NATIVE_HLS = typeof document !== 'undefined' && !!document.createElement('video').canPlayType('application/vnd.apple.mpegurl');
 
-// تصفّح عمودي لفيديوهات المنتجات (Reels) — ملء الشاشة، تشغيل تلقائي للظاهر فقط،
-// تحميل مسبق + تحميل المزيد، شريط تقدّم/انتقال تلقائي، ضغط مطوّل للإيقاف،
-// دبل-تاب لايك (قلب أحمر) مع اهتزاز، تلميح صوت، ومؤشّر تحميل + حماية من فشل الفيديو.
+// ═══════════════════════════════════════════════════════════════════════════
+// معمارية «عنصر فيديو واحد» (single-video): بدل عنصر <video> لكل شريحة، يوجد
+// مشغّل واحد ثابت (ReelPlayer) لا يُفكَّك أبداً، يُعاد استخدامه للريل النشط بتبديل
+// مصدره. بما أن نفس العنصر فُتح بالصوت مرّة (بإيماءة)، يبقى «مفتوحاً» عند iOS —
+// فالصوت لا يُكتَم من جديد كل ريل (كان السبب الجذري لقطع الصوت عند التمرير).
+// الشرائح صارت خلفيات بوستر خفيفة للتمرير فقط، والمشغّل يطفو فوق الشريحة النشطة.
+// ═══════════════════════════════════════════════════════════════════════════
 export default function Reels() {
-  const { t, i18n } = useTranslation();
-  const rtl = i18n.language !== 'en';
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { slug } = useParams();
   const [items, setItems] = useState(null);
@@ -70,7 +72,11 @@ export default function Reels() {
   const offsetRef = useRef(0);
   const hasMoreRef = useRef(true);
   const loadingRef = useRef(false);
+  const videoElRef = useRef(null); // عنصر الفيديو الوحيد — يمسكه الأب ليفتحه داخل إيماءة الزر
   useScrollLock(true);
+
+  // عناصر شرائح البوستر فقط (نستثني طبقة المشغّل الطافية من الحسابات)
+  const slideEls = () => (feedRef.current ? Array.from(feedRef.current.querySelectorAll('[data-reel-slide]')) : []);
 
   const setMutedPersist = (v) => {
     setMuted((m) => {
@@ -83,7 +89,6 @@ export default function Reels() {
   const reelsUrl = (off) => `/public/reels?offset=${off}${slug ? `&store=${encodeURIComponent(slug)}` : ''}${sizeOnly && mySize ? `&size=${encodeURIComponent(mySize)}` : ''}`;
 
   // نتذكّر آخر ريل وصلته الزائرة (لكل متجر على حدة) — الخروج والرجوع يكمل من مكانها.
-  // نقرأ الموضع المحفوظ وقت أول render (قبل أي تأثير) كي لا يدهسه تأثير الحفظ بـ0
   const posKey = `bz_reels_pos:${slug || 'all'}`;
   const initialPosRef = useRef(null);
   if (initialPosRef.current === null) {
@@ -97,7 +102,8 @@ export default function Reels() {
     const saved = initialPosRef.current;
     initialPosRef.current = 0; // تُستهلك مرة واحدة
     const feed = feedRef.current;
-    if (saved > 0 && saved < items.length && feed && feed.children[saved]) {
+    const els = slideEls();
+    if (saved > 0 && saved < items.length && feed && els[saved]) {
       feed.scrollTop = saved * feed.clientHeight; // قفزة فورية (snap) بلا حركة
       setActive(saved);
     }
@@ -141,7 +147,7 @@ export default function Reels() {
   useEffect(() => {
     const root = feedRef.current;
     if (!root || !items || items.length === 0) return undefined;
-    const slides = Array.from(root.children);
+    const slides = slideEls();
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
@@ -158,6 +164,7 @@ export default function Reels() {
     );
     slides.forEach((s) => io.observe(s));
     return () => io.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items]);
 
   // إخفاء تلميح الصوت تلقائياً، وفور تشغيل الصوت
@@ -165,8 +172,8 @@ export default function Reels() {
   useEffect(() => { const id = setTimeout(() => setSoundHint(false), 4200); return () => clearTimeout(id); }, []);
 
   const goNext = (i) => {
-    const root = feedRef.current;
-    if (root && root.children[i + 1]) root.children[i + 1].scrollIntoView({ behavior: 'smooth' });
+    const els = slideEls();
+    if (els[i + 1]) els[i + 1].scrollIntoView({ behavior: 'smooth' });
   };
   // يرجع للصفحة السابقة الفعلية (متجر/رئيسية/فئة...) بدل فرض صفحة المتجر
   const goBackFn = () => goBack(navigate, slug ? `/store/${slug}` : '/shop');
@@ -180,14 +187,25 @@ export default function Reels() {
         style={{ paddingTop: 'calc(env(safe-area-inset-top,0px) + 12px)' }}>
         <div className="pointer-events-auto"><CloseButton onClick={goBackFn} variant="ghost" size="h-10 w-10" label="back" /></div>
         <span className="pointer-events-none inline-flex select-none items-center gap-2 font-display text-lg font-bold text-white/90 drop-shadow"><VideoIcon className="h-5 w-5" /> {t('reels.title')}</span>
-        <button type="button" onClick={() => setMutedPersist((m) => !m)} aria-label={muted ? 'unmute' : 'mute'}
+        {/* تشغيل/كتم الصوت: نطبّق التغيير على العنصر مباشرةً داخل الإيماءة (قبل setState)
+            — تأجيله لتأثير React يُخرجه من نافذة التفعيل فيرفضه iOS ويعيد الكتم. */}
+        <button type="button"
+          onClick={() => {
+            const v = videoElRef.current;
+            const next = !muted;
+            if (v) {
+              v.muted = next;
+              if (!next) v.play().catch(() => {}); // فتح العنصر للصوت داخل الإيماءة
+            }
+            setMutedPersist(next);
+          }}
+          aria-label={muted ? 'unmute' : 'mute'}
           className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white ring-1 ring-white/20 transition hover:bg-black/65">
           {muted ? <MutedIcon /> : <SoundIcon />}
         </button>
       </div>
 
-      {/* فلتر «مقاسي» — يظهر فقط إن كان للزائرة مقاس معتاد. تفعيله يعيد جلب الريلز
-          المقتصرة على منتجات تحمل مقاسها (من الخادم) */}
+      {/* فلتر «مقاسي» — يظهر فقط إن كان للزائرة مقاس معتاد */}
       {mySize && items && (
         <div className="pointer-events-none absolute inset-x-0 z-30 flex justify-center" style={{ top: 'calc(env(safe-area-inset-top,0px) + 54px)' }}>
           <button
@@ -226,24 +244,49 @@ export default function Reels() {
       ) : (
         <>
           <div ref={feedRef}
-            className="h-[100dvh] w-full snap-y snap-mandatory overflow-y-scroll overscroll-y-contain [&::-webkit-scrollbar]:hidden"
+            className="relative h-[100dvh] w-full snap-y snap-mandatory overflow-y-scroll overscroll-y-contain [&::-webkit-scrollbar]:hidden"
             style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
             {items.map((p, i) => (
-              <ReelSlide
-                key={`${p.id}-${i}`}
-                p={p}
-                muted={muted}
-                rtl={rtl}
-                t={t}
-                hint={i === 0}
-                isActive={i === active}
-                preload={i === active || i === active + 1}
-                isLast={i === items.length - 1}
-                onUnmute={() => setMutedPersist(false)}
-                onEnded={() => goNext(i)}
-              />
+              <PosterSlide key={`${p.id}-${i}`} p={p} />
             ))}
+
+            {/* المشغّل الواحد الثابت — يطفو فوق الشريحة النشطة (يتحرّك بمقدار active شريحة) */}
+            {items[active] && (
+              <div
+                className="pointer-events-none absolute inset-x-0 top-0 z-[2] mx-auto h-[100dvh] w-full sm:max-w-[480px]"
+                style={{ transform: `translateY(${active * 100}dvh)` }}
+              >
+                <div className="pointer-events-auto h-full w-full">
+                  <ReelPlayer
+                    product={items[active]}
+                    muted={muted}
+                    t={t}
+                    videoRef={videoElRef}
+                    onUnmute={() => setMutedPersist(false)}
+                    onEnded={() => goNext(active)}
+                    isLast={active === items.length - 1}
+                    showHint={active === 0}
+                  />
+                </div>
+              </div>
+            )}
           </div>
+
+          {/* تسخين الريلين التاليين: عناصر مخفية تحمّل مصادرها مسبقاً فيبدأ الريل فوراً
+              عند الوصول إليه بلا عجلة تحميل (لا تُشغَّل ولا تصدر صوتاً — المشغّل الوحيد
+              أعلاه هو من يعرض). هذا ما يعطي إحساس الانتقال الفوري بالتطبيقات العالمية. */}
+          {[1, 2].map((d) => items[active + d] && (
+            <video
+              key={items[active + d].id}
+              src={reelMp4(items[active + d].videoUrl)}
+              muted
+              playsInline
+              preload="auto"
+              aria-hidden="true"
+              tabIndex={-1}
+              className="pointer-events-none absolute h-px w-px opacity-0"
+            />
+          ))}
 
           {/* مؤشّر موضع عمودي — مقبض ذهبي يتحرّك على مسار حسب الريل الحالي */}
           {items.length > 1 && (
@@ -260,58 +303,144 @@ export default function Reels() {
   );
 }
 
-function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute, onEnded }) {
+// شريحة خلفية خفيفة (بوستر فقط) — تحدّد ارتفاع التمرير وتُظهر معاينة المنتج أثناء
+// الانزلاق. الفيديو والواجهة التفاعلية يوفّرهما المشغّل الواحد الطافي فوق النشطة.
+function PosterSlide({ p }) {
+  const poster = cldVideoPoster(p.videoUrl) || p.imageUrl || '';
+  return (
+    <section data-reel-slide className="relative flex h-[100dvh] w-full snap-start snap-always justify-center bg-black">
+      <div className="relative h-full w-full sm:max-w-[480px]">
+        <img src={cldThumb(poster, 720)} alt={p.name} className="h-full w-full object-cover" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
+      </div>
+    </section>
+  );
+}
+
+// المشغّل الواحد الثابت: يحمل عنصر الفيديو الوحيد وكل منطق التشغيل (HLS/الصوت/الحراسة)
+// والواجهة التفاعلية للريل النشط. يبقى مركّباً عبر تغيّر الريلز (يتغيّر product فقط).
+function ReelPlayer({ product: p, muted, t, onUnmute, onEnded, isLast, showHint, videoRef }) {
   const { add, buyNow } = useCart();
   const { has, toggle } = useWishlist();
   const liked = has(p.id);
   const [copied, setCopied] = useState(false);
   const [descOpen, setDescOpen] = useState(false); // توسيع وصف المنتج
   const [wishMsg, setWishMsg] = useState(''); // توست إضافة/إزالة المفضّلة
-  const progressRef = useRef(null); // شريط التقدّم يُحدَّث بالـDOM مباشرة (بلا re-render كل timeupdate = تعليق)
+  const progressRef = useRef(null); // شريط التقدّم يُحدَّث بالـDOM مباشرة (بلا re-render كل timeupdate)
   const [burst, setBurst] = useState(0);
+  // عجلة التحميل تظهر فقط إن طال الانتظار فعلاً (لا عند كل تلعثم لحظي) — البوستر خلف
+  // الفيديو يغطّي الأجزاء القصيرة، فالانتقال يبدو فورياً كالتطبيقات العالمية.
   const [buffering, setBuffering] = useState(false);
+  const bufTimerRef = useRef(null);
+  const showBuffering = () => {
+    if (bufTimerRef.current) return;
+    bufTimerRef.current = setTimeout(() => { bufTimerRef.current = null; setBuffering(true); }, 700);
+  };
+  const hideBuffering = () => {
+    if (bufTimerRef.current) { clearTimeout(bufTimerRef.current); bufTimerRef.current = null; }
+    setBuffering(false);
+  };
+  useEffect(() => () => { if (bufTimerRef.current) clearTimeout(bufTimerRef.current); }, []);
   const [errored, setErrored] = useState(false);
   const [pick, setPick] = useState(false);
-  const [pickMode, setPickMode] = useState('add'); // 'add' | 'buy' — أي زر فتح شيت الاختيار
+  const [pickMode, setPickMode] = useState('add'); // 'add' | 'buy'
   const [selSize, setSelSize] = useState('');
   const [selColor, setSelColor] = useState('');
-  const [mySize] = useState(getMySize); // نميّز مقاسها المعتاد كصفحة المنتج
-  const vidRef = useRef(null);
+  const [mySize] = useState(getMySize);
+  const vidRef = videoRef; // مرجع مرفوع من الأب — كي يفتحه زر الصوت داخل الإيماءة
   const hlsRef = useRef(null); // مشغّل hls.js (أندرويد/كروم) — iOS يشغّل HLS أصلياً
   const [useMp4, setUseMp4] = useState(false); // فشل HLS؟ → احتياط MP4 نظيف
   const tapRef = useRef({ t: 0 });
-  // كتم مؤقّت لهذا الريل فقط عند رفض iOS التشغيل بالصوت — لا نلمس التفضيل العام
-  // (كان يُكتَم الإعداد العام للأبد فيصمت كل الريلز التالية = "كل كم فيديو ينكتم").
-  // يرجع الصوت تلقائياً بأول لمسة/سحبة، والأيقونة تبقى صحيحة (صوت مفعّل).
+  // كتم مؤقّت لهذا الريل عند رفض iOS التشغيل بالصوت — يرجع بأول إيماءة تالية.
   const forcedMuteRef = useRef(false);
   const soundRestoreRef = useRef(null); // مستمِع إيماءة عام لإعادة الصوت بعد كتم مؤقّت
   const holdRef = useRef({ timer: null, held: false, x: 0, y: 0, moved: false, swallow: false });
-  const activeRef = useRef(isActive);
-  activeRef.current = isActive;
   const poster = cldVideoPoster(p.videoUrl) || p.imageUrl || '';
 
-  // تعليق مصدر الفيديو: HLS متكيّف أولاً، وعند أي فشل قاتل → MP4 نظيف (بلا شاشة سوداء).
-  // أندرويد/كروم: عبر hls.js (يُحمَّل عند الحاجة) مع تحكّم كامل بالتحميل (stopLoad للتالية).
+  // ── استعادة الصوت بعد كتم مؤقّت ─────────────────────────────────────────────
+  const restoreSoundIfForced = () => {
+    const v = vidRef.current;
+    if (v && forcedMuteRef.current && !muted) {
+      forcedMuteRef.current = false;
+      v.muted = false;
+      v.play().catch(() => {});
+    }
+  };
+  // أول إيماءة تالية في أي مكان (بما فيها استمرار التمرير) تُعيد الصوت تلقائياً.
+  const armGlobalSoundRestore = () => {
+    if (soundRestoreRef.current) return;
+    const restore = () => {
+      window.removeEventListener('pointerdown', restore, true);
+      window.removeEventListener('touchstart', restore, true);
+      soundRestoreRef.current = null;
+      restoreSoundIfForced();
+    };
+    soundRestoreRef.current = restore;
+    window.addEventListener('pointerdown', restore, { capture: true, passive: true });
+    window.addEventListener('touchstart', restore, { capture: true, passive: true });
+  };
+  const disarmGlobalSoundRestore = () => {
+    if (soundRestoreRef.current) {
+      window.removeEventListener('pointerdown', soundRestoreRef.current, true);
+      window.removeEventListener('touchstart', soundRestoreRef.current, true);
+      soundRestoreRef.current = null;
+    }
+  };
+  useEffect(() => disarmGlobalSoundRestore, []); // تنظيف عند التفكيك
+
+  // ── فتح العنصر للصوت (iOS unlock) — جوهر إصلاح «كل ريل لازم كبسة» ───────────
+  // سياسة WebKit: كل عنصر <video> يبقى «مقفلاً» للصوت حتى ينجح play() مرّة واحدة
+  // داخل إيماءة مستخدم. بما أن المشغّل هنا عنصر واحد لا يُفكَّك، يكفي فتحه مرّة
+  // فيبقى مفتوحاً لكل الريلز التالية مهما تبدّل المصدر. نفتحه استباقياً بأول إيماءة
+  // في أي مكان (لمسة/سحبة) بدل انتظار فشل التشغيل ثم الكتم.
+  const unlockedRef = useRef(false);
+  useEffect(() => {
+    if (unlockedRef.current) return undefined;
+    const onGesture = () => {
+      const v = vidRef.current;
+      if (!v || unlockedRef.current) return;
+      if (!muted) v.muted = false; // الفتح يتم بمحاولة تشغيل بالصوت داخل الإيماءة
+      v.play().then(() => { unlockedRef.current = true; }).catch(() => { /* نعيد المحاولة بالإيماءة التالية */ });
+    };
+    window.addEventListener('pointerdown', onGesture, { capture: true, passive: true });
+    window.addEventListener('touchstart', onGesture, { capture: true, passive: true });
+    return () => {
+      window.removeEventListener('pointerdown', onGesture, true);
+      window.removeEventListener('touchstart', onGesture, true);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [muted]);
+
+  // ── ريل جديد: صفّر الحالة المتعلّقة به ───────────────────────────────────────
+  useEffect(() => {
+    setUseMp4(false); setErrored(false); setSelSize(''); setSelColor(''); setDescOpen(false); setPick(false);
+    hideBuffering(); // لا نورّث عجلة الريل السابق
+    disarmGlobalSoundRestore();
+    const v = vidRef.current;
+    if (v) { try { v.currentTime = 0; } catch { /* تجاهل */ } }
+    if (progressRef.current) progressRef.current.style.width = '0%';
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [p.id]);
+
+  // ── تعليق مصدر الفيديو للريل النشط: HLS متكيّف أولاً، وعند فشل قاتل → MP4 نظيف ─
   useEffect(() => {
     const vid = vidRef.current;
-    if (!vid || !preload || NATIVE_HLS) return undefined;
+    if (!vid) return undefined;
     const hlsUrl = reelHls(p.videoUrl);
     const mp4Url = reelMp4(p.videoUrl);
-    let cancelled = false;
+    // iOS/سفاري: HLS أصلي (بلا hls.js)
+    if (NATIVE_HLS) {
+      const src = (!hlsUrl || useMp4) ? mp4Url : hlsUrl;
+      if (vid.getAttribute('src') !== src) { vid.src = src; try { vid.load(); } catch { /* تجاهل */ } }
+      return undefined;
+    }
+    // أندرويد/كروم عبر hls.js
     if (!hlsUrl || useMp4) { vid.src = mp4Url; return undefined; }
-    let hls;
+    let hls; let cancelled = false;
     import('hls.js')
       .then(({ default: Hls }) => {
         if (cancelled) return;
         if (!Hls.isSupported()) { vid.src = mp4Url; return; }
-        // مخزون 30 ثانية بدل 15 — على شبكات الجوّال الضعيفة (جمهور الإعلانات) كان
-        // المخزون القصير ينفد فيقف الفيديو كل شوي.
-        // جودة عالية للريلز القصيرة:
-        // - startLevel:-1 + تقدير نطاق مبدئي عالٍ (5Mbps): يبدأ بأعلى دقة فوراً بدل أدنى
-        //   دقة "احتياطاً" (الريل القصير كان يخلص قبل ارتقاء الدقة = جودة زفتة).
-        // - أزلنا capLevelToPlayerSize: كان يقيّد الدقة بعرض المشغّل بالبكسل المنطقي
-        //   (~400px) فيختار ~480p رغم شاشة retina — سبب مباشر لضبابية الصورة.
-        // - ولو الشبكة فعلاً ضعيفة، ABR ينزل تلقائياً فلا تعليق.
         hls = new Hls({ maxBufferLength: 30, autoStartLoad: false, startLevel: -1, abrEwmaDefaultEstimate: 5000000 });
         hlsRef.current = hls;
         hls.on(Hls.Events.ERROR, (_e, data) => {
@@ -319,7 +448,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
         });
         hls.loadSource(hlsUrl);
         hls.attachMedia(vid);
-        if (activeRef.current) hls.startLoad(-1);
+        hls.startLoad(-1);
       })
       .catch(() => { if (!cancelled) vid.src = mp4Url; });
     return () => {
@@ -327,95 +456,32 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
       if (hls) { try { hls.destroy(); } catch { /* تجاهل */ } if (hlsRef.current === hls) hlsRef.current = null; }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [preload, useMp4]);
+  }, [p.id, useMp4]);
 
-  // iOS/سفاري (HLS أصلي): لا سيطرة على تحميله — فيديوان معلّقان يتنافسان على الشبكة
-  // (لهذا كان الكمبيوتر سلساً والآيفون/الآيباد يتلعثم). الحل: نعلّق المصدر للشريحة
-  // النشطة فقط، ونفصله عند مغادرتها — البوستر يغطي الشرائح المجاورة.
-  useEffect(() => {
-    const vid = vidRef.current;
-    if (!vid || !NATIVE_HLS || !preload) return undefined;
-    const hlsUrl = reelHls(p.videoUrl);
-    const mp4Url = reelMp4(p.videoUrl);
-    const src = (!hlsUrl || useMp4) ? mp4Url : hlsUrl;
-    if (isActive) {
-      if (vid.getAttribute('src') !== src) { vid.src = src; try { vid.load(); } catch { /* تجاهل */ } }
-    } else if (vid.getAttribute('src')) {
-      try { vid.pause(); vid.removeAttribute('src'); vid.load(); } catch { /* تجاهل */ }
-    }
-    return undefined;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isActive, preload, useMp4]);
-
-  // المتغيّرات بوعي مخزون الألوان (النموذج الجديد): الألوان من colorStock إن وُجد،
-  // والنمر المتاحة تتبع اللون المختار (تُستثنى المنفدة) — فلا تُضاف تشكيلة غير متوفرة
-  const colorStock = p.colorStock && typeof p.colorStock === 'object' ? p.colorStock : {};
-  const hasCS = Object.keys(colorStock).length > 0;
-  // منتجات مخزون النمر العادي: نستثني المنفدة (كمية 0) أيضاً — نفس منطق مخزون الألوان
-  const sizeStock = p.sizeStock && typeof p.sizeStock === 'object' ? p.sizeStock : {};
-  const sizes = hasCS
-    ? (selColor ? Object.entries(colorStock[selColor] || {}).filter(([, q]) => q !== 0).map(([s]) => s) : [])
-    : (p.size || '').split(',').map((s) => s.trim()).filter(Boolean).filter((s) => sizeStock[s] !== 0);
-  const colors = hasCS ? Object.keys(colorStock) : (p.color || '').split(',').map((s) => s.trim()).filter(Boolean);
-  const hasDiscount = p.oldPrice && p.oldPrice > p.price;
-  const discountPct = hasDiscount ? Math.round((1 - p.price / p.oldPrice) * 100) : 0;
-  // نفد كلياً؟ (صفر عام أو نفاد كل كميات الألوان/النمر) — بدونها كان شيت الاختيار
-  // يُفتح فارغاً بلا نمرة قابلة للاختيار فتحتار الزبونة
-  const detailedQty = hasCS
-    ? Object.values(colorStock).flatMap((sz) => Object.values(sz || {})).filter((q) => typeof q === 'number')
-    : Object.values(sizeStock).filter((q) => typeof q === 'number');
-  const soldOut = p.stock === 0 || (detailedQty.length > 0 && detailedQty.reduce((a, b) => a + b, 0) === 0);
-
+  // ── تشغيل الريل النشط: محاولة فورية + إعادات تلتقط تفعيل الإيماءة لاستعادة الصوت ─
   useEffect(() => {
     const vid = vidRef.current;
     if (!vid) return undefined;
-    if (!isActive) {
-      vid.pause();
-      vid.currentTime = 0;
-      if (progressRef.current) progressRef.current.style.width = '0%';
-      if (hlsRef.current) { try { hlsRef.current.stopLoad(); } catch { /* تجاهل */ } } // الشريحة التالية لا تزاحم تحميل النشطة
-      // نلغي مستمِع استعادة الصوت المعلّق (لم نعد الريل النشط) كي لا يبقى عالقاً
-      if (soundRestoreRef.current) {
-        window.removeEventListener('pointerdown', soundRestoreRef.current, true);
-        window.removeEventListener('touchstart', soundRestoreRef.current, true);
-        soundRestoreRef.current = null;
-      }
-      return undefined;
-    }
     if (hlsRef.current) { try { hlsRef.current.startLoad(-1); } catch { /* تجاهل */ } }
-    // كل تفعيل يحترم تفضيل الصوت العام من جديد: يلغي أي كتم مؤقّت سابق فيعيد المحاولة
-    // بالصوت (مهم عند الرجوع لريل سبق أن كُتم — كان يبقى صامتاً حتى لمسة مقصودة)
     if (!muted && forcedMuteRef.current) { forcedMuteRef.current = false; vid.muted = false; }
-    // عنصر الفيديو يُركّب عند الاقتراب فقط، فقد لا يكون جاهزاً لحظة التفعيل —
-    // أمر تشغيل واحد كان يفشل بصمت ويبقى الفيديو واقفاً حتى كبسة المستخدم.
-    // الآن: محاولة فورية + إعادة عند جاهزية البيانات + محاولات مجدولة قليلة
-    // (لا نقاوم الإيقاف المتعمّد بالضغط المطوّل).
     let alive = true;
-    let blockedTries = 0; // مرات رفض التشغيل بالصوت — نعيد المحاولة ضمن نافذة تفعيل السحبة قبل الكتم
+    let blockedTries = 0;
     const tryPlay = () => {
       if (!alive || vid.ended || !vid.paused || holdRef.current.held || document.hidden) return;
       vid.play().catch((err) => {
         if (!alive || !err || err.name !== 'NotAllowedError' || vid.muted) return;
-        // رُفض التشغيل بالصوت. iOS يسمح بالصوت خلال ثوانٍ قليلة من أي إيماءة، والسحبة
-        // التي جاءت بنا لهذا الريل هي إيماءة — فنعيد المحاولة بالصوت عدة مرات سريعة،
-        // تنجح غالباً فيبقى الصوت تلقائياً بلا أي كبسة. وإن فشلت كلها (تفعيل منتهٍ،
-        // كالتقدّم التلقائي بعد انتهاء الريل) نكتم مؤقّتاً كي لا يتجمّد، والصوت يعود
-        // بأول لمسة/سحبة تالية. (كان يكتم من أول رفضة ولا يعيد المحاولة أبداً = سبب
-        // "كل كم مقطع يروح الصوت ولازم أكبس".)
         blockedTries += 1;
         if (blockedTries >= 4) {
           forcedMuteRef.current = true;
           vid.muted = true;
           vid.play().catch(() => {});
-          armGlobalSoundRestore(); // أول إيماءة تالية (بما فيها استمرار التمرير) تُعيد الصوت
+          armGlobalSoundRestore();
         }
       });
     };
     tryPlay();
     vid.addEventListener('loadeddata', tryPlay);
     vid.addEventListener('canplay', tryPlay);
-    // إعادات سريعة تلتقط تفعيل السحبة (خلال ~½ثانية) لاستعادة الصوت تلقائياً،
-    // ثم حارس كل 800ms يضمن ألا يبقى الفيديو واقفاً أبداً مهما كان السبب.
     const quick = [130, 300, 520].map((ms) => setTimeout(tryPlay, ms));
     const iv = setInterval(tryPlay, 800);
     return () => {
@@ -426,61 +492,21 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
       vid.removeEventListener('canplay', tryPlay);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isActive]);
+  }, [p.id]);
 
-  // iOS يوقف الفيديو تلقائياً لو أُزيل الكتم خارج إيماءة مستخدم مباشرة (سياسة WebKit
-  // الموثّقة) — لهذا بعد تطبيق الكتم نستأنف فوراً، ولو رُفض بالصوت يُعاد مكتوماً (لا يجمد أبداً).
+  // ── تغيّر تفضيل الكتم صراحةً ──────────────────────────────────────────────────
   useEffect(() => {
     const vid = vidRef.current;
     if (!vid) return;
-    forcedMuteRef.current = false; // تفضيل جديد صريح من المستخدم يلغي أي كتم مؤقّت
+    forcedMuteRef.current = false;
     vid.muted = muted;
     if (!muted) ensurePlaying();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [muted]);
 
-  // استعادة الصوت داخل أي إيماءة (لمسة/بداية سحب): لو كان هذا الريل مكتوماً مؤقّتاً
-  // (رفض iOS التشغيل بالصوت تلقائياً) والمستخدم مفضّلٌ الصوت عاماً، نرجّعه فوراً —
-  // فالصوت يعود بلا كبسة مقصودة (أول تفاعل يكفي)، دون أي تجمّد.
-  const restoreSoundIfForced = () => {
-    const v = vidRef.current;
-    if (v && forcedMuteRef.current && !muted) {
-      forcedMuteRef.current = false;
-      v.muted = false;
-      v.play().catch(() => {});
-    }
-  };
-
-  // بعد كتم مؤقّت (رفض iOS التشغيل بالصوت): نصغي لأول إيماءة تالية في أي مكان بالشاشة —
-  // بما فيها استمرار التمرير أو أي لمسة — فتُعيد صوت هذا الريل تلقائياً داخل الإيماءة (iOS
-  // يسمح بالصوت حينها). هكذا لا يحتاج المستخدم لمسة مقصودة على الشريحة، فلا "يقطع الصوت
-  // كل ما نزّلت". listener لمرّة واحدة يُزال فور تنفيذه أو عند تفكيك المكوّن.
-  const armGlobalSoundRestore = () => {
-    if (soundRestoreRef.current) return; // مسلّح أصلاً — لا نكرّر
-    const restore = () => {
-      window.removeEventListener('pointerdown', restore, true);
-      window.removeEventListener('touchstart', restore, true);
-      soundRestoreRef.current = null;
-      if (activeRef.current) restoreSoundIfForced(); // فقط إن بقي هذا الريل النشط (لا نشغّل ريلاً غادرناه)
-    };
-    soundRestoreRef.current = restore;
-    window.addEventListener('pointerdown', restore, { capture: true, passive: true });
-    window.addEventListener('touchstart', restore, { capture: true, passive: true });
-  };
-  useEffect(() => () => {
-    if (soundRestoreRef.current) {
-      window.removeEventListener('pointerdown', soundRestoreRef.current, true);
-      window.removeEventListener('touchstart', soundRestoreRef.current, true);
-      soundRestoreRef.current = null;
-    }
-  }, []);
-
-  // حارس الانحشار (زي مشغّلات الريلز الكبيرة): لو صار الفيديو "شغّال" لكن وقته لا
-  // يتقدّم ~6 ثوانٍ (تخزين معلّق/شبكة انقطعت لحظة/جلسة iOS انحشرت) نعيد تحميل
-  // المصدر ونكمل من نفس المكان تلقائياً — بدل ما يظل واقفاً حتى تدخّل المستخدم.
+  // ── حارس الانحشار: لو توقّف تقدّم الوقت ~6ث نعيد التحميل من نفس الموضع ──────────
   const stuckRef = useRef({ t: -1, count: 0 });
   useEffect(() => {
-    if (!isActive) return undefined;
     stuckRef.current = { t: -1, count: 0 };
     const id = setInterval(() => {
       const v = vidRef.current;
@@ -492,11 +518,10 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
           const pos = v.currentTime;
           try {
             if (hlsRef.current) {
-              // مع hls.js: إعادة إقلاع التحميل من نفس الموضع (لا نلمس v.load مع MSE)
               hlsRef.current.startLoad(pos);
               v.play().catch(() => {});
             } else {
-              v.load(); // إعادة فتح المصدر (يتخطى المخزّن المنحشر)
+              v.load();
               const seek = () => { try { v.currentTime = pos; } catch { /* تجاهل */ } v.play().catch(() => {}); };
               v.addEventListener('loadedmetadata', seek, { once: true });
             }
@@ -508,16 +533,16 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
       }
     }, 3000);
     return () => clearInterval(id);
-  }, [isActive]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [p.id]);
 
-  // إيقاف الفيديو عند قفل الشاشة/تصغير التطبيق، وإيقافه وإفراغ مصدره عند مغادرة الريلز.
-  // كان صوت الريل يظل يعمل بمشغّل الوسائط على شاشة القفل (iOS PWA) وكأنه "معلّق".
+  // ── إيقاف عند إخفاء التطبيق، وإفراغ المصدر عند مغادرة الريلز ─────────────────
   useEffect(() => {
     const onVis = () => {
       const v = vidRef.current;
       if (!v) return;
       if (document.hidden) v.pause();
-      else if (activeRef.current && !holdRef.current.held) v.play().catch(() => {});
+      else if (!holdRef.current.held) v.play().catch(() => {});
     };
     document.addEventListener('visibilitychange', onVis);
     return () => {
@@ -531,18 +556,15 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
     const v = vidRef.current;
     if (v && v.duration && progressRef.current) progressRef.current.style.width = `${(v.currentTime / v.duration) * 100}%`;
   };
-  // الفيديو النشط يجب أن يظل يعمل دائماً. أي توقّف غير متعمّد (سباق أثناء التمرير،
-  // تعليق iOS، عودة من الخلفية) يُستأنف فوراً — هذا يصلح "الفيديو بيقطع وما بيشتغل
-  // إلا بكبسة مطوّلة": لم تكن هناك إعادة تشغيل بعد انتهاء مؤقّتات التفعيل الأولى.
   const ensurePlaying = () => {
     const v = vidRef.current;
-    if (v && isActive && !holdRef.current.held && !document.hidden && v.paused && !v.ended) {
+    if (v && !holdRef.current.held && !document.hidden && v.paused && !v.ended) {
       v.play().catch((err) => {
-        // رُفض بالصوت؟ نكتم هذا العنصر مؤقّتاً ونشغّل — يظل يعمل بلا كبسة وبلا كتم عام
         if (err && err.name === 'NotAllowedError' && !v.muted) {
           forcedMuteRef.current = true;
           v.muted = true;
           v.play().catch(() => {});
+          armGlobalSoundRestore();
         }
       });
     }
@@ -555,14 +577,10 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   const doLike = () => {
     if (!liked) toggle(p);
     setBurst((b) => b + 1);
-    if (navigator.vibrate) navigator.vibrate(18); // اهتزاز خفيف (أندرويد)
+    if (navigator.vibrate) navigator.vibrate(18);
   };
 
-  // نقرة = إزالة كتم (+استئناف لو واقف) | نقرة مزدوجة = لايك
-  // كل شيء يتنفّذ فوراً داخل الإيماءة نفسها — كان تأخير إزالة الكتم بمؤقّت 350ms
-  // يُخرجها من نافذة إيماءة المستخدم، فيوقف iOS الفيديو (سياسة WebKit: إزالة الكتم
-  // بلا إيماءة = إيقاف) ثم تُرفض كل محاولات التشغيل التلقائية إلى أن يضغط المستخدم
-  // ضغطاً مطوّلاً — هذا كان سبب "الريل بوقف وما برضى يشتغل إلا بضغطة طويلة".
+  // نقرة = إزالة كتم (+استئناف) | نقرة مزدوجة = لايك
   const onTap = () => {
     const v = vidRef.current;
     if (v && v.paused && !v.ended) v.play().catch(() => {});
@@ -572,17 +590,14 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
       doLike();
     } else {
       tapRef.current.t = now;
-      if (muted) { if (v) v.muted = false; onUnmute(); } // الكتم يُزال داخل الإيماءة مباشرة — iOS ما بيوقف الفيديو
+      if (muted) { if (v) v.muted = false; onUnmute(); }
     }
   };
 
-  // ضغط مطوّل = إيقاف مؤقّت (مع إلغائه إن صار تمرير)
+  // ضغط مطوّل = إيقاف مؤقّت (يُلغى إن صار تمرير)
   const onDown = (e) => {
-    // أول لمسة إيماءة حقيقية: لو الفيديو واقف (توفير طاقة/رفض تشغيل) نستأنفه فوراً —
-    // حتى السحب للتمرير يكفي، فلا يحتاج المستخدم أي كبسة مقصودة. ونرجّع الصوت إن كان
-    // مكتوماً مؤقّتاً — هذه الإيماءة تسمح لـ iOS بالصوت، فيعود تلقائياً.
     const v = vidRef.current;
-    if (v && activeRef.current && v.paused && !v.ended) v.play().catch(() => {});
+    if (v && v.paused && !v.ended) v.play().catch(() => {});
     restoreSoundIfForced();
     holdRef.current = { ...holdRef.current, held: false, moved: false, x: e.clientX || 0, y: e.clientY || 0 };
     holdRef.current.timer = setTimeout(() => {
@@ -595,14 +610,10 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
       clearTimeout(holdRef.current.timer);
     }
   };
-  // إنهاء الضغط المطوّل من أي مسار (رفع الإصبع أو خطف التمرير للمسة عبر pointercancel).
-  // المهم: نصفّر held دائماً — كان يبقى عالقاً عند التمرير (لا يصل click يصفّره)
-  // فترفض إعادة التشغيل التلقائية تشغيل الفيديو "الموقوف عمداً" إلى الأبد،
-  // وهذا سبب توقّف الفيديو عند التصفّح لتحت حتى كبسة المستخدم.
   const endHold = (resume) => {
     clearTimeout(holdRef.current.timer);
     if (holdRef.current.held) {
-      holdRef.current.swallow = true; // نبلع النقرة القادمة (كانت ضغطاً مطوّلاً لا نقرة)
+      holdRef.current.swallow = true;
       holdRef.current.held = false;
       if (resume) ensurePlaying();
     }
@@ -617,8 +628,6 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   const share = async (e) => {
     e?.stopPropagation?.();
     const url = `${window.location.origin}/share/product/${p.id}`;
-    // بلا text: عند اختيار "نسخ" من ورقة المشاركة يدمج النظام النص مع الرابط فيخرج
-    // ملوّثاً بكلام — ورابط /share/ يعرض صورة المنتج وسعره كمعاينة أصلاً
     const data = { title: p.name, url };
     if (navigator.share) {
       try { await navigator.share(data); return; } catch (err) { if (err && err.name === 'AbortError') return; }
@@ -627,11 +636,25 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
     catch { window.prompt(t('reels.copyPrompt'), url); }
   };
 
+  // المتغيّرات بوعي مخزون الألوان (النموذج الجديد)
+  const colorStock = p.colorStock && typeof p.colorStock === 'object' ? p.colorStock : {};
+  const hasCS = Object.keys(colorStock).length > 0;
+  const sizeStock = p.sizeStock && typeof p.sizeStock === 'object' ? p.sizeStock : {};
+  const sizes = hasCS
+    ? (selColor ? Object.entries(colorStock[selColor] || {}).filter(([, q]) => q !== 0).map(([s]) => s) : [])
+    : (p.size || '').split(',').map((s) => s.trim()).filter(Boolean).filter((s) => sizeStock[s] !== 0);
+  const colors = hasCS ? Object.keys(colorStock) : (p.color || '').split(',').map((s) => s.trim()).filter(Boolean);
+  const hasDiscount = p.oldPrice && p.oldPrice > p.price;
+  const discountPct = hasDiscount ? Math.round((1 - p.price / p.oldPrice) * 100) : 0;
+  const detailedQty = hasCS
+    ? Object.values(colorStock).flatMap((sz) => Object.values(sz || {})).filter((q) => typeof q === 'number')
+    : Object.values(sizeStock).filter((q) => typeof q === 'number');
+  const soldOut = p.stock === 0 || (detailedQty.length > 0 && detailedQty.reduce((a, b) => a + b, 0) === 0);
+
   const quickAdd = () => {
     if (sizes.length || colors.length) { setPickMode('add'); setPick(true); return; }
     add({ ...p, whatsapp: p.storeWhatsapp, size: '', color: '' });
   };
-  // شراء فوري من الريل: نفس تدفّق الاختيار، ثم تفتح السلة على إتمام الطلب مباشرة
   const quickBuy = () => {
     if (sizes.length || colors.length) { setPickMode('buy'); setPick(true); return; }
     buyNow({ ...p, whatsapp: p.storeWhatsapp, size: '', color: '' });
@@ -641,219 +664,211 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
     doIt({ ...p, whatsapp: p.storeWhatsapp, size: selSize, color: selColor });
     setPick(false);
   };
-  // اللون أولاً (إن وُجد)، ثم النمرة من المتاح — ولون نفدت كل نمره لا يُؤكَّد
   const canConfirm = (!colors.length || selColor) && (!sizes.length || selSize) && !(hasCS && selColor && sizes.length === 0);
 
   return (
-    <section className="relative flex h-[100dvh] w-full snap-start snap-always justify-center bg-black">
-      <div className="relative h-full w-full sm:max-w-[480px]">
-        {/* شريط التقدّم — يُحدَّث بالـDOM مباشرة (بلا إعادة رسم البطاقة) */}
-        <div className="absolute inset-x-0 top-0 z-30 h-0.5 bg-white/20">
-          <div ref={progressRef} className="h-full bg-white/90 transition-[width] duration-150 ease-linear" style={{ width: '0%' }} />
-        </div>
-
-        {/* بوستر ثابت خلف الفيديو دائماً → لا سواد أثناء تحميل الريل أو الانتقال إليه.
-            الفيديو يُحمّل للنشطة والتالية فقط ويطبع فوق البوستر عند جاهزيته. */}
-        <img src={cldThumb(poster, 720)} alt={p.name} className="absolute inset-0 z-0 h-full w-full object-cover" />
-        {preload && !errored && (
-          <video
-            ref={vidRef}
-            poster={poster}
-            muted={muted}
-            playsInline
-            preload="auto"
-            onTimeUpdate={onTimeUpdate}
-            onEnded={onVidEnded}
-            onPause={ensurePlaying}
-            onWaiting={() => setBuffering(true)}
-            onPlaying={() => setBuffering(false)}
-            onCanPlay={() => { setBuffering(false); ensurePlaying(); }}
-            onError={() => { if (!useMp4) setUseMp4(true); else setErrored(true); }}
-            style={{ touchAction: 'pan-y' }}
-            className="absolute inset-0 z-[1] h-full w-full object-cover"
-          />
-        )}
-
-        {/* مؤشّر تحميل الفيديو */}
-        {buffering && isActive && !errored && (
-          <div className="pointer-events-none absolute inset-0 z-[6] flex items-center justify-center">
-            <span className="h-10 w-10 animate-spin rounded-full border-[3px] border-white/30 border-t-white" />
-          </div>
-        )}
-
-        {/* طبقة لمس: نقرة=كتم، مزدوجة=لايك، ضغط مطوّل=إيقاف (تسمح بالتمرير) */}
-        <div
-          className="absolute inset-0 z-[5]"
-          style={{ touchAction: 'pan-y' }}
-          onPointerDown={onDown}
-          onPointerMove={onMove}
-          onPointerUp={onUp}
-          onPointerCancel={onCancel}
-          onClick={onLayerClick}
-        />
-
-        {/* انفجار القلب الأحمر (دبل-تاب) */}
-        {burst > 0 && (
-          <div key={burst} className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
-            <svg viewBox="0 0 24 24" className="animate-heart-pop h-28 w-28 drop-shadow-2xl" style={{ fill: '#ff2d55' }} aria-hidden="true">
-              <path d="M12 21C12 21 4 15 4 8.5A4.5 4.5 0 0 1 12 6 A4.5 4.5 0 0 1 20 8.5C20 15 12 21 12 21Z" />
-            </svg>
-          </div>
-        )}
-
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
-
-        {hint && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-56 flex animate-bounce flex-col items-center gap-1 text-white/80">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-black/50 px-3.5 py-1.5 text-xs font-semibold backdrop-blur-sm ring-1 ring-white/15">
-              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M6 11l6-6 6 6" /></svg>
-              {t('reels.swipeHint')}
-            </span>
-          </div>
-        )}
-
-        {copied && (
-          <div className="pointer-events-none absolute inset-x-0 top-20 z-30 flex justify-center">
-            <span className="rounded-full bg-black/75 px-4 py-2 text-xs font-semibold text-white">{t('reels.copied')}</span>
-          </div>
-        )}
-
-        {/* شارة الخصم (عدد المبيعات مُزال بطلب المالكة) */}
-        {hasDiscount && (
-          <div className="absolute start-3 z-20 flex flex-col items-start gap-2" style={{ top: 'calc(env(safe-area-inset-top,0px) + 64px)' }}>
-            <span className="rounded-full bg-[#8a2438] px-2.5 py-1 text-xs font-extrabold text-[#F4EDE2] shadow">-{discountPct}%</span>
-          </div>
-        )}
-
-        {/* توست المفضّلة */}
-        {wishMsg && (
-          <div className="pointer-events-none absolute inset-x-0 top-20 z-30 flex justify-center">
-            <span className="animate-toast-top rounded-full bg-black/75 px-4 py-2 text-xs font-semibold text-white">{wishMsg}</span>
-          </div>
-        )}
-
-        {/* مفضّلة + مشاركة */}
-        <div className="absolute bottom-40 end-3 z-20 flex flex-col items-center gap-4">
-          <button type="button"
-            onClick={() => {
-              const willSave = !liked;
-              if (willSave && navigator.vibrate) navigator.vibrate(18);
-              toggle(p);
-              setWishMsg(willSave ? t('reels.saved') : t('reels.removed'));
-              setTimeout(() => setWishMsg(''), 1600);
-            }}
-            aria-label="wishlist"
-            className={`flex h-12 w-12 items-center justify-center rounded-full ring-1 ring-white/20 transition active:scale-90 ${liked ? 'bg-red-500/90 text-white' : 'bg-black/50 text-white hover:bg-black/65'}`}>
-            <HeartIcon className={`h-6 w-6 transition-transform ${liked ? 'scale-110' : ''}`} filled={liked} />
-          </button>
-          <button type="button" onClick={share} aria-label="share"
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-black/50 text-white ring-1 ring-white/20 transition hover:bg-black/65 active:scale-90">
-            <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" /><path d="M16 6l-4-4-4 4" /><path d="M12 2v14" /></svg>
-          </button>
-        </div>
-
-        {/* معلومات المنتج + أزرار */}
-        <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col gap-2 p-4 pe-16 pb-[calc(env(safe-area-inset-bottom,0px)+18px)] text-white">
-          <Link to={`/store/${p.storeSlug}`} className="inline-flex max-w-fit items-center gap-2 text-sm font-semibold text-white drop-shadow">
-            {p.storeLogo ? (
-              <img src={cldThumb(p.storeLogo, 80)} alt="" className="h-7 w-7 shrink-0 rounded-full object-cover ring-2 ring-[#e6c878]/70" />
-            ) : (
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 text-white"><StoreIcon className="h-4 w-4" /></span>
-            )}
-            <span className="truncate">{p.storeName}</span>
-          </Link>
-          {/* اسم بخط العرض الفاخر + سعر ذهبي بحبة عصرية (بلا blur — تمرير أسلس) */}
-          <h2 className="line-clamp-2 font-display text-lg font-bold leading-snug drop-shadow-lg">{p.name}</h2>
-          {p.description && (
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); setDescOpen((o) => !o); }}
-              className="max-w-full text-start"
-            >
-              <span className={`block text-xs leading-relaxed text-white/80 drop-shadow ${descOpen ? '' : 'line-clamp-1'}`}>{p.description}</span>
-              {p.description.length > 55 && (
-                <span className="text-[11px] font-bold text-gold-200 drop-shadow">{descOpen ? t('reels.less') : `… ${t('reels.more')}`}</span>
-              )}
-            </button>
-          )}
-          <div className="flex items-baseline gap-2">
-            <span className="rounded-full bg-black/50 px-3 py-1 font-display text-lg font-extrabold text-gold-200 ring-1 ring-[#e6c878]/30">{t('common.currency')}{p.price}</span>
-            {hasDiscount && <Strike className="text-sm text-white/70">{t('common.currency')}{p.oldPrice}</Strike>}
-            {hasDiscount && <span className="rounded-full bg-emerald-600/85 px-2 py-0.5 text-[11px] font-bold text-white drop-shadow">{t('product.saveAmount', { amount: `${t('common.currency')}${(p.oldPrice - p.price).toFixed(2).replace(/\.00$/, '')}` })}</span>}
-          </div>
-          <div className="mt-1 flex items-stretch gap-2">
-            {/* شراء فوري من الريل — الزر الأساسي (يفتح إتمام الطلب مباشرة بعد الاختيار) */}
-            <button onClick={quickBuy} disabled={soldOut}
-              className="flex flex-1 items-center justify-center gap-2 rounded-full bg-white py-3 text-sm font-bold text-wine shadow-lg transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:active:scale-100">
-              <BagIcon className="h-5 w-5" /> {soldOut ? t('product.outOfStock') : t('product.buyNow')}
-            </button>
-            <button onClick={quickAdd} disabled={soldOut} aria-label={t('reels.add')} title={t('reels.add')}
-              className="flex w-12 items-center justify-center rounded-full bg-white/20 text-white ring-1 ring-white/25 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 disabled:active:scale-100">
-              <CartIcon className="h-5 w-5" />
-            </button>
-            <Link to={`/product/${p.id}${selColor ? `?color=${encodeURIComponent(selColor)}` : ''}`}
-              className="flex items-center justify-center rounded-full bg-white/20 px-4 py-3 text-sm font-bold text-white ring-1 ring-white/25 transition active:scale-95">
-              {t('reels.view')}
-            </Link>
-          </div>
-        </div>
-
-        {/* شيت اختيار المقاس/اللون */}
-        {pick && (
-          <div className="absolute inset-0 z-40 flex items-end" onClick={() => setPick(false)}>
-            <div className="absolute inset-0 bg-black/55 backdrop-blur-[1px]" />
-            <div className="relative w-full rounded-t-3xl bg-white p-5 pb-[calc(env(safe-area-inset-bottom,0px)+18px)] text-wine" onClick={(e) => e.stopPropagation()}>
-              <p className="mb-3 line-clamp-1 font-bold">{p.name}</p>
-              {colors.length > 0 && (
-                <div className="mb-3">
-                  <p className="mb-1.5 text-xs font-medium text-stone-500">{t('reels.color')}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {colors.map((c) => {
-                      const css = colorToCss(c);
-                      return (
-                        <button key={c} onClick={() => { setSelColor(selColor === c ? '' : c); if (hasCS) setSelSize(''); }}
-                          className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-semibold transition ${selColor === c ? 'border-wine bg-wine text-cream' : 'border-wine/30 text-wine hover:bg-wine/10'}`}>
-                          {css && <span className="h-4 w-4 shrink-0 rounded-full" style={{ background: css, boxShadow: '0 0 0 1px rgba(255,255,255,0.55), inset 0 0 0 1px rgba(0,0,0,0.15)' }} />}
-                          {c}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-              {/* مع مخزون الألوان: النمر تظهر بعد اختيار اللون (المتاح فقط) */}
-              {hasCS && !selColor ? (
-                <p className="mb-4 rounded-xl bg-wine/5 px-3 py-2 text-sm font-medium text-wine/70">{t('product.pickColorFirst')}</p>
-              ) : sizes.length > 0 && (
-                <div className="mb-4">
-                  <p className="mb-1.5 text-xs font-medium text-stone-500">{t('reels.size')}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {sizes.map((s) => {
-                      // المتبقّي من هذه النمرة (نفس عرض صفحة المنتج) — طمأنة وندرة بنفس الوقت
-                      const q = hasCS ? colorStock[selColor]?.[s] : sizeStock[s];
-                      const on = selSize === s;
-                      return (
-                        <button key={s} onClick={() => { setSelSize(s); setMySize(s); }}
-                          title={!on && mySize === s ? t('product.mySize') : undefined}
-                          className={`flex min-w-11 flex-col items-center rounded-xl border px-3.5 py-1.5 transition ${on ? 'border-wine bg-wine text-cream' : 'border-wine/30 text-wine hover:bg-wine/10'} ${!on && mySize === s ? 'ring-2 ring-gold-400/70 ring-offset-1' : ''}`}>
-                          <span className="text-sm font-semibold leading-none">{sizeLabel(s, t)}</span>
-                          {typeof q === 'number' && <span className={`mt-1 text-[10px] font-medium leading-none ${on ? 'text-cream/80' : 'text-wine/55'}`}>{t('product.leftShort', { count: q })}</span>}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-              <button onClick={confirmAdd} disabled={!canConfirm}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-wine py-3 font-bold text-cream transition active:scale-[0.98] disabled:opacity-40">
-                {pickMode === 'buy' ? <BagIcon className="h-5 w-5" /> : <CartIcon className="h-5 w-5" />}
-                {pickMode === 'buy' ? t('product.buyNow') : t('reels.add')}
-              </button>
-            </div>
-          </div>
-        )}
+    <div className="relative h-full w-full overflow-hidden bg-black">
+      {/* شريط التقدّم — يُحدَّث بالـDOM مباشرة */}
+      <div className="absolute inset-x-0 top-0 z-30 h-0.5 bg-white/20">
+        <div ref={progressRef} className="h-full bg-white/90 transition-[width] duration-150 ease-linear" style={{ width: '0%' }} />
       </div>
-    </section>
+
+      {/* بوستر خلف الفيديو دائماً → لا سواد عند تبديل الريل */}
+      <img src={cldThumb(poster, 720)} alt={p.name} className="absolute inset-0 z-0 h-full w-full object-cover" />
+      {!errored && (
+        <video
+          ref={vidRef}
+          poster={poster}
+          muted={muted}
+          playsInline
+          preload="auto"
+          onTimeUpdate={onTimeUpdate}
+          onEnded={onVidEnded}
+          onPause={ensurePlaying}
+          onWaiting={showBuffering}
+          onPlaying={hideBuffering}
+          onCanPlay={() => { hideBuffering(); ensurePlaying(); }}
+          onError={() => { if (!useMp4) setUseMp4(true); else setErrored(true); }}
+          style={{ touchAction: 'pan-y' }}
+          className="absolute inset-0 z-[1] h-full w-full object-cover"
+        />
+      )}
+
+      {/* مؤشّر تحميل الفيديو */}
+      {buffering && !errored && (
+        <div className="pointer-events-none absolute inset-0 z-[6] flex items-center justify-center">
+          <span className="h-10 w-10 animate-spin rounded-full border-[3px] border-white/30 border-t-white" />
+        </div>
+      )}
+
+      {/* طبقة لمس: نقرة=كتم، مزدوجة=لايك، ضغط مطوّل=إيقاف (تسمح بالتمرير) */}
+      <div
+        className="absolute inset-0 z-[5]"
+        style={{ touchAction: 'pan-y' }}
+        onPointerDown={onDown}
+        onPointerMove={onMove}
+        onPointerUp={onUp}
+        onPointerCancel={onCancel}
+        onClick={onLayerClick}
+      />
+
+      {/* انفجار القلب الأحمر (دبل-تاب) */}
+      {burst > 0 && (
+        <div key={burst} className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
+          <svg viewBox="0 0 24 24" className="animate-heart-pop h-28 w-28 drop-shadow-2xl" style={{ fill: '#ff2d55' }} aria-hidden="true">
+            <path d="M12 21C12 21 4 15 4 8.5A4.5 4.5 0 0 1 12 6 A4.5 4.5 0 0 1 20 8.5C20 15 12 21 12 21Z" />
+          </svg>
+        </div>
+      )}
+
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
+
+      {showHint && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-56 flex animate-bounce flex-col items-center gap-1 text-white/80">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-black/50 px-3.5 py-1.5 text-xs font-semibold backdrop-blur-sm ring-1 ring-white/15">
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M6 11l6-6 6 6" /></svg>
+            {t('reels.swipeHint')}
+          </span>
+        </div>
+      )}
+
+      {copied && (
+        <div className="pointer-events-none absolute inset-x-0 top-20 z-30 flex justify-center">
+          <span className="rounded-full bg-black/75 px-4 py-2 text-xs font-semibold text-white">{t('reels.copied')}</span>
+        </div>
+      )}
+
+      {/* توست المفضّلة */}
+      {wishMsg && (
+        <div className="pointer-events-none absolute inset-x-0 top-20 z-30 flex justify-center">
+          <span className="animate-toast-top rounded-full bg-black/75 px-4 py-2 text-xs font-semibold text-white">{wishMsg}</span>
+        </div>
+      )}
+
+      {/* شارة الخصم */}
+      {hasDiscount && (
+        <div className="absolute start-3 z-20 flex flex-col items-start gap-2" style={{ top: 'calc(env(safe-area-inset-top,0px) + 64px)' }}>
+          <span className="rounded-full bg-[#8a2438] px-2.5 py-1 text-xs font-extrabold text-[#F4EDE2] shadow">-{discountPct}%</span>
+        </div>
+      )}
+
+      {/* مفضّلة + مشاركة */}
+      <div className="absolute bottom-40 end-3 z-20 flex flex-col items-center gap-4">
+        <button type="button"
+          onClick={() => {
+            const willSave = !liked;
+            if (willSave && navigator.vibrate) navigator.vibrate(18);
+            toggle(p);
+            setWishMsg(willSave ? t('reels.saved') : t('reels.removed'));
+            setTimeout(() => setWishMsg(''), 1600);
+          }}
+          aria-label="wishlist"
+          className={`flex h-12 w-12 items-center justify-center rounded-full ring-1 ring-white/20 transition active:scale-90 ${liked ? 'bg-red-500/90 text-white' : 'bg-black/50 text-white hover:bg-black/65'}`}>
+          <HeartIcon className={`h-6 w-6 transition-transform ${liked ? 'scale-110' : ''}`} filled={liked} />
+        </button>
+        <button type="button" onClick={share} aria-label="share"
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-black/50 text-white ring-1 ring-white/20 transition hover:bg-black/65 active:scale-90">
+          <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" /><path d="M16 6l-4-4-4 4" /><path d="M12 2v14" /></svg>
+        </button>
+      </div>
+
+      {/* معلومات المنتج + أزرار */}
+      <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col gap-2 p-4 pe-16 pb-[calc(env(safe-area-inset-bottom,0px)+18px)] text-white">
+        <Link to={`/store/${p.storeSlug}`} className="inline-flex max-w-fit items-center gap-2 text-sm font-semibold text-white drop-shadow">
+          {p.storeLogo ? (
+            <img src={cldThumb(p.storeLogo, 80)} alt="" className="h-7 w-7 shrink-0 rounded-full object-cover ring-2 ring-[#e6c878]/70" />
+          ) : (
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 text-white"><StoreIcon className="h-4 w-4" /></span>
+          )}
+          <span className="truncate">{p.storeName}</span>
+        </Link>
+        <h2 className="line-clamp-2 font-display text-lg font-bold leading-snug drop-shadow-lg">{p.name}</h2>
+        {p.description && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setDescOpen((o) => !o); }}
+            className="max-w-full text-start"
+          >
+            <span className={`block text-xs leading-relaxed text-white/80 drop-shadow ${descOpen ? '' : 'line-clamp-1'}`}>{p.description}</span>
+            {p.description.length > 55 && (
+              <span className="text-[11px] font-bold text-gold-200 drop-shadow">{descOpen ? t('reels.less') : `… ${t('reels.more')}`}</span>
+            )}
+          </button>
+        )}
+        <div className="flex items-baseline gap-2">
+          <span className="rounded-full bg-black/50 px-3 py-1 font-display text-lg font-extrabold text-gold-200 ring-1 ring-[#e6c878]/30">{t('common.currency')}{p.price}</span>
+          {hasDiscount && <Strike className="text-sm text-white/70">{t('common.currency')}{p.oldPrice}</Strike>}
+          {hasDiscount && <span className="rounded-full bg-emerald-600/85 px-2 py-0.5 text-[11px] font-bold text-white drop-shadow">{t('product.saveAmount', { amount: `${t('common.currency')}${(p.oldPrice - p.price).toFixed(2).replace(/\.00$/, '')}` })}</span>}
+        </div>
+        <div className="mt-1 flex items-stretch gap-2">
+          <button onClick={quickBuy} disabled={soldOut}
+            className="flex flex-1 items-center justify-center gap-2 rounded-full bg-white py-3 text-sm font-bold text-wine shadow-lg transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:active:scale-100">
+            <BagIcon className="h-5 w-5" /> {soldOut ? t('product.outOfStock') : t('product.buyNow')}
+          </button>
+          <button onClick={quickAdd} disabled={soldOut} aria-label={t('reels.add')} title={t('reels.add')}
+            className="flex w-12 items-center justify-center rounded-full bg-white/20 text-white ring-1 ring-white/25 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 disabled:active:scale-100">
+            <CartIcon className="h-5 w-5" />
+          </button>
+          <Link to={`/product/${p.id}${selColor ? `?color=${encodeURIComponent(selColor)}` : ''}`}
+            className="flex items-center justify-center rounded-full bg-white/20 px-4 py-3 text-sm font-bold text-white ring-1 ring-white/25 transition active:scale-95">
+            {t('reels.view')}
+          </Link>
+        </div>
+      </div>
+
+      {/* شيت اختيار المقاس/اللون */}
+      {pick && (
+        <div className="absolute inset-0 z-40 flex items-end" onClick={() => setPick(false)}>
+          <div className="absolute inset-0 bg-black/55 backdrop-blur-[1px]" />
+          <div className="relative w-full rounded-t-3xl bg-white p-5 pb-[calc(env(safe-area-inset-bottom,0px)+18px)] text-wine" onClick={(e) => e.stopPropagation()}>
+            <p className="mb-3 line-clamp-1 font-bold">{p.name}</p>
+            {colors.length > 0 && (
+              <div className="mb-3">
+                <p className="mb-1.5 text-xs font-medium text-stone-500">{t('reels.color')}</p>
+                <div className="flex flex-wrap gap-2">
+                  {colors.map((c) => {
+                    const css = colorToCss(c);
+                    return (
+                      <button key={c} onClick={() => { setSelColor(selColor === c ? '' : c); if (hasCS) setSelSize(''); }}
+                        className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-semibold transition ${selColor === c ? 'border-wine bg-wine text-cream' : 'border-wine/30 text-wine hover:bg-wine/10'}`}>
+                        {css && <span className="h-4 w-4 shrink-0 rounded-full" style={{ background: css, boxShadow: '0 0 0 1px rgba(255,255,255,0.55), inset 0 0 0 1px rgba(0,0,0,0.15)' }} />}
+                        {c}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            {hasCS && !selColor ? (
+              <p className="mb-4 rounded-xl bg-wine/5 px-3 py-2 text-sm font-medium text-wine/70">{t('product.pickColorFirst')}</p>
+            ) : sizes.length > 0 && (
+              <div className="mb-4">
+                <p className="mb-1.5 text-xs font-medium text-stone-500">{t('reels.size')}</p>
+                <div className="flex flex-wrap gap-2">
+                  {sizes.map((s) => {
+                    const q = hasCS ? colorStock[selColor]?.[s] : sizeStock[s];
+                    const on = selSize === s;
+                    return (
+                      <button key={s} onClick={() => { setSelSize(s); setMySize(s); }}
+                        title={!on && mySize === s ? t('product.mySize') : undefined}
+                        className={`flex min-w-11 flex-col items-center rounded-xl border px-3.5 py-1.5 transition ${on ? 'border-wine bg-wine text-cream' : 'border-wine/30 text-wine hover:bg-wine/10'} ${!on && mySize === s ? 'ring-2 ring-gold-400/70 ring-offset-1' : ''}`}>
+                        <span className="text-sm font-semibold leading-none">{sizeLabel(s, t)}</span>
+                        {typeof q === 'number' && <span className={`mt-1 text-[10px] font-medium leading-none ${on ? 'text-cream/80' : 'text-wine/55'}`}>{t('product.leftShort', { count: q })}</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            <button onClick={confirmAdd} disabled={!canConfirm}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-wine py-3 font-bold text-cream transition active:scale-[0.98] disabled:opacity-40">
+              {pickMode === 'buy' ? <BagIcon className="h-5 w-5" /> : <CartIcon className="h-5 w-5" />}
+              {pickMode === 'buy' ? t('product.buyNow') : t('reels.add')}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
