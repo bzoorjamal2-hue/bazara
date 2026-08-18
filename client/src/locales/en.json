@@ -106,7 +106,8 @@
     "more": "more",
     "less": "less",
     "saved": "Saved to wishlist ✓",
-    "removed": "Removed from wishlist"
+    "removed": "Removed from wishlist",
+    "noSizeMatch": "No reels in size {{size}} right now"
   },
   "story": {
     "yours": "Your story",

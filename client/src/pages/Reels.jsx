@@ -59,6 +59,8 @@ export default function Reels() {
   });
   const [active, setActive] = useState(0);
   const [soundHint, setSoundHint] = useState(true);
+  const [mySize] = useState(getMySize); // مقاس الزائرة المعتاد — لاختصار فلترة الريلز
+  const [sizeOnly, setSizeOnly] = useState(false); // فلتر "مقاسي" مفعّل؟
   const feedRef = useRef(null);
   const offsetRef = useRef(0);
   const hasMoreRef = useRef(true);
@@ -73,7 +75,7 @@ export default function Reels() {
     });
   };
 
-  const reelsUrl = (off) => `/public/reels?offset=${off}${slug ? `&store=${encodeURIComponent(slug)}` : ''}`;
+  const reelsUrl = (off) => `/public/reels?offset=${off}${slug ? `&store=${encodeURIComponent(slug)}` : ''}${sizeOnly && mySize ? `&size=${encodeURIComponent(mySize)}` : ''}`;
 
   // نتذكّر آخر ريل وصلته الزائرة (لكل متجر على حدة) — الخروج والرجوع يكمل من مكانها.
   // نقرأ الموضع المحفوظ وقت أول render (قبل أي تأثير) كي لا يدهسه تأثير الحفظ بـ0
@@ -102,6 +104,7 @@ export default function Reels() {
     let on = true;
     setItems(null);
     offsetRef.current = 0; hasMoreRef.current = true; loadingRef.current = false;
+    setActive(0); // فلتر جديد يبدأ من أول ريل
     api.get(reelsUrl(0))
       .then((r) => {
         if (!on) return;
@@ -112,7 +115,8 @@ export default function Reels() {
       })
       .catch(() => { if (on) setItems([]); });
     return () => { on = false; };
-  }, [slug]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug, sizeOnly]);
 
   const loadMore = () => {
     if (loadingRef.current || !hasMoreRef.current) return;
@@ -177,9 +181,27 @@ export default function Reels() {
         </button>
       </div>
 
+      {/* فلتر «مقاسي» — يظهر فقط إن كان للزائرة مقاس معتاد. تفعيله يعيد جلب الريلز
+          المقتصرة على منتجات تحمل مقاسها (من الخادم) */}
+      {mySize && items && (
+        <div className="pointer-events-none absolute inset-x-0 z-30 flex justify-center" style={{ top: 'calc(env(safe-area-inset-top,0px) + 54px)' }}>
+          <button
+            type="button"
+            onClick={() => setSizeOnly((v) => !v)}
+            aria-pressed={sizeOnly}
+            className={`pointer-events-auto inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold ring-1 backdrop-blur-sm transition active:scale-95 ${
+              sizeOnly ? 'bg-[#e6c878] text-[#3f2e22] ring-[#e6c878]' : 'bg-black/50 text-white ring-white/20 hover:bg-black/65'
+            }`}
+          >
+            <RulerGlyph className="h-3.5 w-3.5" />
+            {t('filters.mySize', { size: sizeLabel(mySize, t) })}
+          </button>
+        </div>
+      )}
+
       {/* تلميح الصوت */}
       {items && items.length > 0 && soundHint && muted && (
-        <div className="pointer-events-none absolute inset-x-0 z-30 flex justify-center" style={{ top: 'calc(env(safe-area-inset-top,0px) + 60px)' }}>
+        <div className="pointer-events-none absolute inset-x-0 z-30 flex justify-center" style={{ top: `calc(env(safe-area-inset-top,0px) + ${mySize ? 98 : 60}px)` }}>
           <span className="inline-flex animate-toast-top items-center gap-1.5 rounded-full bg-black/60 px-3.5 py-1.5 text-xs font-semibold text-white"><SpeakerIcon className="h-4 w-4" /> {t('reels.soundHint')}</span>
         </div>
       )}
@@ -189,8 +211,12 @@ export default function Reels() {
       ) : items.length === 0 ? (
         <div className="flex h-full flex-col items-center justify-center gap-4 px-6 text-center text-white/80">
           <VideoIcon className="h-14 w-14 text-white/50" />
-          <p className="text-lg font-semibold">{t('reels.empty')}</p>
-          <button onClick={goBackFn} className="rounded-full bg-white/15 px-5 py-2 text-sm font-semibold backdrop-blur transition hover:bg-white/25">{t('reels.back')}</button>
+          <p className="text-lg font-semibold">{sizeOnly ? t('reels.noSizeMatch', { size: sizeLabel(mySize, t) }) : t('reels.empty')}</p>
+          {sizeOnly ? (
+            <button onClick={() => setSizeOnly(false)} className="rounded-full bg-[#e6c878] px-5 py-2 text-sm font-bold text-[#3f2e22] transition hover:brightness-105">{t('filters.clear')}</button>
+          ) : (
+            <button onClick={goBackFn} className="rounded-full bg-white/15 px-5 py-2 text-sm font-semibold backdrop-blur transition hover:bg-white/25">{t('reels.back')}</button>
+          )}
         </div>
       ) : (
         <>
@@ -824,6 +850,15 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
         )}
       </div>
     </section>
+  );
+}
+
+// أيقونة مسطرة (فلتر المقاس)
+function RulerGlyph({ className = 'h-4 w-4' }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 8.5 8.5 3 21 15.5 15.5 21 3 8.5Z" /><path d="M7 9.5 8.5 11M10 6.5 12 8.5M13 3.5 14.5 5" />
+    </svg>
   );
 }
 

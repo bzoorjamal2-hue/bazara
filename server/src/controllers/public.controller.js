@@ -577,6 +577,13 @@ export async function getReels(req, res, next) {
     const params = [];
     let sql = `${PRODUCT_SELECT} WHERE p.video_url IS NOT NULL AND p.video_url <> '' AND ${active}`;
     if (slug) { params.push(slug); sql += ` AND s.slug = $${params.length}`; } // ريلز متجر واحد
+    // فلتر "مقاسي": ريلز المنتجات التي تحمل هذا المقاس (عمود size مفصول بفواصل).
+    // نطبّع بحذف المسافات ونطابق داخل القائمة (ILIKE)، ونُعقّم المدخل لأبجدي-رقمي فقط.
+    const size = String(req.query.size || '').trim().replace(/[^a-zA-Z0-9]/g, '');
+    if (size) {
+      params.push(size);
+      sql += ` AND (',' || replace(p.size, ' ', '') || ',') ILIKE ('%,' || $${params.length} || ',%')`;
+    }
     sql += ` ORDER BY p.featured DESC, p.created_at DESC`;
     params.push(REELS_PAGE); sql += ` LIMIT $${params.length}`;
     params.push(offset); sql += ` OFFSET $${params.length}`;
