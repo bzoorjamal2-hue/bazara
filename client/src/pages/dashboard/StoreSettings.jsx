@@ -223,9 +223,11 @@ export default function StoreSettings() {
                 key={id}
                 type="button"
                 onClick={() => jump(id)}
+                // النشط: ذهب صريح (hex) يتجاوز remap الثيم — يبقى ذهبياً بنص غامق في
+                // الوضعين. (bg-gold-400/text-wine-dark كانا ينقلبان نهاراً لبنّي على بنّي)
                 className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
                   on
-                    ? 'border-gold-400 bg-gold-400 text-wine-dark'
+                    ? 'border-[#d4af37] bg-[#d4af37] text-[#3f2e22]'
                     : 'border-gold-400/30 bg-gold-400/5 text-stone-300 hover:bg-gold-400/10 hover:text-gold-300'
                 }`}
               >
