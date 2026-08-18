@@ -239,6 +239,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
   // (كان يُكتَم الإعداد العام للأبد فيصمت كل الريلز التالية = "كل كم فيديو ينكتم").
   // يرجع الصوت تلقائياً بأول لمسة/سحبة، والأيقونة تبقى صحيحة (صوت مفعّل).
   const forcedMuteRef = useRef(false);
+  const soundRestoreRef = useRef(null); // مستمِع إيماءة عام لإعادة الصوت بعد كتم مؤقّت
   const holdRef = useRef({ timer: null, held: false, x: 0, y: 0, moved: false, swallow: false });
   const activeRef = useRef(isActive);
   activeRef.current = isActive;
@@ -328,9 +329,18 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
       vid.currentTime = 0;
       if (progressRef.current) progressRef.current.style.width = '0%';
       if (hlsRef.current) { try { hlsRef.current.stopLoad(); } catch { /* تجاهل */ } } // الشريحة التالية لا تزاحم تحميل النشطة
+      // نلغي مستمِع استعادة الصوت المعلّق (لم نعد الريل النشط) كي لا يبقى عالقاً
+      if (soundRestoreRef.current) {
+        window.removeEventListener('pointerdown', soundRestoreRef.current, true);
+        window.removeEventListener('touchstart', soundRestoreRef.current, true);
+        soundRestoreRef.current = null;
+      }
       return undefined;
     }
     if (hlsRef.current) { try { hlsRef.current.startLoad(-1); } catch { /* تجاهل */ } }
+    // كل تفعيل يحترم تفضيل الصوت العام من جديد: يلغي أي كتم مؤقّت سابق فيعيد المحاولة
+    // بالصوت (مهم عند الرجوع لريل سبق أن كُتم — كان يبقى صامتاً حتى لمسة مقصودة)
+    if (!muted && forcedMuteRef.current) { forcedMuteRef.current = false; vid.muted = false; }
     // عنصر الفيديو يُركّب عند الاقتراب فقط، فقد لا يكون جاهزاً لحظة التفعيل —
     // أمر تشغيل واحد كان يفشل بصمت ويبقى الفيديو واقفاً حتى كبسة المستخدم.
     // الآن: محاولة فورية + إعادة عند جاهزية البيانات + محاولات مجدولة قليلة
@@ -352,6 +362,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
           forcedMuteRef.current = true;
           vid.muted = true;
           vid.play().catch(() => {});
+          armGlobalSoundRestore(); // أول إيماءة تالية (بما فيها استمرار التمرير) تُعيد الصوت
         }
       });
     };
@@ -369,6 +380,7 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
       vid.removeEventListener('loadeddata', tryPlay);
       vid.removeEventListener('canplay', tryPlay);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive]);
 
   // iOS يوقف الفيديو تلقائياً لو أُزيل الكتم خارج إيماءة مستخدم مباشرة (سياسة WebKit
@@ -393,6 +405,30 @@ function ReelSlide({ p, muted, rtl, t, hint, isActive, preload, isLast, onUnmute
       v.play().catch(() => {});
     }
   };
+
+  // بعد كتم مؤقّت (رفض iOS التشغيل بالصوت): نصغي لأول إيماءة تالية في أي مكان بالشاشة —
+  // بما فيها استمرار التمرير أو أي لمسة — فتُعيد صوت هذا الريل تلقائياً داخل الإيماءة (iOS
+  // يسمح بالصوت حينها). هكذا لا يحتاج المستخدم لمسة مقصودة على الشريحة، فلا "يقطع الصوت
+  // كل ما نزّلت". listener لمرّة واحدة يُزال فور تنفيذه أو عند تفكيك المكوّن.
+  const armGlobalSoundRestore = () => {
+    if (soundRestoreRef.current) return; // مسلّح أصلاً — لا نكرّر
+    const restore = () => {
+      window.removeEventListener('pointerdown', restore, true);
+      window.removeEventListener('touchstart', restore, true);
+      soundRestoreRef.current = null;
+      if (activeRef.current) restoreSoundIfForced(); // فقط إن بقي هذا الريل النشط (لا نشغّل ريلاً غادرناه)
+    };
+    soundRestoreRef.current = restore;
+    window.addEventListener('pointerdown', restore, { capture: true, passive: true });
+    window.addEventListener('touchstart', restore, { capture: true, passive: true });
+  };
+  useEffect(() => () => {
+    if (soundRestoreRef.current) {
+      window.removeEventListener('pointerdown', soundRestoreRef.current, true);
+      window.removeEventListener('touchstart', soundRestoreRef.current, true);
+      soundRestoreRef.current = null;
+    }
+  }, []);
 
   // حارس الانحشار (زي مشغّلات الريلز الكبيرة): لو صار الفيديو "شغّال" لكن وقته لا
   // يتقدّم ~6 ثوانٍ (تخزين معلّق/شبكة انقطعت لحظة/جلسة iOS انحشرت) نعيد تحميل
