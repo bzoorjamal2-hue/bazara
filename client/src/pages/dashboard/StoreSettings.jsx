@@ -9,6 +9,7 @@ import BannerEditor from '../../components/BannerEditor.jsx';
 import OpostConnect from '../../components/OpostConnect.jsx';
 import EpsConnect from '../../components/EpsConnect.jsx';
 import GoboxConnect from '../../components/GoboxConnect.jsx';
+import { Field, SectionHead } from '../../components/FormField.jsx';
 import {
   SaveIcon, TruckIcon, ImageIcon, GiftIcon, FolderIcon, TrashIcon, MegaphoneIcon, RulerIcon, ShieldIcon,
   StoreIcon, PhoneIcon, BoltIcon, ChartIcon, TagIcon, CardIcon, GearIcon, CheckIcon, CopyIcon, LinkIcon,
@@ -30,56 +31,6 @@ const EyeGlyph = (p) => (
   </svg>
 );
 
-// ── عناصر إدخال مساعدة ────────────────────────────────────────────────────────
-
-// تلميح منبثق: زر «؟» صغير بجانب التسمية يشرح الخانة عند الضغط — شرح وافٍ بلا زحمة بصرية
-function Tip({ text }) {
-  const [open, setOpen] = useState(false);
-  if (!text) return null;
-  return (
-    <span className="relative inline-flex align-middle">
-      <button
-        type="button"
-        aria-label={text}
-        onClick={() => setOpen((o) => !o)}
-        onBlur={() => setTimeout(() => setOpen(false), 150)}
-        className={`inline-flex h-[17px] w-[17px] items-center justify-center rounded-full border text-[10px] font-bold leading-none transition ${
-          open ? 'border-gold-400 bg-gold-400/25 text-gold-200' : 'border-gold-400/40 text-gold-300/70 hover:border-gold-400 hover:text-gold-200'
-        }`}
-      >
-        ؟
-      </button>
-      {open && (
-        <span className="glass-strong absolute top-[22px] z-30 w-60 max-w-[70vw] p-2.5 text-[11px] font-normal leading-relaxed text-stone-200 start-0">
-          {text}
-        </span>
-      )}
-    </span>
-  );
-}
-
-// خانة موحّدة: تسمية + تلميح منبثق + عدّاد أحرف + سطر إرشادي تحتها
-function Field({ label, tip, hint, icon, max, value = '', required = false, children }) {
-  const len = String(value || '').length;
-  return (
-    <div>
-      <div className="mb-1.5 flex items-end justify-between gap-2">
-        <span className="flex flex-wrap items-center gap-1.5 text-sm font-medium text-stone-300">
-          {icon}
-          {label}
-          {required && <span className="text-red-400/70">*</span>}
-          <Tip text={tip} />
-        </span>
-        {max ? (
-          <span className={`shrink-0 text-[10px] tabular-nums ${len > max * 0.88 ? 'text-amber-400' : 'text-stone-500'}`}>{len}/{max}</span>
-        ) : null}
-      </div>
-      {children}
-      {hint && <p className="mt-1 text-[11px] leading-snug text-stone-400">{hint}</p>}
-    </div>
-  );
-}
-
 // حلقة تقدّم اكتمال الإعدادات — تعطي المالكة هدفاً واضحاً بدل قائمة خانات صمّاء
 function ProgressRing({ pct }) {
   const r = 22;
@@ -100,26 +51,6 @@ function ProgressRing({ pct }) {
       </svg>
       <span className="absolute text-[11px] font-bold tabular-nums text-gold-300">{pct}%</span>
     </span>
-  );
-}
-
-// رأس قسم موحّد: بلاطة أيقونة ذهبية + عنوان + وصف اختياري + علامة اكتمال
-function SectionHead({ icon, title, desc, done }) {
-  return (
-    <div className="flex items-start gap-2.5">
-      <span className="relative mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gold-400/10 text-gold-300 ring-1 ring-gold-400/20">
-        {icon}
-        {done && (
-          <span className="absolute -bottom-1 -end-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-white">
-            <CheckIcon className="h-2.5 w-2.5" />
-          </span>
-        )}
-      </span>
-      <div className="min-w-0">
-        <h2 className="font-display text-lg font-bold text-stone-100">{title}</h2>
-        {desc && <p className="mt-0.5 text-xs leading-relaxed text-stone-400">{desc}</p>}
-      </div>
-    </div>
   );
 }
 
@@ -372,7 +303,7 @@ export default function StoreSettings() {
 
   // تنقّل سريع بين أقسام الإعدادات — القفز لقسم مع محاذاته تحت الشريط العلوي (scroll-mt)
   const jump = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  const CARD = 'glass space-y-4 p-5 sm:p-6 scroll-mt-[calc(env(safe-area-inset-top,0px)+7.5rem)]';
+  const CARD = 'dash-section glass space-y-4 p-5 sm:p-6 scroll-mt-[calc(env(safe-area-inset-top,0px)+7.5rem)]';
   const SUBCARD = 'rounded-2xl border border-gold-400/15 bg-black/20 p-3';
 
   return (
@@ -420,7 +351,14 @@ export default function StoreSettings() {
           لاصق تحت الهيدر العلوي تماماً: top = ارتفاع الهيدر (safe-area + 4.25rem)
           و z-30 أقل من الهيدر (z-50) فلا يتراكبان. خلفية glass معتمة (أبيض/داكن)
           تغطّي المحتوى المتمرّر خلفه. يبقى الشريط في المتناول أثناء النزول. */}
-      <div className="glass sticky top-[calc(env(safe-area-inset-top,0px)+4.25rem)] z-30 flex items-center gap-2 p-2">
+      <div className="glass sticky top-[calc(env(safe-area-inset-top,0px)+4.25rem)] z-30 flex items-center gap-2 overflow-hidden p-2">
+        {/* خيط تقدّم رفيع بأسفل الشريط — نسبة الاكتمال حاضرة دوماً أثناء النزول */}
+        <span
+          // start-0 منطقي: ينمو من بداية السطر بالعربية والإنجليزية على السواء
+          className="pointer-events-none absolute bottom-0 start-0 h-[2px] bg-gradient-to-r from-[#e6c878] to-[#b8932c] transition-[width] duration-700"
+          style={{ width: `${pct}%` }}
+          aria-hidden="true"
+        />
         <div className="flex flex-1 gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {SECTIONS.map(([id, key]) => {
             const on = activeSec === id;
@@ -584,7 +522,7 @@ export default function StoreSettings() {
         {/* بانرات السلايدر */}
         <div id="s-banners" className={CARD}>
           <SectionHead icon={<ImageIcon className="h-5 w-5" />} title={t('dashboard.store.banners')} desc={t('dashboard.store.bannersHint')} done={doneMap['s-banners']} />
-          <BannerEditor banners={form.banners} onChange={(b) => setForm((f) => ({ ...f, banners: b }))} />
+          <BannerEditor banners={form.banners} onChange={(b) => setForm((f) => ({ ...f, banners: b }))} storeName={form.name} />
         </div>
 
         {/* مناطق التوصيل ورسومها */}

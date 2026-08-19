@@ -228,6 +228,8 @@
     "imageSaved": "Image saved ✓"
   },
   "video": {
+    "change": "Change video",
+    "dropHint": "Drag a video here or pick one from your device — MP4 or MOV, ideally under 15 seconds.",
     "chooseFile": "Choose a video from your device",
     "uploading": "Uploading...",
     "notVideo": "The selected file is not a video."
@@ -630,6 +632,20 @@
       "emailChanged": "Email changed successfully."
     },
     "store": {
+      "slidesCount": "{{n}} of {{max}} slides — the order here is the order they appear in the slider.",
+      "bannerTitlePreview": "Slide title",
+      "bannerTitleLabel": "Slide title",
+      "bannerTitleTip": "The large line in the middle of the slide. Keep it short and punchy — two or three words read best on a phone.",
+      "bannerSubtitleLabel": "Subtitle",
+      "bannerSubtitleTip": "A small line under the title that explains it or adds a detail (such as how long the offer runs). Leave it empty if the title says enough.",
+      "bannerBgTip": "The slide background: \"Default\" shows an animated wine-toned backdrop, or pick your own colour, image or video. Images and video are dimmed slightly so the text stays readable.",
+      "bannerImageHint": "A wide, high-resolution image (1920×1080 px). Avoid busy centres so the text stays clear.",
+      "bannerVideoHint": "A short clip (5-15 seconds). It loops automatically and plays muted, so audio does not matter.",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "duplicateSlide": "Duplicate slide",
+      "slideButtonTip": "A button shown under the slide text. Leave the label empty to hide the button.",
+      "btnHrefLabel": "Button destination",
       "progressTitle": "Store setup progress",
       "progressCount": "You have completed {{done}} of {{total}} sections — each one makes your store more trustworthy.",
       "progressDone": "Excellent! Every section is complete — your store is ready ✨",

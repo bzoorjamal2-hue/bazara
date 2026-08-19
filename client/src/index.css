@@ -710,6 +710,21 @@ html.dark .theme-pub .dash-hero {
   background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.6), transparent);
 }
 
+/* أقسام صفحة الإعدادات: خيط ذهبي متدرّج بأعلى كل بطاقة — يفصل الأقسام بأناقة
+   بلا عنصر إضافي داخل كل قسم (::before يغطّي الاثني عشر قسماً دفعةً واحدة) */
+.dash-section { position: relative; overflow: hidden; }
+.dash-section::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.45), transparent);
+}
+html.dark .theme-pub .dash-section::before {
+  background: linear-gradient(90deg, transparent, rgba(230, 200, 120, 0.55), transparent);
+}
+
 /* بطاقات لوحة التحكم: زوايا أنعم وظل فخم متدرّج (يشمل كل الأقسام تلقائياً) */
 .theme-pub .dash .glass {
   border-radius: 1.4rem;
