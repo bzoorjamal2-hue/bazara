@@ -282,11 +282,17 @@ button > svg { vertical-align: middle; }
 html.dark .theme-pub .btn-cart { border-color: rgba(240, 220, 166, 0.45); color: #f0dca6; }
 @media (hover: hover) { html.dark .theme-pub .btn-cart:hover:not(:disabled) { background: #f0dca6; color: #241b12; } }
 
-/* حقول الإدخال */
-.input {
-  @apply w-full rounded-xl border border-gold-400/15 bg-black/30 px-4 py-2.5 text-stone-100
-         placeholder:text-stone-500 focus:border-gold-400/60 focus:outline-none
-         focus:ring-2 focus:ring-gold-400/25 transition;
+/* حقول الإدخال — داخل طبقة components عمداً:
+   هذا الملف يأتي بعد @tailwind utilities، فلو عُرِّف .input خارج الطبقة لتغلّبت
+   حشوته (px-4) على أي أداة حشو تُضاف معه (ps-10 · pe-8 · pe-7)، فيلتصق النص
+   بالأيقونة أو الرمز (₪ · % · أيقونة البحث) ويظهر فوقه. داخل الطبقة تفوز
+   الأدوات دائماً كما هو متوقّع. */
+@layer components {
+  .input {
+    @apply w-full rounded-xl border border-gold-400/15 bg-black/30 px-4 py-2.5 text-stone-100
+           placeholder:text-stone-500 focus:border-gold-400/60 focus:outline-none
+           focus:ring-2 focus:ring-gold-400/25 transition;
+  }
 }
 .label {
   @apply mb-1.5 block text-sm font-medium text-stone-300;

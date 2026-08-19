@@ -846,6 +846,12 @@
       "collectionQuery": "Search keyword (e.g. evening dress)"
     },
     "product": {
+      "sortBy": "Sort",
+      "sortNewest": "Newest",
+      "sortPriceAsc": "Cheapest first",
+      "sortPriceDesc": "Most expensive first",
+      "sortStockAsc": "Lowest stock",
+      "showing": "Showing {{shown}} of {{total}}",
       "listTitle": "Your items",
       "listCount_one": "1 item listed in your store.",
       "listCount_other": "{{count}} items listed in your store.",

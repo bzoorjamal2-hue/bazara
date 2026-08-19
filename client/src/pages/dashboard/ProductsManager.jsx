@@ -4,7 +4,7 @@ import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import ProductForm from './ProductForm.jsx';
 import ConfirmModal from '../../components/ConfirmModal.jsx';
-import { StarIcon, LinkIcon, BagIcon, SearchIcon, EditIcon, CopyIcon, TrashIcon, CheckIcon } from '../../components/icons.jsx';
+import { StarIcon, LinkIcon, BagIcon, SearchIcon, EditIcon, CopyIcon, TrashIcon, CheckIcon, XIcon } from '../../components/icons.jsx';
 import { cldVideoPoster } from '../../utils/cloudinary.js';
 import { clearCachePrefixes } from '../../utils/apiCache.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -36,6 +36,8 @@ export default function ProductsManager({ onCount }) {
   const [delBusy, setDelBusy] = useState(false);
   const [stockFilter, setStockFilter] = useState('all'); // all | low | out — متابعة سريعة للمخزون
   const [q, setQ] = useState(''); // بحث بالاسم أو الفئة — يصير ضرورياً مع كثرة القطع
+  const [cat, setCat] = useState('all'); // تصفية حسب الفئة
+  const [sort, setSort] = useState('newest'); // newest | priceAsc | priceDesc | stockAsc
 
   const load = useCallback(async () => {
     try {
@@ -109,14 +111,25 @@ export default function ProductsManager({ onCount }) {
   const lowList = useMemo(() => (products || []).filter((p) => { const r = remainingOf(p); return r != null && r > 0 && r <= 5; }), [products]);
   const outList = useMemo(() => (products || []).filter((p) => remainingOf(p) === 0), [products]);
 
+  // الفئات الموجودة فعلياً بقطعك — لا نعرض فئة فارغة للتصفية
+  const cats = useMemo(() => [...new Set((products || []).map((p) => p.category).filter(Boolean))], [products]);
+
   const shown = useMemo(() => {
     if (!products) return [];
-    const base = stockFilter === 'low' ? lowList : stockFilter === 'out' ? outList : products;
+    let base = stockFilter === 'low' ? lowList : stockFilter === 'out' ? outList : products;
+    if (cat !== 'all') base = base.filter((p) => p.category === cat);
     const needle = q.trim().toLowerCase();
-    if (!needle) return base;
-    return base.filter((p) => `${p.name} ${catLabel(p.category)}`.toLowerCase().includes(needle));
+    if (needle) base = base.filter((p) => `${p.name} ${catLabel(p.category)}`.toLowerCase().includes(needle));
+    // الترتيب على نسخة — لا نمسّ مصفوفة المنتجات الأصلية
+    const arr = [...base];
+    const remOrInf = (p) => { const r = remainingOf(p); return r == null ? Infinity : r; };
+    if (sort === 'priceAsc') arr.sort((a, b) => Number(a.price) - Number(b.price));
+    else if (sort === 'priceDesc') arr.sort((a, b) => Number(b.price) - Number(a.price));
+    else if (sort === 'stockAsc') arr.sort((a, b) => remOrInf(a) - remOrInf(b));
+    // newest = ترتيب الخادم الأصلي (المميّزة ثم الأحدث) فلا نُعيد ترتيبه
+    return arr;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [products, stockFilter, q, lowList, outList, store]);
+  }, [products, stockFilter, q, cat, sort, lowList, outList, store]);
 
   if (products === null) return <Spinner />;
 
@@ -136,6 +149,15 @@ export default function ProductsManager({ onCount }) {
         {rem != null && rem > 0 && rem <= 5 && <span className="badge bg-amber-500/20 text-amber-300">{t('product.lastFew', { count: rem })}</span>}
       </span>
     );
+  };
+
+  // المتبقّي كرقم صريح لا كشارة فقط — «٣ قطع» أوضح من «آخر القطع» عند إعادة التوفير.
+  // الفارغ (—) يعني منتجاً بلا مخزون محدَّد أصلاً (متوفّر دائماً).
+  const StockCell = ({ p }) => {
+    const r = remainingOf(p);
+    if (r == null) return <span className="text-stone-500">—</span>;
+    const tone = r === 0 ? 'text-red-300' : r <= 5 ? 'text-amber-400' : 'text-stone-300';
+    return <span className={`font-bold tabular-nums ${tone}`}>{r}</span>;
   };
 
   const Chip = ({ value, label, count, tone }) => (
@@ -209,24 +231,68 @@ export default function ProductsManager({ onCount }) {
             desc={t('dashboard.product.listCount', { count: products.length })}
           />
 
-          {/* بحث + شرائح المخزون */}
+          {/* بحث + ترتيب + تصفية */}
           <div className="space-y-2.5">
-            <div className="relative">
-              <span className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-stone-400"><SearchIcon className="h-4 w-4" /></span>
-              <input
-                type="search"
-                className="input ps-10"
-                placeholder={t('dashboard.product.searchPlaceholder')}
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-              />
+            <div className="flex flex-wrap gap-2">
+              {/* الأيقونة والحقل داخل حاوية واحدة (لا تراكب) + زرّ تفريغ سريع */}
+              <div className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-gold-400/15 bg-black/20 px-3 focus-within:border-gold-400/60 focus-within:ring-2 focus-within:ring-gold-400/25">
+                <SearchIcon className="h-4 w-4 shrink-0 text-stone-400" />
+                <input
+                  type="text"
+                  className="min-w-0 flex-1 bg-transparent py-2.5 text-sm text-stone-100 placeholder:text-stone-500 focus:outline-none"
+                  placeholder={t('dashboard.product.searchPlaceholder')}
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                />
+                {q && (
+                  <button type="button" onClick={() => setQ('')} aria-label={t('common.cancel')} className="shrink-0 text-stone-400 transition hover:text-gold-200">
+                    <XIcon className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+              <select
+                value={sort} onChange={(e) => setSort(e.target.value)}
+                aria-label={t('dashboard.product.sortBy')}
+                className="input !w-auto shrink-0 !py-2 text-sm"
+              >
+                <option value="newest">{t('dashboard.product.sortNewest')}</option>
+                <option value="priceAsc">{t('dashboard.product.sortPriceAsc')}</option>
+                <option value="priceDesc">{t('dashboard.product.sortPriceDesc')}</option>
+                <option value="stockAsc">{t('dashboard.product.sortStockAsc')}</option>
+              </select>
             </div>
+
+            {/* شرائح المخزون */}
             {(lowList.length > 0 || outList.length > 0) && (
               <div className="flex flex-wrap items-center gap-2">
                 <Chip value="all" label={t('common.all')} count={products.length} tone="bg-wine/10 text-wine ring-wine/20" />
                 {lowList.length > 0 && <Chip value="low" label={t('dashboard.product.lowStock')} count={lowList.length} tone="bg-amber-500/15 text-amber-300 ring-amber-500/25" />}
                 {outList.length > 0 && <Chip value="out" label={t('product.outOfStock')} count={outList.length} tone="bg-red-500/15 text-red-300 ring-red-500/25" />}
               </div>
+            )}
+
+            {/* شرائح الفئات — تظهر عند وجود أكثر من فئة فعلاً */}
+            {cats.length > 1 && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {['all', ...cats].map((c) => {
+                  const on = cat === c;
+                  return (
+                    <button
+                      key={c} type="button" onClick={() => setCat(c)}
+                      className={`rounded-full border px-3 py-1 text-[11px] font-semibold transition ${
+                        on ? 'border-[#d4af37] bg-[#d4af37] text-[#3f2e22]' : 'border-gold-400/25 bg-gold-400/5 text-stone-300 hover:bg-gold-400/15 hover:text-gold-200'
+                      }`}
+                    >
+                      {c === 'all' ? t('common.all') : catLabel(c)}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* عدد النتائج — يظهر فقط عند وجود تصفية فعّالة */}
+            {(q.trim() || cat !== 'all' || stockFilter !== 'all') && shown.length > 0 && (
+              <p className="text-[11px] text-stone-400">{t('dashboard.product.showing', { shown: shown.length, total: products.length })}</p>
             )}
           </div>
 
@@ -241,6 +307,7 @@ export default function ProductsManager({ onCount }) {
                     <th className="py-3 pe-3 text-start font-medium">{t('dashboard.product.name')}</th>
                     <th className="p-3 text-start font-medium">{t('dashboard.product.category')}</th>
                     <th className="p-3 text-start font-medium">{t('dashboard.product.price')}</th>
+                    <th className="p-3 text-start font-medium">{t('dashboard.product.qty')}</th>
                     <th className="py-3 ps-3"></th>
                   </tr>
                 </thead>
@@ -255,6 +322,7 @@ export default function ProductsManager({ onCount }) {
                       </td>
                       <td className="p-3 text-stone-300">{catLabel(p.category)}</td>
                       <td className="p-3 font-semibold text-gold-300">{t('common.currency')}{p.price}</td>
+                      <td className="p-3"><StockCell p={p} /></td>
                       <td className="py-3 ps-3">
                         <div className="flex justify-end"><RowActions p={p} /></div>
                       </td>
@@ -273,6 +341,7 @@ export default function ProductsManager({ onCount }) {
                         <p className="truncate font-medium text-stone-100">{p.name}</p>
                         <p className="mt-0.5 truncate text-xs text-stone-400">
                           {catLabel(p.category)} · <span className="font-bold text-gold-300">{t('common.currency')}{p.price}</span>
+                          {' · '}<span className="text-stone-400">{t('dashboard.product.qty')}: </span><StockCell p={p} />
                         </p>
                         <p className="mt-1"><Badges p={p} /></p>
                       </div>

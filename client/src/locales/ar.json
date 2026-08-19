@@ -852,6 +852,12 @@
       "collectionQuery": "كلمة البحث (مثال: فستان سهرة)"
     },
     "product": {
+      "sortBy": "الترتيب",
+      "sortNewest": "الأحدث",
+      "sortPriceAsc": "الأرخص أولاً",
+      "sortPriceDesc": "الأغلى أولاً",
+      "sortStockAsc": "الأقل مخزوناً",
+      "showing": "عرض {{shown}} من {{total}}",
       "listTitle": "قطعك",
       "listCount_one": "قطعة واحدة معروضة بمتجرك.",
       "listCount_two": "قطعتان معروضتان بمتجرك.",
