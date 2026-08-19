@@ -450,6 +450,30 @@ async function ensureColumns() {
   }
 }
 
+// ترقية المحاسبة، منفصلة عن ensureColumns عمداً: تلك كتلة try واحدة، فأي جملة
+// قديمة تفشل فيها تُسقط كل ما بعدها بصمت. عمود التكلفة وجدول المصاريف يقرأهما
+// الكود مباشرةً، وغيابهما يُسقط قائمة الطلبات بخطأ خادم — فلا يصحّ أن يتعلّق
+// وجودهما بنجاح ترقية لا علاقة لها بهما.
+async function ensureAccounting() {
+  const steps = [
+    'ALTER TABLE products ADD COLUMN IF NOT EXISTS cost NUMERIC(10,2);',
+    `CREATE TABLE IF NOT EXISTS expenses (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+      category VARCHAR(30) NOT NULL DEFAULT 'other',
+      amount NUMERIC(12,2) NOT NULL CHECK (amount >= 0),
+      note VARCHAR(200) DEFAULT '',
+      spent_at DATE NOT NULL DEFAULT CURRENT_DATE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );`,
+    'CREATE INDEX IF NOT EXISTS idx_expenses_store_date ON expenses(store_id, spent_at DESC);',
+  ];
+  // كل جملة على حدة: فشل واحدة لا يمنع البقية
+  for (const sql of steps) {
+    try { await pool.query(sql); } catch (err) { console.error('⚠️ ترقية محاسبة:', err.message); }
+  }
+}
+
 function start() {
   app.listen(PORT, () => {
     console.log(`🚀 الخادم يعمل على المنفذ ${PORT}`);
@@ -475,7 +499,10 @@ function start() {
 if (process.env.NODE_ENV === 'production') {
   // .catch إضافي: لو رجعت ensureColumns رفضاً لأي سبب نادر، نسجّله ونُقلع بأي حال —
   // فلا يبقى رفض غير ملتقَط يوقف العملية عند الإقلاع.
-  ensureColumns().catch((e) => console.error('⚠️ ensureColumns rejected:', e?.message)).finally(start);
+  ensureColumns()
+    .catch((e) => console.error('⚠️ ensureColumns rejected:', e?.message))
+    .then(ensureAccounting)
+    .finally(start);
 } else {
   start();
 }

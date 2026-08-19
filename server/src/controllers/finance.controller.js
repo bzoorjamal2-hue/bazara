@@ -27,6 +27,23 @@ function monthRange(raw) {
   return { from, to, key };
 }
 
+// سجلّ مصاريف الشهر. 42P01 = الجدول غير موجود بعد (قاعدة لم تُرقَّ): نُرجع سجلاً
+// فارغاً بدل خطأ خادم — تبقى أرقام الإيراد والربح ظاهرة والمصاريف صفراً، وهو
+// أصدق للمالكة من شاشة معطّلة. نفس الدرس الذي أسقط قائمة الطلبات سابقاً.
+async function listExpenses(storeId, from, to) {
+  try {
+    return await query(
+      `SELECT id, category, amount, note, spent_at FROM expenses
+       WHERE store_id = $1 AND spent_at >= $2 AND spent_at < $3
+       ORDER BY spent_at DESC, created_at DESC`,
+      [storeId, from, to]
+    );
+  } catch (err) {
+    if (err.code === '42P01') return { rows: [] };
+    throw err;
+  }
+}
+
 // ── GET /api/finance?month=YYYY-MM ─────────────────────────────────────────
 export async function financeSummary(req, res, next) {
   try {
@@ -40,12 +57,7 @@ export async function financeSummary(req, res, next) {
          WHERE store_id = $1 AND ${PAID} AND created_at >= $2 AND created_at < $3`,
         [store.id, from, to]
       ),
-      query(
-        `SELECT id, category, amount, note, spent_at FROM expenses
-         WHERE store_id = $1 AND spent_at >= $2 AND spent_at < $3
-         ORDER BY spent_at DESC, created_at DESC`,
-        [store.id, from, to]
-      ),
+      listExpenses(store.id, from, to),
       storeCostMap(store.id),
     ]);
 

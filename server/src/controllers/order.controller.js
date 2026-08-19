@@ -130,8 +130,16 @@ export function orderProfit(order, costByProduct = new Map()) {
 
 // خريطة تكلفة منتجات المتجر — للطلبات القديمة التي بلا لقطة
 export async function storeCostMap(storeId) {
-  const r = await query('SELECT id, cost FROM products WHERE store_id = $1 AND cost IS NOT NULL', [storeId]);
-  return new Map(r.rows.map((p) => [String(p.id), Number(p.cost)]));
+  try {
+    const r = await query('SELECT id, cost FROM products WHERE store_id = $1 AND cost IS NOT NULL', [storeId]);
+    return new Map(r.rows.map((p) => [String(p.id), Number(p.cost)]));
+  } catch (err) {
+    // 42703 = عمود غير موجود. قائمة الطلبات شريان المتجر ولا يجوز أن تسقط لأجل
+    // رقم محاسبي: نُرجع خريطة فارغة فيظهر الربح «غير محسوب» بدل خطأ خادم يُخفي
+    // الطلبات كلها. حدث هذا فعلاً حين سبق الكودُ ترقيةَ قاعدة البيانات.
+    if (err.code === '42703') return new Map();
+    throw err;
+  }
 }
 
 const SITE = () => (process.env.PUBLIC_SITE_URL || process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '');
@@ -702,7 +710,7 @@ export async function listMyOrders(req, res, next) {
     const store = await getUserStore(req.user.id);
     if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
     const r = await query(
-      `SELECT id, customer_name, customer_phone, items, total, currency, status, created_at,
+      `SELECT id, reference, customer_name, customer_phone, items, total, currency, status, created_at,
               city, area, address, notes, delivery_fee, coupon_code, discount,
               opost_tracking, opost_status, eps_barcode, eps_status, gobox_barcode, gobox_status
        FROM orders WHERE store_id = $1 ORDER BY created_at DESC LIMIT 200`,
