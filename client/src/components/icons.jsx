@@ -255,3 +255,7 @@ export function EyeIcon({ className = 'h-5 w-5' }) {
 export function EyeOffIcon({ className = 'h-5 w-5' }) {
   return svg(className, <><path {...L} d="M9.9 4.24A9.1 9.1 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19M6.6 6.6A18.6 18.6 0 0 0 2 12s3 8 10 8a9.3 9.3 0 0 0 5.4-1.6" /><path {...L} d="M9.9 9.9a3 3 0 0 0 4.2 4.2M2 2l20 20" /></>);
 }
+// طابعة — طباعة فاتورة الطلب
+export function PrintIcon({ className = 'h-5 w-5' }) {
+  return svg(className, <><path {...L} d="M7 9V4h10v5" /><rect {...L} x="4" y="9" width="16" height="7" rx="2" /><path {...L} d="M7 14h10v6H7z" /></>);
+}

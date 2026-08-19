@@ -5,7 +5,8 @@ import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
 import { buildWhatsappLink, waCandidates } from '../../utils/whatsapp.js';
 import { getCache, setCache } from '../../utils/apiCache.js';
-import { PinIcon, NoteIcon, TicketIcon, WhatsAppIcon, TruckIcon, BellIcon, TrashIcon, BagIcon, ReceiptIcon, SearchIcon, XIcon, DownloadIcon } from '../../components/icons.jsx';
+import { downloadXlsx } from '../../utils/xlsx.js';
+import { PinIcon, NoteIcon, TicketIcon, WhatsAppIcon, TruckIcon, BellIcon, TrashIcon, BagIcon, ReceiptIcon, SearchIcon, XIcon, DownloadIcon, CheckIcon, CopyIcon, PhoneIcon, PrintIcon } from '../../components/icons.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useCouriers, syncCourierStatuses, courierOf, CourierLock, CourierSend } from '../../components/couriers.jsx';
 import { PageHead, SectionHead } from '../../components/FormField.jsx';
@@ -46,6 +47,7 @@ export default function OrdersManager() {
   // فلترة وبحث بالطلبات: حالة + اسم/هاتف/رقم طلب — للوصول لأي طلب بثوانٍ
   const [statusFilter, setStatusFilter] = useState('all');
   const [oq, setOq] = useState('');
+  const [toast, setToast] = useState(''); // رسالة خاطفة (نسخ التفاصيل)
 
   useEffect(() => {
     let on = true;
@@ -145,36 +147,183 @@ export default function OrdersManager() {
     return lines.join('\n');
   };
 
-  // تصدير الطلبات لملف CSV يفتح في Excel (BOM لدعم العربية) — بناء من البيانات مباشرة بلا خادم
-  const exportCsv = () => {
+  // الخطوة التالية المنطقية بمسار الطلب — زرّ واحد بدل فتح القائمة كل مرّة
+  const NEXT = { new: 'confirmed', confirmed: 'shipped', shipped: 'delivered' };
+
+  // نصّ الطلب كاملاً للنسخ — يُلصق بأي مكان (دفتر، محادثة، ملاحظة)
+  const orderText = (o) => {
+    const cur = t('common.currency');
+    return [
+      `#${o.id} — ${t(`dashboard.ordersSection.${o.status}`)}`,
+      `${o.customerName || ''} ${o.customerPhone || ''}`.trim(),
+      [o.city, o.area && o.area !== o.city ? o.area : '', o.address].filter(Boolean).join(' - '),
+      '',
+      ...(o.items || []).map((it) => `• ${it.name}${it.size ? ` (${it.size})` : ''}${it.color ? ` - ${it.color}` : ''} ×${it.qty} = ${cur}${(it.price * it.qty).toFixed(2)}`),
+      '',
+      `${t('dashboard.ordersSection.delivery')}: ${cur}${Number(o.deliveryFee || 0).toFixed(2)}`,
+      o.discount > 0 ? `${o.couponCode || ''}: −${cur}${Number(o.discount).toFixed(2)}` : '',
+      `${t('dashboard.ordersSection.total')}: ${cur}${Number(o.total).toFixed(2)}`,
+      o.notes ? `${t('dashboard.ordersSection.notes')}: ${o.notes}` : '',
+    ].filter(Boolean).join('\n');
+  };
+
+  const copyOrder = async (o) => {
+    try { await navigator.clipboard.writeText(orderText(o)); setToast(t('common.copied')); setTimeout(() => setToast(''), 1600); } catch { /* تجاهُل */ }
+  };
+
+  // فاتورة للطباعة/الحفظ PDF — تُبنى داخل إطار مخفيّ (أوثق من نافذة منبثقة تحجبها المتصفّحات)
+  const printInvoice = (o) => {
+    const cur = t('common.currency');
+    const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const rows = (o.items || []).map((it) => `<tr>
+      <td>${esc(it.name)}${it.size || it.color ? `<br><small>${esc([it.size, it.color].filter(Boolean).join(' · '))}</small>` : ''}</td>
+      <td class="c">${esc(it.qty)}</td>
+      <td class="e">${cur}${(it.price * it.qty).toFixed(2)}</td>
+    </tr>`).join('');
+    const line = (lbl, val) => `<tr><td colspan="2" class="e lbl">${esc(lbl)}</td><td class="e">${esc(val)}</td></tr>`;
+    const html = `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>${esc(t('dashboard.ordersSection.invoice'))} #${esc(o.id)}</title>
+      <style>
+        *{box-sizing:border-box} body{font-family:'Cairo','Segoe UI',Tahoma,sans-serif;color:#2b2b2b;margin:0;padding:24px}
+        h1{font-size:20px;margin:0 0 2px} .muted{color:#6b6b6b;font-size:12px}
+        .head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #d4af37;padding-bottom:12px;margin-bottom:16px}
+        .box{border:1px solid #e3ddd3;border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:13px}
+        table{width:100%;border-collapse:collapse;font-size:13px}
+        th{background:#f6f1e8;text-align:start;padding:8px;border-bottom:1px solid #e3ddd3}
+        td{padding:8px;border-bottom:1px solid #f0ebe3;vertical-align:top}
+        .c{text-align:center;width:60px} .e{text-align:end;width:110px} .lbl{color:#6b6b6b}
+        .total td{font-weight:800;font-size:15px;border-top:2px solid #d4af37}
+        small{color:#6b6b6b}
+        @media print{body{padding:0}}
+      </style></head><body>
+      <div class="head">
+        <div><h1>${esc(store?.name || 'Bazara')}</h1><div class="muted">${esc(t('dashboard.ordersSection.invoice'))} #${esc(o.id)}</div></div>
+        <div class="muted">${esc(new Date(o.createdAt).toLocaleString())}<br>${esc(t(`dashboard.ordersSection.${o.status}`))}</div>
+      </div>
+      <div class="box">
+        <b>${esc(o.customerName || '')}</b> ${esc(o.customerPhone || '')}<br>
+        ${esc([o.city, o.area && o.area !== o.city ? o.area : '', o.address].filter(Boolean).join(' - '))}
+        ${o.notes ? `<br><small>${esc(o.notes)}</small>` : ''}
+      </div>
+      <table>
+        <thead><tr><th>${esc(t('dashboard.product.name'))}</th><th class="c">${esc(t('dashboard.product.qty'))}</th><th class="e">${esc(t('dashboard.product.price'))}</th></tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot>
+          ${line(t('dashboard.ordersSection.subtotal'), `${cur}${(o.total - (o.deliveryFee || 0) + (o.discount || 0)).toFixed(2)}`)}
+          ${o.discount > 0 ? line(o.couponCode || t('dashboard.ordersSection.discount'), `−${cur}${Number(o.discount).toFixed(2)}`) : ''}
+          ${line(t('dashboard.ordersSection.delivery'), `${cur}${Number(o.deliveryFee || 0).toFixed(2)}`)}
+          <tr class="total"><td colspan="2" class="e">${esc(t('dashboard.ordersSection.total'))}</td><td class="e">${cur}${Number(o.total).toFixed(2)}</td></tr>
+        </tfoot>
+      </table>
+      </body></html>`;
+    const f = document.createElement('iframe');
+    f.setAttribute('aria-hidden', 'true');
+    f.style.cssText = 'position:fixed;inset-inline-end:-9999px;width:0;height:0;border:0';
+    document.body.appendChild(f);
+    const doc = f.contentWindow.document;
+    doc.open(); doc.write(html); doc.close();
+    setTimeout(() => {
+      f.contentWindow.focus();
+      f.contentWindow.print();
+      setTimeout(() => f.remove(), 1500);
+    }, 300);
+  };
+
+  // تصدير Excel حقيقي (.xlsx) بثلاث أوراق منسّقة تكبر تلقائياً مع الطلبات:
+  //   ١) الطلبات — سطر لكل طلب   ٢) القطع المباعة — سطر لكل قطعة (للجرد والأكثر مبيعاً)
+  //   ٣) ملخّص — عدد الطلبات ومبيعاتها لكل حالة
+  // العناوين مثبّتة بتصفية تلقائية، والمبالغ أرقام حقيقية لا نصّ فتُجمَع بـExcel مباشرةً.
+  const exportExcel = () => {
     if (!orders?.length) return;
     const o2 = (k) => t(`dashboard.ordersSection.${k}`);
-    const esc = (v) => {
-      const s = String(v ?? '');
-      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    const p2 = (k) => t(`dashboard.product.${k}`);
+    const dest = (o) => [o.city, o.area && o.area !== o.city ? o.area : ''].filter(Boolean).join(' - ');
+
+    const ordersSheet = {
+      name: o2('title'),
+      columns: [
+        { header: '#', width: 9, type: 'int' },
+        { header: o2('date'), width: 20 },
+        { header: o2('customer'), width: 22 },
+        { header: o2('phone'), width: 16 },
+        { header: o2('deliveryTo'), width: 18 },
+        { header: o2('address'), width: 30 },
+        { header: o2('items'), width: 40 },
+        { header: o2('subtotal'), width: 13, type: 'money' },
+        { header: o2('discount'), width: 12, type: 'money' },
+        { header: o2('coupon'), width: 14 },
+        { header: o2('delivery'), width: 12, type: 'money' },
+        { header: o2('total'), width: 14, type: 'money' },
+        { header: o2('status'), width: 14 },
+      ],
+      rows: orders.map((o) => [
+        o.id,
+        new Date(o.createdAt).toLocaleString(),
+        o.customerName || '',
+        o.customerPhone || '',
+        dest(o),
+        o.address || '',
+        (o.items || []).map((it) => `${it.name}${it.size ? ` (${it.size})` : ''}${it.color ? ` - ${it.color}` : ''} ×${it.qty}`).join(' | '),
+        Number((o.total - (o.deliveryFee || 0) + (o.discount || 0)).toFixed(2)),
+        Number(o.discount || 0),
+        o.couponCode || '',
+        Number(o.deliveryFee || 0),
+        Number(o.total || 0),
+        o2(o.status),
+      ]),
     };
-    const headers = [o2('date'), o2('customer'), o2('phone'), o2('deliveryTo'), o2('address'), o2('items'), o2('subtotal'), o2('discount'), o2('coupon'), o2('delivery'), o2('total'), o2('status')];
-    const rows = orders.map((o) => [
-      new Date(o.createdAt).toLocaleString(),
+
+    // ورقة القطع: سطر مستقلّ لكل قطعة بكل طلب — أساس الجرد ومعرفة الأكثر مبيعاً
+    const itemRows = [];
+    orders.forEach((o) => (o.items || []).forEach((it) => itemRows.push([
+      o.id,
+      new Date(o.createdAt).toLocaleDateString(),
       o.customerName || '',
-      o.customerPhone || '',
-      [o.city, o.area && o.area !== o.city ? o.area : ''].filter(Boolean).join(' - '),
-      o.address || '',
-      (o.items || []).map((it) => `${it.name}${it.size ? ` (${it.size})` : ''}${it.color ? ` - ${it.color}` : ''} x${it.qty}`).join(' | '),
-      (o.total - (o.deliveryFee || 0) + (o.discount || 0)).toFixed(2),
-      (o.discount || 0).toFixed(2),
-      o.couponCode || '',
-      (o.deliveryFee || 0).toFixed(2),
-      o.total.toFixed(2),
+      it.name || '',
+      it.size || '',
+      it.color || '',
+      Number(it.qty || 0),
+      Number(it.price || 0),
+      Number(((it.price || 0) * (it.qty || 0)).toFixed(2)),
       o2(o.status),
-    ]);
-    const csv = '﻿' + [headers, ...rows].map((r) => r.map(esc).join(',')).join('\n');
-    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `bazara-orders-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    ])));
+    const itemsSheet = {
+      name: o2('items'),
+      columns: [
+        { header: '#', width: 9, type: 'int' },
+        { header: o2('date'), width: 14 },
+        { header: o2('customer'), width: 20 },
+        { header: p2('name'), width: 30 },
+        { header: p2('size'), width: 10 },
+        { header: p2('color'), width: 12 },
+        { header: p2('qty'), width: 9, type: 'int' },
+        { header: p2('price'), width: 12, type: 'money' },
+        { header: o2('total'), width: 13, type: 'money' },
+        { header: o2('status'), width: 14 },
+      ],
+      rows: itemRows,
+    };
+
+    // ورقة الملخّص: لكل حالة عدد الطلبات ومجموع مبيعاتها + سطر الإجمالي
+    const byStatus = FLOW.map((s) => {
+      const list = orders.filter((o) => o.status === s);
+      return [t(`dashboard.ordersSection.${s}`), list.length, Number(list.reduce((sum, o) => sum + Number(o.total || 0), 0).toFixed(2))];
+    }).filter((r) => r[1] > 0);
+    const paid = orders.filter((o) => ['confirmed', 'shipped', 'delivered'].includes(o.status));
+    const summarySheet = {
+      name: t('dashboard.analytics.metricsTitle'),
+      columns: [
+        { header: o2('status'), width: 20 },
+        { header: o2('ordersCountLabel'), width: 14, type: 'int' },
+        { header: o2('total'), width: 16, type: 'money' },
+      ],
+      rows: [
+        ...byStatus,
+        ['', '', ''],
+        [t('dashboard.analytics.revenue'), paid.length, Number(paid.reduce((s, o) => s + Number(o.total || 0), 0).toFixed(2))],
+      ],
+    };
+
+    downloadXlsx([ordersSheet, itemsSheet, summarySheet], `bazara-orders-${new Date().toISOString().slice(0, 10)}`);
   };
 
   if (orders === null && !error) return <Spinner />;
@@ -203,7 +352,7 @@ export default function OrdersManager() {
         hint={t('dashboard.ordersSection.stockHint')}
         action={orders?.length > 0 ? (
           <button
-            onClick={exportCsv}
+            onClick={exportExcel}
             className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-gold-400/30 px-3 py-2 text-sm font-semibold text-gold-200 transition hover:bg-gold-400/10"
           >
             <DownloadIcon className="h-4 w-4" /> {t('dashboard.ordersSection.export')}
@@ -211,6 +360,11 @@ export default function OrdersManager() {
         ) : null}
       />
       {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">{error}</div>}
+      {toast && (
+        <div className="flex items-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-400">
+          <CheckIcon className="h-4 w-4 shrink-0" /> {toast}
+        </div>
+      )}
 
       {/* طلبات لم تكتمل: زبائن أدخلوا بياناتهم بشاشة الإتمام ولم يؤكّدوا — فرصة بيع تُنقَذ برسالة */}
       {abandoned.length > 0 && (
@@ -363,38 +517,65 @@ export default function OrdersManager() {
                   </div>
                   <span className="flex shrink-0 items-center gap-1.5">
                     {/* رقم الطلب — مرجع تذكره المالكة بالمحادثة مع الزبونة أو شركة التوصيل */}
+                    <span className="text-[10px] text-stone-500">{new Date(o.createdAt).toLocaleString()}</span>
                     <span className="rounded-full bg-gold-400/10 px-2 py-0.5 text-[10px] font-bold tabular-nums text-stone-400" dir="ltr">#{o.id}</span>
                     <span className={`badge ${BADGE[o.status] || ''}`}>{t(`dashboard.ordersSection.${o.status}`)}</span>
                   </span>
                 </div>
 
-                {/* المنتجات (مع المقاس/اللون) */}
-                <ul className="mt-2 space-y-0.5 text-sm text-stone-300">
+                {/* القطع — صفوف مقروءة: الكمية بشارة، والتفاصيل تحت الاسم، والسعر بالطرف */}
+                <div className="mt-3 divide-y divide-white/5 overflow-hidden rounded-2xl border border-gold-400/15 bg-black/20">
                   {(o.items || []).map((it, i) => (
-                    <li key={i}>
-                      • {it.name}{it.size ? ` (${it.size})` : ''}{it.color ? ` - ${it.color}` : ''} ×{it.qty}
-                      <span className="text-stone-500"> — {t('common.currency')}{(it.price * it.qty).toFixed(2)}</span>
-                    </li>
+                    <div key={i} className="flex items-center gap-2.5 p-2.5">
+                      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-gold-400/15 text-[11px] font-bold text-gold-200" dir="ltr">×{it.qty}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm text-stone-200">{it.name}</p>
+                        {(it.size || it.color) && (
+                          <p className="mt-0.5 truncate text-[11px] text-stone-400">
+                            {[it.size && `${t('dashboard.product.size')}: ${it.size}`, it.color && `${t('dashboard.product.color')}: ${it.color}`].filter(Boolean).join(' · ')}
+                          </p>
+                        )}
+                      </div>
+                      <span className="shrink-0 text-sm font-semibold tabular-nums text-stone-300">{t('common.currency')}{(it.price * it.qty).toFixed(2)}</span>
+                    </div>
                   ))}
-                </ul>
+                </div>
 
-                {/* التوصيل */}
-                {(o.city || o.address) && (
-                  <p className="mt-2 text-xs text-stone-400">
-                    <PinIcon className="inline h-4 w-4" /> {t('dashboard.ordersSection.deliveryTo')}: <span className="text-stone-200">{[o.city, o.area && o.area !== o.city ? o.area : ''].filter(Boolean).join(' - ')}</span>
-                    {o.address ? <span className="text-stone-300"> — {o.address}</span> : null}
-                  </p>
+                {/* التوصيل والملاحظات */}
+                {(o.city || o.address || o.notes) && (
+                  <div className="mt-2.5 space-y-1.5">
+                    {(o.city || o.address) && (
+                      <p className="flex items-start gap-1.5 text-xs text-stone-400">
+                        <PinIcon className="mt-px h-4 w-4 shrink-0" />
+                        <span className="min-w-0">
+                          <span className="text-stone-200">{[o.city, o.area && o.area !== o.city ? o.area : ''].filter(Boolean).join(' - ')}</span>
+                          {o.address ? <span className="text-stone-300"> — {o.address}</span> : null}
+                        </span>
+                      </p>
+                    )}
+                    {o.notes && <p className="flex items-start gap-1.5 text-xs text-stone-400"><NoteIcon className="mt-px h-3.5 w-3.5 shrink-0" /> <span className="min-w-0">{o.notes}</span></p>}
+                  </div>
                 )}
-                {o.notes && <p className="mt-1 flex items-center gap-1 text-xs text-stone-400"><NoteIcon className="h-3.5 w-3.5 shrink-0" /> {o.notes}</p>}
 
-                {/* المبالغ */}
-                <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-white/5 pt-2 text-sm">
-                  <span className="text-xs text-stone-500">{new Date(o.createdAt).toLocaleString()}</span>
-                  <div className="flex flex-wrap items-center gap-3 text-stone-400">
-                    <span>{t('dashboard.ordersSection.subtotal')}: {t('common.currency')}{subtotal}</span>
-                    {o.discount > 0 && <span className="inline-flex items-center gap-1 text-emerald-300"><TicketIcon className="h-3.5 w-3.5" /> {o.couponCode}: −{t('common.currency')}{o.discount.toFixed(2)}</span>}
-                    <span>{t('dashboard.ordersSection.delivery')}: {t('common.currency')}{(o.deliveryFee || 0).toFixed(2)}</span>
-                    <span className="font-display text-base font-bold text-gold-300">{t('common.currency')}{o.total.toFixed(2)}</span>
+                {/* الملخّص المالي — سطور مرتّبة بدل صفّ مزدحم، والإجمالي بارز */}
+                <div className="mt-2.5 space-y-1 rounded-2xl border border-gold-400/15 bg-black/20 p-3 text-sm">
+                  <div className="flex items-center justify-between gap-2 text-stone-400">
+                    <span>{t('dashboard.ordersSection.subtotal')}</span>
+                    <span className="tabular-nums">{t('common.currency')}{subtotal}</span>
+                  </div>
+                  {o.discount > 0 && (
+                    <div className="flex items-center justify-between gap-2 text-emerald-400">
+                      <span className="inline-flex items-center gap-1"><TicketIcon className="h-3.5 w-3.5" /> {o.couponCode}</span>
+                      <span className="tabular-nums">−{t('common.currency')}{o.discount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between gap-2 text-stone-400">
+                    <span>{t('dashboard.ordersSection.delivery')}</span>
+                    <span className="tabular-nums">{t('common.currency')}{(o.deliveryFee || 0).toFixed(2)}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 border-t border-white/5 pt-1.5">
+                    <span className="font-semibold text-stone-200">{t('dashboard.ordersSection.total')}</span>
+                    <span className="font-display text-lg font-extrabold tabular-nums text-gold-300">{t('common.currency')}{o.total.toFixed(2)}</span>
                   </div>
                 </div>
 
@@ -412,6 +593,17 @@ export default function OrdersManager() {
                         options={FLOW.map((s) => ({ value: s, label: t(`dashboard.ordersSection.${s}`) }))}
                       />
                     </div>
+                  )}
+                  {/* الخطوة التالية بضغطة — أسرع من فتح القائمة لكل طلب */}
+                  {!courierOf(o) && NEXT[o.status] && (
+                    <button
+                      onClick={() => setStatus(o.id, NEXT[o.status])}
+                      disabled={savingId === o.id}
+                      title={t('dashboard.ordersSection.moveTo', { status: t(`dashboard.ordersSection.${NEXT[o.status]}`) })}
+                      className="inline-flex items-center gap-1 rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-400 transition hover:bg-emerald-500/20 disabled:opacity-50"
+                    >
+                      <CheckIcon className="h-4 w-4" /> {t(`dashboard.ordersSection.${NEXT[o.status]}`)}
+                    </button>
                   )}
                   {savingId === o.id && <span className="text-xs text-stone-500">…</span>}
                   {wa && (
@@ -436,6 +628,33 @@ export default function OrdersManager() {
                     </button>
                   )}
                   <CourierSend order={o} couriers={couriers} onSent={markSent} />
+
+                  {/* أدوات الطلب: اتصال · نسخ التفاصيل · طباعة الفاتورة */}
+                  <span className="ms-auto flex items-center gap-1.5">
+                    {o.customerPhone && (
+                      <a
+                        href={`tel:${o.customerPhone.replace(/\s/g, '')}`}
+                        title={t('dashboard.ordersSection.call')} aria-label={t('dashboard.ordersSection.call')}
+                        className="grid h-9 w-9 place-items-center rounded-xl border border-gold-400/20 text-stone-400 transition hover:border-gold-400/50 hover:text-gold-200"
+                      >
+                        <PhoneIcon className="h-4 w-4" />
+                      </a>
+                    )}
+                    <button
+                      onClick={() => copyOrder(o)}
+                      title={t('dashboard.ordersSection.copyOrder')} aria-label={t('dashboard.ordersSection.copyOrder')}
+                      className="grid h-9 w-9 place-items-center rounded-xl border border-gold-400/20 text-stone-400 transition hover:border-gold-400/50 hover:text-gold-200"
+                    >
+                      <CopyIcon className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => printInvoice(o)}
+                      title={t('dashboard.ordersSection.printInvoice')} aria-label={t('dashboard.ordersSection.printInvoice')}
+                      className="grid h-9 w-9 place-items-center rounded-xl border border-gold-400/20 text-stone-400 transition hover:border-gold-400/50 hover:text-gold-200"
+                    >
+                      <PrintIcon className="h-4 w-4" />
+                    </button>
+                  </span>
                 </div>
               </div>
               </Fragment>

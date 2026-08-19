@@ -372,6 +372,12 @@
     },
     "addProduct": "Add new product",
     "ordersSection": {
+      "moveTo": "Move to \"{{status}}\"",
+      "copyOrder": "Copy order details",
+      "printInvoice": "Print invoice",
+      "call": "Call customer",
+      "invoice": "Invoice",
+      "ordersCountLabel": "Orders",
       "title": "Orders",
       "stockHint": "All customer orders appear here automatically. Setting status to “Confirmed” deducts the ordered sizes from stock; “Cancelled” restores them.",
       "empty": "No orders yet.",
