@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import { ChartIcon, WarnIcon, TrophyIcon, PinIcon, TruckIcon, ClockIcon, SparkleIcon, CartIcon } from '../../components/icons.jsx';
-import { SectionHead, Tip } from '../../components/FormField.jsx';
+import { SectionHead, Tip, PageHead } from '../../components/FormField.jsx';
 import CountUp from '../../components/CountUp.jsx';
 
 const ic = (p) => ({ viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.9, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true, ...p });
@@ -80,16 +80,7 @@ export default function AnalyticsManager() {
 
   return (
     <div className="space-y-5">
-      {/* رأس الصفحة — بلاطة أيقونة متدرّجة + عنوان ذهبي + سطر تعريفي (كبقية التبويبات) */}
-      <div className="flex items-center gap-3">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-400 to-amber-500 text-white shadow-md">
-          <ChartIcon className="h-6 w-6" />
-        </span>
-        <div className="min-w-0">
-          <h1 className="font-display text-2xl font-bold leading-tight gradient-text">{t('dashboard.analytics.title')}</h1>
-          <p className="text-xs text-stone-400">{t('dashboard.analytics.hint')}</p>
-        </div>
-      </div>
+      <PageHead icon={<ChartIcon className="h-6 w-6" />} title={t('dashboard.analytics.title')} hint={t('dashboard.analytics.hint')} />
 
       {/* المؤشّرات الرئيسية */}
       <div className={CARD}>

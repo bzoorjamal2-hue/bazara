@@ -4,10 +4,11 @@ import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import ProductForm from './ProductForm.jsx';
 import ConfirmModal from '../../components/ConfirmModal.jsx';
-import { StarIcon, LinkIcon } from '../../components/icons.jsx';
+import { StarIcon, LinkIcon, BagIcon } from '../../components/icons.jsx';
 import { cldVideoPoster } from '../../utils/cloudinary.js';
 import { clearCachePrefixes } from '../../utils/apiCache.js';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { PageHead } from '../../components/FormField.jsx';
 
 // الفئات الأصلية السبع — ما عداها فئة مخصّصة للمتجر نجلب اسمها من إعداداته
 const BUILTIN_CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
@@ -141,10 +142,12 @@ export default function ProductsManager({ onCount }) {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-2xl font-bold gradient-text">{t('dashboard.myProducts')}</h1>
-        <button onClick={() => setModal({})} className="btn-primary">＋ {t('dashboard.addProduct')}</button>
-      </div>
+      <PageHead
+        icon={<BagIcon className="h-6 w-6" />}
+        title={t('dashboard.myProducts')}
+        hint={t('dashboard.productsHint')}
+        action={<button onClick={() => setModal({})} className="btn-primary shrink-0">＋ {t('dashboard.addProduct')}</button>}
+      />
 
       {/* شرائح متابعة المخزون — تظهر فقط إن وُجد ما يستحق الانتباه */}
       {(lowList.length > 0 || outList.length > 0) && (

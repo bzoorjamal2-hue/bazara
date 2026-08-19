@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext.jsx';
 import api, { getErrorMessage } from '../../api/client.js';
 import { MegaphoneIcon, UsersIcon, CheckIcon } from '../../components/icons.jsx';
+import { PageHead } from '../../components/FormField.jsx';
 
 // حملة إشعارات المتجر — صاحب المتجر يبعث Push لكل متابِعي متجره (وصل جديد/خصم).
 // الجمهور = من فعّلوا "إشعارات المتجر" من صفحة المتجر (زوّار وزبائن، حتى بلا حساب).
@@ -49,10 +50,7 @@ export default function CampaignManager() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="flex items-center gap-2 font-display text-2xl font-bold gradient-text"><MegaphoneIcon className="h-6 w-6" /> {t('campaign.title')}</h1>
-        <p className="mt-1 text-sm text-stone-400">{t('campaign.hint')}</p>
-      </div>
+      <PageHead icon={<MegaphoneIcon className="h-6 w-6" />} title={t('campaign.title')} hint={t('campaign.hint')} />
 
       {msg && <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-200">{msg}</div>}
       {err && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{err}</div>}

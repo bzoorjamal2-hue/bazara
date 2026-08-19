@@ -123,6 +123,24 @@ export function RowTools({ index, count, onMove, onDuplicate, onRemove, canDupli
   );
 }
 
+// رأس صفحة موحّد لكل تبويبات لوحة التحكّم: بلاطة أيقونة متدرّجة + عنوان ذهبي
+// + سطر تعريفي. مصدر واحد كي تبدو كل التبويبات من عائلة واحدة، وأي تعديل
+// على شكل الرأس ينطبق عليها جميعاً مرّةً واحدة.
+export function PageHead({ icon, title, hint, action }) {
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-400 to-amber-500 text-white shadow-md">
+        {icon}
+      </span>
+      <div className="min-w-0 flex-1">
+        <h1 className="font-display text-2xl font-bold leading-tight gradient-text">{title}</h1>
+        {hint && <p className="mt-0.5 text-xs leading-relaxed text-stone-400">{hint}</p>}
+      </div>
+      {action}
+    </div>
+  );
+}
+
 // رأس قسم موحّد: بلاطة أيقونة ذهبية متدرّجة + عنوان + وصف + علامة اكتمال
 export function SectionHead({ icon, title, desc, done }) {
   return (

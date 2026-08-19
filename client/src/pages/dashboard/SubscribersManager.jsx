@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
-import { CrownIcon, LinkIcon, BellIcon, SaveIcon, PlusIcon, MailIcon, TrashIcon, StarIcon } from '../../components/icons.jsx';
+import { CrownIcon, LinkIcon, BellIcon, SaveIcon, PlusIcon, MailIcon, TrashIcon, StarIcon, UsersIcon } from '../../components/icons.jsx';
+import { PageHead } from '../../components/FormField.jsx';
 
 function fmt(d) {
   return d ? new Date(d).toLocaleString() : '—';
@@ -263,8 +264,7 @@ export default function SubscribersManager() {
 
   return (
     <div className="space-y-5">
-      <h1 className="font-display text-2xl font-bold gradient-text">{t('admin.subscribersTitle')}</h1>
-      <p className="text-sm text-stone-400">{t('admin.subscribersHint')}</p>
+      <PageHead icon={<UsersIcon className="h-6 w-6" />} title={t('admin.subscribersTitle')} hint={t('admin.subscribersHint')} />
       {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
 
       {/* بحث + فلترة بالحالة — يصير ضرورياً مع كثرة المتاجر */}

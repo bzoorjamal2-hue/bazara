@@ -8,6 +8,7 @@ import { sizeLabel } from '../../utils/sizes.js';
 import { InstagramIcon, BagIcon, BackIcon, CheckIcon, TrashIcon, PlusIcon } from '../../components/icons.jsx';
 import { startFbLogin, igRedirectUri } from '../../utils/fbSdk.js';
 import { cldThumb, cldVideoPoster } from '../../utils/cloudinary.js';
+import { PageHead } from '../../components/FormField.jsx';
 
 // ننظّف رابط الصفحة من بارامترات العودة (code/state) بعد معالجتها
 function cleanOauthUrl() {
@@ -42,12 +43,7 @@ export default function InstagramInbox() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="flex items-center gap-2 font-display text-2xl font-bold gradient-text">
-          <InstagramIcon className="h-6 w-6" /> {t('dashboard.instagram.title')}
-        </h1>
-        <p className="mt-1 text-sm text-stone-400">{t('dashboard.instagram.hint')}</p>
-      </div>
+      <PageHead icon={<InstagramIcon className="h-6 w-6" />} title={t('dashboard.instagram.title')} hint={t('dashboard.instagram.hint')} />
 
       {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
 

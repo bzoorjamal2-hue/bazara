@@ -4,7 +4,8 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import api, { getErrorMessage } from '../../api/client.js';
 import ImageInput from '../../components/ImageInput.jsx';
 import PasswordStrength from '../../components/PasswordStrength.jsx';
-import { SaveIcon, KeyIcon, MailIcon } from '../../components/icons.jsx';
+import { SaveIcon, KeyIcon, MailIcon, UserIcon } from '../../components/icons.jsx';
+import { PageHead } from '../../components/FormField.jsx';
 
 export default function Profile() {
   const { t } = useTranslation();
@@ -89,7 +90,7 @@ export default function Profile() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-2xl font-bold gradient-text">{t('dashboard.profileSection.title')}</h1>
+      <PageHead icon={<UserIcon className="h-6 w-6" />} title={t('dashboard.profileSection.title')} hint={t('dashboard.profileSection.hint')} />
 
       {/* الملف الشخصي */}
       <form onSubmit={submit} className="glass space-y-5 p-6">

@@ -10,7 +10,7 @@ import {
   TicketIcon, GiftIcon, BellIcon, UsersIcon, ShieldIcon, ImageIcon, StoreIcon, LinkIcon, MailIcon, InstagramIcon, BoltIcon,
 } from '../components/icons.jsx';
 import SubscriptionBanner from '../components/SubscriptionBanner.jsx';
-import { SectionHead, Tip } from '../components/FormField.jsx';
+import { SectionHead, Tip, PageHead } from '../components/FormField.jsx';
 import Profile from './dashboard/Profile.jsx';
 import StoreSettings from './dashboard/StoreSettings.jsx';
 import ProductsManager from './dashboard/ProductsManager.jsx';
@@ -167,16 +167,7 @@ function Overview({ productsCount }) {
 
   return (
     <div className="space-y-5">
-      {/* رأس الصفحة — بنفس نمط رأس الإعدادات (بلاطة متدرّجة + عنوان ذهبي + سطر تعريفي) */}
-      <div className="flex items-center gap-3">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-400 to-amber-500 text-white shadow-md">
-          <HomeIcon className="h-6 w-6" />
-        </span>
-        <div className="min-w-0">
-          <h1 className="font-display text-2xl font-bold leading-tight gradient-text">{t('dashboard.overview')}</h1>
-          <p className="text-xs text-stone-400">{t('dashboard.ovHint')}</p>
-        </div>
-      </div>
+      <PageHead icon={<HomeIcon className="h-6 w-6" />} title={t('dashboard.overview')} hint={t('dashboard.ovHint')} />
 
       <SubscriptionBanner />
 

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import { MailIcon, PhoneIcon } from '../../components/icons.jsx';
+import { PageHead } from '../../components/FormField.jsx';
 
 // مشتركو النشرة (مدير) — عرض وتصدير. لا حذف من هنا: الحذف يحتاج تأكيد الشخص نفسه،
 // وإتاحته بضغطة تفتح باب مسح القائمة بالخطأ.
@@ -55,14 +56,12 @@ export default function NewsletterManager() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="flex items-center gap-2 font-display text-2xl font-bold gradient-text">
-          <MailIcon className="h-6 w-6" /> {t('admin.newsletter')}
-        </h1>
-        {list.length > 0 && (
-          <button onClick={exportCsv} className="btn-primary !py-2 text-sm">{t('admin.exportCsv')}</button>
-        )}
-      </div>
+      <PageHead
+        icon={<MailIcon className="h-6 w-6" />}
+        title={t('admin.newsletter')}
+        hint={t('admin.newsletterHint')}
+        action={list.length > 0 ? <button onClick={exportCsv} className="btn-primary shrink-0 !py-2 text-sm">{t('admin.exportCsv')}</button> : null}
+      />
 
       {list.length === 0 ? (
         <div className="glass p-10 text-center text-stone-400">{t('admin.newsletterEmpty')}</div>

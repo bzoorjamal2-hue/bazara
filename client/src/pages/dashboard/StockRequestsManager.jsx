@@ -8,6 +8,7 @@ import { BellIcon, WhatsAppIcon, TrashIcon, BagIcon, PinIcon, NoteIcon } from '.
 import { sizeLabel } from '../../utils/sizes.js';
 import { useCouriers, syncCourierStatuses, courierOf, CourierLock, CourierSend } from '../../components/couriers.jsx';
 import { cldThumb } from '../../utils/cloudinary.js';
+import { PageHead } from '../../components/FormField.jsx';
 
 const FLOW = ['new', 'confirmed', 'shipped', 'delivered', 'cancelled'];
 const BADGE = {
@@ -113,10 +114,7 @@ export default function StockRequestsManager() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="flex items-center gap-2 font-display text-2xl font-bold gradient-text"><BellIcon className="h-6 w-6" /> {t('dashboard.stockRequests.title')}</h1>
-        <p className="mt-1 text-sm text-stone-400">{t('dashboard.stockRequests.hint')}</p>
-      </div>
+      <PageHead icon={<BellIcon className="h-6 w-6" />} title={t('dashboard.stockRequests.title')} hint={t('dashboard.stockRequests.hint')} />
 
       {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
 

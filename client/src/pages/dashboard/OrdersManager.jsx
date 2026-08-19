@@ -5,9 +5,10 @@ import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
 import { buildWhatsappLink, waCandidates } from '../../utils/whatsapp.js';
 import { getCache, setCache } from '../../utils/apiCache.js';
-import { PinIcon, NoteIcon, TicketIcon, WhatsAppIcon, TruckIcon, BellIcon, TrashIcon, BagIcon } from '../../components/icons.jsx';
+import { PinIcon, NoteIcon, TicketIcon, WhatsAppIcon, TruckIcon, BellIcon, TrashIcon, BagIcon, ReceiptIcon } from '../../components/icons.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useCouriers, syncCourierStatuses, courierOf, CourierLock, CourierSend } from '../../components/couriers.jsx';
+import { PageHead } from '../../components/FormField.jsx';
 
 const FLOW = ['new', 'confirmed', 'shipped', 'delivered', 'cancelled'];
 
@@ -197,10 +198,7 @@ export default function OrdersManager() {
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="font-display text-2xl font-bold gradient-text">{t('dashboard.ordersSection.title')}</h1>
-          <p className="mt-1 text-sm text-stone-400">{t('dashboard.ordersSection.stockHint')}</p>
-        </div>
+        <PageHead icon={<ReceiptIcon className="h-6 w-6" />} title={t('dashboard.ordersSection.title')} hint={t('dashboard.ordersSection.stockHint')} />
         {orders?.length > 0 && (
           <button
             onClick={exportCsv}

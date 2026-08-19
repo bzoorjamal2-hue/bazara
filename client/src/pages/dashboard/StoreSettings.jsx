@@ -9,7 +9,7 @@ import BannerEditor from '../../components/BannerEditor.jsx';
 import OpostConnect from '../../components/OpostConnect.jsx';
 import EpsConnect from '../../components/EpsConnect.jsx';
 import GoboxConnect from '../../components/GoboxConnect.jsx';
-import { Field, SectionHead, RowTools } from '../../components/FormField.jsx';
+import { Field, SectionHead, RowTools, PageHead } from '../../components/FormField.jsx';
 import {
   SaveIcon, TruckIcon, ImageIcon, GiftIcon, FolderIcon, MegaphoneIcon, RulerIcon, ShieldIcon,
   StoreIcon, PhoneIcon, BoltIcon, ChartIcon, TagIcon, CardIcon, GearIcon, CheckIcon, CopyIcon, LinkIcon, ShareIcon,
@@ -364,16 +364,7 @@ export default function StoreSettings() {
 
   return (
     <div className="space-y-5">
-      {/* رأس فخم */}
-      <div className="flex items-center gap-3">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-400 to-amber-500 text-white shadow-md">
-          <GearIcon className="h-6 w-6" />
-        </span>
-        <div className="min-w-0">
-          <h1 className="font-display text-2xl font-bold leading-tight gradient-text">{t('dashboard.storeSettings')}</h1>
-          <p className="text-xs text-stone-400">{t('dashboard.store.settingsHint')}</p>
-        </div>
-      </div>
+      <PageHead icon={<GearIcon className="h-6 w-6" />} title={t('dashboard.storeSettings')} hint={t('dashboard.store.settingsHint')} />
 
       {/* بطاقة الاكتمال: نسبة + الأقسام الناقصة كأزرار قفز — تُرشد المالكة لما تبقّى */}
       <div className="glass p-4 sm:p-5">

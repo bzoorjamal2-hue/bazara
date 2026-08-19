@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
-import { KeyIcon, CardIcon, LockOpenIcon } from '../../components/icons.jsx';
+import { KeyIcon, CardIcon, LockOpenIcon, ShieldIcon } from '../../components/icons.jsx';
+import { PageHead } from '../../components/FormField.jsx';
 
 function genPassword() {
   const lower = 'abcdefghijkmnpqrstuvwxyz';
@@ -96,7 +97,7 @@ export default function AdminRequests() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-2xl font-bold gradient-text">{t('admin.title')}</h1>
+      <PageHead icon={<ShieldIcon className="h-6 w-6" />} title={t('admin.title')} hint={t('admin.hint')} />
       <Alert>{error}</Alert>
 
       {/* أكواد التفعيل */}
@@ -126,8 +127,10 @@ export default function AdminRequests() {
           <div className="rounded-xl border border-gold-400/30 bg-gold-400/5 p-3">
             <p className="mb-2 text-sm font-semibold text-gold-200">{t('admin.newCodes')}</p>
             <div className="flex flex-wrap gap-2">
+              {/* bg-black/40 كانت تصير مربّعاً رمادياً داكناً بنصّ بنّي باهت بالوضع
+                  النهاري — خلفية ذهبية شفّافة تعمل بالوضعين */}
               {newCodes.map((c) => (
-                <code key={c} className="rounded-lg bg-black/40 px-3 py-1.5 font-mono text-sm text-gold-300" dir="ltr">{c}</code>
+                <code key={c} className="rounded-lg bg-gold-400/15 px-3 py-1.5 font-mono text-sm font-bold text-gold-200 ring-1 ring-gold-400/25" dir="ltr">{c}</code>
               ))}
             </div>
           </div>

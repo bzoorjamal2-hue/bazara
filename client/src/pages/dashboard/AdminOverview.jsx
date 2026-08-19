@@ -5,6 +5,7 @@ import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import { UsersIcon, BagIcon, ReceiptIcon, MailIcon, BellIcon, CrownIcon, ChartIcon } from '../../components/icons.jsx';
 import CountUp from '../../components/CountUp.jsx';
+import { PageHead } from '../../components/FormField.jsx';
 
 // بطاقة إحصائية واحدة — رقم كبير + عنوان + أيقونة، بأسلوب لوحة المتاجر الكبرى.
 function Stat({ Icon, label, value, sub, tone = 'gold', to }) {
@@ -45,10 +46,7 @@ export default function AdminOverview() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="font-display text-2xl font-bold gradient-text">{t('admin.ov.title')}</h1>
-        <p className="mt-1 text-sm text-stone-400">{t('admin.ov.hint')}</p>
-      </div>
+      <PageHead icon={<ChartIcon className="h-6 w-6" />} title={t('admin.ov.title')} hint={t('admin.ov.hint')} />
       {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
 
       {data && (

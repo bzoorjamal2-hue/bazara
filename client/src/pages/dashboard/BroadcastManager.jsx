@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
-import { MailIcon, UsersIcon } from '../../components/icons.jsx';
+import { MailIcon, UsersIcon, MegaphoneIcon } from '../../components/icons.jsx';
+import { PageHead } from '../../components/FormField.jsx';
 
 // رسالة جماعية للمدير — بريد إعلاني لكل أصحاب المتاجر أو مشتركي النشرة.
 export default function BroadcastManager() {
@@ -36,10 +37,7 @@ export default function BroadcastManager() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="font-display text-2xl font-bold gradient-text">{t('admin.bc.title')}</h1>
-        <p className="mt-1 text-sm text-stone-400">{t('admin.bc.hint')}</p>
-      </div>
+      <PageHead icon={<MegaphoneIcon className="h-6 w-6" />} title={t('admin.bc.title')} hint={t('admin.bc.hint')} />
       {msg && <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-200">{msg}</div>}
       {err && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{err}</div>}
 

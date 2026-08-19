@@ -4,6 +4,7 @@ import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
 import { TicketIcon, EditIcon, TrashIcon } from '../../components/icons.jsx';
+import { PageHead } from '../../components/FormField.jsx';
 
 const EMPTY = { code: '', type: 'percent', value: '', minTotal: '', maxUses: '', expiresAt: '', active: true };
 
@@ -78,10 +79,7 @@ export default function CouponsManager() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="flex items-center gap-2 font-display text-2xl font-bold gradient-text"><TicketIcon className="h-6 w-6" /> {t('dashboard.coupons.title')}</h1>
-        <p className="mt-1 text-sm text-stone-400">{t('dashboard.coupons.hint')}</p>
-      </div>
+      <PageHead icon={<TicketIcon className="h-6 w-6" />} title={t('dashboard.coupons.title')} hint={t('dashboard.coupons.hint')} />
 
       {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
 

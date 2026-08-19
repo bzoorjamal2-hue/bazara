@@ -6,6 +6,7 @@ import Spinner from '../../components/Spinner.jsx';
 import BannerEditor from '../../components/BannerEditor.jsx';
 import ImageInput from '../../components/ImageInput.jsx';
 import { ImageIcon } from '../../components/icons.jsx';
+import { PageHead } from '../../components/FormField.jsx';
 
 // الشرائح الافتراضية الموجودة حالياً بالصفحة الرئيسية — تظهر للمدير ليعدّلها/يحذفها
 const DEFAULT_SITE_SLIDES = [
@@ -52,10 +53,7 @@ export default function SiteSliders() {
   if (banners === null) return <Spinner />;
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="flex items-center gap-2 font-display text-2xl font-bold gradient-text"><ImageIcon className="h-6 w-6" /> {t('admin.siteSliders')}</h1>
-        <p className="mt-1 text-sm text-stone-400">{t('admin.siteSlidersHint')}</p>
-      </div>
+      <PageHead icon={<ImageIcon className="h-6 w-6" />} title={t('admin.siteSliders')} hint={t('admin.siteSlidersHint')} />
       {msg && <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-200">{msg}</div>}
       {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
       <div className="glass p-6">
