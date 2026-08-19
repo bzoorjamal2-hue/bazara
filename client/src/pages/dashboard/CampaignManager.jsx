@@ -2,9 +2,20 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext.jsx';
 import api, { getErrorMessage } from '../../api/client.js';
-import { MegaphoneIcon, UsersIcon, CheckIcon, StoreIcon, TagIcon, ClockIcon, WarnIcon, BellIcon } from '../../components/icons.jsx';
-import { PageHead, SectionHead, Field } from '../../components/FormField.jsx';
+import { MegaphoneIcon, UsersIcon, CheckIcon, StoreIcon, TagIcon, ClockIcon, WarnIcon, BellIcon, CopyIcon } from '../../components/icons.jsx';
+import { PageHead, SectionHead, Field, Tip } from '../../components/FormField.jsx';
 import { cldThumb } from '../../utils/cloudinary.js';
+
+// طول العنوان الآمن قبل أن تقصّه شاشة الإشعار على الجوال
+const TITLE_SAFE = 50;
+
+// قوالب جاهزة لأكثر أربع حملات شيوعاً بمتجر ملابس — تُعبّئ العنوان والنصّ والوجهة
+const TEMPLATES = [
+  { key: 'newArrival', emoji: '✨', dest: 'store' },
+  { key: 'sale', emoji: '🏷️', dest: 'offers' },
+  { key: 'lastChance', emoji: '⏳', dest: 'offers' },
+  { key: 'restock', emoji: '🔄', dest: 'store' },
+];
 
 // حملة إشعارات المتجر — صاحب المتجر يبعث Push لكل متابِعي متجره (وصل جديد/خصم).
 // الجمهور = من فعّلوا "إشعارات المتجر" من صفحة المتجر (زوّار وزبائن، حتى بلا حساب).
@@ -54,6 +65,7 @@ export default function CampaignManager() {
   };
 
   const followers = status?.followers ?? 0;
+  const history = status?.history || [];
   const pushOff = status && !status.enabled;
   const dests = [
     { key: 'store', label: t('campaign.linkStore'), Icon: StoreIcon },
@@ -109,11 +121,36 @@ export default function CampaignManager() {
       </div>
 
       {/* المؤلّف */}
-      <div className={CARD}>
+      <div id="campaign-compose" className={`${CARD} scroll-mt-[calc(env(safe-area-inset-top,0px)+5rem)]`}>
         <SectionHead icon={<MegaphoneIcon className="h-5 w-5" />} title={t('campaign.composeTitle')} desc={t('campaign.composeHint')} />
+
+        {/* قوالب جاهزة — البدء من صفحة بيضاء أصعب ما بالحملة */}
+        <div>
+          <p className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-stone-400">
+            {t('campaign.templatesLabel')} <Tip text={t('campaign.templatesTip')} />
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {TEMPLATES.map((tp) => (
+              <button
+                key={tp.key}
+                type="button"
+                onClick={() => { setTitle(t(`campaign.tpl.${tp.key}.title`)); setBody(t(`campaign.tpl.${tp.key}.body`)); setDest(tp.dest); setConfirm(false); }}
+                className="inline-flex items-center gap-1.5 rounded-full border border-gold-400/25 bg-gold-400/5 px-3 py-1.5 text-[11px] font-semibold text-stone-300 transition hover:bg-gold-400/15 hover:text-gold-200"
+              >
+                <span aria-hidden>{tp.emoji}</span> {t(`campaign.tpl.${tp.key}.name`)}
+              </button>
+            ))}
+          </div>
+        </div>
 
         <Field label={t('campaign.notifTitle')} tip={t('campaign.titleTip')} max={80} value={title} required>
           <input className="input" maxLength={80} value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t('campaign.titlePlaceholder')} />
+          {/* الجوال يقصّ العنوان الطويل — ننبّه قبل الإرسال لا بعده */}
+          {title.trim().length > TITLE_SAFE && (
+            <p className="mt-1 flex items-center gap-1 text-[11px] font-semibold text-amber-300">
+              <WarnIcon className="h-3.5 w-3.5 shrink-0" /> {t('campaign.titleLong', { n: TITLE_SAFE })}
+            </p>
+          )}
         </Field>
 
         <Field label={t('campaign.notifBody')} tip={t('campaign.bodyTip')} max={160} value={body} required>
@@ -184,6 +221,37 @@ export default function CampaignManager() {
           </p>
         )}
       </div>
+
+      {/* سجلّ الحملات — ماذا أرسلتِ ومتى وكم وصل، كي لا تتكرّر رسالة أو تتقارب حملتان */}
+      {history.length > 0 && (
+        <div className={CARD}>
+          <SectionHead icon={<ClockIcon className="h-5 w-5" />} title={t('campaign.historyTitle')} desc={t('campaign.historyHint')} />
+          <div className="space-y-2">
+            {history.map((h, i) => (
+              <div key={i} className="rounded-2xl border border-gold-400/15 bg-black/20 p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="min-w-0 flex-1 truncate text-sm font-bold text-stone-100">{h.title}</p>
+                  <span className="shrink-0 rounded-full bg-gold-400/10 px-2.5 py-1 text-[11px] font-bold text-gold-200">
+                    {t('campaign.lastReach', { count: h.sentCount })}
+                  </span>
+                </div>
+                {h.body && <p className="mt-1 line-clamp-2 text-[11px] text-stone-400">{h.body}</p>}
+                <div className="mt-1.5 flex items-center justify-between gap-2">
+                  <span className="text-[10px] text-stone-500">{new Date(h.at).toLocaleString()}</span>
+                  {/* إعادة استخدام حملة سابقة نجحت — بضغطة بدل إعادة كتابتها */}
+                  <button
+                    type="button"
+                    onClick={() => { setTitle(h.title); setBody(h.body || ''); setConfirm(false); document.getElementById('campaign-compose')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
+                    className="inline-flex items-center gap-1 rounded-full border border-gold-400/25 px-2.5 py-1 text-[10px] font-semibold text-gold-200 transition hover:bg-gold-400/10"
+                  >
+                    <CopyIcon className="h-3 w-3" /> {t('campaign.reuse')}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

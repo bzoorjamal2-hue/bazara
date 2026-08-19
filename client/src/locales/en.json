@@ -32,6 +32,34 @@
     "following": "Notifications on ✓"
   },
   "campaign": {
+    "templatesLabel": "Ready-made templates",
+    "templatesTip": "Tap a template to fill the title, text and destination, then edit it to fit your store. Starting from ready text is faster than a blank page.",
+    "titleLong": "The title is longer than {{n}} characters — phones will cut the end off.",
+    "historyTitle": "Campaign history",
+    "historyHint": "Your last ten campaigns: what you sent, when, and how many devices it reached.",
+    "reuse": "Reuse",
+    "tpl": {
+      "newArrival": {
+        "name": "New arrival",
+        "title": "✨ New arrivals!",
+        "body": "A new collection just landed in our store — take a look before it sells out 🌷"
+      },
+      "sale": {
+        "name": "Sale",
+        "title": "🏷️ Sale on the collection",
+        "body": "A special discount on selected pieces for a limited time — shop now before it ends."
+      },
+      "lastChance": {
+        "name": "Last chance",
+        "title": "⏳ Last day of the offer",
+        "body": "The offer ends today — last chance to grab your favourite piece at the reduced price."
+      },
+      "restock": {
+        "name": "Back in stock",
+        "title": "🔄 Back in stock!",
+        "body": "The pieces that sold out are back — grab your size before they go again."
+      }
+    },
     "audienceTitle": "Your audience",
     "audienceHint": "People who turned on notifications from your store page — your message reaches their phone directly, even without an account.",
     "composeTitle": "Notification text",

@@ -75,16 +75,20 @@ export async function campaignStatus(req, res, next) {
   try {
     const store = await ownerStore(req.user.id);
     if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
-    const [fc, last] = await Promise.all([
+    // نُرجع سجلّ آخر عشر حملات لا الأخيرة وحدها: المالكة تحتاج تعرف ماذا أرسلت
+    // ومتى وكم جهازاً وصل، كي لا تُكرّر رسالة أو تُرسل متقاربتين.
+    const [fc, hist] = await Promise.all([
       query('SELECT COUNT(*)::int AS n FROM store_followers WHERE store_id = $1', [store.id]),
-      query('SELECT title, sent_count, created_at FROM store_campaigns WHERE store_id = $1 ORDER BY created_at DESC LIMIT 1', [store.id]),
+      query('SELECT title, body, sent_count, created_at FROM store_campaigns WHERE store_id = $1 ORDER BY created_at DESC LIMIT 10', [store.id]),
     ]);
-    const lastRow = last.rows[0] || null;
-    const nextAt = lastRow ? new Date(new Date(lastRow.created_at).getTime() + CAMPAIGN_COOLDOWN_MS) : null;
+    const rows = hist.rows.map((r) => ({ title: r.title, body: r.body || '', sentCount: r.sent_count, at: r.created_at }));
+    const lastRow = rows[0] || null;
+    const nextAt = lastRow ? new Date(new Date(lastRow.at).getTime() + CAMPAIGN_COOLDOWN_MS) : null;
     res.json({
       enabled: isPushConfigured(),
       followers: fc.rows[0].n,
-      last: lastRow ? { title: lastRow.title, sentCount: lastRow.sent_count, at: lastRow.created_at } : null,
+      last: lastRow,
+      history: rows,
       readyAt: nextAt && nextAt.getTime() > Date.now() ? nextAt : null, // وقت جاهزية الحملة التالية (تهدئة)
     });
   } catch (err) {
