@@ -395,6 +395,20 @@ export async function updateOrderStatus(req, res, next) {
   try {
     const store = await getUserStore(req.user.id);
     if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
+
+    // الطلب المُسلَّم لشركة توصيل تُدار حالته من عندهم فقط: نرفض أي تعديل يدوي
+    // هنا لا بالواجهة وحدها — وإلا بقي ممكناً عبر الـAPI مباشرةً، وتضاربت حالة
+    // بازارا مع حالة الشحنة الحقيقية.
+    const held = await query(
+      `SELECT opost_id, eps_id, gobox_id FROM orders WHERE id = $1 AND store_id = $2`,
+      [id, store.id]
+    );
+    if (!held.rows[0]) return res.status(404).json({ error: 'الطلب غير موجود.' });
+    const h = held.rows[0];
+    if (h.opost_id || h.eps_id || h.gobox_id) {
+      return res.status(409).json({ error: 'هذا الطلب بعهدة شركة التوصيل — حالته تتحدّث تلقائياً من عندهم ولا تُعدَّل يدوياً.' });
+    }
+
     const r = await applyOrderStatus(store.id, id, status);
     if (!r.ok) return res.status(r.code || 400).json({ error: 'الطلب غير موجود.' });
     res.json({ ok: true, status });

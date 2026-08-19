@@ -372,6 +372,9 @@
     },
     "addProduct": "إضافة منتج جديد",
     "ordersSection": {
+      "saveImage": "حفظ الفاتورة صورة",
+      "savingImage": "جاري تجهيز الصورة…",
+      "imageSaved": "تم حفظ صورة الفاتورة ✓",
       "sheetOrders": "الطلبات",
       "sheetItems": "القطع المباعة",
       "sheetBest": "الأكثر مبيعاً",

@@ -372,6 +372,9 @@
     },
     "addProduct": "Add new product",
     "ordersSection": {
+      "saveImage": "Save invoice as image",
+      "savingImage": "Preparing the image…",
+      "imageSaved": "Invoice image saved ✓",
       "sheetOrders": "Orders",
       "sheetItems": "Items sold",
       "sheetBest": "Best sellers",

@@ -6,7 +6,8 @@ import Select from '../../components/Select.jsx';
 import { buildWhatsappLink, waCandidates } from '../../utils/whatsapp.js';
 import { getCache, setCache } from '../../utils/apiCache.js';
 import { downloadXlsx } from '../../utils/xlsx.js';
-import { PinIcon, NoteIcon, TicketIcon, WhatsAppIcon, TruckIcon, BellIcon, TrashIcon, BagIcon, ReceiptIcon, SearchIcon, XIcon, DownloadIcon, CheckIcon, CopyIcon, PhoneIcon, PrintIcon } from '../../components/icons.jsx';
+import { htmlToPngBlob, safeFileName, downloadBlob } from '../../utils/htmlImage.js';
+import { PinIcon, NoteIcon, TicketIcon, WhatsAppIcon, TruckIcon, BellIcon, TrashIcon, BagIcon, ReceiptIcon, SearchIcon, XIcon, DownloadIcon, CheckIcon, CopyIcon, PhoneIcon, PrintIcon, ImageIcon } from '../../components/icons.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useCouriers, syncCourierStatuses, courierOf, CourierLock, CourierSend } from '../../components/couriers.jsx';
 import { PageHead, SectionHead } from '../../components/FormField.jsx';
@@ -299,7 +300,25 @@ export default function OrdersManager() {
     }, 300);
   };
 
-  const printInvoice = (o) => printHtml(invoiceBody(o), `${t('dashboard.ordersSection.invoice')} ${orderNo(o)}`);
+  // عنوان المستند يصير اسم ملف PDF عند «حفظ كـPDF» بحوار الطباعة — نجعله باسم
+  // الزبونة ورقم طلبها بدل عنوان لوحة بازارا.
+  const invoiceName = (o) => safeFileName(`${t('dashboard.ordersSection.invoice')} - ${o.customerName || ''} - ${orderNo(o)}`);
+  const printInvoice = (o) => printHtml(invoiceBody(o), invoiceName(o));
+
+  // حفظ الفاتورة صورة PNG — أسهل للإرسال بواتساب من ملف PDF
+  const saveInvoiceImage = async (o) => {
+    try {
+      setToast(t('dashboard.ordersSection.savingImage'));
+      const blob = await htmlToPngBlob(invoiceBody(o), INVOICE_CSS);
+      downloadBlob(blob, `${invoiceName(o)}.png`);
+      setToast(t('dashboard.ordersSection.imageSaved'));
+    } catch (e) {
+      setError(e.message);
+      setToast('');
+      return;
+    }
+    setTimeout(() => setToast(''), 1800);
+  };
   // طباعة فواتير كل الطلبات الظاهرة دفعةً واحدة — كل فاتورة بصفحة مستقلّة
   const printAllInvoices = () => {
     if (!visibleOrders.length) return;
@@ -830,6 +849,13 @@ export default function OrdersManager() {
                       className="grid h-9 w-9 place-items-center rounded-xl border border-gold-400/20 text-stone-400 transition hover:border-gold-400/50 hover:text-gold-200"
                     >
                       <CopyIcon className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => saveInvoiceImage(o)}
+                      title={t('dashboard.ordersSection.saveImage')} aria-label={t('dashboard.ordersSection.saveImage')}
+                      className="grid h-9 w-9 place-items-center rounded-xl border border-gold-400/20 text-stone-400 transition hover:border-gold-400/50 hover:text-gold-200"
+                    >
+                      <ImageIcon className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => printInvoice(o)}
