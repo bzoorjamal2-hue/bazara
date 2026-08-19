@@ -228,6 +228,8 @@
     "imageSaved": "Image saved ✓"
   },
   "video": {
+    "remove": "Remove video",
+    "uploaded": "Uploaded",
     "change": "Change video",
     "dropHint": "Drag a video here or pick one from your device — MP4 or MOV, ideally under 15 seconds.",
     "chooseFile": "Choose a video from your device",

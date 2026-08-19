@@ -74,8 +74,13 @@ export default function ImageInput({ value, onChange, round = false, label, plac
           drag ? 'border-gold-400/70 bg-gold-400/10' : 'border-gold-400/20 bg-black/15'
         }`}
       >
-        {/* المعاينة — الصورة الحالية أو الافتراضية أو مربّع فارغ */}
-        <div className={`relative h-20 w-20 shrink-0 overflow-hidden border border-gold-400/25 bg-black/30 ${shape}`}>
+        {/* المعاينة — الصورة الحالية أو الافتراضية أو مربّع فارغ. قابلة للضغط:
+            أسرع طريق لتبديل الصورة هو الضغط على الصورة نفسها */}
+        <button
+          type="button" disabled={busy} onClick={() => fileRef.current?.click()}
+          aria-label={hasImg ? t('image.change') : t('image.chooseFile')}
+          className={`group relative h-20 w-20 shrink-0 overflow-hidden border border-gold-400/25 bg-black/30 transition hover:border-gold-400/60 ${shape}`}
+        >
           {hasImg ? (
             <img
               src={value}
@@ -100,11 +105,17 @@ export default function ImageInput({ value, onChange, round = false, label, plac
             </span>
           )}
           {done && !busy && (
-            <span className="absolute inset-0 flex items-center justify-center bg-emerald-500/25 text-emerald-200">
-              <CheckIcon className="h-8 w-8" />
+            <span className="absolute inset-0 flex items-center justify-center bg-emerald-500/30 text-white">
+              <CheckIcon className="h-8 w-8 drop-shadow" />
             </span>
           )}
-        </div>
+          {/* عند مرور الماوس: أيقونة كاميرا تشير أن الصورة نفسها زرّ تبديل */}
+          {!busy && !done && (
+            <span className="pointer-events-none absolute inset-0 hidden items-center justify-center bg-black/45 text-cream opacity-0 transition-opacity group-hover:opacity-100 sm:flex">
+              <CameraIcon className="h-6 w-6" />
+            </span>
+          )}
+        </button>
 
         {/* الإجراءات */}
         <div className="min-w-0 flex-1">

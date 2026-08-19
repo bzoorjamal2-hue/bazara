@@ -527,7 +527,9 @@ input[type='datetime-local']::-webkit-datetime-edit {
 .theme-pub .bg-white\/\[0\.03\],
 .theme-pub .bg-white\/\[0\.05\] { background-color: rgba(94, 70, 54, 0.04); }
 /* صناديق/حقول بخلفية سوداء خفيفة → لمسة كريمية */
+.theme-pub .bg-black\/15,
 .theme-pub .bg-black\/20,
+.theme-pub .bg-black\/25,
 .theme-pub .bg-black\/30 { background-color: rgba(94, 70, 54, 0.05); }
 
 /* شريط التمرير خمري داخل الثيم العام */
@@ -843,6 +845,23 @@ html.dark .theme-pub .border-wine\/25,
 html.dark .theme-pub .border-wine\/30,
 html.dark .theme-pub .border-wine\/40 { border-color: rgba(230, 200, 120, 0.30); }
 
+/* حدود الذهب المستقلّة (حقول الصور/الفيديو، البطاقات الفرعية، زر التلميح «؟»):
+   نهاراً تُقلب لبنّي خفيف، ولم يكن لها مقابل ليلي فتبقى بنّية داكنة على السطح
+   الداكن — أي تختفي عملياً. نعيدها ذهبية خفيفة ليلاً كبقية الحدود.
+   (.glass و.input لا يتأثران: حدودهما من @apply لا من صنف مستقلّ) */
+html.dark .theme-pub .border-gold-400\/15,
+html.dark .theme-pub .border-gold-400\/20,
+html.dark .theme-pub .border-gold-400\/25,
+html.dark .theme-pub .border-gold-400\/30,
+html.dark .theme-pub .border-gold-400\/40,
+html.dark .theme-pub .border-gold-400\/60 { border-color: rgba(230, 200, 120, 0.30); }
+html.dark .theme-pub .border-gold-400 { border-color: #e6c878; }
+@media (hover: hover) {
+  html.dark .theme-pub .hover\:border-gold-400\/45:hover,
+  html.dark .theme-pub .hover\:border-gold-400\/50:hover,
+  html.dark .theme-pub .hover\:border-gold-400\/60:hover { border-color: rgba(230, 200, 120, 0.55); }
+}
+
 /* أزرار البنّي الخفيفة (chips/أزرار ثانوية) */
 html.dark .theme-pub .bg-wine\/5,
 html.dark .theme-pub .bg-wine\/10 { background-color: rgba(230, 200, 120, 0.10); }
@@ -952,6 +971,11 @@ html.dark .theme-pub .text-orange-400,
 html.dark .theme-pub .text-orange-500,
 html.dark .theme-pub .text-orange-600,
 html.dark .theme-pub .text-orange-700 { color: #fdba74; }
+/* الكهرماني الفاتح (عدّادات الأحرف وتنبيه «تعديلات غير محفوظة») كان بلا مقابل
+   ليلي، فيبقى بنّياً داكناً على البطاقة الداكنة ولا يُقرأ — نرفعه لدرجة مضيئة */
+html.dark .theme-pub .text-amber-200,
+html.dark .theme-pub .text-amber-300,
+html.dark .theme-pub .text-amber-400,
 html.dark .theme-pub .text-amber-500,
 html.dark .theme-pub .text-amber-600,
 html.dark .theme-pub .text-amber-700 { color: #fcd34d; }

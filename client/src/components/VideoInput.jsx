@@ -70,7 +70,9 @@ export default function VideoInput({ value, onChange, label, hint = '' }) {
               key={preview}
               src={preview}
               autoPlay loop muted playsInline controls
-              className="max-h-52 w-full rounded-xl bg-black/40"
+              // خلفية داكنة ثابتة خلف الفيديو بالوضعين — الفيديو يغطّيها والأشرطة السوداء
+              // على جوانبه تبدو مقصودة بدل مربّع فاتح غريب
+              className="max-h-52 w-full rounded-xl bg-[#1a1410]"
             />
             {busy && (
               <span className="absolute inset-x-0 bottom-0 flex items-center gap-2 rounded-b-xl bg-black/70 px-2.5 py-1.5 text-[11px] font-bold text-gold-200">
@@ -81,15 +83,23 @@ export default function VideoInput({ value, onChange, label, hint = '' }) {
               </span>
             )}
             {done && !busy && (
-              <span className="absolute top-2 end-2 flex items-center gap-1 rounded-full bg-emerald-500/85 px-2 py-0.5 text-[10px] font-bold text-white">
-                <CheckIcon className="h-3 w-3" /> ✓
+              <span className="absolute top-2 end-2 flex items-center gap-1 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
+                <CheckIcon className="h-3 w-3" /> {t('video.uploaded')}
               </span>
             )}
           </div>
         ) : (
-          <div className="mb-2.5 flex h-24 items-center justify-center rounded-xl bg-black/25 text-stone-600">
-            <VideoIcon className="h-8 w-8" />
-          </div>
+          // الحالة الفارغة: بلاطة مرتّبة قابلة للضغط — أيقونة فيديو داخل دائرة ذهبية
+          // متمركزة تماماً + الصيغ المدعومة، بألوان تتبع الوضع النهاري/الليلي
+          <button
+            type="button" onClick={() => fileRef.current?.click()} disabled={busy}
+            className="mb-2.5 flex h-28 w-full flex-col items-center justify-center gap-2 rounded-xl border border-gold-400/20 bg-black/20 transition hover:border-gold-400/45 hover:bg-gold-400/10 disabled:opacity-60"
+          >
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-gold-400/15 text-gold-300 ring-1 ring-gold-400/25">
+              <VideoIcon className="h-5 w-5" />
+            </span>
+            <span className="text-[11px] font-semibold tracking-wide text-stone-400">MP4 · MOV</span>
+          </button>
         )}
 
         <input ref={fileRef} type="file" accept="video/*" onChange={handleFile} className="hidden" />
@@ -127,7 +137,7 @@ export default function VideoInput({ value, onChange, label, hint = '' }) {
                 type="button" onClick={clear}
                 className="inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-xs text-stone-400 transition hover:text-red-300"
               >
-                <TrashIcon className="h-3.5 w-3.5" /> {t('image.remove')}
+                <TrashIcon className="h-3.5 w-3.5" /> {t('video.remove')}
               </button>
             )}
           </div>

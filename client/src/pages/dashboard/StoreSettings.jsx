@@ -386,8 +386,10 @@ export default function StoreSettings() {
           form="store-settings-form"
           type="submit"
           disabled={busy}
-          className={`relative inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold text-cream shadow-sm transition disabled:opacity-60 ${
-            dirty ? 'bg-wine hover:bg-wine-dark' : 'bg-wine/70 hover:bg-wine'
+          // خمري ممتلئ بالحالتين (التباين مع النص العاجي يبقى عالياً نهاراً وليلاً)؛
+          // الفرق بين «فيه تعديل» و«محفوظ» تحمله حلقة ذهبية ونقطة تنبيه لا شفافية اللون
+          className={`relative inline-flex shrink-0 items-center gap-1.5 rounded-full bg-wine px-4 py-1.5 text-xs font-bold text-cream shadow-sm transition hover:bg-wine-dark disabled:opacity-60 ${
+            dirty ? 'ring-2 ring-[#d4af37]/60' : ''
           }`}
         >
           <SaveIcon className="h-3.5 w-3.5" /> {busy ? t('common.loading') : t('common.save')}
@@ -477,12 +479,12 @@ export default function StoreSettings() {
           <div className="grid gap-4 sm:grid-cols-2">
             <Field
               label={t('dashboard.store.whatsapp')} required
-              icon={<WhatsAppIcon className="h-4 w-4 text-emerald-500" />}
+              icon={<WhatsAppIcon className="h-4 w-4 text-emerald-400" />}
               tip={t('dashboard.store.whatsappTip')} hint={t('dashboard.store.whatsappHint')}
             >
               <input type="tel" dir="ltr" inputMode="tel" className="input" placeholder="+962790000000" value={form.whatsapp} onChange={(e) => setVal('whatsapp', cleanPhone(e.target.value))} />
               {form.whatsapp.length > 7 && (
-                <a href={waLink(form.whatsapp)} target="_blank" rel="noreferrer" className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-500 hover:opacity-80">
+                <a href={waLink(form.whatsapp)} target="_blank" rel="noreferrer" className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 hover:opacity-80">
                   <CheckIcon className="h-3.5 w-3.5" /> {t('dashboard.store.testNumber')}
                 </a>
               )}
@@ -625,7 +627,7 @@ export default function StoreSettings() {
           </div>
 
           {flashOn ? (
-            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3 py-2.5 text-xs font-semibold text-emerald-500">
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3 py-2.5 text-xs font-semibold text-emerald-400">
               <BoltIcon className="h-4 w-4 shrink-0" />
               <span>{t('dashboard.store.flashActive', { percent: form.flashPercent })}</span>
               {flashLeft && <span className="rounded-full bg-emerald-500/15 px-2 py-0.5">{t('dashboard.store.flashLeft', { time: flashLeft })}</span>}
@@ -669,7 +671,9 @@ export default function StoreSettings() {
                     <span className="flex min-w-0 items-center gap-2">
                       <img src={logo} alt="" className="h-8 w-8 shrink-0 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                       <span className="truncate text-sm font-semibold text-gold-200">{displayName}</span>
-                      {hidden && <span className="shrink-0 rounded-full bg-black/40 px-2 py-0.5 text-[10px] text-stone-400">{t('dashboard.store.hiddenBadge')}</span>}
+                      {/* شارة «مخفية»: خلفية ذهبية شفّافة تعمل على الأبيض نهاراً وعلى الداكن ليلاً
+                          (bg-black/40 كانت تصير رمادية داكنة بنصّ باهت بالوضع النهاري) */}
+                      {hidden && <span className="shrink-0 rounded-full bg-gold-400/15 px-2 py-0.5 text-[10px] font-semibold text-stone-400 ring-1 ring-gold-400/20">{t('dashboard.store.hiddenBadge')}</span>}
                     </span>
                     <button
                       type="button"
