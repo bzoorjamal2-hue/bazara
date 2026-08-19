@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext.jsx';
 import api, { getErrorMessage } from '../../api/client.js';
-import { MegaphoneIcon, UsersIcon, CheckIcon } from '../../components/icons.jsx';
-import { PageHead } from '../../components/FormField.jsx';
+import { MegaphoneIcon, UsersIcon, CheckIcon, StoreIcon, TagIcon, ClockIcon, WarnIcon, BellIcon } from '../../components/icons.jsx';
+import { PageHead, SectionHead, Field } from '../../components/FormField.jsx';
+import { cldThumb } from '../../utils/cloudinary.js';
 
 // حملة إشعارات المتجر — صاحب المتجر يبعث Push لكل متابِعي متجره (وصل جديد/خصم).
 // الجمهور = من فعّلوا "إشعارات المتجر" من صفحة المتجر (زوّار وزبائن، حتى بلا حساب).
@@ -18,14 +19,24 @@ export default function CampaignManager() {
   const [confirm, setConfirm] = useState(false);
   const [msg, setMsg] = useState('');
   const [err, setErr] = useState('');
+  const [tick, setTick] = useState(0); // نبضة دقيقة لعدّاد التهدئة
 
   const load = () => api.get('/push/campaign').then((r) => setStatus(r.data)).catch(() => setStatus({ enabled: false, followers: 0 }));
   useEffect(() => { load(); }, []);
 
+  // عدّاد التهدئة يتناقص أمام العين بدل رقم جامد يحتاج تحديث الصفحة
+  useEffect(() => {
+    const id = setInterval(() => setTick((n) => n + 1), 30000);
+    return () => clearInterval(id);
+  }, []);
+
   const url = dest === 'offers' ? '/offers' : (store ? `/store/${store.slug}` : '/');
   const ready = title.trim() && body.trim() && !busy;
   // فترة تهدئة نشطة؟
-  const cooldownMins = status?.readyAt ? Math.max(0, Math.ceil((new Date(status.readyAt).getTime() - Date.now()) / 60000)) : 0;
+  const cooldownMins = (() => {
+    void tick;
+    return status?.readyAt ? Math.max(0, Math.ceil((new Date(status.readyAt).getTime() - Date.now()) / 60000)) : 0;
+  })();
 
   const send = async () => {
     setMsg(''); setErr(''); setBusy(true);
@@ -43,72 +54,120 @@ export default function CampaignManager() {
   };
 
   const followers = status?.followers ?? 0;
+  const pushOff = status && !status.enabled;
   const dests = [
-    { key: 'store', label: t('campaign.linkStore') },
-    { key: 'offers', label: t('campaign.linkOffers') },
+    { key: 'store', label: t('campaign.linkStore'), Icon: StoreIcon },
+    { key: 'offers', label: t('campaign.linkOffers'), Icon: TagIcon },
   ];
+  const blocked = !ready || followers === 0 || cooldownMins > 0 || pushOff;
+
+  const CARD = 'dash-section glass space-y-4 p-5 sm:p-6';
 
   return (
     <div className="space-y-5">
       <PageHead icon={<MegaphoneIcon className="h-6 w-6" />} title={t('campaign.title')} hint={t('campaign.hint')} />
 
-      {msg && <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-200">{msg}</div>}
-      {err && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{err}</div>}
-
-      {status && !status.enabled && (
-        <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-2.5 text-sm text-amber-200">{t('campaign.disabled')}</div>
-      )}
-
-      {/* عدد المتابِعين */}
-      <div className="glass flex items-center gap-3 p-4">
-        <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gold-400/15 text-gold-300"><UsersIcon className="h-5 w-5" /></span>
-        <div>
-          <div className="font-display text-2xl font-bold text-stone-100">{followers}</div>
-          <div className="text-xs text-stone-400">{t('campaign.followers')}</div>
+      {msg && (
+        <div className="flex items-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-400">
+          <CheckIcon className="h-4 w-4 shrink-0" /> {msg}
         </div>
+      )}
+      {err && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">{err}</div>}
+
+      {/* جمهورك */}
+      <div className={CARD}>
+        <SectionHead icon={<UsersIcon className="h-5 w-5" />} title={t('campaign.audienceTitle')} desc={t('campaign.audienceHint')} />
+
+        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-gold-400/15 bg-black/20 p-4">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gold-400/15 text-gold-300"><UsersIcon className="h-6 w-6" /></span>
+          <div className="min-w-0 flex-1">
+            <p className="font-display text-3xl font-extrabold tabular-nums text-stone-100">{followers}</p>
+            <p className="text-xs text-stone-400">{t('campaign.followers')}</p>
+          </div>
+          {followers === 0 && !pushOff && (
+            <p className="w-full text-[11px] leading-relaxed text-stone-400 sm:w-auto sm:max-w-xs">{t('campaign.noFollowers')}</p>
+          )}
+        </div>
+
+        {pushOff && (
+          <p className="flex items-start gap-2 rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-2.5 text-sm font-semibold text-amber-300">
+            <WarnIcon className="mt-px h-4 w-4 shrink-0" /> {t('campaign.disabled')}
+          </p>
+        )}
+
+        {status?.last && (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-gold-400/15 bg-black/20 p-3">
+            <span className="flex min-w-0 items-center gap-2 text-xs text-stone-400">
+              <BellIcon className="h-4 w-4 shrink-0" />
+              <span className="min-w-0 truncate text-stone-300">{status.last.title}</span>
+            </span>
+            <span className="shrink-0 rounded-full bg-gold-400/10 px-2.5 py-1 text-[11px] font-bold text-gold-200">
+              {t('campaign.lastReach', { count: status.last.sentCount })}
+            </span>
+          </div>
+        )}
       </div>
 
-      {status?.last && (
-        <p className="text-xs text-stone-400">{t('campaign.lastSent', { title: status.last.title, count: status.last.sentCount })}</p>
-      )}
-
       {/* المؤلّف */}
-      <div className="glass space-y-4 p-6">
-        <div>
-          <label className="mb-1 block text-xs text-stone-400">{t('campaign.notifTitle')}</label>
-          <input className="input" maxLength={80} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="✨ وصل جديد!" />
-        </div>
-        <div>
-          <label className="mb-1 block text-xs text-stone-400">{t('campaign.notifBody')}</label>
-          <textarea className="input" rows={3} maxLength={160} value={body} onChange={(e) => setBody(e.target.value)} placeholder="تشكيلة الخريف صارت متوفّرة — تسوّقي قبل ما تخلص 🍂" />
-        </div>
-        <div>
-          <label className="mb-1 block text-xs text-stone-400">{t('campaign.link')}</label>
+      <div className={CARD}>
+        <SectionHead icon={<MegaphoneIcon className="h-5 w-5" />} title={t('campaign.composeTitle')} desc={t('campaign.composeHint')} />
+
+        <Field label={t('campaign.notifTitle')} tip={t('campaign.titleTip')} max={80} value={title} required>
+          <input className="input" maxLength={80} value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t('campaign.titlePlaceholder')} />
+        </Field>
+
+        <Field label={t('campaign.notifBody')} tip={t('campaign.bodyTip')} max={160} value={body} required>
+          <textarea className="input resize-none" rows={3} maxLength={160} value={body} onChange={(e) => setBody(e.target.value)} placeholder={t('campaign.bodyPlaceholder')} />
+        </Field>
+
+        <Field label={t('campaign.link')} tip={t('campaign.linkTip')}>
           <div className="grid grid-cols-2 gap-2">
-            {dests.map((d) => (
-              <button
-                key={d.key}
-                type="button"
-                onClick={() => setDest(d.key)}
-                className={`rounded-xl px-3 py-2.5 text-sm font-bold transition ${dest === d.key ? 'bg-gold-400 text-ink-950 shadow-sm' : 'border border-gold-400/25 text-stone-300 hover:bg-gold-400/10'}`}
-              >
-                {d.label}
-              </button>
-            ))}
+            {dests.map((d) => {
+              const on = dest === d.key;
+              return (
+                <button
+                  key={d.key}
+                  type="button"
+                  onClick={() => setDest(d.key)}
+                  // ذهب صريح بالهيكس: bg-gold-400 تنقلب بنّية نهاراً وتبقى ذهبية ليلاً
+                  // مع نصّ عاجي، فيضعف التباين بأحد الوضعين
+                  className={`inline-flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-sm font-bold transition ${
+                    on ? 'border-[#d4af37] bg-[#d4af37] text-[#3f2e22] shadow-sm' : 'border-gold-400/25 text-stone-300 hover:bg-gold-400/10 hover:text-gold-200'
+                  }`}
+                >
+                  <d.Icon className="h-4 w-4" /> {d.label}
+                </button>
+              );
+            })}
+          </div>
+        </Field>
+
+        {/* معاينة حيّة: هيك بيوصل الإشعار لجوال المتابِعة قبل ما تبعثيه */}
+        <div>
+          <p className="mb-1.5 text-xs font-medium text-stone-400">{t('campaign.previewLabel')}</p>
+          <div className="flex items-start gap-3 rounded-2xl border border-gold-400/20 bg-gradient-to-br from-gold-400/10 to-transparent p-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl border border-gold-400/25 bg-black/25">
+              {store?.logoUrl
+                ? <img src={cldThumb(store.logoUrl, 120)} alt="" className="h-full w-full object-cover" />
+                : <StoreIcon className="h-5 w-5 text-stone-500" />}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="flex items-center gap-1.5 text-[10px] text-stone-400">
+                <span className="truncate">{store?.name || t('app.name')}</span> · {t('campaign.previewNow')}
+              </p>
+              <p className="mt-0.5 truncate text-sm font-bold text-stone-100">{title.trim() || t('campaign.previewTitle')}</p>
+              <p className="mt-0.5 line-clamp-2 text-xs text-stone-300">{body.trim() || t('campaign.previewBody')}</p>
+            </div>
           </div>
         </div>
 
         {!confirm ? (
-          <button
-            disabled={!ready || followers === 0 || cooldownMins > 0 || (status && !status.enabled)}
-            onClick={() => setConfirm(true)}
-            className="btn-primary w-full gap-2 disabled:opacity-50"
-          >
+          <button disabled={blocked} onClick={() => setConfirm(true)} className="btn-primary w-full gap-2 disabled:opacity-50">
             <MegaphoneIcon className="h-5 w-5" /> {t('campaign.send')}
           </button>
         ) : (
-          <div className="space-y-2">
-            <p className="text-center text-sm text-stone-300">{t('campaign.confirm')}</p>
+          <div className="space-y-2 rounded-2xl border border-gold-400/25 bg-gold-400/5 p-3">
+            <p className="text-center text-sm font-semibold text-stone-200">{t('campaign.confirmCount', { count: followers })}</p>
             <div className="flex gap-2">
               <button disabled={busy} onClick={send} className="btn-primary flex-1 gap-2 disabled:opacity-60">
                 <CheckIcon className="h-5 w-5" /> {busy ? t('campaign.sending') : t('campaign.send')}
@@ -118,8 +177,12 @@ export default function CampaignManager() {
           </div>
         )}
 
-        {followers === 0 && status?.enabled && <p className="text-xs text-stone-500">{t('campaign.noFollowers')}</p>}
-        {cooldownMins > 0 && <p className="text-center text-xs text-amber-300">{t('campaign.cooldown', { mins: cooldownMins })}</p>}
+        {/* سبب تعطّل الزرّ — بلا تخمين */}
+        {cooldownMins > 0 && (
+          <p className="flex items-center justify-center gap-1.5 text-center text-xs font-semibold text-amber-300">
+            <ClockIcon className="h-4 w-4" /> {t('campaign.cooldown', { mins: cooldownMins })}
+          </p>
+        )}
       </div>
     </div>
   );
