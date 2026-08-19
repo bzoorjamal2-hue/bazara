@@ -4,11 +4,11 @@ import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
 import { buildWhatsappLink, waCandidates } from '../../utils/whatsapp.js';
-import { BellIcon, WhatsAppIcon, TrashIcon, BagIcon, PinIcon, NoteIcon } from '../../components/icons.jsx';
+import { BellIcon, WhatsAppIcon, TrashIcon, BagIcon, PinIcon, NoteIcon, SearchIcon, XIcon } from '../../components/icons.jsx';
 import { sizeLabel } from '../../utils/sizes.js';
 import { useCouriers, syncCourierStatuses, courierOf, CourierLock, CourierSend } from '../../components/couriers.jsx';
 import { cldThumb } from '../../utils/cloudinary.js';
-import { PageHead } from '../../components/FormField.jsx';
+import { PageHead, SectionHead } from '../../components/FormField.jsx';
 
 const FLOW = ['new', 'confirmed', 'shipped', 'delivered', 'cancelled'];
 const BADGE = {
@@ -116,37 +116,92 @@ export default function StockRequestsManager() {
     <div className="space-y-5">
       <PageHead icon={<BellIcon className="h-6 w-6" />} title={t('dashboard.stockRequests.title')} hint={t('dashboard.stockRequests.hint')} />
 
-      {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
+      {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">{error}</div>}
 
-      {/* بحث وفلترة — للوصول لأي طلب توفّر بثوانٍ عندما تكثر */}
-      {counts.all > 3 && (
-        <div className="glass space-y-2.5 p-3">
-          <input className="input" placeholder={t('dashboard.stockRequests.searchPlaceholder')} value={q} onChange={(e) => setQ(e.target.value)} />
-          <div className="flex flex-wrap gap-1.5">
-            {['all', 'ready', 'waiting', 'converted'].map((s) => {
-              if (s !== 'all' && !counts[s]) return null;
-              const on = filter === s;
-              return (
-                <button
-                  key={s}
-                  onClick={() => setFilter(s)}
-                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                    on ? 'bg-gold-400 text-wine-dark shadow-sm' : 'bg-white/5 text-stone-300 ring-1 ring-white/10 hover:bg-white/10'
-                  }`}
-                >
-                  {s === 'all' ? t('common.all') : t(`dashboard.stockRequests.filters.${s}`)}
-                  <span className={`rounded-full px-1.5 text-[10px] font-bold ${on ? 'bg-wine/15 text-wine-dark' : 'bg-white/10 text-stone-400'}`}>{counts[s]}</span>
-                </button>
-              );
-            })}
+      {reqs && reqs.length > 0 && (
+        <div className="dash-section glass space-y-4 p-5 sm:p-6">
+          <SectionHead
+            icon={<BellIcon className="h-5 w-5" />}
+            title={t('dashboard.stockRequests.listTitle')}
+            desc={t('dashboard.stockRequests.listCount', { count: counts.all })}
+          />
+
+          {/* الجاهزة للتنبيه أولاً: هذه أقرب مبيعات ممكنة — زبونة طلبت القطعة وقد توفّرت */}
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { k: 'ready', v: counts.ready, cls: 'text-emerald-400' },
+              { k: 'waiting', v: counts.waiting, cls: 'text-amber-400' },
+              { k: 'converted', v: counts.converted, cls: 'text-stone-300' },
+            ].map((s) => (
+              <button
+                key={s.k}
+                type="button"
+                onClick={() => setFilter(filter === s.k ? 'all' : s.k)}
+                className={`rounded-2xl border bg-black/20 p-3 text-center transition ${
+                  filter === s.k ? 'border-[#d4af37]' : 'border-gold-400/15 hover:border-gold-400/40'
+                }`}
+              >
+                <p className={`font-display text-2xl font-extrabold tabular-nums ${s.cls}`}>{s.v}</p>
+                <p className="mt-0.5 text-[11px] leading-snug text-stone-400">{t(`dashboard.stockRequests.filters.${s.k}`)}</p>
+              </button>
+            ))}
           </div>
+
+          {/* بحث وفلترة — للوصول لأي طلب توفّر بثوانٍ عندما تكثر */}
+          {counts.all > 3 && (
+            <div className="space-y-2.5">
+              <div className="flex items-center gap-2 rounded-xl border border-gold-400/15 bg-black/20 px-3 focus-within:border-gold-400/60 focus-within:ring-2 focus-within:ring-gold-400/25">
+                <SearchIcon className="h-4 w-4 shrink-0 text-stone-400" />
+                <input
+                  className="min-w-0 flex-1 bg-transparent py-2.5 text-sm text-stone-100 placeholder:text-stone-500 focus:outline-none"
+                  placeholder={t('dashboard.stockRequests.searchPlaceholder')}
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                />
+                {q && (
+                  <button type="button" onClick={() => setQ('')} aria-label={t('common.cancel')} className="shrink-0 text-stone-400 transition hover:text-gold-200">
+                    <XIcon className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {['all', 'ready', 'waiting', 'converted'].map((s) => {
+                  if (s !== 'all' && !counts[s]) return null;
+                  const on = filter === s;
+                  return (
+                    <button
+                      key={s}
+                      onClick={() => setFilter(s)}
+                      // ذهب صريح: bg-gold-400 تنقلب بنّية نهاراً وtext-wine-dark بنّي أغمق
+                      // — بنّي على بنّي لا يُقرأ
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                        on
+                          ? 'border-[#d4af37] bg-[#d4af37] text-[#3f2e22] shadow-sm'
+                          : 'border-gold-400/25 bg-gold-400/5 text-stone-300 hover:bg-gold-400/15 hover:text-gold-200'
+                      }`}
+                    >
+                      {s === 'all' ? t('common.all') : t(`dashboard.stockRequests.filters.${s}`)}
+                      <span className={`rounded-full px-1.5 text-[10px] font-bold ${on ? 'bg-[#3f2e22]/15' : 'bg-gold-400/10 text-stone-400'}`}>{counts[s]}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
       {reqs && reqs.length === 0 ? (
-        <div className="glass p-10 text-center text-stone-400">{t('dashboard.stockRequests.empty')}</div>
+        <div className="dash-section glass p-5 sm:p-6">
+          <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-gold-400/25 bg-black/15 p-8 text-center">
+            <BellIcon className="h-8 w-8 text-gold-300" />
+            <span className="text-sm text-stone-400">{t('dashboard.stockRequests.empty')}</span>
+          </div>
+        </div>
       ) : !visible.length ? (
-        <div className="glass p-8 text-center text-sm text-stone-400">{t('dashboard.stockRequests.noResults')}</div>
+        <div className="dash-section glass p-5 sm:p-6">
+          <p className="rounded-2xl border border-gold-400/15 bg-black/20 py-8 text-center text-sm text-stone-400">{t('dashboard.stockRequests.noResults')}</p>
+        </div>
       ) : (
         <div className="space-y-3">
           {visible.map((r) => (

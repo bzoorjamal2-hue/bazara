@@ -663,6 +663,9 @@
       "waMsg": "Hello {{name}} 🌸 this is {{store}}\nWe noticed you started an order that wasn't completed:\n{{items}}\nTotal: ₪{{total}}\nIf you ran into any issue or have a question we're here to help finish it for you 🤍"
     },
     "stockRequests": {
+      "listTitle": "Stock requests",
+      "listCount_one": "1 stock request.",
+      "listCount_other": "{{count}} stock requests.",
       "title": "Restock requests",
       "hint": "Customers who left their number for sold-out items — reach out when you restock.",
       "empty": "No restock requests yet.",
