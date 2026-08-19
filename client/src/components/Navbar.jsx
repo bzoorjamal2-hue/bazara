@@ -15,9 +15,17 @@ import { isStandalone } from '../utils/pwa.js';
 import CatThumb from './CatThumb.jsx';
 import { cldThumb } from '../utils/cloudinary.js';
 
-function Avatar({ user, size = 'h-8 w-8' }) {
+// هوية الحساب أينما ظهرت (زرّ الشريط · القائمة المنبثقة · القائمة الجانبية):
+// صورة الحساب إن وُجدت، وإلا شعار المتجر (للمشترك لا للمدير)، وإلا أول حرف الاسم.
+// مصدر واحد للترتيب والشكل — كان زرّ الشريط يعرض الحرف بينما القائمة الجانبية
+// تعرض شعار المتجر، فيبدوان هويتين مختلفتين لنفس الحساب.
+function Avatar({ user, store, size = 'h-8 w-8' }) {
   if (user?.avatarUrl) {
     return <img src={cldThumb(user.avatarUrl, 140)} alt={user.name} loading="eager" decoding="async" className={`${size} rounded-full border border-gold-400/40 object-cover`} />;
+  }
+  if (store?.logoUrl) {
+    // الشعار غالباً مربّع بهوامش — object-contain كي لا تُقصّ أطرافه داخل الدائرة
+    return <img src={cldThumb(store.logoUrl, 140)} alt={store.name} loading="eager" decoding="async" className={`${size} rounded-full border border-gold-400/40 bg-cream/10 object-contain p-[3px]`} />;
   }
   const initial = user?.name?.trim()?.[0] || <UserIcon className="h-5 w-5" />;
   return (
@@ -58,7 +66,7 @@ function AccountMenu({ user, store, subscription, isAdmin, onClose, onLogout }) 
         <div className="relative overflow-hidden bg-gradient-to-br from-wine to-wine-dark px-3 py-3 text-cream">
           <span aria-hidden className="pointer-events-none absolute -end-5 -top-6 h-16 w-16 rounded-full bg-gold-400/25 blur-2xl" />
           <div className="relative flex items-center gap-2.5">
-            <span className="shrink-0 rounded-full p-[2px] ring-1 ring-gold-300/60"><Avatar user={user} size="h-9 w-9" /></span>
+            <span className="shrink-0 rounded-full p-[2px] ring-1 ring-gold-300/60"><Avatar user={user} store={isAdmin ? null : store} size="h-9 w-9" /></span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-[13px] font-bold leading-tight text-cream">{user.name}</p>
               <span className={`mt-1 inline-flex items-center gap-1 rounded-full px-1.5 py-px text-[10px] font-bold ${pill.cls}`}>
@@ -267,7 +275,7 @@ export default function Navbar() {
                   aria-label={t('nav.account')}
                   aria-expanded={acctOpen}
                 >
-                  <Avatar user={user} size="h-9 w-9" />
+                  <Avatar user={user} store={subscription?.isAdmin ? null : store} size="h-9 w-9" />
                 </button>
                 {acctOpen && (
                   <AccountMenu
@@ -319,15 +327,8 @@ export default function Navbar() {
 
             {/* الهوية — المدير يظهر باسمه وصورته (حساب تحكّم) */}
             <div className="mt-5 flex items-center gap-3 border-b border-cream/15 pb-4">
-              {user.avatarUrl ? (
-                <img src={user.avatarUrl} alt={user.name} className="h-12 w-12 rounded-full border border-cream/40 object-cover" />
-              ) : !isAdmin && store?.logoUrl ? (
-                <img src={store.logoUrl} alt={store.name} className="h-12 w-12 rounded-xl border border-cream/40 object-cover" />
-              ) : (
-                <span className="flex h-12 w-12 items-center justify-center rounded-full border border-cream/40 bg-cream/15 text-lg font-bold text-cream">
-                  {user.name?.[0] || <UserIcon className="h-5 w-5" />}
-                </span>
-              )}
+              {/* نفس مكوّن الهوية المستخدم بزرّ الشريط — فلا يختلف الشعار بين الاثنين */}
+              <Avatar user={user} store={isAdmin ? null : store} size="h-12 w-12" />
               <div className="min-w-0">
                 <p className="truncate font-display text-lg font-bold text-cream">
                   {isAdmin ? user.name : store?.name || t('app.name')}
