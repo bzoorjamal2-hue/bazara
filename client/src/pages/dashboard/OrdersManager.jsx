@@ -550,7 +550,7 @@ export default function OrdersManager() {
               title={t('dashboard.ordersSection.printAll')}
               className="inline-flex items-center gap-1.5 rounded-xl border border-gold-400/30 px-3 py-2 text-sm font-semibold text-gold-200 transition hover:bg-gold-400/10"
             >
-              <PrintIcon className="h-4 w-4" /> <span className="hidden sm:inline">{t('dashboard.ordersSection.printAll')}</span>
+              <PrintIcon className="h-4 w-4 shrink-0" /> <span>{t('dashboard.ordersSection.printAll')}</span>
             </button>
             <button
               onClick={exportExcel}

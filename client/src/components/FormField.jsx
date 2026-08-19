@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TrashIcon, CopyIcon, ArrowUpIcon, ArrowDownIcon, HelpIcon } from './icons.jsx';
+import { TrashIcon, CopyIcon, ArrowUpIcon, ArrowDownIcon, HelpIcon, XIcon } from './icons.jsx';
 
 // عناصر إدخال مشتركة لكل نماذج لوحة التحكّم — مصدر واحد فتبقى كل الواجهات
 // (إعدادات المتجر، محرّر الشرايح، نماذج المدير المستقبلية) بنفس الشكل والسلوك.
@@ -134,6 +134,35 @@ export function RowTools({ index, count, onMove, onDuplicate, onRemove, canDupli
 // رأس صفحة موحّد لكل تبويبات لوحة التحكّم: بلاطة أيقونة متدرّجة + عنوان ذهبي
 // + سطر تعريفي. مصدر واحد كي تبدو كل التبويبات من عائلة واحدة، وأي تعديل
 // على شكل الرأس ينطبق عليها جميعاً مرّةً واحدة.
+// خانة تاريخ بزرّ مسح. خانة التاريخ الأصلية لا تتيح إفراغها بعد اختيار يوم على
+// أغلب المتصفّحات والجوالات، فيبقى التاريخ لصيقاً رغماً عن المستخدمة. كان الزرّ
+// مكتوباً داخل شاشة الكوبونات وحدها بينما بقيت ثلاث خانات تواريخ أخرى بلا مخرج.
+export function DateInput({ value, onChange, type = 'date', clearLabel, className = '', ...rest }) {
+  const { t } = useTranslation();
+  return (
+    <div className="relative">
+      <input
+        {...rest}
+        type={type}
+        value={value || ''}
+        onChange={(e) => onChange(e.target.value)}
+        className={`input ${value ? 'pe-10' : ''} ${className}`}
+      />
+      {value && (
+        <button
+          type="button"
+          onClick={() => onChange('')}
+          title={clearLabel || t('common.clearDate')}
+          aria-label={clearLabel || t('common.clearDate')}
+          className="absolute inset-y-0 end-2 my-auto grid h-7 w-7 place-items-center rounded-lg text-stone-400 transition hover:bg-red-500/10 hover:text-red-300"
+        >
+          <XIcon className="h-4 w-4" />
+        </button>
+      )}
+    </div>
+  );
+}
+
 export function PageHead({ icon, title, hint, action }) {
   const { t } = useTranslation();
   const hintRef = useRef(null);
@@ -186,9 +215,11 @@ export function PageHead({ icon, title, hint, action }) {
       </div>
       {/* الزرّ يأخذ سطراً كاملاً على الجوال بدل أن يسحق العنوان، ويعود لجانبه
           على الحاسوب. كان shrink-0 يُبقيه بالسطر الأول فينضغط النص إلى ٦٠px
-          ويتحوّل التلميح إلى ١٤ سطراً. */}
+          ويتحوّل التلميح إلى ١٤ سطراً. وإن كانت الإجراءات أكثر من واحد تتراصّ
+          عمودياً على الجوال: اقتسام السطر يجعل التسمية الطويلة تلتفّ فيختلف
+          ارتفاع الزرّين. */}
       {action && (
-        <div className="w-full sm:w-auto sm:shrink-0 [&>*]:w-full sm:[&>*]:w-auto [&>span]:flex [&>span>*]:flex-1 sm:[&>span>*]:flex-none">
+        <div className="w-full sm:w-auto sm:shrink-0 [&>*]:w-full sm:[&>*]:w-auto [&>span]:flex [&>span]:flex-col [&>span]:items-stretch sm:[&>span]:flex-row sm:[&>span]:items-center [&>span>*]:flex-1 sm:[&>span>*]:flex-none">
           {action}
         </div>
       )}

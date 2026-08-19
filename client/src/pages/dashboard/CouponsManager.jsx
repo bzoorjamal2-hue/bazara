@@ -5,7 +5,7 @@ import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
 import ConfirmModal from '../../components/ConfirmModal.jsx';
 import { TicketIcon, EditIcon, TrashIcon, CopyIcon, CheckIcon, PlusIcon, CashIcon, ClockIcon, UsersIcon, XIcon, SearchIcon, ShareIcon } from '../../components/icons.jsx';
-import { PageHead, SectionHead, Field } from '../../components/FormField.jsx';
+import { PageHead, SectionHead, Field, DateInput } from '../../components/FormField.jsx';
 
 const EMPTY = { code: '', type: 'percent', value: '', minTotal: '', maxUses: '', expiresAt: '', active: true };
 
@@ -211,21 +211,11 @@ export default function CouponsManager() {
           </Field>
 
           <Field label={t('dashboard.coupons.expiresAt')} icon={<ClockIcon className="h-4 w-4" />} tip={t('dashboard.coupons.expiresTip')} hint={t('common.optional')}>
-            <div className="relative">
-              {/* زرّ مسح: خانة التاريخ الأصلية لا تتيح إفراغها بعد اختيار يوم على
-                  أغلب المتصفّحات والجوالات — فيبقى الكوبون بتاريخ انتهاء رغماً عنك */}
-              <input className={`input ${form.expiresAt ? 'pe-10' : ''}`} type="date" value={form.expiresAt} onChange={set('expiresAt')} />
-              {form.expiresAt && (
-                <button
-                  type="button"
-                  onClick={() => setForm({ ...form, expiresAt: '' })}
-                  title={t('dashboard.coupons.clearDate')} aria-label={t('dashboard.coupons.clearDate')}
-                  className="absolute inset-y-0 end-2 my-auto grid h-7 w-7 place-items-center rounded-lg text-stone-400 transition hover:bg-red-500/10 hover:text-red-300"
-                >
-                  <XIcon className="h-4 w-4" />
-                </button>
-              )}
-            </div>
+            <DateInput
+              value={form.expiresAt}
+              onChange={(v) => setForm({ ...form, expiresAt: v })}
+              clearLabel={t('dashboard.coupons.clearDate')}
+            />
           </Field>
         </div>
 

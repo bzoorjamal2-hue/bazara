@@ -9,7 +9,7 @@ import BannerEditor from '../../components/BannerEditor.jsx';
 import OpostConnect from '../../components/OpostConnect.jsx';
 import EpsConnect from '../../components/EpsConnect.jsx';
 import GoboxConnect from '../../components/GoboxConnect.jsx';
-import { Field, SectionHead, RowTools, PageHead } from '../../components/FormField.jsx';
+import { Field, SectionHead, RowTools, PageHead, DateInput } from '../../components/FormField.jsx';
 import {
   SaveIcon, TruckIcon, ImageIcon, GiftIcon, FolderIcon, MegaphoneIcon, RulerIcon, ShieldIcon,
   StoreIcon, PhoneIcon, BoltIcon, ChartIcon, TagIcon, CardIcon, GearIcon, CheckIcon, CopyIcon, LinkIcon, ShareIcon,
@@ -675,7 +675,7 @@ export default function StoreSettings() {
             </Field>
 
             <Field label={t('dashboard.store.flashEndsAt')} icon={<ClockIcon className="h-4 w-4" />} tip={t('dashboard.store.flashEndsTip')}>
-              <input className="input" type="datetime-local" value={form.flashEndsAt} onChange={set('flashEndsAt')} />
+              <DateInput type="datetime-local" value={form.flashEndsAt} onChange={(v) => set('flashEndsAt')({ target: { value: v } })} />
               {/* مُدد جاهزة — بضغطة بدل تعبئة التاريخ والساعة يدوياً */}
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {[[1, 'dHour1'], [24, 'dDay1'], [72, 'dDays3'], [168, 'dWeek1']].map(([h, key]) => (

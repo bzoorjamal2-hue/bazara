@@ -6,7 +6,7 @@ import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
 import ConfirmModal from '../../components/ConfirmModal.jsx';
 import { CashIcon, ChartIcon, PlusIcon, TrashIcon, CheckIcon, BagIcon, TruckIcon, MegaphoneIcon, PackageIcon, HomeIcon, UsersIcon, NoteIcon, WarnIcon, DownloadIcon, ClockIcon } from '../../components/icons.jsx';
-import { PageHead, SectionHead, Field, Tip } from '../../components/FormField.jsx';
+import { PageHead, SectionHead, Field, Tip, DateInput } from '../../components/FormField.jsx';
 import { downloadXlsx } from '../../utils/xlsx.js';
 
 // فئات المصاريف — نفس مفاتيح الخادم
@@ -375,7 +375,7 @@ export default function FinanceManager() {
                 </div>
               </Field>
               <Field label={t('finance.spentAt')} tip={t('finance.spentAtTip')}>
-                <input type="date" className="input" value={form.spentAt} onChange={(e) => setForm({ ...form, spentAt: e.target.value })} />
+                <DateInput value={form.spentAt} onChange={(v) => setForm({ ...form, spentAt: v })} />
               </Field>
               <Field label={t('finance.note')} max={200} value={form.note}>
                 <input type="text" maxLength={200} className="input" placeholder={t('finance.notePlaceholder')} value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />

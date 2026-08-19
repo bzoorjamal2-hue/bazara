@@ -197,7 +197,8 @@
     "ok": "OK",
     "confirmTitle": "Confirm",
     "more": "More",
-    "less": "Less"
+    "less": "Less",
+    "clearDate": "Clear date"
   },
   "searchPage": {
     "title": "Search",
@@ -434,7 +435,7 @@
       "lineTotal": "Amount",
       "payCod": "Payment method: cash on delivery.",
       "invoiceThanks": "Thank you for trusting {{store}} — always a pleasure to serve you.",
-      "printAll": "Print invoices",
+      "printAll": "Print all invoices",
       "moveTo": "Move to \"{{status}}\"",
       "copyOrder": "Copy order details",
       "printInvoice": "Print invoice",

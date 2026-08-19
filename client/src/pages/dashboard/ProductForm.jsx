@@ -8,7 +8,7 @@ import VideoInput from '../../components/VideoInput.jsx';
 import Select from '../../components/Select.jsx';
 import useScrollLock from '../../hooks/useScrollLock.js';
 import { XIcon, ClockIcon, PaletteIcon, CameraIcon, StarIcon, EditIcon, TagIcon, CashIcon } from '../../components/icons.jsx';
-import { Field } from '../../components/FormField.jsx';
+import { Field, DateInput } from '../../components/FormField.jsx';
 import { SIZES, sizeLabel } from '../../utils/sizes.js';
 import { colorToCss, COLOR_SUGGESTIONS } from '../../utils/colorDot.js';
 
@@ -265,7 +265,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
             {form.oldPrice !== '' && (
               <div className="min-w-0">
                 <label className="label flex items-center gap-1.5"><ClockIcon className="h-4 w-4" /> {t('dashboard.product.saleEndsAt')} <span className="text-stone-500">({t('common.optional')})</span></label>
-                <input type="date" className="input" value={form.saleEndsAt} onChange={set('saleEndsAt')} />
+                <DateInput value={form.saleEndsAt} onChange={(v) => set('saleEndsAt')({ target: { value: v } })} />
                 <p className="mt-1 text-xs text-stone-400">{t('dashboard.product.saleEndsHint')}</p>
               </div>
             )}
