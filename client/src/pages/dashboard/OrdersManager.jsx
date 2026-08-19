@@ -259,9 +259,10 @@ export default function OrdersManager() {
     body{font-family:'Cairo','Segoe UI',Tahoma,sans-serif;color:#2b2b2b;margin:0;padding:0;background:#fff}
     .inv{padding:22px 24px;max-width:800px;margin:0 auto}
     .inv + .inv{page-break-before:always}
-    h1{font-size:19px;margin:0 0 4px}
+    h1{font-size:19px;margin:0 0 4px;color:#8a6a2f}
     .muted{color:#6b6b6b;font-size:11.5px;line-height:1.7}
-    .head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border-bottom:2px solid #d4af37;padding-bottom:12px;margin-bottom:14px}
+    /* خيط ذهبي متدرّج أسفل الترويسة بدل خطّ مصمت — هوية بازارا الذهبية */
+    .head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding-bottom:12px;margin-bottom:14px;border-bottom:3px solid;border-image:linear-gradient(90deg,#e6c878,#d4af37,#b8932c) 1}
     .inv-meta{text-align:end}
     .tag{display:inline-block;background:#d4af37;color:#3f2e22;font-weight:800;font-size:11px;padding:2px 10px;border-radius:99px;margin-bottom:4px}
     .no{font-weight:800;font-size:14px;letter-spacing:.5px}
@@ -270,14 +271,14 @@ export default function OrdersManager() {
     .box-t{color:#8a7f75;font-size:10.5px;font-weight:700;margin-bottom:2px}
     .note{margin-bottom:10px}
     table{width:100%;border-collapse:collapse;font-size:12.5px}
-    th{background:#f6f1e8;text-align:start;padding:7px 8px;border-bottom:1px solid #e3ddd3;font-size:11.5px}
+    th{background:linear-gradient(180deg,#f7efdc,#f1e6cd);color:#6b5320;text-align:start;padding:8px;border-bottom:2px solid #d4af37;font-size:11.5px;font-weight:700}
     td{padding:7px 8px;border-bottom:1px solid #f0ebe3;vertical-align:middle}
     .n{width:28px;text-align:center;color:#8a7f75}
     .c{text-align:center;width:64px}
     .e{text-align:end;width:96px}
     .b{font-weight:700}
     .lbl{color:#6b6b6b}
-    .total td{font-weight:800;font-size:14.5px;border-top:2px solid #d4af37;background:#fdfaf3}
+    .total td{font-weight:800;font-size:15px;color:#6b5320;border-top:2px solid #d4af37;background:linear-gradient(180deg,#fdf7e8,#f9f0dc)}
     small{color:#6b6b6b}
     .pay{margin-top:10px;font-size:12px;color:#3f2e22;background:#f6f1e8;border-radius:8px;padding:7px 10px}
     .thanks{margin-top:10px;text-align:center;color:#8a7f75;font-size:11.5px}
@@ -778,7 +779,9 @@ export default function OrdersManager() {
                   </div>
                   <div className="flex items-center justify-between gap-2 border-t border-white/5 pt-1.5">
                     <span className="text-sm font-bold text-stone-200">{t('dashboard.ordersSection.total')}</span>
-                    <span className="font-display text-base font-extrabold tabular-nums text-gold-300">{t('common.currency')}{o.total.toFixed(2)}</span>
+                    {/* الإجمالي يبقى الأبرز بالبطاقة بذهبه الكامل — صغّرته سابقاً بحجّة
+                        توحيد المقاييس فخفت حضوره، وهو أهمّ رقم بالطلب */}
+                    <span className="font-display text-lg font-extrabold tabular-nums text-gold-300">{t('common.currency')}{o.total.toFixed(2)}</span>
                   </div>
                 </div>
 

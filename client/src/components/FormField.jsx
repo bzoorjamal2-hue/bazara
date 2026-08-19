@@ -33,11 +33,12 @@ export function Tip({ text }) {
         aria-label={text}
         onClick={() => setOpen((o) => !o)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
-        // text-stone-400 لا text-gold-400/55: الأخيرة بلا مقابل نهاري فتبقى ذهبية
-        // باهتة على البطاقة البيضاء. الرمادي مضبوط بالوضعين ويصير ذهبياً عند الفتح.
-        className={`inline-flex shrink-0 self-center rounded-full transition ${
-          open ? 'text-gold-300' : 'text-stone-400 hover:text-gold-300'
-        }`}
+        // ذهبي صريح بنمط مباشر: أصناف gold تنقلب بنّية نهاراً، والنمط المباشر
+        // يضمن اللون الذهبي بالوضعين ولا تُبطله أي قاعدة أخرى.
+        className="inline-flex shrink-0 self-center rounded-full transition"
+        style={open
+          ? { color: '#e6c878', background: 'rgba(212,175,55,0.22)', boxShadow: '0 0 0 1px #d4af37' }
+          : { color: '#d4af37' }}
       >
         <HelpIcon className="h-[15px] w-[15px] block" />
       </button>

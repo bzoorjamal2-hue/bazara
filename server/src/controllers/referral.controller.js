@@ -5,7 +5,9 @@ import { query } from '../config/db.js';
 // الزبونات بلا حسابات، فالهويّة عبر الكود + رقم الهاتف (معزول لكل متجر).
 
 async function getUserStore(userId) {
-  const r = await query('SELECT id FROM stores WHERE user_id = $1', [userId]);
+  // نجلب نسبة الإحالة معه: اللوحة تحتاجها لتبيّن للمالكة إن كان البرنامج مفعّلاً
+  // أصلاً — بلا نسبة لا يستطيع أحد الإحالة ولا تُفهم القائمة الفارغة.
+  const r = await query('SELECT id, name, referral_percent FROM stores WHERE user_id = $1', [userId]);
   return r.rows[0] || null;
 }
 
@@ -88,6 +90,11 @@ export async function listMyReferrals(req, res, next) {
     if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
     const r = await query('SELECT * FROM referrals WHERE store_id = $1 ORDER BY uses DESC, created_at DESC LIMIT 200', [store.id]);
     const tot = await query('SELECT COALESCE(SUM(uses),0)::int AS total FROM referrals WHERE store_id = $1', [store.id]);
-    res.json({ referrals: r.rows.map(mapReferral), totalReferred: tot.rows[0].total });
+    res.json({
+      referrals: r.rows.map(mapReferral),
+      totalReferred: tot.rows[0].total,
+      percent: Number(store.referral_percent || 0),
+      storeName: store.name || '',
+    });
   } catch (err) { next(err); }
 }
