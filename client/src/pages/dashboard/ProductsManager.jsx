@@ -1,14 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import ProductForm from './ProductForm.jsx';
 import ConfirmModal from '../../components/ConfirmModal.jsx';
-import { StarIcon, LinkIcon, BagIcon } from '../../components/icons.jsx';
+import { StarIcon, LinkIcon, BagIcon, SearchIcon, EditIcon, CopyIcon, TrashIcon, CheckIcon } from '../../components/icons.jsx';
 import { cldVideoPoster } from '../../utils/cloudinary.js';
 import { clearCachePrefixes } from '../../utils/apiCache.js';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { PageHead } from '../../components/FormField.jsx';
+import { PageHead, SectionHead } from '../../components/FormField.jsx';
 
 // الفئات الأصلية السبع — ما عداها فئة مخصّصة للمتجر نجلب اسمها من إعداداته
 const BUILTIN_CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
@@ -35,6 +35,7 @@ export default function ProductsManager({ onCount }) {
   const [confirmDel, setConfirmDel] = useState(null); // المنتج المراد حذفه
   const [delBusy, setDelBusy] = useState(false);
   const [stockFilter, setStockFilter] = useState('all'); // all | low | out — متابعة سريعة للمخزون
+  const [q, setQ] = useState(''); // بحث بالاسم أو الفئة — يصير ضرورياً مع كثرة القطع
 
   const load = useCallback(async () => {
     try {
@@ -87,28 +88,42 @@ export default function ProductsManager({ onCount }) {
     }
   };
 
-  if (products === null) return <Spinner />;
-
-  // صورة مصغّرة: تعرض مشهد الفيديو إذا ما في صورة
-  const Thumb = ({ p, size }) => {
-    const img = p.imageUrl || (p.images && p.images[0]) || (p.videoUrl && cldVideoPoster(p.videoUrl));
-    return <img src={img || PH} alt={p.name} className={`${size} rounded-lg object-cover`} />;
-  };
-
   // المتبقي الكلي: مجموع كميات الألوان/النمر إن وُجدت وإلا المخزون العام —
   // نفس منطق شارات الزبون، فتنبيهات التاجرة تطابق ما يراه زبونها
   const remainingOf = (p) => {
     const cs = p.colorStock && typeof p.colorStock === 'object' ? p.colorStock : null;
     if (cs && Object.keys(cs).length) {
-      const v = Object.values(cs).flatMap((sz) => Object.values(sz || {})).filter((q) => typeof q === 'number');
+      const v = Object.values(cs).flatMap((sz) => Object.values(sz || {})).filter((qty) => typeof qty === 'number');
       return v.length ? v.reduce((a, b) => a + b, 0) : null;
     }
     const ss = p.sizeStock && typeof p.sizeStock === 'object' ? p.sizeStock : null;
     if (ss && Object.keys(ss).length) {
-      const v = Object.values(ss).filter((q) => typeof q === 'number');
+      const v = Object.values(ss).filter((qty) => typeof qty === 'number');
       return v.length ? v.reduce((a, b) => a + b, 0) : null;
     }
     return typeof p.stock === 'number' ? p.stock : null;
+  };
+
+  // متابعة المخزون: "أوشك على النفاد" = 5 فأقل ولم ينفد بعد. نعتمد نفس remainingOf
+  // الذي تقوم عليه الشارات، فما تراه هنا يطابق ما تراه الزبونة تماماً.
+  const lowList = useMemo(() => (products || []).filter((p) => { const r = remainingOf(p); return r != null && r > 0 && r <= 5; }), [products]);
+  const outList = useMemo(() => (products || []).filter((p) => remainingOf(p) === 0), [products]);
+
+  const shown = useMemo(() => {
+    if (!products) return [];
+    const base = stockFilter === 'low' ? lowList : stockFilter === 'out' ? outList : products;
+    const needle = q.trim().toLowerCase();
+    if (!needle) return base;
+    return base.filter((p) => `${p.name} ${catLabel(p.category)}`.toLowerCase().includes(needle));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [products, stockFilter, q, lowList, outList, store]);
+
+  if (products === null) return <Spinner />;
+
+  // صورة مصغّرة: تعرض مشهد الفيديو إذا ما في صورة
+  const Thumb = ({ p, size }) => {
+    const img = p.imageUrl || (p.images && p.images[0]) || (p.videoUrl && cldVideoPoster(p.videoUrl));
+    return <img src={img || PH} alt="" className={`${size} shrink-0 rounded-xl object-cover ring-1 ring-gold-400/20`} />;
   };
 
   const Badges = ({ p }) => {
@@ -123,11 +138,6 @@ export default function ProductsManager({ onCount }) {
     );
   };
 
-  // متابعة المخزون: "أوشك على النفاد" = 5 فأقل ولم ينفد بعد. نعتمد نفس remainingOf
-  // الذي تقوم عليه الشارات، فما تراه هنا يطابق ما تراه الزبونة تماماً.
-  const lowList = products.filter((p) => { const r = remainingOf(p); return r != null && r > 0 && r <= 5; });
-  const outList = products.filter((p) => remainingOf(p) === 0);
-  const shown = stockFilter === 'low' ? lowList : stockFilter === 'out' ? outList : products;
   const Chip = ({ value, label, count, tone }) => (
     <button
       type="button"
@@ -140,79 +150,139 @@ export default function ProductsManager({ onCount }) {
     </button>
   );
 
+  // أزرار الصفّ: أيقونات متساوية بتلميح لكلٍّ منها — كانت أربعة أزرار نصّية
+  // متلاصقة تزدحم على الجوال ويقصّ بعضها
+  const RowActions = ({ p }) => {
+    const btn = 'grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-gold-400/20 text-stone-400 transition';
+    return (
+      <div className="flex shrink-0 items-center gap-1.5">
+        <button onClick={() => shareProduct(p)} title={t('product.shareProduct')} aria-label={t('product.shareProduct')} className={`${btn} hover:border-gold-400/50 hover:text-gold-200`}>
+          <LinkIcon className="h-4 w-4" />
+        </button>
+        <button onClick={() => setModal(p)} title={t('common.edit')} aria-label={t('common.edit')} className={`${btn} hover:border-gold-400/50 hover:text-gold-200`}>
+          <EditIcon className="h-4 w-4" />
+        </button>
+        <button onClick={() => duplicate(p)} title={t('dashboard.product.duplicate')} aria-label={t('dashboard.product.duplicate')} className={`${btn} hover:border-gold-400/50 hover:text-gold-200`}>
+          <CopyIcon className="h-4 w-4" />
+        </button>
+        <button onClick={() => setConfirmDel(p)} title={t('common.delete')} aria-label={t('common.delete')} className={`${btn} hover:border-red-400/50 hover:text-red-300`}>
+          <TrashIcon className="h-4 w-4" />
+        </button>
+      </div>
+    );
+  };
+
+  const CARD = 'dash-section glass space-y-4 p-5 sm:p-6';
+
   return (
     <div className="space-y-5">
       <PageHead
         icon={<BagIcon className="h-6 w-6" />}
         title={t('dashboard.myProducts')}
         hint={t('dashboard.productsHint')}
-        action={<button onClick={() => setModal({})} className="btn-primary shrink-0">＋ {t('dashboard.addProduct')}</button>}
+        action={<button onClick={() => setModal({})} className="btn-primary shrink-0 !py-2 text-sm">＋ {t('dashboard.addProduct')}</button>}
       />
 
-      {/* شرائح متابعة المخزون — تظهر فقط إن وُجد ما يستحق الانتباه */}
-      {(lowList.length > 0 || outList.length > 0) && (
-        <div className="flex flex-wrap items-center gap-2">
-          <Chip value="all" label={t('common.all')} count={products.length} tone="bg-wine/10 text-wine ring-wine/20" />
-          {lowList.length > 0 && <Chip value="low" label={t('dashboard.product.lowStock')} count={lowList.length} tone="bg-amber-500/15 text-amber-300 ring-amber-500/25" />}
-          {outList.length > 0 && <Chip value="out" label={t('product.outOfStock')} count={outList.length} tone="bg-red-500/15 text-red-300 ring-red-500/25" />}
+      {msg && (
+        <div className="flex items-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-400">
+          <CheckIcon className="h-4 w-4 shrink-0" /> {msg}
         </div>
       )}
-
-      {msg && <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-200">{msg}</div>}
-      {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
+      {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">{error}</div>}
 
       {products.length === 0 ? (
-        <div className="glass p-10 text-center text-stone-400">{t('dashboard.product.empty')}</div>
+        <div className={CARD}>
+          <button
+            type="button" onClick={() => setModal({})}
+            className="flex w-full flex-col items-center gap-2 rounded-2xl border border-dashed border-gold-400/25 bg-black/15 p-8 text-center transition hover:border-gold-400/50 hover:bg-gold-400/5"
+          >
+            <BagIcon className="h-8 w-8 text-gold-300" />
+            <span className="font-display text-base font-bold text-stone-100">{t('dashboard.product.empty')}</span>
+            <span className="text-xs text-stone-400">{t('dashboard.product.emptyCta')}</span>
+          </button>
+        </div>
       ) : (
-        <div className="glass overflow-hidden">
-          <table className="hidden w-full text-start text-sm sm:table">
-            <thead className="border-b border-gold-400/15 text-stone-400">
-              <tr>
-                <th className="p-4 text-start font-medium">{t('dashboard.product.name')}</th>
-                <th className="p-4 text-start font-medium">{t('dashboard.product.category')}</th>
-                <th className="p-4 text-start font-medium">{t('dashboard.product.price')}</th>
-                <th className="p-4"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {shown.map((p) => (
-                <tr key={p.id} className="border-b border-white/5 last:border-0 hover:bg-white/5">
-                  <td className="p-4">
-                    <div className="flex items-center gap-3">
-                      <Thumb p={p} size="h-10 w-10" />
-                      <span className="font-medium text-stone-100">{p.name}<Badges p={p} /></span>
-                    </div>
-                  </td>
-                  <td className="p-4 text-stone-300">{catLabel(p.category)}</td>
-                  <td className="p-4 font-semibold text-gold-300">{t('common.currency')}{p.price}</td>
-                  <td className="p-4">
-                    <div className="flex justify-end gap-2">
-                      <button onClick={() => shareProduct(p)} className="btn-ghost gap-1.5 !px-3 !py-1.5 text-xs" title={t('product.shareProduct')}><LinkIcon className="h-4 w-4" /> {t('product.shareProduct')}</button>
-                      <button onClick={() => setModal(p)} className="btn-ghost !px-3 !py-1.5 text-xs">{t('common.edit')}</button>
-                      <button onClick={() => duplicate(p)} className="btn-ghost !px-3 !py-1.5 text-xs" title={t('dashboard.product.duplicate')}>{t('dashboard.product.duplicate')}</button>
-                      <button onClick={() => setConfirmDel(p)} className="btn-danger !px-3 !py-1.5 text-xs">{t('common.delete')}</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className={CARD}>
+          <SectionHead
+            icon={<BagIcon className="h-5 w-5" />}
+            title={t('dashboard.product.listTitle')}
+            desc={t('dashboard.product.listCount', { count: products.length })}
+          />
 
-          <div className="divide-y divide-white/5 sm:hidden">
-            {shown.map((p) => (
-              <div key={p.id} className="flex items-center gap-3 p-4">
-                <Thumb p={p} size="h-12 w-12" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium text-stone-100">{p.name}</p>
-                  <p className="text-xs text-stone-400">{catLabel(p.category)} · <span className="text-gold-300">{t('common.currency')}{p.price}</span></p>
-                </div>
-                <button onClick={() => shareProduct(p)} className="btn-ghost !px-2.5 !py-1.5 text-xs" title={t('product.shareProduct')} aria-label={t('product.shareProduct')}><LinkIcon className="h-4 w-4" /></button>
-                <button onClick={() => setModal(p)} className="btn-ghost !px-2.5 !py-1.5 text-xs">{t('common.edit')}</button>
-                <button onClick={() => duplicate(p)} className="btn-ghost !px-2.5 !py-1.5 text-xs" aria-label={t('dashboard.product.duplicate')} title={t('dashboard.product.duplicate')}>⧉</button>
-                <button onClick={() => setConfirmDel(p)} className="btn-danger !px-2.5 !py-1.5 text-xs">{t('common.delete')}</button>
+          {/* بحث + شرائح المخزون */}
+          <div className="space-y-2.5">
+            <div className="relative">
+              <span className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-stone-400"><SearchIcon className="h-4 w-4" /></span>
+              <input
+                type="search"
+                className="input ps-10"
+                placeholder={t('dashboard.product.searchPlaceholder')}
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+              />
+            </div>
+            {(lowList.length > 0 || outList.length > 0) && (
+              <div className="flex flex-wrap items-center gap-2">
+                <Chip value="all" label={t('common.all')} count={products.length} tone="bg-wine/10 text-wine ring-wine/20" />
+                {lowList.length > 0 && <Chip value="low" label={t('dashboard.product.lowStock')} count={lowList.length} tone="bg-amber-500/15 text-amber-300 ring-amber-500/25" />}
+                {outList.length > 0 && <Chip value="out" label={t('product.outOfStock')} count={outList.length} tone="bg-red-500/15 text-red-300 ring-red-500/25" />}
               </div>
-            ))}
+            )}
           </div>
+
+          {shown.length === 0 ? (
+            <p className="rounded-2xl border border-gold-400/15 bg-black/20 py-8 text-center text-sm text-stone-400">{t('dashboard.product.noMatch')}</p>
+          ) : (
+            <>
+              {/* جدول للشاشات المتوسّطة فأعلى */}
+              <table className="hidden w-full text-start text-sm sm:table">
+                <thead className="border-b border-gold-400/15 text-stone-400">
+                  <tr>
+                    <th className="py-3 pe-3 text-start font-medium">{t('dashboard.product.name')}</th>
+                    <th className="p-3 text-start font-medium">{t('dashboard.product.category')}</th>
+                    <th className="p-3 text-start font-medium">{t('dashboard.product.price')}</th>
+                    <th className="py-3 ps-3"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {shown.map((p) => (
+                    <tr key={p.id} className="border-b border-white/5 last:border-0 hover:bg-gold-400/5">
+                      <td className="py-3 pe-3">
+                        <div className="flex items-center gap-3">
+                          <Thumb p={p} size="h-11 w-11" />
+                          <span className="font-medium text-stone-100">{p.name}<Badges p={p} /></span>
+                        </div>
+                      </td>
+                      <td className="p-3 text-stone-300">{catLabel(p.category)}</td>
+                      <td className="p-3 font-semibold text-gold-300">{t('common.currency')}{p.price}</td>
+                      <td className="py-3 ps-3">
+                        <div className="flex justify-end"><RowActions p={p} /></div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* بطاقات للجوال — الأزرار بسطر مستقلّ فلا تزدحم مع الاسم */}
+              <div className="space-y-2.5 sm:hidden">
+                {shown.map((p) => (
+                  <div key={p.id} className="rounded-2xl border border-gold-400/15 bg-black/20 p-3">
+                    <div className="flex items-center gap-3">
+                      <Thumb p={p} size="h-14 w-14" />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium text-stone-100">{p.name}</p>
+                        <p className="mt-0.5 truncate text-xs text-stone-400">
+                          {catLabel(p.category)} · <span className="font-bold text-gold-300">{t('common.currency')}{p.price}</span>
+                        </p>
+                        <p className="mt-1"><Badges p={p} /></p>
+                      </div>
+                    </div>
+                    <div className="mt-2.5 flex justify-end border-t border-white/5 pt-2.5"><RowActions p={p} /></div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       )}
 

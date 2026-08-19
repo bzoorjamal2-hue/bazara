@@ -311,7 +311,7 @@
     "renewBtn": "Renew & sign in"
   },
   "dashboard": {
-    "productsHint": "Everything you offer for sale — add a product, edit its price and stock, or hide it temporarily.",
+    "productsHint": "Everything you have for sale.",
     "ovTrend": "Revenue, last 7 days",
     "ovTrendTip": "The shape of your daily revenue over the past week, counting confirmed orders only. The figure on the right is the weekly total.",
     "ovAbandoned": "{{count}} abandoned carts worth {{value}}",
@@ -846,6 +846,12 @@
       "collectionQuery": "Search keyword (e.g. evening dress)"
     },
     "product": {
+      "listTitle": "Your items",
+      "listCount_one": "1 item listed in your store.",
+      "listCount_other": "{{count}} items listed in your store.",
+      "searchPlaceholder": "Search by item name or category…",
+      "noMatch": "No item matches your search.",
+      "emptyCta": "Tap here to add your first item.",
       "name": "Item name",
       "price": "Price",
       "oldPrice": "Price before discount",
