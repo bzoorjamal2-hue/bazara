@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
-import { ChartIcon, WarnIcon, TrophyIcon } from '../../components/icons.jsx';
+import { ChartIcon, WarnIcon, TrophyIcon, PinIcon, TruckIcon, ClockIcon, SparkleIcon, CartIcon } from '../../components/icons.jsx';
+import { SectionHead, Tip } from '../../components/FormField.jsx';
 import CountUp from '../../components/CountUp.jsx';
 
 const ic = (p) => ({ viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.9, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true, ...p });
@@ -21,17 +22,28 @@ const I = {
   repeat: (c) => (<svg {...ic({ className: c })}><path d="M4 8a8 8 0 0 1 13.5-3L20 7" /><path d="M20 4v3h-3" /><path d="M20 16a8 8 0 0 1-13.5 3L4 17" /><path d="M4 20v-3h3" /></svg>),
 };
 
-// بطاقة إحصاء عصرية: بلاطة أيقونة متدرّجة + رقم بارز.
-// (أُزيل الوهج الزخرفي: كان يتسرّب خارج زاوية البطاقة على iOS — منظر مقزّز.)
-function StatCard({ label, value, accent = 'text-gold-300', grad = 'from-gold-400 to-amber-500', icon }) {
+// قمع التحويل — أيقونة القسم
+function FunnelGlyph({ className = 'h-5 w-5' }) {
+  return (<svg {...ic({ className })}><path d="M3.5 5h17l-6.5 7.5V20l-4-2.5v-5Z" /></svg>);
+}
+
+// بطاقة إحصاء: بطاقة فرعية داخل قسم (لا بطاقة زجاجية مستقلّة) — نفس نمط
+// إعدادات المتجر والنظرة العامة، فلا تتداخل طبقتا زجاج ويبقى الإيقاع واحداً.
+function StatCard({ label, value, accent = 'text-gold-300', grad = 'from-gold-400 to-amber-500', icon, tip, badge }) {
   const Icon = I[icon];
   return (
-    <div className="glass overflow-hidden p-5">
-      <span className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-md ${grad}`}>
-        {Icon && Icon('h-[22px] w-[22px]')}
-      </span>
-      <p className="mt-3 text-xs font-medium text-stone-400">{label}</p>
-      <p className={`mt-1 font-display text-3xl font-extrabold leading-tight ${accent}`}>{value}</p>
+    <div className="rounded-2xl border border-gold-400/15 bg-black/20 p-4">
+      <div className="flex items-start justify-between gap-2">
+        <span className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-md ${grad}`}>
+          {Icon && Icon('h-[22px] w-[22px]')}
+        </span>
+        {badge}
+      </div>
+      <p className="mt-3 flex items-center gap-1.5 text-xs font-medium text-stone-400">
+        <span className="truncate">{label}</span>
+        <Tip text={tip} />
+      </p>
+      <p className={`mt-1 truncate font-display text-3xl font-extrabold leading-tight ${accent}`}>{value}</p>
     </div>
   );
 }
@@ -50,7 +62,7 @@ export default function AnalyticsManager() {
   // خطأ الشبكة كان يستبدل الصفحة بنص أحمر بلا مخرج — الحل الوحيد تحديث المتصفّح يدوياً
   if (error) {
     return (
-      <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-4 text-sm text-red-200">
+      <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-4 text-sm text-red-300">
         <p>{error}</p>
         <button type="button" onClick={load} className="btn-ghost mt-3 !px-4 !py-1.5 text-xs">{t('assistant.retry')}</button>
       </div>
@@ -63,42 +75,56 @@ export default function AnalyticsManager() {
   const cur = t('common.currency');
   const dayName = (iso) => new Date(iso + 'T00:00:00').toLocaleDateString(i18n.language === 'en' ? 'en' : 'ar', { weekday: 'short' });
 
+  // نفس هيكل صفحتَي الإعدادات والنظرة العامة
+  const CARD = 'dash-section glass space-y-4 p-5 sm:p-6';
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="flex items-center gap-2 font-display text-2xl font-bold gradient-text"><ChartIcon className="h-6 w-6" /> {t('dashboard.analytics.title')}</h1>
-        <p className="mt-1 text-sm text-stone-400">{t('dashboard.analytics.hint')}</p>
+    <div className="space-y-5">
+      {/* رأس الصفحة — بلاطة أيقونة متدرّجة + عنوان ذهبي + سطر تعريفي (كبقية التبويبات) */}
+      <div className="flex items-center gap-3">
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-400 to-amber-500 text-white shadow-md">
+          <ChartIcon className="h-6 w-6" />
+        </span>
+        <div className="min-w-0">
+          <h1 className="font-display text-2xl font-bold leading-tight gradient-text">{t('dashboard.analytics.title')}</h1>
+          <p className="text-xs text-stone-400">{t('dashboard.analytics.hint')}</p>
+        </div>
       </div>
 
-      {/* البطاقات الرئيسية */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard icon="revenue" grad="from-emerald-500 to-emerald-700" accent="text-emerald-300" label={t('dashboard.analytics.revenue')} value={<CountUp value={data.revenue} format={(x) => `${cur}${Math.round(x).toLocaleString()}`} />} />
-        <StatCard icon="confirmed" grad="from-gold-400 to-amber-500" accent="text-gold-300" label={t('dashboard.analytics.confirmed')} value={<CountUp value={data.confirmedOrders} />} />
-        <StatCard icon="newOrders" grad="from-amber-400 to-amber-600" accent="text-amber-700" label={t('dashboard.analytics.newOrders')} value={<CountUp value={data.newOrders} />} />
-        <StatCard icon="products" grad="from-wine to-wine-dark" accent="text-stone-100" label={t('dashboard.productsCount')} value={<CountUp value={data.productsCount} />} />
+      {/* المؤشّرات الرئيسية */}
+      <div className={CARD}>
+        <SectionHead icon={<ChartIcon className="h-5 w-5" />} title={t('dashboard.analytics.metricsTitle')} desc={t('dashboard.analytics.metricsHint')} />
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <StatCard icon="revenue" grad="from-emerald-500 to-emerald-700" accent="text-emerald-400" label={t('dashboard.analytics.revenue')} tip={t('dashboard.analytics.revenueTip')} value={<CountUp value={data.revenue} format={(x) => `${cur}${Math.round(x).toLocaleString()}`} />} />
+          <StatCard icon="confirmed" grad="from-gold-400 to-amber-500" accent="text-gold-300" label={t('dashboard.analytics.confirmed')} tip={t('dashboard.analytics.confirmedTip')} value={<CountUp value={data.confirmedOrders} />} />
+          <StatCard icon="newOrders" grad="from-amber-400 to-amber-600" accent="text-amber-400" label={t('dashboard.analytics.newOrders')} tip={t('dashboard.analytics.newOrdersTip')} value={<CountUp value={data.newOrders} />} />
+          <StatCard icon="products" grad="from-wine to-wine-dark" accent="text-stone-100" label={t('dashboard.productsCount')} tip={t('dashboard.analytics.productsTip')} value={<CountUp value={data.productsCount} />} />
+        </div>
       </div>
 
       {/* رؤى العمل: متوسّط الطلب · إيراد الشهر مع النموّ · نسبة الزبائن المكرّرين */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard icon="aov" grad="from-sky-500 to-blue-600" accent="text-sky-300" label={t('dashboard.analytics.aov')} value={<CountUp value={data.aov || 0} format={(x) => `${cur}${Math.round(x).toLocaleString()}`} />} />
-        <div className="glass overflow-hidden p-5">
-          <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-md">{I.revenue('h-[22px] w-[22px]')}</span>
-          <p className="mt-3 text-xs font-medium text-stone-400">{t('dashboard.analytics.thisMonth')}</p>
-          <p className="mt-1 flex items-center gap-2 font-display text-3xl font-extrabold leading-tight text-emerald-300">
-            {cur}{Math.round(data.thisMonth || 0).toLocaleString()}
-            {typeof data.monthGrowth === 'number' && (data.thisMonth > 0 || data.lastMonth > 0) && (
-              <span className={`text-xs font-bold ${data.monthGrowth >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{data.monthGrowth >= 0 ? '▲' : '▼'} {Math.abs(data.monthGrowth)}%</span>
-            )}
-          </p>
+      <div className={CARD}>
+        <SectionHead icon={<SparkleIcon className="h-5 w-5" />} title={t('dashboard.analytics.insightsTitle')} desc={t('dashboard.analytics.insightsHint')} />
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <StatCard icon="aov" grad="from-sky-500 to-blue-600" accent="text-sky-300" label={t('dashboard.analytics.aov')} tip={t('dashboard.analytics.aovTip')} value={<CountUp value={data.aov || 0} format={(x) => `${cur}${Math.round(x).toLocaleString()}`} />} />
+          <StatCard
+            icon="revenue" grad="from-emerald-500 to-emerald-700" accent="text-emerald-400"
+            label={t('dashboard.analytics.thisMonth')} tip={t('dashboard.analytics.thisMonthTip')}
+            value={`${cur}${Math.round(data.thisMonth || 0).toLocaleString()}`}
+            badge={typeof data.monthGrowth === 'number' && (data.thisMonth > 0 || data.lastMonth > 0) ? (
+              <span className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold tabular-nums ${data.monthGrowth >= 0 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-300'}`}>
+                {data.monthGrowth >= 0 ? '▲' : '▼'} {Math.abs(data.monthGrowth)}%
+              </span>
+            ) : null}
+          />
+          <StatCard icon="repeat" grad="from-fuchsia-500 to-purple-600" accent="text-fuchsia-300" label={t('dashboard.analytics.repeatRate')} tip={t('dashboard.analytics.repeatRateTip')} value={<><CountUp value={data.repeatRate || 0} />%</>} />
         </div>
-        <StatCard icon="repeat" grad="from-fuchsia-500 to-purple-600" accent="text-fuchsia-300" label={t('dashboard.analytics.repeatRate')} value={<><CountUp value={data.repeatRate || 0} />%</>} />
       </div>
 
       {/* لوحة النمو: قمع التحويل الحقيقي — أين يتسرّب الزبائن قبل الشراء */}
       {data.funnel && data.funnel.visitors > 0 && (
-        <div className="glass p-5">
-          <h2 className="mb-1 flex items-center gap-1.5 font-display text-lg font-bold text-stone-100">📈 {t('dashboard.analytics.funnelTitle')}</h2>
-          <p className="mb-4 text-xs text-stone-400">{t('dashboard.analytics.funnelHint')}</p>
+        <div className={CARD}>
+          <SectionHead icon={<FunnelGlyph className="h-5 w-5" />} title={t('dashboard.analytics.funnelTitle')} desc={t('dashboard.analytics.funnelHint')} />
           {(() => {
             const f = data.funnel;
             const steps = [
@@ -126,7 +152,9 @@ export default function AnalyticsManager() {
                 ))}
                 {/* الخلاصة الذهبية: معدّل التحويل الكلي (زائر → طلب) */}
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-gold-400/10 px-4 py-3 ring-1 ring-gold-400/20">
-                  <span className="text-sm font-semibold text-stone-200">{t('dashboard.analytics.convRate')}</span>
+                  <span className="flex items-center gap-1.5 text-sm font-semibold text-stone-200">
+                    {t('dashboard.analytics.convRate')} <Tip text={t('dashboard.analytics.convRateTip')} />
+                  </span>
                   <span className="font-display text-2xl font-extrabold text-gold-300">{pct(f.orders, f.visitors)}%</span>
                 </div>
               </div>
@@ -135,22 +163,21 @@ export default function AnalyticsManager() {
         </div>
       )}
 
-      {/* فرصة ضائعة: سلات متروكة بقيمة ₪ — رابط سريع لمتابعتها */}
+      {/* فرصة ضائعة: سلات متروكة بقيمة ₪ */}
       {data.abandonedCount > 0 && (
-        <div className="glass flex flex-wrap items-center justify-between gap-3 border border-amber-400/25 p-5">
-          <div className="min-w-0">
-            <h2 className="flex items-center gap-1.5 font-display text-lg font-bold text-stone-100">🛒 {t('dashboard.analytics.abandonedTitle')}</h2>
-            <p className="mt-0.5 text-xs text-stone-400">{t('dashboard.analytics.abandonedHint', { count: data.abandonedCount })}</p>
+        <div className={`${CARD} !border-amber-400/25`}>
+          <SectionHead icon={<CartIcon className="h-5 w-5" />} title={t('dashboard.analytics.abandonedTitle')} desc={t('dashboard.analytics.abandonedHint', { count: data.abandonedCount })} />
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-amber-400/25 bg-amber-500/10 px-4 py-3">
+            <span className="text-sm font-semibold text-stone-200">{t('dashboard.analytics.abandonedValue')}</span>
+            <span className="font-display text-2xl font-extrabold text-amber-300">{cur}{Math.round(data.abandonedValue).toLocaleString()}</span>
           </div>
-          <span className="font-display text-2xl font-extrabold text-amber-300">{cur}{data.abandonedValue.toFixed(0)}</span>
         </div>
       )}
 
       {/* قاربت على النفاد — تنبيه لإعادة التوفير */}
       {data.lowStock?.length > 0 && (
-        <div className="glass border border-amber-400/25 p-5">
-          <h2 className="flex items-center gap-1.5 font-display text-lg font-bold text-stone-100"><WarnIcon className="h-5 w-5" /> {t('dashboard.analytics.lowStock')}</h2>
-          <p className="mb-3 mt-0.5 text-xs text-stone-400">{t('dashboard.analytics.lowStockHint')}</p>
+        <div className={`${CARD} !border-amber-400/25`}>
+          <SectionHead icon={<WarnIcon className="h-5 w-5" />} title={t('dashboard.analytics.lowStock')} desc={t('dashboard.analytics.lowStockHint')} />
           <div className="flex flex-wrap gap-2">
             {data.lowStock.map((p) => (
               <span
@@ -171,17 +198,16 @@ export default function AnalyticsManager() {
 
       {/* تقرير التحصيل الشهري حسب شركة التوصيل — لمطابقة مبالغ الدفع عند الاستلام */}
       {data.courierMonth?.length > 0 && (
-        <div className="glass p-5">
-          <h2 className="mb-1 font-display text-lg font-bold text-stone-100">💰 {t('dashboard.analytics.courierMonth')}</h2>
-          <p className="mb-4 text-xs text-stone-400">{t('dashboard.analytics.courierMonthHint')}</p>
+        <div className={CARD}>
+          <SectionHead icon={<TruckIcon className="h-5 w-5" />} title={t('dashboard.analytics.courierMonth')} desc={t('dashboard.analytics.courierMonthHint')} />
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {data.courierMonth.map((c) => (
-              <div key={c.courier} className="flex items-center justify-between rounded-xl bg-white/5 px-4 py-3">
+              <div key={c.courier} className="flex items-center justify-between rounded-2xl border border-gold-400/15 bg-black/20 px-4 py-3">
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-stone-100">{t(`dashboard.analytics.courierNames.${c.courier}`)}</p>
                   <p className="text-xs text-stone-400">{t('dashboard.analytics.courierOrders', { count: c.orders })}</p>
                 </div>
-                <span className="shrink-0 font-display text-xl font-extrabold text-emerald-300">{t('common.currency')}{c.amount.toFixed(0)}</span>
+                <span className="shrink-0 font-display text-xl font-extrabold text-emerald-400">{cur}{Math.round(c.amount).toLocaleString()}</span>
               </div>
             ))}
           </div>
@@ -189,10 +215,10 @@ export default function AnalyticsManager() {
       )}
 
       {/* نشاط آخر 7 أيام */}
-      <div className="glass p-5">
-        <h2 className="mb-4 font-display text-lg font-bold text-stone-100">{t('dashboard.analytics.last7')}</h2>
+      <div className={CARD}>
+        <SectionHead icon={<ClockIcon className="h-5 w-5" />} title={t('dashboard.analytics.last7')} desc={t('dashboard.analytics.last7Hint')} />
         {data.totalOrders === 0 ? (
-          <p className="py-6 text-center text-sm text-stone-400">{t('dashboard.analytics.empty')}</p>
+          <p className="rounded-2xl border border-gold-400/15 bg-black/20 py-6 text-center text-sm text-stone-400">{t('dashboard.analytics.empty')}</p>
         ) : (
           <div className="flex items-end justify-between gap-2" style={{ height: 140 }}>
             {data.daily.map((d) => (
@@ -212,8 +238,8 @@ export default function AnalyticsManager() {
 
       {/* أعلى مدن التوصيل — أين يتركّز زبائنك (عدد الطلبات + المبلغ) */}
       {data.topCities?.length > 0 && (
-        <div className="glass p-5">
-          <h2 className="mb-4 flex items-center gap-1.5 font-display text-lg font-bold text-stone-100">📍 {t('dashboard.analytics.topCities')}</h2>
+        <div className={CARD}>
+          <SectionHead icon={<PinIcon className="h-5 w-5" />} title={t('dashboard.analytics.topCities')} desc={t('dashboard.analytics.topCitiesHint')} />
           <div className="space-y-3">
             {(() => {
               const maxCity = Math.max(1, ...data.topCities.map((c) => c.orders));
@@ -237,10 +263,10 @@ export default function AnalyticsManager() {
       )}
 
       {/* الأكثر مبيعاً */}
-      <div className="glass p-5">
-        <h2 className="mb-4 flex items-center gap-1.5 font-display text-lg font-bold text-stone-100"><TrophyIcon className="h-5 w-5" /> {t('dashboard.analytics.topProducts')}</h2>
+      <div className={CARD}>
+        <SectionHead icon={<TrophyIcon className="h-5 w-5" />} title={t('dashboard.analytics.topProducts')} desc={t('dashboard.analytics.topProductsHint')} />
         {data.topProducts.length === 0 ? (
-          <p className="py-4 text-center text-sm text-stone-400">{t('dashboard.analytics.noSales')}</p>
+          <p className="rounded-2xl border border-gold-400/15 bg-black/20 py-4 text-center text-sm text-stone-400">{t('dashboard.analytics.noSales')}</p>
         ) : (
           <div className="space-y-3">
             {data.topProducts.map((p, i) => (

@@ -961,6 +961,19 @@ html.dark .theme-pub .text-wine\/30 { color: rgba(236, 227, 214, 0.45); }
 .theme-pub .text-amber-200,
 .theme-pub .text-amber-300,
 .theme-pub .text-amber-400 { color: #b45309; }
+/* السماوي والأرجواني (بطاقات الإحصائيات) — كانا بلا مقابل نهاري فيبهتان على الأبيض */
+.theme-pub .text-sky-200,
+.theme-pub .text-sky-300,
+.theme-pub .text-sky-400 { color: #0369a1; }
+.theme-pub .text-fuchsia-200,
+.theme-pub .text-fuchsia-300,
+.theme-pub .text-fuchsia-400 { color: #a21caf; }
+html.dark .theme-pub .text-sky-200,
+html.dark .theme-pub .text-sky-300,
+html.dark .theme-pub .text-sky-400 { color: #7dd3fc; }
+html.dark .theme-pub .text-fuchsia-200,
+html.dark .theme-pub .text-fuchsia-300,
+html.dark .theme-pub .text-fuchsia-400 { color: #f0abfc; }
 html.dark .theme-pub .text-emerald-200,
 html.dark .theme-pub .text-emerald-300,
 html.dark .theme-pub .text-emerald-400 { color: #6ee7b7; }
