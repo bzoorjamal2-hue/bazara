@@ -184,11 +184,31 @@ function Overview({ productsCount }) {
       <div className={CARD}>
         <SectionHead icon={<ChartIcon className="h-5 w-5" />} title={t('dashboard.ovMetrics')} desc={t('dashboard.ovMetricsHint')} />
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <MetricCard label={t('dashboard.analytics.revenue')} tip={t('dashboard.ovRevenueTip')} value={stats ? <CountUp value={stats.revenue} format={(x) => `${cur}${Math.round(x).toLocaleString()}`} /> : '—'} Icon={WalletGlyph} grad="from-emerald-500 to-emerald-700" accent="text-emerald-400" />
+          <MetricCard
+            label={t('dashboard.analytics.revenue')} tip={t('dashboard.ovRevenueTip')}
+            value={stats ? <CountUp value={stats.revenue} format={(x) => `${cur}${Math.round(x).toLocaleString()}`} /> : '—'}
+            Icon={WalletGlyph} grad="from-emerald-500 to-emerald-700" accent="text-emerald-400"
+            badge={stats && stats.lastMonth > 0 ? <GrowthBadge pct={stats.monthGrowth} /> : null}
+          />
           <MetricCard label={t('dashboard.analytics.newOrders')} tip={t('dashboard.ovNewOrdersTip')} value={stats ? <CountUp value={stats.newOrders} /> : '—'} Icon={ReceiptIcon} grad="from-gold-400 to-amber-500" accent="text-gold-300" />
           <MetricCard label={t('dashboard.visitors')} tip={t('dashboard.ovVisitorsTip')} value={visitors != null ? <CountUp value={visitors} /> : '—'} Icon={UsersIcon} grad="from-[#8a6a4f] to-[#3f2e22]" accent="text-stone-100" />
           <MetricCard label={t('dashboard.productsCount')} tip={t('dashboard.ovProductsTip')} value={productCount != null ? <CountUp value={productCount} /> : '—'} Icon={BagIcon} grad="from-wine to-wine-dark" accent="text-stone-100" />
         </div>
+
+        {/* اتجاه آخر ٧ أيام — يقرأ الشكل العام بلمحة قبل فتح صفحة الإحصائيات */}
+        {stats?.daily?.length > 0 && (
+          <div className="rounded-2xl border border-gold-400/15 bg-black/20 p-4">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="flex items-center gap-1.5 text-xs font-semibold text-stone-300">
+                {t('dashboard.ovTrend')} <Tip text={t('dashboard.ovTrendTip')} />
+              </p>
+              <p className="text-[11px] tabular-nums text-stone-400">
+                {cur}{Math.round(stats.daily.reduce((s, d) => s + d.revenue, 0)).toLocaleString()}
+              </p>
+            </div>
+            <Sparkline points={stats.daily} cur={cur} />
+          </div>
+        )}
       </div>
 
       {/* تنبيه طلبات التوفّر — يظهر فقط عند وجود ما يستدعي التصرّف. الأخضر (رجع متوفّر
@@ -212,6 +232,25 @@ function Overview({ productsCount }) {
                 : t('dashboard.stockRequests.overviewPending', { count: stats.stockRequestsPending })}
             </p>
             <p className="mt-0.5 truncate text-xs text-stone-400">{t('dashboard.stockRequests.overviewCta')}</p>
+          </div>
+        </Link>
+      )}
+
+      {/* السلات المتروكة: زبونة ملأت سلّتها ولم تُكمل — أقرب مبيعات ممكنة، فتُعرض
+          كفرصة قابلة للتصرّف لا كرقم صامت داخل الإحصائيات */}
+      {stats?.abandonedCount > 0 && (
+        <Link
+          to="/dashboard?tab=analytics"
+          className="group flex items-center gap-3 rounded-2xl bg-amber-500/10 p-4 ring-1 ring-amber-400/30 transition hover:-translate-y-0.5"
+        >
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-md">
+            <CartGlyph className="h-[22px] w-[22px]" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-amber-300">
+              {t('dashboard.ovAbandoned', { count: stats.abandonedCount, value: `${cur}${Math.round(stats.abandonedValue).toLocaleString()}` })}
+            </p>
+            <p className="mt-0.5 truncate text-xs text-stone-400">{t('dashboard.ovAbandonedCta')}</p>
           </div>
         </Link>
       )}
@@ -274,12 +313,15 @@ function Overview({ productsCount }) {
 // overflow-hidden لا يقصّ عنصر البلور هناك، فيظهر مربّع باهت مقزّز بالزاوية.)
 // (صارت بطاقة فرعية داخل قسم لا بطاقة زجاجية مستقلّة — نفس نمط البطاقات الفرعية
 //  بصفحة الإعدادات، فلا تتداخل طبقتا زجاج ويبقى الإيقاع البصري واحداً.)
-function MetricCard({ label, value, Icon, grad, accent, tip }) {
+function MetricCard({ label, value, Icon, grad, accent, tip, badge }) {
   return (
     <div className="rounded-2xl border border-gold-400/15 bg-black/20 p-4">
-      <span className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-md ${grad}`}>
-        <Icon className="h-[22px] w-[22px]" />
-      </span>
+      <div className="flex items-start justify-between gap-2">
+        <span className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-md ${grad}`}>
+          <Icon className="h-[22px] w-[22px]" />
+        </span>
+        {badge}
+      </div>
       <p className="mt-3 flex items-center gap-1.5 text-xs font-medium text-stone-400">
         <span className="truncate">{label}</span>
         <Tip text={tip} />
@@ -301,6 +343,67 @@ function QuickAction({ to, label, Icon }) {
       </span>
       <span className="text-sm font-semibold text-stone-200">{label}</span>
     </Link>
+  );
+}
+
+// شارة نموّ الإيراد شهرياً: مقارنة هذا الشهر بالشهر الماضي. تُعرض فقط عند وجود
+// شهر ماضٍ للمقارنة — «+100%» على متجر جديد رقم بلا معنى.
+function GrowthBadge({ pct }) {
+  const up = pct >= 0;
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold tabular-nums ${
+        up ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-300'
+      }`}
+    >
+      {up ? '▲' : '▼'} {Math.abs(pct)}%
+    </span>
+  );
+}
+
+// خط اتجاه مصغّر لإيراد آخر ٧ أيام — SVG خالص (بلا مكتبة رسم) يرسم مساحة مملوءة
+// تحت الخط. القيم مُطبَّعة على أعلى يوم، فيبقى الشكل مقروءاً مهما اختلف حجم الأرقام.
+function Sparkline({ points, cur }) {
+  const vals = points.map((p) => p.revenue);
+  const max = Math.max(...vals, 1);
+  const W = 100;
+  const H = 32;
+  const step = points.length > 1 ? W / (points.length - 1) : W;
+  const xy = points.map((p, i) => [i * step, H - (p.revenue / max) * (H - 4) - 2]);
+  const line = xy.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
+  const area = `${line} L${W},${H} L0,${H} Z`;
+  // "YYYY-MM-DD" وحدها تُفسَّر UTC فينزاح اسم اليوم بالمناطق ذات الإزاحة السالبة —
+  // نُلحق الوقت ليُقرأ التاريخ محلياً كما أرسله الخادم
+  const dayLabel = (d) => new Date(`${d}T00:00`).toLocaleDateString(undefined, { weekday: 'short' });
+  return (
+    <div>
+      {/* preserveAspectRatio=none يمدّ الرسم لعرض البطاقة كاملاً بأي شاشة */}
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="h-12 w-full" aria-hidden="true">
+        <defs>
+          <linearGradient id="bz-spark" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#d4af37" stopOpacity="0.45" />
+            <stop offset="100%" stopColor="#d4af37" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={area} fill="url(#bz-spark)" />
+        <path d={line} fill="none" stroke="#d4af37" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+      </svg>
+      <div className="mt-1 flex justify-between text-[9px] text-stone-500">
+        {points.map((p) => (
+          <span key={p.day} title={`${cur}${Math.round(p.revenue).toLocaleString()}`}>{dayLabel(p.day)}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// أيقونة سلّة متروكة (لبطاقة الفرصة الضائعة)
+function CartGlyph({ className = 'h-5 w-5' }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.4a2 2 0 0 0 2-1.55L20.5 8H6" />
+      <circle cx="10" cy="19.5" r="1.3" /><circle cx="17" cy="19.5" r="1.3" />
+    </svg>
   );
 }
 

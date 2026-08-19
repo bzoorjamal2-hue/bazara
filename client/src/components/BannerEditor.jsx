@@ -124,7 +124,9 @@ export default function BannerEditor({ banners = [], onChange, withButtons = fal
       ) : (
         <div ref={listRef} className="space-y-3">
           {banners.map((b, idx) => (
-            <div key={idx} className="overflow-hidden rounded-2xl border border-gold-400/15 bg-black/20">
+            /* بلا overflow-hidden: المعاينة تقصّ زواياها بنفسها، ووجوده كان يقصّ
+               نوافذ التلميح «؟» الخارجة عن حدّ البطاقة */
+            <div key={idx} className="rounded-2xl border border-gold-400/15 bg-black/20">
               {/* المعاينة الحيّة أعلى البطاقة */}
               <div className="p-2.5 pb-0">
                 <SlidePreview banner={b} storeName={storeName} />

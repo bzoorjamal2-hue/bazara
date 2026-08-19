@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TrashIcon, CopyIcon, ArrowUpIcon, ArrowDownIcon } from './icons.jsx';
+import { TrashIcon, CopyIcon, ArrowUpIcon, ArrowDownIcon, HelpIcon } from './icons.jsx';
 
 // عناصر إدخال مشتركة لكل نماذج لوحة التحكّم — مصدر واحد فتبقى كل الواجهات
 // (إعدادات المتجر، محرّر الشرايح، نماذج المدير المستقبلية) بنفس الشكل والسلوك.
@@ -8,22 +8,43 @@ import { TrashIcon, CopyIcon, ArrowUpIcon, ArrowDownIcon } from './icons.jsx';
 // تلميح منبثق: زر «؟» صغير بجانب التسمية يشرح الخانة عند الضغط — شرح وافٍ بلا زحمة بصرية
 export function Tip({ text }) {
   const [open, setOpen] = useState(false);
+  const [shift, setShift] = useState(0); // إزاحة أفقية تُبقي النافذة داخل الشاشة
+  const popRef = useRef(null);
+
+  // التلميح عرضه ثابت وينفتح من جهة البداية، فإن كان الزرّ قرب حافّة الشاشة
+  // خرجت النافذة خارجها وانقصّت. نقيسها بعد الفتح ونزيحها للداخل بالقدر اللازم.
+  useLayoutEffect(() => {
+    if (!open) { setShift(0); return; }
+    const el = popRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect(); // shift = 0 عند الفتح، فالقياس صافٍ
+    const pad = 8;
+    if (r.left < pad) setShift(Math.round(pad - r.left));
+    else if (r.right > window.innerWidth - pad) setShift(Math.round(window.innerWidth - pad - r.right));
+  }, [open]);
+
   if (!text) return null;
   return (
     <span className="relative inline-flex align-middle">
+      {/* الأيقونة SVG لا حرفاً: تتمركز تماماً مع سطر التسمية بأي خط أو حجم
+          (حرف «؟» كان ينزل عن السطر ويختلف وزنه بين الأجهزة) */}
       <button
         type="button"
         aria-label={text}
         onClick={() => setOpen((o) => !o)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
-        className={`inline-flex h-[17px] w-[17px] items-center justify-center rounded-full border text-[10px] font-bold leading-none transition ${
-          open ? 'border-gold-400 bg-gold-400/25 text-gold-200' : 'border-gold-400/40 text-gold-300/70 hover:border-gold-400 hover:text-gold-200'
+        className={`inline-flex shrink-0 self-center rounded-full transition ${
+          open ? 'text-gold-300' : 'text-gold-400/55 hover:text-gold-300'
         }`}
       >
-        ؟
+        <HelpIcon className="h-[15px] w-[15px] block" />
       </button>
       {open && (
-        <span className="glass-strong absolute top-[22px] z-30 w-60 max-w-[70vw] p-2.5 text-[11px] font-normal leading-relaxed text-stone-200 start-0">
+        <span
+          ref={popRef}
+          style={shift ? { transform: `translateX(${shift}px)` } : undefined}
+          className="glass-strong absolute top-[22px] z-30 w-60 max-w-[85vw] p-2.5 text-[11px] font-normal leading-relaxed text-stone-200 start-0 shadow-xl"
+        >
           {text}
         </span>
       )}

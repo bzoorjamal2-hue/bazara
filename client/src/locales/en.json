@@ -311,6 +311,10 @@
     "renewBtn": "Renew & sign in"
   },
   "dashboard": {
+    "ovTrend": "Revenue, last 7 days",
+    "ovTrendTip": "The shape of your daily revenue over the past week, counting confirmed orders only. The figure on the right is the weekly total.",
+    "ovAbandoned": "{{count}} abandoned carts worth {{value}}",
+    "ovAbandonedCta": "Customers filled a cart but never checked out — your closest possible sales. Tap for details.",
     "ovHint": "A quick look at your store: your numbers, daily shortcuts, and your share link.",
     "ovMetrics": "Store metrics",
     "ovMetricsHint": "Your numbers since the store opened — tap \"?\" next to any metric to see exactly what it counts.",

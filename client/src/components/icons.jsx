@@ -242,3 +242,9 @@ export function GridIcon({ className = 'h-5 w-5' }) { return svg(className, <pat
 export function InstallIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="6" y="3" width="12" height="18" rx="2" /><path {...L} d="M12 8 V14 M9.5 11.5 L12 14 L14.5 11.5" /></>); }
 export function TagIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M4 4 H11 L20 13 L13 20 L4 11 Z" /><circle cx="8" cy="8" r="1.3" fill="currentColor" /></>); }
 export function WaveIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M7 13 V6.5 A1.4 1.4 0 0 1 9.8 6.5 V11 M9.8 5.5 A1.4 1.4 0 0 1 12.6 5.5 V11 M12.6 6.5 A1.4 1.4 0 0 1 15.4 6.5 V12 M15.4 9 A1.4 1.4 0 0 1 18 9 V14 A6 6 0 0 1 6.5 16.5 L4.5 13 A1.5 1.5 0 0 1 7 11.5" />); }
+// علامة استفهام داخل دائرة — زر التلميح «؟» بكل النماذج. رُسمت كأيقونة SVG بدل
+// حرف «؟» النصّي: الحرف يختلف شكله ووزنه بين الخطوط والأجهزة ولا يتمركز داخل
+// الدائرة (يبدو نازلاً عن سطر التسمية)، أما المسار فمتمركز دائماً وبأي حجم.
+export function HelpIcon({ className = 'h-5 w-5' }) {
+  return svg(className, <><circle {...L} cx="12" cy="12" r="9" /><path {...L} d="M9.6 9.4 A2.5 2.5 0 1 1 12.9 11.8 C12.25 12.05 11.9 12.6 11.9 13.3 V13.8" /><circle cx="12" cy="16.7" r="1.05" fill="currentColor" /></>);
+}

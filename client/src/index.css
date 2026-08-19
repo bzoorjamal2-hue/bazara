@@ -714,13 +714,17 @@ html.dark .theme-pub .dash-hero {
 
 /* أقسام صفحة الإعدادات: خيط ذهبي متدرّج بأعلى كل بطاقة — يفصل الأقسام بأناقة
    بلا عنصر إضافي داخل كل قسم (::before يغطّي الاثني عشر قسماً دفعةً واحدة) */
-.dash-section { position: relative; overflow: hidden; }
+/* ملاحظة: بلا overflow:hidden — كان يقصّ نوافذ التلميح «؟» التي تتجاوز حدّ
+   البطاقة فلا تظهر أصلاً. بدلاً منه نُزيح الخيط عن الحوافّ فلا يبرز من الزوايا
+   المستديرة، ويبقى المحتوى المنبثق حرّاً. */
+.dash-section { position: relative; }
 .dash-section::before {
   content: '';
   position: absolute;
-  inset-inline: 0;
+  inset-inline: 1.5rem;
   top: 0;
   height: 2px;
+  border-radius: 2px;
   background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.45), transparent);
 }
 html.dark .theme-pub .dash-section::before {
