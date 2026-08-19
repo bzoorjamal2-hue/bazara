@@ -69,8 +69,9 @@ export default function Select({ value, onChange, options, className = '', place
         className={`input flex items-center justify-between gap-2 ${className}`}
       >
         <span className={selected ? '' : 'text-stone-400'}>{selected ? selected.label : placeholder}</span>
+        {/* text-stone-400 لا text-wine/60: الأخيرة بلا مقابل ليلي فيغيب السهم على الحقل الداكن */}
         <svg
-          className={`h-4 w-4 shrink-0 text-wine/60 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+          className={`h-4 w-4 shrink-0 text-stone-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
           viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
         >
           <path d="M6 9l6 6 6-6" />
@@ -80,7 +81,9 @@ export default function Select({ value, onChange, options, className = '', place
       {open && pos && createPortal(
         <div
           ref={menuRef}
-          className="animate-pop fixed z-[120] max-h-64 overflow-auto rounded-2xl border border-wine/15 bg-white p-1.5 shadow-2xl"
+          // bz-select-menu: القائمة تُرسَم على body خارج .theme-pub فلا تصلها قواعد
+          // الثيم — تُلوَّن بصنف مخصّص يتبع الوضع النهاري/الليلي بنفسه.
+          className="bz-select-menu animate-pop fixed z-[120] max-h-64 overflow-auto rounded-2xl border p-1.5 shadow-2xl"
           style={{
             left: pos.left,
             width: pos.width,
@@ -94,13 +97,11 @@ export default function Select({ value, onChange, options, className = '', place
                 key={o.value}
                 type="button"
                 onClick={() => { onChange(o.value); setOpen(false); }}
-                className={`flex w-full items-center justify-between gap-4 rounded-xl px-3 py-2.5 text-start text-sm transition ${
-                  active ? 'bg-wine/10 font-semibold text-wine' : 'text-[#2b2b2b] hover:bg-wine/5'
-                }`}
+                className={`bz-select-opt flex w-full items-center justify-between gap-4 rounded-xl px-3 py-2.5 text-start text-sm transition ${active ? 'is-active' : ''}`}
               >
                 <span className="min-w-0 break-words">{o.label}</span>
                 {active && (
-                  <svg className="h-4 w-4 shrink-0 text-wine" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M20 6L9 17l-5-5" />
                   </svg>
                 )}

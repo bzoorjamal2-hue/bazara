@@ -9,6 +9,7 @@ import { cldVideoPoster } from '../../utils/cloudinary.js';
 import { clearCachePrefixes } from '../../utils/apiCache.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { PageHead, SectionHead } from '../../components/FormField.jsx';
+import Select from '../../components/Select.jsx';
 
 // الفئات الأصلية السبع — ما عداها فئة مخصّصة للمتجر نجلب اسمها من إعداداته
 const BUILTIN_CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
@@ -250,16 +251,21 @@ export default function ProductsManager({ onCount }) {
                   </button>
                 )}
               </div>
-              <select
-                value={sort} onChange={(e) => setSort(e.target.value)}
-                aria-label={t('dashboard.product.sortBy')}
-                className="input !w-auto shrink-0 !py-2 text-sm"
-              >
-                <option value="newest">{t('dashboard.product.sortNewest')}</option>
-                <option value="priceAsc">{t('dashboard.product.sortPriceAsc')}</option>
-                <option value="priceDesc">{t('dashboard.product.sortPriceDesc')}</option>
-                <option value="stockAsc">{t('dashboard.product.sortStockAsc')}</option>
-              </select>
+              {/* قائمة الموقع المخصّصة لا <select> الأصلي: الأخير يرسم قائمته
+                  بألوان النظام فلا تتبع ثيم الموقع ولا الوضع الليلي */}
+              <div className="w-40 shrink-0">
+                <Select
+                  value={sort}
+                  onChange={setSort}
+                  className="!py-2 text-sm"
+                  options={[
+                    { value: 'newest', label: t('dashboard.product.sortNewest') },
+                    { value: 'priceAsc', label: t('dashboard.product.sortPriceAsc') },
+                    { value: 'priceDesc', label: t('dashboard.product.sortPriceDesc') },
+                    { value: 'stockAsc', label: t('dashboard.product.sortStockAsc') },
+                  ]}
+                />
+              </div>
             </div>
 
             {/* شرائح المخزون */}
