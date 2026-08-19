@@ -69,7 +69,7 @@ export function Field({ label, tip, hint, icon, max, value = '', required = fals
             {icon}
             <span className="min-w-0">
               {label}
-              {required && <span className="text-red-400/70">*</span>}
+              {required && <span className="text-red-400">*</span>}
             </span>
             <Tip text={tip} />
           </span>
@@ -135,16 +135,63 @@ export function RowTools({ index, count, onMove, onDuplicate, onRemove, canDupli
 // + سطر تعريفي. مصدر واحد كي تبدو كل التبويبات من عائلة واحدة، وأي تعديل
 // على شكل الرأس ينطبق عليها جميعاً مرّةً واحدة.
 export function PageHead({ icon, title, hint, action }) {
+  const { t } = useTranslation();
+  const hintRef = useRef(null);
+  const [open, setOpen] = useState(false);   // التلميح الطويل مطويّ على الجوال
+  const [long, setLong] = useState(false);   // هل يتجاوز السطرين أصلاً؟
+
+  // نقيس بعد الرسم وعند تغيّر العرض: تلميح الطلبات فقرة كاملة تصير أسطراً
+  // كثيرة على الجوال فتدفن العنوان، بينما هو سطر واحد على الحاسوب. لا نقيس
+  // وهو مفتوح لأن الارتفاعين يتساويان حينها فيختفي زرّ الطيّ.
+  useLayoutEffect(() => {
+    const el = hintRef.current;
+    if (!el || open) return undefined;
+    const check = () => setLong(el.scrollHeight > el.clientHeight + 2);
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [hint, open]);
+
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-400 to-amber-500 text-white shadow-md">
+    <div className="flex flex-wrap items-start gap-x-3 gap-y-3">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-400 to-amber-500 text-white shadow-md sm:h-12 sm:w-12">
         {icon}
       </span>
-      <div className="min-w-0 flex-1">
-        <h1 className="font-display text-2xl font-bold leading-tight gradient-text">{title}</h1>
-        {hint && <p className="mt-0.5 text-xs leading-relaxed text-stone-400">{hint}</p>}
+      {/* items-start لا items-center: توسيط البلاطة أمام كتلة (عنوان + تلميح)
+          يُنزلها مع طول التلميح، فبالطلبات ابتعدت ٣٢px عن عنوانها وبدت معلّقة
+          أمام الفقرة. الآن تُحاذي سطر العنوان مهما طال ما تحته. */}
+      {/* basis-0 مع flex-1: الكتلة تأخذ ما تبقّى من السطر ولا تُقاس بمحتواها */}
+      <div className="min-w-0 flex-1 basis-0">
+        <h1 className="gradient-text font-display text-xl font-bold leading-tight sm:text-2xl">{title}</h1>
+        {hint && (
+          <>
+            <p
+              ref={hintRef}
+              className={`mt-0.5 text-xs leading-relaxed text-stone-400 ${open ? '' : 'line-clamp-2 sm:line-clamp-none'}`}
+            >
+              {hint}
+            </p>
+            {long && (
+              <button
+                type="button"
+                onClick={() => setOpen((v) => !v)}
+                className="mt-0.5 text-[11px] font-semibold text-gold-300 underline-offset-2 hover:underline sm:hidden"
+              >
+                {open ? t('common.less') : t('common.more')}
+              </button>
+            )}
+          </>
+        )}
       </div>
-      {action}
+      {/* الزرّ يأخذ سطراً كاملاً على الجوال بدل أن يسحق العنوان، ويعود لجانبه
+          على الحاسوب. كان shrink-0 يُبقيه بالسطر الأول فينضغط النص إلى ٦٠px
+          ويتحوّل التلميح إلى ١٤ سطراً. */}
+      {action && (
+        <div className="w-full sm:w-auto sm:shrink-0 [&>*]:w-full sm:[&>*]:w-auto [&>span]:flex [&>span>*]:flex-1 sm:[&>span>*]:flex-none">
+          {action}
+        </div>
+      )}
     </div>
   );
 }

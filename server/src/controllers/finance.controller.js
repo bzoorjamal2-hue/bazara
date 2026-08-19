@@ -51,15 +51,26 @@ export async function financeSummary(req, res, next) {
     if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
     const { from, to, key } = monthRange(req.query.month);
 
-    const [ordersRes, expRes, costMap] = await Promise.all([
+    // نافذة ستة أشهر تنتهي بالشهر المختار: رقمٌ واحد بلا سياق لا يقول للمالكة
+    // إن كانت تتحسّن أم تتراجع. نجلبها بطلبين لا باثني عشر.
+    const trendFrom = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth() - 5, 1));
+    const [allOrders, allExp, costMap] = await Promise.all([
       query(
-        `SELECT items, total, delivery_fee FROM orders
+        `SELECT items, total, delivery_fee, created_at FROM orders
          WHERE store_id = $1 AND ${PAID} AND created_at >= $2 AND created_at < $3`,
-        [store.id, from, to]
+        [store.id, trendFrom, to]
       ),
-      listExpenses(store.id, from, to),
+      listExpenses(store.id, trendFrom, to),
       storeCostMap(store.id),
     ]);
+
+    const mKey = (d) => {
+      const x = new Date(d);
+      return `${x.getUTCFullYear()}-${String(x.getUTCMonth() + 1).padStart(2, '0')}`;
+    };
+    const inMonth = (d) => mKey(d) === key;
+    const ordersRes = { rows: allOrders.rows.filter((o) => inMonth(o.created_at)) };
+    const expRes = { rows: allExp.rows.filter((e) => inMonth(e.spent_at)) };
 
     let revenue = 0;
     let cogs = 0;
@@ -94,7 +105,64 @@ export async function financeSummary(req, res, next) {
     }
 
     const r2 = (n) => Math.round(n * 100) / 100;
+
+    // اتجاه الأشهر الستة: صافي ربح كل شهر بنفس معادلة الشهر المختار تماماً
+    const buckets = new Map();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth() - i, 1));
+      buckets.set(mKey(d), { month: mKey(d), revenue: 0, productProfit: 0, expenses: 0 });
+    }
+    for (const o of allOrders.rows) {
+      const b = buckets.get(mKey(o.created_at));
+      if (!b) continue;
+      b.revenue += Number(o.total || 0);
+      const p = orderProfit({ items: o.items, total: Number(o.total), deliveryFee: Number(o.delivery_fee || 0) }, costMap);
+      if (p.complete) b.productProfit += p.profit;
+    }
+    for (const e of allExp.rows) {
+      const b = buckets.get(mKey(e.spent_at));
+      if (b) b.expenses += Number(e.amount || 0);
+    }
+    const trend = [...buckets.values()].map((b) => ({
+      month: b.month,
+      revenue: r2(b.revenue),
+      netProfit: r2(b.productProfit - b.expenses),
+    }));
+
+    const netProfit = r2(productProfit - expensesTotal);
+    const prev = trend[trend.length - 2] || null;
+    // نسبة التغيّر بلا قسمة على صفر، وبقيمة مطلقة للمقام كي لا ينقلب الاتجاه
+    // حين يكون الشهر الماضي خسارة: من −١٠٠ إلى +٥٠ تحسُّنٌ لا تراجع.
+    const change = prev && prev.netProfit !== 0
+      ? Math.round(((netProfit - prev.netProfit) / Math.abs(prev.netProfit)) * 100)
+      : null;
+
+    // مصاريف متكرّرة: الإيجار والرواتب تتكرّر كل شهر بنفس المبلغ، وإعادة
+    // إدخالها يدوياً كل مرّة عبء يجعل المالكة تهملها فيكذب صافي الربح. نقترح
+    // ما سُجّل الشهر الماضي ولم يُسجَّل بعد هذا الشهر — اقتراحٌ بضغطة، لا
+    // إنشاءٌ تلقائي، كي لا يظهر مصروف لم تقرّره.
+    const prevKey = mKey(new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth() - 1, 1)));
+    const loggedNow = new Set(expenses.map((e) => e.category));
+    const seen = new Set();
+    const recurring = [];
+    for (const e of allExp.rows) {
+      if (mKey(e.spent_at) !== prevKey) continue;
+      if (loggedNow.has(e.category)) continue;
+      const sig = `${e.category}|${Number(e.amount)}`;
+      if (seen.has(sig)) continue;
+      seen.add(sig);
+      recurring.push({ category: e.category, amount: Number(e.amount), note: e.note || '' });
+      if (recurring.length >= 4) break;
+    }
+
     res.json({
+      recurring,
+      trend,
+      prevNetProfit: prev ? prev.netProfit : null,
+      netChange: change,
+      // هامش الربح: كم شيكلاً يبقى من كل ١٠٠ تبيعها. أصدق من الرقم المطلق
+      // لأنه لا يكبر لمجرّد أن المبيعات كبرت.
+      margin: revenue > 0 ? Math.round((netProfit / revenue) * 100) : null,
       month: key,
       ordersCount: ordersRes.rows.length,
       revenue: r2(revenue),
@@ -108,7 +176,7 @@ export async function financeSummary(req, res, next) {
       expensesByCategory: byCategory,
       expensesTotal: r2(expensesTotal),
       // صافي الربح = ربح البضاعة − مصاريف الشهر. يكون سالباً إن تجاوزت المصاريف الربح.
-      netProfit: r2(productProfit - expensesTotal),
+      netProfit,
     });
   } catch (err) {
     next(err);

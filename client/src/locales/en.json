@@ -195,7 +195,9 @@
     "share": "Share store",
     "optional": "optional",
     "ok": "OK",
-    "confirmTitle": "Confirm"
+    "confirmTitle": "Confirm",
+    "more": "More",
+    "less": "Less"
   },
   "searchPage": {
     "title": "Search",
@@ -1557,6 +1559,12 @@
       "none": "Manual delivery"
     },
     "settleConfirm_one": "Mark 1 order from {{courier}} as received — {{amount}} in total. Use this when the courier pays out in one transfer.",
-    "settleConfirm_other": "Mark {{count}} orders from {{courier}} as received — {{amount}} in total. Use this when the courier pays out in one transfer."
+    "settleConfirm_other": "Mark {{count}} orders from {{courier}} as received — {{amount}} in total. Use this when the courier pays out in one transfer.",
+    "vsPrev": "vs last month",
+    "margin": "Profit margin",
+    "marginTip": "How much stays with you out of every 100 you sell. Truer than the absolute figure, which grows just because sales grew.",
+    "trendTitle": "Net profit — last 6 months (tap a bar to open that month)",
+    "recurringTitle": "Repeat from last month",
+    "recurringTip": "Expenses you logged last month that are not logged yet this month. Tapping fills the form — it does not save."
   }
 }

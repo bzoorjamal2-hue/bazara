@@ -33,6 +33,16 @@ function monthOptions(t, lang) {
   return out;
 }
 
+// اسم الشهر بلغة الواجهة — للاتجاه والتلميحات
+const monthLabel = (m, lang) => {
+  const [y, mo] = m.split('-').map(Number);
+  return new Date(y, mo - 1, 1).toLocaleDateString(lang, { month: 'long', year: 'numeric' });
+};
+const shortMonth = (m, lang) => {
+  const [y, mo] = m.split('-').map(Number);
+  return new Date(y, mo - 1, 1).toLocaleDateString(lang, { month: 'short' });
+};
+
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
 export default function FinanceManager() {
@@ -179,10 +189,28 @@ export default function FinanceManager() {
               <p className="flex items-center gap-1.5 text-xs font-medium text-stone-400">
                 {t('finance.netProfit')} <Tip text={t('finance.netTip')} />
               </p>
-              <p className={`mt-1 font-display text-4xl font-extrabold tabular-nums ${positive ? 'text-emerald-400' : 'text-red-300'}`}>
-                {money(net)}
-              </p>
-              <p className="mt-1 text-[11px] text-stone-400">{t('finance.netFormula')}</p>
+              <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <p className={`font-display text-3xl font-extrabold tabular-nums sm:text-4xl ${positive ? 'text-emerald-400' : 'text-red-300'}`}>
+                  {money(net)}
+                </p>
+                {/* الاتجاه مقابل الشهر الماضي — رقمٌ بلا سياق لا يقول شيئاً */}
+                {data.netChange != null && (
+                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold text-stone-200 ${data.netChange >= 0 ? 'bg-emerald-500/15' : 'bg-red-500/15'}`}>
+                    <span className={data.netChange >= 0 ? 'text-emerald-400' : 'text-red-300'}>{data.netChange >= 0 ? '▲' : '▼'}</span>
+                    {Math.abs(data.netChange)}%
+                    <span className="font-medium text-stone-300">{t('finance.vsPrev')}</span>
+                  </span>
+                )}
+              </div>
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-stone-400">
+                <span className="after:mx-1 after:text-stone-500 after:content-['·']">{t('finance.netFormula')}</span>
+                {data.margin != null && (
+                  <span className="flex items-center gap-1">
+                    {t('finance.margin')}: <b className="tabular-nums text-stone-200">{data.margin}%</b>
+                    <Tip text={t('finance.marginTip')} />
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* سطور الكشف: من الإيراد إلى الصافي */}
@@ -200,6 +228,42 @@ export default function FinanceManager() {
                 <span className={`font-display text-lg font-extrabold tabular-nums ${positive ? 'text-emerald-400' : 'text-red-300'}`}>{money(net)}</span>
               </div>
             </div>
+
+            {/* اتجاه ستة أشهر: العمود يُنقر فينتقل الكشف إليه */}
+            {data.trend?.length > 1 && data.trend.some((m) => m.netProfit !== 0) && (
+              <div className="rounded-2xl border border-gold-400/15 bg-black/20 p-3">
+                <p className="mb-2 text-[11px] font-semibold text-stone-400">{t('finance.trendTitle')}</p>
+                <div className="flex items-end justify-between gap-1.5" style={{ height: 92 }}>
+                  {data.trend.map((m) => {
+                    // المقياس على أكبر قيمة مطلقة كي تظهر الخسارة بحجمها الحقيقي
+                    const peak = Math.max(...data.trend.map((x) => Math.abs(x.netProfit)), 1);
+                    const h = Math.max(Math.round((Math.abs(m.netProfit) / peak) * 62), 3);
+                    const up = m.netProfit >= 0;
+                    const now = m.month === data.month;
+                    return (
+                      <button
+                        key={m.month}
+                        onClick={() => setMonth(m.month)}
+                        title={`${monthLabel(m.month, i18n.language)} · ${money(m.netProfit)}`}
+                        className="group flex min-w-0 flex-1 flex-col items-center justify-end gap-1"
+                        style={{ height: '100%' }}
+                      >
+                        <span className={`text-[10px] tabular-nums ${now ? 'font-bold text-stone-200' : 'text-stone-300'}`}>
+                          {Math.round(m.netProfit / 100) / 10 || 0}k
+                        </span>
+                        <span
+                          className={`w-full rounded-md transition group-hover:opacity-100 ${up ? 'bg-emerald-500/70' : 'bg-red-500/70'} ${now ? 'opacity-100 ring-1 ring-gold-400/60' : 'opacity-55'}`}
+                          style={{ height: h }}
+                        />
+                        <span className={`w-full truncate text-[10px] ${now ? 'font-bold text-stone-200' : 'text-stone-300'}`}>
+                          {shortMonth(m.month, i18n.language)}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* صدق الأرقام: كم طلباً دخل حساب الربح وكم استُثني */}
             {(data.profitMissing > 0 || data.profitEstimated > 0) && (
@@ -317,6 +381,25 @@ export default function FinanceManager() {
                 <input type="text" maxLength={200} className="input" placeholder={t('finance.notePlaceholder')} value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
               </Field>
             </div>
+            {data.recurring?.length > 0 && (
+              <div className="rounded-xl border border-dashed border-gold-400/25 bg-black/15 p-2.5">
+                <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold text-stone-400">
+                  {t('finance.recurringTitle')} <Tip text={t('finance.recurringTip')} />
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {data.recurring.map((rc) => (
+                    <button
+                      key={`${rc.category}-${rc.amount}`}
+                      type="button"
+                      onClick={() => setForm((f) => ({ ...f, category: rc.category, amount: String(rc.amount), note: rc.note }))}
+                      className="inline-flex items-center gap-1 rounded-lg border border-gold-400/30 px-2 py-1 text-[11px] font-semibold text-gold-300 transition hover:bg-gold-400/10"
+                    >
+                      <PlusIcon className="h-3 w-3" /> {t(`finance.cat.${rc.category}`)} {money(rc.amount)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <button type="submit" disabled={busy} className="btn-primary w-full gap-2">
               <PlusIcon className="h-4 w-4" /> {busy ? t('common.loading') : t('finance.add')}
             </button>
