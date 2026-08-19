@@ -5,10 +5,10 @@ import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
 import { buildWhatsappLink, waCandidates } from '../../utils/whatsapp.js';
 import { getCache, setCache } from '../../utils/apiCache.js';
-import { PinIcon, NoteIcon, TicketIcon, WhatsAppIcon, TruckIcon, BellIcon, TrashIcon, BagIcon, ReceiptIcon } from '../../components/icons.jsx';
+import { PinIcon, NoteIcon, TicketIcon, WhatsAppIcon, TruckIcon, BellIcon, TrashIcon, BagIcon, ReceiptIcon, SearchIcon, XIcon, DownloadIcon } from '../../components/icons.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useCouriers, syncCourierStatuses, courierOf, CourierLock, CourierSend } from '../../components/couriers.jsx';
-import { PageHead } from '../../components/FormField.jsx';
+import { PageHead, SectionHead } from '../../components/FormField.jsx';
 
 const FLOW = ['new', 'confirmed', 'shipped', 'delivered', 'cancelled'];
 
@@ -197,30 +197,28 @@ export default function OrdersManager() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <PageHead icon={<ReceiptIcon className="h-6 w-6" />} title={t('dashboard.ordersSection.title')} hint={t('dashboard.ordersSection.stockHint')} />
-        {orders?.length > 0 && (
+      <PageHead
+        icon={<ReceiptIcon className="h-6 w-6" />}
+        title={t('dashboard.ordersSection.title')}
+        hint={t('dashboard.ordersSection.stockHint')}
+        action={orders?.length > 0 ? (
           <button
             onClick={exportCsv}
             className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-gold-400/30 px-3 py-2 text-sm font-semibold text-gold-200 transition hover:bg-gold-400/10"
           >
-            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14" />
-            </svg>
-            {t('dashboard.ordersSection.export')}
+            <DownloadIcon className="h-4 w-4" /> {t('dashboard.ordersSection.export')}
           </button>
-        )}
-      </div>
-      {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
+        ) : null}
+      />
+      {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">{error}</div>}
 
       {/* طلبات لم تكتمل: زبائن أدخلوا بياناتهم بشاشة الإتمام ولم يؤكّدوا — فرصة بيع تُنقَذ برسالة */}
       {abandoned.length > 0 && (
-        <div className="glass border border-amber-400/25 p-4">
-          <h2 className="flex items-center gap-2 font-display text-lg font-bold text-stone-100">
-            <BagIcon className="h-5 w-5 text-amber-300" /> {t('dashboard.abandoned.title')}
-            <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-bold text-amber-300">{abandoned.length}</span>
-          </h2>
-          <p className="mb-3 mt-0.5 text-xs text-stone-400">{t('dashboard.abandoned.hint')}</p>
+        <div className="dash-section glass space-y-4 !border-amber-400/25 p-5 sm:p-6">
+          <div className="flex items-start justify-between gap-2">
+            <SectionHead icon={<BagIcon className="h-5 w-5" />} title={t('dashboard.abandoned.title')} desc={t('dashboard.abandoned.hint')} />
+            <span className="shrink-0 rounded-full bg-amber-500/15 px-2.5 py-1 text-xs font-bold text-amber-400">{abandoned.length}</span>
+          </div>
           <div className="space-y-2">
             {abandoned.map((a) => {
               const itemsTxt = (a.items || []).map((it) => `• ${it.name}${it.size ? ` (${it.size})` : ''}${it.color ? ` - ${it.color}` : ''} ×${it.qty}`).join('\n');
@@ -228,7 +226,7 @@ export default function OrdersManager() {
               const nums = waCandidates(a.phone);
               const pieces = (a.items || []).reduce((s, i) => s + (Number(i.qty) || 1), 0);
               return (
-                <div key={a.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white/5 p-3">
+                <div key={a.id} className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-gold-400/15 bg-black/20 p-3">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-stone-100">
                       {a.name || a.phone} {a.phone && <a href={`tel:${String(a.phone).replace(/\s/g, '')}`} dir="ltr" className="ms-1 text-xs font-normal text-stone-400 underline-offset-2 hover:text-gold-200 hover:underline">{a.phone}</a>}
@@ -259,13 +257,27 @@ export default function OrdersManager() {
 
       {/* شريط الفلترة والبحث — يظهر عندما تكثر الطلبات ليصل المالك لأي طلب بثوانٍ */}
       {orders?.length > 3 && (
-        <div className="glass space-y-2.5 p-3">
-          <input
-            className="input"
-            placeholder={t('dashboard.ordersSection.searchPlaceholder')}
-            value={oq}
-            onChange={(e) => setOq(e.target.value)}
+        <div className="dash-section glass space-y-4 p-5 sm:p-6">
+          <SectionHead
+            icon={<ReceiptIcon className="h-5 w-5" />}
+            title={t('dashboard.ordersSection.title')}
+            desc={t('dashboard.ordersSection.ordersCount', { count: orders.length })}
           />
+          {/* الأيقونة والحقل بحاوية واحدة (لا تراكب) + زرّ تفريغ */}
+          <div className="flex items-center gap-2 rounded-xl border border-gold-400/15 bg-black/20 px-3 focus-within:border-gold-400/60 focus-within:ring-2 focus-within:ring-gold-400/25">
+            <SearchIcon className="h-4 w-4 shrink-0 text-stone-400" />
+            <input
+              className="min-w-0 flex-1 bg-transparent py-2.5 text-sm text-stone-100 placeholder:text-stone-500 focus:outline-none"
+              placeholder={t('dashboard.ordersSection.searchPlaceholder')}
+              value={oq}
+              onChange={(e) => setOq(e.target.value)}
+            />
+            {oq && (
+              <button type="button" onClick={() => setOq('')} aria-label={t('common.cancel')} className="shrink-0 text-stone-400 transition hover:text-gold-200">
+                <XIcon className="h-4 w-4" />
+              </button>
+            )}
+          </div>
           <div className="flex flex-wrap gap-1.5">
             {['all', ...FLOW].map((s) => {
               const n = s === 'all' ? (orders?.length || 0) : (statusCounts[s] || 0);
@@ -275,28 +287,43 @@ export default function OrdersManager() {
                 <button
                   key={s}
                   onClick={() => setStatusFilter(s)}
-                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                  // النشط بذهب صريح (hex): bg-gold-400 تنقلب نهاراً لبنّي و text-wine-dark
+                  // بنّي أغمق — بنّي على بنّي لا يُقرأ. الهيكس يتجاوز قلب الثيم.
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
                     on
-                      ? 'bg-gold-400 text-wine-dark shadow-sm'
-                      : 'bg-white/5 text-stone-300 ring-1 ring-white/10 hover:bg-white/10'
+                      ? 'border-[#d4af37] bg-[#d4af37] text-[#3f2e22] shadow-sm'
+                      : 'border-gold-400/25 bg-gold-400/5 text-stone-300 hover:bg-gold-400/15 hover:text-gold-200'
                   }`}
                 >
                   {s === 'all' ? t('common.all') : t(`dashboard.ordersSection.${s}`)}
-                  <span className={`rounded-full px-1.5 text-[10px] font-bold ${on ? 'bg-wine/15 text-wine-dark' : 'bg-white/10 text-stone-400'}`}>{n}</span>
+                  <span className={`rounded-full px-1.5 text-[10px] font-bold ${on ? 'bg-[#3f2e22]/15 text-[#3f2e22]' : 'bg-gold-400/10 text-stone-400'}`}>{n}</span>
                 </button>
               );
             })}
           </div>
+          {/* عدد النتائج عند وجود تصفية فعّالة */}
+          {(oq.trim() || statusFilter !== 'all') && visibleOrders.length > 0 && (
+            <p className="text-[11px] text-stone-400">{t('dashboard.product.showing', { shown: visibleOrders.length, total: orders.length })}</p>
+          )}
         </div>
       )}
 
       {orders && orders.length === 0 ? (
-        <div className="glass p-10 text-center text-stone-400">{t('dashboard.ordersSection.empty')}</div>
+        <div className="dash-section glass p-5 sm:p-6">
+          <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-gold-400/25 bg-black/15 p-8 text-center">
+            <ReceiptIcon className="h-8 w-8 text-gold-300" />
+            <span className="text-sm text-stone-400">{t('dashboard.ordersSection.empty')}</span>
+          </div>
+        </div>
       ) : (
         <div className="space-y-3">
           {(() => {
             if (!visibleOrders.length) {
-              return <div className="glass p-8 text-center text-sm text-stone-400">{t('dashboard.ordersSection.noResults')}</div>;
+              return (
+                <div className="dash-section glass p-5 sm:p-6">
+                  <p className="rounded-2xl border border-gold-400/15 bg-black/20 py-8 text-center text-sm text-stone-400">{t('dashboard.ordersSection.noResults')}</p>
+                </div>
+              );
             }
             // عدد الطلبات وإجمالي المبيعات لكل يوم (الملغاة لا تُحسب بالإجمالي)
             const counts = {};
@@ -334,7 +361,11 @@ export default function OrdersManager() {
                     <span className="font-semibold text-stone-100">{o.customerName || '—'}</span>
                     {o.customerPhone && <a href={`tel:${o.customerPhone.replace(/\s/g, '')}`} className="ms-2 text-xs text-stone-400 underline-offset-2 transition hover:text-gold-200 hover:underline" dir="ltr">{o.customerPhone}</a>}
                   </div>
-                  <span className={`badge ${BADGE[o.status] || ''}`}>{t(`dashboard.ordersSection.${o.status}`)}</span>
+                  <span className="flex shrink-0 items-center gap-1.5">
+                    {/* رقم الطلب — مرجع تذكره المالكة بالمحادثة مع الزبونة أو شركة التوصيل */}
+                    <span className="rounded-full bg-gold-400/10 px-2 py-0.5 text-[10px] font-bold tabular-nums text-stone-400" dir="ltr">#{o.id}</span>
+                    <span className={`badge ${BADGE[o.status] || ''}`}>{t(`dashboard.ordersSection.${o.status}`)}</span>
+                  </span>
                 </div>
 
                 {/* المنتجات (مع المقاس/اللون) */}
@@ -368,7 +399,7 @@ export default function OrdersManager() {
                 </div>
 
                 {/* تحديث الحالة + تواصل */}
-                <div className="mt-3 flex flex-wrap items-center gap-2">
+                <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-white/5 pt-3">
                   <span className="text-xs text-stone-400">{t('dashboard.ordersSection.updateStatus')}:</span>
                   {courierOf(o) ? (
                     // الطلب بعهدة شركة التوصيل → الحالة مُقفلة (تُدار من عندهم)
