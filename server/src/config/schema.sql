@@ -86,6 +86,8 @@ ALTER TABLE products ADD COLUMN IF NOT EXISTS video_url TEXT DEFAULT ''; -- را
 ALTER TABLE products ADD COLUMN IF NOT EXISTS size_stock JSONB DEFAULT '{}'::jsonb; -- مخزون لكل مقاس
 ALTER TABLE products ADD COLUMN IF NOT EXISTS color_stock JSONB DEFAULT '{}'::jsonb; -- مخزون لكل لون ثم نمرة
 ALTER TABLE products ADD COLUMN IF NOT EXISTS sale_ends_at TIMESTAMPTZ; -- نهاية العرض (عدّاد)
+-- سعر التكلفة (شراء القطعة) — للمالك فقط، لا يظهر للزبون إطلاقاً. أساس حساب الربح.
+ALTER TABLE products ADD COLUMN IF NOT EXISTS cost NUMERIC(10,2);
 
 -- تحويل الفئة إلى نص حر (فئات أزياء مخصّصة) + إعادة تعيين القيم القديمة
 ALTER TABLE products ALTER COLUMN category TYPE TEXT USING category::text;

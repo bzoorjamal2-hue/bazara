@@ -7,13 +7,14 @@ import ImageInput from '../../components/ImageInput.jsx';
 import VideoInput from '../../components/VideoInput.jsx';
 import Select from '../../components/Select.jsx';
 import useScrollLock from '../../hooks/useScrollLock.js';
-import { XIcon, ClockIcon, PaletteIcon, CameraIcon, StarIcon, EditIcon, TagIcon } from '../../components/icons.jsx';
+import { XIcon, ClockIcon, PaletteIcon, CameraIcon, StarIcon, EditIcon, TagIcon, CashIcon } from '../../components/icons.jsx';
+import { Field } from '../../components/FormField.jsx';
 import { SIZES, sizeLabel } from '../../utils/sizes.js';
 import { colorToCss, COLOR_SUGGESTIONS } from '../../utils/colorDot.js';
 
 const CATEGORIES = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
 const EMPTY = {
-  name: '', price: '', oldPrice: '', description: '', size: '', color: '',
+  name: '', price: '', cost: '', oldPrice: '', description: '', size: '', color: '',
   category: 'abaya', imageUrl: '', images: [], videoUrl: '', stock: '', featured: false, sizeStock: {}, colorStock: {}, colorImages: {}, saleEndsAt: '',
 };
 
@@ -50,6 +51,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
           ...EMPTY,
           ...initial,
           price: String(initial.price ?? ''),
+          cost: initial.cost != null ? String(initial.cost) : '',
           oldPrice: initial.oldPrice != null ? String(initial.oldPrice) : '',
           stock: initial.stock != null ? String(initial.stock) : '',
           images: initial.images || [],
@@ -66,6 +68,15 @@ export default function ProductForm({ initial, onClose, onSaved }) {
   useScrollLock(true); // تجميد الخلفية أثناء فتح نموذج المنتج
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+
+  // هامش القطعة = السعر − التكلفة (يظهر فور الكتابة ليوجّه التسعير)
+  const margin = (() => {
+    const price = parseFloat(form.price);
+    const cost = parseFloat(form.cost);
+    if (!Number.isFinite(price) || !Number.isFinite(cost) || cost <= 0) return null;
+    const value = price - cost;
+    return { value, pct: price > 0 ? Math.round((value / price) * 100) : 0 };
+  })();
 
   // المخزون لكل لون ثم نمرة: { "أسود": {"38": 3}, ... }
   const colors = Object.keys(form.colorStock);
@@ -133,6 +144,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
     const payload = {
       ...form,
       price: parseFloat(form.price),
+      cost: form.cost === '' ? null : parseFloat(form.cost),
       oldPrice: form.oldPrice === '' ? null : parseFloat(form.oldPrice),
       stock: form.stock === '' ? null : parseInt(form.stock, 10),
       images: form.images.filter(Boolean),
@@ -226,6 +238,29 @@ export default function ProductForm({ initial, onClose, onSaved }) {
                 <input type="number" step="0.01" min="0" className="input" value={form.oldPrice} onChange={set('oldPrice')} />
               </div>
             </div>
+            {/* سعر التكلفة — للمالكة وحدها، لا يظهر للزبون إطلاقاً. أساس حساب الربح. */}
+            <Field
+              label={t('dashboard.product.cost')}
+              tip={t('dashboard.product.costTip')}
+              hint={t('common.optional')}
+              icon={<CashIcon className="h-4 w-4" />}
+            >
+              <div className="relative">
+                <input
+                  type="number" step="0.01" min="0" inputMode="decimal" placeholder="0"
+                  className="input pe-8" value={form.cost} onChange={set('cost')}
+                />
+                <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-stone-400">{t('common.currency')}</span>
+              </div>
+              {/* الربح لكل قطعة يظهر فور الكتابة — رقم يوجّه التسعير قبل الحفظ */}
+              {margin != null && (
+                <p className={`mt-1.5 flex flex-wrap items-center gap-x-2 text-[11px] font-semibold ${margin.value >= 0 ? 'text-emerald-400' : 'text-red-300'}`}>
+                  <span>{t('dashboard.product.marginPerPiece', { amount: `${t('common.currency')}${margin.value.toFixed(2)}` })}</span>
+                  <span className="rounded-full bg-gold-400/10 px-2 py-0.5 text-stone-400">{t('dashboard.product.marginPercent', { pct: margin.pct })}</span>
+                </p>
+              )}
+            </Field>
+
             {/* عرض بوقت محدود: عدّاد تنازلي — يظهر للزبون، وعند انتهائه يعود السعر الأصلي تلقائياً */}
             {form.oldPrice !== '' && (
               <div className="min-w-0">

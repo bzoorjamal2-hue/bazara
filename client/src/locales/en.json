@@ -416,6 +416,8 @@
     },
     "addProduct": "Add new product",
     "ordersSection": {
+      "profit": "Your profit",
+      "estimated": "estimated",
       "saveImage": "Save invoice as image",
       "savingImage": "Preparing the image…",
       "imageSaved": "Invoice image saved ✓",
@@ -696,6 +698,11 @@
       "overviewCta": "Open stock requests to manage and notify in one tap"
     },
     "analytics": {
+      "profit": "Product profit",
+      "profitTip": "Revenue minus the purchase cost of the items and the delivery fee, on confirmed orders. It does not include general expenses (ads, rent, packaging) — those come with the expenses stage.",
+      "profitBasis": "Calculated on {{done}} orders · {{missing}} orders excluded (an item has no cost price).",
+      "profitEstimated": "{{count}} of them estimated (orders older than the cost field)",
+      "profitNoCost": "You have not entered a cost price for any product yet — add it in the product form to start tracking profit.",
       "metricsTitle": "Key metrics",
       "metricsHint": "Your numbers since the store opened — tap \"?\" next to any metric to see exactly what it counts.",
       "revenueTip": "Total value of confirmed orders (confirmed, shipped and delivered). New and cancelled orders are not counted.",
@@ -959,6 +966,10 @@
       "collectionQuery": "Search keyword (e.g. evening dress)"
     },
     "product": {
+      "cost": "Cost price",
+      "costTip": "What the item cost you to buy. Customers never see it — we use it to work out your real profit on every order. Leave it empty if you do not know it, but orders containing an item without a cost will have no profit figure.",
+      "marginPerPiece": "Your profit per piece: {{amount}}",
+      "marginPercent": "{{pct}}% of the price",
       "sortBy": "Sort",
       "sortNewest": "Newest",
       "sortPriceAsc": "Cheapest first",

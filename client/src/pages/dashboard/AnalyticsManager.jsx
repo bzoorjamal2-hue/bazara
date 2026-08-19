@@ -110,6 +110,25 @@ export default function AnalyticsManager() {
           />
           <StatCard icon="repeat" grad="from-fuchsia-500 to-purple-600" accent="text-fuchsia-300" label={t('dashboard.analytics.repeatRate')} tip={t('dashboard.analytics.repeatRateTip')} value={<><CountUp value={data.repeatRate || 0} />%</>} />
         </div>
+
+        {/* الربح: الرقم الذي يهمّ فعلاً — الإيراد ناقص تكلفة البضاعة والتوصيل.
+            نكشف صراحةً كم طلباً دخل الحساب وكم تعذّر، فلا يُقرأ رقم جزئي كأنه كامل. */}
+        <div className="rounded-2xl border border-emerald-400/25 bg-emerald-500/5 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="flex items-center gap-1.5 text-xs font-medium text-stone-400">
+              {t('dashboard.analytics.profit')} <Tip text={t('dashboard.analytics.profitTip')} />
+            </p>
+            <p className="font-display text-2xl font-extrabold tabular-nums text-emerald-400">
+              {cur}{Math.round(data.profit || 0).toLocaleString()}
+            </p>
+          </div>
+          <p className="mt-1 text-[11px] leading-relaxed text-stone-400">
+            {data.productsWithCost === 0
+              ? t('dashboard.analytics.profitNoCost')
+              : t('dashboard.analytics.profitBasis', { done: data.profitOrders || 0, missing: data.profitMissing || 0 })}
+            {data.profitEstimated > 0 && ` · ${t('dashboard.analytics.profitEstimated', { count: data.profitEstimated })}`}
+          </p>
+        </div>
       </div>
 
       {/* لوحة النمو: قمع التحويل الحقيقي — أين يتسرّب الزبائن قبل الشراء */}

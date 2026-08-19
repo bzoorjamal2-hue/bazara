@@ -102,6 +102,38 @@ async function restoreStock(orderItems, q = query) {
   }
 }
 
+// ── حساب الربح ────────────────────────────────────────────────────────────────
+// الطلبات الجديدة تحمل لقطة تكلفة داخل كل عنصر (مجمّدة لحظة البيع) فربحها دقيق.
+// الطلبات القديمة أُنشئت قبل وجود حقل التكلفة، فنقدّرها بتكلفة المنتج الحالية
+// ونضع علم exact=false كي تُعرَض «تقديري» ولا يُبنى عليها قرار مالي كأنها مؤكّدة.
+// المنتج بلا تكلفة محدّدة أصلاً → لا ربح له (نعدّه غير مكتمل لا ربحاً كاملاً).
+export function orderProfit(order, costByProduct = new Map()) {
+  const items = Array.isArray(order.items) ? order.items : [];
+  let cogs = 0;          // تكلفة البضاعة المباعة
+  let exact = true;      // كل العناصر من لقطة وقت البيع؟
+  let known = 0;         // عناصر لها تكلفة معروفة
+  for (const it of items) {
+    const qty = Number(it.qty) || 0;
+    let unit = it.cost != null ? Number(it.cost) : null;
+    if (unit == null) {
+      const fallback = costByProduct.get(String(it.id));
+      if (fallback != null) { unit = Number(fallback); exact = false; }
+    }
+    if (unit != null && Number.isFinite(unit)) { cogs += unit * qty; known += 1; }
+  }
+  const complete = items.length > 0 && known === items.length;
+  if (!complete) return { cogs: null, profit: null, exact: false, complete: false };
+  // الربح = ما دفعه الزبون − تكلفة البضاعة − أجرة التوصيل. الخصم مطروح أصلاً من الإجمالي.
+  const profit = Number(order.total || 0) - cogs - Number(order.deliveryFee ?? order.delivery_fee ?? 0);
+  return { cogs: Math.round(cogs * 100) / 100, profit: Math.round(profit * 100) / 100, exact, complete: true };
+}
+
+// خريطة تكلفة منتجات المتجر — للطلبات القديمة التي بلا لقطة
+export async function storeCostMap(storeId) {
+  const r = await query('SELECT id, cost FROM products WHERE store_id = $1 AND cost IS NOT NULL', [storeId]);
+  return new Map(r.rows.map((p) => [String(p.id), Number(p.cost)]));
+}
+
 const SITE = () => (process.env.PUBLIC_SITE_URL || process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '');
 
 async function getUserStore(userId) {
@@ -126,7 +158,7 @@ export async function checkout(req, res, next) {
     // نحسب الإجمالي من قاعدة البيانات (لا نثق بأسعار العميل) ونتأكد أن المنتجات من متجر واحد
     const ids = items.map((i) => i.id);
     const r = await query(
-      'SELECT id, name, price, store_id FROM products WHERE id = ANY($1::uuid[])',
+      'SELECT id, name, price, cost, store_id FROM products WHERE id = ANY($1::uuid[])',
       [ids]
     );
     if (r.rows.length === 0) return res.status(400).json({ error: 'منتجات غير صالحة.' });
@@ -141,7 +173,7 @@ export async function checkout(req, res, next) {
       const qty = Math.max(1, parseInt(i.qty, 10) || 1);
       if (!p) return null;
       total += Number(p.price) * qty;
-      return { id: p.id, name: p.name, price: Number(p.price), qty };
+      return { id: p.id, name: p.name, price: Number(p.price), qty, cost: p.cost != null ? Number(p.cost) : null };
     }).filter(Boolean);
 
     if (total <= 0) return res.status(400).json({ error: 'إجمالي غير صالح.' });
@@ -181,7 +213,7 @@ export async function createCodOrder(req, res, next) {
   try {
     // نحسب الإجمالي من قاعدة البيانات (لا نثق بأسعار العميل) ونتأكد أن المنتجات من متجر واحد
     const ids = items.map((i) => i.id);
-    const r = await query('SELECT id, name, price, store_id FROM products WHERE id = ANY($1::uuid[])', [ids]);
+    const r = await query('SELECT id, name, price, cost, store_id FROM products WHERE id = ANY($1::uuid[])', [ids]);
     if (r.rows.length === 0) return res.status(400).json({ error: 'منتجات غير صالحة.' });
 
     const storeId = r.rows[0].store_id;
@@ -196,7 +228,7 @@ export async function createCodOrder(req, res, next) {
         if (!p) return null;
         const qty = Math.max(1, parseInt(i.qty, 10) || 1);
         subtotal += Number(p.price) * qty;
-        return { id: p.id, name: p.name, price: Number(p.price), qty, size: i.size || '', color: i.color || '' };
+        return { id: p.id, name: p.name, price: Number(p.price), qty, size: i.size || '', color: i.color || '', cost: p.cost != null ? Number(p.cost) : null };
       })
       .filter(Boolean);
     if (orderItems.length === 0 || subtotal <= 0) return res.status(400).json({ error: 'طلب غير صالح.' });
@@ -573,6 +605,27 @@ export async function getStats(req, res, next) {
     const monthGrowth = lastMonth > 0 ? Math.round(((thisMonth - lastMonth) / lastMonth) * 100) : (thisMonth > 0 ? 100 : 0);
     const rp = repeat.rows[0];
     const repeatRate = rp.customers > 0 ? Math.round((rp.repeaters / rp.customers) * 100) : 0;
+
+    // ── الربح: على الطلبات المؤكّدة فقط (نفس أساس الإيراد) ──────────────────
+    // نعرض ثلاثة أرقام بدل رقم واحد مضلّل: الربح المحسوب، وكم طلباً دخل الحساب،
+    // وكم طلباً تعذّر حسابه لنقص تكلفة قطعة — كي تعرف المالكة أن الرقم جزئي.
+    const costMap = await storeCostMap(sid);
+    const paidRows = await query(
+      `SELECT items, total, delivery_fee FROM orders WHERE store_id = $1 AND ${PAID}`,
+      [sid]
+    );
+    let profitTotal = 0;
+    let profitOrders = 0;
+    let profitMissing = 0;
+    let profitEstimated = 0;
+    for (const row of paidRows.rows) {
+      const p = orderProfit({ items: row.items, total: Number(row.total), deliveryFee: Number(row.delivery_fee || 0) }, costMap);
+      if (!p.complete) { profitMissing += 1; continue; }
+      profitTotal += p.profit;
+      profitOrders += 1;
+      if (!p.exact) profitEstimated += 1;
+    }
+    profitTotal = Math.round(profitTotal * 100) / 100;
     // قمع التحويل: زوّار → بدؤوا الطلب (سلة متروكة + طلبات فعلية) → أتمّوا الطلب →
     // تسلّموا. أرقام حقيقية من بياناتك — تُظهر أين يتسرّب الزبائن قبل الشراء.
     const funnel = {
@@ -605,6 +658,11 @@ export async function getStats(req, res, next) {
       repeatRate,
       repeatCustomers: rp.repeaters,
       totalCustomers: rp.customers,
+      profit: profitTotal,
+      profitOrders,          // طلبات دخلت حساب الربح
+      profitMissing,         // طلبات تعذّر حسابها (قطعة بلا سعر تكلفة)
+      profitEstimated,       // منها ما حُسب بتكلفة اليوم لا بلقطة وقت البيع
+      productsWithCost: costMap.size,
       stockRequestsPending,
       stockRequestsReady,
     });
@@ -650,6 +708,8 @@ export async function listMyOrders(req, res, next) {
        FROM orders WHERE store_id = $1 ORDER BY created_at DESC LIMIT 200`,
       [store.id]
     );
+    // تكاليف المنتجات الحالية — تُستعمل فقط للطلبات القديمة التي بلا لقطة تكلفة
+    const costMap = await storeCostMap(store.id);
     res.json({
       orders: r.rows.map((o) => ({
         id: o.id,
@@ -676,6 +736,11 @@ export async function listMyOrders(req, res, next) {
         goboxTracking: o.gobox_barcode || '',
         goboxStatus: o.gobox_status || '',
         createdAt: o.created_at,
+        // الربح: دقيق للطلبات الجديدة (لقطة تكلفة)، تقديري للقديمة، وفارغ إن نقصت تكلفة قطعة
+        ...(() => {
+          const p = orderProfit({ items: o.items, total: Number(o.total), deliveryFee: Number(o.delivery_fee || 0) }, costMap);
+          return { cogs: p.cogs, profit: p.profit, profitExact: p.exact };
+        })(),
       })),
     });
   } catch (err) {

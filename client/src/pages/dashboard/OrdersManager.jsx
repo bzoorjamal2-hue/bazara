@@ -777,6 +777,19 @@ export default function OrdersManager() {
                     <span>{t('dashboard.ordersSection.delivery')}</span>
                     <span className="tabular-nums">{t('common.currency')}{(o.deliveryFee || 0).toFixed(2)}</span>
                   </div>
+                  {/* الربح: يظهر فقط عند معرفة تكلفة كل قطعة بالطلب. «تقديري» يعني
+                      أن الطلب أقدم من حقل التكلفة فحُسب بتكلفة اليوم لا بتكلفة يومها. */}
+                  {o.profit != null && (
+                    <div className="flex items-center justify-between gap-2 text-emerald-400">
+                      <span className="inline-flex items-center gap-1">
+                        {t('dashboard.ordersSection.profit')}
+                        {!o.profitExact && (
+                          <span className="rounded-full bg-amber-500/15 px-1.5 py-px text-[9px] font-bold text-amber-400">{t('dashboard.ordersSection.estimated')}</span>
+                        )}
+                      </span>
+                      <span className="font-bold tabular-nums">{t('common.currency')}{o.profit.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between gap-2 border-t border-white/5 pt-1.5">
                     <span className="text-sm font-bold text-stone-200">{t('dashboard.ordersSection.total')}</span>
                     {/* الإجمالي يبقى الأبرز بالبطاقة بذهبه الكامل — صغّرته سابقاً بحجّة

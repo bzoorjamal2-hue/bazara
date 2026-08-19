@@ -16,7 +16,7 @@ export async function listMyProducts(req, res, next) {
       `SELECT * FROM products WHERE store_id = $1 ORDER BY featured DESC, created_at DESC`,
       [store.id]
     );
-    res.json({ products: result.rows.map(mapProduct) });
+    res.json({ products: result.rows.map(mapOwnerProduct) });
   } catch (err) {
     next(err);
   }
@@ -30,10 +30,10 @@ export async function createProduct(req, res, next) {
 
     const result = await query(
       `INSERT INTO products
-         (store_id, name, price, old_price, description, size, color, category, image_url, images, stock, featured, video_url, size_stock, sale_ends_at, color_stock, color_images)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+         (store_id, name, price, cost, old_price, description, size, color, category, image_url, images, stock, featured, video_url, size_stock, sale_ends_at, color_stock, color_images)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
        RETURNING *`,
-      [store.id, p.name, p.price, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, p.videoUrl, JSON.stringify(p.sizeStock), p.saleEndsAt, JSON.stringify(p.colorStock), JSON.stringify(p.colorImages)]
+      [store.id, p.name, p.price, p.cost, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, p.videoUrl, JSON.stringify(p.sizeStock), p.saleEndsAt, JSON.stringify(p.colorStock), JSON.stringify(p.colorImages)]
     );
 
     const product = result.rows[0];
@@ -41,7 +41,7 @@ export async function createProduct(req, res, next) {
       `${process.env.PUBLIC_SITE_URL}/store/${store.slug}`,
       `${process.env.PUBLIC_SITE_URL}/product/${product.id}`,
     ]);
-    res.status(201).json({ product: mapProduct(product) });
+    res.status(201).json({ product: mapOwnerProduct(product) });
   } catch (err) {
     next(err);
   }
@@ -61,13 +61,13 @@ export async function updateProduct(req, res, next) {
 
     const result = await query(
       `UPDATE products SET
-         name=$1, price=$2, old_price=$3, description=$4, size=$5, color=$6,
+         name=$1, price=$2, cost=$19, old_price=$3, description=$4, size=$5, color=$6,
          category=$7, image_url=$8, images=$9, stock=$10, featured=$11, video_url=$12, size_stock=$13, sale_ends_at=$14, color_stock=$15, color_images=$16, updated_at=now()
        WHERE id=$17 AND store_id=$18
        RETURNING *`,
-      [p.name, p.price, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, p.videoUrl, JSON.stringify(p.sizeStock), p.saleEndsAt, JSON.stringify(p.colorStock), JSON.stringify(p.colorImages), id, store.id]
+      [p.name, p.price, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, p.videoUrl, JSON.stringify(p.sizeStock), p.saleEndsAt, JSON.stringify(p.colorStock), JSON.stringify(p.colorImages), id, store.id, p.cost]
     );
-    res.json({ product: mapProduct(result.rows[0]) });
+    res.json({ product: mapOwnerProduct(result.rows[0]) });
     // تنبيه استباقي (بالخلفية): لو رجع متغيّرٌ تنتظره زبونة متوفّراً، نُشعر المالكة لتبلّغها
     alertOwnerOnRestock(id).catch(() => {});
   } catch (err) {
@@ -153,6 +153,8 @@ function normalizeBody(b) {
   return {
     name: b.name,
     price: Number(b.price),
+    // سعر التكلفة: فارغ = غير محدَّد (لا نفترض صفراً كي لا يظهر ربح وهمي)
+    cost: b.cost === '' || b.cost == null ? null : Number(b.cost),
     oldPrice,
     description: b.description || '',
     size,
@@ -180,6 +182,13 @@ function sanitizeColorImages(raw) {
     if (imgs.length) out[String(color).slice(0, 50)] = imgs;
   }
   return out;
+}
+
+// مُهيّئ خاص بالمالك: mapProduct مشترك مع الواجهات العامة (الرئيسية وصفحة المتجر
+// والمساعد)، فلا يجوز أن يحمل سعر التكلفة — وإلا رآه الزبون بردّ الـAPI. نضيفه هنا
+// فقط بمسارات المالك الثلاثة.
+export function mapOwnerProduct(p) {
+  return { ...mapProduct(p), cost: p.cost != null ? Number(p.cost) : null };
 }
 
 export function mapProduct(p) {
