@@ -4,7 +4,7 @@ import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
 import ConfirmModal from '../../components/ConfirmModal.jsx';
-import { TicketIcon, EditIcon, TrashIcon, CopyIcon, CheckIcon, PlusIcon, CashIcon, ClockIcon, UsersIcon } from '../../components/icons.jsx';
+import { TicketIcon, EditIcon, TrashIcon, CopyIcon, CheckIcon, PlusIcon, CashIcon, ClockIcon, UsersIcon, XIcon, SearchIcon, ShareIcon } from '../../components/icons.jsx';
 import { PageHead, SectionHead, Field } from '../../components/FormField.jsx';
 
 const EMPTY = { code: '', type: 'percent', value: '', minTotal: '', maxUses: '', expiresAt: '', active: true };
@@ -19,6 +19,8 @@ export default function CouponsManager() {
   const [busy, setBusy] = useState(false);
   const [confirmDel, setConfirmDel] = useState(null);
   const [copied, setCopied] = useState('');
+  const [q, setQ] = useState(''); // بحث بالكود
+  const [stateFilter, setStateFilter] = useState('all'); // all | on | off
 
   const load = () => api.get('/coupons').then((r) => setCoupons(r.data.coupons)).catch((e) => setError(getErrorMessage(e)));
   useEffect(() => { load(); }, []);
@@ -87,6 +89,40 @@ export default function CouponsManager() {
     try { await navigator.clipboard.writeText(c.code); setCopied(c.id); setTimeout(() => setCopied(''), 1600); } catch { /* تجاهُل */ }
   };
 
+  // نسخ كوبون: نفتح النموذج مُعبّأً بنفس الشروط وكود جديد — لعمل كوبون مشابه بسرعة
+  const duplicate = (c) => {
+    setEditId(null);
+    setForm({
+      code: `${c.code}-2`.slice(0, 20),
+      type: c.type,
+      value: String(c.value),
+      minTotal: c.minTotal ? String(c.minTotal) : '',
+      maxUses: c.maxUses != null ? String(c.maxUses) : '',
+      expiresAt: '',
+      active: true,
+    });
+    document.getElementById('coupon-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  // نصّ جاهز لمشاركة الكوبون مع الزبائن (واتساب/إنستغرام) بشروطه كاملة
+  const shareCoupon = async (c) => {
+    const terms = [
+      c.minTotal > 0 ? t('dashboard.coupons.shareMin', { amount: `${t('common.currency')}${c.minTotal}` }) : '',
+      c.expiresAt ? t('dashboard.coupons.shareUntil', { date: new Date(c.expiresAt).toLocaleDateString() }) : '',
+    ].filter(Boolean).join(' · ');
+    const text = [
+      t('dashboard.coupons.shareText', {
+        code: c.code,
+        value: c.type === 'percent' ? `${c.value}%` : `${t('common.currency')}${c.value}`,
+      }),
+      terms,
+    ].filter(Boolean).join('\n');
+    try {
+      if (navigator.share) await navigator.share({ text });
+      else { await navigator.clipboard.writeText(text); flash(t('common.copied')); }
+    } catch { /* أُلغيت المشاركة */ }
+  };
+
   if (coupons === null && !error) return <Spinner />;
 
   const CARD = 'dash-section glass space-y-4 p-5 sm:p-6';
@@ -98,6 +134,18 @@ export default function CouponsManager() {
     if (c.maxUses != null && c.usedCount >= c.maxUses) return { key: 'maxed', label: t('dashboard.coupons.maxed'), cls: 'bg-red-500/15 text-red-300' };
     return { key: 'on', label: t('dashboard.coupons.statusActive'), cls: 'bg-emerald-500/15 text-emerald-400' };
   };
+
+  // لمحة سريعة + تصفية: «موقوف» هنا تعني كل ما لا يعمل الآن (موقوف/منتهي/مستهلك)
+  const stats = {
+    active: list.filter((c) => stateOf(c).key === 'on').length,
+    off: list.filter((c) => stateOf(c).key !== 'on').length,
+    uses: list.reduce((s, c) => s + (Number(c.usedCount) || 0), 0),
+  };
+  const shown = list.filter((c) => {
+    if (stateFilter === 'on' && stateOf(c).key !== 'on') return false;
+    if (stateFilter === 'off' && stateOf(c).key === 'on') return false;
+    return !q.trim() || c.code.includes(q.trim());
+  });
 
   return (
     <div className="space-y-5">
@@ -163,7 +211,21 @@ export default function CouponsManager() {
           </Field>
 
           <Field label={t('dashboard.coupons.expiresAt')} icon={<ClockIcon className="h-4 w-4" />} tip={t('dashboard.coupons.expiresTip')} hint={t('common.optional')}>
-            <input className="input" type="date" value={form.expiresAt} onChange={set('expiresAt')} />
+            <div className="relative">
+              {/* زرّ مسح: خانة التاريخ الأصلية لا تتيح إفراغها بعد اختيار يوم على
+                  أغلب المتصفّحات والجوالات — فيبقى الكوبون بتاريخ انتهاء رغماً عنك */}
+              <input className={`input ${form.expiresAt ? 'pe-10' : ''}`} type="date" value={form.expiresAt} onChange={set('expiresAt')} />
+              {form.expiresAt && (
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, expiresAt: '' })}
+                  title={t('dashboard.coupons.clearDate')} aria-label={t('dashboard.coupons.clearDate')}
+                  className="absolute inset-y-0 end-2 my-auto grid h-7 w-7 place-items-center rounded-lg text-stone-400 transition hover:bg-red-500/10 hover:text-red-300"
+                >
+                  <XIcon className="h-4 w-4" />
+                </button>
+              )}
+            </div>
           </Field>
         </div>
 
@@ -193,8 +255,59 @@ export default function CouponsManager() {
             <span className="text-sm text-stone-400">{t('dashboard.coupons.empty')}</span>
           </div>
         ) : (
+          <>
+            {/* لمحة سريعة: كم كوبوناً يعمل الآن وكم مرّة استُخدمت كوبوناتك */}
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { label: t('dashboard.coupons.statsActive'), value: stats.active, cls: 'text-emerald-400' },
+                { label: t('dashboard.coupons.statsUses'), value: stats.uses, cls: 'text-gold-300' },
+                { label: t('dashboard.coupons.statsOff'), value: stats.off, cls: 'text-stone-300' },
+              ].map((s) => (
+                <div key={s.label} className="rounded-2xl border border-gold-400/15 bg-black/20 p-3 text-center">
+                  <p className={`font-display text-2xl font-extrabold tabular-nums ${s.cls}`}>{s.value}</p>
+                  <p className="mt-0.5 text-[11px] text-stone-400">{s.label}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* بحث + تصفية بالحالة — تظهر عند تعدّد الكوبونات */}
+            {list.length > 3 && (
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-2 rounded-xl border border-gold-400/15 bg-black/20 px-3 focus-within:border-gold-400/60 focus-within:ring-2 focus-within:ring-gold-400/25">
+                  <SearchIcon className="h-4 w-4 shrink-0 text-stone-400" />
+                  <input
+                    className="min-w-0 flex-1 bg-transparent py-2.5 text-sm text-stone-100 placeholder:text-stone-500 focus:outline-none"
+                    placeholder={t('dashboard.coupons.searchPlaceholder')}
+                    value={q}
+                    onChange={(e) => setQ(e.target.value.toUpperCase())}
+                    dir="ltr"
+                  />
+                  {q && (
+                    <button type="button" onClick={() => setQ('')} aria-label={t('common.cancel')} className="shrink-0 text-stone-400 transition hover:text-gold-200">
+                      <XIcon className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {[['all', t('common.all'), list.length], ['on', t('dashboard.coupons.statusActive'), stats.active], ['off', t('dashboard.coupons.statsOff'), stats.off]].map(([k, label, n]) => (
+                    <button
+                      key={k} type="button" onClick={() => setStateFilter(k)}
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold transition ${
+                        stateFilter === k ? 'border-[#d4af37] bg-[#d4af37] text-[#3f2e22]' : 'border-gold-400/25 bg-gold-400/5 text-stone-300 hover:bg-gold-400/15 hover:text-gold-200'
+                      }`}
+                    >
+                      {label} <span className={`rounded-full px-1.5 text-[10px] ${stateFilter === k ? 'bg-[#3f2e22]/15' : 'bg-gold-400/10'}`}>{n}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {shown.length === 0 ? (
+              <p className="rounded-2xl border border-gold-400/15 bg-black/20 py-8 text-center text-sm text-stone-400">{t('dashboard.coupons.noMatch')}</p>
+            ) : (
           <div className="space-y-2.5">
-            {list.map((c) => {
+            {shown.map((c) => {
               const st = stateOf(c);
               const off = st.key !== 'on';
               const pct = c.maxUses ? Math.min(100, Math.round((c.usedCount / c.maxUses) * 100)) : 0;
@@ -224,6 +337,8 @@ export default function CouponsManager() {
                       >
                         {st.label}
                       </button>
+                      <button onClick={() => shareCoupon(c)} title={t('dashboard.coupons.shareCoupon')} aria-label={t('dashboard.coupons.shareCoupon')} className="grid h-8 w-8 place-items-center rounded-lg text-stone-400 transition hover:bg-gold-400/10 hover:text-gold-200"><ShareIcon className="h-4 w-4" /></button>
+                      <button onClick={() => duplicate(c)} title={t('dashboard.store.duplicate')} aria-label={t('dashboard.store.duplicate')} className="grid h-8 w-8 place-items-center rounded-lg text-stone-400 transition hover:bg-gold-400/10 hover:text-gold-200"><CopyIcon className="h-4 w-4" /></button>
                       <button onClick={() => edit(c)} title={t('common.edit')} aria-label={t('common.edit')} className="grid h-8 w-8 place-items-center rounded-lg text-stone-400 transition hover:bg-gold-400/10 hover:text-gold-200"><EditIcon className="h-4 w-4" /></button>
                       <button onClick={() => setConfirmDel(c)} title={t('common.delete')} aria-label={t('common.delete')} className="grid h-8 w-8 place-items-center rounded-lg text-stone-400 transition hover:bg-red-500/10 hover:text-red-300"><TrashIcon className="h-4 w-4" /></button>
                     </div>
@@ -252,6 +367,8 @@ export default function CouponsManager() {
               );
             })}
           </div>
+            )}
+          </>
         )}
       </div>
 

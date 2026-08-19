@@ -25,7 +25,7 @@ export function Tip({ text }) {
 
   if (!text) return null;
   return (
-    <span className="relative inline-flex align-middle">
+    <span className="relative inline-flex shrink-0 align-middle">
       {/* الأيقونة SVG لا حرفاً: تتمركز تماماً مع سطر التسمية بأي خط أو حجم
           (حرف «؟» كان ينزل عن السطر ويختلف وزنه بين الأجهزة) */}
       <button
@@ -33,8 +33,10 @@ export function Tip({ text }) {
         aria-label={text}
         onClick={() => setOpen((o) => !o)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
+        // text-stone-400 لا text-gold-400/55: الأخيرة بلا مقابل نهاري فتبقى ذهبية
+        // باهتة على البطاقة البيضاء. الرمادي مضبوط بالوضعين ويصير ذهبياً عند الفتح.
         className={`inline-flex shrink-0 self-center rounded-full transition ${
-          open ? 'text-gold-300' : 'text-gold-400/55 hover:text-gold-300'
+          open ? 'text-gold-300' : 'text-stone-400 hover:text-gold-300'
         }`}
       >
         <HelpIcon className="h-[15px] w-[15px] block" />
@@ -59,10 +61,15 @@ export function Field({ label, tip, hint, icon, max, value = '', required = fals
     <div>
       {(label || max) && (
         <div className="mb-1.5 flex items-end justify-between gap-2">
-          <span className="flex flex-wrap items-center gap-1.5 text-sm font-medium text-stone-300">
+          {/* flex بلا wrap: التسمية تلتفّ داخل حيّزها والتلميح يبقى بجانبها
+              متمركزاً معها رأسياً على كل المقاسات — كان flex-wrap يُنزله سطراً
+              وحده على الشاشات الضيّقة. */}
+          <span className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-stone-300">
             {icon}
-            {label}
-            {required && <span className="text-red-400/70">*</span>}
+            <span className="min-w-0">
+              {label}
+              {required && <span className="text-red-400/70">*</span>}
+            </span>
             <Tip text={tip} />
           </span>
           {max ? (

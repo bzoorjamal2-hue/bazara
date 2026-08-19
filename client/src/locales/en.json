@@ -535,6 +535,16 @@
       "managed": "via gobox"
     },
     "coupons": {
+      "statsActive": "Working now",
+      "statsUses": "Times used",
+      "statsOff": "Not working",
+      "searchPlaceholder": "Search by code…",
+      "noMatch": "No coupon matches your search.",
+      "shareCoupon": "Share coupon",
+      "shareText": "🎁 {{value}} off with code {{code}}",
+      "shareMin": "On orders over {{amount}}",
+      "shareUntil": "Valid until {{date}}",
+      "clearDate": "Clear expiry date",
       "formHint": "The customer types this code in their cart and the discount applies automatically before payment.",
       "codeTip": "The code you share with customers. Keep it short and easy to type (e.g. EID25). It is always stored in capitals, so it does not matter how the customer types it.",
       "typeTip": "Percentage: takes a share off the order (10% of 200 = 20). Fixed amount: takes that exact amount off, whatever the order is worth.",
