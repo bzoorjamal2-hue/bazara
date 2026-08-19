@@ -646,6 +646,11 @@
     "viewHome": "Bazara homepage",
     "welcome": "Welcome",
     "profileSection": {
+      "identity": "Your details",
+      "identityHint": "Your photo and name as they appear to you in the dashboard and account menu.",
+      "avatarHint": "A clear square photo of you or your logo — it is shown small and circular.",
+      "nameTip": "Your own name, not the store name. It appears in the dashboard greeting and account menu only; customers never see it.",
+      "emailTip": "Your email is your login, so it is not changed here — use the \"Change email\" section below after confirming your password.",
       "hint": "Your personal details, photo and password.",
       "title": "Profile",
       "avatar": "Profile picture",
@@ -653,6 +658,13 @@
       "emailNote": "To change your email, use the section below."
     },
     "security": {
+      "changePasswordHint": "Pick a strong password you do not use on any other site — this account holds your customers’ orders and details.",
+      "changeEmailHint": "The new email becomes your login as soon as you save.",
+      "currentPasswordTip": "We ask for it to confirm the account is yours — it protects you if someone left the device unlocked.",
+      "newPasswordTip": "Longer is stronger: eight characters or more, mixing letters and numbers. Avoid your name, phone number or birth date.",
+      "newEmailTip": "After saving, sign in with the new email. Make sure it is correct and that you can receive mail there.",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
       "title": "Security",
       "changePassword": "Change password",
       "changeEmail": "Change email",

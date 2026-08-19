@@ -248,3 +248,10 @@ export function WaveIcon({ className = 'h-5 w-5' }) { return svg(className, <pat
 export function HelpIcon({ className = 'h-5 w-5' }) {
   return svg(className, <><circle {...L} cx="12" cy="12" r="9" /><path {...L} d="M9.6 9.4 A2.5 2.5 0 1 1 12.9 11.8 C12.25 12.05 11.9 12.6 11.9 13.3 V13.8" /><circle cx="12" cy="16.7" r="1.05" fill="currentColor" /></>);
 }
+// عين / عين مشطوبة — إظهار وإخفاء كلمة السر، وإظهار وإخفاء عناصر الواجهة.
+export function EyeIcon({ className = 'h-5 w-5' }) {
+  return svg(className, <><path {...L} d="M2 12s3-8 10-8 10 8 10 8-3 8-10 8-10-8-10-8Z" /><circle {...L} cx="12" cy="12" r="3" /></>);
+}
+export function EyeOffIcon({ className = 'h-5 w-5' }) {
+  return svg(className, <><path {...L} d="M9.9 4.24A9.1 9.1 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19M6.6 6.6A18.6 18.6 0 0 0 2 12s3 8 10 8a9.3 9.3 0 0 0 5.4-1.6" /><path {...L} d="M9.9 9.9a3 3 0 0 0 4.2 4.2M2 2l20 20" /></>);
+}
