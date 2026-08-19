@@ -7,9 +7,10 @@ import { useAuth } from '../context/AuthContext.jsx';
 import Seo from '../components/Seo.jsx';
 import {
   UserIcon, DownloadIcon, HomeIcon, ChartIcon, GearIcon, BagIcon, ReceiptIcon,
-  TicketIcon, GiftIcon, BellIcon, UsersIcon, ShieldIcon, ImageIcon, StoreIcon, LinkIcon, MailIcon, InstagramIcon,
+  TicketIcon, GiftIcon, BellIcon, UsersIcon, ShieldIcon, ImageIcon, StoreIcon, LinkIcon, MailIcon, InstagramIcon, BoltIcon,
 } from '../components/icons.jsx';
 import SubscriptionBanner from '../components/SubscriptionBanner.jsx';
+import { SectionHead, Tip } from '../components/FormField.jsx';
 import Profile from './dashboard/Profile.jsx';
 import StoreSettings from './dashboard/StoreSettings.jsx';
 import ProductsManager from './dashboard/ProductsManager.jsx';
@@ -160,18 +161,34 @@ function Overview({ productsCount }) {
   };
 
   const cur = t('common.currency');
-  const fmt = (n) => (n == null ? '—' : Number(n).toLocaleString());
+
+  // نفس هيكل صفحة إعدادات المتجر: بطاقة قسم بخيط ذهبي + رأس ببلاطة أيقونة متدرّجة
+  const CARD = 'dash-section glass space-y-4 p-5 sm:p-6';
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
+      {/* رأس الصفحة — بنفس نمط رأس الإعدادات (بلاطة متدرّجة + عنوان ذهبي + سطر تعريفي) */}
+      <div className="flex items-center gap-3">
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-400 to-amber-500 text-white shadow-md">
+          <HomeIcon className="h-6 w-6" />
+        </span>
+        <div className="min-w-0">
+          <h1 className="font-display text-2xl font-bold leading-tight gradient-text">{t('dashboard.overview')}</h1>
+          <p className="text-xs text-stone-400">{t('dashboard.ovHint')}</p>
+        </div>
+      </div>
+
       <SubscriptionBanner />
 
-      {/* المؤشّرات الرئيسية — بطاقات موحّدة ببلاطة أيقونة متدرّجة (متناسقة مع الإحصائيات) */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <MetricCard label={t('dashboard.analytics.revenue')} value={stats ? <CountUp value={stats.revenue} format={(x) => `${cur}${Math.round(x).toLocaleString()}`} /> : '—'} Icon={WalletGlyph} grad="from-emerald-500 to-emerald-700" accent="text-emerald-300" />
-        <MetricCard label={t('dashboard.analytics.newOrders')} value={stats ? <CountUp value={stats.newOrders} /> : '—'} Icon={ReceiptIcon} grad="from-gold-400 to-amber-500" accent="text-gold-300" />
-        <MetricCard label={t('dashboard.visitors')} value={visitors != null ? <CountUp value={visitors} /> : '—'} Icon={UsersIcon} grad="from-[#8a6a4f] to-[#3f2e22]" accent="text-stone-100" />
-        <MetricCard label={t('dashboard.productsCount')} value={productCount != null ? <CountUp value={productCount} /> : '—'} Icon={BagIcon} grad="from-wine to-wine-dark" accent="text-stone-100" />
+      {/* المؤشّرات الرئيسية */}
+      <div className={CARD}>
+        <SectionHead icon={<ChartIcon className="h-5 w-5" />} title={t('dashboard.ovMetrics')} desc={t('dashboard.ovMetricsHint')} />
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <MetricCard label={t('dashboard.analytics.revenue')} tip={t('dashboard.ovRevenueTip')} value={stats ? <CountUp value={stats.revenue} format={(x) => `${cur}${Math.round(x).toLocaleString()}`} /> : '—'} Icon={WalletGlyph} grad="from-emerald-500 to-emerald-700" accent="text-emerald-400" />
+          <MetricCard label={t('dashboard.analytics.newOrders')} tip={t('dashboard.ovNewOrdersTip')} value={stats ? <CountUp value={stats.newOrders} /> : '—'} Icon={ReceiptIcon} grad="from-gold-400 to-amber-500" accent="text-gold-300" />
+          <MetricCard label={t('dashboard.visitors')} tip={t('dashboard.ovVisitorsTip')} value={visitors != null ? <CountUp value={visitors} /> : '—'} Icon={UsersIcon} grad="from-[#8a6a4f] to-[#3f2e22]" accent="text-stone-100" />
+          <MetricCard label={t('dashboard.productsCount')} tip={t('dashboard.ovProductsTip')} value={productCount != null ? <CountUp value={productCount} /> : '—'} Icon={BagIcon} grad="from-wine to-wine-dark" accent="text-stone-100" />
+        </div>
       </div>
 
       {/* تنبيه طلبات التوفّر — يظهر فقط عند وجود ما يستدعي التصرّف. الأخضر (رجع متوفّر
@@ -200,8 +217,8 @@ function Overview({ productsCount }) {
       )}
 
       {/* إجراءات سريعة — اختصارات لأكثر ما يستخدمه صاحب المتجر يومياً */}
-      <div>
-        <h2 className="mb-3 text-sm font-bold text-stone-300">{t('dashboard.quickActions')}</h2>
+      <div className={CARD}>
+        <SectionHead icon={<BoltIcon className="h-5 w-5" />} title={t('dashboard.quickActions')} desc={t('dashboard.ovQuickHint')} />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <QuickAction to="/dashboard?tab=myProducts" label={t('dashboard.myProducts')} Icon={BagIcon} />
           <QuickAction to="/dashboard?tab=myOrders" label={t('dashboard.myOrders')} Icon={ReceiptIcon} />
@@ -212,14 +229,8 @@ function Overview({ productsCount }) {
 
       {/* شارك متجرك: الرابط + رمز QR في بطاقة واحدة متناسقة (بدل بطاقتين منفصلتين) */}
       {store && (
-        <div className="glass relative overflow-hidden p-6">
-          <span className="dash-hairline absolute inset-x-0 top-0" />
-          <div className="mb-4 flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gold-400/10 text-gold-300 ring-1 ring-gold-400/20">
-              <LinkIcon className="h-4 w-4" />
-            </span>
-            <p className="font-display text-base font-bold text-gold-200">{t('dashboard.store.shareStore')}</p>
-          </div>
+        <div className={CARD}>
+          <SectionHead icon={<LinkIcon className="h-5 w-5" />} title={t('dashboard.store.shareStore')} desc={t('dashboard.ovShareHint')} />
           <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-stretch">
             {/* رمز QR */}
             <div className="flex flex-col items-center gap-2">
@@ -261,13 +272,18 @@ function Overview({ productsCount }) {
 // بطاقة مؤشّر موحّدة — بلاطة أيقونة متدرّجة + رقم بارز (نفس لغة صفحة الإحصائيات).
 // (أُزيل التوهّج الزخرفي المتدرّج: كان يتسرّب خارج زاوية البطاقة على iOS لأن
 // overflow-hidden لا يقصّ عنصر البلور هناك، فيظهر مربّع باهت مقزّز بالزاوية.)
-function MetricCard({ label, value, Icon, grad, accent }) {
+// (صارت بطاقة فرعية داخل قسم لا بطاقة زجاجية مستقلّة — نفس نمط البطاقات الفرعية
+//  بصفحة الإعدادات، فلا تتداخل طبقتا زجاج ويبقى الإيقاع البصري واحداً.)
+function MetricCard({ label, value, Icon, grad, accent, tip }) {
   return (
-    <div className="glass overflow-hidden p-5">
+    <div className="rounded-2xl border border-gold-400/15 bg-black/20 p-4">
       <span className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-md ${grad}`}>
         <Icon className="h-[22px] w-[22px]" />
       </span>
-      <p className="mt-3 text-xs font-medium text-stone-400">{label}</p>
+      <p className="mt-3 flex items-center gap-1.5 text-xs font-medium text-stone-400">
+        <span className="truncate">{label}</span>
+        <Tip text={tip} />
+      </p>
       <p className={`mt-1 truncate font-display text-3xl font-extrabold leading-tight ${accent}`}>{value}</p>
     </div>
   );
@@ -276,7 +292,7 @@ function MetricCard({ label, value, Icon, grad, accent }) {
 // اختصار سريع أنيق — بلاطة أيقونة ذهبية متدرّجة واضحة (تبرز بالوضعين) + عنوان
 function QuickAction({ to, label, Icon }) {
   return (
-    <Link to={to} className="glass group flex flex-col items-center gap-2.5 p-4 text-center transition duration-200 hover:-translate-y-0.5">
+    <Link to={to} className="group flex flex-col items-center gap-2.5 rounded-2xl border border-gold-400/15 bg-black/20 p-4 text-center transition duration-200 hover:-translate-y-0.5 hover:border-gold-400/40 hover:bg-gold-400/5">
       <span
         className="flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-md transition group-hover:brightness-110"
         style={{ background: 'linear-gradient(135deg, #e6c878 0%, #d4af37 55%, #b8932c 100%)' }}

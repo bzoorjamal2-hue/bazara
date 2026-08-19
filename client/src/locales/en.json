@@ -311,6 +311,15 @@
     "renewBtn": "Renew & sign in"
   },
   "dashboard": {
+    "ovHint": "A quick look at your store: your numbers, daily shortcuts, and your share link.",
+    "ovMetrics": "Store metrics",
+    "ovMetricsHint": "Your numbers since the store opened — tap \"?\" next to any metric to see exactly what it counts.",
+    "ovRevenueTip": "Total value of confirmed orders (confirmed, shipped and delivered) since your store opened. New and cancelled orders are not counted.",
+    "ovNewOrdersTip": "Orders that arrived and you have not confirmed yet — these deserve your attention first.",
+    "ovVisitorsTip": "Visits to your store page. Rising visitors with flat orders means the page needs work (photos, prices, descriptions).",
+    "ovProductsTip": "How many products are currently published in your store.",
+    "ovQuickHint": "Shortcuts to what you open most often.",
+    "ovShareHint": "Your store link and QR code — share them on Instagram and WhatsApp, or print the code on a card.",
     "title": "Dashboard",
     "hello": "Hello",
     "viewStore": "View store",
