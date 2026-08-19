@@ -639,6 +639,9 @@ export async function listMyOrders(req, res, next) {
     res.json({
       orders: r.rows.map((o) => ({
         id: o.id,
+        // رقم الطلب القصير (BZ-XXXX) هو ما يراه الزبون ويتتبّع به — لم يكن يُرسَل
+        // للوحة، فكانت تعرض معرّف UUID طويلاً ويفشل البحث برقم الطلب.
+        reference: o.reference || '',
         customerName: o.customer_name,
         customerPhone: o.customer_phone,
         items: o.items,

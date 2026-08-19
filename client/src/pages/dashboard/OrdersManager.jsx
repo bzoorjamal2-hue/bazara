@@ -150,11 +150,15 @@ export default function OrdersManager() {
   // الخطوة التالية المنطقية بمسار الطلب — زرّ واحد بدل فتح القائمة كل مرّة
   const NEXT = { new: 'confirmed', confirmed: 'shipped', shipped: 'delivered' };
 
+  // رقم الطلب المعروض: المرجع القصير (BZ-…) الذي يعرفه الزبون. وإن غاب (طلبات
+  // قديمة) نعرض آخر ٦ خانات من المعرّف بدل UUID كامل يملأ السطر.
+  const orderNo = (o) => o.reference || `#${String(o.id).replace(/-/g, '').slice(-6).toUpperCase()}`;
+
   // نصّ الطلب كاملاً للنسخ — يُلصق بأي مكان (دفتر، محادثة، ملاحظة)
   const orderText = (o) => {
     const cur = t('common.currency');
     return [
-      `#${o.id} — ${t(`dashboard.ordersSection.${o.status}`)}`,
+      `${orderNo(o)} — ${t(`dashboard.ordersSection.${o.status}`)}`,
       `${o.customerName || ''} ${o.customerPhone || ''}`.trim(),
       [o.city, o.area && o.area !== o.city ? o.area : '', o.address].filter(Boolean).join(' - '),
       '',
@@ -171,50 +175,117 @@ export default function OrdersManager() {
     try { await navigator.clipboard.writeText(orderText(o)); setToast(t('common.copied')); setTimeout(() => setToast(''), 1600); } catch { /* تجاهُل */ }
   };
 
-  // فاتورة للطباعة/الحفظ PDF — تُبنى داخل إطار مخفيّ (أوثق من نافذة منبثقة تحجبها المتصفّحات)
-  const printInvoice = (o) => {
+  const escHtml = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  // جسم فاتورة واحدة — مفصّلة: بيانات المتجر والزبونة، وجدول بسعر الوحدة والكمية
+  // والمجموع لكل قطعة، والمقاس واللون بعمودين مستقلّين، وطريقة الدفع وحالة الطلب.
+  const invoiceBody = (o) => {
     const cur = t('common.currency');
-    const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-    const rows = (o.items || []).map((it) => `<tr>
-      <td>${esc(it.name)}${it.size || it.color ? `<br><small>${esc([it.size, it.color].filter(Boolean).join(' · '))}</small>` : ''}</td>
-      <td class="c">${esc(it.qty)}</td>
-      <td class="e">${cur}${(it.price * it.qty).toFixed(2)}</td>
+    const e = escHtml;
+    const c = courierOf(o);
+    const rows = (o.items || []).map((it, i) => `<tr>
+      <td class="n">${i + 1}</td>
+      <td>${e(it.name)}</td>
+      <td class="c">${e(it.size || '—')}</td>
+      <td class="c">${e(it.color || '—')}</td>
+      <td class="e">${cur}${Number(it.price || 0).toFixed(2)}</td>
+      <td class="c">${e(it.qty)}</td>
+      <td class="e b">${cur}${((it.price || 0) * (it.qty || 0)).toFixed(2)}</td>
     </tr>`).join('');
-    const line = (lbl, val) => `<tr><td colspan="2" class="e lbl">${esc(lbl)}</td><td class="e">${esc(val)}</td></tr>`;
-    const html = `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>${esc(t('dashboard.ordersSection.invoice'))} #${esc(o.id)}</title>
-      <style>
-        *{box-sizing:border-box} body{font-family:'Cairo','Segoe UI',Tahoma,sans-serif;color:#2b2b2b;margin:0;padding:24px}
-        h1{font-size:20px;margin:0 0 2px} .muted{color:#6b6b6b;font-size:12px}
-        .head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #d4af37;padding-bottom:12px;margin-bottom:16px}
-        .box{border:1px solid #e3ddd3;border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:13px}
-        table{width:100%;border-collapse:collapse;font-size:13px}
-        th{background:#f6f1e8;text-align:start;padding:8px;border-bottom:1px solid #e3ddd3}
-        td{padding:8px;border-bottom:1px solid #f0ebe3;vertical-align:top}
-        .c{text-align:center;width:60px} .e{text-align:end;width:110px} .lbl{color:#6b6b6b}
-        .total td{font-weight:800;font-size:15px;border-top:2px solid #d4af37}
-        small{color:#6b6b6b}
-        @media print{body{padding:0}}
-      </style></head><body>
-      <div class="head">
-        <div><h1>${esc(store?.name || 'Bazara')}</h1><div class="muted">${esc(t('dashboard.ordersSection.invoice'))} #${esc(o.id)}</div></div>
-        <div class="muted">${esc(new Date(o.createdAt).toLocaleString())}<br>${esc(t(`dashboard.ordersSection.${o.status}`))}</div>
-      </div>
-      <div class="box">
-        <b>${esc(o.customerName || '')}</b> ${esc(o.customerPhone || '')}<br>
-        ${esc([o.city, o.area && o.area !== o.city ? o.area : '', o.address].filter(Boolean).join(' - '))}
-        ${o.notes ? `<br><small>${esc(o.notes)}</small>` : ''}
-      </div>
-      <table>
-        <thead><tr><th>${esc(t('dashboard.product.name'))}</th><th class="c">${esc(t('dashboard.product.qty'))}</th><th class="e">${esc(t('dashboard.product.price'))}</th></tr></thead>
-        <tbody>${rows}</tbody>
-        <tfoot>
-          ${line(t('dashboard.ordersSection.subtotal'), `${cur}${(o.total - (o.deliveryFee || 0) + (o.discount || 0)).toFixed(2)}`)}
-          ${o.discount > 0 ? line(o.couponCode || t('dashboard.ordersSection.discount'), `−${cur}${Number(o.discount).toFixed(2)}`) : ''}
-          ${line(t('dashboard.ordersSection.delivery'), `${cur}${Number(o.deliveryFee || 0).toFixed(2)}`)}
-          <tr class="total"><td colspan="2" class="e">${esc(t('dashboard.ordersSection.total'))}</td><td class="e">${cur}${Number(o.total).toFixed(2)}</td></tr>
-        </tfoot>
-      </table>
-      </body></html>`;
+    const line = (lbl, val, cls = '') => `<tr class="${cls}"><td colspan="6" class="e lbl">${e(lbl)}</td><td class="e">${e(val)}</td></tr>`;
+    const pieces = (o.items || []).reduce((s, it) => s + (Number(it.qty) || 0), 0);
+    return `
+      <div class="inv">
+        <div class="head">
+          <div>
+            <h1>${e(store?.name || 'Bazara')}</h1>
+            <div class="muted">
+              ${store?.whatsapp ? `${e(t('dashboard.store.whatsapp'))}: <span dir="ltr">${e(store.whatsapp)}</span><br>` : ''}
+              ${store?.phone ? `${e(t('dashboard.store.phone'))}: <span dir="ltr">${e(store.phone)}</span><br>` : ''}
+              ${store?.slug ? `bazarastore.site/store/${e(store.slug)}` : ''}
+            </div>
+          </div>
+          <div class="inv-meta">
+            <div class="tag">${e(t('dashboard.ordersSection.invoice'))}</div>
+            <div class="no" dir="ltr">${e(orderNo(o))}</div>
+            <div class="muted">${e(new Date(o.createdAt).toLocaleString())}</div>
+            <div class="muted">${e(t('dashboard.ordersSection.status'))}: <b>${e(t(`dashboard.ordersSection.${o.status}`))}</b></div>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="box">
+            <div class="box-t">${e(t('dashboard.ordersSection.customer'))}</div>
+            <b>${e(o.customerName || '—')}</b><br>
+            <span dir="ltr">${e(o.customerPhone || '')}</span>
+          </div>
+          <div class="box">
+            <div class="box-t">${e(t('dashboard.ordersSection.deliveryTo'))}</div>
+            ${e([o.city, o.area && o.area !== o.city ? o.area : ''].filter(Boolean).join(' - ')) || '—'}<br>
+            <small>${e(o.address || '')}</small>
+            ${c?.name ? `<br><small>${e(c.name)}${c.tracking && c.tracking !== '✓' ? ` — <span dir="ltr">${e(c.tracking)}</span>` : ''}</small>` : ''}
+          </div>
+        </div>
+        ${o.notes ? `<div class="box note"><div class="box-t">${e(t('dashboard.ordersSection.notes'))}</div>${e(o.notes)}</div>` : ''}
+
+        <table>
+          <thead><tr>
+            <th class="n">#</th>
+            <th>${e(t('dashboard.product.name'))}</th>
+            <th class="c">${e(t('dashboard.product.size'))}</th>
+            <th class="c">${e(t('dashboard.product.color'))}</th>
+            <th class="e">${e(t('dashboard.ordersSection.unitPrice'))}</th>
+            <th class="c">${e(t('dashboard.product.qty'))}</th>
+            <th class="e">${e(t('dashboard.ordersSection.lineTotal'))}</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+          <tfoot>
+            ${line(`${t('dashboard.ordersSection.subtotal')} (${t('dashboard.abandoned.itemsCount', { count: pieces })})`, `${cur}${(o.total - (o.deliveryFee || 0) + (o.discount || 0)).toFixed(2)}`)}
+            ${o.discount > 0 ? line(`${t('dashboard.ordersSection.discount')}${o.couponCode ? ` (${o.couponCode})` : ''}`, `−${cur}${Number(o.discount).toFixed(2)}`) : ''}
+            ${line(t('dashboard.ordersSection.delivery'), `${cur}${Number(o.deliveryFee || 0).toFixed(2)}`)}
+            <tr class="total"><td colspan="6" class="e">${e(t('dashboard.ordersSection.total'))}</td><td class="e">${cur}${Number(o.total).toFixed(2)}</td></tr>
+          </tfoot>
+        </table>
+
+        <div class="pay">${e(t('dashboard.ordersSection.payCod'))}</div>
+        <div class="thanks">${e(t('dashboard.ordersSection.invoiceThanks', { store: store?.name || '' }))}</div>
+      </div>`;
+  };
+
+  // أنماط الفاتورة (A4) — مشتركة بين فاتورة واحدة وطباعة عدّة فواتير
+  const INVOICE_CSS = `
+    *{box-sizing:border-box}
+    body{font-family:'Cairo','Segoe UI',Tahoma,sans-serif;color:#2b2b2b;margin:0;padding:0;background:#fff}
+    .inv{padding:22px 24px;max-width:800px;margin:0 auto}
+    .inv + .inv{page-break-before:always}
+    h1{font-size:19px;margin:0 0 4px}
+    .muted{color:#6b6b6b;font-size:11.5px;line-height:1.7}
+    .head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border-bottom:2px solid #d4af37;padding-bottom:12px;margin-bottom:14px}
+    .inv-meta{text-align:end}
+    .tag{display:inline-block;background:#d4af37;color:#3f2e22;font-weight:800;font-size:11px;padding:2px 10px;border-radius:99px;margin-bottom:4px}
+    .no{font-weight:800;font-size:14px;letter-spacing:.5px}
+    .grid2{display:flex;gap:10px;margin-bottom:10px}
+    .box{flex:1;border:1px solid #e3ddd3;border-radius:10px;padding:9px 11px;font-size:12.5px;line-height:1.7}
+    .box-t{color:#8a7f75;font-size:10.5px;font-weight:700;margin-bottom:2px}
+    .note{margin-bottom:10px}
+    table{width:100%;border-collapse:collapse;font-size:12.5px}
+    th{background:#f6f1e8;text-align:start;padding:7px 8px;border-bottom:1px solid #e3ddd3;font-size:11.5px}
+    td{padding:7px 8px;border-bottom:1px solid #f0ebe3;vertical-align:middle}
+    .n{width:28px;text-align:center;color:#8a7f75}
+    .c{text-align:center;width:64px}
+    .e{text-align:end;width:96px}
+    .b{font-weight:700}
+    .lbl{color:#6b6b6b}
+    .total td{font-weight:800;font-size:14.5px;border-top:2px solid #d4af37;background:#fdfaf3}
+    small{color:#6b6b6b}
+    .pay{margin-top:10px;font-size:12px;color:#3f2e22;background:#f6f1e8;border-radius:8px;padding:7px 10px}
+    .thanks{margin-top:10px;text-align:center;color:#8a7f75;font-size:11.5px}
+    @page{size:A4;margin:10mm}
+  `;
+
+  // الطباعة داخل إطار مخفيّ (أوثق من نافذة منبثقة تحجبها المتصفّحات)
+  const printHtml = (body, title) => {
+    const html = `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>${escHtml(title)}</title><style>${INVOICE_CSS}</style></head><body>${body}</body></html>`;
     const f = document.createElement('iframe');
     f.setAttribute('aria-hidden', 'true');
     f.style.cssText = 'position:fixed;inset-inline-end:-9999px;width:0;height:0;border:0';
@@ -228,6 +299,13 @@ export default function OrdersManager() {
     }, 300);
   };
 
+  const printInvoice = (o) => printHtml(invoiceBody(o), `${t('dashboard.ordersSection.invoice')} ${orderNo(o)}`);
+  // طباعة فواتير كل الطلبات الظاهرة دفعةً واحدة — كل فاتورة بصفحة مستقلّة
+  const printAllInvoices = () => {
+    if (!visibleOrders.length) return;
+    printHtml(visibleOrders.map(invoiceBody).join(''), t('dashboard.ordersSection.invoice'));
+  };
+
   // تصدير Excel حقيقي (.xlsx) بثلاث أوراق منسّقة تكبر تلقائياً مع الطلبات:
   //   ١) الطلبات — سطر لكل طلب   ٢) القطع المباعة — سطر لكل قطعة (للجرد والأكثر مبيعاً)
   //   ٣) ملخّص — عدد الطلبات ومبيعاتها لكل حالة
@@ -239,7 +317,7 @@ export default function OrdersManager() {
     const dest = (o) => [o.city, o.area && o.area !== o.city ? o.area : ''].filter(Boolean).join(' - ');
 
     const ordersSheet = {
-      name: o2('title'),
+      name: o2('sheetOrders'),
       columns: [
         { header: '#', width: 9, type: 'int' },
         { header: o2('date'), width: 20 },
@@ -287,7 +365,7 @@ export default function OrdersManager() {
       o2(o.status),
     ])));
     const itemsSheet = {
-      name: o2('items'),
+      name: o2('sheetItems'),
       columns: [
         { header: '#', width: 9, type: 'int' },
         { header: o2('date'), width: 14 },
@@ -303,27 +381,122 @@ export default function OrdersManager() {
       rows: itemRows,
     };
 
-    // ورقة الملخّص: لكل حالة عدد الطلبات ومجموع مبيعاتها + سطر الإجمالي
+    // المبيعات المحتسَبة = الطلبات المؤكّدة/المشحونة/المسلّمة (كما بصفحة الإحصائيات)
+    const paid = orders.filter((o) => ['confirmed', 'shipped', 'delivered'].includes(o.status));
+    const money = (n) => Number(Number(n || 0).toFixed(2));
+    // تجميع عام: يبني جدولاً من مفتاح → مجاميع، ويُرتّب تنازلياً بالمبيعات
+    const groupBy = (list, keyOf, extra = () => ({})) => {
+      const m = new Map();
+      list.forEach((o) => {
+        const k = keyOf(o);
+        if (!k) return;
+        const cur2 = m.get(k) || { key: k, orders: 0, revenue: 0, ...extra(o) };
+        cur2.orders += 1;
+        cur2.revenue += Number(o.total || 0);
+        cur2.last = o.createdAt;
+        m.set(k, cur2);
+      });
+      return [...m.values()].sort((a, b) => b.revenue - a.revenue);
+    };
+
+    // ٣) الأكثر مبيعاً — تجميع القطع باسم المنتج (يكبر تلقائياً مع كل منتج جديد)
+    const prodMap = new Map();
+    paid.forEach((o) => (o.items || []).forEach((it) => {
+      const k = it.name || '—';
+      const cur2 = prodMap.get(k) || { name: k, qty: 0, revenue: 0, orders: new Set() };
+      cur2.qty += Number(it.qty) || 0;
+      cur2.revenue += (Number(it.price) || 0) * (Number(it.qty) || 0);
+      cur2.orders.add(o.id);
+      prodMap.set(k, cur2);
+    }));
+    const bestSellers = {
+      name: o2('sheetBest'),
+      columns: [
+        { header: p2('name'), width: 34 },
+        { header: p2('qty'), width: 12, type: 'int' },
+        { header: o2('ordersCountLabel'), width: 14, type: 'int' },
+        { header: t('dashboard.analytics.revenue'), width: 16, type: 'money' },
+      ],
+      rows: [...prodMap.values()].sort((a, b) => b.qty - a.qty)
+        .map((p) => [p.name, p.qty, p.orders.size, money(p.revenue)]),
+    };
+
+    // ٤) المبيعات اليومية — سطر لكل يوم فيه طلبات (يمتدّ تلقائياً مع الأيام)
+    const dayMap = new Map();
+    paid.forEach((o) => {
+      const k = new Date(o.createdAt).toLocaleDateString();
+      const cur2 = dayMap.get(k) || { day: k, orders: 0, pieces: 0, revenue: 0, ts: new Date(o.createdAt).getTime() };
+      cur2.orders += 1;
+      cur2.pieces += (o.items || []).reduce((s, it) => s + (Number(it.qty) || 0), 0);
+      cur2.revenue += Number(o.total || 0);
+      dayMap.set(k, cur2);
+    });
+    const dailySheet = {
+      name: o2('sheetDaily'),
+      columns: [
+        { header: o2('date'), width: 16 },
+        { header: o2('ordersCountLabel'), width: 14, type: 'int' },
+        { header: p2('qty'), width: 12, type: 'int' },
+        { header: t('dashboard.analytics.revenue'), width: 16, type: 'money' },
+      ],
+      rows: [...dayMap.values()].sort((a, b) => a.ts - b.ts).map((d) => [d.day, d.orders, d.pieces, money(d.revenue)]),
+    };
+
+    // ٥) الزبائن — من طلب أكثر ومن أنفق أكثر (أساس المكافآت وإعادة الاستهداف)
+    const customers = groupBy(paid, (o) => (o.customerPhone || o.customerName || '').trim(), (o) => ({ name: o.customerName || '' }));
+    const customersSheet = {
+      name: o2('sheetCustomers'),
+      columns: [
+        { header: o2('customer'), width: 24 },
+        { header: o2('phone'), width: 18 },
+        { header: o2('ordersCountLabel'), width: 14, type: 'int' },
+        { header: t('dashboard.analytics.revenue'), width: 16, type: 'money' },
+        { header: o2('date'), width: 16 },
+      ],
+      rows: customers.map((c) => [c.name || c.key, c.key, c.orders, money(c.revenue), new Date(c.last).toLocaleDateString()]),
+    };
+
+    // ٦) المدن — أين يتركّز البيع (لتسعير التوصيل واستهداف الإعلانات)
+    const cities = groupBy(paid, (o) => (o.city || '').trim());
+    const citiesSheet = {
+      name: o2('sheetCities'),
+      columns: [
+        { header: o2('deliveryTo'), width: 22 },
+        { header: o2('ordersCountLabel'), width: 14, type: 'int' },
+        { header: t('dashboard.analytics.revenue'), width: 16, type: 'money' },
+      ],
+      rows: cities.map((c) => [c.key, c.orders, money(c.revenue)]),
+    };
+
+    // ٧) الملخّص — لكل حالة عدد ومبيعات، ثم مؤشّرات عامة
     const byStatus = FLOW.map((s) => {
       const list = orders.filter((o) => o.status === s);
-      return [t(`dashboard.ordersSection.${s}`), list.length, Number(list.reduce((sum, o) => sum + Number(o.total || 0), 0).toFixed(2))];
+      return [t(`dashboard.ordersSection.${s}`), list.length, money(list.reduce((sum, o) => sum + Number(o.total || 0), 0))];
     }).filter((r) => r[1] > 0);
-    const paid = orders.filter((o) => ['confirmed', 'shipped', 'delivered'].includes(o.status));
+    const revenue = paid.reduce((s, o) => s + Number(o.total || 0), 0);
+    const allPieces = paid.reduce((s, o) => s + (o.items || []).reduce((x, it) => x + (Number(it.qty) || 0), 0), 0);
     const summarySheet = {
-      name: t('dashboard.analytics.metricsTitle'),
+      name: o2('sheetSummary'),
       columns: [
-        { header: o2('status'), width: 20 },
+        { header: o2('status'), width: 24 },
         { header: o2('ordersCountLabel'), width: 14, type: 'int' },
         { header: o2('total'), width: 16, type: 'money' },
       ],
       rows: [
         ...byStatus,
         ['', '', ''],
-        [t('dashboard.analytics.revenue'), paid.length, Number(paid.reduce((s, o) => s + Number(o.total || 0), 0).toFixed(2))],
+        [t('dashboard.analytics.revenue'), paid.length, money(revenue)],
+        [t('dashboard.analytics.aov'), '', money(paid.length ? revenue / paid.length : 0)],
+        [p2('qty'), '', allPieces],
+        [t('dashboard.analytics.topProducts'), '', prodMap.size],
+        [t('dashboard.analytics.repeatRate'), '', customers.length],
       ],
     };
 
-    downloadXlsx([ordersSheet, itemsSheet, summarySheet], `bazara-orders-${new Date().toISOString().slice(0, 10)}`);
+    downloadXlsx(
+      [ordersSheet, itemsSheet, bestSellers, dailySheet, customersSheet, citiesSheet, summarySheet],
+      `bazara-orders-${new Date().toISOString().slice(0, 10)}`
+    );
   };
 
   if (orders === null && !error) return <Spinner />;
@@ -351,12 +524,21 @@ export default function OrdersManager() {
         title={t('dashboard.ordersSection.title')}
         hint={t('dashboard.ordersSection.stockHint')}
         action={orders?.length > 0 ? (
-          <button
-            onClick={exportExcel}
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-gold-400/30 px-3 py-2 text-sm font-semibold text-gold-200 transition hover:bg-gold-400/10"
-          >
-            <DownloadIcon className="h-4 w-4" /> {t('dashboard.ordersSection.export')}
-          </button>
+          <span className="flex shrink-0 items-center gap-1.5">
+            <button
+              onClick={printAllInvoices}
+              title={t('dashboard.ordersSection.printAll')}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-gold-400/30 px-3 py-2 text-sm font-semibold text-gold-200 transition hover:bg-gold-400/10"
+            >
+              <PrintIcon className="h-4 w-4" /> <span className="hidden sm:inline">{t('dashboard.ordersSection.printAll')}</span>
+            </button>
+            <button
+              onClick={exportExcel}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-gold-400/30 px-3 py-2 text-sm font-semibold text-gold-200 transition hover:bg-gold-400/10"
+            >
+              <DownloadIcon className="h-4 w-4" /> {t('dashboard.ordersSection.export')}
+            </button>
+          </span>
         ) : null}
       />
       {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">{error}</div>}
@@ -510,15 +692,17 @@ export default function OrdersManager() {
               {header}
               <div className="glass p-4">
                 {/* رأس: الزبون + الحالة */}
-                <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <span className="font-semibold text-stone-100">{o.customerName || '—'}</span>
-                    {o.customerPhone && <a href={`tel:${o.customerPhone.replace(/\s/g, '')}`} className="ms-2 text-xs text-stone-400 underline-offset-2 transition hover:text-gold-200 hover:underline" dir="ltr">{o.customerPhone}</a>}
+                    <p className="truncate text-sm font-bold text-stone-100">{o.customerName || '—'}</p>
+                    <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-stone-400">
+                      {o.customerPhone && <a href={`tel:${o.customerPhone.replace(/\s/g, '')}`} className="underline-offset-2 transition hover:text-gold-200 hover:underline" dir="ltr">{o.customerPhone}</a>}
+                      <span>{new Date(o.createdAt).toLocaleString()}</span>
+                    </p>
                   </div>
                   <span className="flex shrink-0 items-center gap-1.5">
-                    {/* رقم الطلب — مرجع تذكره المالكة بالمحادثة مع الزبونة أو شركة التوصيل */}
-                    <span className="text-[10px] text-stone-500">{new Date(o.createdAt).toLocaleString()}</span>
-                    <span className="rounded-full bg-gold-400/10 px-2 py-0.5 text-[10px] font-bold tabular-nums text-stone-400" dir="ltr">#{o.id}</span>
+                    {/* رقم الطلب القصير الذي يراه الزبون (BZ-…) لا معرّف قاعدة البيانات الطويل */}
+                    <span className="rounded-full bg-gold-400/10 px-2 py-0.5 text-[10px] font-bold text-stone-400" dir="ltr">{orderNo(o)}</span>
                     <span className={`badge ${BADGE[o.status] || ''}`}>{t(`dashboard.ordersSection.${o.status}`)}</span>
                   </span>
                 </div>
@@ -545,7 +729,7 @@ export default function OrdersManager() {
                 {(o.city || o.address || o.notes) && (
                   <div className="mt-2.5 space-y-1.5">
                     {(o.city || o.address) && (
-                      <p className="flex items-start gap-1.5 text-xs text-stone-400">
+                      <p className="flex items-start gap-1.5 text-[11px] text-stone-400">
                         <PinIcon className="mt-px h-4 w-4 shrink-0" />
                         <span className="min-w-0">
                           <span className="text-stone-200">{[o.city, o.area && o.area !== o.city ? o.area : ''].filter(Boolean).join(' - ')}</span>
@@ -553,12 +737,12 @@ export default function OrdersManager() {
                         </span>
                       </p>
                     )}
-                    {o.notes && <p className="flex items-start gap-1.5 text-xs text-stone-400"><NoteIcon className="mt-px h-3.5 w-3.5 shrink-0" /> <span className="min-w-0">{o.notes}</span></p>}
+                    {o.notes && <p className="flex items-start gap-1.5 text-[11px] text-stone-400"><NoteIcon className="mt-px h-3.5 w-3.5 shrink-0" /> <span className="min-w-0">{o.notes}</span></p>}
                   </div>
                 )}
 
                 {/* الملخّص المالي — سطور مرتّبة بدل صفّ مزدحم، والإجمالي بارز */}
-                <div className="mt-2.5 space-y-1 rounded-2xl border border-gold-400/15 bg-black/20 p-3 text-sm">
+                <div className="mt-2.5 space-y-1 rounded-2xl border border-gold-400/15 bg-black/20 p-3 text-xs">
                   <div className="flex items-center justify-between gap-2 text-stone-400">
                     <span>{t('dashboard.ordersSection.subtotal')}</span>
                     <span className="tabular-nums">{t('common.currency')}{subtotal}</span>
@@ -574,8 +758,8 @@ export default function OrdersManager() {
                     <span className="tabular-nums">{t('common.currency')}{(o.deliveryFee || 0).toFixed(2)}</span>
                   </div>
                   <div className="flex items-center justify-between gap-2 border-t border-white/5 pt-1.5">
-                    <span className="font-semibold text-stone-200">{t('dashboard.ordersSection.total')}</span>
-                    <span className="font-display text-lg font-extrabold tabular-nums text-gold-300">{t('common.currency')}{o.total.toFixed(2)}</span>
+                    <span className="text-sm font-bold text-stone-200">{t('dashboard.ordersSection.total')}</span>
+                    <span className="font-display text-base font-extrabold tabular-nums text-gold-300">{t('common.currency')}{o.total.toFixed(2)}</span>
                   </div>
                 </div>
 

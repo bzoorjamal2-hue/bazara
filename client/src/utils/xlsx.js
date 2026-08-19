@@ -83,6 +83,8 @@ function zip(files) {
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[c]));
 // حرف العمود من رقمه: 0→A، 26→AA …
 const colName = (n) => { let s = ''; n += 1; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
+// اسم الورقة بقيود Excel: ٣١ حرفاً كحدّ أقصى وبلا : \ / ? * [ ] — وإلا رفض الملف
+const safeSheetName = (name, i) => (String(name || `Sheet${i + 1}`).replace(/[:\\/?*[\]]/g, ' ').trim().slice(0, 31) || `Sheet${i + 1}`);
 
 // أنماط الخلايا: 0 عادي · 1 ترويسة · 2 عملة · 3 عدد صحيح · 4 عنوان الملخّص
 const STYLES = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -179,7 +181,7 @@ ${list.map((_, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" Cont
 
   const workbook = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
-<sheets>${list.map((s, i) => `<sheet name="${esc(s.name || `Sheet${i + 1}`)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets>
+<sheets>${list.map((s, i) => `<sheet name="${esc(safeSheetName(s.name, i))}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets>
 </workbook>`;
 
   const wbRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
