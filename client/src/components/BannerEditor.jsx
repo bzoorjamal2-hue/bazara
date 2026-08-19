@@ -42,8 +42,17 @@ function SlidePreview({ banner, storeName }) {
           <span className="pointer-events-none absolute -bottom-8 end-[12%] h-24 w-24 rounded-full bg-cream/10 blur-2xl" />
         </>
       )}
+      {/* شارة «شريحة فيديو»: قرص زجاجي بمثلّث تشغيل متمركز بصرياً — بدل الرمز
+          النصّي ▶ الذي كان يختلف شكله بين الأجهزة ويبدو غير مرتّب */}
       {isVideo && (
-        <span className="absolute top-1.5 end-1.5 rounded-full bg-black/50 px-1.5 py-0.5 text-[9px] font-bold text-cream">▶ {t('dashboard.store.bgVideo')}</span>
+        <span
+          title={t('dashboard.store.bgVideo')} aria-label={t('dashboard.store.bgVideo')}
+          className="absolute top-2 end-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/45 text-cream shadow-sm ring-1 ring-white/25 backdrop-blur-sm"
+        >
+          <svg viewBox="0 0 24 24" className="h-3 w-3 translate-x-[0.5px]" fill="currentColor" aria-hidden="true">
+            <path d="M9 7.2v9.6a1 1 0 0 0 1.53.85l7.7-4.8a1 1 0 0 0 0-1.7l-7.7-4.8A1 1 0 0 0 9 7.2Z" />
+          </svg>
+        </span>
       )}
       <p className="relative line-clamp-2 font-display text-base font-extrabold text-cream drop-shadow sm:text-lg">
         {banner.title?.trim() || storeName || t('dashboard.store.bannerTitlePreview')}

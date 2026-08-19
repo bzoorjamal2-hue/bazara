@@ -266,7 +266,12 @@ export default function StoreSettings() {
   };
 
   // رابط المتجر العام — يُعرض كاملاً ويُنسخ بضغطة
+  // رابط المشاركة: النطاق الرسمي دائماً — هذا ما تُرسله المالكة للزبائن.
   const storeUrl = `https://bazarastore.site/store/${form.slug || ''}`;
+  // رابط الفتح: نفس أصل الصفحة الحالية. الجلسة (كوكي httpOnly + التوكن المحلي)
+  // مربوطة بالأصل، فالقفز لنطاق آخر (التطبيق المثبّت أو نسخة معاينة أو محلياً)
+  // يفتح المتجر على أصل بلا جلسة فيبدو الحساب «مسجّل خروج» عند الرجوع.
+  const storeOpenUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/store/${form.slug || ''}`;
   const copyUrl = async () => {
     try { await navigator.clipboard.writeText(storeUrl); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch { /* تجاهُل */ }
   };
@@ -529,7 +534,7 @@ export default function StoreSettings() {
                 </button>
               )}
               <a
-                href={storeUrl} target="_blank" rel="noreferrer"
+                href={storeOpenUrl} target="_blank" rel="noopener"
                 className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] text-stone-400 transition hover:text-gold-200 ${form.slug ? '' : 'pointer-events-none opacity-40'}`}
               >
                 <LinkIcon className="h-3.5 w-3.5" /> {t('dashboard.store.openStore')}
