@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import { clearCachePrefixes } from '../../utils/apiCache.js';
@@ -9,8 +9,13 @@ import BannerEditor from '../../components/BannerEditor.jsx';
 import OpostConnect from '../../components/OpostConnect.jsx';
 import EpsConnect from '../../components/EpsConnect.jsx';
 import GoboxConnect from '../../components/GoboxConnect.jsx';
-import { SaveIcon, TruckIcon, ImageIcon, GiftIcon, FolderIcon, TrashIcon, MegaphoneIcon, RulerIcon, ShieldIcon, StoreIcon, PhoneIcon, BoltIcon, ChartIcon, TagIcon, CardIcon, GearIcon } from '../../components/icons.jsx';
+import {
+  SaveIcon, TruckIcon, ImageIcon, GiftIcon, FolderIcon, TrashIcon, MegaphoneIcon, RulerIcon, ShieldIcon,
+  StoreIcon, PhoneIcon, BoltIcon, ChartIcon, TagIcon, CardIcon, GearIcon, CheckIcon, CopyIcon, LinkIcon,
+  ClockIcon, SparkleIcon, WhatsAppIcon, InstagramIcon, FacebookIcon, CashIcon, PinIcon,
+} from '../../components/icons.jsx';
 import { cldThumb } from '../../utils/cloudinary.js';
+import { SIZE_CHART } from '../../utils/sizes.js';
 
 // أيقونتا إخفاء/إظهار (عين مشطوبة / عين) — للتحكم بظهور الفئة بالمتجر
 const EyeOffGlyph = (p) => (
@@ -25,26 +30,114 @@ const EyeGlyph = (p) => (
   </svg>
 );
 
-// رأس قسم موحّد: بلاطة أيقونة ذهبية + عنوان + وصف اختياري — لمظهر متناسق عبر كل الأقسام
-function SectionHead({ icon, title, desc }) {
+// ── عناصر إدخال مساعدة ────────────────────────────────────────────────────────
+
+// تلميح منبثق: زر «؟» صغير بجانب التسمية يشرح الخانة عند الضغط — شرح وافٍ بلا زحمة بصرية
+function Tip({ text }) {
+  const [open, setOpen] = useState(false);
+  if (!text) return null;
+  return (
+    <span className="relative inline-flex align-middle">
+      <button
+        type="button"
+        aria-label={text}
+        onClick={() => setOpen((o) => !o)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        className={`inline-flex h-[17px] w-[17px] items-center justify-center rounded-full border text-[10px] font-bold leading-none transition ${
+          open ? 'border-gold-400 bg-gold-400/25 text-gold-200' : 'border-gold-400/40 text-gold-300/70 hover:border-gold-400 hover:text-gold-200'
+        }`}
+      >
+        ؟
+      </button>
+      {open && (
+        <span className="glass-strong absolute top-[22px] z-30 w-60 max-w-[70vw] p-2.5 text-[11px] font-normal leading-relaxed text-stone-200 start-0">
+          {text}
+        </span>
+      )}
+    </span>
+  );
+}
+
+// خانة موحّدة: تسمية + تلميح منبثق + عدّاد أحرف + سطر إرشادي تحتها
+function Field({ label, tip, hint, icon, max, value = '', required = false, children }) {
+  const len = String(value || '').length;
+  return (
+    <div>
+      <div className="mb-1.5 flex items-end justify-between gap-2">
+        <span className="flex flex-wrap items-center gap-1.5 text-sm font-medium text-stone-300">
+          {icon}
+          {label}
+          {required && <span className="text-red-400/70">*</span>}
+          <Tip text={tip} />
+        </span>
+        {max ? (
+          <span className={`shrink-0 text-[10px] tabular-nums ${len > max * 0.88 ? 'text-amber-400' : 'text-stone-500'}`}>{len}/{max}</span>
+        ) : null}
+      </div>
+      {children}
+      {hint && <p className="mt-1 text-[11px] leading-snug text-stone-400">{hint}</p>}
+    </div>
+  );
+}
+
+// حلقة تقدّم اكتمال الإعدادات — تعطي المالكة هدفاً واضحاً بدل قائمة خانات صمّاء
+function ProgressRing({ pct }) {
+  const r = 22;
+  const c = 2 * Math.PI * r;
+  return (
+    <span className="relative grid h-14 w-14 shrink-0 place-items-center">
+      <svg viewBox="0 0 52 52" className="h-14 w-14 -rotate-90" aria-hidden="true">
+        <circle cx="26" cy="26" r={r} fill="none" strokeWidth="4" className="stroke-current text-stone-400/25" />
+        <circle
+          cx="26" cy="26" r={r} fill="none" stroke="url(#bz-progress)" strokeWidth="4" strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={c * (1 - pct / 100)} style={{ transition: 'stroke-dashoffset .7s ease' }}
+        />
+        <defs>
+          <linearGradient id="bz-progress" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#e6c878" /><stop offset="100%" stopColor="#b8932c" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <span className="absolute text-[11px] font-bold tabular-nums text-gold-300">{pct}%</span>
+    </span>
+  );
+}
+
+// رأس قسم موحّد: بلاطة أيقونة ذهبية + عنوان + وصف اختياري + علامة اكتمال
+function SectionHead({ icon, title, desc, done }) {
   return (
     <div className="flex items-start gap-2.5">
-      <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gold-400/10 text-gold-300 ring-1 ring-gold-400/20">{icon}</span>
+      <span className="relative mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gold-400/10 text-gold-300 ring-1 ring-gold-400/20">
+        {icon}
+        {done && (
+          <span className="absolute -bottom-1 -end-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-white">
+            <CheckIcon className="h-2.5 w-2.5" />
+          </span>
+        )}
+      </span>
       <div className="min-w-0">
         <h2 className="font-display text-lg font-bold text-stone-100">{title}</h2>
-        {desc && <p className="mt-0.5 text-xs text-stone-400">{desc}</p>}
+        {desc && <p className="mt-0.5 text-xs leading-relaxed text-stone-400">{desc}</p>}
       </div>
     </div>
   );
 }
 
-// أقسام الإعدادات بالترتيب: [معرّف المرساة، مفتاح الترجمة تحت dashboard.store]
-// مصدر واحد لشريط التنقّل ومراقبة القسم النشط
+// أقسام الإعدادات بالترتيب: [معرّف المرساة، مفتاح الترجمة تحت dashboard.store، هل القسم مكتمل؟]
+// مصدر واحد لشريط التنقّل ومراقبة القسم النشط ومؤشّر الاكتمال
 const SECTIONS = [
-  ['s-basics', 'basics'], ['s-contact', 'contact'], ['s-banners', 'banners'],
-  ['s-zones', 'zones'], ['s-flash', 'flashTitle'], ['s-ads', 'adsTitle'],
-  ['s-categories', 'categories'], ['s-collections', 'collections'], ['s-marketing', 'marketing'],
-  ['s-sizechart', 'sizeChart'], ['s-return', 'returnPolicy'], ['s-delivery', 'deliveryPayment'],
+  ['s-basics', 'basics', (f) => Boolean(f.name && f.slug && f.logoUrl)],
+  ['s-contact', 'contact', (f) => Boolean(f.whatsapp)],
+  ['s-banners', 'banners', (f) => (f.banners || []).some((b) => String(b?.title || '').trim())],
+  ['s-zones', 'zones', (f) => Number(f.deliveryTiers?.wb) > 0],
+  ['s-flash', 'flashTitle', (f) => Number(f.flashPercent) > 0 && Boolean(f.flashEndsAt)],
+  ['s-ads', 'adsTitle', (f) => Boolean(f.fbPixel || f.tiktokPixel || f.gaId)],
+  ['s-categories', 'categories', (f) => Object.values(f.categoryMeta || {}).some((m) => m?.image || m?.name) || (f.customCategories || []).length > 0],
+  ['s-collections', 'collections', (f) => (f.collections || []).some((c) => String(c?.title || '').trim())],
+  ['s-marketing', 'marketing', (f) => Boolean(String(f.announcement || '').trim() || String(f.welcomeOffer || '').trim())],
+  ['s-sizechart', 'sizeChart', (f) => Object.values(f.sizeChart || {}).some((r) => r && Object.values(r).some(Boolean))],
+  ['s-return', 'returnPolicy', (f) => Boolean(String(f.returnPolicy || '').trim())],
+  ['s-delivery', 'deliveryPayment', (f) => Boolean(String(f.deliveryInfo || '').trim() || String(f.paymentInfo || '').trim())],
 ];
 
 const EMPTY = {
@@ -57,6 +150,7 @@ const DEFAULT_BANNERS = [
   { title: 'تشكيلة جديدة وصلت', subtitle: 'تصفّحوا أحدث القطع لدينا', bgType: '', bgValue: '' },
   { title: 'عروض خاصة', subtitle: 'تابعونا لكل جديد وحصري', bgType: '', bgValue: '' },
 ];
+
 // تحويل طابع زمني ISO إلى صيغة datetime-local ("YYYY-MM-DDTHH:mm") بالتوقيت المحلي
 function toLocalInput(iso) {
   const d = new Date(iso);
@@ -70,6 +164,17 @@ const CHART_SIZES = ['36', '38', '40', '42', '44', '46', '48'];
 // الفئات الثابتة (قابلة للتخصيص بصورة/اسم)
 const STORE_CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
 
+// تنظيف ما يُلصق بخانات التواصل: كثيراً ما يُلصق رابط كامل بدل اسم المستخدم
+const cleanHandle = (v) =>
+  String(v || '').trim()
+    .replace(/^https?:\/\/(www\.)?(instagram|tiktok)\.com\//i, '')
+    .replace(/^@/, '')
+    .replace(/[/?].*$/, '');
+// أرقام الهاتف: نُبقي الأرقام و«+» فقط (يزيل المسافات والشرطات الملصوقة)
+const cleanPhone = (v) => String(v || '').replace(/[^\d+]/g, '');
+// رابط واتساب من الرقم (بلا + ولا أصفار بادئة) لتجربته بضغطة
+const waLink = (v) => `https://wa.me/${cleanPhone(v).replace(/^\++/, '').replace(/^00/, '')}`;
+
 export default function StoreSettings() {
   const { t } = useTranslation();
   const { refresh } = useAuth();
@@ -77,14 +182,18 @@ export default function StoreSettings() {
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [activeSec, setActiveSec] = useState('s-basics'); // القسم الظاهر حالياً — يُبرَز بشريط التنقّل
+  const savedRef = useRef(''); // آخر نسخة محفوظة — للمقارنة وكشف التغييرات غير المحفوظة
+  const [tick, setTick] = useState(0); // نبضة كل دقيقة لتحديث عدّاد عرض الفلاش
 
   useEffect(() => {
     api
       .get('/stores/me')
       .then((res) => {
         const s = res.data.store;
-        setForm({
+        const next = {
+          ...EMPTY,
           name: s.name || '', slug: s.slug || '', description: s.description || '', logoUrl: s.logoUrl || '',
           phone: s.phone || '', whatsapp: s.whatsapp || '', deliveryPhone: s.deliveryPhone || '', instagram: s.instagram || '',
           facebook: s.facebook || '', tiktok: s.tiktok || '', themeColor: s.themeColor || '#d4af37',
@@ -109,7 +218,9 @@ export default function StoreSettings() {
           flashPercent: s.flashPercent ? String(s.flashPercent) : '',
           // datetime-local يحتاج "YYYY-MM-DDTHH:mm" بالتوقيت المحلي (بلا ثوانٍ/منطقة)
           flashEndsAt: s.flashEndsAt ? toLocalInput(s.flashEndsAt) : '',
-        });
+        };
+        savedRef.current = JSON.stringify(next);
+        setForm(next);
       })
       .catch((err) => setError(getErrorMessage(err)));
   }, []);
@@ -129,6 +240,36 @@ export default function StoreSettings() {
     return () => obs.disconnect();
   }, [loaded]);
 
+  // نبضة كل دقيقة — يبقى «المتبقّي» بعرض الفلاش صادقاً بلا تحديث الصفحة
+  useEffect(() => {
+    const id = setInterval(() => setTick((n) => n + 1), 60000);
+    return () => clearInterval(id);
+  }, []);
+
+  // تغييرات غير محفوظة: مقارنة النموذج الحالي بآخر نسخة محفوظة
+  const dirty = loaded && JSON.stringify(form) !== savedRef.current;
+  // تحذير المتصفّح عند مغادرة الصفحة وفيها تعديلات لم تُحفظ — يمنع ضياع التعب
+  useEffect(() => {
+    if (!dirty) return undefined;
+    const onLeave = (e) => { e.preventDefault(); e.returnValue = ''; };
+    window.addEventListener('beforeunload', onLeave);
+    return () => window.removeEventListener('beforeunload', onLeave);
+  }, [dirty]);
+
+  // نسبة اكتمال الإعدادات + الأقسام الناقصة (تُحتسب من SECTIONS عند كل تغيير)
+  const { pct, doneCount, missing, doneMap } = useMemo(() => {
+    if (!form) return { pct: 0, doneCount: 0, missing: [], doneMap: {} };
+    const map = {};
+    SECTIONS.forEach(([id, , isDone]) => { map[id] = Boolean(isDone(form)); });
+    const n = Object.values(map).filter(Boolean).length;
+    return {
+      pct: Math.round((n / SECTIONS.length) * 100),
+      doneCount: n,
+      missing: SECTIONS.filter(([id]) => !map[id]),
+      doneMap: map,
+    };
+  }, [form]);
+
   const submit = async (e) => {
     e.preventDefault();
     setMsg(''); setError(''); setBusy(true);
@@ -139,6 +280,7 @@ export default function StoreSettings() {
       await api.put('/stores/me', payload);
       await refresh();
       clearCachePrefixes(['home', 'storepage:']); // الإعدادات الجديدة (شعار/بانر/فلاش) تظهر فوراً
+      savedRef.current = JSON.stringify(form);
       setMsg(t('dashboard.store.saved'));
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
@@ -155,6 +297,7 @@ export default function StoreSettings() {
       await api.put('/stores/me', form);
       await refresh();
       clearCachePrefixes(['home', 'storepage:']);
+      savedRef.current = JSON.stringify(form);
       setMsg(t('image.imageSaved'));
       setTimeout(() => setMsg(''), 2000);
     } catch (err) {
@@ -164,7 +307,13 @@ export default function StoreSettings() {
 
   if (!form) return <Spinner />;
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+  const setVal = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
+  // رابط المتجر العام — يُعرض كاملاً ويُنسخ بضغطة
+  const storeUrl = `https://bazarastore.site/store/${form.slug || ''}`;
+  const copyUrl = async () => {
+    try { await navigator.clipboard.writeText(storeUrl); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch { /* تجاهُل */ }
+  };
 
   // التحكم بأسعار الشرائح الثلاث (الضفة/القدس/الداخل)
   const setTier = (key) => (e) => setForm((f) => ({ ...f, deliveryTiers: { ...f.deliveryTiers, [key]: e.target.value === '' ? '' : Math.max(0, Number(e.target.value) || 0) } }));
@@ -172,6 +321,17 @@ export default function StoreSettings() {
   // التحكم بدليل المقاسات المخصّص: {"38": {bust, waist, hips}}
   const setChartCell = (size, key, val) =>
     setForm((f) => ({ ...f, sizeChart: { ...f.sizeChart, [size]: { ...(f.sizeChart?.[size] || {}), [key]: val.replace(/\D/g, '') } } }));
+  // تعبئة الجدول بالقياسات القياسية دفعةً واحدة (ثم تعدّلها المالكة كما يناسب قصّاتها)
+  const fillStandardChart = () =>
+    setForm((f) => ({
+      ...f,
+      sizeChart: CHART_SIZES.reduce((acc, s) => {
+        const m = SIZE_CHART[s] || {};
+        acc[s] = { bust: String(m.bust || ''), waist: String(m.waist || ''), hips: String(m.hips || '') };
+        return acc;
+      }, {}),
+    }));
+  const clearChart = () => setForm((f) => ({ ...f, sizeChart: {} }));
 
   // التحكم بتخصيص الفئات: {"dress": {image, name}}
   const setCatMeta = (cat, key, val) =>
@@ -191,12 +351,32 @@ export default function StoreSettings() {
   const removeCollection = (idx) =>
     setForm((f) => ({ ...f, collections: f.collections.filter((_, i) => i !== idx) }));
 
+  // ضبط نهاية عرض الفلاش بضغطة (ساعة/يوم/٣ أيام/أسبوع) بدل تعبئة التاريخ يدوياً
+  const setFlashIn = (hours) => setVal('flashEndsAt', toLocalInput(new Date(Date.now() + hours * 3600000).toISOString()));
+  const flashEndsMs = form.flashEndsAt ? new Date(form.flashEndsAt).getTime() : 0;
+  const flashOn = Number(form.flashPercent) > 0 && flashEndsMs > Date.now();
+  // المدّة المتبقّية للعرض بصيغة «يومان · ٥ ساعات» (tick يعيد الحساب كل دقيقة)
+  const flashLeft = (() => {
+    void tick;
+    const ms = flashEndsMs - Date.now();
+    if (ms <= 0) return '';
+    const d = Math.floor(ms / 86400000);
+    const h = Math.floor((ms % 86400000) / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    return [
+      d ? t('dashboard.store.dDays', { n: d }) : '',
+      h ? t('dashboard.store.dHours', { n: h }) : '',
+      !d && m ? t('dashboard.store.dMins', { n: m }) : '',
+    ].filter(Boolean).join(' · ');
+  })();
+
   // تنقّل سريع بين أقسام الإعدادات — القفز لقسم مع محاذاته تحت الشريط العلوي (scroll-mt)
   const jump = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  const NAV = SECTIONS.map(([id, key]) => [id, t(`dashboard.store.${key}`)]);
+  const CARD = 'glass space-y-4 p-5 sm:p-6 scroll-mt-[calc(env(safe-area-inset-top,0px)+7.5rem)]';
+  const SUBCARD = 'rounded-2xl border border-gold-400/15 bg-black/20 p-3';
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* رأس فخم */}
       <div className="flex items-center gap-3">
         <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-400 to-amber-500 text-white shadow-md">
@@ -208,13 +388,41 @@ export default function StoreSettings() {
         </div>
       </div>
 
+      {/* بطاقة الاكتمال: نسبة + الأقسام الناقصة كأزرار قفز — تُرشد المالكة لما تبقّى */}
+      <div className="glass p-4 sm:p-5">
+        <div className="flex items-center gap-3.5">
+          <ProgressRing pct={pct} />
+          <div className="min-w-0 flex-1">
+            <h2 className="font-display text-base font-bold text-stone-100">{t('dashboard.store.progressTitle')}</h2>
+            <p className="mt-0.5 text-xs leading-relaxed text-stone-400">
+              {pct === 100 ? t('dashboard.store.progressDone') : t('dashboard.store.progressCount', { done: doneCount, total: SECTIONS.length })}
+            </p>
+          </div>
+        </div>
+        {missing.length > 0 && (
+          <div className="mt-3 border-t border-white/5 pt-3">
+            <p className="mb-2 text-[11px] font-semibold text-stone-400">{t('dashboard.store.progressMissing')}</p>
+            <div className="flex flex-wrap gap-1.5">
+              {missing.map(([id, key]) => (
+                <button
+                  key={id} type="button" onClick={() => jump(id)}
+                  className="rounded-full border border-gold-400/25 bg-gold-400/5 px-2.5 py-1 text-[11px] font-semibold text-stone-300 transition hover:bg-gold-400/15 hover:text-gold-200"
+                >
+                  {t(`dashboard.store.${key}`)}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* شريط تنقّل + حفظ: قفز لأي قسم، إبراز القسم الظاهر، وحفظ من أعلى الصفحة.
           لاصق تحت الهيدر العلوي تماماً: top = ارتفاع الهيدر (safe-area + 4.25rem)
           و z-30 أقل من الهيدر (z-50) فلا يتراكبان. خلفية glass معتمة (أبيض/داكن)
           تغطّي المحتوى المتمرّر خلفه. يبقى الشريط في المتناول أثناء النزول. */}
       <div className="glass sticky top-[calc(env(safe-area-inset-top,0px)+4.25rem)] z-30 flex items-center gap-2 p-2">
         <div className="flex flex-1 gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {NAV.map(([id, label]) => {
+          {SECTIONS.map(([id, key]) => {
             const on = activeSec === id;
             return (
               <button
@@ -223,13 +431,15 @@ export default function StoreSettings() {
                 onClick={() => jump(id)}
                 // النشط: ذهب صريح (hex) يتجاوز remap الثيم — يبقى ذهبياً بنص غامق في
                 // الوضعين. (bg-gold-400/text-wine-dark كانا ينقلبان نهاراً لبنّي على بنّي)
-                className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
                   on
                     ? 'border-[#d4af37] bg-[#d4af37] text-[#3f2e22]'
                     : 'border-gold-400/30 bg-gold-400/5 text-stone-300 hover:bg-gold-400/10 hover:text-gold-300'
                 }`}
               >
-                {label}
+                {/* نقطة حالة: خضراء إذا القسم مكتمل — نظرة سريعة على ما ينقص */}
+                <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${doneMap[id] ? 'bg-emerald-400' : on ? 'bg-[#3f2e22]/35' : 'bg-stone-400/40'}`} />
+                {t(`dashboard.store.${key}`)}
               </button>
             );
           })}
@@ -238,184 +448,274 @@ export default function StoreSettings() {
           form="store-settings-form"
           type="submit"
           disabled={busy}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-wine px-4 py-1.5 text-xs font-bold text-cream shadow-sm transition hover:bg-wine-dark disabled:opacity-60"
+          className={`relative inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold text-cream shadow-sm transition disabled:opacity-60 ${
+            dirty ? 'bg-wine hover:bg-wine-dark' : 'bg-wine/70 hover:bg-wine'
+          }`}
         >
           <SaveIcon className="h-3.5 w-3.5" /> {busy ? t('common.loading') : t('common.save')}
+          {/* نقطة تنبيه: يوجد تعديل لم يُحفظ بعد */}
+          {dirty && !busy && <span className="absolute -top-0.5 -end-0.5 h-2.5 w-2.5 animate-pulse rounded-full bg-amber-400" />}
         </button>
       </div>
 
-      {msg && <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-200">{msg}</div>}
-      {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
+      {/* حالة الحفظ: تعديلات معلّقة / تم الحفظ / خطأ */}
+      {dirty && !msg && (
+        <div className="flex items-center gap-2 rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-2 text-xs font-semibold text-amber-300">
+          <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-amber-400" /> {t('dashboard.store.unsaved')}
+        </div>
+      )}
+      {msg && <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-300">{msg}</div>}
+      {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">{error}</div>}
 
       <form id="store-settings-form" onSubmit={submit} className="space-y-5">
         {/* الأساسيات */}
-        <div id="s-basics" className="glass space-y-4 p-6 scroll-mt-[calc(env(safe-area-inset-top,0px)+7.5rem)]">
-          <SectionHead icon={<StoreIcon className="h-5 w-5" />} title={t('dashboard.store.basics')} />
-          <div>
-            <ImageInput label={t('dashboard.store.logo')} value={form.logoUrl} onChange={(v) => setForm({ ...form, logoUrl: v })} />
-            <button type="button" onClick={saveLogo} className="btn-ghost mt-3 gap-1.5 text-sm"><SaveIcon className="h-4 w-4" /> {t('image.saveImage')}</button>
+        <div id="s-basics" className={CARD}>
+          <SectionHead icon={<StoreIcon className="h-5 w-5" />} title={t('dashboard.store.basics')} desc={t('dashboard.store.basicsHint')} done={doneMap['s-basics']} />
+
+          {/* معاينة حيّة: هيك بيشوف الزبون رأس متجرك — يجعل أثر كل تعديل ملموساً فوراً */}
+          <div className="flex items-center gap-3 rounded-2xl border border-gold-400/20 bg-gradient-to-br from-gold-400/10 to-transparent p-3">
+            <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-2xl border border-gold-400/30 bg-black/25">
+              {form.logoUrl
+                ? <img src={cldThumb(form.logoUrl, 160)} alt="" className="h-full w-full object-cover" />
+                : <StoreIcon className="h-6 w-6 text-stone-500" />}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-display text-base font-bold text-stone-100">{form.name || t('dashboard.store.previewName')}</p>
+              <p className="truncate text-[11px] text-stone-400">{form.description || t('dashboard.store.previewDesc')}</p>
+              <p className="mt-0.5 truncate text-[10px] text-gold-300" dir="ltr">{storeUrl}</p>
+            </div>
           </div>
+
           <div>
-            <label className="label">{t('dashboard.store.name')}</label>
-            <input type="text" required className="input" value={form.name} onChange={set('name')} />
+            <ImageInput
+              label={t('dashboard.store.logo')}
+              value={form.logoUrl}
+              onChange={(v) => setVal('logoUrl', v)}
+              hint={t('dashboard.store.logoHint')}
+            />
+            <button type="button" onClick={saveLogo} className="btn-ghost mt-2.5 gap-1.5 !py-1.5 text-sm"><SaveIcon className="h-4 w-4" /> {t('image.saveImage')}</button>
           </div>
-          <div>
-            <label className="label">{t('dashboard.store.urlLabel')}</label>
-            <div className="flex items-center gap-1 rounded-xl border border-wine/20 bg-white/5 px-3 py-1" dir="ltr">
+
+          <Field label={t('dashboard.store.name')} tip={t('dashboard.store.nameTip')} max={60} value={form.name} required>
+            <input type="text" required maxLength={60} className="input" placeholder={t('dashboard.store.namePlaceholder')} value={form.name} onChange={set('name')} />
+          </Field>
+
+          <Field label={t('dashboard.store.urlLabel')} tip={t('dashboard.store.urlTip')} hint={t('dashboard.store.urlHint')} required>
+            <div className="flex items-center gap-1 rounded-xl border border-wine/20 bg-black/20 px-3 py-1" dir="ltr">
               <span className="shrink-0 text-xs text-stone-400">bazarastore.site/store/</span>
               <input
                 type="text" dir="ltr" inputMode="latin" placeholder="lifestyle"
                 className="min-w-0 flex-1 bg-transparent py-1.5 text-sm text-stone-100 focus:outline-none"
                 value={form.slug}
-                onChange={(e) => setForm({ ...form, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })}
+                onChange={(e) => setVal('slug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
               />
             </div>
-            <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.urlHint')}</p>
-          </div>
-          <div>
-            <label className="label">{t('dashboard.store.description')}</label>
-            <textarea rows={3} className="input resize-none" value={form.description} onChange={set('description')} />
-          </div>
+            {/* نسخ الرابط أو فتحه بتبويب جديد — بلا كتابة يدوية ولا أخطاء */}
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              <button
+                type="button" onClick={copyUrl} disabled={!form.slug}
+                className="inline-flex items-center gap-1.5 rounded-full border border-gold-400/30 bg-gold-400/10 px-3 py-1 text-[11px] font-semibold text-gold-200 transition hover:bg-gold-400/20 disabled:opacity-40"
+              >
+                {copied ? <CheckIcon className="h-3.5 w-3.5" /> : <CopyIcon className="h-3.5 w-3.5" />}
+                {copied ? t('common.copied') : t('common.copyLink')}
+              </button>
+              <a
+                href={storeUrl} target="_blank" rel="noreferrer"
+                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] text-stone-400 transition hover:text-gold-200 ${form.slug ? '' : 'pointer-events-none opacity-40'}`}
+              >
+                <LinkIcon className="h-3.5 w-3.5" /> {t('dashboard.store.openStore')}
+              </a>
+            </div>
+          </Field>
+
+          <Field label={t('dashboard.store.description')} tip={t('dashboard.store.descriptionTip')} max={300} value={form.description}>
+            <textarea rows={3} maxLength={300} className="input resize-none" placeholder={t('dashboard.store.descriptionPlaceholder')} value={form.description} onChange={set('description')} />
+          </Field>
         </div>
 
         {/* التواصل */}
-        <div id="s-contact" className="glass space-y-4 p-6 scroll-mt-[calc(env(safe-area-inset-top,0px)+7.5rem)]">
-          <SectionHead icon={<PhoneIcon className="h-5 w-5" />} title={t('dashboard.store.contact')} />
+        <div id="s-contact" className={CARD}>
+          <SectionHead icon={<PhoneIcon className="h-5 w-5" />} title={t('dashboard.store.contact')} desc={t('dashboard.store.contactHint')} done={doneMap['s-contact']} />
           <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="label">{t('dashboard.store.whatsapp')}</label>
-              <input type="text" dir="ltr" className="input" placeholder="+962790000000" value={form.whatsapp} onChange={set('whatsapp')} />
-              <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.whatsappHint')}</p>
-            </div>
-            <div>
-              <label className="label">{t('dashboard.store.phone')}</label>
-              <input type="text" dir="ltr" className="input" value={form.phone} onChange={set('phone')} />
-            </div>
-            <div>
-              <label className="label flex items-center gap-1.5"><TruckIcon className="h-4 w-4" /> {t('dashboard.store.deliveryPhone')}</label>
-              <input type="text" dir="ltr" className="input" placeholder="+970590000000" value={form.deliveryPhone} onChange={set('deliveryPhone')} />
-              <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.deliveryPhoneHint')}</p>
-            </div>
-            <div>
-              <label className="label">{t('dashboard.store.instagram')}</label>
-              <input type="text" dir="ltr" className="input" placeholder="username" value={form.instagram} onChange={set('instagram')} />
-            </div>
-            <div>
-              <label className="label">{t('dashboard.store.facebook')}</label>
+            <Field
+              label={t('dashboard.store.whatsapp')} required
+              icon={<WhatsAppIcon className="h-4 w-4 text-emerald-500" />}
+              tip={t('dashboard.store.whatsappTip')} hint={t('dashboard.store.whatsappHint')}
+            >
+              <input type="tel" dir="ltr" inputMode="tel" className="input" placeholder="+962790000000" value={form.whatsapp} onChange={(e) => setVal('whatsapp', cleanPhone(e.target.value))} />
+              {form.whatsapp.length > 7 && (
+                <a href={waLink(form.whatsapp)} target="_blank" rel="noreferrer" className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-500 hover:opacity-80">
+                  <CheckIcon className="h-3.5 w-3.5" /> {t('dashboard.store.testNumber')}
+                </a>
+              )}
+            </Field>
+
+            <Field label={t('dashboard.store.phone')} icon={<PhoneIcon className="h-4 w-4" />} tip={t('dashboard.store.phoneTip')}>
+              <input type="tel" dir="ltr" inputMode="tel" className="input" placeholder="+970590000000" value={form.phone} onChange={(e) => setVal('phone', cleanPhone(e.target.value))} />
+            </Field>
+
+            <Field
+              label={t('dashboard.store.deliveryPhone')} icon={<TruckIcon className="h-4 w-4" />}
+              tip={t('dashboard.store.deliveryPhoneTip')} hint={t('dashboard.store.deliveryPhoneHint')}
+            >
+              <input type="tel" dir="ltr" inputMode="tel" className="input" placeholder="+970590000000" value={form.deliveryPhone} onChange={(e) => setVal('deliveryPhone', cleanPhone(e.target.value))} />
+            </Field>
+
+            <Field label={t('dashboard.store.instagram')} icon={<InstagramIcon className="h-4 w-4" />} tip={t('dashboard.store.handleTip')}>
+              <div className="flex items-center gap-1 rounded-xl border border-gold-400/15 bg-black/20 px-3" dir="ltr">
+                <span className="shrink-0 text-sm text-stone-400">@</span>
+                <input type="text" dir="ltr" className="min-w-0 flex-1 bg-transparent py-2.5 text-sm text-stone-100 focus:outline-none" placeholder="username" value={form.instagram} onChange={(e) => setVal('instagram', cleanHandle(e.target.value))} />
+              </div>
+            </Field>
+
+            <Field label={t('dashboard.store.facebook')} icon={<FacebookIcon className="h-4 w-4" />} tip={t('dashboard.store.facebookTip')}>
               <input type="text" dir="ltr" className="input" placeholder="facebook.com/yourpage" value={form.facebook} onChange={set('facebook')} />
-            </div>
-            <div>
-              <label className="label">{t('dashboard.store.tiktok')}</label>
-              <input type="text" dir="ltr" className="input" placeholder="username" value={form.tiktok} onChange={set('tiktok')} />
-            </div>
+            </Field>
+
+            <Field label={t('dashboard.store.tiktok')} tip={t('dashboard.store.handleTip')}>
+              <div className="flex items-center gap-1 rounded-xl border border-gold-400/15 bg-black/20 px-3" dir="ltr">
+                <span className="shrink-0 text-sm text-stone-400">@</span>
+                <input type="text" dir="ltr" className="min-w-0 flex-1 bg-transparent py-2.5 text-sm text-stone-100 focus:outline-none" placeholder="username" value={form.tiktok} onChange={(e) => setVal('tiktok', cleanHandle(e.target.value))} />
+              </div>
+            </Field>
           </div>
         </div>
 
         {/* بانرات السلايدر */}
-        <div id="s-banners" className="glass space-y-4 p-6 scroll-mt-[calc(env(safe-area-inset-top,0px)+7.5rem)]">
-          <SectionHead icon={<ImageIcon className="h-5 w-5" />} title={t('dashboard.store.banners')} />
+        <div id="s-banners" className={CARD}>
+          <SectionHead icon={<ImageIcon className="h-5 w-5" />} title={t('dashboard.store.banners')} desc={t('dashboard.store.bannersHint')} done={doneMap['s-banners']} />
           <BannerEditor banners={form.banners} onChange={(b) => setForm((f) => ({ ...f, banners: b }))} />
         </div>
 
         {/* مناطق التوصيل ورسومها */}
-        <div id="s-zones" className="glass space-y-3 p-6 scroll-mt-[calc(env(safe-area-inset-top,0px)+7.5rem)]">
-          <SectionHead icon={<TruckIcon className="h-5 w-5" />} title={t('dashboard.store.zones')} desc={t('dashboard.store.zonesHint')} />
+        <div id="s-zones" className={CARD}>
+          <SectionHead icon={<TruckIcon className="h-5 w-5" />} title={t('dashboard.store.zones')} desc={t('dashboard.store.zonesHint')} done={doneMap['s-zones']} />
 
           {/* أسعار الشرائح: تُطبَّق تلقائياً على كل المدن (يبحث عنها الزبون بالسلة) */}
           <div className="grid grid-cols-3 gap-2">
             {[['wb', t('dashboard.store.tierWb')], ['quds', t('dashboard.store.tierQuds')], ['dakhel', t('dashboard.store.tierDakhel')]].map(([key, label]) => (
-              <div key={key}>
-                <label className="mb-1 block text-xs text-stone-400">{label}</label>
+              <div key={key} className="rounded-2xl border border-gold-400/15 bg-black/20 p-2.5 text-center">
+                <span className="mb-1.5 flex items-center justify-center gap-1 text-[11px] font-semibold text-stone-400">
+                  <PinIcon className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{label}</span>
+                </span>
                 <div className="relative">
-                  <input className="input pe-7 text-center" type="number" min="0" step="1" value={form.deliveryTiers?.[key] ?? ''} onChange={setTier(key)} />
+                  <input className="input !px-2 pe-6 text-center font-bold" type="number" min="0" step="1" inputMode="numeric" value={form.deliveryTiers?.[key] ?? ''} onChange={setTier(key)} />
                   <span className="pointer-events-none absolute inset-y-0 end-2 flex items-center text-xs text-stone-400">₪</span>
                 </div>
               </div>
             ))}
           </div>
+
           <div className="border-t border-white/5 pt-3">
-            <label className="label">{t('dashboard.store.freeShippingOver')}</label>
-            <div className="relative w-40">
-              <input className="input pe-8" type="number" min="0" step="1" placeholder="0" value={form.freeShippingOver} onChange={set('freeShippingOver')} />
-              <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-stone-400">₪</span>
-            </div>
-            <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.freeShippingHint')}</p>
+            <Field label={t('dashboard.store.freeShippingOver')} icon={<CashIcon className="h-4 w-4" />} tip={t('dashboard.store.freeShippingHint')} hint={t('dashboard.store.freeShippingHint')}>
+              <div className="relative w-40">
+                <input className="input pe-8" type="number" min="0" step="1" inputMode="numeric" placeholder="0" value={form.freeShippingOver} onChange={set('freeShippingOver')} />
+                <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-stone-400">₪</span>
+              </div>
+            </Field>
           </div>
 
           {/* برنامج الإحالة: نسبة خصم الزبونة الجديدة (0 = معطّل) */}
           <div className="border-t border-white/5 pt-3">
-            <label className="label flex items-center gap-1.5"><GiftIcon className="h-4 w-4" /> {t('dashboard.store.referralPercent')}</label>
-            <div className="relative w-40">
-              <input className="input pe-8" type="number" min="0" max="90" step="1" placeholder="0" value={form.referralPercent} onChange={set('referralPercent')} />
-              <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-stone-400">%</span>
-            </div>
-            <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.referralHint')}</p>
+            <Field label={t('dashboard.store.referralPercent')} icon={<GiftIcon className="h-4 w-4" />} tip={t('dashboard.store.referralHint')} hint={t('dashboard.store.referralHint')}>
+              <div className="relative w-40">
+                <input className="input pe-8" type="number" min="0" max="90" step="1" inputMode="numeric" placeholder="0" value={form.referralPercent} onChange={set('referralPercent')} />
+                <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-stone-400">%</span>
+              </div>
+            </Field>
           </div>
 
           {/* نقاط الولاء: كل N طلبات مؤكّدة → خصم % تلقائي على الطلب التالي (0 = معطّل) */}
           <div className="border-t border-white/5 pt-3">
-            <label className="label flex items-center gap-1.5"><GiftIcon className="h-4 w-4" /> {t('dashboard.store.loyaltyTitle')}</label>
-            <div className="flex flex-wrap items-center gap-2 text-sm text-stone-300">
-              <span>{t('dashboard.store.loyaltyEveryLabel')}</span>
-              <input className="input !w-20 text-center" type="number" min="0" max="50" step="1" placeholder="0" value={form.loyaltyEvery} onChange={set('loyaltyEvery')} />
-              <span>{t('dashboard.store.loyaltyPercentLabel')}</span>
-              <div className="relative w-24">
-                <input className="input pe-7 text-center" type="number" min="0" max="50" step="1" placeholder="0" value={form.loyaltyPercent} onChange={set('loyaltyPercent')} />
-                <span className="pointer-events-none absolute inset-y-0 end-2.5 flex items-center text-xs text-stone-400">%</span>
+            <Field label={t('dashboard.store.loyaltyTitle')} icon={<GiftIcon className="h-4 w-4" />} tip={t('dashboard.store.loyaltyHint')} hint={t('dashboard.store.loyaltyHint')}>
+              <div className="flex flex-wrap items-center gap-2 text-sm text-stone-300">
+                <span>{t('dashboard.store.loyaltyEveryLabel')}</span>
+                <input className="input !w-20 text-center" type="number" min="0" max="50" step="1" inputMode="numeric" placeholder="0" value={form.loyaltyEvery} onChange={set('loyaltyEvery')} />
+                <span>{t('dashboard.store.loyaltyPercentLabel')}</span>
+                <div className="relative w-24">
+                  <input className="input pe-7 text-center" type="number" min="0" max="50" step="1" inputMode="numeric" placeholder="0" value={form.loyaltyPercent} onChange={set('loyaltyPercent')} />
+                  <span className="pointer-events-none absolute inset-y-0 end-2.5 flex items-center text-xs text-stone-400">%</span>
+                </div>
               </div>
-            </div>
-            <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.loyaltyHint')}</p>
+            </Field>
           </div>
         </div>
 
         {/* عرض الفلاش: خصم مؤقّت على كل المتجر بعدّاد تنازلي — إلحاح يرفع مبيعات الحملات */}
-        <div id="s-flash" className="glass space-y-4 p-6 scroll-mt-[calc(env(safe-area-inset-top,0px)+7.5rem)]">
-          <SectionHead icon={<BoltIcon className="h-5 w-5" />} title={t('dashboard.store.flashTitle')} desc={t('dashboard.store.flashHint')} />
+        <div id="s-flash" className={CARD}>
+          <SectionHead icon={<BoltIcon className="h-5 w-5" />} title={t('dashboard.store.flashTitle')} desc={t('dashboard.store.flashHint')} done={doneMap['s-flash']} />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label className="label">{t('dashboard.store.flashPercent')}</label>
+            <Field label={t('dashboard.store.flashPercent')} tip={t('dashboard.store.flashPercentTip')}>
               <div className="relative w-32">
-                <input className="input pe-7 text-center" type="number" min="0" max="90" step="1" placeholder="0" value={form.flashPercent} onChange={set('flashPercent')} />
+                <input className="input pe-7 text-center font-bold" type="number" min="0" max="90" step="1" inputMode="numeric" placeholder="0" value={form.flashPercent} onChange={set('flashPercent')} />
                 <span className="pointer-events-none absolute inset-y-0 end-2.5 flex items-center text-xs text-stone-400">%</span>
               </div>
-            </div>
-            <div>
-              <label className="label">{t('dashboard.store.flashEndsAt')}</label>
+              {/* اختصارات نسب شائعة — أسرع من الكتابة */}
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {[10, 15, 20, 30, 50].map((p) => (
+                  <button
+                    key={p} type="button" onClick={() => setVal('flashPercent', String(p))}
+                    className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold transition ${
+                      String(form.flashPercent) === String(p) ? 'border-[#d4af37] bg-[#d4af37] text-[#3f2e22]' : 'border-gold-400/25 bg-gold-400/5 text-stone-300 hover:bg-gold-400/15'
+                    }`}
+                  >
+                    {p}%
+                  </button>
+                ))}
+              </div>
+            </Field>
+
+            <Field label={t('dashboard.store.flashEndsAt')} icon={<ClockIcon className="h-4 w-4" />} tip={t('dashboard.store.flashEndsTip')}>
               <input className="input" type="datetime-local" value={form.flashEndsAt} onChange={set('flashEndsAt')} />
-            </div>
+              {/* مُدد جاهزة — بضغطة بدل تعبئة التاريخ والساعة يدوياً */}
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {[[1, 'dHour1'], [24, 'dDay1'], [72, 'dDays3'], [168, 'dWeek1']].map(([h, key]) => (
+                  <button
+                    key={key} type="button" onClick={() => setFlashIn(h)}
+                    className="rounded-full border border-gold-400/25 bg-gold-400/5 px-2.5 py-1 text-[11px] font-semibold text-stone-300 transition hover:bg-gold-400/15 hover:text-gold-200"
+                  >
+                    {t(`dashboard.store.${key}`)}
+                  </button>
+                ))}
+                {form.flashEndsAt && (
+                  <button type="button" onClick={() => setVal('flashEndsAt', '')} className="rounded-full px-2 py-1 text-[11px] text-stone-400 transition hover:text-red-300">
+                    {t('common.remove')}
+                  </button>
+                )}
+              </div>
+            </Field>
           </div>
-          {form.flashPercent > 0 && form.flashEndsAt && new Date(form.flashEndsAt).getTime() > Date.now() ? (
-            <p className="rounded-xl bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-300">{t('dashboard.store.flashActive', { percent: form.flashPercent })}</p>
+
+          {flashOn ? (
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3 py-2.5 text-xs font-semibold text-emerald-500">
+              <BoltIcon className="h-4 w-4 shrink-0" />
+              <span>{t('dashboard.store.flashActive', { percent: form.flashPercent })}</span>
+              {flashLeft && <span className="rounded-full bg-emerald-500/15 px-2 py-0.5">{t('dashboard.store.flashLeft', { time: flashLeft })}</span>}
+            </div>
           ) : (
-            <p className="text-xs text-stone-400">{t('dashboard.store.flashOff')}</p>
+            <p className="rounded-xl border border-white/5 bg-black/20 px-3 py-2.5 text-xs text-stone-400">{t('dashboard.store.flashOff')}</p>
           )}
         </div>
 
         {/* التمويل والإعلانات: بكسلات تتبّع لإعلانات المالك الممولة */}
-        <div id="s-ads" className="glass space-y-4 p-6 scroll-mt-[calc(env(safe-area-inset-top,0px)+7.5rem)]">
-          <SectionHead icon={<ChartIcon className="h-5 w-5" />} title={t('dashboard.store.adsTitle')} desc={t('dashboard.store.adsHint')} />
+        <div id="s-ads" className={CARD}>
+          <SectionHead icon={<ChartIcon className="h-5 w-5" />} title={t('dashboard.store.adsTitle')} desc={t('dashboard.store.adsHint')} done={doneMap['s-ads']} />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div>
-              <label className="label">{t('dashboard.store.fbPixel')}</label>
-              <input className="input" dir="ltr" placeholder="123456789012345" value={form.fbPixel} onChange={set('fbPixel')} />
-              <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.fbPixelHint')}</p>
-            </div>
-            <div>
-              <label className="label">{t('dashboard.store.tiktokPixel')}</label>
-              <input className="input" dir="ltr" placeholder="C0ABC1DEFG2HIJ3KLM" value={form.tiktokPixel} onChange={set('tiktokPixel')} />
-              <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.tiktokPixelHint')}</p>
-            </div>
-            <div>
-              <label className="label">{t('dashboard.store.gaId')}</label>
-              <input className="input" dir="ltr" placeholder="G-XXXXXXXXXX" value={form.gaId} onChange={set('gaId')} />
-              <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.gaIdHint')}</p>
-            </div>
+            <Field label={t('dashboard.store.fbPixel')} tip={t('dashboard.store.fbPixelHint')} hint={t('dashboard.store.fbPixelHint')}>
+              <input className="input" dir="ltr" placeholder="123456789012345" value={form.fbPixel} onChange={(e) => setVal('fbPixel', e.target.value.trim())} />
+            </Field>
+            <Field label={t('dashboard.store.tiktokPixel')} tip={t('dashboard.store.tiktokPixelHint')} hint={t('dashboard.store.tiktokPixelHint')}>
+              <input className="input" dir="ltr" placeholder="C0ABC1DEFG2HIJ3KLM" value={form.tiktokPixel} onChange={(e) => setVal('tiktokPixel', e.target.value.trim())} />
+            </Field>
+            <Field label={t('dashboard.store.gaId')} tip={t('dashboard.store.gaIdHint')} hint={t('dashboard.store.gaIdHint')}>
+              <input className="input" dir="ltr" placeholder="G-XXXXXXXXXX" value={form.gaId} onChange={(e) => setVal('gaId', e.target.value.trim())} />
+            </Field>
           </div>
         </div>
 
         {/* تخصيص الفئات — صورة واقعية + اسم لكل فئة */}
-        <div id="s-categories" className="glass space-y-4 p-6 scroll-mt-[calc(env(safe-area-inset-top,0px)+7.5rem)]">
-          <SectionHead icon={<FolderIcon className="h-5 w-5" />} title={t('dashboard.store.categories')} desc={t('dashboard.store.categoriesHint')} />
+        <div id="s-categories" className={CARD}>
+          <SectionHead icon={<FolderIcon className="h-5 w-5" />} title={t('dashboard.store.categories')} desc={t('dashboard.store.categoriesHint')} done={doneMap['s-categories']} />
           <div className="space-y-3">
             {STORE_CATS.map((c) => {
               const meta = form.categoryMeta?.[c] || {};
@@ -425,7 +725,7 @@ export default function StoreSettings() {
               // اللوقو الحالي: صورة المالكة إن رفعتها وإلا الأيقونة الثابتة
               const logo = meta.image ? cldThumb(meta.image, 120) : `/categories/${c}.png`;
               return (
-                <div key={c} className={`rounded-xl border border-gold-400/15 bg-black/20 p-3 transition ${hidden ? 'opacity-60' : ''}`}>
+                <div key={c} className={`${SUBCARD} transition ${hidden ? 'opacity-60' : ''}`}>
                   {/* العنوان: لوقو + اسم واحد + زر إخفاء/إظهار — بلا تكرار للاسم */}
                   <div className="mb-2 flex items-center justify-between gap-2">
                     <span className="flex min-w-0 items-center gap-2">
@@ -445,7 +745,10 @@ export default function StoreSettings() {
                   </div>
                   {!hidden && (
                     <>
-                      <ImageInput value={meta.image || ''} onChange={(v) => setCatMeta(c, 'image', v)} placeholderImg={`/categories/${c}.png`} contain />
+                      <ImageInput
+                        value={meta.image || ''} onChange={(v) => setCatMeta(c, 'image', v)}
+                        placeholderImg={`/categories/${c}.png`} contain hint={t('dashboard.store.categoryImageHint')}
+                      />
                       <input
                         type="text"
                         maxLength={40}
@@ -464,24 +767,27 @@ export default function StoreSettings() {
           {/* فئات إضافية مخصّصة — يضيفها المشترك بلا حدود */}
           <div className="border-t border-gold-400/10 pt-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <h3 className="font-display text-base font-bold text-stone-100">＋ {t('dashboard.store.customCategories')}</h3>
+              <h3 className="font-display text-base font-bold text-stone-100">{t('dashboard.store.customCategories')}</h3>
               <button type="button" onClick={addCustomCat} className="btn-ghost !py-1.5 text-sm">＋ {t('dashboard.store.addCategory')}</button>
             </div>
             {(form.customCategories || []).length === 0 ? (
-              <p className="rounded-xl border border-gold-400/15 bg-black/20 p-3 text-center text-xs text-stone-400">{t('dashboard.store.noCustomCategories')}</p>
+              <button type="button" onClick={addCustomCat} className="flex w-full flex-col items-center gap-1.5 rounded-2xl border border-dashed border-gold-400/25 bg-black/15 p-5 text-center transition hover:border-gold-400/50 hover:bg-gold-400/5">
+                <FolderIcon className="h-6 w-6 text-gold-300" />
+                <span className="text-xs text-stone-400">{t('dashboard.store.noCustomCategories')}</span>
+              </button>
             ) : (
               <div className="space-y-3">
                 {form.customCategories.map((cc, idx) => (
-                  <div key={cc.key || idx} className="rounded-xl border border-gold-400/15 bg-black/20 p-3">
+                  <div key={cc.key || idx} className={SUBCARD}>
                     {/* بلا تكرار للاسم: خانة الاسم تحته هي المصدر — بالأعلى لوقو (إن وُجد) + حذف فقط */}
                     <div className="mb-2 flex items-center justify-between gap-2">
                       {cc.image
                         ? <img src={cldThumb(cc.image, 120)} alt="" className="h-8 w-8 shrink-0 rounded object-contain" />
-                        : <span />}
+                        : <span className="truncate text-xs font-semibold text-stone-500">{cc.name || t('dashboard.store.newCategory')}</span>}
                       <button type="button" onClick={() => removeCustomCat(idx)} className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-xs text-stone-400 hover:text-red-300"><TrashIcon className="h-3.5 w-3.5" /> {t('common.delete')}</button>
                     </div>
                     <input type="text" maxLength={40} className="input mb-2" placeholder={t('dashboard.store.categoryNameField')} value={cc.name} onChange={(e) => setCustomCat(idx, 'name', e.target.value)} />
-                    <ImageInput value={cc.image || ''} onChange={(v) => setCustomCat(idx, 'image', v)} contain />
+                    <ImageInput value={cc.image || ''} onChange={(v) => setCustomCat(idx, 'image', v)} contain hint={t('dashboard.store.categoryImageHint')} />
                   </div>
                 ))}
               </div>
@@ -490,28 +796,35 @@ export default function StoreSettings() {
         </div>
 
         {/* مجموعات المتجر: تسوّقي حسب المناسبة — صورة مرفوعة + كلمة بحث */}
-        <div id="s-collections" className="glass space-y-4 p-6 scroll-mt-[calc(env(safe-area-inset-top,0px)+7.5rem)]">
+        <div id="s-collections" className={CARD}>
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <SectionHead icon={<TagIcon className="h-5 w-5" />} title={t('dashboard.store.collections')} desc={t('dashboard.store.collectionsHint')} />
+            <SectionHead icon={<TagIcon className="h-5 w-5" />} title={t('dashboard.store.collections')} desc={t('dashboard.store.collectionsHint')} done={doneMap['s-collections']} />
             {(form.collections || []).length < 12 && (
               <button type="button" onClick={addCollection} className="btn-ghost !py-1.5 text-sm">＋ {t('common.add')}</button>
             )}
           </div>
           {(form.collections || []).length === 0 ? (
-            <p className="rounded-xl border border-gold-400/15 bg-black/20 p-3 text-center text-xs text-stone-400">{t('dashboard.store.collectionsEmpty')}</p>
+            <button type="button" onClick={addCollection} className="flex w-full flex-col items-center gap-1.5 rounded-2xl border border-dashed border-gold-400/25 bg-black/15 p-5 text-center transition hover:border-gold-400/50 hover:bg-gold-400/5">
+              <SparkleIcon className="h-6 w-6 text-gold-300" />
+              <span className="text-xs text-stone-400">{t('dashboard.store.collectionsEmpty')}</span>
+            </button>
           ) : (
             <div className="space-y-3">
               {form.collections.map((c, idx) => (
-                <div key={idx} className="rounded-xl border border-gold-400/15 bg-black/20 p-3">
+                <div key={idx} className={SUBCARD}>
                   <div className="mb-2 flex items-center justify-between">
-                    <span className="text-sm font-semibold text-gold-200">{c.title || t('dashboard.store.newCategory')}</span>
-                    <button type="button" onClick={() => removeCollection(idx)} className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-stone-400 hover:text-red-300"><TrashIcon className="h-3.5 w-3.5" /> {t('common.delete')}</button>
+                    <span className="truncate text-sm font-semibold text-gold-200">{c.title || t('dashboard.store.newCategory')}</span>
+                    <button type="button" onClick={() => removeCollection(idx)} className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-xs text-stone-400 hover:text-red-300"><TrashIcon className="h-3.5 w-3.5" /> {t('common.delete')}</button>
                   </div>
                   <div className="mb-2 grid gap-2 sm:grid-cols-2">
-                    <input type="text" maxLength={60} className="input" placeholder={t('dashboard.store.collectionTitle')} value={c.title} onChange={(e) => setCollection(idx, 'title', e.target.value)} />
-                    <input type="text" maxLength={60} className="input" placeholder={t('dashboard.store.collectionQuery')} value={c.q} onChange={(e) => setCollection(idx, 'q', e.target.value)} />
+                    <Field label={t('dashboard.store.collectionTitleLabel')} tip={t('dashboard.store.collectionTitleTip')}>
+                      <input type="text" maxLength={60} className="input" placeholder={t('dashboard.store.collectionTitle')} value={c.title} onChange={(e) => setCollection(idx, 'title', e.target.value)} />
+                    </Field>
+                    <Field label={t('dashboard.store.collectionQueryLabel')} tip={t('dashboard.store.collectionQueryTip')}>
+                      <input type="text" maxLength={60} className="input" placeholder={t('dashboard.store.collectionQuery')} value={c.q} onChange={(e) => setCollection(idx, 'q', e.target.value)} />
+                    </Field>
                   </div>
-                  <ImageInput value={c.image || ''} onChange={(v) => setCollection(idx, 'image', v)} />
+                  <ImageInput value={c.image || ''} onChange={(v) => setCollection(idx, 'image', v)} hint={t('dashboard.store.collectionImageHint')} />
                 </div>
               ))}
             </div>
@@ -519,28 +832,40 @@ export default function StoreSettings() {
         </div>
 
         {/* تسويق: شريط إعلانات + نافذة ترحيب */}
-        <div id="s-marketing" className="glass space-y-4 p-6 scroll-mt-[calc(env(safe-area-inset-top,0px)+7.5rem)]">
-          <SectionHead icon={<MegaphoneIcon className="h-5 w-5" />} title={t('dashboard.store.marketing')} />
-          <div>
-            <label className="label">{t('dashboard.store.announcement')}</label>
+        <div id="s-marketing" className={CARD}>
+          <SectionHead icon={<MegaphoneIcon className="h-5 w-5" />} title={t('dashboard.store.marketing')} desc={t('dashboard.store.marketingHint')} done={doneMap['s-marketing']} />
+
+          <Field label={t('dashboard.store.announcement')} tip={t('dashboard.store.announcementHint')} hint={t('dashboard.store.announcementHint')} max={500} value={form.announcement}>
             <textarea rows={3} maxLength={500} className="input resize-none" placeholder={t('dashboard.store.announcementPlaceholder')} value={form.announcement} onChange={set('announcement')} />
-            <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.announcementHint')}</p>
-          </div>
-          <div>
-            <label className="label">{t('dashboard.store.announcementEn')}</label>
+            {/* معاينة الشريط كما يظهر بأعلى المتجر */}
+            {String(form.announcement || '').trim() && (
+              <div className="mt-2 overflow-hidden rounded-xl bg-gradient-to-r from-wine to-wine-dark px-3 py-2">
+                <p className="truncate text-[11px] font-semibold text-cream">
+                  {form.announcement.split('\n').map((l) => l.trim()).filter(Boolean).join('   ✦   ')}
+                </p>
+              </div>
+            )}
+          </Field>
+
+          <Field label={t('dashboard.store.announcementEn')} tip={t('dashboard.store.announcementEnHint')} hint={t('dashboard.store.announcementEnHint')} max={500} value={form.announcementEn}>
             <textarea rows={3} maxLength={500} dir="ltr" className="input resize-none text-start" placeholder={t('dashboard.store.announcementEnPlaceholder')} value={form.announcementEn} onChange={set('announcementEn')} />
-            <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.announcementEnHint')}</p>
-          </div>
-          <div>
-            <label className="label">{t('dashboard.store.welcomeOffer')}</label>
+          </Field>
+
+          <Field label={t('dashboard.store.welcomeOffer')} tip={t('dashboard.store.welcomeHint')} hint={t('dashboard.store.welcomeHint')} max={300} value={form.welcomeOffer}>
             <input type="text" maxLength={300} className="input" placeholder={t('dashboard.store.welcomePlaceholder')} value={form.welcomeOffer} onChange={set('welcomeOffer')} />
-            <p className="mt-1 text-xs text-stone-400">{t('dashboard.store.welcomeHint')}</p>
-          </div>
+          </Field>
         </div>
 
         {/* دليل المقاسات المخصّص */}
-        <div id="s-sizechart" className="glass space-y-3 p-6 scroll-mt-[calc(env(safe-area-inset-top,0px)+7.5rem)]">
-          <SectionHead icon={<RulerIcon className="h-5 w-5" />} title={t('dashboard.store.sizeChart')} desc={t('dashboard.store.sizeChartHint')} />
+        <div id="s-sizechart" className={CARD}>
+          <SectionHead icon={<RulerIcon className="h-5 w-5" />} title={t('dashboard.store.sizeChart')} desc={t('dashboard.store.sizeChartHint')} done={doneMap['s-sizechart']} />
+          {/* تعبئة/تفريغ دفعةً واحدة — أسرع بكثير من ٢١ خانة يدوية */}
+          <div className="flex flex-wrap gap-1.5">
+            <button type="button" onClick={fillStandardChart} className="inline-flex items-center gap-1.5 rounded-full border border-gold-400/30 bg-gold-400/10 px-3 py-1 text-[11px] font-semibold text-gold-200 transition hover:bg-gold-400/20">
+              <RulerIcon className="h-3.5 w-3.5" /> {t('dashboard.store.fillStandard')}
+            </button>
+            <button type="button" onClick={clearChart} className="rounded-full px-2.5 py-1 text-[11px] text-stone-400 transition hover:text-red-300">{t('dashboard.store.clearChart')}</button>
+          </div>
           <table className="w-full table-fixed border-collapse text-center text-[clamp(0.72rem,3.2vw,0.875rem)]">
             <thead>
               <tr className="text-stone-400">
@@ -559,7 +884,9 @@ export default function StoreSettings() {
                     {['bust', 'waist', 'hips'].map((k) => (
                       <td key={k} className="p-0.5">
                         <input
-                          dir="ltr" inputMode="numeric" placeholder="—"
+                          dir="ltr" inputMode="numeric"
+                          // الشبح = القياس القياسي المستخدم تلقائياً لو تُركت الخانة فارغة
+                          placeholder={String(SIZE_CHART[s]?.[k] ?? '—')}
                           value={row[k] ?? ''}
                           onChange={(e) => setChartCell(s, k, e.target.value)}
                           className="input w-full !min-w-0 !px-1 !py-1.5 text-center"
@@ -571,25 +898,26 @@ export default function StoreSettings() {
               })}
             </tbody>
           </table>
+          <p className="text-[11px] text-stone-400">{t('dashboard.store.sizeChartCm')}</p>
         </div>
 
         {/* سياسة الإرجاع والتبديل */}
-        <div id="s-return" className="glass space-y-3 p-6 scroll-mt-[calc(env(safe-area-inset-top,0px)+7.5rem)]">
-          <SectionHead icon={<ShieldIcon className="h-5 w-5" />} title={t('dashboard.store.returnPolicy')} desc={t('dashboard.store.returnPolicyHint')} />
-          <textarea rows={3} className="input resize-none" maxLength={2000} placeholder={t('product.returnPolicyDefault')} value={form.returnPolicy} onChange={set('returnPolicy')} />
+        <div id="s-return" className={CARD}>
+          <SectionHead icon={<ShieldIcon className="h-5 w-5" />} title={t('dashboard.store.returnPolicy')} desc={t('dashboard.store.returnPolicyHint')} done={doneMap['s-return']} />
+          <Field label={t('dashboard.store.returnPolicyLabel')} tip={t('dashboard.store.returnPolicyTip')} max={2000} value={form.returnPolicy}>
+            <textarea rows={4} className="input resize-none" maxLength={2000} placeholder={t('product.returnPolicyDefault')} value={form.returnPolicy} onChange={set('returnPolicy')} />
+          </Field>
         </div>
 
         {/* التوصيل والدفع */}
-        <div id="s-delivery" className="glass space-y-4 p-6 scroll-mt-[calc(env(safe-area-inset-top,0px)+7.5rem)]">
-          <SectionHead icon={<CardIcon className="h-5 w-5" />} title={t('dashboard.store.deliveryPayment')} />
-          <div>
-            <label className="label">{t('dashboard.store.delivery')}</label>
-            <textarea rows={2} className="input resize-none" value={form.deliveryInfo} onChange={set('deliveryInfo')} />
-          </div>
-          <div>
-            <label className="label">{t('dashboard.store.payment')}</label>
-            <textarea rows={2} className="input resize-none" value={form.paymentInfo} onChange={set('paymentInfo')} />
-          </div>
+        <div id="s-delivery" className={CARD}>
+          <SectionHead icon={<CardIcon className="h-5 w-5" />} title={t('dashboard.store.deliveryPayment')} desc={t('dashboard.store.deliveryPaymentHint')} done={doneMap['s-delivery']} />
+          <Field label={t('dashboard.store.delivery')} icon={<TruckIcon className="h-4 w-4" />} tip={t('dashboard.store.deliveryTip')} max={500} value={form.deliveryInfo}>
+            <textarea rows={2} maxLength={500} className="input resize-none" placeholder={t('dashboard.store.deliveryPlaceholder')} value={form.deliveryInfo} onChange={set('deliveryInfo')} />
+          </Field>
+          <Field label={t('dashboard.store.payment')} icon={<CashIcon className="h-4 w-4" />} tip={t('dashboard.store.paymentTip')} max={500} value={form.paymentInfo}>
+            <textarea rows={2} maxLength={500} className="input resize-none" placeholder={t('dashboard.store.paymentPlaceholder')} value={form.paymentInfo} onChange={set('paymentInfo')} />
+          </Field>
         </div>
 
         <button
