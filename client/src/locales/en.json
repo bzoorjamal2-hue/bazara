@@ -1534,6 +1534,29 @@
     "estimatedNote_one": "1 order is estimated using today’s cost, not the cost at sale time.",
     "estimatedNote_other": "{{count}} orders are estimated using today’s cost, not the cost at sale time.",
     "expensesCount_one": "1 expense logged.",
-    "expensesCount_other": "{{count}} expenses logged."
+    "expensesCount_other": "{{count}} expenses logged.",
+    "settleTitle": "Courier settlement",
+    "settleHint": "Money the courier collected from customers that has not reached you yet.",
+    "inTransit": "In transit",
+    "inTransitTip": "Shipped but not delivered yet — nothing has been collected.",
+    "atCourier": "At courier",
+    "atCourierTip": "Delivered and paid, but the money is still held by the courier.",
+    "collected": "Received",
+    "collectedTip": "What actually reached you from the couriers in the selected month.",
+    "settleAll": "Received all",
+    "collectPicked": "Received selected ({{count}})",
+    "collectedCount_one": "1 order marked received",
+    "collectedCount_other": "{{count}} orders marked received",
+    "pendingList_one": "1 order awaiting payout",
+    "pendingList_other": "{{count}} orders awaiting payout",
+    "noName": "No name",
+    "courier": {
+      "opost": "Optimus",
+      "eps": "EPS",
+      "gobox": "gobox",
+      "none": "Manual delivery"
+    },
+    "settleConfirm_one": "Mark 1 order from {{courier}} as received — {{amount}} in total. Use this when the courier pays out in one transfer.",
+    "settleConfirm_other": "Mark {{count}} orders from {{courier}} as received — {{amount}} in total. Use this when the courier pays out in one transfer."
   }
 }

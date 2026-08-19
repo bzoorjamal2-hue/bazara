@@ -235,3 +235,8 @@ CREATE TABLE IF NOT EXISTS expenses (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_expenses_store_date ON expenses(store_id, spent_at DESC);
+
+-- تسوية التحصيل: لحظة استلام ثمن الطلب من شركة التوصيل. NULL = المبلغ ما زال
+-- عند الشركة. يفصل «بِعتُ» عن «قبضتُ» فلا يبدو المتجر رابحاً ونصف ماله عالق.
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS collected_at TIMESTAMPTZ;
+CREATE INDEX IF NOT EXISTS idx_orders_collected ON orders(store_id, collected_at);

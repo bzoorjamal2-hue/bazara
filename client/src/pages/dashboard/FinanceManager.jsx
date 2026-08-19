@@ -5,7 +5,7 @@ import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
 import ConfirmModal from '../../components/ConfirmModal.jsx';
-import { CashIcon, ChartIcon, PlusIcon, TrashIcon, CheckIcon, BagIcon, TruckIcon, MegaphoneIcon, PackageIcon, HomeIcon, UsersIcon, NoteIcon, WarnIcon, DownloadIcon } from '../../components/icons.jsx';
+import { CashIcon, ChartIcon, PlusIcon, TrashIcon, CheckIcon, BagIcon, TruckIcon, MegaphoneIcon, PackageIcon, HomeIcon, UsersIcon, NoteIcon, WarnIcon, DownloadIcon, ClockIcon } from '../../components/icons.jsx';
 import { PageHead, SectionHead, Field, Tip } from '../../components/FormField.jsx';
 import { downloadXlsx } from '../../utils/xlsx.js';
 
@@ -44,10 +44,15 @@ export default function FinanceManager() {
   const [busy, setBusy] = useState(false);
   const [confirmDel, setConfirmDel] = useState(null);
   const [form, setForm] = useState({ category: 'ads', amount: '', note: '', spentAt: todayStr() });
+  const [settle, setSettle] = useState(null);   // تسوية شركات التوصيل
+  const [picked, setPicked] = useState(() => new Set()); // طلبات مؤشَّرة للتحصيل
+  const [confirmCollect, setConfirmCollect] = useState(null);
 
   const load = useCallback((m) => {
     setError('');
     api.get(`/finance?month=${m}`).then((r) => setData(r.data)).catch((e) => setError(getErrorMessage(e)));
+    // التسوية مستقلّة: فشلها لا يمنع ظهور كشف الشهر
+    api.get(`/finance/couriers?month=${m}`).then((r) => { setSettle(r.data); setPicked(new Set()); }).catch(() => setSettle(null));
   }, []);
   useEffect(() => { load(month); }, [load, month]);
 
@@ -79,6 +84,26 @@ export default function FinanceManager() {
     try { await api.delete(`/finance/expenses/${x.id}`); load(month); } catch (e) { setError(getErrorMessage(e)); }
   };
 
+  const togglePick = (id) => setPicked((prev) => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
+
+  const collect = async (body, label) => {
+    setBusy(true); setError('');
+    try {
+      const r = await api.post('/finance/collect', body);
+      flash(t('finance.collectedCount', { count: r.data.count }));
+      load(month);
+    } catch (e) {
+      setError(getErrorMessage(e));
+    } finally {
+      setBusy(false);
+      setConfirmCollect(null);
+    }
+  };
+
   // تصدير كشف الشهر: ورقة ملخّص + ورقة مصاريف مفصّلة
   const exportMonth = () => {
     if (!data) return;
@@ -107,7 +132,7 @@ export default function FinanceManager() {
           { header: t('finance.amount'), width: 14, type: 'money' },
           { header: t('finance.note'), width: 34 },
         ],
-        rows: data.expenses.map((e) => [new Date(e.spentAt).toLocaleDateString(), catLabel(e.category), e.amount, e.note]),
+        rows: data.expenses.map((e) => [new Date(e.spentAt).toLocaleDateString(i18n.language), catLabel(e.category), e.amount, e.note]),
       },
     ], `bazara-finance-${data.month}`);
   };
@@ -189,6 +214,82 @@ export default function FinanceManager() {
             )}
           </div>
 
+          {/* تسوية تحصيل شركات التوصيل */}
+          {settle && (settle.couriers.length > 0 || settle.pending.length > 0) && (
+            <div className={CARD}>
+              <SectionHead icon={<TruckIcon className="h-5 w-5" />} title={t('finance.settleTitle')} desc={t('finance.settleHint')} />
+
+              {/* المشهد بثلاثة أرقام: بالطريق · عند الشركة · قبضتِه */}
+              <div className="grid grid-cols-3 gap-2">
+                <Stat icon={<TruckIcon className="h-4 w-4" />} label={t('finance.inTransit')} value={money(settle.totals.transitAmount)} tip={t('finance.inTransitTip')} tone="sky" />
+                <Stat icon={<ClockIcon className="h-4 w-4" />} label={t('finance.atCourier')} value={money(settle.totals.pendingAmount)} tip={t('finance.atCourierTip')} tone="amber" />
+                <Stat icon={<CheckIcon className="h-4 w-4" />} label={t('finance.collected')} value={money(settle.totals.collectedAmount)} tip={t('finance.collectedTip')} tone="emerald" />
+              </div>
+
+              {/* لكل شركة على حدة — المالكة تستلم من كل شركة حوالةً مستقلّة */}
+              <div className="space-y-2">
+                {settle.couriers.map((c) => (
+                  <div key={c.key} className="rounded-2xl border border-gold-400/15 bg-black/20 p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="flex items-center gap-1.5 text-sm font-bold text-stone-100">
+                        <TruckIcon className="h-4 w-4 text-stone-400" /> {t(`finance.courier.${c.key}`)}
+                      </span>
+                      {c.pendingOrders > 0 && (
+                        <button
+                          onClick={() => setConfirmCollect({ courier: c.key, count: c.pendingOrders, amount: c.pendingAmount })}
+                          disabled={busy}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-400/40 px-2.5 py-1 text-xs font-bold text-emerald-400 transition hover:bg-emerald-500/10 disabled:opacity-50"
+                        >
+                          <CheckIcon className="h-3.5 w-3.5" /> {t('finance.settleAll')}
+                        </button>
+                      )}
+                    </div>
+                    <div className="mt-2 grid grid-cols-3 gap-2 text-center text-[11px]">
+                      <Mini label={t('finance.inTransit')} value={money(c.transitAmount)} count={c.transitOrders} />
+                      <Mini label={t('finance.atCourier')} value={money(c.pendingAmount)} count={c.pendingOrders} strong={c.pendingOrders > 0} />
+                      <Mini label={t('finance.collected')} value={money(c.collectedAmount)} count={c.collectedOrders} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* الطلبات المستحقّة، طلباً طلباً — للتسوية الجزئية */}
+              {settle.pending.length > 0 && (
+                <>
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                    <span className="text-xs font-semibold text-stone-300">{t('finance.pendingList', { count: settle.pending.length })}</span>
+                    {picked.size > 0 && (
+                      <button
+                        onClick={() => collect({ orderIds: [...picked] })}
+                        disabled={busy}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-bold text-emerald-400 transition hover:bg-emerald-500/25 disabled:opacity-50"
+                      >
+                        <CheckIcon className="h-3.5 w-3.5" /> {t('finance.collectPicked', { count: picked.size })}
+                      </button>
+                    )}
+                  </div>
+                  <div className="divide-y divide-white/5 overflow-hidden rounded-2xl border border-gold-400/15 bg-black/20">
+                    {settle.pending.map((o) => (
+                      <label key={o.id} className="flex cursor-pointer items-center gap-2.5 p-3 transition hover:bg-white/5">
+                        <input
+                          type="checkbox" checked={picked.has(o.id)} onChange={() => togglePick(o.id)}
+                          className="h-4 w-4 shrink-0 accent-emerald-500"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-stone-100">{o.customerName || t('finance.noName')}</p>
+                          <p className="mt-0.5 truncate text-[11px] text-stone-400">
+                            {o.reference || '—'} · {t(`finance.courier.${o.courier}`)} · {new Date(o.createdAt).toLocaleDateString(i18n.language)}
+                          </p>
+                        </div>
+                        <span className="shrink-0 text-sm font-bold tabular-nums text-gold-300">{money(o.total)}</span>
+                      </label>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
           {/* إضافة مصروف */}
           <form onSubmit={addExpense} className={CARD}>
             <SectionHead icon={<PlusIcon className="h-5 w-5" />} title={t('finance.addTitle')} desc={t('finance.addHint')} />
@@ -262,7 +363,7 @@ export default function FinanceManager() {
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold text-stone-100">{t(`finance.cat.${e.category}`)}</p>
                         <p className="mt-0.5 truncate text-[11px] text-stone-400">
-                          {new Date(e.spentAt).toLocaleDateString()}{e.note ? ` · ${e.note}` : ''}
+                          {new Date(e.spentAt).toLocaleDateString(i18n.language)}{e.note ? ` · ${e.note}` : ''}
                         </p>
                       </div>
                       <span className="shrink-0 text-sm font-bold tabular-nums text-stone-200">{money(e.amount)}</span>
@@ -289,6 +390,15 @@ export default function FinanceManager() {
       )}
 
       <ConfirmModal
+        open={!!confirmCollect}
+        title={t('finance.settleTitle')}
+        message={confirmCollect ? t('finance.settleConfirm', { count: confirmCollect.count, courier: t(`finance.courier.${confirmCollect.courier}`), amount: money(confirmCollect.amount) }) : ''}
+        confirmLabel={t('finance.settleAll')}
+        onConfirm={() => collect({ courier: confirmCollect.courier })}
+        onCancel={() => setConfirmCollect(null)}
+      />
+
+      <ConfirmModal
         open={!!confirmDel}
         title={t('finance.deleteTitle')}
         message={confirmDel ? `${t('finance.deleteConfirm')}\n${t(`finance.cat.${confirmDel.category}`)} — ${money(confirmDel.amount)}` : ''}
@@ -306,6 +416,36 @@ function Row({ label, value, tip, muted }) {
     <div className={`flex items-center justify-between gap-2 ${muted ? 'text-stone-400' : 'text-stone-300'}`}>
       <span className="flex items-center gap-1.5">{label} <Tip text={tip} /></span>
       <span className="tabular-nums">{value}</span>
+    </div>
+  );
+}
+
+// بطاقة رقم بلون دلالي — بالطريق (سماوي) · عند الشركة (كهرماني) · قبضتِه (أخضر)
+function Stat({ icon, label, value, tip, tone }) {
+  const tones = {
+    sky: 'border-sky-400/30 bg-sky-500/10 text-sky-400',
+    amber: 'border-amber-400/30 bg-amber-500/10 text-amber-400',
+    emerald: 'border-emerald-400/30 bg-emerald-500/10 text-emerald-400',
+  };
+  return (
+    <div className={`rounded-2xl border p-2.5 text-center ${tones[tone]}`}>
+      <p className="flex items-center justify-center gap-1 text-[10px] font-semibold text-stone-400">
+        {label} <Tip text={tip} />
+      </p>
+      <p className="mt-1 flex items-center justify-center gap-1 font-display text-base font-extrabold tabular-nums sm:text-lg">
+        {icon}<span className="truncate">{value}</span>
+      </p>
+    </div>
+  );
+}
+
+// سطر مصغّر داخل بطاقة الشركة
+function Mini({ label, value, count, strong }) {
+  return (
+    <div>
+      <p className="text-stone-400">{label}</p>
+      <p className={`mt-0.5 tabular-nums ${strong ? 'font-bold text-amber-400' : 'text-stone-200'}`}>{value}</p>
+      <p className="text-stone-400">{count}</p>
     </div>
   );
 }

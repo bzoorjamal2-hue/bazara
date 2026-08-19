@@ -467,6 +467,9 @@ async function ensureAccounting() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );`,
     'CREATE INDEX IF NOT EXISTS idx_expenses_store_date ON expenses(store_id, spent_at DESC);',
+    // تسوية التحصيل: متى استلمتِ ثمن الطلب من شركة التوصيل (NULL = ما زال عندها)
+    "ALTER TABLE orders ADD COLUMN IF NOT EXISTS collected_at TIMESTAMPTZ;",
+    'CREATE INDEX IF NOT EXISTS idx_orders_collected ON orders(store_id, collected_at);',
   ];
   // كل جملة على حدة: فشل واحدة لا يمنع البقية
   for (const sql of steps) {
