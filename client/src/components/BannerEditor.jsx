@@ -2,8 +2,8 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import ImageInput from './ImageInput.jsx';
 import VideoInput from './VideoInput.jsx';
-import { Field } from './FormField.jsx';
-import { TrashIcon, CopyIcon, ArrowUpIcon, ArrowDownIcon, ImageIcon, VideoIcon, PaletteIcon, SparkleIcon, LinkIcon } from './icons.jsx';
+import { Field, RowTools } from './FormField.jsx';
+import { ImageIcon, VideoIcon, PaletteIcon, SparkleIcon, LinkIcon } from './icons.jsx';
 import { cldThumb, cldVideoPoster } from '../utils/cloudinary.js';
 
 // أنواع خلفية الشريحة: [القيمة المخزّنة، مفتاح الترجمة، الأيقونة]
@@ -127,36 +127,14 @@ export default function BannerEditor({ banners = [], onChange, withButtons = fal
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-400/10 px-2.5 py-1 text-[11px] font-bold text-gold-200">
                     {t('dashboard.store.slide')} {idx + 1}
                   </span>
-                  <div className="flex items-center gap-0.5">
-                    <button
-                      type="button" onClick={() => moveBanner(idx, -1)} disabled={idx === 0}
-                      title={t('dashboard.store.moveUp')} aria-label={t('dashboard.store.moveUp')}
-                      className="rounded-lg p-1.5 text-stone-400 transition hover:bg-gold-400/10 hover:text-gold-200 disabled:pointer-events-none disabled:opacity-25"
-                    >
-                      <ArrowUpIcon className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button" onClick={() => moveBanner(idx, 1)} disabled={idx === banners.length - 1}
-                      title={t('dashboard.store.moveDown')} aria-label={t('dashboard.store.moveDown')}
-                      className="rounded-lg p-1.5 text-stone-400 transition hover:bg-gold-400/10 hover:text-gold-200 disabled:pointer-events-none disabled:opacity-25"
-                    >
-                      <ArrowDownIcon className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button" onClick={() => duplicateBanner(idx)} disabled={banners.length >= MAX_BANNERS}
-                      title={t('dashboard.store.duplicateSlide')} aria-label={t('dashboard.store.duplicateSlide')}
-                      className="rounded-lg p-1.5 text-stone-400 transition hover:bg-gold-400/10 hover:text-gold-200 disabled:pointer-events-none disabled:opacity-25"
-                    >
-                      <CopyIcon className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button" onClick={() => removeBanner(idx)}
-                      title={t('common.delete')} aria-label={t('common.delete')}
-                      className="rounded-lg p-1.5 text-stone-400 transition hover:bg-red-500/10 hover:text-red-300"
-                    >
-                      <TrashIcon className="h-4 w-4" />
-                    </button>
-                  </div>
+                  <RowTools
+                    index={idx}
+                    count={banners.length}
+                    onMove={(dir) => moveBanner(idx, dir)}
+                    onDuplicate={() => duplicateBanner(idx)}
+                    canDuplicate={banners.length < MAX_BANNERS}
+                    onRemove={() => removeBanner(idx)}
+                  />
                 </div>
 
                 <div className="space-y-2.5">

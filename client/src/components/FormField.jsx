@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { TrashIcon, CopyIcon, ArrowUpIcon, ArrowDownIcon } from './icons.jsx';
 
 // عناصر إدخال مشتركة لكل نماذج لوحة التحكّم — مصدر واحد فتبقى كل الواجهات
 // (إعدادات المتجر، محرّر الشرايح، نماذج المدير المستقبلية) بنفس الشكل والسلوك.
@@ -49,6 +51,53 @@ export function Field({ label, tip, hint, icon, max, value = '', required = fals
       )}
       {children}
       {hint && <p className="mt-1 text-[11px] leading-snug text-stone-400">{hint}</p>}
+    </div>
+  );
+}
+
+// أدوات صفّ داخل قائمة (شريحة، فئة، مجموعة): ترتيب لأعلى/لأسفل، نسخ، حذف.
+// الترتيب هنا هو ترتيب الظهور بالمتجر، فنُبقي الأدوات نفسها بكل القوائم.
+//   onMove(dir) اختياري — تُخفى أسهم الترتيب إن لم يُمرَّر.
+//   onDuplicate اختياري — يُعطَّل تلقائياً عند بلوغ الحد الأقصى (canDuplicate=false).
+export function RowTools({ index, count, onMove, onDuplicate, onRemove, canDuplicate = true }) {
+  const { t } = useTranslation();
+  const btn = 'rounded-lg p-1.5 text-stone-400 transition disabled:pointer-events-none disabled:opacity-25';
+  return (
+    <div className="flex shrink-0 items-center gap-0.5">
+      {onMove && (
+        <>
+          <button
+            type="button" onClick={() => onMove(-1)} disabled={index === 0}
+            title={t('dashboard.store.moveUp')} aria-label={t('dashboard.store.moveUp')}
+            className={`${btn} hover:bg-gold-400/10 hover:text-gold-200`}
+          >
+            <ArrowUpIcon className="h-4 w-4" />
+          </button>
+          <button
+            type="button" onClick={() => onMove(1)} disabled={index === count - 1}
+            title={t('dashboard.store.moveDown')} aria-label={t('dashboard.store.moveDown')}
+            className={`${btn} hover:bg-gold-400/10 hover:text-gold-200`}
+          >
+            <ArrowDownIcon className="h-4 w-4" />
+          </button>
+        </>
+      )}
+      {onDuplicate && (
+        <button
+          type="button" onClick={onDuplicate} disabled={!canDuplicate}
+          title={t('dashboard.store.duplicate')} aria-label={t('dashboard.store.duplicate')}
+          className={`${btn} hover:bg-gold-400/10 hover:text-gold-200`}
+        >
+          <CopyIcon className="h-4 w-4" />
+        </button>
+      )}
+      <button
+        type="button" onClick={onRemove}
+        title={t('common.delete')} aria-label={t('common.delete')}
+        className={`${btn} hover:bg-red-500/10 hover:text-red-300`}
+      >
+        <TrashIcon className="h-4 w-4" />
+      </button>
     </div>
   );
 }

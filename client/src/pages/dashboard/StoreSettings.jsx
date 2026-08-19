@@ -9,10 +9,10 @@ import BannerEditor from '../../components/BannerEditor.jsx';
 import OpostConnect from '../../components/OpostConnect.jsx';
 import EpsConnect from '../../components/EpsConnect.jsx';
 import GoboxConnect from '../../components/GoboxConnect.jsx';
-import { Field, SectionHead } from '../../components/FormField.jsx';
+import { Field, SectionHead, RowTools } from '../../components/FormField.jsx';
 import {
-  SaveIcon, TruckIcon, ImageIcon, GiftIcon, FolderIcon, TrashIcon, MegaphoneIcon, RulerIcon, ShieldIcon,
-  StoreIcon, PhoneIcon, BoltIcon, ChartIcon, TagIcon, CardIcon, GearIcon, CheckIcon, CopyIcon, LinkIcon,
+  SaveIcon, TruckIcon, ImageIcon, GiftIcon, FolderIcon, MegaphoneIcon, RulerIcon, ShieldIcon,
+  StoreIcon, PhoneIcon, BoltIcon, ChartIcon, TagIcon, CardIcon, GearIcon, CheckIcon, CopyIcon, LinkIcon, ShareIcon,
   ClockIcon, SparkleIcon, WhatsAppIcon, InstagramIcon, FacebookIcon, CashIcon, PinIcon,
 } from '../../components/icons.jsx';
 import { cldThumb } from '../../utils/cloudinary.js';
@@ -105,6 +105,12 @@ const cleanHandle = (v) =>
 const cleanPhone = (v) => String(v || '').replace(/[^\d+]/g, '');
 // رابط واتساب من الرقم (بلا + ولا أصفار بادئة) لتجربته بضغطة
 const waLink = (v) => `https://wa.me/${cleanPhone(v).replace(/^\++/, '').replace(/^00/, '')}`;
+// صالح لواتساب = صيغة دولية: ١٠–١٥ رقماً بلا صفر بادئ بعد إسقاط 00.
+// الرقم المحلّي (0590000000) يبدو صحيحاً للعين لكنه لا يفتح واتساب أبداً — لذا ننبّه عليه.
+const waValid = (v) => {
+  const d = String(v || '').replace(/\D/g, '').replace(/^00/, '');
+  return d.length >= 10 && d.length <= 15 && !d.startsWith('0');
+};
 
 export default function StoreSettings() {
   const { t } = useTranslation();
@@ -187,6 +193,18 @@ export default function StoreSettings() {
     return () => window.removeEventListener('beforeunload', onLeave);
   }, [dirty]);
 
+  // اختصار Ctrl/⌘+S للحفظ — عادة راسخة عند كل من يعبّئ نماذج طويلة
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && String(e.key).toLowerCase() === 's') {
+        e.preventDefault();
+        document.getElementById('store-settings-form')?.requestSubmit();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   // نسبة اكتمال الإعدادات + الأقسام الناقصة (تُحتسب من SECTIONS عند كل تغيير)
   const { pct, doneCount, missing, doneMap } = useMemo(() => {
     if (!form) return { pct: 0, doneCount: 0, missing: [], doneMap: {} };
@@ -240,10 +258,22 @@ export default function StoreSettings() {
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
   const setVal = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
+  // التراجع عن كل التعديلات غير المحفوظة والعودة لآخر نسخة محفوظة
+  const revert = () => {
+    if (!window.confirm(t('dashboard.store.revertConfirm'))) return;
+    setForm(JSON.parse(savedRef.current));
+    setMsg(''); setError('');
+  };
+
   // رابط المتجر العام — يُعرض كاملاً ويُنسخ بضغطة
   const storeUrl = `https://bazarastore.site/store/${form.slug || ''}`;
   const copyUrl = async () => {
     try { await navigator.clipboard.writeText(storeUrl); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch { /* تجاهُل */ }
+  };
+  // مشاركة الرابط بورقة المشاركة الأصلية (جوال) — أسرع طريق لنشره على واتساب/إنستغرام
+  const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+  const shareStore = async () => {
+    try { await navigator.share({ title: form.name || 'Bazara', url: storeUrl }); } catch { /* أُلغيت المشاركة */ }
   };
 
   // التحكم بأسعار الشرائح الثلاث (الضفة/القدس/الداخل)
@@ -281,6 +311,27 @@ export default function StoreSettings() {
     setForm((f) => ({ ...f, collections: f.collections.map((c, i) => (i === idx ? { ...c, [key]: val } : c)) }));
   const removeCollection = (idx) =>
     setForm((f) => ({ ...f, collections: f.collections.filter((_, i) => i !== idx) }));
+
+  // ترتيب/نسخ عناصر أي قائمة (فئات إضافية، مجموعات) — نفس سلوك الشرايح تماماً:
+  // ترتيب القائمة هنا هو ترتيب ظهورها بالمتجر.
+  const moveIn = (key, idx, dir) =>
+    setForm((f) => {
+      const list = [...(f[key] || [])];
+      const to = idx + dir;
+      if (to < 0 || to >= list.length) return f;
+      [list[idx], list[to]] = [list[to], list[idx]];
+      return { ...f, [key]: list };
+    });
+  const duplicateIn = (key, idx, max, fresh) =>
+    setForm((f) => {
+      const list = [...(f[key] || [])];
+      if (list.length >= max) return f;
+      // المفتاح يجب أن يبقى فريداً بالفئات المخصّصة — نولّد واحداً جديداً للنسخة
+      const copy = { ...list[idx], ...(fresh ? fresh() : {}) };
+      list.splice(idx + 1, 0, copy);
+      return { ...f, [key]: list };
+    });
+  const newCatKey = () => ({ key: 'c_' + Math.random().toString(36).slice(2, 9) });
 
   // ضبط نهاية عرض الفلاش بضغطة (ساعة/يوم/٣ أيام/أسبوع) بدل تعبئة التاريخ يدوياً
   const setFlashIn = (hours) => setVal('flashEndsAt', toLocalInput(new Date(Date.now() + hours * 3600000).toISOString()));
@@ -400,8 +451,13 @@ export default function StoreSettings() {
 
       {/* حالة الحفظ: تعديلات معلّقة / تم الحفظ / خطأ */}
       {dirty && !msg && (
-        <div className="flex items-center gap-2 rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-2 text-xs font-semibold text-amber-300">
-          <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-amber-400" /> {t('dashboard.store.unsaved')}
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-2 text-xs font-semibold text-amber-300">
+          <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-amber-400" />
+          <span className="min-w-0 flex-1">{t('dashboard.store.unsaved')}</span>
+          {/* تراجع: يُرجع كل الخانات لآخر نسخة محفوظة — مخرج آمن بعد تعديل بالخطأ */}
+          <button type="button" onClick={revert} className="shrink-0 rounded-full border border-amber-400/40 px-2.5 py-1 text-[11px] font-bold transition hover:bg-amber-500/20">
+            {t('dashboard.store.revert')}
+          </button>
         </div>
       )}
       {msg && <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-300">{msg}</div>}
@@ -450,7 +506,11 @@ export default function StoreSettings() {
                 onChange={(e) => setVal('slug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
               />
             </div>
-            {/* نسخ الرابط أو فتحه بتبويب جديد — بلا كتابة يدوية ولا أخطاء */}
+            {/* رابط قصير جداً يصعب تذكّره ويسهل تعارضه — تنبيه لا منع */}
+            {form.slug && form.slug.length < 3 && (
+              <p className="mt-1.5 text-[11px] font-semibold text-amber-300">{t('dashboard.store.slugShort')}</p>
+            )}
+            {/* نسخ الرابط أو مشاركته أو فتحه بتبويب جديد — بلا كتابة يدوية ولا أخطاء */}
             <div className="mt-2 flex flex-wrap items-center gap-1.5">
               <button
                 type="button" onClick={copyUrl} disabled={!form.slug}
@@ -459,6 +519,15 @@ export default function StoreSettings() {
                 {copied ? <CheckIcon className="h-3.5 w-3.5" /> : <CopyIcon className="h-3.5 w-3.5" />}
                 {copied ? t('common.copied') : t('common.copyLink')}
               </button>
+              {/* المشاركة الأصلية للجهاز (واتساب/إنستغرام…) — تظهر حيث يدعمها المتصفّح فقط */}
+              {canShare && (
+                <button
+                  type="button" onClick={shareStore} disabled={!form.slug}
+                  className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] text-stone-400 transition hover:text-gold-200 disabled:opacity-40"
+                >
+                  <ShareIcon className="h-3.5 w-3.5" /> {t('dashboard.store.shareStore')}
+                </button>
+              )}
               <a
                 href={storeUrl} target="_blank" rel="noreferrer"
                 className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] text-stone-400 transition hover:text-gold-200 ${form.slug ? '' : 'pointer-events-none opacity-40'}`}
@@ -483,6 +552,10 @@ export default function StoreSettings() {
               tip={t('dashboard.store.whatsappTip')} hint={t('dashboard.store.whatsappHint')}
             >
               <input type="tel" dir="ltr" inputMode="tel" className="input" placeholder="+962790000000" value={form.whatsapp} onChange={(e) => setVal('whatsapp', cleanPhone(e.target.value))} />
+              {/* رقم بلا رمز دولة لن يفتح واتساب — ننبّه قبل الحفظ لا بعد ضياع طلب */}
+              {form.whatsapp.length > 3 && !waValid(form.whatsapp) && (
+                <p className="mt-1.5 text-[11px] font-semibold text-amber-300">{t('dashboard.store.whatsappInvalid')}</p>
+              )}
               {form.whatsapp.length > 7 && (
                 <a href={waLink(form.whatsapp)} target="_blank" rel="noreferrer" className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 hover:opacity-80">
                   <CheckIcon className="h-3.5 w-3.5" /> {t('dashboard.store.testNumber')}
@@ -721,12 +794,19 @@ export default function StoreSettings() {
               <div className="space-y-3">
                 {form.customCategories.map((cc, idx) => (
                   <div key={cc.key || idx} className={SUBCARD}>
-                    {/* بلا تكرار للاسم: خانة الاسم تحته هي المصدر — بالأعلى لوقو (إن وُجد) + حذف فقط */}
+                    {/* الرأس: لوقو (إن وُجد) + الاسم، وأدوات الترتيب/النسخ/الحذف —
+                        نفس أدوات الشرايح، فترتيب القائمة هو ترتيب الظهور بالمتجر */}
                     <div className="mb-2 flex items-center justify-between gap-2">
-                      {cc.image
-                        ? <img src={cldThumb(cc.image, 120)} alt="" className="h-8 w-8 shrink-0 rounded object-contain" />
-                        : <span className="truncate text-xs font-semibold text-stone-500">{cc.name || t('dashboard.store.newCategory')}</span>}
-                      <button type="button" onClick={() => removeCustomCat(idx)} className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-xs text-stone-400 hover:text-red-300"><TrashIcon className="h-3.5 w-3.5" /> {t('common.delete')}</button>
+                      <span className="flex min-w-0 items-center gap-2">
+                        {cc.image && <img src={cldThumb(cc.image, 120)} alt="" className="h-8 w-8 shrink-0 rounded object-contain" />}
+                        <span className="truncate text-xs font-semibold text-stone-500">{cc.name || t('dashboard.store.newCategory')}</span>
+                      </span>
+                      <RowTools
+                        index={idx} count={form.customCategories.length}
+                        onMove={(dir) => moveIn('customCategories', idx, dir)}
+                        onDuplicate={() => duplicateIn('customCategories', idx, 30, newCatKey)}
+                        onRemove={() => removeCustomCat(idx)}
+                      />
                     </div>
                     <input type="text" maxLength={40} className="input mb-2" placeholder={t('dashboard.store.categoryNameField')} value={cc.name} onChange={(e) => setCustomCat(idx, 'name', e.target.value)} />
                     <ImageInput value={cc.image || ''} onChange={(v) => setCustomCat(idx, 'image', v)} contain hint={t('dashboard.store.categoryImageHint')} />
@@ -741,9 +821,14 @@ export default function StoreSettings() {
         <div id="s-collections" className={CARD}>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <SectionHead icon={<TagIcon className="h-5 w-5" />} title={t('dashboard.store.collections')} desc={t('dashboard.store.collectionsHint')} done={doneMap['s-collections']} />
-            {(form.collections || []).length < 12 && (
-              <button type="button" onClick={addCollection} className="btn-ghost !py-1.5 text-sm">＋ {t('common.add')}</button>
-            )}
+            <div className="flex shrink-0 items-center gap-2">
+              {(form.collections || []).length > 0 && (
+                <span className="text-[11px] tabular-nums text-stone-400">{(form.collections || []).length}/12</span>
+              )}
+              {(form.collections || []).length < 12 && (
+                <button type="button" onClick={addCollection} className="btn-ghost !py-1.5 text-sm">＋ {t('common.add')}</button>
+              )}
+            </div>
           </div>
           {(form.collections || []).length === 0 ? (
             <button type="button" onClick={addCollection} className="flex w-full flex-col items-center gap-1.5 rounded-2xl border border-dashed border-gold-400/25 bg-black/15 p-5 text-center transition hover:border-gold-400/50 hover:bg-gold-400/5">
@@ -754,10 +839,35 @@ export default function StoreSettings() {
             <div className="space-y-3">
               {form.collections.map((c, idx) => (
                 <div key={idx} className={SUBCARD}>
-                  <div className="mb-2 flex items-center justify-between">
+                  <div className="mb-2 flex items-center justify-between gap-2">
                     <span className="truncate text-sm font-semibold text-gold-200">{c.title || t('dashboard.store.newCategory')}</span>
-                    <button type="button" onClick={() => removeCollection(idx)} className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-xs text-stone-400 hover:text-red-300"><TrashIcon className="h-3.5 w-3.5" /> {t('common.delete')}</button>
+                    <RowTools
+                      index={idx} count={form.collections.length}
+                      onMove={(dir) => moveIn('collections', idx, dir)}
+                      onDuplicate={() => duplicateIn('collections', idx, 12)}
+                      canDuplicate={form.collections.length < 12}
+                      onRemove={() => removeCollection(idx)}
+                    />
                   </div>
+
+                  {/* معاينة البطاقة كما تظهر بصفحة المتجر (٤:٣ + تدرّج سفلي + عنوان بالوسط) */}
+                  <div className="relative mb-2 aspect-[4/3] max-w-[220px] overflow-hidden rounded-xl">
+                    {c.image
+                      ? <img src={cldThumb(c.image, 500)} alt="" className="h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                      : <span className="block h-full w-full" style={{ background: 'linear-gradient(135deg, #8a6a4f 0%, #5e4636 55%, #3f2e22 100%)' }} />}
+                    <span aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                    <span className="absolute inset-x-0 bottom-0 p-3 text-center font-display text-base font-bold text-white drop-shadow-lg">
+                      {c.title || t('dashboard.store.collectionTitlePreview')}
+                    </span>
+                  </div>
+
+                  {/* المتجر يتجاهل أي مجموعة بلا عنوان أو بلا كلمة بحث — ننبّه بدل أن تختفي بصمت */}
+                  {(!String(c.title || '').trim() || !String(c.q || '').trim()) && (
+                    <p className="mb-2 rounded-lg border border-amber-400/30 bg-amber-500/10 px-2.5 py-1.5 text-[11px] font-semibold text-amber-300">
+                      {t('dashboard.store.collectionIncomplete')}
+                    </p>
+                  )}
+
                   <div className="mb-2 grid gap-2 sm:grid-cols-2">
                     <Field label={t('dashboard.store.collectionTitleLabel')} tip={t('dashboard.store.collectionTitleTip')}>
                       <input type="text" maxLength={60} className="input" placeholder={t('dashboard.store.collectionTitle')} value={c.title} onChange={(e) => setCollection(idx, 'title', e.target.value)} />

@@ -634,6 +634,13 @@
       "emailChanged": "Email changed successfully."
     },
     "store": {
+      "duplicate": "Duplicate",
+      "revert": "Undo",
+      "revertConfirm": "This discards all unsaved changes and restores the last saved version. Continue?",
+      "slugShort": "That link is short — three characters or more is easier to remember and less likely to clash.",
+      "whatsappInvalid": "Check the number: country code then the number without a leading zero (e.g. +970590000000).",
+      "collectionTitlePreview": "Collection title",
+      "collectionIncomplete": "This collection stays hidden in your store until both the title and the search term are filled in.",
       "slidesCount": "{{n}} of {{max}} slides — the order here is the order they appear in the slider.",
       "bannerTitlePreview": "Slide title",
       "bannerTitleLabel": "Slide title",
