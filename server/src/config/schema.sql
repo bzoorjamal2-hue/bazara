@@ -222,3 +222,16 @@ ALTER TABLE stock_requests ADD COLUMN IF NOT EXISTS customer_name VARCHAR(100) D
 ALTER TABLE stock_requests ADD COLUMN IF NOT EXISTS city VARCHAR(80) DEFAULT '';
 ALTER TABLE stock_requests ADD COLUMN IF NOT EXISTS address TEXT DEFAULT '';
 CREATE INDEX IF NOT EXISTS idx_stockreq_store ON stock_requests(store_id);
+
+-- مصاريف المتجر (إعلانات، تغليف، إيجار، رواتب…) — أساس صافي الربح.
+-- spent_at تاريخ الصرف الفعلي لا وقت الإدخال: المالكة قد تُدخل مصروف أمس اليوم.
+CREATE TABLE IF NOT EXISTS expenses (
+    id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    store_id   UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+    category   VARCHAR(30) NOT NULL DEFAULT 'other',
+    amount     NUMERIC(12,2) NOT NULL CHECK (amount >= 0),
+    note       VARCHAR(200) DEFAULT '',
+    spent_at   DATE NOT NULL DEFAULT CURRENT_DATE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_expenses_store_date ON expenses(store_id, spent_at DESC);

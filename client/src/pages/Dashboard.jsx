@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import Seo from '../components/Seo.jsx';
 import {
   UserIcon, DownloadIcon, HomeIcon, ChartIcon, GearIcon, BagIcon, ReceiptIcon,
-  TicketIcon, GiftIcon, BellIcon, UsersIcon, ShieldIcon, ImageIcon, StoreIcon, LinkIcon, MailIcon, InstagramIcon, BoltIcon,
+  TicketIcon, GiftIcon, BellIcon, UsersIcon, ShieldIcon, ImageIcon, StoreIcon, LinkIcon, MailIcon, InstagramIcon, BoltIcon, CashIcon,
 } from '../components/icons.jsx';
 import SubscriptionBanner from '../components/SubscriptionBanner.jsx';
 import { SectionHead, Tip, PageHead } from '../components/FormField.jsx';
@@ -28,6 +28,7 @@ import SiteSliders from './dashboard/SiteSliders.jsx';
 import NewsletterManager from './dashboard/NewsletterManager.jsx';
 import InstagramInbox from './dashboard/InstagramInbox.jsx';
 import CampaignManager from './dashboard/CampaignManager.jsx';
+import FinanceManager from './dashboard/FinanceManager.jsx';
 
 // أقسام البائع (المشترك العادي) — الاستخدام اليومي أولاً (الطلبات/المنتجات)
 const SECTIONS = [
@@ -36,6 +37,7 @@ const SECTIONS = [
   { key: 'myProducts', Icon: BagIcon },
   { key: 'instagram', Icon: InstagramIcon },
   { key: 'analytics', Icon: ChartIcon },
+  { key: 'finance', Icon: CashIcon },
   { key: 'coupons', Icon: TicketIcon },
   { key: 'referrals', Icon: GiftIcon },
   { key: 'campaign', Icon: BellIcon },
@@ -108,6 +110,7 @@ export default function Dashboard() {
       <div className="min-w-0">
         {section === 'overview' && !isAdmin && <Overview productsCount={productsCount} />}
         {section === 'analytics' && !isAdmin && <AnalyticsManager />}
+        {section === 'finance' && !isAdmin && <FinanceManager />}
         {section === 'profile' && <Profile />}
         {section === 'storeSettings' && !isAdmin && <StoreSettings />}
         {section === 'myProducts' && !isAdmin && <ProductsManager onCount={setProductsCount} />}
