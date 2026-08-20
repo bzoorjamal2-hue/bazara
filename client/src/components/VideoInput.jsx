@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { uploadToCloudinary, cldOptimized, cldVideoMp4, cloudinaryEnabled } from '../utils/cloudinary.js';
 import { LinkIcon, VideoIcon, TrashIcon, CheckIcon } from './icons.jsx';
+import { isKind, droppedUrl } from '../utils/dropFile.js';
 
 // حقل فيديو موحّد: سحب وإفلات، رفع مباشر من الجهاز (Cloudinary)، أو لصق رابط.
 // بنفس لغة حقل الصورة (ImageInput) — تجربة واحدة متّسقة عبر كل النماذج.
@@ -29,7 +30,7 @@ export default function VideoInput({ value, onChange, label, hint = '' }) {
 
   const upload = async (file) => {
     if (!file) return;
-    if (!file.type?.startsWith('video/')) { setErr(t('video.notVideo')); return; }
+    if (!isKind(file, 'video')) { setErr(t('video.notVideo')); return; }
     // نعرض الفيديو من الجهاز مباشرة — تظهر المعاينة قبل انتهاء الرفع وبلا اعتماد على التحويل السحابي
     setLocalPreview((prev) => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(file); });
     setErr(''); setPct(0); setBusy(true);
@@ -46,7 +47,15 @@ export default function VideoInput({ value, onChange, label, hint = '' }) {
   };
 
   const handleFile = (e) => { upload(e.target.files?.[0]); e.target.value = ''; };
-  const onDrop = (e) => { e.preventDefault(); setDrag(false); upload(e.dataTransfer?.files?.[0]); };
+  const onDrop = (e) => {
+    e.preventDefault(); setDrag(false);
+    setErr(''); // إفلاتٌ جديد يبدأ بصفحة نظيفة
+    const file = e.dataTransfer?.files?.[0];
+    if (file) { upload(file); return; }
+    const url = droppedUrl(e.dataTransfer);
+    if (url) { onChange(url); return; }
+    setErr(t('video.notVideo'));
+  };
   const clear = () => {
     setLocalPreview((prev) => { if (prev) URL.revokeObjectURL(prev); return ''; });
     onChange('');

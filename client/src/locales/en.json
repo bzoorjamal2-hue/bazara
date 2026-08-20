@@ -1047,7 +1047,12 @@
       "saveNew": "Save product",
       "galleryCount": "{{count}} of 5",
       "formHintNew": "Fill this in and the piece appears in your store right away",
-      "formHintEdit": "Editing an existing piece"
+      "formHintEdit": "Editing an existing piece",
+      "oldPriceTooLow": "The pre-discount price is lower than or equal to the current price — customers would see a struck-through price cheaper than what they pay.",
+      "discountShown": "shown to customers — saving {{amount}}",
+      "variantTotal_one": "Total: 1 piece",
+      "variantTotal_other": "Total: {{count}} pieces",
+      "variantTotalHint": "This governs sales when colours exist, not the quantity field above."
     }
   },
   "product": {

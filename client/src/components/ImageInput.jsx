@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { resizeImageFile } from '../utils/image.js';
 import { uploadToCloudinary, cldOptimized, cloudinaryEnabled } from '../utils/cloudinary.js';
 import { LinkIcon, CameraIcon, TrashIcon, CheckIcon, ImageIcon } from './icons.jsx';
+import { isKind, droppedUrl } from '../utils/dropFile.js';
 
 // حقل صورة موحّد: سحب وإفلات، لصق من الحافظة، رفع من الجهاز، أو لصق رابط.
 // القيمة سلسلة نصية (رابط أو data URL).
@@ -27,7 +28,7 @@ export default function ImageInput({ value, onChange, round = false, label, plac
 
   const upload = async (file) => {
     if (!file) return;
-    if (!file.type?.startsWith('image/')) { setErr(t('image.notImage')); return; }
+    if (!isKind(file, 'image')) { setErr(t('image.notImage')); return; }
     setErr(''); setPct(0); setBusy(true);
     try {
       if (cloudinaryEnabled) {
@@ -49,7 +50,13 @@ export default function ImageInput({ value, onChange, round = false, label, plac
   const handleFile = (e) => { upload(e.target.files?.[0]); e.target.value = ''; };
   const onDrop = (e) => {
     e.preventDefault(); setDrag(false);
-    upload(e.dataTransfer?.files?.[0]);
+    setErr(''); // إفلاتٌ جديد يبدأ بصفحة نظيفة: كان خطأ محاولة سابقة يبقى معلّقاً
+    const file = e.dataTransfer?.files?.[0];
+    if (file) { upload(file); return; }
+    // لا ملف: صورة مسحوبة من صفحة ويب أخرى تصل كرابط لا كملف
+    const url = droppedUrl(e.dataTransfer);
+    if (url) { onChange(url); setDone(true); return; }
+    setErr(t('image.notImage'));
   };
   // لصق صورة من الحافظة (لقطة شاشة أو نسخ صورة من متصفّح) مباشرة داخل الحقل
   const onPaste = (e) => {

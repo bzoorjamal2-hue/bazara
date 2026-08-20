@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TrashIcon, CopyIcon, ArrowUpIcon, ArrowDownIcon, HelpIcon, XIcon } from './icons.jsx';
 
@@ -10,6 +10,24 @@ export function Tip({ text }) {
   const [open, setOpen] = useState(false);
   const [shift, setShift] = useState(0); // إزاحة أفقية تُبقي النافذة داخل الشاشة
   const popRef = useRef(null);
+  const wrapRef = useRef(null); // الزرّ والنافذة معاً — ما دونه يُعدّ «خارجاً»
+
+  // الإغلاق بالضغط خارج التلميح أو بمفتاح Escape. كان معلّقاً على blur الزرّ
+  // وحده: لا يصل دائماً على اللمس فتبقى النافذة مفتوحة، وكان يُغلقها لحظة
+  // الضغط على نصّها فيتعذّر تحديده أو قراءته بإصبع عليه.
+  useEffect(() => {
+    if (!open) return undefined;
+    const onDown = (e) => { if (!wrapRef.current?.contains(e.target)) setOpen(false); };
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false); };
+    // pointerdown في طور الالتقاط: يُغلق فور ملامسة الإصبع ولا يبتلعه عنصر
+    // آخر يوقف انتشار الحدث (نافذة منبثقة، قائمة، بطاقة قابلة للضغط).
+    document.addEventListener('pointerdown', onDown, true);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', onDown, true);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
 
   // التلميح عرضه ثابت وينفتح من جهة البداية، فإن كان الزرّ قرب حافّة الشاشة
   // خرجت النافذة خارجها وانقصّت. نقيسها بعد الفتح ونزيحها للداخل بالقدر اللازم.
@@ -25,14 +43,14 @@ export function Tip({ text }) {
 
   if (!text) return null;
   return (
-    <span className="relative inline-flex shrink-0 align-middle">
+    <span ref={wrapRef} className="relative inline-flex shrink-0 align-middle">
       {/* الأيقونة SVG لا حرفاً: تتمركز تماماً مع سطر التسمية بأي خط أو حجم
           (حرف «؟» كان ينزل عن السطر ويختلف وزنه بين الأجهزة) */}
       <button
         type="button"
         aria-label={text}
+        aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        onBlur={() => setTimeout(() => setOpen(false), 150)}
         // ذهبي صريح بنمط مباشر: أصناف gold تنقلب بنّية نهاراً، والنمط المباشر
         // يضمن اللون الذهبي بالوضعين ولا تُبطله أي قاعدة أخرى.
         className="inline-flex shrink-0 self-center rounded-full transition"

@@ -1068,7 +1068,15 @@
       "saveNew": "حفظ المنتج",
       "galleryCount": "{{count}} من ٥",
       "formHintNew": "املئي البيانات وستظهر القطعة في متجركِ فوراً",
-      "formHintEdit": "تعديل قطعة موجودة"
+      "formHintEdit": "تعديل قطعة موجودة",
+      "oldPriceTooLow": "السعر قبل الخصم أقلّ من السعر الحالي أو يساويه — سيظهر للزبونة سعرٌ مشطوب أرخص من الذي تدفعه.",
+      "discountShown": "يظهر للزبونة — توفير {{amount}}",
+      "variantTotal_one": "المجموع: قطعة واحدة",
+      "variantTotal_two": "المجموع: قطعتان",
+      "variantTotal_few": "المجموع: {{count}} قطع",
+      "variantTotal_many": "المجموع: {{count}} قطعة",
+      "variantTotal_other": "المجموع: {{count}} قطعة",
+      "variantTotalHint": "هذا ما يحكم البيع عند وجود ألوان، لا «الكمية المتوفّرة» بالأعلى."
     }
   },
   "product": {

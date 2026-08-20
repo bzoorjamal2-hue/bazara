@@ -78,8 +78,26 @@ export default function ProductForm({ initial, onClose, onSaved }) {
     return { value, pct: price > 0 ? Math.round((value / price) * 100) : 0 };
   })();
 
+  // الخصم كما ستراه الزبونة. القيمة السالبة ليست خصماً بل رفعاً للسعر، وكانت
+  // تُحفظ بصمت فيظهر على البطاقة سعرٌ مشطوب أقلّ من الحالي — وهو ما يفقد الثقة.
+  const discount = (() => {
+    const price = parseFloat(form.price);
+    const old = parseFloat(form.oldPrice);
+    if (!Number.isFinite(price) || !Number.isFinite(old) || old <= 0 || price <= 0) return null;
+    if (old <= price) return { invalid: true };
+    return { pct: Math.round(((old - price) / old) * 100), saves: old - price };
+  })();
+
   // المخزون لكل لون ثم نمرة: { "أسود": {"38": 3}, ... }
   const colors = Object.keys(form.colorStock);
+
+  // مجموع كميّات المتغيّرات: الرقم الذي يحكم البيع فعلاً حين تُعرَّف ألوان،
+  // بينما «الكمية المتوفّرة» بالأعلى تخصّ المنتج بلا متغيّرات. عرضهما معاً
+  // يمنع الظنّ أن الحقلين يتحدّثان عن الشيء نفسه.
+  const variantTotal = colors.reduce(
+    (sum, c) => sum + Object.values(form.colorStock[c] || {}).reduce((a, q) => a + (parseInt(q, 10) || 0), 0),
+    0
+  );
   const addColorVariant = (val) => {
     const v = (val || '').trim();
     if (!v || form.colorStock[v]) { setColorInput(''); return; }
@@ -250,6 +268,16 @@ export default function ProductForm({ initial, onClose, onSaved }) {
                   <input type="number" step="0.01" min="0" inputMode="decimal" className="input pe-8" value={form.oldPrice} onChange={set('oldPrice')} />
                   <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-stone-400">{t('common.currency')}</span>
                 </div>
+                {discount?.invalid && (
+                  <p className="mt-1.5 text-[11px] font-semibold text-amber-400">{t('dashboard.product.oldPriceTooLow')}</p>
+                )}
+                {discount?.pct > 0 && (
+                  <p className="mt-1.5 flex flex-wrap items-center gap-1 text-[11px] font-semibold text-stone-200">
+                    {/* شارة مصمتة بلونين صريحين: الأخضر الشفّاف فوق خلفية فاتحة يهبط إلى ٢.٩٦ */}
+                    <span className="rounded-full px-1.5 py-0.5" style={{ background: '#047857', color: '#ffffff' }}>−{discount.pct}%</span>
+                    {t('dashboard.product.discountShown', { pct: discount.pct, amount: `${t('common.currency')}${discount.saves.toFixed(2)}` })}
+                  </p>
+                )}
               </Field>
             </div>
             {/* سعر التكلفة — للمالكة وحدها، لا يظهر للزبون إطلاقاً. أساس حساب الربح. */}
@@ -304,6 +332,13 @@ export default function ProductForm({ initial, onClose, onSaved }) {
               <span className="shrink-0 text-[10px] text-stone-400">({t('common.optional')})</span>
             </div>
             <p className="mb-2 text-xs text-stone-400">{t('dashboard.product.variantsHint')}</p>
+
+            {colors.length > 0 && (
+              <p className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-gold-400/20 bg-gold-400/[0.06] px-2.5 py-1.5 text-[11px] font-semibold text-stone-200">
+                <span>{t('dashboard.product.variantTotal', { count: variantTotal })}</span>
+                <span className="font-normal text-stone-400">{t('dashboard.product.variantTotalHint')}</span>
+              </p>
+            )}
 
             {colors.length > 0 && (
               <div className="space-y-3">
