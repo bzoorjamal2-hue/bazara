@@ -213,30 +213,60 @@ export async function getAdminStats(_req, res, next) {
       `SELECT
          COUNT(*)::int AS total_stores,
          COUNT(*) FILTER (WHERE ${activeStoreSql('u')})::int AS active_subs,
-         COUNT(*) FILTER (WHERE u.created_at >= date_trunc('month', now()))::int AS new_this_month
+         COUNT(*) FILTER (WHERE u.created_at >= date_trunc('month', now()))::int AS new_this_month,
+         -- توشك على الانتهاء خلال أسبوع: الرقم الوحيد القابل للتصرّف قبل فوات
+         -- الأوان — الاشتراك المنتهي خسارةٌ وقعت، والموشك فرصةٌ باقية.
+         COUNT(*) FILTER (
+           WHERE ${activeStoreSql('u')}
+             AND u.current_period_end IS NOT NULL
+             AND u.current_period_end <= now() + interval '7 days'
+         )::int AS expiring_soon,
+         -- متجر بلا منتج واحد: اشترك ولم يُطلق. مؤشّر تعثّرٍ مبكّر لا يظهر
+         -- في «إجمالي المتاجر» إطلاقاً.
+         COUNT(*) FILTER (WHERE NOT EXISTS (SELECT 1 FROM products p WHERE p.store_id = s.id))::int AS empty_stores
        FROM stores s JOIN users u ON u.id = s.user_id
        WHERE TRUE ${notAdmin}`
     );
     const productsQ = await query('SELECT COUNT(*)::int AS c FROM products');
+    const PAID = "status IN ('confirmed','shipped','delivered')";
     const ordersQ = await query(
       `SELECT COUNT(*)::int AS total_orders,
               COUNT(*) FILTER (WHERE status='new')::int AS new_orders,
-              COALESCE(SUM(total) FILTER (WHERE status IN ('confirmed','shipped','delivered')), 0) AS gmv
+              COUNT(*) FILTER (WHERE created_at >= date_trunc('month', now()))::int AS orders_this_month,
+              COALESCE(SUM(total) FILTER (WHERE ${PAID}), 0) AS gmv,
+              COALESCE(SUM(total) FILTER (WHERE ${PAID} AND created_at >= date_trunc('month', now())), 0) AS gmv_this_month,
+              COALESCE(SUM(total) FILTER (
+                WHERE ${PAID}
+                  AND created_at >= date_trunc('month', now()) - interval '1 month'
+                  AND created_at <  date_trunc('month', now())
+              ), 0) AS gmv_last_month
        FROM orders`
     );
     const newsQ = await query('SELECT COUNT(*)::int AS c FROM subscribers');
     const reqQ = await query("SELECT COUNT(*)::int AS c FROM subscription_requests WHERE status = 'pending'");
     const s = storesQ.rows[0];
     const o = ordersQ.rows[0];
+    const thisM = Number(o.gmv_this_month) || 0;
+    const lastM = Number(o.gmv_last_month) || 0;
+    // القسمة على القيمة المطلقة لا الخام: لو كان الشهر الماضي صفراً لا نقسم
+    // عليه، ونكتفي بغياب النسبة بدل رقمٍ لا معنى له.
+    const gmvChange = lastM > 0 ? Math.round(((thisM - lastM) / lastM) * 100) : null;
+
     res.json({
       totalStores: s.total_stores,
       activeSubs: s.active_subs,
       expiredSubs: Math.max(0, s.total_stores - s.active_subs),
       newStoresThisMonth: s.new_this_month,
+      expiringSoon: s.expiring_soon,
+      emptyStores: s.empty_stores,
       totalProducts: productsQ.rows[0].c,
       totalOrders: o.total_orders,
       newOrders: o.new_orders,
+      ordersThisMonth: o.orders_this_month,
       gmv: Number(o.gmv) || 0,
+      gmvThisMonth: thisM,
+      gmvLastMonth: lastM,
+      gmvChange,
       newsletterSubscribers: newsQ.rows[0].c,
       pendingRequests: reqQ.rows[0].c,
     });
