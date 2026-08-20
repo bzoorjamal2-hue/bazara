@@ -5,8 +5,8 @@ import { clearCachePrefixes } from '../../utils/apiCache.js';
 import Spinner from '../../components/Spinner.jsx';
 import BannerEditor from '../../components/BannerEditor.jsx';
 import ImageInput from '../../components/ImageInput.jsx';
-import { ImageIcon } from '../../components/icons.jsx';
-import { PageHead } from '../../components/FormField.jsx';
+import { ImageIcon, MegaphoneIcon } from '../../components/icons.jsx';
+import { PageHead, SectionHead, Field } from '../../components/FormField.jsx';
 
 // الشرائح الافتراضية الموجودة حالياً بالصفحة الرئيسية — تظهر للمدير ليعدّلها/يحذفها
 const DEFAULT_SITE_SLIDES = [
@@ -56,42 +56,44 @@ export default function SiteSliders() {
       <PageHead icon={<ImageIcon className="h-6 w-6" />} title={t('admin.siteSliders')} hint={t('admin.siteSlidersHint')} />
       {msg && <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-200">{msg}</div>}
       {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
-      <div className="glass p-6">
+      <div className="dash-section glass space-y-4 p-5 sm:p-6">
+        <SectionHead icon={<ImageIcon className="h-5 w-5" />} title={t('admin.slidesSection')} desc={t('admin.slidesSectionDesc')} />
         <BannerEditor banners={banners} onChange={setBanners} withButtons />
       </div>
 
       {/* شريط الإعلان أعلى الصفحة الرئيسية — سطر لكل رسالة، تُعرض بتتابع متحرّك.
           يبقى مخفياً تماماً إن تُرك فارغاً */}
-      <div className="glass space-y-3 p-6">
-        <div>
-          <h2 className="font-display text-lg font-bold text-gold-200">{t('admin.announcement')}</h2>
-          <p className="mt-1 text-xs text-stone-400">{t('admin.announcementHint')}</p>
-        </div>
-        <textarea
-          value={ann}
-          onChange={(e) => setAnn(e.target.value)}
-          rows={3}
-          maxLength={400}
-          placeholder={t('admin.announcementPlaceholder')}
-          className="input w-full"
-        />
-        <textarea
-          value={annEn}
-          onChange={(e) => setAnnEn(e.target.value)}
-          rows={2}
-          maxLength={400}
-          dir="ltr"
-          placeholder={t('admin.announcementEnPlaceholder')}
-          className="input w-full"
-        />
+      <div className="dash-section glass space-y-4 p-5 sm:p-6">
+        <SectionHead icon={<MegaphoneIcon className="h-5 w-5" />} title={t('admin.announcement')} desc={t('admin.announcementHint')} />
+        {/* سطر لكل رسالة، تُعرض بتتابع متحرّك. يبقى الشريط مخفياً إن تُرك فارغاً */}
+        <Field label={t('admin.annAr')} tip={t('admin.annArTip')} max={400} value={ann}>
+          <textarea
+            value={ann}
+            onChange={(e) => setAnn(e.target.value)}
+            rows={3}
+            maxLength={400}
+            placeholder={t('admin.announcementPlaceholder')}
+            className="input w-full resize-none"
+          />
+        </Field>
+        <Field label={t('admin.annEn')} tip={t('admin.annEnTip')} optional max={400} value={annEn}>
+          <textarea
+            value={annEn}
+            onChange={(e) => setAnnEn(e.target.value)}
+            rows={2}
+            maxLength={400}
+            dir="ltr"
+            placeholder={t('admin.announcementEnPlaceholder')}
+            className="input w-full resize-none"
+          />
+        </Field>
       </div>
       {/* اللوك بوك: صورة إطلالة + أرقام المنتجات الظاهرة فيها (بفواصل) */}
-      <div className="glass space-y-3 p-6">
-        <div>
-          <h2 className="font-display text-lg font-bold text-gold-200">{t('admin.lookbook')}</h2>
-          <p className="mt-1 text-xs text-stone-400">{t('admin.lookbookHint')}</p>
-        </div>
-        <ImageInput value={lb.image} onChange={(v) => setLb({ ...lb, image: v })} />
+      <div className="dash-section glass space-y-4 p-5 sm:p-6">
+        <SectionHead icon={<ImageIcon className="h-5 w-5" />} title={t('admin.lookbook')} desc={t('admin.lookbookHint')} />
+        <Field label={t('admin.lookbookImage')} tip={t('admin.lookbookImageTip')}>
+          <ImageInput value={lb.image} onChange={(v) => setLb({ ...lb, image: v })} />
+        </Field>
         <div className="grid gap-2 sm:grid-cols-2">
           <input value={lb.title} onChange={(e) => setLb({ ...lb, title: e.target.value })} maxLength={60} placeholder={t('admin.lookbookTitle')} className="input" />
           <input value={lb.titleEn} onChange={(e) => setLb({ ...lb, titleEn: e.target.value })} maxLength={60} dir="ltr" placeholder={t('admin.collectionTitleEn')} className="input" />

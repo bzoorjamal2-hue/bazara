@@ -66,7 +66,15 @@ export default function Dashboard() {
   const { user, store, subscription } = useAuth();
   const [params] = useSearchParams();
   const [productsCount, setProductsCount] = useState(null);
+  const [newOrders, setNewOrders] = useState(0);
   const isAdmin = subscription?.isAdmin;
+
+  // عدّاد الطلبات الجديدة في الرأس: أهمّ ما تفتح المالكة اللوحة لأجله، وكان
+  // لا يظهر إلا بعد فتح تبويب الطلبات. طلبٌ خفيف مستقلّ عن إحصاءات النظرة.
+  useEffect(() => {
+    if (isAdmin) return;
+    api.get('/orders/new-count').then((r) => setNewOrders(r.data.count || 0)).catch(() => {});
+  }, [isAdmin]);
   // التنقّل بين الأقسام عبر قائمة ☰ (Navbar) — المصدر الوحيد بلا تكرار
   const allowed = (isAdmin ? ADMIN_SECTIONS : SECTIONS).map((s) => s.key);
   const defaultTab = isAdmin ? 'adminOverview' : 'overview';
@@ -109,6 +117,55 @@ export default function Dashboard() {
             </Link>
           )}
         </div>
+
+        {/* حالة المتجر وإجراءاته اليومية داخل الرأس. كان الرأس تحيّةً واسماً
+            فقط: جميلٌ ولا يقول شيئاً ولا يقود إلى فعل. */}
+        {!isAdmin && store && (
+          <div className="relative mt-4 flex flex-wrap items-center gap-2">
+            {/* حالة الاشتراك: أخطر ما قد يفاجئ المالكة هو إقفال متجرها */}
+            {subscription && (
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold"
+                style={subscription.active
+                  ? (subscription.daysRemaining != null && subscription.daysRemaining <= 7
+                    ? { background: '#92400e', color: '#F4EDE2' }
+                    : { background: 'rgba(4,120,87,0.9)', color: '#F4EDE2' })
+                  : { background: '#b91c1c', color: '#F4EDE2' }}
+              >
+                <BoltIcon className="h-3.5 w-3.5" />
+                {subscription.active
+                  ? (subscription.daysRemaining != null
+                    ? t('subscription.daysLeft', { count: subscription.daysRemaining })
+                    : t('subscription.active'))
+                  : t('subscription.expired')}
+              </span>
+            )}
+
+            {/* الطلبات الجديدة: الرقم يقود إلى مكانه بضغطة */}
+            {newOrders > 0 && (
+              <Link
+                to="/dashboard?tab=myOrders"
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition hover:brightness-110"
+                style={{ background: '#F4EDE2', color: '#4a1322' }}
+              >
+                <ReceiptIcon className="h-3.5 w-3.5" /> {t('dashboard.heroNewOrders', { count: newOrders })}
+              </Link>
+            )}
+
+            <Link
+              to="/dashboard?tab=myProducts"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#e6c878]/40 px-3 py-1.5 text-xs font-bold text-[#F4EDE2] transition hover:bg-[#F4EDE2]/15"
+            >
+              <BagIcon className="h-3.5 w-3.5" /> {t('dashboard.addProduct')}
+            </Link>
+            <Link
+              to="/dashboard?tab=finance"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#e6c878]/40 px-3 py-1.5 text-xs font-bold text-[#F4EDE2] transition hover:bg-[#F4EDE2]/15"
+            >
+              <CashIcon className="h-3.5 w-3.5" /> {t('finance.title')}
+            </Link>
+          </div>
+        )}
       </header>
 
       <div className="min-w-0">

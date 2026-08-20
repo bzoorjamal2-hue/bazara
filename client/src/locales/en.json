@@ -1071,7 +1071,9 @@
       "colorTotal_other": "{{count}} pieces",
       "qtyMissing_one": "1 size has no quantity — the colour will not save until it is filled",
       "qtyMissing_other": "{{count}} sizes have no quantity — the colour will not save until they are filled"
-    }
+    },
+    "heroNewOrders_one": "1 new order",
+    "heroNewOrders_other": "{{count}} new orders"
   },
   "product": {
     "new": "NEW",
@@ -1457,7 +1459,6 @@
     "collectionImage": "Image URL (https://…)",
     "newsletter": "Newsletter",
     "newsletterEmpty": "No subscribers yet.",
-    "newsletterTotal": "{{count}} subscribers",
     "exportCsv": "Export CSV",
     "lookbook": "Lookbook",
     "lookbookHint": "A full-look image + the IDs of the pieces in it. Hidden from home if the image is empty.",
@@ -1480,7 +1481,16 @@
       "review": "Review & send",
       "confirmAsk": "Send to everyone?",
       "confirmYes": "Send now",
-      "sent": "Sending started to {{count}} recipient(s). May take a few minutes."
+      "sent": "Sending started to {{count}} recipient(s). May take a few minutes.",
+      "compose": "Compose",
+      "composeDesc": "Sends an email to the audience you choose.",
+      "audience": "Audience",
+      "audienceTip": "Store owners = Bazara subscribers. Newsletter = visitors who left their email.",
+      "subjectTip": "The first thing seen in the inbox — it decides open or ignore.",
+      "subjectPlaceholder": "e.g. The autumn collection has arrived",
+      "bodyTip": "Plain text, no formatting. Blank lines are kept as you wrote them.",
+      "bodyPlaceholder": "Write your message here…",
+      "noUndo": "No undo after sending — the email leaves and cannot be recalled."
     },
     "ov": {
       "nav": "Overview",
@@ -1599,7 +1609,25 @@
     "manualWarn": "This creates a password you will know and that travels over an insecure channel. Use it only if email fails.",
     "newPasswordTip": "Send it to the owner and ask her to change it as soon as she signs in.",
     "settingsLogged": "Every action here is logged",
-    "settingsLoggedTip": "Password resets and code sends appear in the action log with your name and time — never the password itself."
+    "settingsLoggedTip": "Password resets and code sends appear in the action log with your name and time — never the password itself.",
+    "nlAudience": "Newsletter audience",
+    "nlAudienceDesc": "Everyone who signed up for your updates.",
+    "nlEmailsTip": "Only these receive the broadcast.",
+    "nlPhonesTip": "Phone numbers — the platform does not message them; export to use them yourself.",
+    "slidesSection": "Home page slides",
+    "slidesSectionDesc": "The first thing a visitor sees. A clear image and a short title.",
+    "annAr": "Bar text (Arabic)",
+    "annArTip": "One line per message, shown in rotation at the top of the page.",
+    "annEn": "Bar text (English)",
+    "annEnTip": "Shown to visitors browsing in English.",
+    "lookbookImage": "Look image",
+    "lookbookImageTip": "A full-look photo, then list the product numbers visible in it.",
+    "newsletterTotal_one": "1 subscriber",
+    "newsletterTotal_other": "{{count}} subscribers",
+    "nlEmails_one": "1 email",
+    "nlEmails_other": "{{count}} emails",
+    "nlPhones_one": "1 phone",
+    "nlPhones_other": "{{count}} phones"
   },
   "order": {
     "choose": "Choose order method",

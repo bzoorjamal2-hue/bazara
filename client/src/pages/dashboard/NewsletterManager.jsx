@@ -3,12 +3,12 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import { MailIcon, PhoneIcon } from '../../components/icons.jsx';
-import { PageHead } from '../../components/FormField.jsx';
+import { PageHead, SectionHead, Tip } from '../../components/FormField.jsx';
 
 // مشتركو النشرة (مدير) — عرض وتصدير. لا حذف من هنا: الحذف يحتاج تأكيد الشخص نفسه،
 // وإتاحته بضغطة تفتح باب مسح القائمة بالخطأ.
 export default function NewsletterManager() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [list, setList] = useState(null);
   const [error, setError] = useState('');
   const [q, setQ] = useState('');
@@ -67,18 +67,32 @@ export default function NewsletterManager() {
         <div className="glass p-10 text-center text-stone-400">{t('admin.newsletterEmpty')}</div>
       ) : (
         <>
-          <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
-            <span className="rounded-full bg-wine/10 px-3 py-1.5 text-wine">{t('admin.newsletterTotal', { count: list.length })}</span>
-            {emails > 0 && <span className="inline-flex items-center gap-1 rounded-full bg-gold-400/15 px-3 py-1.5 text-gold-200"><MailIcon className="h-3.5 w-3.5" /> {emails}</span>}
-            {phones > 0 && <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-3 py-1.5 text-emerald-300"><PhoneIcon className="h-3.5 w-3.5" /> {phones}</span>}
-          </div>
+          <div className="dash-section glass space-y-4 p-5">
+            <SectionHead icon={<MailIcon className="h-5 w-5" />} title={t('admin.nlAudience')} desc={t('admin.nlAudienceDesc')} />
 
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder={t('common.search')}
-            className="input w-full sm:max-w-xs"
-          />
+            {/* تقسيم الوسيلة: البريد يُراسَل من «الرسالة الجماعية»، والهاتف
+                لا يُراسَل من المنصّة — فالتفريق بينهما ليس تزييناً. */}
+            <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
+              <span className="rounded-full bg-wine/10 px-3 py-1.5 text-wine">{t('admin.newsletterTotal', { count: list.length })}</span>
+              {emails > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-cream" style={{ background: '#4a1322' }}>
+                  <MailIcon className="h-3.5 w-3.5" /> {t('admin.nlEmails', { count: emails })} <Tip text={t('admin.nlEmailsTip')} />
+                </span>
+              )}
+              {phones > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-cream" style={{ background: '#047857' }}>
+                  <PhoneIcon className="h-3.5 w-3.5" /> {t('admin.nlPhones', { count: phones })} <Tip text={t('admin.nlPhonesTip')} />
+                </span>
+              )}
+            </div>
+
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder={t('common.search')}
+              className="input w-full sm:max-w-xs"
+            />
+          </div>
 
           <div className="glass divide-y divide-white/5 overflow-hidden">
             {shown.length === 0 ? (
@@ -90,7 +104,7 @@ export default function NewsletterManager() {
                     {s.kind === 'email' ? <MailIcon className="h-4 w-4" /> : <PhoneIcon className="h-4 w-4" />}
                   </span>
                   <span dir="ltr" className="min-w-0 flex-1 truncate text-sm text-stone-100">{s.contact}</span>
-                  <span className="shrink-0 text-xs text-stone-500">{new Date(s.created_at).toLocaleDateString()}</span>
+                  <span className="shrink-0 text-xs text-stone-400">{new Date(s.created_at).toLocaleDateString(i18n.language)}</span>
                 </div>
               ))
             )}

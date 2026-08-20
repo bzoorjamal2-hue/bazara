@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
-import { MailIcon, UsersIcon, MegaphoneIcon } from '../../components/icons.jsx';
-import { PageHead } from '../../components/FormField.jsx';
+import { MailIcon, UsersIcon, MegaphoneIcon, WarnIcon } from '../../components/icons.jsx';
+import { PageHead, SectionHead, Field, Tip } from '../../components/FormField.jsx';
 
 // رسالة جماعية للمدير — بريد إعلاني لكل أصحاب المتاجر أو مشتركي النشرة.
 export default function BroadcastManager() {
@@ -41,46 +41,67 @@ export default function BroadcastManager() {
       {msg && <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-200">{msg}</div>}
       {err && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{err}</div>}
 
-      <div className="glass space-y-4 p-6">
-        {/* الجمهور */}
-        <div className="grid grid-cols-2 gap-2">
-          {audiences.map(({ key, label, Icon }) => (
-            <button
-              key={key}
-              onClick={() => setAudience(key)}
-              className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold transition ${audience === key ? 'bg-gold-400 text-ink-950 shadow-sm' : 'border border-gold-400/25 text-stone-300 hover:bg-gold-400/10'}`}
-            >
-              <Icon className="h-4 w-4" /> {label}
-            </button>
-          ))}
-        </div>
+      <div className="dash-section glass space-y-4 p-5 sm:p-6">
+        <SectionHead icon={<MegaphoneIcon className="h-5 w-5" />} title={t('admin.bc.compose')} desc={t('admin.bc.composeDesc')} />
 
-        <input
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-          maxLength={160}
-          placeholder={t('admin.bc.subject')}
-          className="input w-full"
-        />
-        <textarea
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          rows={7}
-          maxLength={5000}
-          placeholder={t('admin.bc.body')}
-          className="input w-full"
-        />
+        <Field label={t('admin.bc.audience')} tip={t('admin.bc.audienceTip')} required>
+          <div className="grid grid-cols-2 gap-2">
+            {audiences.map(({ key, label, Icon }) => {
+              const on = audience === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setAudience(key)}
+                  aria-pressed={on}
+                  className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold transition ${on ? 'shadow-sm' : 'border border-gold-400/25 text-stone-300 hover:bg-gold-400/10'}`}
+                  // لونان صريحان للحالة النشطة: أصناف الذهب تنقلب بنّية نهاراً
+                  style={on ? { background: '#d4af37', color: '#2a1c10' } : undefined}
+                >
+                  <Icon className="h-4 w-4" /> {label}
+                </button>
+              );
+            })}
+          </div>
+        </Field>
 
+        <Field label={t('admin.bc.subject')} tip={t('admin.bc.subjectTip')} required max={160} value={subject}>
+          <input
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            maxLength={160}
+            placeholder={t('admin.bc.subjectPlaceholder')}
+            className="input w-full"
+          />
+        </Field>
+
+        <Field label={t('admin.bc.body')} tip={t('admin.bc.bodyTip')} required max={5000} value={body}>
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            rows={7}
+            maxLength={5000}
+            placeholder={t('admin.bc.bodyPlaceholder')}
+            className="input w-full resize-none"
+          />
+        </Field>
+
+        {/* لا تراجع بعد الإرسال: البريد يغادر ولا يُستدعى */}
         {confirm ? (
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-sm text-stone-300">{t('admin.bc.confirmAsk')}</span>
-            <button onClick={send} disabled={busy} className="btn-primary">
-              {busy ? t('common.loading') : t('admin.bc.confirmYes')}
-            </button>
-            <button onClick={() => setConfirm(false)} className="text-sm text-stone-400 hover:text-stone-200">{t('common.cancel')}</button>
+          <div className="space-y-3 rounded-xl border border-amber-400/30 bg-amber-500/[0.07] p-3">
+            <p className="flex items-start gap-1.5 text-[11px] font-semibold text-amber-400">
+              <WarnIcon className="mt-px h-3.5 w-3.5 shrink-0" /> {t('admin.bc.noUndo')}
+            </p>
+            <p className="text-sm text-stone-200">{t('admin.bc.confirmAsk')}</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <button onClick={send} disabled={busy} className="btn-primary">
+                {busy ? t('common.loading') : t('admin.bc.confirmYes')}
+              </button>
+              <button onClick={() => setConfirm(false)} className="text-sm text-stone-400 hover:text-stone-200">{t('common.cancel')}</button>
+            </div>
           </div>
         ) : (
-          <button onClick={() => setConfirm(true)} disabled={!ready} className="btn-primary inline-flex items-center gap-2 disabled:opacity-50">
+          <button onClick={() => setConfirm(true)} disabled={!ready} className="btn-primary w-full gap-2 disabled:opacity-50">
             <MailIcon className="h-5 w-5" /> {t('admin.bc.review')}
           </button>
         )}
