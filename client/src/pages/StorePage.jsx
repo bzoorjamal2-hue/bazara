@@ -7,6 +7,7 @@ import { useCart } from '../context/CartContext.jsx';
 import Seo from '../components/Seo.jsx';
 import { StorePageSkeleton } from '../components/Skeleton.jsx';
 import ProductCard from '../components/ProductCard.jsx';
+import OffersBar from '../components/OffersBar.jsx';
 import CategoryGrid from '../components/CategoryGrid.jsx';
 import StoreHeader from '../components/StoreHeader.jsx';
 import StoreFooter from '../components/StoreFooter.jsx';
@@ -17,7 +18,7 @@ import CatThumb from '../components/CatThumb.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
 import StylistChat from '../components/StylistChat.jsx';
 import ShareEarnModal from '../components/ShareEarnModal.jsx';
-import { WaveIcon, GiftIcon, CheckIcon, PlusIcon, BoltIcon } from '../components/icons.jsx';
+import { WaveIcon, GiftIcon, CheckIcon, PlusIcon, BoltIcon, TagIcon, SearchIcon, GridIcon } from '../components/icons.jsx';
 import CloseButton from '../components/CloseButton.jsx';
 import Reveal from '../components/Reveal.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
@@ -342,8 +343,8 @@ export default function StorePage() {
         /* صفحة التصنيفات — شبكة فئات المتجر بهوية المتجر (زرّ "التصنيفات" السفلي) */
         <>
           <nav className="mb-4 mt-2 flex flex-wrap items-center gap-1.5 text-sm">
-            {/* شعار المتجر (الرئيسية) › بطاقة التصنيفات بأيقونتها — لوقوهات لا نصّاً مجرّداً */}
-            <CrumbLogo store={store} onClick={() => pickCategory('all')} />
+            {/* بيت الرئيسية › بطاقة التصنيفات بأيقونتها — أيقونات لا نصّاً مجرّداً */}
+            <CrumbHome onClick={() => pickCategory('all')} label={t('nav.home')} />
             <Crumb />
             <span className="flex items-center gap-2 rounded-full bg-wine/10 px-2.5 py-1 font-display text-base font-bold text-wine">
               <GridGlyph className="h-5 w-5" />
@@ -394,27 +395,35 @@ export default function StorePage() {
         <>
           {searching ? (
             <nav className="mb-4 mt-2 flex items-center gap-2 text-sm">
-              <CrumbLogo store={store} onClick={clearSearch} />
+              <CrumbHome onClick={clearSearch} label={t('nav.home')} />
               <Crumb />
-              <span className="font-display text-lg font-bold text-wine">{t('store.searchResults')} «{q.trim()}»</span>
+              <CrumbHere icon={<SearchIcon className="h-[17px] w-[17px]" />} label={t('store.searchResults')} text={'«' + q.trim() + '»'} />
             </nav>
           ) : viewAll ? (
             <nav className="mb-4 mt-2 flex items-center gap-2 text-sm">
-              <CrumbLogo store={store} onClick={() => { setViewAll(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
+              <CrumbHome onClick={() => { setViewAll(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} label={t('nav.home')} />
               <Crumb />
-              <span className="font-display text-lg font-bold text-wine">{t('store.allProducts')}</span>
+              <CrumbHere icon={<GridIcon className="h-[17px] w-[17px]" />} label={t('store.allProducts')} />
             </nav>
           ) : offersView ? (
-            <nav className="mb-4 mt-2 flex items-center gap-2 text-sm">
-              <CrumbLogo store={store} onClick={() => pickCategory('all')} />
-              <Crumb />
-              <span className="font-display text-lg font-bold text-wine">{t('store.specialOffers')}</span>
-            </nav>
+            <>
+              {/* المسار بأيقونتين لا بصورة واسم: بيتٌ للرئيسية وبطاقة سعر
+                  للعروض — نفس نمط مسار التصنيفات، فيبقى الشكل واحداً أينما
+                  وقفتِ بدل صورة متجر ثم نصّ طويل. */}
+              <nav className="mb-3 mt-2 flex items-center gap-2 text-sm">
+                <CrumbHome onClick={() => pickCategory('all')} label={t('nav.home')} />
+                <Crumb />
+                <CrumbHere icon={<TagIcon className="h-[17px] w-[17px]" />} label={t('store.specialOffers')} />
+              </nav>
+              {/* نفس خلاصة صفحة العروض العامّة: من يفتح العروض من الشريط
+                  السفلي داخل متجر كان يصل إلى شبكة عارية بلا أي سياق. */}
+              <OffersBar products={(data?.products || []).filter((p) => p.oldPrice && p.oldPrice > p.price)} />
+            </>
           ) : (
             <nav className="mb-4 mt-2 flex flex-wrap items-center gap-1.5 text-sm">
               {/* مسار متتابع بأيقونات دائرية (لوقوهات لا نصّ) — نفس نمط الموقع العام تماماً:
                   شعار المتجر (الرئيسية) › أيقونة التصنيفات › بطاقة الفئة المفتوحة بأيقونتها */}
-              <CrumbLogo store={store} onClick={() => pickCategory('all')} />
+              <CrumbHome onClick={() => pickCategory('all')} label={t('nav.home')} />
               <Crumb />
               <button
                 type="button"
@@ -684,20 +693,37 @@ function Crumb({ className = 'h-4 w-4' }) {
 // قالب النافذة السفلية
 // زر بداية مسار التنقّل = شعار المتجر نفسه (بدل أيقونة بيت عامة + كلمة "المتجر")
 // يعطي إحساس متجر خاص متناسق بكل صفحات الشبكة، والضغط يعود لرئيسية المتجر.
-function CrumbLogo({ store, onClick }) {
+// أوّل المسار: بيتٌ يعود لرئيسية المتجر. كانت صورة المتجر تشغل مكانه، وهي
+// هويّةٌ لا وجهةٌ — والزائرة تبحث عن «رجوع للرئيسية» لا عن شعار.
+function CrumbHome({ onClick, label }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-label={store?.name || 'store'}
-      className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-sm ring-1 ring-gold-400/45 transition hover:ring-gold-400/80"
+      aria-label={label} title={label}
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-wine/10 text-wine shadow-sm ring-1 ring-wine/15 transition hover:bg-wine hover:text-cream"
     >
-      {store?.logoUrl
-        ? <img src={cldThumb(store.logoUrl, 96)} alt={store.name || ''} className="h-full w-full object-cover" />
-        : <span className="flex h-full w-full items-center justify-center bg-wine/10 text-wine"><HomeGlyph className="h-4 w-4" /></span>}
+      <HomeGlyph className="h-[18px] w-[18px]" />
     </button>
   );
 }
+
+// آخر المسار: أيقونة الوجهة الحالية بخلفية خمرية مصمتة (نصّ عاجي عليها يُقرأ
+// في الوضعين) مع نصّ اختياري للحالات التي يهمّ فيها المحتوى كنتيجة البحث.
+function CrumbHere({ icon, label, text }) {
+  return (
+    <>
+      <span
+        aria-label={label} title={label}
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-wine text-cream shadow-sm ring-1 ring-[#e6c878]/40"
+      >
+        {icon}
+      </span>
+      {text ? <span className="min-w-0 truncate font-display text-lg font-bold text-wine">{text}</span> : null}
+    </>
+  );
+}
+
 
 // لوقو بيت أنيق (زر العودة للصفحة الرئيسية للمتجر)
 function HomeGlyph({ className = 'h-[18px] w-[18px]' }) {

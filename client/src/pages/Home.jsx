@@ -8,6 +8,7 @@ import ProductCard from '../components/ProductCard.jsx';
 import FilteredProductGrid from '../components/FilteredProductGrid.jsx';
 import CatThumb from '../components/CatThumb.jsx';
 import ProductRail from '../components/ProductRail.jsx';
+import OffersBar from '../components/OffersBar.jsx';
 import { getRecent } from '../utils/recentlyViewed.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { cldVideoPoster, cldThumb, cldVideoMp4 } from '../utils/cloudinary.js';
@@ -130,16 +131,20 @@ export default function Home() {
       {/* صفقات اليوم — أعلى الخصومات عبر المنصّة (أسلوب المتاجر الكبرى) */}
       {data?.deals?.length > 0 && (
         <Reveal>
-          <ProductRail
-            title={t('home.deals')}
-            icon={<BoltIcon className="h-5 w-5 shrink-0 text-gold-500" />}
-            products={data.deals}
-            action={
-              <Link to="/offers" className="inline-flex items-center gap-1 text-sm font-semibold text-gold-200 transition hover:opacity-80">
-                {t('store.viewAll')} <ForwardIcon className="h-4 w-4 rtl-flip" />
-              </Link>
-            }
-          />
+          <>
+            <ProductRail
+              title={t('home.deals')}
+              icon={<BoltIcon className="h-5 w-5 shrink-0 text-gold-500" />}
+              products={data.deals}
+              action={
+                <Link to="/offers" className="inline-flex items-center gap-1 text-sm font-semibold text-gold-200 transition hover:opacity-80">
+                  {t('store.viewAll')} <ForwardIcon className="h-4 w-4 rtl-flip" />
+                </Link>
+              }
+            />
+            {/* أعمق خصم وما يوشك على الانتهاء — الرفّ وحده لا يقول أيّهما يستحقّ العجلة */}
+            <OffersBar products={data.deals} compact />
+          </>
         </Reveal>
       )}
 
