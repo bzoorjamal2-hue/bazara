@@ -289,16 +289,17 @@ export default function StorePage() {
   ];
   // عدّاد كل فئة وما فيها من عروض. البطاقة بلا رقم لا تقول إن كانت تخفي
   // أربعين قطعة أم اثنتين، والفئة الفارغة كانت تُعرض ثم تفتح على لا شيء.
-  const catCounts = useMemo(() => {
-    const out = {};
-    for (const pr of data?.products || []) {
-      const k = pr.category || 'other';
-      if (!out[k]) out[k] = { total: 0, sale: 0 };
-      out[k].total += 1;
-      if (pr.oldPrice && pr.oldPrice > pr.price) out[k].sale += 1;
-    }
-    return out;
-  }, [data]);
+  //
+  // حسابٌ عادي لا useMemo عمداً: هذا الموضع يقع بعد `if (!data) return` أعلاه،
+  // فخطّافٌ هنا يُستدعى في رسمةٍ ولا يُستدعى في أخرى — ويسقط التطبيق كلّه بشاشة
+  // فارغة عند أول انتقال. المرور مرّةً على المنتجات أرخص من أي تذكير.
+  const catCounts = {};
+  for (const pr of data.products || []) {
+    const k = pr.category || 'other';
+    if (!catCounts[k]) catCounts[k] = { total: 0, sale: 0 };
+    catCounts[k].total += 1;
+    if (pr.oldPrice && pr.oldPrice > pr.price) catCounts[k].sale += 1;
+  }
   const visibleCats = gridCats.filter((c) => (catCounts[c.key]?.total || 0) > 0);
 
   const searching = q.trim().length > 0;

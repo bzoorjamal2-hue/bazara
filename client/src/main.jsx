@@ -28,6 +28,7 @@ import { AuthProvider } from './context/AuthContext.jsx';
 import { CartProvider } from './context/CartContext.jsx';
 import { WishlistProvider } from './context/WishlistContext.jsx';
 import { ThemeProvider } from './context/ThemeContext.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 
 // تسجيل الـ Service Worker مع فحص تحديث تلقائي متكرّر — حتى يلتقط التطبيق المثبّت
 // أحدث نسخة بسرعة بعد كل نشر (لا ينتظر إعادة فتح التطبيق). autoUpdate يطبّق التحديث
@@ -69,6 +70,7 @@ window.addEventListener('vite:preloadError', async () => {
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
+    <ErrorBoundary>
     <HelmetProvider>
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <ThemeProvider>
@@ -82,5 +84,6 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         </ThemeProvider>
       </BrowserRouter>
     </HelmetProvider>
+    </ErrorBoundary>
   </React.StrictMode>
 );
