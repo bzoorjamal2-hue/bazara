@@ -33,6 +33,9 @@ import { verifyWebhook, receiveWebhook } from './controllers/instagram.controlle
 import { robots, sitemap, indexNowKey, shareProduct, shareStore, shareStory } from './controllers/seo.controller.js';
 import { issueCsrfToken, verifyCsrf, getCsrfToken } from './middleware/csrf.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
 
@@ -470,6 +473,27 @@ async function ensureAccounting() {
     // تسوية التحصيل: متى استلمتِ ثمن الطلب من شركة التوصيل (NULL = ما زال عندها)
     "ALTER TABLE orders ADD COLUMN IF NOT EXISTS collected_at TIMESTAMPTZ;",
     'CREATE INDEX IF NOT EXISTS idx_orders_collected ON orders(store_id, collected_at);',
+    // فئات المنتجات: العمود بدأ نوعاً مُعدّداً (men/women/kids/accessories) ثم
+    // صار نصّاً حرّاً بفئات أزياء. التحويل وإعادة التعيين كانا في schema.sql
+    // وحدها ولا تُنفَّذ عند الإقلاع، فبقيت منتجات بقيمٍ قديمة لا تطابق أي زرّ
+    // فئة — وهو سبب اختفاء العبايات تحت زرّها.
+    `DO $
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'products' AND column_name = 'category' AND data_type <> 'text'
+  ) THEN
+    ALTER TABLE products ALTER COLUMN category TYPE TEXT USING category::text;
+  END IF;
+END $;`,
+    "ALTER TABLE products ALTER COLUMN category SET DEFAULT 'dress';",
+    `UPDATE products SET category = CASE category
+       WHEN 'women' THEN 'dress'
+       WHEN 'men' THEN 'set'
+       WHEN 'kids' THEN 'abaya'
+       WHEN 'accessories' THEN 'hijab'
+       ELSE category END
+     WHERE category IN ('women', 'men', 'kids', 'accessories');`,
   ];
   // كل جملة على حدة: فشل واحدة لا يمنع البقية
   for (const sql of steps) {
@@ -498,12 +522,42 @@ function start() {
   setTimeout(() => { notifyAbandonedCheckouts().catch(() => {}); }, 2 * 60 * 1000);
 }
 
+// تنفيذ schema.sql كاملاً عند الإقلاع.
+//
+// ٤٠ جملة ترقية كانت تعيش في المخطّط وحده، وهو لا يُنفَّذ إلا يدوياً — فكلّما
+// سبق الكودُ قاعدةَ البيانات ظهر عطبٌ صامت: سقطت قائمة الطلبات مرّةً، واختفت
+// منتجات العبايات مرّةً لأن قيم الفئات القديمة لم تُعَد تعيينها. المخطّط كلّه
+// إضافيّ ومحصّن (IF NOT EXISTS)، وجملته الوحيدة التي تلمس بيانات لها WHERE
+// يستنفد نفسه — فإعادة تنفيذه بلا أثر، والنشر يصير يُصلح نفسه.
+async function ensureSchemaFile() {
+  const LOCK = 918273645; // قفل استشاري: نسختان تُقلعان معاً لا تتزاحمان على ALTER
+  let client;
+  try {
+    client = await pool.connect();
+    const got = await client.query('SELECT pg_try_advisory_lock($1) AS ok', [LOCK]);
+    if (!got.rows[0].ok) return; // نسخة أخرى تُهيّئ الآن
+    try {
+      const dir = path.dirname(fileURLToPath(import.meta.url));
+      await client.query(fs.readFileSync(path.join(dir, 'config/schema.sql'), 'utf-8'));
+      console.log('✅ المخطّط محدَّث.');
+    } finally {
+      await client.query('SELECT pg_advisory_unlock($1)', [LOCK]);
+    }
+  } catch (err) {
+    // لا نُسقط الخادم: متجرٌ يعمل بميزة ناقصة أفضل من متجرٍ مُطفأ
+    console.error('⚠️ تعذّرت تهيئة المخطّط:', err.message);
+  } finally {
+    client?.release();
+  }
+}
+
 // الترقية التلقائية على الإنتاج فقط (Render). محلياً نشغّل مباشرة بلا لمس قاعدة البيانات.
 if (process.env.NODE_ENV === 'production') {
   // .catch إضافي: لو رجعت ensureColumns رفضاً لأي سبب نادر، نسجّله ونُقلع بأي حال —
   // فلا يبقى رفض غير ملتقَط يوقف العملية عند الإقلاع.
-  ensureColumns()
-    .catch((e) => console.error('⚠️ ensureColumns rejected:', e?.message))
+  ensureSchemaFile()
+    .then(ensureColumns)
+    .catch((e) => console.error('⚠️ الترقيات:', e?.message))
     .then(ensureAccounting)
     .finally(start);
 } else {

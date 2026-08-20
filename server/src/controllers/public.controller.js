@@ -7,6 +7,7 @@ import { epsStatusLabelAr } from '../config/eps.js';
 import { normalizeTiers, villagesByCity, flatInternalLocalities, mapExternalLocalities, sameName } from '../config/deliveryCities.js';
 import { fetchCities, fetchAreas, cachedLocalities, fetchAllLocalities } from '../config/opost.js';
 import { ensureToken } from './opost.controller.js';
+import { categoryAliases } from '../utils/category.js';
 
 // أعمدة المنتج + بيانات المتجر + تجميع التقييمات. نربط users لفلترة المشتركين الفعّالين.
 const PRODUCT_SELECT = `
@@ -476,8 +477,8 @@ export async function getByCategory(req, res, next) {
         const cats = Array.isArray(sc.rows[0]?.custom_categories) ? sc.rows[0].custom_categories : [];
         if (!cats.some((c) => c && c.key === cat)) return res.status(400).json({ error: 'فئة غير صالحة.' });
         const rc = await query(
-          `${PRODUCT_SELECT} WHERE p.category = $1 AND s.slug = $2 AND ${active} ORDER BY p.featured DESC, p.created_at DESC LIMIT 60`,
-          [cat, storeSlug]
+          `${PRODUCT_SELECT} WHERE p.category = ANY($1::text[]) AND s.slug = $2 AND ${active} ORDER BY p.featured DESC, p.created_at DESC LIMIT 60`,
+          [categoryAliases(cat), storeSlug]
         );
         return res.json({ category: cat, products: rc.rows.map(mapProduct) });
       }
@@ -490,21 +491,21 @@ export async function getByCategory(req, res, next) {
       );
       if (!exists.rows.length) return res.status(400).json({ error: 'فئة غير صالحة.' });
       const rc = await query(
-        `${PRODUCT_SELECT} WHERE p.category = $1 AND ${active} ORDER BY p.featured DESC, p.created_at DESC LIMIT 60`,
-        [cat]
+        `${PRODUCT_SELECT} WHERE p.category = ANY($1::text[]) AND ${active} ORDER BY p.featured DESC, p.created_at DESC LIMIT 60`,
+        [categoryAliases(cat)]
       );
       return res.json({ category: cat, products: rc.rows.map(mapProduct) });
     }
     let r;
     if (storeSlug) {
       r = await query(
-        `${PRODUCT_SELECT} WHERE p.category = $1 AND s.slug = $2 AND ${active} ORDER BY p.featured DESC, p.created_at DESC LIMIT 60`,
-        [cat, storeSlug]
+        `${PRODUCT_SELECT} WHERE p.category = ANY($1::text[]) AND s.slug = $2 AND ${active} ORDER BY p.featured DESC, p.created_at DESC LIMIT 60`,
+        [categoryAliases(cat), storeSlug]
       );
     } else {
       r = await query(
-        `${PRODUCT_SELECT} WHERE p.category = $1 AND ${active} ORDER BY p.featured DESC, p.created_at DESC LIMIT 60`,
-        [cat]
+        `${PRODUCT_SELECT} WHERE p.category = ANY($1::text[]) AND ${active} ORDER BY p.featured DESC, p.created_at DESC LIMIT 60`,
+        [categoryAliases(cat)]
       );
     }
     res.json({ category: cat, products: r.rows.map(mapProduct) });

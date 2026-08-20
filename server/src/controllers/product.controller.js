@@ -1,6 +1,7 @@
 import { query } from '../config/db.js';
 import { pingIndexNow } from '../utils/indexnow.js';
 import { alertOwnerOnRestock } from './stockRequest.controller.js';
+import { normalizeCategory } from '../utils/category.js';
 
 async function getUserStore(userId) {
   const r = await query('SELECT id, slug FROM stores WHERE user_id = $1', [userId]);
@@ -159,7 +160,7 @@ function normalizeBody(b) {
     description: b.description || '',
     size,
     color,
-    category: b.category,
+    category: normalizeCategory(b.category),
     imageUrl: b.imageUrl || '',
     images: Array.isArray(b.images) ? b.images.filter(Boolean).slice(0, 6) : [],
     stock,
@@ -204,11 +205,14 @@ export function mapProduct(p) {
   // اسم الفئة الظاهر: مخصّصة → اسمها من إعدادات المتجر؛ أصلية مُعاد تسميتها → اسمها المخصّص.
   // (فارغ للأصلية غير المعدّلة → العميل يترجمها) — حتى تتصرّف الفئات الجديدة مثل الأصلية تماماً.
   let categoryName = '';
+  // فئةٌ قديمة مخزَّنة (kids/women/…) تُقرأ بقيمتها الحالية، وإلا لا تطابق أي
+  // زرّ فئة في الواجهة فتختفي منتجاتها تحته.
+  const category = normalizeCategory(p.category);
   const customCats = Array.isArray(p.store_custom_categories) ? p.store_custom_categories : [];
-  const cc = customCats.find((c) => c && c.key === p.category);
+  const cc = customCats.find((c) => c && c.key === category);
   if (cc) categoryName = cc.name || '';
   if (!categoryName && p.store_category_meta && typeof p.store_category_meta === 'object') {
-    const m = p.store_category_meta[p.category];
+    const m = p.store_category_meta[category];
     if (m && m.name) categoryName = m.name;
   }
   return {
@@ -220,7 +224,7 @@ export function mapProduct(p) {
     description: p.description,
     size: p.size,
     color: p.color,
-    category: p.category,
+    category,
     categoryName,
     imageUrl: p.image_url,
     images: p.images || [],

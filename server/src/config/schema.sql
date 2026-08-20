@@ -90,7 +90,16 @@ ALTER TABLE products ADD COLUMN IF NOT EXISTS sale_ends_at TIMESTAMPTZ; -- نه�
 ALTER TABLE products ADD COLUMN IF NOT EXISTS cost NUMERIC(10,2);
 
 -- تحويل الفئة إلى نص حر (فئات أزياء مخصّصة) + إعادة تعيين القيم القديمة
-ALTER TABLE products ALTER COLUMN category TYPE TEXT USING category::text;
+-- مشروط: ALTER TYPE بلا شرط يُعيد بناء الجدول كلّه عند كل تنفيذ
+DO $
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'products' AND column_name = 'category' AND data_type <> 'text'
+  ) THEN
+    ALTER TABLE products ALTER COLUMN category TYPE TEXT USING category::text;
+  END IF;
+END $;
 ALTER TABLE products ALTER COLUMN category SET DEFAULT 'dress';
 UPDATE products SET category = CASE category
     WHEN 'women' THEN 'dress'
