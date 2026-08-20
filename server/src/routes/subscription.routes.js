@@ -12,6 +12,7 @@ import {
   listCodes,
   sendCodeToSubscriber,
   listSubscribers,
+  getStoreDetail,
   deleteSubscriber,
   setSubscription,
   addSubscriptionDays,
@@ -35,6 +36,7 @@ router.post('/codes', requireAuth, requireAdmin, generateCodes);
 router.post('/send-code', requireAuth, requireAdmin, sendCodeToSubscriber);
 router.get('/admin-stats', requireAuth, requireAdmin, getAdminStats);
 router.get('/subscribers', requireAuth, requireAdmin, listSubscribers);
+router.get('/store/:slug', requireAuth, requireAdmin, getStoreDetail);
 router.post('/set-subscription', requireAuth, requireAdmin, setSubscription);
 router.post('/add-days', requireAuth, requireAdmin, addSubscriptionDays);
 router.post('/delete-subscriber', requireAuth, requireAdmin, deleteSubscriber);

@@ -209,7 +209,8 @@
     "more": "More",
     "less": "Less",
     "clearDate": "Clear date",
-    "clear": "Clear"
+    "clear": "Clear",
+    "close": "Close"
   },
   "searchPage": {
     "title": "Search",
@@ -1496,7 +1497,37 @@
       "newsletter": "Newsletter subscribers",
       "pending": "{{count}} subscription request(s) awaiting review",
       "pendingHint": "Tap to open the admin section to approve/reject."
-    }
+    },
+    "storeDetail": "Store details",
+    "subscription": "Subscription",
+    "subscriptionDesc": "Its status, plan and expiry.",
+    "expiresAt": "Expires",
+    "expiresTip": "After this date the store is closed to visitors until renewed.",
+    "joinedAt": "Joined",
+    "storeCreated": "Store created",
+    "featuredLabel": "Featured",
+    "featuredTip": "Featured stores lead the home page.",
+    "sizeActivity": "Size and activity",
+    "sizeActivityDesc": "Is this store actually selling, or did it sign up and never launch?",
+    "gmvTip": "Total of confirmed, shipped and delivered orders — excludes cancelled and new ones.",
+    "lastOrder": "Last order",
+    "lastOrderTip": "The clearest sign the store is alive. Very old = dormant.",
+    "flagNoProducts": "No products — signed up but never launched.",
+    "flagPending_one": "1 order awaiting confirmation",
+    "flagPending_other": "{{count}} orders awaiting confirmation",
+    "flagOutOfStock_one": "1 product out of stock",
+    "flagOutOfStock_other": "{{count}} products out of stock",
+    "recentOrders": "Recent orders",
+    "recentOrdersDesc": "The latest eight orders in this store.",
+    "topProducts": "Best sellers",
+    "topProductsDesc": "Computed from confirmed order items.",
+    "soldQty_one": "1 piece",
+    "soldQty_other": "{{count}} pieces",
+    "emailOwner": "Email the owner",
+    "sortNewest": "Newest",
+    "sortGmv": "Highest sales",
+    "sortOrders": "Most orders",
+    "sortExpiry": "Expiring soonest"
   },
   "order": {
     "choose": "Choose order method",

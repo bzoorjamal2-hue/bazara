@@ -3,14 +3,29 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
-import { CrownIcon, LinkIcon, BellIcon, SaveIcon, PlusIcon, MailIcon, TrashIcon, StarIcon, UsersIcon } from '../../components/icons.jsx';
+import { CrownIcon, LinkIcon, BellIcon, SaveIcon, PlusIcon, MailIcon, TrashIcon, StarIcon, UsersIcon, ChartIcon, BagIcon, ReceiptIcon } from '../../components/icons.jsx';
 import { PageHead } from '../../components/FormField.jsx';
+import AdminStoreDetail from './AdminStoreDetail.jsx';
 
 function fmt(d) {
   return d ? new Date(d).toLocaleString() : '—';
 }
 
-function SubRow({ s, onDeleted, onUpdated }) {
+// شارة رقم صغيرة داخل صفّ المشترك. البرتقالي المصمت للتنبيه (متجر بلا
+// منتجات) — لونٌ شفّاف فوق خلفية فاتحة يهبط تحت عتبة القراءة.
+function Chip({ Icon, value, label, warn = false }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${warn ? 'text-cream' : 'border border-gold-400/20 text-stone-300'}`}
+      style={warn ? { background: '#9a3412' } : undefined}
+      title={label}
+    >
+      <Icon className="h-3 w-3 shrink-0" /> {value}
+    </span>
+  );
+}
+
+function SubRow({ s, onDeleted, onUpdated, onOpen }) {
   const { t } = useTranslation();
   // نبدأ بالخطة التي طلبها المستخدم (إن وُجدت) ليفعّلها المدير مباشرة، وإلا الخطة الحالية
   const [plan, setPlan] = useState(s.requestedPlan || s.plan || 'monthly');
@@ -142,9 +157,23 @@ function SubRow({ s, onDeleted, onUpdated }) {
             >
               <StarIcon className="h-3.5 w-3.5" filled={s.featured} /> {s.featured ? t('admin.featured') : t('admin.feature')}
             </button>
+            <button
+              type="button"
+              onClick={() => onOpen?.(s.storeSlug)}
+              className="inline-flex items-center gap-1 rounded-full border border-gold-400/30 px-2.5 py-1 text-xs font-bold text-gold-200 transition hover:bg-gold-400/10"
+            >
+              <ChartIcon className="h-3.5 w-3.5" /> {t('admin.storeDetail')}
+            </button>
             <a href={`/store/${s.storeSlug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-gold-300 hover:text-gold-200"><LinkIcon className="h-3.5 w-3.5" /> {t('admin.subStore')}</a>
           </div>
         )}
+      </div>
+
+      {/* حجم المتجر بلمحة — بلا هذه الأرقام كان الصفّ اسماً وبريداً فقط */}
+      <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+        <Chip Icon={BagIcon} value={s.productsCount ?? 0} label={t('admin.ov.products')} warn={(s.productsCount ?? 0) === 0} />
+        <Chip Icon={ReceiptIcon} value={s.ordersCount ?? 0} label={t('admin.ov.orders')} />
+        <Chip Icon={ChartIcon} value={`${t('common.currency')}${Math.round(s.gmv || 0).toLocaleString()}`} label={t('admin.ov.gmv')} />
       </div>
 
       <div className="mt-3 grid grid-cols-1 gap-1.5 text-xs text-stone-400 sm:grid-cols-3 sm:gap-2">
@@ -222,6 +251,7 @@ function SubRow({ s, onDeleted, onUpdated }) {
           </div>
         </div>
       )}
+
     </div>
   );
 }
@@ -232,6 +262,8 @@ export default function SubscribersManager() {
   const [error, setError] = useState('');
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState('all'); // all | active | expired | requested
+  const [sort, setSort] = useState('newest');  // newest | gmv | orders | expiry
+  const [openSlug, setOpenSlug] = useState('');
 
   useEffect(() => {
     api.get('/subscription/subscribers').then((r) => setSubs(r.data.subscribers)).catch((e) => setError(getErrorMessage(e)));
@@ -241,13 +273,27 @@ export default function SubscribersManager() {
 
   // فلترة محلية على القائمة المحمّلة — بحث بالاسم/الإيميل/اسم المتجر + حالة الاشتراك
   const query = q.trim().toLowerCase();
-  const shown = (subs || []).filter((s) => {
+  const shown = [...(subs || [])].filter((s) => {
     if (query && !`${s.name} ${s.email} ${s.storeName || ''}`.toLowerCase().includes(query)) return false;
     if (filter === 'active') return s.active;
     if (filter === 'expired') return !s.active && !s.isAdmin;
     if (filter === 'requested') return s.requestedStatus === 'pending';
     return true;
   });
+
+  // الفرز: المدير يبحث عن «الأكبر مبيعاً» أو «الأقرب انتهاءً» لا عن الأحدث دائماً
+  const sorters = {
+    newest: () => 0,
+    gmv: (a, b) => (b.gmv || 0) - (a.gmv || 0),
+    orders: (a, b) => (b.ordersCount || 0) - (a.ordersCount || 0),
+    expiry: (a, b) => {
+      // بلا تاريخ انتهاء (مدير/مدى الحياة) يُدفع لآخر القائمة لا لأوّلها
+      const av = a.currentPeriodEnd ? new Date(a.currentPeriodEnd).getTime() : Infinity;
+      const bv = b.currentPeriodEnd ? new Date(b.currentPeriodEnd).getTime() : Infinity;
+      return av - bv;
+    },
+  };
+  shown.sort(sorters[sort] || sorters.newest);
 
   const counts = {
     all: subs?.length || 0,
@@ -276,6 +322,19 @@ export default function SubscribersManager() {
             placeholder={t('admin.searchSubscribers')}
             className="input w-full"
           />
+          <div className="w-44">
+            <Select
+              value={sort}
+              onChange={setSort}
+              className="!py-2 text-sm"
+              options={[
+                { value: 'newest', label: t('admin.sortNewest') },
+                { value: 'gmv', label: t('admin.sortGmv') },
+                { value: 'orders', label: t('admin.sortOrders') },
+                { value: 'expiry', label: t('admin.sortExpiry') },
+              ]}
+            />
+          </div>
           <div className="flex flex-wrap gap-2">
             {chips.map((c) => (
               <button
@@ -302,10 +361,13 @@ export default function SubscribersManager() {
               s={s}
               onDeleted={(email) => setSubs((prev) => prev.filter((x) => x.email !== email))}
               onUpdated={(email, patch) => setSubs((prev) => prev.map((x) => (x.email === email ? { ...x, ...patch } : x)))}
+              onOpen={setOpenSlug}
             />
           ))}
         </div>
       )}
+
+      {openSlug && <AdminStoreDetail slug={openSlug} onClose={() => setOpenSlug('')} />}
     </div>
   );
 }

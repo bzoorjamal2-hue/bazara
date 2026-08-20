@@ -344,16 +344,29 @@ export async function setStoreFeatured(req, res, next) {
 
 export async function listSubscribers(req, res, next) {
   try {
+    // حجم المتجر ونشاطه بجانب اسمه: القرار بتفعيل اشتراكٍ أو إيقافه كان
+    // يُتّخذ على اسمٍ وبريدٍ فقط، بلا معرفة إن كان المتجر يبيع أصلاً.
     const r = await query(
-      `SELECT u.name, u.email, u.subscription_plan, u.subscription_status,
+      `SELECT u.id AS user_id, u.name, u.email, u.subscription_plan, u.subscription_status,
               u.subscription_started_at, u.current_period_end, u.created_at,
-              s.name AS store_name, s.slug AS store_slug, s.featured AS store_featured,
-              lr.plan AS requested_plan, lr.status AS requested_status
+              s.id AS store_id, s.name AS store_name, s.slug AS store_slug, s.featured AS store_featured,
+              lr.plan AS requested_plan, lr.status AS requested_status,
+              COALESCE(pc.c, 0)::int AS products_count,
+              COALESCE(oc.c, 0)::int AS orders_count,
+              COALESCE(oc.gmv, 0) AS gmv,
+              oc.last_order_at
        FROM users u JOIN stores s ON s.user_id = u.id
        LEFT JOIN LATERAL (
          SELECT plan, status FROM subscription_requests sr
          WHERE sr.user_id = u.id ORDER BY created_at DESC LIMIT 1
        ) lr ON true
+       LEFT JOIN LATERAL (SELECT COUNT(*)::int AS c FROM products p WHERE p.store_id = s.id) pc ON true
+       LEFT JOIN LATERAL (
+         SELECT COUNT(*)::int AS c,
+                COALESCE(SUM(o.total) FILTER (WHERE o.status IN ('confirmed','shipped','delivered')), 0) AS gmv,
+                MAX(o.created_at) AS last_order_at
+         FROM orders o WHERE o.store_id = s.id
+       ) oc ON true
        ORDER BY u.created_at DESC LIMIT 300`
     );
     res.json({
@@ -368,13 +381,103 @@ export async function listSubscribers(req, res, next) {
         // المدير: تاريخ اشتراك = تاريخ إنشاء حسابه، واشتراكه مدى الحياة بلا انتهاء
         startedAt: x.subscription_started_at || (isAdminEmail(x.email) ? x.created_at : null),
         currentPeriodEnd: x.current_period_end,
+        storeId: x.store_id,
         storeName: x.store_name,
         storeSlug: x.store_slug,
         featured: Boolean(x.store_featured),
+        productsCount: x.products_count,
+        ordersCount: x.orders_count,
+        gmv: Number(x.gmv) || 0,
+        lastOrderAt: x.last_order_at,
         active: isUserActive({ email: x.email, subscription_status: x.subscription_status, current_period_end: x.current_period_end }),
         isAdmin: isAdminEmail(x.email),
         lifetime: isAdminEmail(x.email),
       })),
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ── GET /api/subscription/store/:slug ──────────────────────────────────────
+// كل ما يخصّ متجراً واحداً في مكان واحد. كان على المدير أن يقرّر التفعيل
+// والإيقاف والحذف وهو لا يرى من المتجر إلا اسمه — فأيّ قرارٍ كان تخميناً.
+export async function getStoreDetail(req, res, next) {
+  try {
+    const slug = String(req.params.slug || '').trim();
+    if (!slug) return res.status(400).json({ error: 'المتجر غير محدّد.' });
+
+    const sr = await query(
+      `SELECT s.id, s.name, s.slug, s.logo_url, s.featured, s.created_at,
+              s.phone, s.whatsapp, s.instagram,
+              u.id AS user_id, u.name AS owner_name, u.email, u.phone AS owner_phone,
+              u.subscription_status, u.subscription_plan, u.current_period_end, u.created_at AS joined_at
+       FROM stores s JOIN users u ON u.id = s.user_id
+       WHERE s.slug = $1`,
+      [slug]
+    );
+    const st = sr.rows[0];
+    if (!st) return res.status(404).json({ error: 'المتجر غير موجود.' });
+
+    const PAID = "o.status IN ('confirmed','shipped','delivered')";
+    const [prod, ord, recent, top] = await Promise.all([
+      query(
+        `SELECT COUNT(*)::int AS total,
+                COUNT(*) FILTER (WHERE stock = 0)::int AS out_of_stock,
+                COUNT(*) FILTER (WHERE old_price IS NOT NULL AND old_price > price)::int AS on_sale
+         FROM products WHERE store_id = $1`,
+        [st.id]
+      ),
+      query(
+        `SELECT COUNT(*)::int AS total,
+                COUNT(*) FILTER (WHERE o.status = 'new')::int AS pending,
+                COUNT(*) FILTER (WHERE o.status = 'cancelled')::int AS cancelled,
+                COALESCE(SUM(o.total) FILTER (WHERE ${PAID}), 0) AS gmv,
+                MAX(o.created_at) AS last_order_at
+         FROM orders o WHERE o.store_id = $1`,
+        [st.id]
+      ),
+      query(
+        `SELECT id, reference, customer_name, total, status, created_at
+         FROM orders WHERE store_id = $1 ORDER BY created_at DESC LIMIT 8`,
+        [st.id]
+      ),
+      // الأكثر مبيعاً: يُحتسب من عناصر الطلبات المؤكّدة لا من عدّاد على المنتج
+      query(
+        `SELECT it->>'name' AS name, SUM((it->>'qty')::int)::int AS qty
+         FROM orders o, jsonb_array_elements(o.items) it
+         WHERE o.store_id = $1 AND ${PAID}
+         GROUP BY 1 ORDER BY qty DESC LIMIT 5`,
+        [st.id]
+      ),
+    ]);
+
+    const p0 = prod.rows[0];
+    const o0 = ord.rows[0];
+    res.json({
+      store: {
+        id: st.id, name: st.name, slug: st.slug, logoUrl: st.logo_url || '',
+        featured: Boolean(st.featured), createdAt: st.created_at,
+        phone: st.phone || '', whatsapp: st.whatsapp || '', instagram: st.instagram || '',
+      },
+      owner: {
+        id: st.user_id, name: st.owner_name, email: st.email, phone: st.owner_phone || '',
+        joinedAt: st.joined_at,
+        status: st.subscription_status, plan: st.subscription_plan,
+        currentPeriodEnd: st.current_period_end,
+        active: isUserActive({ email: st.email, subscription_status: st.subscription_status, current_period_end: st.current_period_end }),
+        isAdmin: isAdminEmail(st.email),
+      },
+      products: { total: p0.total, outOfStock: p0.out_of_stock, onSale: p0.on_sale },
+      orders: {
+        total: o0.total, pending: o0.pending, cancelled: o0.cancelled,
+        gmv: Number(o0.gmv) || 0, lastOrderAt: o0.last_order_at,
+      },
+      recentOrders: recent.rows.map((o) => ({
+        id: o.id, reference: o.reference || '', customerName: o.customer_name || '',
+        total: Number(o.total), status: o.status, createdAt: o.created_at,
+      })),
+      topProducts: top.rows.map((x) => ({ name: x.name || '—', qty: x.qty })),
     });
   } catch (err) {
     next(err);
