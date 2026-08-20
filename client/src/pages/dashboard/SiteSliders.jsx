@@ -5,8 +5,8 @@ import { clearCachePrefixes } from '../../utils/apiCache.js';
 import Spinner from '../../components/Spinner.jsx';
 import BannerEditor from '../../components/BannerEditor.jsx';
 import ImageInput from '../../components/ImageInput.jsx';
-import { ImageIcon, MegaphoneIcon } from '../../components/icons.jsx';
-import { PageHead, SectionHead, Field } from '../../components/FormField.jsx';
+import { ImageIcon, MegaphoneIcon, GridIcon } from '../../components/icons.jsx';
+import { PageHead, SectionHead, Field, RowTools } from '../../components/FormField.jsx';
 
 // الشرائح الافتراضية الموجودة حالياً بالصفحة الرئيسية — تظهر للمدير ليعدّلها/يحذفها
 const DEFAULT_SITE_SLIDES = [
@@ -22,6 +22,7 @@ export default function SiteSliders() {
   const [ann, setAnn] = useState('');
   const [annEn, setAnnEn] = useState('');
   const [lb, setLb] = useState({ image: '', title: '', titleEn: '', productIds: [] });
+  const [collections, setCollections] = useState([]);
   const [instagram, setInstagram] = useState('');
   const [facebook, setFacebook] = useState('');
   const [msg, setMsg] = useState('');
@@ -30,14 +31,14 @@ export default function SiteSliders() {
 
   useEffect(() => {
     api.get('/site/banners')
-      .then((r) => { setBanners(r.data.banners?.length ? r.data.banners : DEFAULT_SITE_SLIDES); setAnn(r.data.announcement || ''); setAnnEn(r.data.announcementEn || ''); setLb({ image: '', title: '', titleEn: '', productIds: [], ...(r.data.lookbook || {}) }); setInstagram(r.data.instagram || ''); setFacebook(r.data.facebook || ''); })
+      .then((r) => { setBanners(r.data.banners?.length ? r.data.banners : DEFAULT_SITE_SLIDES); setAnn(r.data.announcement || ''); setAnnEn(r.data.announcementEn || ''); setLb({ image: '', title: '', titleEn: '', productIds: [], ...(r.data.lookbook || {}) }); setCollections(Array.isArray(r.data.collections) ? r.data.collections : []); setInstagram(r.data.instagram || ''); setFacebook(r.data.facebook || ''); })
       .catch((e) => setError(getErrorMessage(e)));
   }, []);
 
   const save = async () => {
     setMsg(''); setError(''); setBusy(true);
     try {
-      await api.put('/site/banners', { banners, announcement: ann, announcementEn: annEn, lookbook: lb, instagram, facebook });
+      await api.put('/site/banners', { banners, announcement: ann, announcementEn: annEn, collections, lookbook: lb, instagram, facebook });
       // بانرات الرئيسية الجديدة تظهر فوراً: نفرّغ كاش الرئيسية + النسخة المحفوظة للظهور الفوري
       clearCachePrefixes(['home']);
       try { localStorage.removeItem('bz_home_banners'); localStorage.removeItem('bz_site_socials'); } catch { /* تجاهل */ }
@@ -89,6 +90,62 @@ export default function SiteSliders() {
         </Field>
       </div>
       {/* اللوك بوك: صورة إطلالة + أرقام المنتجات الظاهرة فيها (بفواصل) */}
+      {/* المجموعات التحريرية («تسوّقي حسب المناسبة») — كان العمود يُحفظ ويُقرأ
+          ولا واجهة تحرّره ولا الرئيسية تعرضه: ميزةٌ مدفونة من الطرفين. */}
+      <div className="dash-section glass space-y-4 p-5 sm:p-6">
+        <SectionHead icon={<GridIcon className="h-5 w-5" />} title={t('admin.collections')} desc={t('admin.collectionsHint')} />
+
+        {collections.length === 0 ? (
+          <div className="flex flex-col items-center gap-1.5 rounded-xl border border-dashed border-gold-400/25 bg-black/15 px-4 py-6 text-center">
+            <GridIcon className="h-7 w-7 text-gold-300" />
+            <p className="text-xs text-stone-400">{t('admin.collectionsEmpty')}</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {collections.map((c, i) => (
+              <div key={i} className="space-y-2.5 rounded-xl border border-gold-400/15 bg-black/20 p-3">
+                <div className="flex items-center gap-2">
+                  <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-gold-400/15 text-[11px] font-bold text-gold-200">{i + 1}</span>
+                  <span className="min-w-0 flex-1 truncate text-sm font-bold text-stone-100">{c.title || t('admin.collectionUntitled')}</span>
+                  <RowTools
+                    index={i}
+                    count={collections.length}
+                    canDuplicate={false}
+                    onMove={(dir) => setCollections((p2) => {
+                      const a2 = [...p2]; const j = i + dir;
+                      if (j < 0 || j >= a2.length) return p2;
+                      [a2[j], a2[i]] = [a2[i], a2[j]];
+                      return a2;
+                    })}
+                    onRemove={() => setCollections((p2) => p2.filter((_, j) => j !== i))}
+                  />
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <Field label={t('admin.collTitle')} tip={t('admin.collTitleTip')} required max={60} value={c.title || ''}>
+                    <input className="input" maxLength={60} value={c.title || ''} onChange={(e) => setCollections((p2) => p2.map((x, j) => (j === i ? { ...x, title: e.target.value } : x)))} />
+                  </Field>
+                  <Field label={t('admin.collTitleEn')} optional max={60} value={c.titleEn || ''}>
+                    <input className="input" dir="ltr" maxLength={60} value={c.titleEn || ''} onChange={(e) => setCollections((p2) => p2.map((x, j) => (j === i ? { ...x, titleEn: e.target.value } : x)))} />
+                  </Field>
+                </div>
+                <Field label={t('admin.collQ')} tip={t('admin.collQTip')} required max={60} value={c.q || ''}>
+                  <input className="input" maxLength={60} value={c.q || ''} onChange={(e) => setCollections((p2) => p2.map((x, j) => (j === i ? { ...x, q: e.target.value } : x)))} placeholder={t('admin.collQPlaceholder')} />
+                </Field>
+                <Field label={t('admin.collImage')} tip={t('admin.collImageTip')}>
+                  <ImageInput value={c.image || ''} onChange={(v) => setCollections((p2) => p2.map((x, j) => (j === i ? { ...x, image: v } : x)))} />
+                </Field>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {collections.length < 6 && (
+          <button type="button" onClick={() => setCollections((p2) => [...p2, { title: '', titleEn: '', q: '', image: '' }])} className="btn-ghost w-full text-sm">
+            ＋ {t('admin.addCollection')}
+          </button>
+        )}
+      </div>
+
       <div className="dash-section glass space-y-4 p-5 sm:p-6">
         <SectionHead icon={<ImageIcon className="h-5 w-5" />} title={t('admin.lookbook')} desc={t('admin.lookbookHint')} />
         <Field label={t('admin.lookbookImage')} tip={t('admin.lookbookImageTip')}>

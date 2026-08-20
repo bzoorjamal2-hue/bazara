@@ -325,12 +325,23 @@ export async function broadcastMessage(req, res, next) {
 }
 
 // تمييز/إلغاء تمييز متجر (للمدير) — المتجر المميّز يتصدّر «متاجر مميزة» بالرئيسية.
+// أكثر من هذا العدد يجعل «المميّزة» بلا معنى في الرئيسية
+const FEATURED_LIMIT = 8;
+
 export async function setStoreFeatured(req, res, next) {
   const email = (req.body.email || '').trim().toLowerCase();
   const featured = Boolean(req.body.featured);
   if (!email) return res.status(400).json({ error: 'البريد مطلوب.' });
   if (isAdminEmail(email)) return res.status(400).json({ error: 'حساب المدير ليس متجراً.' });
   try {
+    // حدّ أقصى للمميّزة: لو صار كل متجر مميّزاً فقدت الكلمة معناها وفقدت
+    // الرئيسية ترتيبها. الحدّ عند الإضافة فقط — إلغاء التمييز مسموح دائماً.
+    if (featured) {
+      const cnt = await query('SELECT COUNT(*)::int AS c FROM stores WHERE featured = true');
+      if (cnt.rows[0].c >= FEATURED_LIMIT) {
+        return res.status(409).json({ error: `الحدّ الأقصى ${FEATURED_LIMIT} متاجر مميّزة. ألغِ تمييز متجر أوّلاً.`, limit: FEATURED_LIMIT });
+      }
+    }
     const r = await query(
       'UPDATE stores SET featured = $1 WHERE user_id = (SELECT id FROM users WHERE lower(email) = $2) RETURNING id',
       [featured, email]

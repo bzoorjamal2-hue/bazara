@@ -8,6 +8,7 @@ import ProductCard from '../components/ProductCard.jsx';
 import FilteredProductGrid from '../components/FilteredProductGrid.jsx';
 import CatThumb from '../components/CatThumb.jsx';
 import ProductRail from '../components/ProductRail.jsx';
+import CollectionsRow from '../components/CollectionsRow.jsx';
 import OffersBar from '../components/OffersBar.jsx';
 import { getRecent } from '../utils/recentlyViewed.js';
 import { getCache, setCache } from '../utils/apiCache.js';
@@ -127,6 +128,12 @@ export default function Home() {
 
       {/* شريط ترويجي (توصيل/دفع عند الاستلام) — طبق المرجع */}
       <PromoBanner />
+
+      {/* المجموعات التحريرية — يحرّرها المدير من «سلايدر الموقع». تُخفى تماماً
+          إن لم يُضف شيء، فلا حشو ولا بطاقات وهمية. */}
+      {data?.collections?.length > 0 && (
+        <Reveal><CollectionsRow collections={data.collections} /></Reveal>
+      )}
 
       {/* صفقات اليوم — أعلى الخصومات عبر المنصّة (أسلوب المتاجر الكبرى) */}
       {data?.deals?.length > 0 && (

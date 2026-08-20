@@ -190,7 +190,10 @@ function SubRow({ s, onDeleted, onUpdated, onOpen }) {
         </div>
         {/* المدير حساب تحكّم — بلا رابط متجر عام */}
         {!s.isAdmin && (
-          <div className="flex items-center gap-3">
+          // خمسة إجراءات صفّاً مستقلاً بعرض البطاقة على كل المقاسات: حشرها
+          // بجانب الاسم كان يُخرجها عن الشاشة على الجوال ويُكدّسها ثلاثة صفوف
+          // ضيّقة على التابلت. صفٌّ واحد مفصول بخيط أوضح وأثبت.
+          <div className="flex w-full flex-wrap items-center gap-1.5 border-t border-gold-400/10 pt-2.5 sm:gap-2">
             {/* تمييز المتجر ليتصدّر «متاجر مميزة» بالرئيسية */}
             <button
               onClick={toggleFeatured}
