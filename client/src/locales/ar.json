@@ -1092,7 +1092,19 @@
       "variantTotal_few": "المجموع: {{count}} قطع",
       "variantTotal_many": "المجموع: {{count}} قطعة",
       "variantTotal_other": "المجموع: {{count}} قطعة",
-      "variantTotalHint": "هذا ما يحكم البيع عند وجود ألوان، لا «الكمية المتوفّرة» بالأعلى."
+      "variantTotalHint": "هذا ما يحكم البيع عند وجود ألوان، لا «الكمية المتوفّرة» بالأعلى.",
+      "variantsEmpty": "لا ألوان بعد. أضيفي لوناً بالأعلى ثم اختاري نمره وكميّة كلٍّ منها.",
+      "pickSizes": "النمر المتوفّرة بهذا اللون:",
+      "colorTotal_one": "قطعة واحدة",
+      "colorTotal_two": "قطعتان",
+      "colorTotal_few": "{{count}} قطع",
+      "colorTotal_many": "{{count}} قطعة",
+      "colorTotal_other": "{{count}} قطعة",
+      "qtyMissing_one": "نمرة بلا كميّة — لن يُحفظ اللون قبل تعبئتها",
+      "qtyMissing_two": "نمرتان بلا كميّة — لن يُحفظ اللون قبل تعبئتهما",
+      "qtyMissing_few": "{{count}} نمر بلا كميّة — لن يُحفظ اللون قبل تعبئتها",
+      "qtyMissing_many": "{{count}} نمرة بلا كميّة — لن يُحفظ اللون قبل تعبئتها",
+      "qtyMissing_other": "{{count}} نمرة بلا كميّة — لن يُحفظ اللون قبل تعبئتها"
     }
   },
   "product": {

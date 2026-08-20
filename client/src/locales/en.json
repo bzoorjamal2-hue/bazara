@@ -1062,7 +1062,13 @@
       "discountShown": "shown to customers — saving {{amount}}",
       "variantTotal_one": "Total: 1 piece",
       "variantTotal_other": "Total: {{count}} pieces",
-      "variantTotalHint": "This governs sales when colours exist, not the quantity field above."
+      "variantTotalHint": "This governs sales when colours exist, not the quantity field above.",
+      "variantsEmpty": "No colours yet. Add one above, then pick its sizes and the quantity of each.",
+      "pickSizes": "Sizes available in this colour:",
+      "colorTotal_one": "1 piece",
+      "colorTotal_other": "{{count}} pieces",
+      "qtyMissing_one": "1 size has no quantity — the colour will not save until it is filled",
+      "qtyMissing_other": "{{count}} sizes have no quantity — the colour will not save until they are filled"
     }
   },
   "product": {

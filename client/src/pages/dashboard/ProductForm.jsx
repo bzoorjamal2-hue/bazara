@@ -7,7 +7,7 @@ import ImageInput from '../../components/ImageInput.jsx';
 import VideoInput from '../../components/VideoInput.jsx';
 import Select from '../../components/Select.jsx';
 import useScrollLock from '../../hooks/useScrollLock.js';
-import { XIcon, ClockIcon, PaletteIcon, CameraIcon, StarIcon, EditIcon, TagIcon, CashIcon } from '../../components/icons.jsx';
+import { XIcon, ClockIcon, PaletteIcon, CameraIcon, StarIcon, EditIcon, TagIcon, CashIcon, TrashIcon } from '../../components/icons.jsx';
 import { Field, DateInput, Tip } from '../../components/FormField.jsx';
 import { SIZES, sizeLabel } from '../../utils/sizes.js';
 import { colorToCss, COLOR_SUGGESTIONS } from '../../utils/colorDot.js';
@@ -294,11 +294,18 @@ export default function ProductForm({ initial, onClose, onSaved }) {
                 />
                 <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-stone-400">{t('common.currency')}</span>
               </div>
-              {/* الربح لكل قطعة يظهر فور الكتابة — رقم يوجّه التسعير قبل الحفظ */}
+              {/* الربح لكل قطعة يظهر فور الكتابة — رقم يوجّه التسعير قبل الحفظ.
+                  النصّ بلون قويّ والنسبة بشارة مصمتة: الأخضر الشفّاف كان يهبط
+                  إلى ٣.٣٧ فوق الخلفية الفاتحة، والبيع بخسارة أوضح بالأحمر المصمت. */}
               {margin != null && (
-                <p className={`mt-1.5 flex flex-wrap items-center gap-x-2 text-[11px] font-semibold ${margin.value >= 0 ? 'text-emerald-400' : 'text-red-300'}`}>
+                <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] font-semibold text-stone-200">
+                  <span
+                    className="rounded-full px-1.5 py-0.5 text-cream"
+                    style={{ background: margin.value >= 0 ? '#047857' : '#b91c1c' }}
+                  >
+                    {t('dashboard.product.marginPercent', { pct: margin.pct })}
+                  </span>
                   <span>{t('dashboard.product.marginPerPiece', { amount: `${t('common.currency')}${margin.value.toFixed(2)}` })}</span>
-                  <span className="rounded-full bg-gold-400/10 px-2 py-0.5 text-stone-400">{t('dashboard.product.marginPercent', { pct: margin.pct })}</span>
                 </p>
               )}
             </Field>
@@ -323,7 +330,9 @@ export default function ProductForm({ initial, onClose, onSaved }) {
               <input type="number" min="0" inputMode="numeric" className="input" value={form.stock} onChange={set('stock')} placeholder="∞" />
               <p className="mt-1 text-xs text-stone-400">{t('dashboard.product.stockHint')}</p>
             </Field>
-          {/* المتغيّرات: لكل لون نختار النمر المتوفّرة وكميتها — الزبون يختار اللون أولاً ثم النمرة */}
+          {/* المتغيّرات: لون → نمر → كميّات. أُعيد ترتيبها: الإضافة أولاً ثم
+              البطاقات، وكل نمرة سطرٌ واحد بعدّاد بدل صفّ أزرار ثم شبكة خانات
+              تكرّر أسماء النمر مرّةً ثانية. */}
           <div>
             <div className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-stone-300">
               <PaletteIcon className="h-4 w-4 shrink-0" />
@@ -333,91 +342,9 @@ export default function ProductForm({ initial, onClose, onSaved }) {
             </div>
             <p className="mb-2 text-xs text-stone-400">{t('dashboard.product.variantsHint')}</p>
 
-            {colors.length > 0 && (
-              <p className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-gold-400/20 bg-gold-400/[0.06] px-2.5 py-1.5 text-[11px] font-semibold text-stone-200">
-                <span>{t('dashboard.product.variantTotal', { count: variantTotal })}</span>
-                <span className="font-normal text-stone-400">{t('dashboard.product.variantTotalHint')}</span>
-              </p>
-            )}
-
-            {colors.length > 0 && (
-              <div className="space-y-3">
-                {colors.map((c) => {
-                  const sizes = form.colorStock[c] || {};
-                  return (
-                    <div key={c} className="rounded-xl border border-gold-400/15 bg-black/20 p-3">
-                      <div className="mb-2 flex items-center justify-between">
-                        <span className="flex items-center gap-2 font-bold text-gold-100">
-                          <span className="h-4 w-4 shrink-0 rounded-full" style={{ background: colorToCss(c) || 'transparent', boxShadow: '0 0 0 1px rgba(244,237,226,0.45), inset 0 0 0 1px rgba(0,0,0,0.2)' }} />
-                          {c}
-                        </span>
-                        <button type="button" onClick={() => removeColorVariant(c)} className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-stone-400 hover:text-red-300"><XIcon className="h-3.5 w-3.5" /> {t('common.delete')}</button>
-                      </div>
-                      {/* اختيار النمر المتوفّرة لهذا اللون */}
-                      <div className="flex flex-wrap gap-1.5">
-                        {SIZES.map((s) => (
-                          <button
-                            type="button"
-                            key={s}
-                            onClick={() => toggleColorSize(c, s)}
-                            className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
-                              s in sizes ? 'border-gold-400 bg-gold-400/20 text-gold-100' : 'border-gold-400/20 text-stone-300 hover:bg-white/5'
-                            }`}
-                          >
-                            {sizeLabel(s, t)}
-                          </button>
-                        ))}
-                      </div>
-                      {/* كمية كل نمرة مختارة لهذا اللون */}
-                      {Object.keys(sizes).length > 0 && (
-                        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                          {Object.keys(sizes).map((s) => (
-                            <div key={s} className="flex items-center gap-2">
-                              <span className="w-12 shrink-0 text-xs font-bold text-gold-100">{sizeLabel(s, t)}</span>
-                              <input
-                                type="number" min="0" inputMode="numeric" required
-                                className={`input !py-1.5 text-sm ${sizes[s] === '' || sizes[s] == null ? 'ring-1 ring-red-400/70' : ''}`}
-                                placeholder={t('dashboard.product.qty')}
-                                value={sizes[s] ?? ''}
-                                onChange={(e) => setColorSizeQty(c, s, e.target.value)}
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* صور هذا اللون — تظهر للزبونة عند اختياره (Color Swatches) */}
-                      {(() => {
-                        const imgs = form.colorImages?.[c] || [];
-                        return (
-                          <div className="mt-3 rounded-lg border border-gold-400/20 bg-gold-400/[0.04] p-2.5">
-                            <div className="mb-1 flex items-center justify-between gap-2">
-                              <p className="flex items-center gap-1.5 text-xs font-bold text-gold-100"><CameraIcon className="h-4 w-4" /> {t('dashboard.product.colorImages')}</p>
-                              {imgs.length > 0 && <span className="shrink-0 text-[10px] font-medium text-stone-400">{t('dashboard.product.colorImagesCount', { count: imgs.length })}</span>}
-                            </div>
-                            <p className="mb-2 text-[11px] leading-relaxed text-stone-400">{t('dashboard.product.colorImagesHint')}</p>
-                            <div className="space-y-2">
-                              {imgs.map((img, idx) => (
-                                <div key={idx} className="flex items-start gap-2">
-                                  <div className="flex-1"><ImageInput value={img} onChange={(v) => setColorImageAt(c, idx, v)} /></div>
-                                  <button type="button" onClick={() => removeColorImage(c, idx)} className="mt-1 rounded-lg p-2 text-stone-400 hover:text-red-300" aria-label={t('common.delete')}><XIcon className="h-4 w-4" /></button>
-                                </div>
-                              ))}
-                              {imgs.length < 4 && (
-                                <button type="button" onClick={() => addColorImage(c)} className="btn-ghost w-full text-sm">＋ {t('dashboard.product.addColorImage')}</button>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* إضافة لون جديد — مع اقتراحات أثناء الكتابة ومعاينة حيّة لدائرة اللون */}
-            <div className="mt-2 flex gap-2">
+            {/* إضافة لون — فوق البطاقات لا تحتها: هي الخطوة الأولى، وكانت
+                أسفل قائمة فارغة فلا يظهر من أين يبدأ. */}
+            <div className="flex gap-2">
               <div className="relative min-w-0 flex-1">
                 <input
                   type="text"
@@ -443,6 +370,151 @@ export default function ProductForm({ initial, onClose, onSaved }) {
             {/* الاسم غير معروف؟ ننبّه قبل الحفظ بدل دائرة فاضية تفاجئه على البطاقة */}
             {colorInput.trim().length > 1 && !colorToCss(colorInput) && (
               <p className="mt-1.5 text-xs text-orange-700">{t('dashboard.product.colorUnknown')}</p>
+            )}
+
+            {colors.length === 0 ? (
+              <div className="mt-3 flex flex-col items-center gap-1.5 rounded-xl border border-dashed border-gold-400/25 bg-black/15 px-4 py-6 text-center">
+                <PaletteIcon className="h-7 w-7 text-gold-300" />
+                <p className="text-xs text-stone-400">{t('dashboard.product.variantsEmpty')}</p>
+              </div>
+            ) : (
+              <>
+                <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-gold-400/20 bg-gold-400/[0.06] px-2.5 py-1.5 text-[11px] font-semibold text-stone-200">
+                  <span>{t('dashboard.product.variantTotal', { count: variantTotal })}</span>
+                  <span className="font-normal text-stone-400">{t('dashboard.product.variantTotalHint')}</span>
+                </p>
+
+                <div className="mt-2 space-y-3">
+                  {colors.map((c) => {
+                    const sizes = form.colorStock[c] || {};
+                    const chosen = Object.keys(sizes);
+                    const colorTotal = chosen.reduce((a, s) => a + (parseInt(sizes[s], 10) || 0), 0);
+                    const missing = chosen.filter((s) => sizes[s] === '' || sizes[s] == null).length;
+                    const imgs = form.colorImages?.[c] || [];
+                    return (
+                      <div key={c} className="overflow-hidden rounded-xl border border-gold-400/15 bg-black/20">
+                        {/* رأس اللون: الدائرة والاسم ومجموع قطعه وزرّ حذف واضح */}
+                        <div className="flex items-center gap-2 border-b border-gold-400/10 bg-black/15 px-3 py-2">
+                          <span className="h-5 w-5 shrink-0 rounded-full" style={{ background: colorToCss(c) || 'transparent', boxShadow: '0 0 0 1px rgba(244,237,226,0.45), inset 0 0 0 1px rgba(0,0,0,0.2)' }} />
+                          <span className="min-w-0 flex-1 truncate text-sm font-bold text-gold-100">{c}</span>
+                          {chosen.length > 0 && (
+                            <span className="shrink-0 rounded-full bg-gold-400/12 px-2 py-0.5 text-[10px] font-bold tabular-nums text-stone-200">
+                              {t('dashboard.product.colorTotal', { count: colorTotal })}
+                            </span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => removeColorVariant(c)}
+                            title={t('common.delete')} aria-label={`${t('common.delete')} ${c}`}
+                            className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-stone-400 transition hover:bg-red-500/10 hover:text-red-300"
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </button>
+                        </div>
+
+                        <div className="space-y-2.5 p-3">
+                          {/* اختيار النمر المتوفّرة لهذا اللون */}
+                          <div>
+                            <p className="mb-1.5 text-[11px] font-semibold text-stone-400">{t('dashboard.product.pickSizes')}</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {SIZES.map((sz) => {
+                                const on = sz in sizes;
+                                return (
+                                  <button
+                                    type="button"
+                                    key={sz}
+                                    onClick={() => toggleColorSize(c, sz)}
+                                    aria-pressed={on}
+                                    className={`rounded-full border px-3 py-1 text-xs font-bold transition ${on ? 'border-transparent' : 'border-gold-400/25 text-stone-300 hover:bg-white/5'}`}
+                                    // لونان صريحان للحالة النشطة: أصناف الذهب تنقلب
+                                    // بنّية نهاراً فيصير النصّ بنّياً على بنّي
+                                    style={on ? { background: '#d4af37', color: '#2a1c10' } : undefined}
+                                  >
+                                    {sizeLabel(sz, t)}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {/* كميّة كل نمرة مختارة — عدّاد بأزرار بدل خانة رقم
+                              صغيرة: الإدخال على الجوال بإصبع لا بلوحة مفاتيح */}
+                          {chosen.length > 0 && (
+                            <div className="space-y-1.5">
+                              {chosen.map((sz) => {
+                                const raw = sizes[sz];
+                                const n = parseInt(raw, 10);
+                                const empty = raw === '' || raw == null;
+                                return (
+                                  <div key={sz} className={`flex items-center gap-2 rounded-lg border px-2 py-1.5 ${empty ? 'border-red-400/45 bg-red-500/[0.07]' : 'border-gold-400/12 bg-black/15'}`}>
+                                    <span className="w-12 shrink-0 text-xs font-bold text-gold-100">{sizeLabel(sz, t)}</span>
+                                    <div className="flex flex-1 items-center justify-end gap-1.5">
+                                      <button
+                                        type="button"
+                                        onClick={() => setColorSizeQty(c, sz, String(Math.max(0, (Number.isFinite(n) ? n : 0) - 1)))}
+                                        aria-label="−"
+                                        className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-gold-400/25 text-sm font-bold text-stone-200 transition hover:bg-white/5"
+                                      >
+                                        −
+                                      </button>
+                                      <input
+                                        type="number" min="0" inputMode="numeric" required
+                                        className="input !w-14 !px-1 !py-1 text-center text-sm"
+                                        placeholder={t('dashboard.product.qty')}
+                                        value={raw ?? ''}
+                                        onChange={(e) => setColorSizeQty(c, sz, e.target.value)}
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => setColorSizeQty(c, sz, String((Number.isFinite(n) ? n : 0) + 1))}
+                                        aria-label="+"
+                                        className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-gold-400/25 text-sm font-bold text-stone-200 transition hover:bg-white/5"
+                                      >
+                                        +
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => toggleColorSize(c, sz)}
+                                        title={t('common.delete')} aria-label={`${t('common.delete')} ${sizeLabel(sz, t)}`}
+                                        className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-stone-400 transition hover:bg-red-500/10 hover:text-red-300"
+                                      >
+                                        <XIcon className="h-3.5 w-3.5" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                              {missing > 0 && (
+                                <p className="text-[11px] font-semibold text-red-300">{t('dashboard.product.qtyMissing', { count: missing })}</p>
+                              )}
+                            </div>
+                          )}
+
+                          {/* صور هذا اللون — تظهر للزبونة عند اختياره (Color Swatches) */}
+                          <div className="rounded-lg border border-gold-400/20 bg-gold-400/[0.04] p-2.5">
+                            <div className="mb-1 flex items-center justify-between gap-2">
+                              <p className="flex items-center gap-1.5 text-xs font-bold text-gold-100"><CameraIcon className="h-4 w-4" /> {t('dashboard.product.colorImages')}</p>
+                              {imgs.length > 0 && <span className="shrink-0 text-[10px] font-medium text-stone-400">{t('dashboard.product.colorImagesCount', { count: imgs.length })}</span>}
+                            </div>
+                            <p className="mb-2 text-[11px] leading-relaxed text-stone-400">{t('dashboard.product.colorImagesHint')}</p>
+                            <div className="space-y-2">
+                              {imgs.map((img, idx) => (
+                                <div key={idx} className="flex items-start gap-2">
+                                  <div className="min-w-0 flex-1"><ImageInput value={img} onChange={(v) => setColorImageAt(c, idx, v)} /></div>
+                                  <button type="button" onClick={() => removeColorImage(c, idx)} className="mt-1 rounded-lg p-2 text-stone-400 transition hover:bg-red-500/10 hover:text-red-300" aria-label={t('common.delete')}><XIcon className="h-4 w-4" /></button>
+                                </div>
+                              ))}
+                              {imgs.length < 4 && (
+                                <button type="button" onClick={() => addColorImage(c)} className="btn-ghost w-full text-sm">＋ {t('dashboard.product.addColorImage')}</button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
             )}
           </div>
           </Section>
