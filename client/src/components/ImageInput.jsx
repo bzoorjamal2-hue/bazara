@@ -159,7 +159,7 @@ export default function ImageInput({ value, onChange, round = false, label, plac
           )}
 
           {/* تلميح الاستخدام: السحب/اللصق — ما بيعرفها المالكة إلا إذا انكتبت */}
-          <p className="mt-1.5 text-[11px] leading-snug text-stone-500">{hint || t('image.dropHint')}</p>
+          <p className="mt-1.5 text-[11px] leading-snug text-stone-400">{hint || t('image.dropHint')}</p>
           {err && <p className="mt-1 text-xs text-red-300">{err}</p>}
         </div>
       </div>

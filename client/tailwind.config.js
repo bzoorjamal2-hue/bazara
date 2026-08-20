@@ -9,7 +9,11 @@ export default {
       fontFamily: {
         // عربي: Tajawal (نصوص) — إنجليزي: Inter — عناوين فخمة: Playfair (إنجليزي) / El Messiri (عربي)
         sans: ['Inter', 'Tajawal', 'system-ui', 'sans-serif'],
-        ar: ['Tajawal', 'sans-serif'],
+        // Inter قبل Tajawal عمداً: اختيار الخط يجري لكل حرف على حدة، وInter
+        // بلا حروف عربية فتذهب كلها إلى Tajawal كما كانت، بينما تلتقط Inter
+        // الأرقام واللاتيني. كانت Tajawal أولاً فتُرسم بها الأرقام وأرقامها
+        // أضعف — ولهذا كانت الواجهة الإنجليزية تبدو أنظف من العربية.
+        ar: ['Inter', 'Tajawal', 'sans-serif'],
         display: ['"Playfair Display"', '"El Messiri"', 'serif'],
         // ثيم المتجر العام (خمري/عاجي): عناوين El Messiri + نصوص Tajawal
         messiri: ['"El Messiri"', 'serif'],

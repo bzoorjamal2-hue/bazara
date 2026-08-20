@@ -199,18 +199,18 @@ export default function CouponsManager() {
             </div>
           </Field>
 
-          <Field label={t('dashboard.coupons.minTotal')} icon={<CashIcon className="h-4 w-4" />} tip={t('dashboard.coupons.minTotalTip')} hint={t('common.optional')}>
+          <Field label={t('dashboard.coupons.minTotal')} icon={<CashIcon className="h-4 w-4" />} tip={t('dashboard.coupons.minTotalTip')} optional>
             <div className="relative">
               <input className="input pe-8" type="number" min="0" step="0.01" inputMode="decimal" placeholder="0" value={form.minTotal} onChange={set('minTotal')} />
               <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-stone-400">{t('common.currency')}</span>
             </div>
           </Field>
 
-          <Field label={t('dashboard.coupons.maxUses')} icon={<UsersIcon className="h-4 w-4" />} tip={t('dashboard.coupons.maxUsesTip')} hint={t('common.optional')}>
+          <Field label={t('dashboard.coupons.maxUses')} icon={<UsersIcon className="h-4 w-4" />} tip={t('dashboard.coupons.maxUsesTip')} optional>
             <input className="input" type="number" min="1" inputMode="numeric" placeholder="∞" value={form.maxUses} onChange={set('maxUses')} />
           </Field>
 
-          <Field label={t('dashboard.coupons.expiresAt')} icon={<ClockIcon className="h-4 w-4" />} tip={t('dashboard.coupons.expiresTip')} hint={t('common.optional')}>
+          <Field label={t('dashboard.coupons.expiresAt')} icon={<ClockIcon className="h-4 w-4" />} tip={t('dashboard.coupons.expiresTip')} optional>
             <DateInput
               value={form.expiresAt}
               onChange={(v) => setForm({ ...form, expiresAt: v })}

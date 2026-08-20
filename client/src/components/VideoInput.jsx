@@ -143,7 +143,7 @@ export default function VideoInput({ value, onChange, label, hint = '' }) {
           </div>
         )}
 
-        <p className="mt-1.5 text-[11px] leading-snug text-stone-500">{hint || t('video.dropHint')}</p>
+        <p className="mt-1.5 text-[11px] leading-snug text-stone-400">{hint || t('video.dropHint')}</p>
         {err && <p className="mt-1 text-xs text-red-300">{err}</p>}
       </div>
     </div>

@@ -8,7 +8,7 @@ import VideoInput from '../../components/VideoInput.jsx';
 import Select from '../../components/Select.jsx';
 import useScrollLock from '../../hooks/useScrollLock.js';
 import { XIcon, ClockIcon, PaletteIcon, CameraIcon, StarIcon, EditIcon, TagIcon, CashIcon } from '../../components/icons.jsx';
-import { Field, DateInput } from '../../components/FormField.jsx';
+import { Field, DateInput, Tip } from '../../components/FormField.jsx';
 import { SIZES, sizeLabel } from '../../utils/sizes.js';
 import { colorToCss, COLOR_SUGGESTIONS } from '../../utils/colorDot.js';
 
@@ -169,22 +169,37 @@ export default function ProductForm({ initial, onClose, onSaved }) {
   if (!portalTarget) return null;
   return createPortal(
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="glass-strong max-h-[92vh] w-full max-w-lg animate-fade-up overflow-y-auto p-6">
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="font-display text-xl font-bold gradient-text">
-            {isEdit ? t('dashboard.product.editTitle') : t('dashboard.product.newTitle')}
-          </h2>
-          <button type="button" onClick={onClose} className="rounded-lg p-2 text-stone-400 hover:text-gold-200" aria-label="close"><XIcon className="h-5 w-5" /></button>
+      <div className="glass-strong flex max-h-[92vh] w-full max-w-lg animate-fade-up flex-col overflow-hidden">
+        {/* الرأس لاصق: النموذج طويل، وكانت العودة للإغلاق تتطلّب تمريراً للأعلى */}
+        <div className="flex shrink-0 items-center gap-3 border-b border-gold-400/15 px-4 py-4 sm:px-6">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-400 to-amber-500 text-white shadow-md">
+            <TagIcon className="h-5 w-5" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h2 className="gradient-text font-display text-lg font-bold leading-tight sm:text-xl">
+              {isEdit ? t('dashboard.product.editTitle') : t('dashboard.product.newTitle')}
+            </h2>
+            <p className="mt-0.5 truncate text-[11px] text-stone-400">
+              {isEdit ? form.name || t('dashboard.product.formHintEdit') : t('dashboard.product.formHintNew')}
+            </p>
+          </div>
+          <button type="button" onClick={onClose} className="shrink-0 rounded-lg p-2 text-stone-400 transition hover:bg-white/5 hover:text-gold-200" aria-label={t('common.cancel')}><XIcon className="h-5 w-5" /></button>
         </div>
 
-        {error && <div className="mb-4 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
-
-        <form onSubmit={submit} className="space-y-4">
+        <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:px-6">
+        {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
           {/* ١) الصور والفيديو */}
           <Section icon={<CameraIcon className="h-4 w-4" />} title={t('dashboard.product.secMedia')}>
-            <ImageInput label={t('dashboard.product.image')} value={form.imageUrl} onChange={(v) => setForm({ ...form, imageUrl: v })} />
-            <div>
-              <label className="label">{t('dashboard.product.gallery')} <span className="text-stone-500">({t('common.optional')})</span></label>
+            <Field label={t('dashboard.product.image')} tip={t('dashboard.product.imageTip')} icon={<CameraIcon className="h-4 w-4" />} required>
+              <ImageInput value={form.imageUrl} onChange={(v) => setForm({ ...form, imageUrl: v })} />
+            </Field>
+            <Field
+              label={t('dashboard.product.gallery')}
+              tip={t('dashboard.product.galleryTip')}
+              optional
+              hint={form.images.length ? t('dashboard.product.galleryCount', { count: form.images.length }) : ''}
+            >
               <div className="space-y-3">
                 {form.images.map((img, idx) => (
                   <div key={idx} className="flex items-start gap-2">
@@ -198,51 +213,50 @@ export default function ProductForm({ initial, onClose, onSaved }) {
                   <button type="button" onClick={addGallery} className="btn-ghost w-full text-sm">＋ {t('dashboard.product.addImage')}</button>
                 )}
               </div>
-            </div>
-            <VideoInput
-              label={`${t('dashboard.product.video')} (${t('common.optional')})`}
-              value={form.videoUrl}
-              onChange={(v) => setForm({ ...form, videoUrl: v })}
-            />
+            </Field>
+            <Field label={t('dashboard.product.video')} tip={t('dashboard.product.videoTip')} optional>
+              <VideoInput value={form.videoUrl} onChange={(v) => setForm({ ...form, videoUrl: v })} />
+            </Field>
           </Section>
 
           {/* ٢) المعلومات الأساسية */}
           <Section icon={<EditIcon className="h-4 w-4" />} title={t('dashboard.product.secBasic')}>
-            <div>
-              <label className="label">{t('dashboard.product.name')}</label>
-              <input type="text" required className="input" value={form.name} onChange={set('name')} />
-            </div>
-            <div>
-              <label className="label">{t('dashboard.product.category')}</label>
+            <Field label={t('dashboard.product.name')} tip={t('dashboard.product.nameTip')} required max={80} value={form.name}>
+              <input type="text" required maxLength={80} className="input" value={form.name} onChange={set('name')} />
+            </Field>
+            <Field label={t('dashboard.product.category')} tip={t('dashboard.product.categoryTip')} required>
               <Select
                 value={form.category}
                 onChange={(v) => setForm((f) => ({ ...f, category: v }))}
                 options={categoryOptions}
               />
-            </div>
-            <div>
-              <label className="label">{t('dashboard.product.description')} <span className="text-stone-500">({t('common.optional')})</span></label>
-              <textarea rows={3} className="input resize-none" value={form.description} onChange={set('description')} />
-            </div>
+            </Field>
+            <Field label={t('dashboard.product.description')} tip={t('dashboard.product.descriptionTip')} optional max={500} value={form.description}>
+              <textarea rows={3} maxLength={500} className="input resize-none" value={form.description} onChange={set('description')} />
+            </Field>
           </Section>
 
           {/* ٣) السعر والعرض */}
           <Section icon={<TagIcon className="h-4 w-4" />} title={t('dashboard.product.secPricing')}>
             <div className="grid grid-cols-2 gap-4">
-              <div className="min-w-0">
-                <label className="label">{t('dashboard.product.price')}</label>
-                <input type="number" step="0.01" min="0" required className="input" value={form.price} onChange={set('price')} />
-              </div>
-              <div className="min-w-0">
-                <label className="label">{t('dashboard.product.oldPrice')} <span className="text-stone-500">({t('common.optional')})</span></label>
-                <input type="number" step="0.01" min="0" className="input" value={form.oldPrice} onChange={set('oldPrice')} />
-              </div>
+              <Field label={t('dashboard.product.price')} tip={t('dashboard.product.priceTip')} required>
+                <div className="relative">
+                  <input type="number" step="0.01" min="0" inputMode="decimal" required className="input pe-8" value={form.price} onChange={set('price')} />
+                  <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-stone-400">{t('common.currency')}</span>
+                </div>
+              </Field>
+              <Field label={t('dashboard.product.oldPrice')} tip={t('dashboard.product.oldPriceTip')} optional>
+                <div className="relative">
+                  <input type="number" step="0.01" min="0" inputMode="decimal" className="input pe-8" value={form.oldPrice} onChange={set('oldPrice')} />
+                  <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-stone-400">{t('common.currency')}</span>
+                </div>
+              </Field>
             </div>
             {/* سعر التكلفة — للمالكة وحدها، لا يظهر للزبون إطلاقاً. أساس حساب الربح. */}
             <Field
               label={t('dashboard.product.cost')}
               tip={t('dashboard.product.costTip')}
-              hint={t('common.optional')}
+              optional
               icon={<CashIcon className="h-4 w-4" />}
             >
               <div className="relative">
@@ -263,24 +277,32 @@ export default function ProductForm({ initial, onClose, onSaved }) {
 
             {/* عرض بوقت محدود: عدّاد تنازلي — يظهر للزبون، وعند انتهائه يعود السعر الأصلي تلقائياً */}
             {form.oldPrice !== '' && (
-              <div className="min-w-0">
-                <label className="label flex items-center gap-1.5"><ClockIcon className="h-4 w-4" /> {t('dashboard.product.saleEndsAt')} <span className="text-stone-500">({t('common.optional')})</span></label>
+              <Field
+                label={t('dashboard.product.saleEndsAt')}
+                tip={t('dashboard.product.saleEndsTip')}
+                optional
+                icon={<ClockIcon className="h-4 w-4" />}
+              >
                 <DateInput value={form.saleEndsAt} onChange={(v) => set('saleEndsAt')({ target: { value: v } })} />
                 <p className="mt-1 text-xs text-stone-400">{t('dashboard.product.saleEndsHint')}</p>
-              </div>
+              </Field>
             )}
           </Section>
 
           {/* ٤) المخزون والألوان */}
           <Section icon={<PaletteIcon className="h-4 w-4" />} title={t('dashboard.product.secInventory')}>
-            <div>
-              <label className="label">{t('dashboard.product.stock')}</label>
-              <input type="number" min="0" className="input" value={form.stock} onChange={set('stock')} placeholder="∞" />
+            <Field label={t('dashboard.product.stock')} tip={t('dashboard.product.stockTip')} optional>
+              <input type="number" min="0" inputMode="numeric" className="input" value={form.stock} onChange={set('stock')} placeholder="∞" />
               <p className="mt-1 text-xs text-stone-400">{t('dashboard.product.stockHint')}</p>
-            </div>
+            </Field>
           {/* المتغيّرات: لكل لون نختار النمر المتوفّرة وكميتها — الزبون يختار اللون أولاً ثم النمرة */}
           <div>
-            <label className="label flex items-center gap-1.5"><PaletteIcon className="h-4 w-4" /> {t('dashboard.product.variants')} <span className="text-stone-500">({t('common.optional')})</span></label>
+            <div className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-stone-300">
+              <PaletteIcon className="h-4 w-4 shrink-0" />
+              <span className="min-w-0">{t('dashboard.product.variants')}</span>
+              <Tip text={t('dashboard.product.variantsTip')} />
+              <span className="shrink-0 text-[10px] text-stone-400">({t('common.optional')})</span>
+            </div>
             <p className="mb-2 text-xs text-stone-400">{t('dashboard.product.variantsHint')}</p>
 
             {colors.length > 0 && (
@@ -390,17 +412,24 @@ export default function ProductForm({ initial, onClose, onSaved }) {
           </div>
           </Section>
 
-          <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-gold-400/15 bg-black/20 px-4 py-3">
-            <input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} className="h-5 w-5 accent-gold-400" />
-            <span className="inline-flex items-center gap-1.5 text-sm text-stone-200"><StarIcon className="h-4 w-4 text-gold-300" /> {t('dashboard.product.featured')}</span>
-          </label>
-
-          <div className="flex gap-3 pt-2">
-            <button type="submit" disabled={busy} className="btn-primary flex-1">
-              {busy ? t('common.loading') : t('common.save')}
-            </button>
-            <button type="button" onClick={onClose} className="btn-ghost">{t('common.cancel')}</button>
+          <div className="flex items-center gap-2 rounded-xl border border-gold-400/15 bg-black/20 px-4 py-3">
+            <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-3">
+              <input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} className="h-5 w-5 shrink-0 accent-gold-400" />
+              <span className="inline-flex min-w-0 items-center gap-1.5 text-sm text-stone-200"><StarIcon className="h-4 w-4 shrink-0 text-gold-300" /> {t('dashboard.product.featured')}</span>
+            </label>
+            <Tip text={t('dashboard.product.featuredTip')} />
           </div>
+
+        </div>
+
+        {/* الأزرار ثابتة أسفل النافذة: كانت بآخر نموذج يتجاوز ارتفاعه الشاشة
+            مرّات، فيُملأ الحقل الأخير ثم يُبحث عن الحفظ بتمرير طويل */}
+        <div className="flex shrink-0 gap-3 border-t border-gold-400/15 px-4 py-3 sm:px-6">
+          <button type="submit" disabled={busy} className="btn-primary flex-1">
+            {busy ? t('common.loading') : (isEdit ? t('common.save') : t('dashboard.product.saveNew'))}
+          </button>
+          <button type="button" onClick={onClose} className="btn-ghost shrink-0">{t('common.cancel')}</button>
+        </div>
         </form>
       </div>
     </div>,

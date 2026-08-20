@@ -40,7 +40,7 @@ export function Tip({ text }) {
           ? { color: '#e6c878', background: 'rgba(212,175,55,0.22)', boxShadow: '0 0 0 1px #d4af37' }
           : { color: '#d4af37' }}
       >
-        <HelpIcon className="h-[15px] w-[15px] block" />
+        <HelpIcon className="bz-help-glyph h-[15px] w-[15px] block" />
       </button>
       {open && (
         <span
@@ -56,7 +56,8 @@ export function Tip({ text }) {
 }
 
 // خانة موحّدة: تسمية + تلميح منبثق + عدّاد أحرف + سطر إرشادي تحتها
-export function Field({ label, tip, hint, icon, max, value = '', required = false, children }) {
+export function Field({ label, tip, hint, icon, max, value = '', required = false, optional = false, children }) {
+  const { t } = useTranslation();
   const len = String(value || '').length;
   return (
     <div>
@@ -72,9 +73,12 @@ export function Field({ label, tip, hint, icon, max, value = '', required = fals
               {required && <span className="text-red-400">*</span>}
             </span>
             <Tip text={tip} />
+            {/* «اختياري» علامةٌ على الحقل، مكانها بجانب اسمه لا سطراً تحت
+                محتواه — هناك كانت تُقرأ وكأنها تصف ما فوقها. */}
+            {optional && <span className="shrink-0 text-[10px] font-normal text-stone-400">({t('common.optional')})</span>}
           </span>
           {max ? (
-            <span className={`shrink-0 text-[10px] tabular-nums ${len > max * 0.88 ? 'text-amber-400' : 'text-stone-500'}`}>{len}/{max}</span>
+            <span className={`shrink-0 text-[10px] tabular-nums ${len > max * 0.88 ? 'text-amber-400' : 'text-stone-400'}`}>{len}/{max}</span>
           ) : null}
         </div>
       )}

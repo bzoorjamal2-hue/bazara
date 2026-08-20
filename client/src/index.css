@@ -414,7 +414,19 @@ input[type='datetime-local']::-webkit-datetime-edit {
   background: #F4EDE2;
   color: #2b2b2b;
   min-height: 100vh;
-  font-family: 'Tajawal', sans-serif;
+  /* Inter أولاً ثم Tajawal — لا لتغيير النص العربي بل لأن اختيار الخط يجري
+     لكل حرف على حدة: Inter لا يحوي العربية فتذهب للـTajawal كما هي، بينما
+     الأرقام واللاتيني يلتقطها Inter. كانت Tajawal أولاً فتُرسم بها الأرقام
+     أيضاً، وأرقامها أضعف من أرقام Inter — وهو ما يجعل الواجهة الإنجليزية
+     تبدو أنظف من العربية رغم أن الأرقام نفسها. */
+  font-family: 'Inter', 'Tajawal', sans-serif;
+}
+
+/* علامة الاستفهام معكوسة بالعربية (؟) لا كاللاتينية (?). الأيقونة مرسومة
+   بالشكل اللاتيني، فنعكسها أفقياً مع اتجاه الصفحة. الدائرة متماثلة فلا
+   يتأثّر إلا الخطّاف نفسه. */
+[dir='rtl'] .bz-help-glyph {
+  transform: scaleX(-1);
 }
 .theme-pub .font-display {
   font-family: 'El Messiri', serif;

@@ -1030,7 +1030,24 @@
       "lowStock": "Low stock",
       "deleteTitle": "Delete product",
       "deleteMsg": "Are you sure you want to delete this product? This cannot be undone.",
-      "empty": "No products yet. Add your first one!"
+      "empty": "No products yet. Add your first one!",
+      "nameTip": "What customers search for and what shows on the card and invoice. Be descriptive: “Black flared abaya” beats “Abaya 1”.",
+      "categoryTip": "Decides where the product appears in your store and in filters. Custom categories can be added in store settings.",
+      "descriptionTip": "Fabric, cut and fit — what stops the questions and reduces returns.",
+      "priceTip": "What the customer actually pays. If you set an old price, this one shows as the discounted one.",
+      "oldPriceTip": "The price before the discount — shown struck through next to the current price. Leave empty if there is no discount.",
+      "saleEndsTip": "A countdown the customer sees. When it ends the original price returns automatically.",
+      "imageTip": "The main image — the first thing customers see in the store and in search results. Pick the clearest.",
+      "galleryTip": "Up to 5 extra images shown inside the product page. Different angles and fabric detail.",
+      "videoTip": "A short clip showing the piece in motion. It builds a lot of trust for clothing.",
+      "stockTip": "Total quantity. Leave empty for unlimited. It is deducted automatically when an order is confirmed.",
+      "variantsTip": "For each colour you pick the available sizes, quantities and images. Customers pick colour, then size.",
+      "featuredTip": "Shows in the storefront under “Featured” — use it for the pieces you want to sell first.",
+      "requiredHint": "required",
+      "saveNew": "Save product",
+      "galleryCount": "{{count}} of 5",
+      "formHintNew": "Fill this in and the piece appears in your store right away",
+      "formHintEdit": "Editing an existing piece"
     }
   },
   "product": {
