@@ -190,6 +190,7 @@ export default function Navbar() {
         { key: 'subscribers', label: t('admin.subscribersNav'), Icon: UsersIcon },
         { key: 'admin', label: t('admin.nav'), Icon: ShieldCheckIcon },
         { key: 'adminLog', label: t('admin.logTitle'), Icon: ShieldCheckIcon },
+        { key: 'adminSettings', label: t('admin.settingsTitle'), Icon: GearIcon },
         { key: 'siteSliders', label: t('admin.siteSliders'), Icon: GridIcon },
         { key: 'newsletter', label: t('admin.newsletter'), Icon: MailIcon },
         { key: 'broadcast', label: t('admin.bc.nav'), Icon: MailIcon },

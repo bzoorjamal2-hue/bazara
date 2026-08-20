@@ -304,6 +304,43 @@ export async function forgotPassword(req, res, next) {
   }
 }
 
+// ── POST /api/auth/admin/send-reset ────────────────────────────────────────
+// يرسل رمز الاستعادة إلى بريد المشترِكة نفسها. الطريق الآمن: لا أحد يرى كلمة
+// السرّ — لا المدير ولا قناة الإرسال. البديل أدناه (تعيينها يدوياً) يُبقي
+// كلمة سرٍّ صريحة تمرّ في واتساب أو بريد، ويجعل المدير عارفاً بسرّ غيره.
+export async function adminSendReset(req, res, next) {
+  const email = String(req.body?.email || '').trim().toLowerCase();
+  try {
+    if (!email) return res.status(400).json({ error: 'البريد مطلوب.' });
+    const r = await query('SELECT id FROM users WHERE email = $1', [email]);
+    if (r.rows.length === 0) return res.status(404).json({ error: 'لا يوجد حساب بهذا البريد.' });
+    if (!isMailConfigured()) return res.status(503).json({ error: 'البريد غير مُهيّأ على الخادم.' });
+
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    const expires = new Date(Date.now() + 15 * 60 * 1000);
+    await query('UPDATE users SET reset_token = $1, reset_token_expires = $2 WHERE id = $3', [
+      hashToken(code), expires, r.rows[0].id,
+    ]);
+
+    const sentAt = new Date().toLocaleString('ar', { timeZone: 'Asia/Hebron', dateStyle: 'short', timeStyle: 'short' });
+    sendMail({
+      to: email,
+      subject: `رمز التحقق ${code} — Bazara`,
+      html: `<div style="font-family:Tahoma,Arial;direction:rtl;text-align:right">
+        <h2>رمز استعادة كلمة المرور</h2>
+        <p>رمز التحقق الخاص بك (صالح لمدة 15 دقيقة فقط، ويُلغى أي رمز سابق):</p>
+        <p style="font-size:30px;font-weight:bold;letter-spacing:8px;color:#b8932c">${code}</p>
+        <p style="color:#888;font-size:13px">تم الإرسال: ${sentAt} (بتوقيت فلسطين)</p>
+      </div>`,
+    }).catch((e) => console.error('sendMail failed:', e.message));
+
+    await logAdmin(req, 'user.sendReset', { type: 'user', id: email, label: email });
+    res.json({ ok: true, email });
+  } catch (err) {
+    next(err);
+  }
+}
+
 // إعادة تعيين كلمة مرور أي مستخدم (للمدير فقط — بدون إيميل)
 export async function adminResetPassword(req, res, next) {
   const { email, newPassword } = req.body;

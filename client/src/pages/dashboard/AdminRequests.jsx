@@ -3,35 +3,14 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
-import { KeyIcon, CardIcon, LockOpenIcon, ShieldIcon, BellIcon, CheckIcon, XIcon, LinkIcon } from '../../components/icons.jsx';
+import { KeyIcon, ShieldIcon, BellIcon, CheckIcon, XIcon, LinkIcon } from '../../components/icons.jsx';
 import { PageHead, SectionHead, Tip } from '../../components/FormField.jsx';
-
-function genPassword() {
-  const lower = 'abcdefghijkmnpqrstuvwxyz';
-  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-  const dig = '23456789';
-  const sym = '!@#$%&*';
-  const all = lower + upper + dig + sym;
-  const pick = (s) => s[Math.floor(Math.random() * s.length)];
-  let p = pick(lower) + pick(upper) + pick(dig) + pick(sym);
-  for (let i = 0; i < 6; i++) p += pick(all);
-  return p.split('').sort(() => Math.random() - 0.5).join('');
-}
 
 export default function AdminRequests() {
   const { t } = useTranslation();
   const [error, setError] = useState('');
 
-  // إعادة تعيين كلمة مرور مشترك
-  const [rf, setRf] = useState({ email: '', newPassword: '' });
-  const [rMsg, setRMsg] = useState('');
-  const [rErr, setRErr] = useState('');
-  const [rBusy, setRBusy] = useState(false);
 
-  // تعليمات الدفع
-  const [payInfo, setPayInfo] = useState('');
-  const [payMsg, setPayMsg] = useState('');
-  const [payBusy, setPayBusy] = useState(false);
 
   // طلبات الاشتراك المعلّقة — نقطة الوصول الوحيدة لها
   const [requests, setRequests] = useState(null);
@@ -53,7 +32,6 @@ export default function AdminRequests() {
   }, []);
 
   useEffect(() => {
-    api.get('/subscription/settings').then((r) => setPayInfo(r.data.paymentInfo || '')).catch(() => {});
     loadCodes();
     loadRequests();
   }, [loadCodes, loadRequests]);
@@ -68,33 +46,6 @@ export default function AdminRequests() {
       setError(getErrorMessage(err, t('errors.generic')));
     } finally {
       setReqBusy('');
-    }
-  };
-
-  const doReset = async (e) => {
-    e.preventDefault();
-    setRMsg(''); setRErr(''); setRBusy(true);
-    try {
-      await api.post('/auth/admin/reset-password', rf);
-      setRMsg(`${t('admin.resetDone')} (${rf.email} → ${rf.newPassword})`);
-    } catch (err) {
-      setRErr(getErrorMessage(err, t('errors.generic')));
-    } finally {
-      setRBusy(false);
-    }
-  };
-
-  const savePayment = async (e) => {
-    e.preventDefault();
-    setPayMsg(''); setPayBusy(true);
-    try {
-      await api.put('/subscription/settings', { paymentInfo: payInfo });
-      setPayMsg(t('admin.paymentSaved'));
-      setTimeout(() => setPayMsg(''), 2000);
-    } catch (err) {
-      setPayMsg(getErrorMessage(err, t('errors.generic')));
-    } finally {
-      setPayBusy(false);
     }
   };
 
@@ -267,37 +218,6 @@ export default function AdminRequests() {
         )}
       </div>
 
-      {/* تعليمات الدفع */}
-      <form onSubmit={savePayment} className="glass space-y-3 p-5">
-        <h2 className="flex items-center gap-1.5 font-display text-lg font-bold text-stone-100"><CardIcon className="h-5 w-5" /> {t('admin.paymentTitle')}</h2>
-        <p className="text-xs text-stone-400">{t('admin.paymentHint')}</p>
-        {payMsg && <Alert ok>{payMsg}</Alert>}
-        <textarea rows={4} className="input resize-none" value={payInfo} onChange={(e) => setPayInfo(e.target.value)}
-          placeholder="مثال: للاشتراك حوّل المبلغ إلى محفظة PalPay رقم ... أو حساب بنكي ...، ثم تواصل لاستلام كود التفعيل." />
-        <button type="submit" disabled={payBusy} className="btn-primary">{payBusy ? t('common.loading') : t('admin.savePayment')}</button>
-      </form>
-
-      {/* إعادة تعيين كلمة مرور مشترك */}
-      <form onSubmit={doReset} className="glass space-y-3 p-5">
-        <h2 className="flex items-center gap-1.5 font-display text-lg font-bold text-stone-100"><LockOpenIcon className="h-5 w-5" /> {t('admin.resetSection')}</h2>
-        <p className="text-xs text-stone-400">{t('admin.resetHint')}</p>
-        {rMsg && <Alert ok>{rMsg}</Alert>}
-        {rErr && <Alert>{rErr}</Alert>}
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div>
-            <label className="label">{t('admin.userEmail')}</label>
-            <input type="email" required dir="ltr" className="input" value={rf.email} onChange={(e) => setRf({ ...rf, email: e.target.value })} />
-          </div>
-          <div>
-            <label className="label">{t('admin.newPassword')}</label>
-            <div className="flex gap-2">
-              <input type="text" required dir="ltr" className="input" value={rf.newPassword} onChange={(e) => setRf({ ...rf, newPassword: e.target.value })} />
-              <button type="button" onClick={() => setRf({ ...rf, newPassword: genPassword() })} className="btn-ghost shrink-0 !px-3 text-xs">{t('admin.generate')}</button>
-            </div>
-          </div>
-        </div>
-        <button type="submit" disabled={rBusy} className="btn-primary">{rBusy ? t('common.loading') : t('admin.doReset')}</button>
-      </form>
     </div>
   );
 }

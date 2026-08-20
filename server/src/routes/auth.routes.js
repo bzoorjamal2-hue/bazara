@@ -12,6 +12,7 @@ import {
   forgotPassword,
   resetPassword,
   adminResetPassword,
+  adminSendReset,
 } from '../controllers/auth.controller.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
 import {
@@ -53,5 +54,6 @@ router.post('/reset-password', authLimiter, resetPasswordRules, handleValidation
 
 // إعادة تعيين كلمة مرور مستخدم (للمدير)
 router.post('/admin/reset-password', requireAuth, requireAdmin, adminResetRules, handleValidation, adminResetPassword);
+router.post('/admin/send-reset', requireAuth, requireAdmin, adminSendReset);
 
 export default router;
