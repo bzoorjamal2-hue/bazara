@@ -131,7 +131,17 @@
   "offers": {
     "title": "Offers & deals",
     "subtitle": "All discounted pieces in one place",
-    "empty": "No offers right now. Check back soon!"
+    "empty": "No offers right now. Check back soon!",
+    "count_one": "1 discounted piece",
+    "count_other": "{{count}} discounted pieces",
+    "upTo": "up to {{pct}}% off",
+    "endingSoon_one": "1 offer ends within two days",
+    "endingSoon_other": "{{count}} offers end within two days",
+    "tier": {
+      "all": "All offers",
+      "d30": "30% off or more",
+      "d50": "50% off or more"
+    }
   },
   "reels": {
     "title": "Reels",
