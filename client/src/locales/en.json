@@ -1386,10 +1386,10 @@
     "user": "User",
     "store": "Store",
     "plan": "Plan",
-    "method": "Method",
-    "reference": "Reference",
+    "method": "Payment method",
+    "reference": "Transfer ref.",
     "status": "Status",
-    "approve": "Activate",
+    "approve": "Approve",
     "reject": "Reject",
     "approved": "Active",
     "rejected": "Rejected",
@@ -1546,7 +1546,8 @@
       "request.approve": "Request approved",
       "request.reject": "Request rejected",
       "product.hide": "Product hidden",
-      "product.unhide": "Product shown"
+      "product.unhide": "Product shown",
+      "user.resetPassword": "Password reset"
     },
     "logCount_one": "1 action",
     "logCount_other": "{{count}} actions",
@@ -1556,6 +1557,14 @@
       "days": "Days",
       "plan": "Plan",
       "currentPeriodEnd": "Expires"
+    },
+    "requestsTitle": "Subscription requests",
+    "requestsHint": "Requests that paid and await your verification. Approving activates the subscription immediately.",
+    "referenceTip": "The reference the store owner entered. Verify it in your account before approving.",
+    "reqStatus": {
+      "pending": "Awaiting verification",
+      "approved": "Approved",
+      "rejected": "Rejected"
     }
   },
   "order": {

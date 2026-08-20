@@ -5,6 +5,7 @@ import pool, { query } from '../config/db.js';
 import { generateUniqueStoreSlug } from '../utils/slug.js';
 import { generateSubscriberCode, isUserActive, daysRemaining, isAdminEmail, planPeriodEnd } from '../utils/subscription.js';
 import { sendMail, isMailConfigured } from '../utils/mail.js';
+import { logAdmin } from '../utils/adminLog.js';
 
 const hashToken = (t) => crypto.createHash('sha256').update(t).digest('hex');
 const firstUrl = (v) => (v || '').split(',')[0].trim().replace(/\/$/, '');
@@ -313,6 +314,9 @@ export async function adminResetPassword(req, res, next) {
       [hash, email]
     );
     if (r.rows.length === 0) return res.status(404).json({ error: 'لا يوجد مستخدم بهذا البريد.' });
+    // أخطر فعل إداريّ: يمنح المدير دخولاً لحساب غيره. كان بلا أثر إطلاقاً.
+    // لا نسجّل كلمة السرّ نفسها — السجلّ يثبت الفعل لا يُفشي السرّ.
+    await logAdmin(req, 'user.resetPassword', { type: 'user', id: r.rows[0].email, label: r.rows[0].email });
     res.json({ message: 'تم تعيين كلمة مرور جديدة لهذا المستخدم.', email: r.rows[0].email });
   } catch (err) {
     next(err);

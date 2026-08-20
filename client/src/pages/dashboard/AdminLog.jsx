@@ -18,6 +18,7 @@ const ACTIONS = {
   'subscription.addDays': { tone: '#047857', Icon: PlusIcon },
   'store.feature': { tone: '#92400e', Icon: StarIcon },
   'store.unfeature': { tone: '#57534e', Icon: StarIcon },
+  'user.resetPassword': { tone: '#b91c1c', Icon: ShieldIcon },
 };
 
 // قيمة الحقل كما تُقرأ: التاريخ بصيغة محلّية لا ISO، والبقيّة نصّاً مقصوصاً.

@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
-import { KeyIcon, CardIcon, LockOpenIcon, ShieldIcon } from '../../components/icons.jsx';
-import { PageHead } from '../../components/FormField.jsx';
+import { KeyIcon, CardIcon, LockOpenIcon, ShieldIcon, BellIcon, CheckIcon, XIcon, LinkIcon } from '../../components/icons.jsx';
+import { PageHead, SectionHead, Tip } from '../../components/FormField.jsx';
 
 function genPassword() {
   const lower = 'abcdefghijkmnpqrstuvwxyz';
@@ -33,6 +33,10 @@ export default function AdminRequests() {
   const [payMsg, setPayMsg] = useState('');
   const [payBusy, setPayBusy] = useState(false);
 
+  // طلبات الاشتراك المعلّقة — نقطة الوصول الوحيدة لها
+  const [requests, setRequests] = useState(null);
+  const [reqBusy, setReqBusy] = useState('');
+
   // أكواد التفعيل
   const [codes, setCodes] = useState(null);
   const [genPlan, setGenPlan] = useState('monthly');
@@ -44,10 +48,28 @@ export default function AdminRequests() {
     api.get('/subscription/codes').then((r) => setCodes(r.data.codes)).catch((e) => setError(getErrorMessage(e)));
   }, []);
 
+  const loadRequests = useCallback(() => {
+    api.get('/subscription/requests').then((r) => setRequests(r.data.requests)).catch(() => setRequests([]));
+  }, []);
+
   useEffect(() => {
     api.get('/subscription/settings').then((r) => setPayInfo(r.data.paymentInfo || '')).catch(() => {});
     loadCodes();
-  }, [loadCodes]);
+    loadRequests();
+  }, [loadCodes, loadRequests]);
+
+  // قبول الطلب يفعّل الاشتراك فوراً، ورفضه يُبقي الحساب كما هو
+  const decide = async (id, action) => {
+    setReqBusy(id); setError('');
+    try {
+      await api.post(`/subscription/requests/${id}/${action}`);
+      setRequests((prev) => prev.map((x) => (x.id === id ? { ...x, status: action === 'approve' ? 'approved' : 'rejected' } : x)));
+    } catch (err) {
+      setError(getErrorMessage(err, t('errors.generic')));
+    } finally {
+      setReqBusy('');
+    }
+  };
 
   const doReset = async (e) => {
     e.preventDefault();
@@ -99,6 +121,86 @@ export default function AdminRequests() {
     <div className="space-y-6">
       <PageHead icon={<ShieldIcon className="h-6 w-6" />} title={t('admin.title')} hint={t('admin.hint')} />
       <Alert>{error}</Alert>
+
+      {/* طلبات الاشتراك — بانر «طلبات معلّقة» بنظرة المدير كان يقود إلى هذه
+          الصفحة وهي لا تعرض طلباً واحداً: مسارات الخادم كاملة بلا واجهة. */}
+      {requests && requests.length > 0 && (
+        <div className="dash-section glass space-y-4 p-5">
+          <SectionHead icon={<BellIcon className="h-5 w-5" />} title={t('admin.requestsTitle')} desc={t('admin.requestsHint')} />
+          <div className="space-y-2">
+            {requests.map((r) => {
+              const pending = r.status === 'pending';
+              return (
+                <div
+                  key={r.id}
+                  className={`rounded-xl border p-3 ${pending ? 'border-gold-400/40 bg-gold-400/[0.06]' : 'border-gold-400/12 bg-black/15'}`}
+                >
+                  <div className="flex flex-wrap items-start gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold text-stone-100">{r.storeName || r.userName}</p>
+                      <p className="mt-0.5 truncate text-[11px] text-stone-400">{r.userEmail}</p>
+                    </div>
+                    <span
+                      className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold text-cream"
+                      style={{ background: pending ? '#92400e' : r.status === 'approved' ? '#047857' : '#b91c1c' }}
+                    >
+                      {t(`admin.reqStatus.${r.status}`, r.status)}
+                    </span>
+                  </div>
+
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
+                    <span className="rounded-full border border-gold-400/20 px-2 py-0.5 text-stone-300">
+                      {t('admin.plan')}: {t(`subscription.${r.plan}`, r.plan)}
+                    </span>
+                    {r.method && (
+                      <span className="rounded-full border border-gold-400/20 px-2 py-0.5 text-stone-300">
+                        {t('admin.method')}: {r.method}
+                      </span>
+                    )}
+                    {/* رقم الحوالة: ما يتحقّق به المدير من الدفع قبل القبول */}
+                    {r.reference && (
+                      <span className="flex items-center gap-1 rounded-full border border-gold-400/20 px-2 py-0.5 text-stone-300">
+                        {t('admin.reference')}: <b dir="ltr">{r.reference}</b>
+                        <Tip text={t('admin.referenceTip')} />
+                      </span>
+                    )}
+                    {r.storeSlug && (
+                      <a
+                        href={`/store/${r.storeSlug}`} target="_blank" rel="noreferrer"
+                        className="inline-flex items-center gap-1 rounded-full border border-gold-400/20 px-2 py-0.5 text-gold-300 hover:bg-gold-400/10"
+                      >
+                        <LinkIcon className="h-3 w-3" /> {t('admin.subStore')}
+                      </a>
+                    )}
+                  </div>
+
+                  {pending && (
+                    <div className="mt-2.5 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        disabled={reqBusy === r.id}
+                        onClick={() => decide(r.id, 'approve')}
+                        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-cream disabled:opacity-50"
+                        style={{ background: '#047857' }}
+                      >
+                        <CheckIcon className="h-3.5 w-3.5" /> {t('admin.approve')}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={reqBusy === r.id}
+                        onClick={() => decide(r.id, 'reject')}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-red-400/40 px-3 py-1.5 text-xs font-bold text-red-300 transition hover:bg-red-500/10 disabled:opacity-50"
+                      >
+                        <XIcon className="h-3.5 w-3.5" /> {t('admin.reject')}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* أكواد التفعيل */}
       <div className="glass space-y-4 p-5">

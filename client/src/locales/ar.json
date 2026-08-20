@@ -1449,10 +1449,10 @@
     "user": "المستخدم",
     "store": "المتجر",
     "plan": "الخطّة",
-    "method": "الطريقة",
-    "reference": "المرجع",
+    "method": "طريقة الدفع",
+    "reference": "رقم الحوالة",
     "status": "الحالة",
-    "approve": "تفعيل",
+    "approve": "قبول وتفعيل",
     "reject": "رفض",
     "approved": "مفعّل",
     "rejected": "مرفوض",
@@ -1618,7 +1618,8 @@
       "request.approve": "قبول طلب",
       "request.reject": "رفض طلب",
       "product.hide": "إخفاء منتج",
-      "product.unhide": "إظهار منتج"
+      "product.unhide": "إظهار منتج",
+      "user.resetPassword": "تصفير كلمة سرّ"
     },
     "logCount_one": "إجراء واحد",
     "logCount_two": "إجراءان",
@@ -1631,6 +1632,14 @@
       "days": "أيام",
       "plan": "الخطّة",
       "currentPeriodEnd": "ينتهي في"
+    },
+    "requestsTitle": "طلبات الاشتراك",
+    "requestsHint": "طلبات دفعت وتنتظر تحقّقك. القبول يفعّل الاشتراك فوراً.",
+    "referenceTip": "الرقم الذي أدخلته صاحبة المتجر. تحقّقي منه في حسابك قبل القبول.",
+    "reqStatus": {
+      "pending": "بانتظار التحقّق",
+      "approved": "مقبول",
+      "rejected": "مرفوض"
     }
   },
   "order": {
