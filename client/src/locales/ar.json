@@ -1442,7 +1442,9 @@
     "expired": "انتهى اشتراكك. متجرك مخفي مؤقتاً، لكن بياناتك ومنتجاتك محفوظة. جدّد لإعادة تفعيله.",
     "pendingBanner": "طلب اشتراكك قيد المراجعة.",
     "renew": "جدّد الاشتراك",
-    "subscriberCode": "رمز المشترك الخاص بك"
+    "subscriberCode": "رمز المشترك الخاص بك",
+    "suspended": "متجرك موقوف إدارياً",
+    "suspendedHint": "تواصلي مع إدارة بازارا بعد معالجة السبب لرفع الإيقاف."
   },
   "admin": {
     "hint": "مراجعة طلبات الاشتراك وإصدار أكواد التفعيل للمتاجر.",
@@ -1662,7 +1664,10 @@
       "product.hide": "إخفاء منتج",
       "product.unhide": "إظهار منتج",
       "user.resetPassword": "تصفير كلمة سرّ",
-      "user.sendReset": "إرسال رمز استعادة"
+      "user.sendReset": "إرسال رمز استعادة",
+      "account.suspend": "إيقاف حساب",
+      "account.unsuspend": "رفع إيقاف",
+      "account.fix": "تصحيح بيانات"
     },
     "logCount_one": "إجراء واحد",
     "logCount_two": "إجراءان",
@@ -1723,7 +1728,20 @@
     "nlPhones_two": "هاتفان",
     "nlPhones_few": "{{count}} هواتف",
     "nlPhones_many": "{{count}} هاتفاً",
-    "nlPhones_other": "{{count}} هاتف"
+    "nlPhones_other": "{{count}} هاتف",
+    "suspend": "إيقاف",
+    "unsuspend": "رفع الإيقاف",
+    "suspendedLabel": "موقوف إدارياً",
+    "suspendWhat": "الإيقاف يُخفي المتجر عن الزوّار فوراً، ويُعرض السبب لصاحبته. لا يُحذف شيء.",
+    "suspendReasonPlaceholder": "سبب الإيقاف — تراه صاحبة المتجر",
+    "suspendDone": "أُوقف المتجر",
+    "unsuspendDone": "رُفع الإيقاف",
+    "fixAccount": "تصحيح البيانات",
+    "fixWhat": "بريدٌ أُدخل خطأً يعني أنّ صاحبته لن يصلها رمز استعادة أبداً. اتركي الحقل فارغاً إن لم ترغبي بتغييره.",
+    "newEmailPlaceholder": "بريد جديد (اختياري)",
+    "newSlugPlaceholder": "رابط جديد (اختياري)",
+    "saveFix": "حفظ التصحيح",
+    "fixDone": "حُفظ التصحيح"
   },
   "order": {
     "choose": "اختر طريقة الطلب",

@@ -17,6 +17,9 @@ import {
   hideProduct,
   unhideProduct,
   listAdminLog,
+  suspendSubscriber,
+  unsuspendSubscriber,
+  fixAccount,
   deleteSubscriber,
   setSubscription,
   addSubscriptionDays,
@@ -45,6 +48,9 @@ router.get('/store/:slug/products', requireAuth, requireAdmin, listStoreProducts
 router.post('/product/:id/hide', requireAuth, requireAdmin, hideProduct);
 router.post('/product/:id/unhide', requireAuth, requireAdmin, unhideProduct);
 router.get('/admin-log', requireAuth, requireAdmin, listAdminLog);
+router.post('/suspend', requireAuth, requireAdmin, suspendSubscriber);
+router.post('/unsuspend', requireAuth, requireAdmin, unsuspendSubscriber);
+router.post('/fix-account', requireAuth, requireAdmin, fixAccount);
 router.post('/set-subscription', requireAuth, requireAdmin, setSubscription);
 router.post('/add-days', requireAuth, requireAdmin, addSubscriptionDays);
 router.post('/delete-subscriber', requireAuth, requireAdmin, deleteSubscriber);

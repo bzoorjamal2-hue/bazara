@@ -1376,7 +1376,9 @@
     "expired": "Your subscription expired. Your store is temporarily hidden, but your data and products are saved. Renew to reactivate.",
     "pendingBanner": "Your subscription request is under review.",
     "renew": "Renew subscription",
-    "subscriberCode": "Your subscriber code"
+    "subscriberCode": "Your subscriber code",
+    "suspended": "Your store is administratively suspended",
+    "suspendedHint": "Contact Bazara support once the reason is resolved to lift it."
   },
   "admin": {
     "hint": "Review subscription requests and issue activation codes for stores.",
@@ -1578,7 +1580,10 @@
       "product.hide": "Product hidden",
       "product.unhide": "Product shown",
       "user.resetPassword": "Password reset",
-      "user.sendReset": "Recovery code sent"
+      "user.sendReset": "Recovery code sent",
+      "account.suspend": "Account suspended",
+      "account.unsuspend": "Suspension lifted",
+      "account.fix": "Details fixed"
     },
     "logCount_one": "1 action",
     "logCount_other": "{{count}} actions",
@@ -1627,7 +1632,20 @@
     "nlEmails_one": "1 email",
     "nlEmails_other": "{{count}} emails",
     "nlPhones_one": "1 phone",
-    "nlPhones_other": "{{count}} phones"
+    "nlPhones_other": "{{count}} phones",
+    "suspend": "Suspend",
+    "unsuspend": "Unsuspend",
+    "suspendedLabel": "Administratively suspended",
+    "suspendWhat": "Suspension hides the store from visitors immediately and shows the reason to its owner. Nothing is deleted.",
+    "suspendReasonPlaceholder": "Reason — the store owner sees this",
+    "suspendDone": "Store suspended",
+    "unsuspendDone": "Suspension lifted",
+    "fixAccount": "Fix details",
+    "fixWhat": "A mistyped email means she can never receive a recovery code. Leave a field empty to keep it unchanged.",
+    "newEmailPlaceholder": "New email (optional)",
+    "newSlugPlaceholder": "New store link (optional)",
+    "saveFix": "Save fix",
+    "fixDone": "Fix saved"
   },
   "order": {
     "choose": "Choose order method",

@@ -511,6 +511,11 @@ END $;`,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );`,
     'CREATE INDEX IF NOT EXISTS idx_admin_actions_time ON admin_actions(created_at DESC);',
+    // إيقاف إداريّ مؤقّت بسبب: كان البديل إمّا إيقاف الاشتراك (فيظهر «منتهٍ»
+    // وتظنّ صاحبته أنّ خطأً وقع) أو حذف الحساب كلّه. لا شيء بينهما.
+    'ALTER TABLE users ADD COLUMN IF NOT EXISTS suspended_at TIMESTAMPTZ;',
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS suspended_reason VARCHAR(200) DEFAULT '';",
+    'ALTER TABLE users ADD COLUMN IF NOT EXISTS suspended_by UUID REFERENCES users(id) ON DELETE SET NULL;',
   ];
   // كل جملة على حدة: فشل واحدة لا يمنع البقية
   for (const sql of steps) {

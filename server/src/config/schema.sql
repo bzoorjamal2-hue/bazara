@@ -272,3 +272,8 @@ CREATE TABLE IF NOT EXISTS admin_actions (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_admin_actions_time ON admin_actions(created_at DESC);
+
+-- إيقاف إداريّ مؤقّت بسبب — بين «كل شيء بخير» و«حذف الحساب».
+ALTER TABLE users ADD COLUMN IF NOT EXISTS suspended_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS suspended_reason VARCHAR(200) DEFAULT '';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS suspended_by UUID REFERENCES users(id) ON DELETE SET NULL;

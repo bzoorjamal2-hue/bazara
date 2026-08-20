@@ -19,8 +19,11 @@ export function isAdminEmail(email) {
 
 // هل اشتراك المستخدم فعّال؟ (المدير دائماً فعّال؛ وإن كان الإلزام معطّلاً فالجميع فعّال)
 export function isUserActive(user) {
-  if (!isSubscriptionsEnabled()) return true;
   if (!user) return false;
+  // الإيقاف الإداريّ فوق كل شيء: أقوى من اشتراكٍ فعّال ومن تعطيل الإلزام معاً،
+  // وإلا صار قرار الإيقاف بلا أثر. لا يشمل حسابات الإدارة نفسها.
+  if (user.suspended_at && !isAdminEmail(user.email)) return false;
+  if (!isSubscriptionsEnabled()) return true;
   if (isAdminEmail(user.email)) return true;
   const active = user.subscription_status === 'active';
   const notExpired = user.current_period_end && new Date(user.current_period_end) > new Date();
@@ -49,8 +52,11 @@ export function activeStoreSql(userAlias = 'u') {
   const excludeAdmins = admins.length
     ? ` AND ${userAlias}.email NOT IN (${admins.map((e) => `'${e.replace(/'/g, "''")}'`).join(',')})`
     : '';
-  if (!isSubscriptionsEnabled()) return `(TRUE${excludeAdmins})`;
-  return `(${userAlias}.subscription_status = 'active' AND ${userAlias}.current_period_end > now()${excludeAdmins})`;
+  // المتجر الموقوف إدارياً يختفي من كل الصفحات العامّة فوراً — الشرط هنا لأنّه
+  // البوّابة الوحيدة التي تمرّ منها كل استعلامات العرض.
+  const notSuspended = ` AND ${userAlias}.suspended_at IS NULL`;
+  if (!isSubscriptionsEnabled()) return `(TRUE${notSuspended}${excludeAdmins})`;
+  return `(${userAlias}.subscription_status = 'active' AND ${userAlias}.current_period_end > now()${notSuspended}${excludeAdmins})`;
 }
 
 // توليد رمز مشترك فريد بصيغة BZ-XXXXXX

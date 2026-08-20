@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
-import { CrownIcon, LinkIcon, BellIcon, SaveIcon, PlusIcon, MailIcon, TrashIcon, StarIcon, UsersIcon, ChartIcon, BagIcon, ReceiptIcon } from '../../components/icons.jsx';
+import { CrownIcon, LinkIcon, BellIcon, SaveIcon, PlusIcon, MailIcon, TrashIcon, StarIcon, UsersIcon, ChartIcon, BagIcon, ReceiptIcon, LockIcon, LockOpenIcon, EditIcon, WarnIcon } from '../../components/icons.jsx';
 import { PageHead } from '../../components/FormField.jsx';
 import AdminStoreDetail from './AdminStoreDetail.jsx';
 
@@ -38,6 +38,50 @@ function SubRow({ s, onDeleted, onUpdated, onOpen }) {
   const [confirmDel, setConfirmDel] = useState(false);
   const [delBusy, setDelBusy] = useState(false);
   const [featBusy, setFeatBusy] = useState(false);
+  const [panel, setPanel] = useState('');       // 'suspend' | 'fix'
+  const [reason, setReason] = useState('');
+  const [fix, setFix] = useState({ newEmail: '', newSlug: '' });
+  const [toolBusy, setToolBusy] = useState(false);
+
+  // الإيقاف الإداريّ: يُخفي المتجر فوراً ويُعرض سببه لصاحبته
+  const doSuspend = async () => {
+    const why = reason.trim();
+    if (!why) return;
+    setToolBusy(true); setErr('');
+    try {
+      await api.post('/subscription/suspend', { email: s.email, reason: why });
+      onUpdated?.(s.email, { suspended: true, suspendedReason: why, active: false });
+      setPanel(''); setReason('');
+      setMsg(t('admin.suspendDone'));
+      setTimeout(() => setMsg(''), 3000);
+    } catch (e) { setErr(getErrorMessage(e, t('errors.generic'))); } finally { setToolBusy(false); }
+  };
+
+  const doUnsuspend = async () => {
+    setToolBusy(true); setErr('');
+    try {
+      await api.post('/subscription/unsuspend', { email: s.email });
+      onUpdated?.(s.email, { suspended: false, suspendedReason: '' });
+      setMsg(t('admin.unsuspendDone'));
+      setTimeout(() => setMsg(''), 3000);
+    } catch (e) { setErr(getErrorMessage(e, t('errors.generic'))); } finally { setToolBusy(false); }
+  };
+
+  // تصحيح بريد أُدخل خطأً (وإلا فحسابها مقفلٌ فعلياً: لا يصلها رمز استعادة)
+  const doFix = async () => {
+    const body = { email: s.email };
+    if (fix.newEmail.trim()) body.newEmail = fix.newEmail.trim();
+    if (fix.newSlug.trim()) body.newSlug = fix.newSlug.trim();
+    if (!body.newEmail && !body.newSlug) return;
+    setToolBusy(true); setErr('');
+    try {
+      const r = await api.post('/subscription/fix-account', body);
+      onUpdated?.(s.email, { ...(r.data.email ? { email: r.data.email } : {}), ...(r.data.slug ? { storeSlug: r.data.slug } : {}) });
+      setPanel(''); setFix({ newEmail: '', newSlug: '' });
+      setMsg(t('admin.fixDone'));
+      setTimeout(() => setMsg(''), 3000);
+    } catch (e) { setErr(getErrorMessage(e, t('errors.generic'))); } finally { setToolBusy(false); }
+  };
 
   // تمييز/إلغاء تمييز المتجر — يتصدّر «متاجر مميزة» بالرئيسية
   const toggleFeatured = async () => {
@@ -121,16 +165,16 @@ function SubRow({ s, onDeleted, onUpdated, onOpen }) {
   };
 
   const statusBadge = s.isAdmin ? (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-400 px-3 py-1 text-xs font-bold text-ink-950 shadow-sm">
+    <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold shadow-sm" style={{ background: '#d4af37', color: '#2a1c10' }}>
       <CrownIcon className="h-3.5 w-3.5" /> {t('admin.statusAdmin')}
     </span>
   ) : s.active ? (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500 px-3 py-1 text-xs font-bold text-white shadow-sm">
+    <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold text-cream shadow-sm" style={{ background: '#047857' }}>
       <span className="h-2 w-2 rounded-full bg-white" /> {t('admin.statusActive')}
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white shadow-sm">
-      <span className="h-2 w-2 rounded-full bg-white" /> {t('admin.statusLocked')}
+    <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold text-cream shadow-sm" style={{ background: '#b91c1c' }}>
+      <span className="h-2 w-2 rounded-full bg-cream" /> {t('admin.statusLocked')}
     </span>
   );
 
@@ -159,6 +203,24 @@ function SubRow({ s, onDeleted, onUpdated, onOpen }) {
             </button>
             <button
               type="button"
+              onClick={() => (s.suspended ? doUnsuspend() : setPanel(panel === 'suspend' ? '' : 'suspend'))}
+              disabled={toolBusy || s.isAdmin}
+              title={s.suspended ? t('admin.unsuspend') : t('admin.suspend')}
+              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold transition disabled:opacity-40 ${s.suspended ? 'text-cream' : 'border border-red-400/40 text-red-300 hover:bg-red-500/10'}`}
+              style={s.suspended ? { background: '#047857' } : undefined}
+            >
+              {s.suspended ? <LockOpenIcon className="h-3.5 w-3.5" /> : <LockIcon className="h-3.5 w-3.5" />}
+              {s.suspended ? t('admin.unsuspend') : t('admin.suspend')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setPanel(panel === 'fix' ? '' : 'fix')}
+              className="inline-flex items-center gap-1 rounded-full border border-gold-400/30 px-2.5 py-1 text-xs font-bold text-gold-200 transition hover:bg-gold-400/10"
+            >
+              <EditIcon className="h-3.5 w-3.5" /> {t('admin.fixAccount')}
+            </button>
+            <button
+              type="button"
               onClick={() => onOpen?.(s.storeSlug)}
               className="inline-flex items-center gap-1 rounded-full border border-gold-400/30 px-2.5 py-1 text-xs font-bold text-gold-200 transition hover:bg-gold-400/10"
             >
@@ -169,6 +231,14 @@ function SubRow({ s, onDeleted, onUpdated, onOpen }) {
         )}
       </div>
 
+      {/* الإيقاف يعلو كل شيء بالصفّ: حالته وسببه أوّل ما يجب أن يُرى */}
+      {s.suspended && (
+        <p className="mt-2 flex items-start gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold text-cream" style={{ background: '#b91c1c' }}>
+          <WarnIcon className="mt-px h-3.5 w-3.5 shrink-0" />
+          <span>{t('admin.suspendedLabel')}{s.suspendedReason ? ` — ${s.suspendedReason}` : ''}</span>
+        </p>
+      )}
+
       {/* حجم المتجر بلمحة — بلا هذه الأرقام كان الصفّ اسماً وبريداً فقط */}
       <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
         <Chip Icon={BagIcon} value={s.productsCount ?? 0} label={t('admin.ov.products')} warn={(s.productsCount ?? 0) === 0} />
@@ -176,9 +246,58 @@ function SubRow({ s, onDeleted, onUpdated, onOpen }) {
         <Chip Icon={ChartIcon} value={`${t('common.currency')}${Math.round(s.gmv || 0).toLocaleString()}`} label={t('admin.ov.gmv')} />
       </div>
 
+      {/* سبب الإيقاف إلزاميّ: يُعرض لصاحبته فيعرف ما يرفعه */}
+      {panel === 'suspend' && !s.suspended && (
+        <div className="mt-2.5 space-y-2 rounded-xl border border-red-400/35 bg-red-500/[0.07] p-2.5">
+          <p className="text-[11px] font-semibold text-red-300">{t('admin.suspendWhat')}</p>
+          <div className="flex flex-wrap gap-2">
+            <input
+              type="text" autoFocus maxLength={200} value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); doSuspend(); } }}
+              placeholder={t('admin.suspendReasonPlaceholder')}
+              className="input min-w-0 flex-1 !py-1.5 text-sm"
+            />
+            <button
+              type="button" disabled={!reason.trim() || toolBusy} onClick={doSuspend}
+              className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold text-cream disabled:opacity-50"
+              style={{ background: '#b91c1c' }}
+            >
+              {t('admin.suspend')}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {panel === 'fix' && (
+        <div className="mt-2.5 space-y-2 rounded-xl border border-gold-400/25 bg-gold-400/[0.06] p-2.5">
+          <p className="text-[11px] font-semibold text-stone-300">{t('admin.fixWhat')}</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <input
+              type="email" dir="ltr" value={fix.newEmail}
+              onChange={(e) => setFix({ ...fix, newEmail: e.target.value })}
+              placeholder={t('admin.newEmailPlaceholder')}
+              className="input !py-1.5 text-sm"
+            />
+            <input
+              type="text" dir="ltr" value={fix.newSlug}
+              onChange={(e) => setFix({ ...fix, newSlug: e.target.value })}
+              placeholder={t('admin.newSlugPlaceholder')}
+              className="input !py-1.5 text-sm"
+            />
+          </div>
+          <button
+            type="button" disabled={toolBusy || (!fix.newEmail.trim() && !fix.newSlug.trim())} onClick={doFix}
+            className="btn-ghost w-full !py-1.5 text-xs disabled:opacity-50"
+          >
+            {toolBusy ? t('common.loading') : t('admin.saveFix')}
+          </button>
+        </div>
+      )}
+
       <div className="mt-3 grid grid-cols-1 gap-1.5 text-xs text-stone-400 sm:grid-cols-3 sm:gap-2">
         <div>
-          <span className="text-stone-500">{t('admin.subPlan')}:</span>{' '}
+          <span className="text-stone-400">{t('admin.subPlan')}:</span>{' '}
           {s.lifetime ? t('admin.lifetime') : s.plan ? t(`subscription.${s.plan}`) : t('admin.subNone')}
           {/* الخطة التي اختارها المستخدم عند التسجيل — ليفعّلها المدير مباشرة */}
           {!s.isAdmin && s.requestedPlan && (
@@ -187,9 +306,9 @@ function SubRow({ s, onDeleted, onUpdated, onOpen }) {
             </span>
           )}
         </div>
-        <div><span className="text-stone-500">{t('admin.subStarted')}:</span> {fmt(s.startedAt)}</div>
+        <div><span className="text-stone-400">{t('admin.subStarted')}:</span> {fmt(s.startedAt)}</div>
         <div>
-          <span className="text-stone-500">{t('admin.subExpires')}:</span>{' '}
+          <span className="text-stone-400">{t('admin.subExpires')}:</span>{' '}
           {s.lifetime ? <span className="font-semibold text-gold-300">{t('admin.noExpiry')}</span> : fmt(s.currentPeriodEnd)}
         </div>
       </div>
@@ -340,9 +459,11 @@ export default function SubscribersManager() {
               <button
                 key={c.key}
                 onClick={() => setFilter(c.key)}
-                className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${filter === c.key ? 'bg-gold-400 text-ink-950 shadow-sm' : 'border border-gold-400/25 text-stone-300 hover:bg-gold-400/10'}`}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${filter === c.key ? 'shadow-sm' : 'border border-gold-400/25 text-stone-300 hover:bg-gold-400/10'}`}
+                // لونان صريحان للحالة النشطة: أصناف الذهب تنقلب بنّية نهاراً
+                style={filter === c.key ? { background: '#d4af37', color: '#2a1c10' } : undefined}
               >
-                {c.label} <span className={filter === c.key ? 'text-ink-950/70' : 'text-stone-500'}>({counts[c.key]})</span>
+                {c.label} <span className={filter === c.key ? 'opacity-75' : 'text-stone-400'}>({counts[c.key]})</span>
               </button>
             ))}
           </div>

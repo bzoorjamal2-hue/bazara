@@ -351,6 +351,7 @@ export async function listSubscribers(req, res, next) {
     const r = await query(
       `SELECT u.id AS user_id, u.name, u.email, u.subscription_plan, u.subscription_status,
               u.subscription_started_at, u.current_period_end, u.created_at,
+              u.suspended_at, u.suspended_reason,
               s.id AS store_id, s.name AS store_name, s.slug AS store_slug, s.featured AS store_featured,
               lr.plan AS requested_plan, lr.status AS requested_status,
               COALESCE(pc.c, 0)::int AS products_count,
@@ -391,7 +392,9 @@ export async function listSubscribers(req, res, next) {
         ordersCount: x.orders_count,
         gmv: Number(x.gmv) || 0,
         lastOrderAt: x.last_order_at,
-        active: isUserActive({ email: x.email, subscription_status: x.subscription_status, current_period_end: x.current_period_end }),
+        suspended: Boolean(x.suspended_at),
+        suspendedReason: x.suspended_reason || '',
+        active: isUserActive({ email: x.email, subscription_status: x.subscription_status, current_period_end: x.current_period_end, suspended_at: x.suspended_at }),
         isAdmin: isAdminEmail(x.email),
         lifetime: isAdminEmail(x.email),
       })),
@@ -560,6 +563,94 @@ export async function unhideProduct(req, res, next) {
 
     await logAdmin(req, 'product.unhide', { type: 'product', id: row.id, label: row.name });
     res.json({ ok: true, id: row.id, hidden: false });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ── POST /api/subscription/suspend ─────────────────────────────────────────
+// إيقاف إداريّ مؤقّت بسبب. كان البديل إمّا إيقاف الاشتراك — فيظهر لصاحبته
+// «منتهٍ» وتظنّ أنّ خطأً وقع وتراسلك — أو حذف الحساب وكل بياناته. لا شيء
+// بينهما. السبب إلزاميّ ويُعرض لها، فتعرف ما المطلوب لرفع الإيقاف.
+export async function suspendSubscriber(req, res, next) {
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    const reason = String(req.body?.reason || '').trim().slice(0, 200);
+    if (!email) return res.status(400).json({ error: 'البريد مطلوب.' });
+    if (!reason) return res.status(400).json({ error: 'اكتب سبب الإيقاف.' });
+    if (isAdminEmail(email)) return res.status(400).json({ error: 'لا يمكن إيقاف حساب إدارة.' });
+
+    const r = await query(
+      `UPDATE users SET suspended_at = now(), suspended_reason = $2, suspended_by = $3
+       WHERE email = $1 RETURNING email`,
+      [email, reason, req.user?.id || null]
+    );
+    if (!r.rows[0]) return res.status(404).json({ error: 'لا يوجد حساب بهذا البريد.' });
+
+    await logAdmin(req, 'account.suspend', { type: 'user', id: email, label: email, details: { reason } });
+    res.json({ ok: true, email, suspended: true, suspendedReason: reason });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ── POST /api/subscription/unsuspend ───────────────────────────────────────
+export async function unsuspendSubscriber(req, res, next) {
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    if (!email) return res.status(400).json({ error: 'البريد مطلوب.' });
+    const r = await query(
+      `UPDATE users SET suspended_at = NULL, suspended_reason = '', suspended_by = NULL
+       WHERE email = $1 RETURNING email`,
+      [email]
+    );
+    if (!r.rows[0]) return res.status(404).json({ error: 'لا يوجد حساب بهذا البريد.' });
+
+    await logAdmin(req, 'account.unsuspend', { type: 'user', id: email, label: email });
+    res.json({ ok: true, email, suspended: false });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ── POST /api/subscription/fix-account ─────────────────────────────────────
+// تصحيح بريد الحساب أو رابط المتجر. بريدٌ أُدخل خطأً عند التسجيل يعني أنّ
+// صاحبته لن تستقبل رمز استعادة أبداً: حسابٌ مقفلٌ فعلياً بلا مخرج.
+export async function fixAccount(req, res, next) {
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    const newEmail = String(req.body?.newEmail || '').trim().toLowerCase();
+    const newSlug = String(req.body?.newSlug || '').trim().toLowerCase();
+    if (!email) return res.status(400).json({ error: 'البريد الحالي مطلوب.' });
+    if (!newEmail && !newSlug) return res.status(400).json({ error: 'لا يوجد ما يُغيَّر.' });
+
+    const cur = await query('SELECT id FROM users WHERE email = $1', [email]);
+    const user = cur.rows[0];
+    if (!user) return res.status(404).json({ error: 'لا يوجد حساب بهذا البريد.' });
+
+    const changed = {};
+
+    if (newEmail && newEmail !== email) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(newEmail)) return res.status(400).json({ error: 'صيغة البريد غير صحيحة.' });
+      if (isAdminEmail(newEmail)) return res.status(400).json({ error: 'لا يمكن استعمال بريد إدارة.' });
+      const taken = await query('SELECT 1 FROM users WHERE email = $1', [newEmail]);
+      if (taken.rows.length) return res.status(409).json({ error: 'البريد مستعمل بحساب آخر.' });
+      // أيّ رمز استعادة قديم يُلغى مع تغيّر البريد، وإلا بقي صالحاً لعنوانٍ لم يعد للحساب
+      await query('UPDATE users SET email = $1, reset_token = NULL, reset_token_expires = NULL WHERE id = $2', [newEmail, user.id]);
+      changed.email = newEmail;
+    }
+
+    if (newSlug) {
+      if (!/^[a-z0-9-]{3,40}$/.test(newSlug)) return res.status(400).json({ error: 'الرابط: أحرف إنجليزية وأرقام وشرطات، 3–40 حرفاً.' });
+      const taken = await query('SELECT 1 FROM stores WHERE slug = $1 AND user_id <> $2', [newSlug, user.id]);
+      if (taken.rows.length) return res.status(409).json({ error: 'الرابط مستعمل بمتجر آخر.' });
+      const up = await query('UPDATE stores SET slug = $1 WHERE user_id = $2 RETURNING slug', [newSlug, user.id]);
+      if (!up.rows[0]) return res.status(404).json({ error: 'لا يوجد متجر لهذا الحساب.' });
+      changed.slug = newSlug;
+    }
+
+    await logAdmin(req, 'account.fix', { type: 'user', id: email, label: email, details: changed });
+    res.json({ ok: true, ...changed });
   } catch (err) {
     next(err);
   }

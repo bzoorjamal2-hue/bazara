@@ -9,11 +9,23 @@ export default function SubscriptionBanner() {
   const { subscription } = useAuth();
   if (!subscription) return null;
 
-  const { active, daysRemaining, status, currentPeriodEnd, isAdmin, pending } = subscription;
+  const { active, daysRemaining, status, currentPeriodEnd, isAdmin, pending, suspended, suspendedReason } = subscription;
   const dateStr = currentPeriodEnd ? new Date(currentPeriodEnd).toLocaleDateString() : '';
 
   // المدير لا يحتاج اشتراكاً
   if (isAdmin) return null;
+
+  // الإيقاف الإداريّ أوّلاً وقبل كل حالة: بلا سببٍ معروض تظنّ صاحبته أنّ عطلاً
+  // وقع وتراسل الدعم، بينما السبب وحده يخبرها بما يرفع الإيقاف.
+  if (suspended) {
+    return (
+      <div className="rounded-2xl p-4 text-cream" style={{ background: '#b91c1c' }}>
+        <p className="flex items-center gap-1.5 text-sm font-bold"><WarnIcon className="h-4 w-4 shrink-0" /> {t('subscription.suspended')}</p>
+        {suspendedReason && <p className="mt-1 text-xs opacity-95">{suspendedReason}</p>}
+        <p className="mt-1.5 text-[11px] opacity-90">{t('subscription.suspendedHint')}</p>
+      </div>
+    );
+  }
 
   // طلب قيد المراجعة
   if (!active && pending) {

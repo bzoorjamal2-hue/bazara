@@ -162,6 +162,7 @@ export async function me(req, res, next) {
     const result = await query(
       `SELECT u.id, u.name, u.email, u.avatar_url,
               u.subscription_status, u.subscription_plan, u.current_period_end, u.subscriber_code,
+              u.suspended_at, u.suspended_reason,
               EXISTS(SELECT 1 FROM subscription_requests sr WHERE sr.user_id = u.id AND sr.status = 'pending') AS has_pending,
               s.id AS store_id, s.name AS store_name, s.slug AS store_slug,
               s.description AS store_description, s.logo_url AS store_logo_url,
@@ -185,6 +186,10 @@ export async function me(req, res, next) {
         subscriberCode: row.subscriber_code,
         isAdmin: isAdminEmail(row.email),
         pending: row.has_pending,
+        // سبب الإيقاف يُعرض لصاحبته: قرارٌ يُقفل متجرها ولا تعرف لماذا يجعلها
+        // تظنّ أنّ عطلاً وقع، فتراسل الدعم بدل أن تعالج السبب.
+        suspended: Boolean(row.suspended_at),
+        suspendedReason: row.suspended_reason || '',
       },
       store: row.store_id
         ? {

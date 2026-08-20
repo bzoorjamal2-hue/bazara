@@ -237,6 +237,8 @@ export function ShareIcon({ className = 'h-5 w-5' }) { return svg(className, <><
 export function UploadIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M12 16 V5 M7 10 L12 5 L17 10 M5 19 H19" />); }
 export function DownloadIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M12 4 V15 M7 10 L12 15 L17 10 M5 19 H19" />); }
 export function CameraIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M4 8 H7 L9 5 H15 L17 8 H20 V19 H4 Z" /><circle {...L} cx="12" cy="13" r="3.4" /></>); }
+// قفل مغلق — الإيقاف الإداريّ (نظيره المفتوح أدناه لرفعه)
+export function LockIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="5" y="11" width="14" height="9" rx="2" /><path {...L} d="M8 11 V8 a4 4 0 0 1 8 0 V11" /></>); }
 export function LockOpenIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="5" y="11" width="14" height="9" rx="2" /><path {...L} d="M8 11 V8 A4 4 0 0 1 15.5 6.5" /></>); }
 export function GridIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M4 4 H10 V10 H4 Z M14 4 H20 V10 H14 Z M4 14 H10 V20 H4 Z M14 14 H20 V20 H14 Z" />); }
 export function InstallIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="6" y="3" width="12" height="18" rx="2" /><path {...L} d="M12 8 V14 M9.5 11.5 L12 14 L14.5 11.5" /></>); }
