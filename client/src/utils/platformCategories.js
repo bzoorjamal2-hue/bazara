@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+
 // فئات المنصّة.
 //
 // كانت السبع فئات مكتوبةً في خمسة ملفات واجهة وملفٍ في الخادم: إضافة فئة
@@ -58,4 +60,11 @@ export function platformCatImage(key) {
 
 export function isBuiltinCat(key) {
   return BUILTIN_CATS.includes(key);
+}
+
+// هوك يعيد رسم المكوّن عند وصول فئات المدير (تصل بعد أول رسمة من /site-info)
+export function usePlatformCatKeys() {
+  const [keys, setKeys] = useState(platformCatKeys);
+  useEffect(() => onPlatformCategoriesChange(() => setKeys(platformCatKeys())), []);
+  return keys;
 }

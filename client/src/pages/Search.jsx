@@ -10,6 +10,7 @@ import { SearchIcon, StoreIcon, XIcon } from '../components/icons.jsx';
 import { cldThumb } from '../utils/cloudinary.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { goBack } from '../utils/nav.js';
+import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys } from '../utils/platformCategories.js';
 
 // البحث الشامل عبر المنصّة (أسلوب المتاجر الكبرى): الاستعلام بالرابط (?q=)
 // فيعمل الرجوع والمشاركة، مع عمليات بحث سابقة محلية واقتراحات فئات عند اللاشيء.
@@ -24,9 +25,10 @@ const pushRecentSearch = (q) => {
   } catch { /* تجاهل */ }
 };
 
-const CATS = ['dress', 'abaya', 'set', 'hijab', 'trench', 'jacket', 'shirt'];
+
 
 export default function Search() {
+  const catKeys = usePlatformCatKeys();
   const { t, i18n } = useTranslation();
   const rtl = i18n.language !== 'en';
   const navigate = useNavigate();
@@ -183,7 +185,7 @@ export default function Search() {
           <section>
             <h2 className="mb-2.5 text-sm font-bold text-stone-300">{t('searchPage.tryCats')}</h2>
             <div className="flex flex-wrap gap-2">
-              {CATS.map((c) => (
+              {catKeys.map((c) => (
                 <Link key={c} to={catLink(c)}
                   className="rounded-full border border-gold-400/30 bg-gold-400/10 px-3.5 py-1.5 text-sm font-semibold text-gold-200 transition hover:border-gold-400/60">
                   {t(`categories.${c}`)}
@@ -232,7 +234,7 @@ export default function Search() {
                   </span>
                   <p className="mt-4 font-semibold text-stone-200">{t('searchPage.noResults', { q })}</p>
                   <div className="mt-5 flex flex-wrap justify-center gap-2">
-                    {CATS.slice(0, 4).map((c) => (
+                    {catKeys.slice(0, 4).map((c) => (
                       <Link key={c} to={catLink(c)}
                         className="rounded-full border border-gold-400/30 bg-gold-400/10 px-3.5 py-1.5 text-sm font-semibold text-gold-200">
                         {t(`categories.${c}`)}

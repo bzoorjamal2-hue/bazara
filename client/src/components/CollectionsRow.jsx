@@ -24,21 +24,28 @@ export default function CollectionsRow({ collections, storeSlug = '' }) {
         <span aria-hidden className="text-sm text-wine/40">❖</span>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+      {/* صفٌّ واحد يُسحب بالإصبع كالسلايدر. التمرير أفقيّ أصليّ لا محاكاةً
+          بجافاسكربت: يتبع الإصبع بلا تأخّر، ويحترم لوحة المفاتيح وقارئ الشاشة،
+          ويعمل بالماوس على الحاسوب. snap يُوقف البطاقة بمكانها فلا تتوقّف بين
+          اثنتين. عرض البطاقة نسبة من الشاشة فتتناسب مع كل جهاز تلقائياً. */}
+      <div
+        className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0"
+        style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorX: 'contain' }}
+      >
         {list.map((c, i) => {
           const title = (isEn ? (c.titleEn || c.title) : c.title) || '';
           return (
             <Link
               key={`${c.q}-${i}`}
               to={linkFor(c.q)}
-              className="group animate-fade-up relative aspect-[4/3] overflow-hidden rounded-2xl bg-wine/10 shadow-sm ring-1 ring-wine/10 transition duration-300 hover:-translate-y-1 hover:shadow-glow"
+              className="group animate-fade-up relative aspect-[4/3] w-[72%] shrink-0 snap-start overflow-hidden rounded-2xl bg-wine/10 shadow-sm ring-1 ring-wine/10 transition duration-300 hover:-translate-y-1 hover:shadow-glow sm:w-[46%] lg:w-[31%] xl:w-[24%]"
               style={{ animationDelay: `${i * 60}ms` }}
             >
               {c.image ? (
                 <img
                   src={cldThumb(c.image, 700)}
                   srcSet={cldSrcSet(c.image, [300, 500, 700, 900])}
-                  sizes="(min-width: 1024px) 33vw, 50vw"
+                  sizes="(min-width: 1280px) 24vw, (min-width: 1024px) 31vw, (min-width: 640px) 46vw, 72vw"
                   alt=""
                   loading="lazy"
                   decoding="async"

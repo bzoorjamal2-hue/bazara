@@ -4,7 +4,7 @@ import { clearPublicCache } from '../middleware/cache.js';
 
 // إعدادات الموقع العامة (صف واحد id=1) — يتحكّم بها المدير العام.
 async function readSettings() {
-  const r = await query('SELECT home_banners, announcement, announcement_en, collections, lookbook, instagram, facebook FROM site_settings WHERE id = 1');
+  const r = await query('SELECT home_banners, announcement, announcement_en, collections, lookbook, instagram, facebook, platform_categories FROM site_settings WHERE id = 1');
   const row = r.rows[0];
   return {
     banners: Array.isArray(row?.home_banners) ? row.home_banners : [],
@@ -14,6 +14,10 @@ async function readSettings() {
     lookbook: row?.lookbook && typeof row.lookbook === 'object' ? row.lookbook : {},
     instagram: row?.instagram || '',
     facebook: row?.facebook || '',
+    // كائن لا مصفوفة: { extra, hidden }
+    platformCategories: (row?.platform_categories && typeof row.platform_categories === 'object')
+      ? { extra: row.platform_categories.extra || [], hidden: row.platform_categories.hidden || [] }
+      : { extra: [], hidden: [] },
   };
 }
 
@@ -24,6 +28,30 @@ const cleanHandle = (v) => String(v ?? '').trim().slice(0, 200);
 // تنقية المجموعات: عنوان + صورة + كلمة بحث. لا نقبل روابط حرّة (نبني /search بأنفسنا)
 // فلا يمكن حقن رابط خارجي أو javascript: من لوحة الإدارة.
 const MAX_COLLECTIONS = 8;
+// فئات المنصّة. المفتاح يدخل في الروابط (/category/:key) وفي استعلامات SQL،
+// فنقصره على حروف لاتينية صغيرة وأرقام وشرطات ونمنع الاصطدام بالمدمجة.
+const BUILTIN_CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
+const sanitizePlatformCats = (v) => {
+  const extraIn = Array.isArray(v?.extra) ? v.extra : [];
+  const seen = new Set(BUILTIN_CATS);
+  const extra = [];
+  for (const c of extraIn.slice(0, 12)) {
+    const key = String(c?.key ?? '').trim().toLowerCase();
+    if (!/^[a-z0-9-]{2,24}$/.test(key) || seen.has(key)) continue;
+    seen.add(key);
+    extra.push({
+      key,
+      name: String(c?.name ?? '').slice(0, 40).trim(),
+      nameEn: String(c?.nameEn ?? '').slice(0, 40).trim(),
+      image: /^https?:\/\//i.test(String(c?.image ?? '')) ? String(c.image).slice(0, 500) : '',
+    });
+  }
+  const hidden = (Array.isArray(v?.hidden) ? v.hidden : [])
+    .map((k) => String(k).trim().toLowerCase())
+    .filter((k) => BUILTIN_CATS.includes(k));
+  return { extra: extra.filter((c) => c.name), hidden };
+};
+
 const sanitizeCollections = (list) => {
   if (!Array.isArray(list)) return [];
   return list
@@ -76,17 +104,21 @@ export async function updateSiteBanners(req, res, next) {
     const lookbook = req.body.lookbook === undefined ? cur.lookbook : sanitizeLookbook(req.body.lookbook);
     const instagram = req.body.instagram === undefined ? cur.instagram : cleanHandle(req.body.instagram);
     const facebook = req.body.facebook === undefined ? cur.facebook : cleanHandle(req.body.facebook);
+    const platformCategories = req.body.platformCategories === undefined
+      ? cur.platformCategories
+      : sanitizePlatformCats(req.body.platformCategories);
     await query(
-      `INSERT INTO site_settings (id, home_banners, announcement, announcement_en, collections, lookbook, instagram, facebook, updated_at)
-       VALUES (1, $1::jsonb, $2, $3, $4::jsonb, $5::jsonb, $6, $7, now())
+      `INSERT INTO site_settings (id, home_banners, announcement, announcement_en, collections, lookbook, instagram, facebook, platform_categories, updated_at)
+       VALUES (1, $1::jsonb, $2, $3, $4::jsonb, $5::jsonb, $6, $7, $8::jsonb, now())
        ON CONFLICT (id) DO UPDATE SET home_banners = EXCLUDED.home_banners,
          announcement = EXCLUDED.announcement, announcement_en = EXCLUDED.announcement_en,
          collections = EXCLUDED.collections, lookbook = EXCLUDED.lookbook,
-         instagram = EXCLUDED.instagram, facebook = EXCLUDED.facebook, updated_at = now()`,
-      [JSON.stringify(banners), announcement, announcementEn, JSON.stringify(collections), JSON.stringify(lookbook), instagram, facebook]
+         instagram = EXCLUDED.instagram, facebook = EXCLUDED.facebook,
+         platform_categories = EXCLUDED.platform_categories, updated_at = now()`,
+      [JSON.stringify(banners), announcement, announcementEn, JSON.stringify(collections), JSON.stringify(lookbook), instagram, facebook, JSON.stringify(platformCategories)]
     );
     clearPublicCache(); // إبطال كاش الذاكرة فوراً (/home و/site-info) فتظهر التعديلات حالاً
-    res.json({ banners, announcement, announcementEn, collections, lookbook, instagram, facebook });
+    res.json({ banners, announcement, announcementEn, collections, lookbook, instagram, facebook, platformCategories });
   } catch (err) {
     next(err);
   }
@@ -97,7 +129,7 @@ export async function getSiteInfo(_req, res, next) {
   try {
     const s = await readSettings();
     res.set('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=600');
-    res.json({ instagram: s.instagram, facebook: s.facebook });
+    res.json({ instagram: s.instagram, facebook: s.facebook, platformCategories: s.platformCategories });
   } catch (err) {
     next(err);
   }

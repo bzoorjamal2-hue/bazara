@@ -1656,7 +1656,18 @@
     "collQPlaceholder": "e.g. abaya",
     "collImage": "Card image",
     "collImageTip": "A mood image, not a product shot — the card sells the idea, not the piece.",
-    "featuredLimit": "Maximum 8 featured stores. Unfeature one first."
+    "featuredLimit": "Maximum 8 featured stores. Unfeature one first.",
+    "platCats": "Platform categories",
+    "platCatsDesc": "The categories shown across the whole site and every store. These used to live in code.",
+    "builtinCats": "Built-in categories",
+    "builtinCatsTip": "Tap to hide a category from the site. Nothing is deleted — existing products stay linked to it, so restoring it brings them back.",
+    "catName": "Category name",
+    "catNameEn": "Name (English)",
+    "catKey": "Key",
+    "catKeyTip": "Used in the category URL (/category/kaftan). Lowercase letters, digits and dashes only; do not change it once products are linked.",
+    "catImage": "Category image",
+    "catImageTip": "Shown on the category card in the categories page.",
+    "addCat": "Add category"
   },
   "order": {
     "choose": "Choose order method",

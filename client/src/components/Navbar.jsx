@@ -14,6 +14,7 @@ import CloseButton from './CloseButton.jsx';
 import { isStandalone } from '../utils/pwa.js';
 import CatThumb from './CatThumb.jsx';
 import { cldThumb } from '../utils/cloudinary.js';
+import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys } from '../utils/platformCategories.js';
 
 // هوية الحساب أينما ظهرت (زرّ الشريط · القائمة المنبثقة · القائمة الجانبية):
 // صورة الحساب إن وُجدت، وإلا شعار المتجر (للمشترك لا للمدير)، وإلا أول حرف الاسم.
@@ -94,7 +95,7 @@ function AccountMenu({ user, store, subscription, isAdmin, onClose, onLogout }) 
   );
 }
 
-const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
+
 
 // أيقونات خطّية أنيقة لقائمة الحساب (بديل الإيموجي).
 // معظمها موحّد الآن باستيراد من icons.jsx — هنا فقط ما لا مقابل له فيه.
@@ -107,6 +108,7 @@ function LogoutIcon({ className = 'h-5 w-5' }) {
 }
 
 export default function Navbar() {
+  const catKeys = usePlatformCatKeys();
   const { t, i18n } = useTranslation();
   const ltr = i18n.language !== 'ar';
   const { user, store, subscription, logout } = useAuth();
@@ -394,7 +396,7 @@ export default function Navbar() {
             <nav className="mt-4 min-h-0 flex-1 space-y-1 overflow-y-auto">
               <Link to="/shop" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-base text-cream/90 transition hover:bg-cream/10 hover:text-cream"><GridIcon className="h-5 w-5 text-cream/80" /> {t('nav.home')}</Link>
               <div className="my-2 h-px bg-cream/15" />
-              {CATS.map((c) => (
+              {catKeys.map((c) => (
                 <Link key={c} to={`/category/${c}`} onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-base text-cream/85 transition hover:bg-cream/10 hover:text-cream">
                   <CatThumb cat={c} className="h-8 w-8" /> {t(`categories.${c}`)}
                 </Link>

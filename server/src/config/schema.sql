@@ -277,3 +277,6 @@ CREATE INDEX IF NOT EXISTS idx_admin_actions_time ON admin_actions(created_at DE
 ALTER TABLE users ADD COLUMN IF NOT EXISTS suspended_at TIMESTAMPTZ;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS suspended_reason VARCHAR(200) DEFAULT '';
 ALTER TABLE users ADD COLUMN IF NOT EXISTS suspended_by UUID REFERENCES users(id) ON DELETE SET NULL;
+
+-- فئات المنصّة التي يعرّفها المدير (إضافات + إخفاء مدمجة) — كانت مكتوبةً في الكود.
+ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS platform_categories JSONB NOT NULL DEFAULT '{}'::jsonb;

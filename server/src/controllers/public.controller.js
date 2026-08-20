@@ -468,7 +468,10 @@ export async function getProductById(req, res, next) {
 export async function getByCategory(req, res, next) {
   const { cat } = req.params;
   const storeSlug = (req.query.store || '').trim();
-  const builtin = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
+  // المدمجة + ما عرّفه المدير: بلا هذا تُرفض فئة المنصّة الجديدة كأنها غير صالحة
+  const settings = await query('SELECT platform_categories FROM site_settings WHERE id = 1');
+  const platformExtra = (settings.rows[0]?.platform_categories?.extra || []).map((c) => c.key);
+  const builtin = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt', ...platformExtra];
   try {
     const active = activeStoreSql('u');
     // فئة مخصّصة (غير الأصلية):

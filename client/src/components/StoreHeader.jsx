@@ -16,8 +16,9 @@ import StoreFollowButton from './StoreFollowButton.jsx';
 import { cldThumb } from '../utils/cloudinary.js';
 import { productThumb } from '../utils/recentlyViewed.js';
 import { norm } from '../utils/match.js';
+import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys } from '../utils/platformCategories.js';
 
-const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
+
 
 function MenuBtn({ onOpen }) {
   return (
@@ -34,6 +35,7 @@ function MenuBtn({ onOpen }) {
 // هيدر صفحة المتجر — صف 1: شعار/اسم المتجر + قائمة (☰). صف 2: بحث + سلة (تحت زر القائمة تماماً).
 // عند التمرير: الشعار يتقلّص بنعومة، ويظهر زر قائمة مُصغّر بحركة scale ناعمة (بلا قصّ ولا قفز).
 export default function StoreHeader({ store, q, setQ, cat, setCat, products = [], onShare, stories = [], isOwner = false, onStoryAdded, onStoryDeleted, hideSearch = false }) {
+  const catKeys = usePlatformCatKeys();
   const { t, i18n } = useTranslation();
   const ltr = i18n.language !== 'ar';
   const { count, setOpen } = useCart();
@@ -251,7 +253,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
                 {t('store.allProducts')}
               </button>
               <div className="my-2 h-px bg-cream/15" />
-              {CATS.filter((c) => !store.categoryMeta?.[c]?.hidden).map((c) => (
+              {catKeys.filter((c) => !store.categoryMeta?.[c]?.hidden).map((c) => (
                 <button
                   key={c}
                   onClick={() => pick(c)}

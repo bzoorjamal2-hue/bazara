@@ -5,14 +5,16 @@ import Seo from '../components/Seo.jsx';
 import api from '../api/client.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { cldThumb } from '../utils/cloudinary.js';
+import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys } from '../utils/platformCategories.js';
 
-const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
+
 
 // صفحة تصنيفات الموقع العام (بازارا) — فئات بازارا الأصلية + الفئات المخصّصة المجمّعة من
 // كل المتاجر (يعيدها /public/categories). أي فئة يضيفها أي متجر تظهر هنا تلقائياً بنفس
 // شكل الفئات الأصلية. لا تعتمد على متجر صاحب الحساب المسجّل (الصفحة تبقى بازارا خالصة).
 export default function Categories() {
-  const { t } = useTranslation();
+  const catKeys = usePlatformCatKeys();
+  const { t, i18n } = useTranslation();
   const [custom, setCustom] = useState(() => getCache('publicCats') || []);
   useEffect(() => {
     api.get('/public/categories')
@@ -20,7 +22,7 @@ export default function Categories() {
       .catch(() => { /* الفئات المخصّصة اختيارية — الأصلية تكفي */ });
   }, []);
   const items = [
-    ...CATS.map((c) => ({ key: c, name: t(`categories.${c}`), to: `/category/${c}`, img: `/categories/${c}.png` })),
+    ...catKeys.map((c) => ({ key: c, name: platformCatName(c, t, i18n.language), to: `/category/${c}`, img: platformCatImage(c) })),
     ...custom.map((c) => ({ key: c.key, name: c.name, to: `/category/${c.key}`, img: c.image || '' })),
   ];
 

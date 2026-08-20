@@ -31,9 +31,10 @@ import { saveRef } from '../utils/referral.js';
 import { initPixels, trackPixel } from '../utils/pixels.js';
 import { norm } from '../utils/match.js';
 import Countdown from '../components/Countdown.jsx';
+import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys } from '../utils/platformCategories.js';
 
 const PAGE_SIZE = 8;
-const CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
+
 
 // نفد المخزون: صفر عام أو نفاد كل كميات الألوان/النمر (النموذج التفصيلي)
 const isSoldOut = (p) => {
@@ -51,6 +52,7 @@ const isSoldOut = (p) => {
 };
 
 export default function StorePage() {
+  const catKeys = usePlatformCatKeys();
   const { slug } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -268,23 +270,23 @@ export default function StorePage() {
   const catMeta = store.categoryMeta || {};
   const customCats = Array.isArray(store.customCategories) ? store.customCategories : [];
   const catNames = {};
-  for (const c of CATS) catNames[c] = (catMeta[c]?.name || '').trim();
+  for (const c of catKeys) catNames[c] = (catMeta[c]?.name || '').trim();
   for (const cc of customCats) catNames[cc.key] = cc.name;
   const catLabel = (c) => catNames[c] || t(`categories.${c}`);
   // صورة كل فئة: الأصلية تستخدم أيقونتها الثابتة (إلا لو غيّرتها المالكة)؛
   // المخصّصة تستخدم صورة المالكة وإلا أول صورة منتج فيها.
   const catImages = {};
-  for (const c of CATS) { if (catMeta[c]?.image) catImages[c] = catMeta[c].image; }
+  for (const c of catKeys) { if (catMeta[c]?.image) catImages[c] = catMeta[c].image; }
   for (const cc of customCats) { if (cc.image) catImages[cc.key] = cc.image; }
   for (const p of data.products) {
-    if (CATS.includes(p.category) || catImages[p.category]) continue; // الأصلية لها أيقونتها الثابتة
+    if (catKeys.includes(p.category) || catImages[p.category]) continue; // الأصلية لها أيقونتها الثابتة
     const im = p.imageUrl || (p.images && p.images[0]) || (p.videoUrl && cldVideoPoster(p.videoUrl));
     if (im) catImages[p.category] = im;
   }
   // قائمة الفئات للشبكة: الأصلية الخمس + المخصّصة
   const gridCats = [
     // نستثني الفئات الأصلية التي أخفتها المالكة من إعدادات المتجر
-    ...CATS.filter((k) => !catMeta[k]?.hidden).map((k) => ({ key: k, name: catNames[k], image: catImages[k], builtin: true })),
+    ...catKeys.filter((k) => !catMeta[k]?.hidden).map((k) => ({ key: k, name: catNames[k], image: catImages[k], builtin: true })),
     ...customCats.map((cc) => ({ key: cc.key, name: cc.name, image: catImages[cc.key], builtin: false })),
   ];
   // عدّاد كل فئة وما فيها من عروض. البطاقة بلا رقم لا تقول إن كانت تخفي

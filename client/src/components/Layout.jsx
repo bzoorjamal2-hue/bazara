@@ -15,6 +15,7 @@ import { isStandalone } from '../utils/pwa.js';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
 import { WhatsAppIcon, InstagramIcon, FacebookIcon } from './icons.jsx';
 import { BAZARA_WHATSAPP, BAZARA_INSTAGRAM, BAZARA_FACEBOOK } from '../config/site.js';
+import { setPlatformCategories } from '../utils/platformCategories.js';
 
 // الهوية الخمرية/العاجية الفاخرة مطبّقة على كل الموقع (متجر عام + لوحة تحكم لكل المشتركين).
 export default function Layout({ children }) {
@@ -96,6 +97,8 @@ function PublicFooter({ bottomNav = false }) {
   useEffect(() => {
     api.get('/public/site-info')
       .then((r) => {
+        // فئات المنصّة تصل مع معلومات الموقع — مصدر واحد يغذّي كل الواجهات
+        setPlatformCategories(r.data?.platformCategories);
         const s = { instagram: r.data?.instagram || '', facebook: r.data?.facebook || '' };
         setSocial(s);
         try { localStorage.setItem('bz_site_socials', JSON.stringify(s)); } catch { /* تجاهل */ }
