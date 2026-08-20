@@ -38,14 +38,14 @@ export default function CollectionsRow({ collections, storeSlug = '' }) {
             <Link
               key={`${c.q}-${i}`}
               to={linkFor(c.q)}
-              className="group animate-fade-up relative aspect-[4/3] w-[72%] shrink-0 snap-start overflow-hidden rounded-2xl bg-wine/10 shadow-sm ring-1 ring-wine/10 transition duration-300 hover:-translate-y-1 hover:shadow-glow sm:w-[46%] lg:w-[31%] xl:w-[24%]"
+              className="group animate-fade-up relative aspect-[4/3] w-[58%] shrink-0 snap-start overflow-hidden rounded-2xl bg-wine/10 shadow-sm ring-1 ring-wine/10 transition duration-300 hover:-translate-y-1 hover:shadow-glow sm:w-[38%] lg:w-[26%] xl:w-[20%]"
               style={{ animationDelay: `${i * 60}ms` }}
             >
               {c.image ? (
                 <img
                   src={cldThumb(c.image, 700)}
                   srcSet={cldSrcSet(c.image, [300, 500, 700, 900])}
-                  sizes="(min-width: 1280px) 24vw, (min-width: 1024px) 31vw, (min-width: 640px) 46vw, 72vw"
+                  sizes="(min-width: 1280px) 20vw, (min-width: 1024px) 26vw, (min-width: 640px) 38vw, 58vw"
                   alt=""
                   loading="lazy"
                   decoding="async"
@@ -58,8 +58,8 @@ export default function CollectionsRow({ collections, storeSlug = '' }) {
               )}
               {/* تدرّج سفلي ليُقرأ العنوان فوق أي صورة مهما كانت فاتحة */}
               <span aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-              <span className="absolute inset-x-0 bottom-0 p-4 text-center">
-                <span className="font-display text-lg font-bold text-white drop-shadow-lg sm:text-xl">{title}</span>
+              <span className="absolute inset-x-0 bottom-0 p-2.5 text-center sm:p-3">
+                <span className="font-display text-sm font-bold text-white drop-shadow-lg sm:text-base lg:text-lg">{title}</span>
               </span>
             </Link>
           );
