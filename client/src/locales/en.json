@@ -208,7 +208,8 @@
     "confirmTitle": "Confirm",
     "more": "More",
     "less": "Less",
-    "clearDate": "Clear date"
+    "clearDate": "Clear date",
+    "clear": "Clear"
   },
   "searchPage": {
     "title": "Search",
@@ -1206,7 +1207,13 @@
     "allSizes": "All sizes",
     "specialOffers": "Special offers",
     "apply": "Apply",
-    "discounts": "Discounts"
+    "discounts": "Discounts",
+    "catCount_one": "1 category",
+    "catCount_other": "{{count}} categories",
+    "pieceCount_one": "1 piece",
+    "pieceCount_other": "{{count}} pieces",
+    "catSale_one": "1 offer",
+    "catSale_other": "{{count}} offers"
   },
   "cart": {
     "title": "Shopping cart",

@@ -5,7 +5,7 @@ import api, { getErrorMessage } from '../api/client.js';
 import Seo from '../components/Seo.jsx';
 import StoreHeader from '../components/StoreHeader.jsx';
 import StoreFooter from '../components/StoreFooter.jsx';
-import { PackageIcon, CheckIcon, SearchIcon, TruckIcon, CartIcon } from '../components/icons.jsx';
+import { PackageIcon, CheckIcon, SearchIcon, TruckIcon, CartIcon, XIcon } from '../components/icons.jsx';
 import { goBack } from '../utils/nav.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { useCart } from '../context/CartContext.jsx';
@@ -152,11 +152,23 @@ export default function Track() {
                 dir="ltr"
                 inputMode="tel"
                 autoComplete="tel"
-                className="w-full rounded-full border border-wine/15 bg-white py-3 pl-10 pr-4 text-end text-[#2b2b2b] placeholder:text-stone-400 focus:border-wine/40 focus:outline-none focus:ring-2 focus:ring-wine/15"
+                className={`w-full rounded-full border border-wine/15 bg-white py-3 pl-10 text-end text-[#2b2b2b] placeholder:text-stone-400 focus:border-wine/40 focus:outline-none focus:ring-2 focus:ring-wine/15 ${phone ? 'pr-10' : 'pr-4'}`}
                 placeholder={t('track.phonePlaceholder')}
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
               />
+              {/* مسح الرقم: تصحيح رقم مكتوب كان يتطلّب حذفاً حرفاً حرفاً.
+                  يمينٌ فيزيائي لأن الحقل ltr والنصّ ينتهي هناك. */}
+              {phone && (
+                <button
+                  type="button"
+                  onClick={() => setPhone('')}
+                  title={t('common.clear')} aria-label={t('common.clear')}
+                  className="absolute right-2 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full text-wine/70 transition hover:bg-wine/10 hover:text-wine"
+                >
+                  <XIcon className="h-4 w-4" />
+                </button>
+              )}
             </div>
             <button
               type="submit"

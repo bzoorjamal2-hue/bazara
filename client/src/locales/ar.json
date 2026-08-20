@@ -217,7 +217,8 @@
     "confirmTitle": "تأكيد",
     "more": "المزيد",
     "less": "أقل",
-    "clearDate": "مسح التاريخ"
+    "clearDate": "مسح التاريخ",
+    "clear": "مسح"
   },
   "offline": {
     "message": "لا يوجد اتصال بالإنترنت — يمكنك تصفّح الصفحة الرئيسية فقط"
@@ -1260,7 +1261,22 @@
     "allSizes": "كل المقاسات",
     "specialOffers": "عروض خاصة",
     "apply": "تطبيق",
-    "discounts": "خصومات"
+    "discounts": "خصومات",
+    "catCount_one": "فئة واحدة",
+    "catCount_two": "فئتان",
+    "catCount_few": "{{count}} فئات",
+    "catCount_many": "{{count}} فئة",
+    "catCount_other": "{{count}} فئة",
+    "pieceCount_one": "قطعة واحدة",
+    "pieceCount_two": "قطعتان",
+    "pieceCount_few": "{{count}} قطع",
+    "pieceCount_many": "{{count}} قطعة",
+    "pieceCount_other": "{{count}} قطعة",
+    "catSale_one": "عرض واحد",
+    "catSale_two": "عرضان",
+    "catSale_few": "{{count}} عروض",
+    "catSale_many": "{{count}} عرضاً",
+    "catSale_other": "{{count}} عرض"
   },
   "cart": {
     "title": "سلة التسوّق",

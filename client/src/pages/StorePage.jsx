@@ -287,6 +287,20 @@ export default function StorePage() {
     ...CATS.filter((k) => !catMeta[k]?.hidden).map((k) => ({ key: k, name: catNames[k], image: catImages[k], builtin: true })),
     ...customCats.map((cc) => ({ key: cc.key, name: cc.name, image: catImages[cc.key], builtin: false })),
   ];
+  // عدّاد كل فئة وما فيها من عروض. البطاقة بلا رقم لا تقول إن كانت تخفي
+  // أربعين قطعة أم اثنتين، والفئة الفارغة كانت تُعرض ثم تفتح على لا شيء.
+  const catCounts = useMemo(() => {
+    const out = {};
+    for (const pr of data?.products || []) {
+      const k = pr.category || 'other';
+      if (!out[k]) out[k] = { total: 0, sale: 0 };
+      out[k].total += 1;
+      if (pr.oldPrice && pr.oldPrice > pr.price) out[k].sale += 1;
+    }
+    return out;
+  }, [data]);
+  const visibleCats = gridCats.filter((c) => (catCounts[c.key]?.total || 0) > 0);
+
   const searching = q.trim().length > 0;
   // أحدث المنتجات (لقسم "جديدنا")
   const newest = [...data.products].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 8);
@@ -346,16 +360,25 @@ export default function StorePage() {
             {/* بيت الرئيسية › بطاقة التصنيفات بأيقونتها — أيقونات لا نصّاً مجرّداً */}
             <CrumbHome onClick={() => pickCategory('all')} label={t('nav.home')} />
             <Crumb />
-            <span className="flex items-center gap-2 rounded-full bg-wine/10 px-2.5 py-1 font-display text-base font-bold text-wine">
-              <GridGlyph className="h-5 w-5" />
-              {t('nav.categories')}
-            </span>
+            <CrumbHere icon={<GridGlyph className="h-[17px] w-[17px]" />} label={t('nav.categories')} text={t('nav.categories')} />
           </nav>
+          {/* خلاصة: كم فئة وكم قطعة — الشبكة وحدها لا تقول حجم المتجر */}
+          {visibleCats.length > 0 && (
+            <p className="mb-3 flex flex-wrap items-center justify-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-wine/10 px-3 py-1 text-xs font-bold text-wine ring-1 ring-wine/20">
+                {t('store.catCount', { count: visibleCats.length })}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-wine/10 px-3 py-1 text-xs font-bold text-wine ring-1 ring-wine/20">
+                {t('store.pieceCount', { count: data.products.length })}
+              </span>
+            </p>
+          )}
           {/* بطاقات فاخرة (صورة + اسم + "تسوّقي الآن") — نفس تصميم بطاقات التصنيفات
               الموحّد بكل الحسابات، لكن الضغط يفتح فئة هذا المتجر (لا يخرج للعام) */}
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
-            {gridCats.map((c, i) => {
+            {visibleCats.map((c, i) => {
               const src = c.image ? cldThumb(c.image, 400) : c.builtin ? `/categories/${c.key}.png` : '';
+              const cnt = catCounts[c.key] || { total: 0, sale: 0 };
               return (
                 <button
                   key={c.key}
@@ -365,6 +388,15 @@ export default function StorePage() {
                   style={{ animationDelay: `${Math.min(i, 8) * 60}ms` }}
                 >
                   <span className="dash-hairline absolute inset-x-0 top-0" />
+                  {/* شارة العروض على الزاوية: توجّه الزائرة إلى حيث الخصم مباشرةً */}
+                  {cnt.sale > 0 && (
+                    <span
+                      className="absolute end-2 top-2 z-10 rounded-full px-2 py-0.5 text-[10px] font-bold text-cream ring-1 ring-[#e6c878]/40"
+                      style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 100%)' }}
+                    >
+                      {t('store.catSale', { count: cnt.sale })}
+                    </span>
+                  )}
                   <div className="flex aspect-square w-full items-center justify-center overflow-hidden">
                     {src ? (
                       <img
@@ -382,6 +414,7 @@ export default function StorePage() {
                     )}
                   </div>
                   <span className="mt-2 font-display text-sm font-bold text-wine">{catLabel(c.key)}</span>
+                  <span className="mt-0.5 text-[11px] font-semibold text-wine/70">{t('store.pieceCount', { count: cnt.total })}</span>
                   <span className="mt-2 inline-flex items-center gap-1 rounded-full border border-wine/25 px-3.5 py-1 text-[11px] font-bold text-wine transition group-hover:border-wine group-hover:bg-wine group-hover:text-cream">
                     {t('home.shopNow')}
                   </span>
@@ -403,7 +436,7 @@ export default function StorePage() {
             <nav className="mb-4 mt-2 flex items-center gap-2 text-sm">
               <CrumbHome onClick={() => { setViewAll(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} label={t('nav.home')} />
               <Crumb />
-              <CrumbHere icon={<GridIcon className="h-[17px] w-[17px]" />} label={t('store.allProducts')} />
+              <CrumbHere icon={<GridIcon className="h-[17px] w-[17px]" />} label={t('store.allProducts')} text={t('store.allProducts')} />
             </nav>
           ) : offersView ? (
             <>
@@ -413,7 +446,7 @@ export default function StorePage() {
               <nav className="mb-3 mt-2 flex items-center gap-2 text-sm">
                 <CrumbHome onClick={() => pickCategory('all')} label={t('nav.home')} />
                 <Crumb />
-                <CrumbHere icon={<TagIcon className="h-[17px] w-[17px]" />} label={t('store.specialOffers')} />
+                <CrumbHere icon={<TagIcon className="h-[17px] w-[17px]" />} label={t('nav.offers')} text={t('nav.offers')} />
               </nav>
               {/* نفس خلاصة صفحة العروض العامّة: من يفتح العروض من الشريط
                   السفلي داخل متجر كان يصل إلى شبكة عارية بلا أي سياق. */}
