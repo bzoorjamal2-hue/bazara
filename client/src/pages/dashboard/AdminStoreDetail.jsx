@@ -7,7 +7,7 @@ import useScrollLock from '../../hooks/useScrollLock.js';
 import { SectionHead, Tip } from '../../components/FormField.jsx';
 import {
   XIcon, StoreIcon, BagIcon, ReceiptIcon, ChartIcon, CrownIcon,
-  MailIcon, LinkIcon, StarIcon, WarnIcon, ClockIcon,
+  MailIcon, LinkIcon, StarIcon, WarnIcon, ClockIcon, EyeIcon, EyeOffIcon,
 } from '../../components/icons.jsx';
 
 // حالات الطلب بألوان صريحة تُقرأ في الوضعين — أصناف الألوان الشفّافة تهبط
@@ -27,6 +27,10 @@ export default function AdminStoreDetail({ slug, onClose }) {
   const { t, i18n } = useTranslation();
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
+  const [products, setProducts] = useState(null);
+  const [reasonFor, setReasonFor] = useState(null); // المنتج قيد كتابة سبب إخفائه
+  const [reason, setReason] = useState('');
+  const [busyId, setBusyId] = useState('');
   useScrollLock(true);
 
   useEffect(() => {
@@ -34,6 +38,10 @@ export default function AdminStoreDetail({ slug, onClose }) {
     api.get(`/subscription/store/${encodeURIComponent(slug)}`)
       .then((r) => { if (alive) setData(r.data); })
       .catch((e) => { if (alive) setError(getErrorMessage(e)); });
+    // قائمة المنتجات مستقلّة: فشلها لا يمنع ظهور بقيّة التفاصيل
+    api.get(`/subscription/store/${encodeURIComponent(slug)}/products`)
+      .then((r) => { if (alive) setProducts(r.data.products); })
+      .catch(() => { if (alive) setProducts([]); });
     return () => { alive = false; };
   }, [slug]);
 
@@ -43,6 +51,33 @@ export default function AdminStoreDetail({ slug, onClose }) {
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
+
+  const hide = async (id) => {
+    const why = reason.trim();
+    if (!why) return;
+    setBusyId(id); setError('');
+    try {
+      const r = await api.post(`/subscription/product/${id}/hide`, { reason: why });
+      setProducts((prev) => prev.map((x) => (x.id === id ? { ...x, hidden: true, hiddenReason: r.data.hiddenReason } : x)));
+      setReasonFor(null); setReason('');
+    } catch (e) {
+      setError(getErrorMessage(e));
+    } finally {
+      setBusyId('');
+    }
+  };
+
+  const unhide = async (id) => {
+    setBusyId(id); setError('');
+    try {
+      await api.post(`/subscription/product/${id}/unhide`);
+      setProducts((prev) => prev.map((x) => (x.id === id ? { ...x, hidden: false, hiddenReason: '' } : x)));
+    } catch (e) {
+      setError(getErrorMessage(e));
+    } finally {
+      setBusyId('');
+    }
+  };
 
   const cur = t('common.currency');
   const money = (n) => `${cur}${Math.round(Number(n || 0)).toLocaleString()}`;
@@ -165,6 +200,77 @@ export default function AdminStoreDetail({ slug, onClose }) {
                         <span className="w-4 shrink-0 text-[11px] font-bold tabular-nums text-stone-400">{i + 1}</span>
                         <span className="min-w-0 flex-1 truncate text-sm text-stone-100">{p.name}</span>
                         <span className="shrink-0 text-xs font-bold tabular-nums text-stone-200">{t('admin.soldQty', { count: p.qty })}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* منتجات المتجر بعين المدير — تشمل المخفيّة */}
+              {products && products.length > 0 && (
+                <div className="dash-section glass space-y-3 p-4">
+                  <SectionHead
+                    icon={<BagIcon className="h-5 w-5" />}
+                    title={t('admin.moderation')}
+                    desc={t('admin.moderationDesc')}
+                  />
+                  <div className="space-y-1.5">
+                    {products.map((pr) => (
+                      <div
+                        key={pr.id}
+                        className={`rounded-xl border p-2.5 ${pr.hidden ? 'border-red-400/40 bg-red-500/[0.07]' : 'border-gold-400/12 bg-black/15'}`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          {pr.imageUrl
+                            ? <img src={pr.imageUrl} alt="" className="h-9 w-9 shrink-0 rounded-lg object-cover" />
+                            : <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gold-400/10 text-stone-400"><BagIcon className="h-4 w-4" /></span>}
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-stone-100">{pr.name}</p>
+                            <p className="mt-0.5 truncate text-[11px] text-stone-400">
+                              {money(pr.price)}{pr.hidden && pr.hiddenReason ? ` · ${pr.hiddenReason}` : ''}
+                            </p>
+                          </div>
+                          {pr.hidden && (
+                            <span className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold text-cream" style={{ background: '#b91c1c' }}>
+                              {t('admin.hidden')}
+                            </span>
+                          )}
+                          <button
+                            type="button"
+                            disabled={busyId === pr.id}
+                            onClick={() => (pr.hidden ? unhide(pr.id) : (setReasonFor(reasonFor === pr.id ? null : pr.id), setReason('')))}
+                            title={pr.hidden ? t('admin.unhide') : t('admin.hide')}
+                            aria-label={pr.hidden ? t('admin.unhide') : t('admin.hide')}
+                            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-stone-400 transition hover:bg-white/5 hover:text-gold-200 disabled:opacity-50"
+                          >
+                            {pr.hidden ? <EyeIcon className="h-4 w-4" /> : <EyeOffIcon className="h-4 w-4" />}
+                          </button>
+                        </div>
+
+                        {/* السبب إلزاميّ: قرارٌ يُخفي رزق أحدهم يجب أن يُعلَّل */}
+                        {reasonFor === pr.id && !pr.hidden && (
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            <input
+                              type="text"
+                              autoFocus
+                              maxLength={200}
+                              value={reason}
+                              onChange={(e) => setReason(e.target.value)}
+                              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); hide(pr.id); } }}
+                              placeholder={t('admin.hideReasonPlaceholder')}
+                              className="input min-w-0 flex-1 !py-1.5 text-sm"
+                            />
+                            <button
+                              type="button"
+                              disabled={!reason.trim() || busyId === pr.id}
+                              onClick={() => hide(pr.id)}
+                              className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold text-cream disabled:opacity-50"
+                              style={{ background: '#b91c1c' }}
+                            >
+                              {t('admin.hide')}
+                            </button>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

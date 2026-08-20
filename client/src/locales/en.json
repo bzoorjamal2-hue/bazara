@@ -1527,7 +1527,36 @@
     "sortNewest": "Newest",
     "sortGmv": "Highest sales",
     "sortOrders": "Most orders",
-    "sortExpiry": "Expiring soonest"
+    "sortExpiry": "Expiring soonest",
+    "moderation": "Store products",
+    "moderationDesc": "Includes hidden ones. A hidden product is invisible to visitors but stays in the owner’s dashboard.",
+    "hide": "Hide",
+    "unhide": "Show",
+    "hidden": "Hidden",
+    "hideReasonPlaceholder": "Reason for hiding — logged and reviewable",
+    "logTitle": "Action log",
+    "logHint": "Every admin action: who did it, when, and to whom.",
+    "logEmpty": "No actions logged yet.",
+    "act": {
+      "subscription.set": "Subscription updated",
+      "subscription.addDays": "Days added",
+      "subscriber.delete": "Account deleted",
+      "store.feature": "Store featured",
+      "store.unfeature": "Feature removed",
+      "request.approve": "Request approved",
+      "request.reject": "Request rejected",
+      "product.hide": "Product hidden",
+      "product.unhide": "Product shown"
+    },
+    "logCount_one": "1 action",
+    "logCount_other": "{{count}} actions",
+    "logCountTip": "The latest 100 actions are shown. Older ones stay in the database and are never deleted.",
+    "field": {
+      "reason": "Reason",
+      "days": "Days",
+      "plan": "Plan",
+      "currentPeriodEnd": "Expires"
+    }
   },
   "order": {
     "choose": "Choose order method",

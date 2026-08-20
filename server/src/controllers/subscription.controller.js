@@ -2,6 +2,7 @@ import { query } from '../config/db.js';
 import { isUserActive, daysRemaining, isAdminEmail, planPeriodEnd, adminEmails, activeStoreSql } from '../utils/subscription.js';
 import { sendMail, isMailConfigured } from '../utils/mail.js';
 import { clearPublicCache } from '../middleware/cache.js';
+import { logAdmin } from '../utils/adminLog.js';
 
 const PLANS = { monthly: true, yearly: true };
 const planLabel = (p) => (p === 'yearly' ? 'سنوية' : 'شهرية');
@@ -336,6 +337,7 @@ export async function setStoreFeatured(req, res, next) {
     );
     if (r.rowCount === 0) return res.status(404).json({ error: 'لا يوجد متجر بهذا البريد.' });
     clearPublicCache(); // الرئيسية تعكس التمييز فوراً
+    await logAdmin(req, featured ? 'store.feature' : 'store.unfeature', { type: 'user', id: email, label: email });
     res.json({ ok: true, featured });
   } catch (err) {
     next(err);
@@ -484,6 +486,111 @@ export async function getStoreDetail(req, res, next) {
   }
 }
 
+// ── GET /api/subscription/store/:slug/products ─────────────────────────────
+// منتجات متجرٍ بعين المدير: تشمل المخفيّة (وهي محجوبة عن الزوّار) كي يراجعها
+// ويعيدها إن أخطأ. صفحات المتجر العامّة لا تعرضها إطلاقاً.
+export async function listStoreProducts(req, res, next) {
+  try {
+    const slug = String(req.params.slug || '').trim();
+    const r = await query(
+      `SELECT p.id, p.name, p.price, p.old_price, p.image_url, p.stock, p.category,
+              p.created_at, p.hidden_at, p.hidden_reason
+       FROM products p JOIN stores s ON s.id = p.store_id
+       WHERE s.slug = $1
+       ORDER BY p.hidden_at IS NULL, p.created_at DESC
+       LIMIT 200`,
+      [slug]
+    );
+    res.json({
+      products: r.rows.map((x) => ({
+        id: x.id,
+        name: x.name,
+        price: Number(x.price),
+        oldPrice: x.old_price != null ? Number(x.old_price) : null,
+        imageUrl: x.image_url || '',
+        stock: x.stock,
+        category: x.category,
+        createdAt: x.created_at,
+        hidden: Boolean(x.hidden_at),
+        hiddenAt: x.hidden_at,
+        hiddenReason: x.hidden_reason || '',
+      })),
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ── POST /api/subscription/product/:id/hide ────────────────────────────────
+// إخفاء منتج مخالف بسببٍ مسجَّل. البديل الوحيد قبله كان إيقاف اشتراك المتجر
+// كلّه — عقوبةٌ واحدة قاسية بدل أداةٍ دقيقة. السبب إلزاميّ: قرارٌ يُخفي رزق
+// أحدهم يجب أن يُعلَّل، ويُعرض على المالكة لاحقاً.
+export async function hideProduct(req, res, next) {
+  try {
+    const id = String(req.params.id || '').trim();
+    const reason = String(req.body?.reason || '').trim().slice(0, 200);
+    if (!reason) return res.status(400).json({ error: 'اكتب سبب الإخفاء.' });
+
+    const r = await query(
+      `UPDATE products SET hidden_at = now(), hidden_reason = $2, hidden_by = $3
+       WHERE id = $1 RETURNING id, name`,
+      [id, reason, req.user?.id || null]
+    );
+    const row = r.rows[0];
+    if (!row) return res.status(404).json({ error: 'المنتج غير موجود.' });
+
+    await logAdmin(req, 'product.hide', { type: 'product', id: row.id, label: row.name, details: { reason } });
+    res.json({ ok: true, id: row.id, hidden: true, hiddenReason: reason });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ── POST /api/subscription/product/:id/unhide ──────────────────────────────
+export async function unhideProduct(req, res, next) {
+  try {
+    const id = String(req.params.id || '').trim();
+    const r = await query(
+      `UPDATE products SET hidden_at = NULL, hidden_reason = '', hidden_by = NULL
+       WHERE id = $1 RETURNING id, name`,
+      [id]
+    );
+    const row = r.rows[0];
+    if (!row) return res.status(404).json({ error: 'المنتج غير موجود.' });
+
+    await logAdmin(req, 'product.unhide', { type: 'product', id: row.id, label: row.name });
+    res.json({ ok: true, id: row.id, hidden: false });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ── GET /api/subscription/admin-log ────────────────────────────────────────
+export async function listAdminLog(req, res, next) {
+  try {
+    const limit = Math.min(200, Math.max(1, parseInt(req.query.limit, 10) || 100));
+    const r = await query(
+      `SELECT id, admin_email, action, target_type, target_id, target_label, details, created_at
+       FROM admin_actions ORDER BY created_at DESC LIMIT $1`,
+      [limit]
+    );
+    res.json({
+      actions: r.rows.map((x) => ({
+        id: x.id,
+        adminEmail: x.admin_email,
+        action: x.action,
+        targetType: x.target_type,
+        targetId: x.target_id,
+        targetLabel: x.target_label,
+        details: x.details || {},
+        createdAt: x.created_at,
+      })),
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 // حذف حساب مشترك نهائياً (للمدير) — يحذف معه المتجر والمنتجات (CASCADE)
 // تعيين/تغيير اشتراك مشترك مباشرة (للمدير):
 // يضبط الخطة، وتاريخ البدء = وقت الضغط الفعلي، والانتهاء = البدء + مدة الخطة (شهر/سنة).
@@ -508,6 +615,7 @@ export async function setSubscription(req, res, next) {
       "UPDATE users SET subscription_status='active', subscription_plan=$1, subscription_started_at=$2, current_period_end=$3 WHERE id=$4",
       [plan, from, end, cur.rows[0].id]
     );
+    await logAdmin(req, 'subscription.set', { type: 'user', id: email, label: email, details: { plan, currentPeriodEnd: end } });
     res.json({ message: 'تم تحديث الاشتراك.', plan, startedAt: from, currentPeriodEnd: end });
   } catch (err) {
     next(err);
@@ -539,6 +647,7 @@ export async function addSubscriptionDays(req, res, next) {
       "UPDATE users SET subscription_status='active', current_period_end=$1 WHERE id=$2",
       [end, cur.rows[0].id]
     );
+    await logAdmin(req, 'subscription.addDays', { type: 'user', id: email, label: email, details: { days, currentPeriodEnd: end } });
     res.json({ message: 'تمت إضافة الأيام.', currentPeriodEnd: end, addedDays: days });
   } catch (err) {
     next(err);
@@ -552,6 +661,7 @@ export async function deleteSubscriber(req, res, next) {
   try {
     const r = await query('DELETE FROM users WHERE lower(email) = $1 RETURNING id', [email]);
     if (r.rows.length === 0) return res.status(404).json({ error: 'لا يوجد حساب بهذا البريد.' });
+    await logAdmin(req, 'subscriber.delete', { type: 'user', id: email, label: email });
     res.json({ message: 'تم حذف الحساب وكل بياناته.', email });
   } catch (err) {
     next(err);
@@ -628,6 +738,7 @@ export async function approveRequest(req, res, next) {
     );
     await query("UPDATE subscription_requests SET status='approved', reviewed_at=now() WHERE id=$1", [id]);
 
+    await logAdmin(req, 'request.approve', { type: 'request', id: String(id), label: String(id), details: { currentPeriodEnd: end } });
     res.json({ message: 'تم تفعيل الاشتراك.', currentPeriodEnd: end });
   } catch (err) {
     next(err);
@@ -642,6 +753,7 @@ export async function rejectRequest(req, res, next) {
       [id]
     );
     if (r.rows.length === 0) return res.status(404).json({ error: 'الطلب غير موجود.' });
+    await logAdmin(req, 'request.reject', { type: 'request', id: String(id), label: String(id) });
     res.json({ message: 'تم رفض الطلب.' });
   } catch (err) {
     next(err);

@@ -1599,7 +1599,39 @@
     "sortNewest": "الأحدث انضماماً",
     "sortGmv": "الأعلى مبيعاً",
     "sortOrders": "الأكثر طلبات",
-    "sortExpiry": "الأقرب انتهاءً"
+    "sortExpiry": "الأقرب انتهاءً",
+    "moderation": "منتجات المتجر",
+    "moderationDesc": "تشمل المخفيّة. المنتج المخفيّ لا يظهر لأي زائر، ويبقى للمالكة في لوحتها.",
+    "hide": "إخفاء",
+    "unhide": "إظهار",
+    "hidden": "مخفيّ",
+    "hideReasonPlaceholder": "سبب الإخفاء — يُسجَّل ويُراجَع",
+    "logTitle": "سجلّ الإجراءات",
+    "logHint": "كل فعل إداريّ: من نفّذه ومتى وعلى من.",
+    "logEmpty": "لا إجراءات مسجّلة بعد.",
+    "act": {
+      "subscription.set": "تحديث اشتراك",
+      "subscription.addDays": "إضافة أيام",
+      "subscriber.delete": "حذف حساب",
+      "store.feature": "تمييز متجر",
+      "store.unfeature": "إلغاء تمييز",
+      "request.approve": "قبول طلب",
+      "request.reject": "رفض طلب",
+      "product.hide": "إخفاء منتج",
+      "product.unhide": "إظهار منتج"
+    },
+    "logCount_one": "إجراء واحد",
+    "logCount_two": "إجراءان",
+    "logCount_few": "{{count}} إجراءات",
+    "logCount_many": "{{count}} إجراءً",
+    "logCount_other": "{{count}} إجراء",
+    "logCountTip": "يُعرض آخر ١٠٠ إجراء. الأقدم محفوظ بقاعدة البيانات ولا يُحذف.",
+    "field": {
+      "reason": "السبب",
+      "days": "أيام",
+      "plan": "الخطّة",
+      "currentPeriodEnd": "ينتهي في"
+    }
   },
   "order": {
     "choose": "اختر طريقة الطلب",

@@ -249,3 +249,26 @@ CREATE INDEX IF NOT EXISTS idx_expenses_store_date ON expenses(store_id, spent_a
 -- عند الشركة. يفصل «بِعتُ» عن «قبضتُ» فلا يبدو المتجر رابحاً ونصف ماله عالق.
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS collected_at TIMESTAMPTZ;
 CREATE INDEX IF NOT EXISTS idx_orders_collected ON orders(store_id, collected_at);
+
+-- ── إشراف المدير ───────────────────────────────────────────────────────────
+-- إخفاء منتج مخالف بسببٍ مسجَّل. كان البديل الوحيد إيقاف اشتراك المتجر كلّه:
+-- عقوبةٌ واحدة قاسية بدل أداةٍ دقيقة.
+ALTER TABLE products ADD COLUMN IF NOT EXISTS hidden_at TIMESTAMPTZ;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS hidden_reason VARCHAR(200) DEFAULT '';
+ALTER TABLE products ADD COLUMN IF NOT EXISTS hidden_by UUID REFERENCES users(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_products_hidden ON products(hidden_at);
+
+-- سجلّ أفعال المدير: من فعل ماذا ومتى. كانت التفعيلات والحذف وتصفير كلمات
+-- السرّ تُنفَّذ بلا أثر، فلا سبيل لمعرفة ما جرى إن وقع خطأ.
+CREATE TABLE IF NOT EXISTS admin_actions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  admin_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  admin_email VARCHAR(160) NOT NULL DEFAULT '',
+  action VARCHAR(40) NOT NULL,
+  target_type VARCHAR(20) NOT NULL DEFAULT '',
+  target_id VARCHAR(80) NOT NULL DEFAULT '',
+  target_label VARCHAR(200) NOT NULL DEFAULT '',
+  details JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_admin_actions_time ON admin_actions(created_at DESC);

@@ -24,7 +24,7 @@ const CATALOG_SELECT = `
          p.size, p.color, p.stock, p.featured,
          s.slug AS store_slug, s.name AS store_name
   FROM products p
-  JOIN stores s ON s.id = p.store_id
+  JOIN stores s ON s.id = p.store_id AND p.hidden_at IS NULL
   JOIN users u ON u.id = s.user_id
 `;
 
@@ -483,7 +483,7 @@ export async function chatAssistant(req, res, next) {
         `SELECT p.*, s.slug AS store_slug, s.name AS store_name, s.whatsapp AS store_whatsapp,
                 s.instagram AS store_instagram, s.phone AS store_phone, s.size_chart AS store_size_chart,
                 s.return_policy AS store_return_policy, 0 AS rating_avg, 0 AS rating_count
-         FROM products p JOIN stores s ON s.id = p.store_id
+         FROM products p JOIN stores s ON s.id = p.store_id AND p.hidden_at IS NULL
          WHERE p.id = ANY($1::uuid[])`,
         [ids]
       );

@@ -18,7 +18,9 @@ const PRODUCT_SELECT = `
          s.custom_categories AS store_custom_categories, s.category_meta AS store_category_meta,
          COALESCE(r.avg, 0) AS rating_avg, COALESCE(r.cnt, 0) AS rating_count
   FROM products p
-  JOIN stores s ON s.id = p.store_id
+  -- p.hidden_at: المنتج المخفيّ إدارياً لا يظهر لأي زائر. الشرط في الوصل لا في
+  -- WHERE كي يسري على كل مستدعٍ بلا أن يضيفه بنفسه.
+  JOIN stores s ON s.id = p.store_id AND p.hidden_at IS NULL
   JOIN users u ON u.id = s.user_id
   LEFT JOIN (
     SELECT product_id, AVG(rating)::numeric AS avg, COUNT(*)::int AS cnt
@@ -658,7 +660,9 @@ export async function addReview(req, res, next) {
   if (imageUrl && !/^(https?:\/\/|data:image\/)/i.test(imageUrl)) imageUrl = '';
   imageUrl = imageUrl.slice(0, 2000);
   try {
-    const exists = await query('SELECT id, store_id, name FROM products WHERE id = $1', [id]);
+    // المنتج المخفيّ إدارياً محجوب عن الزوّار، فلا يقبل تقييمات جديدة أيضاً —
+    // وإلا بقي بابٌ خلفيّ يتفاعل معه الزوّار وهو مُخفى.
+    const exists = await query('SELECT id, store_id, name FROM products WHERE id = $1 AND hidden_at IS NULL', [id]);
     if (exists.rows.length === 0) return res.status(404).json({ error: 'المنتج غير موجود.' });
     const product = exists.rows[0];
 

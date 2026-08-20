@@ -23,6 +23,7 @@ import BroadcastManager from './dashboard/BroadcastManager.jsx';
 import CountUp from '../components/CountUp.jsx';
 import StockRequestsManager from './dashboard/StockRequestsManager.jsx';
 import AdminRequests from './dashboard/AdminRequests.jsx';
+import AdminLog from './dashboard/AdminLog.jsx';
 import SubscribersManager from './dashboard/SubscribersManager.jsx';
 import SiteSliders from './dashboard/SiteSliders.jsx';
 import NewsletterManager from './dashboard/NewsletterManager.jsx';
@@ -51,6 +52,7 @@ const ADMIN_SECTIONS = [
   { key: 'adminOverview', Icon: ChartIcon },
   { key: 'subscribers', Icon: UsersIcon },
   { key: 'admin', Icon: ShieldIcon },
+  { key: 'adminLog', Icon: ShieldIcon },
   { key: 'siteSliders', Icon: ImageIcon },
   { key: 'newsletter', Icon: MailIcon },
   { key: 'broadcast', Icon: MailIcon },
@@ -123,6 +125,7 @@ export default function Dashboard() {
         {section === 'adminOverview' && isAdmin && <AdminOverview />}
         {section === 'subscribers' && isAdmin && <SubscribersManager />}
         {section === 'admin' && isAdmin && <AdminRequests />}
+        {section === 'adminLog' && isAdmin && <AdminLog />}
         {section === 'siteSliders' && isAdmin && <SiteSliders />}
         {section === 'newsletter' && isAdmin && <NewsletterManager />}
         {section === 'broadcast' && isAdmin && <BroadcastManager />}

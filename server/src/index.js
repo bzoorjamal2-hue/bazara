@@ -494,6 +494,23 @@ END $;`,
        WHEN 'accessories' THEN 'hijab'
        ELSE category END
      WHERE category IN ('women', 'men', 'kids', 'accessories');`,
+    // إشراف المدير: إخفاء منتج بسبب + سجلّ الأفعال
+    "ALTER TABLE products ADD COLUMN IF NOT EXISTS hidden_at TIMESTAMPTZ;",
+    "ALTER TABLE products ADD COLUMN IF NOT EXISTS hidden_reason VARCHAR(200) DEFAULT '';",
+    "ALTER TABLE products ADD COLUMN IF NOT EXISTS hidden_by UUID REFERENCES users(id) ON DELETE SET NULL;",
+    "CREATE INDEX IF NOT EXISTS idx_products_hidden ON products(hidden_at);",
+    `CREATE TABLE IF NOT EXISTS admin_actions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  admin_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  admin_email VARCHAR(160) NOT NULL DEFAULT '',
+  action VARCHAR(40) NOT NULL,
+  target_type VARCHAR(20) NOT NULL DEFAULT '',
+  target_id VARCHAR(80) NOT NULL DEFAULT '',
+  target_label VARCHAR(200) NOT NULL DEFAULT '',
+  details JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);`,
+    'CREATE INDEX IF NOT EXISTS idx_admin_actions_time ON admin_actions(created_at DESC);',
   ];
   // كل جملة على حدة: فشل واحدة لا يمنع البقية
   for (const sql of steps) {
