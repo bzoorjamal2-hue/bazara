@@ -1259,8 +1259,9 @@
     "confirm": "Confirm order via WhatsApp",
     "back": "Back to cart",
     "required": "Please enter your name, phone and city",
-    "phoneInvalid": "Enter a valid phone number (e.g. 0599123456)",
-    "phoneExample": "A 10-digit mobile starting with 05 (e.g. 0599123456)",
+    "phoneInvalid": "The number must start with 05 and be 10 digits (e.g. 0599123456)",
+    "phoneExample": "Required: a 10-digit mobile starting with 05 (e.g. 0599123456)",
+    "phonePlaceholder": "Mobile number · 05XXXXXXXX",
     "eta": {
       "wb": "Delivery in 1–2 business days",
       "quds": "Delivery in 2–3 business days",

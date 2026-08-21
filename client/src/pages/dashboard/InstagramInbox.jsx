@@ -5,6 +5,7 @@ import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
 import CitySearch from '../../components/CitySearch.jsx';
 import { sizeLabel } from '../../utils/sizes.js';
+import { isValidMobile, sanitizeMobileInput } from '../../utils/phone.js';
 import { InstagramIcon, BagIcon, BackIcon, CheckIcon, TrashIcon, PlusIcon } from '../../components/icons.jsx';
 import { startFbLogin, igRedirectUri } from '../../utils/fbSdk.js';
 import { cldThumb, cldVideoPoster } from '../../utils/cloudinary.js';
@@ -446,6 +447,8 @@ function OrderComposer({ defaultName = '', onSubmit }) {
   const submit = async () => {
     if (!picked.length) { setError(t('dashboard.instagram.needProduct')); return; }
     if (!f.name.trim() || !f.phone.trim()) { setError(t('dashboard.instagram.needCustomer')); return; }
+    // نفس قاعدة المتجر: ١٠ أرقام تبدأ بـ 05 — أوبتيموس يرفض غيرها
+    if (!isValidMobile(f.phone)) { setError(t('co.phoneInvalid')); return; }
     setBusy(true); setError('');
     try {
       await onSubmit({
@@ -487,7 +490,11 @@ function OrderComposer({ defaultName = '', onSubmit }) {
       {/* بيانات الزبون */}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <input className="input" placeholder={t('dashboard.instagram.custName')} value={f.name} onChange={set('name')} />
-        <input className="input" placeholder={t('dashboard.instagram.custPhone')} value={f.phone} onChange={set('phone')} dir="ltr" />
+        <input
+          className="input" placeholder={t('co.phonePlaceholder')} value={f.phone} dir="ltr"
+          inputMode="numeric" maxLength={10}
+          onChange={(e) => setF((prev) => ({ ...prev, phone: sanitizeMobileInput(e.target.value) }))}
+        />
         {/* التوصيل: بحث مسطّح عن المكان (كل مدينة/قرية بندٌ مستقل بسعره) + السعر بجنبه */}
         <div className="flex gap-2 sm:col-span-2">
           <div className="flex-1">

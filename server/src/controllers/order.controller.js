@@ -8,6 +8,7 @@ import { sendPushToUser } from '../config/push.js';
 import { sendNativeToUser } from '../config/nativePush.js';
 import { feeForCity, cityOfVillage } from '../config/deliveryCities.js';
 import { variantInStock } from './stockRequest.controller.js';
+import { normalizeMobile, isValidMobile } from '../utils/phone.js';
 
 // إشعار صاحب المتجر (بريد + إشعار دفع على الجوال) عند وصول طلب جديد — بالخلفية
 async function notifyOwnerNewOrder(storeId, info) {
@@ -215,8 +216,13 @@ export async function createCodOrder(req, res, next) {
     return res.status(400).json({ error: 'السلة فارغة.' });
   }
   const name = (customer?.name || '').trim();
-  const phone = (customer?.phone || '').trim();
+  // رقم الموبايل: نوحّده لصيغة محليّة (05XXXXXXXX) ونرفض أي شكل ثاني — أوبتيموس لا
+  // يقبل رقماً أطول أو أقصر من ١٠ خانات ولا المقدّمات الدوليّة (00970 / +972 …)
+  const phone = normalizeMobile(customer?.phone);
   if (!name || !phone) return res.status(400).json({ error: 'الاسم ورقم الهاتف مطلوبان.' });
+  if (!isValidMobile(phone)) {
+    return res.status(400).json({ error: 'رقم الهاتف لازم يبدأ بـ 05 ويتكوّن من ١٠ أرقام (مثال: 0599123456).' });
+  }
 
   try {
     // نحسب الإجمالي من قاعدة البيانات (لا نثق بأسعار العميل) ونتأكد أن المنتجات من متجر واحد

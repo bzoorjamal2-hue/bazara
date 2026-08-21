@@ -2,6 +2,7 @@ import { query } from '../config/db.js';
 import { applyOrderStatus } from './order.controller.js';
 import { sendPushToUser } from '../config/push.js';
 import { sendNativeToUser } from '../config/nativePush.js';
+import { normalizeMobile } from '../utils/phone.js';
 import {
   isOpostConfigured,
   loginOpost,
@@ -285,7 +286,8 @@ export async function opostSendOrder(req, res, next) {
       business_address: store.opost_business_address || undefined,
       consignee: {
         name: order.customer_name || '',
-        phone: order.customer_phone || '',
+        // صيغة محليّة موحّدة (05XXXXXXXX) — أوبتيموس يرفض المقدّمات الدوليّة وغير ١٠ خانات
+        phone: normalizeMobile(order.customer_phone) || order.customer_phone || '',
         city: cityId,
         area: areaId,
         // العنوان التفصيلي = الوصف الإضافي فقط (بلا تكرار المدينة/القرية)

@@ -14,7 +14,7 @@ import { colorToCss } from '../utils/colorDot.js';
 import { cldThumb } from '../utils/cloudinary.js';
 import { getRef, clearRef } from '../utils/referral.js';
 import { trackPixel } from '../utils/pixels.js';
-import { isValidMobile } from '../utils/phone.js';
+import { isValidMobile, normalizePhone, sanitizeMobileInput } from '../utils/phone.js';
 
 // بيانات الزبون المحفوظة محلياً — تعبّئ شاشة الإتمام تلقائياً بالطلبات القادمة
 const CUSTOMER_KEY = 'bz_customer_v1';
@@ -156,7 +156,7 @@ export default function CartDrawer() {
     const id = setTimeout(() => {
       api.post('/public/abandoned', {
         slug: storeSlug,
-        customer: { name: cust.name, phone: cust.phone, city: [cust.city, cust.area].filter(Boolean).join(' - '), address: cust.address },
+        customer: { name: cust.name, phone: normalizePhone(cust.phone), city: [cust.city, cust.area].filter(Boolean).join(' - '), address: cust.address },
         items: items.map((i) => ({ name: i.name, qty: i.qty, price: i.price, size: i.size || '', color: i.color || '' })),
         total, // مجموع القطع (بلا توصيل/خصم — تقديري يكفي للمتابعة)
       }).catch(() => { /* صامت — ميزة مساعدة لا توقف الشراء */ });
@@ -179,7 +179,7 @@ export default function CartDrawer() {
     const digits = cust.phone.replace(/\D/g, '');
     if (digits.length < 9) { setLoyalty(null); return undefined; }
     const id = setTimeout(() => {
-      api.post('/public/loyalty', { slug: storeSlug, phone: cust.phone })
+      api.post('/public/loyalty', { slug: storeSlug, phone: normalizePhone(cust.phone) })
         .then((r) => setLoyalty(Number(r.data.percent) > 0 ? { percent: Number(r.data.percent) } : null))
         .catch(() => setLoyalty(null));
     }, 600);
@@ -292,7 +292,7 @@ export default function CartDrawer() {
     try {
       const r = await api.post('/orders/cod', {
         items: items.map((i) => ({ id: i.id, qty: i.qty, size: i.size, color: i.color })),
-        customer: { name: cust.name, phone: cust.phone, city: cust.city, area: cust.area, address: cust.address, notes: cust.notes, deliveryFee: delivery },
+        customer: { name: cust.name, phone: normalizePhone(cust.phone), city: cust.city, area: cust.area, address: cust.address, notes: cust.notes, deliveryFee: delivery },
         coupon: coupon ? { code: coupon.code } : undefined,
         referralCode: (!coupon && refDiscount > 0) ? referral?.code : undefined,
       });
@@ -498,14 +498,23 @@ export default function CartDrawer() {
                             دايماً، فلازم "end-3" تتحسب بنفس الاتجاه حتى ما تتراكب علامة الصح فوق
                             أول رقم (الصفر) لما تنعكس start/end بصفحة عربية RTL */}
                         <div className="relative" dir="ltr">
+                          {/* sanitizeMobileInput + maxLength: أرقام فقط، يقصّ المقدّمات الدوليّة
+                              (00970/00972/+972) ويقف عند ١٠ خانات — أوبتيموس يرفض غير هيك */}
                           <input
                             className={`input !rounded-2xl pe-9 ${invalid.phone ? 'ring-1 ring-red-400/70' : phoneOk ? 'ring-1 ring-emerald-400/60' : ''}`}
-                            inputMode="tel" autoComplete="tel" placeholder={t('co.phone')} value={cust.phone}
-                            onChange={(e) => { setCust({ ...cust, phone: e.target.value }); if (invalid.phone) setInvalid((v) => ({ ...v, phone: false })); }}
+                            inputMode="numeric" autoComplete="tel" maxLength={10} required
+                            aria-invalid={cust.phone.trim() && !phoneOk ? 'true' : 'false'}
+                            placeholder={t('co.phonePlaceholder')} value={cust.phone}
+                            onChange={(e) => { setCust({ ...cust, phone: sanitizeMobileInput(e.target.value) }); if (invalid.phone) setInvalid((v) => ({ ...v, phone: false })); }}
                           />
                           {phoneOk && <CheckIcon className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-400" />}
                         </div>
-                        {cust.phone.trim() && !phoneOk && <p className="mt-1 text-xs text-red-300">{t('co.phoneExample')}</p>}
+                        {/* التلميح ظاهر دايماً قبل ما يصحّ الرقم: مطلوب، يبدأ بـ 05، و١٠ أرقام */}
+                        {!phoneOk && (
+                          <p className={`mt-1 text-xs ${invalid.phone || cust.phone.trim() ? 'text-red-300' : 'text-white/50'}`}>
+                            {t('co.phoneExample')}
+                          </p>
+                        )}
                       </div>
                       {/* المكان: قائمة مسطّحة — كل مدينة وقرية بندٌ مستقل بسعره (بلا تجميع).
                           اختيار قرية يضبط محافظتها (parent) داخلياً لإرسال دقيق لشركة التوصيل */}
