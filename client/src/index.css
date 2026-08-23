@@ -1121,6 +1121,18 @@ html.dark .bz-title { background: linear-gradient(100deg, #e0c25f 0%, #f0dca6 50
   /* لوحة التحكّم داكنة — نُثبّت مخطّطاً فاتحاً كي لا يقلب المتصفّح ألوان الورقة */
   html { color-scheme: light !important; }
   html, body { background: #fff !important; }
+  /* السبب الحقيقي للصفحة الفاضية الثانية: body عنده min-height:100vh، وبالطباعة
+     الـ100vh = ارتفاع الورقة كاملاً. فحتى لو الفاتورة نصف صفحة، بيصير التدفّق
+     ورقةً كاملة بالضبط، وأي كسر بالتقريب بيدفع سطراً وهمياً لورقة ثانية. */
+  html, body {
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
   body > *:not(#bz-print-root) { display: none !important; }
-  #bz-print-root { display: block; }
+  #bz-print-root { display: block; margin: 0; padding: 0; }
+  /* هامش سفليّ لآخر عنصر بيولّد ورقة زيادة كمان */
+  #bz-print-root > :last-child { margin-bottom: 0 !important; }
 }

@@ -49,11 +49,13 @@ export function savePaper(id) {
 // الحل: على هالأجهزة نخلّي القياس auto — فتملأ الفاتورة الورقة اللي اختارها
 // الجهاز مهما كانت، ويضلّ اختيار صاحب المتجر فاعلاً بالتخطيط (مضغوط أو عادي).
 export function honorsPageSize() {
-  if (typeof navigator === 'undefined') return true;
+  if (typeof navigator === 'undefined') return false;
   const ua = navigator.userAgent || '';
+  // على iOS كل المتصفّحات WebKit (حتى كروم/CriOS) فما بينفّذوا size
   const iOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  const safari = /Safari/.test(ua) && !/Chrome|Chromium|CriOS|FxiOS|Edg|Android/.test(ua);
-  return !(iOS || safari);
+  if (iOS) return false;
+  // كروميوم فقط (كروم/إيدج/أوبرا) — فايرفوكس وسفاري ما نفّذوا size أصلاً
+  return /Chrome|Chromium|Edg\/|OPR\//.test(ua);
 }
 
 // أنماط خاصة بالمقاس تُضاف فوق أنماط الفاتورة الأساسية
