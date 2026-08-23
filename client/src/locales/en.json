@@ -530,7 +530,8 @@
     "on": "Enabled",
     "denied": "Permission denied. Enable notifications for Bazara in your phone settings.",
     "notConfigured": "Notifications aren't set up on the server yet.",
-    "error": "Couldn't enable, please try again."
+    "error": "Couldn't enable, please try again.",
+    "rowOnShort": "On — you get an alert for every order"
   },
   "offer": {
     "endsIn": "Offer ends in",

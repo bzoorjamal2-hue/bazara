@@ -59,13 +59,14 @@ export function honorsPageSize() {
 }
 
 // أنماط خاصة بالمقاس تُضاف فوق أنماط الفاتورة الأساسية
-export function paperCss(id) {
+export function paperCss(id, { zoom: useZoom = true } = {}) {
   const p = paperById(id);
   const honors = honorsPageSize();
   const size = honors ? p.page : 'auto';
   // بلا قياس معروف لا معنى للتكبير المحسوب لورقة بعينها — نخلّيه ١ فتملأ الفاتورة
   // الورقة اللي يعطينا إيّاها الجهاز بحجم خطّ طبيعي.
-  const zoom = honors ? p.zoom : 1;
+  // الصورة (PNG) تُرسم بعرضٍ نحدّده نحن، فلا معنى للتكبير المحسوب لورقة
+  const zoom = !useZoom ? 1 : honors ? p.zoom : 1;
   return `
     @page{size:${size};margin:${p.margin}}
     .inv{zoom:${zoom}}

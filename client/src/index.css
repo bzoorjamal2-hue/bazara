@@ -1157,3 +1157,40 @@ html.dark .bz-title { background: linear-gradient(100deg, #e0c25f 0%, #f0dca6 50
 @media (prefers-reduced-motion: no-preference) {
   .menu-nudge { animation: bz-menu-nudge 2.4s ease-in-out infinite; }
 }
+
+/* ===== درج القائمة الجانبية (اللوحة والزائر) =====
+   كان بنّياً مصمتاً واحداً بالوضعين: نهاراً يبدو باهتاً، وليلاً يذوب بخلفية
+   الصفحة الداكنة. صار سطحاً متدرّجاً بلمسة ذهب من أعلى، وأغمق ليلاً كي يبقى
+   الدرج منفصلاً عمّا خلفه. */
+.dash-drawer {
+  background:
+    radial-gradient(130% 55% at 100% 0%, rgba(212, 175, 55, 0.18), transparent 62%),
+    linear-gradient(180deg, #4a3628 0%, #3f2e22 42%, #34251b 100%);
+}
+html.dark .dash-drawer {
+  background:
+    radial-gradient(130% 55% at 100% 0%, rgba(212, 175, 55, 0.13), transparent 62%),
+    linear-gradient(180deg, #2b1f17 0%, #241a13 50%, #1b130e 100%);
+}
+
+/* تلاشي حافّة القائمة السفلية — يطابق لون قاع الدرج بالوضعين */
+.dash-drawer-fade { background: linear-gradient(to top, #34251b 18%, rgba(52, 37, 27, 0.82) 50%, rgba(52, 37, 27, 0)); }
+html.dark .dash-drawer-fade { background: linear-gradient(to top, #1b130e 18%, rgba(27, 19, 14, 0.82) 50%, rgba(27, 19, 14, 0)); }
+
+/* ===== إحساس التطبيق لا صفحة الويب =====
+   الروابط والأزرار كانت تُسحب بالإصبع (شبح الرابط يمشي مع اليد) وتفتح قائمة
+   اللمسة الطويلة على iOS — إحساس «صفحة» لا «تطبيق». نمنع الاثنين في كل مكان
+   بلا أن نمنع تحديد النصّ العادي. */
+a, button, [role='button'], summary {
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+}
+
+/* عناصر واجهة التطبيق (قوائم · تبويبات · أزرار تنقّل): بلا تحديد نصّ كذلك */
+.app-tap {
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}

@@ -62,47 +62,51 @@ export default function NavBell({ variant = 'bar' }) {
     }
   };
 
-  // ───── البطاقة العصرية بمفتاح التبديل (داخل درج القائمة) ─────
+  // ───── بطاقة الإشعارات داخل درج القائمة ─────
+  //
+  // كانت بطاقة عريضة بهالة ذهبية وسطر شرحٍ مقصوص بنقاط (…) فوق كل الأقسام —
+  // تسرق النظر ولا تُقرأ. صارت صفّاً بعرض القائمة بنفس لغتها: أيقونة بمربّع،
+  // عنوان قصير، وحالة بكلمة، ومفتاح تبديل. والشرح الطويل يظهر سطرين فقط عند
+  // الإطفاء أو الرفض — يعني وقت يلزم فعلاً.
   if (variant === 'row') {
-    const subtitle = denied ? t('push.denied') : on ? t('push.rowOn') : t('push.rowOff');
+    const subtitle = denied ? t('push.denied') : on ? t('push.rowOnShort') : t('push.rowOff');
     return (
-      <div className={`mb-1 flex items-center gap-2.5 rounded-2xl p-2.5 ring-1 transition-colors duration-300 ${on ? 'bg-gold-400/15 ring-gold-400/40' : 'bg-cream/10 ring-cream/15'}`}>
+      <div
+        className={`app-tap mb-1 flex items-center gap-3 rounded-2xl px-2.5 py-2.5 ring-1 transition-colors duration-300 ${
+          on ? 'bg-gold-400/10 ring-gold-400/30' : 'bg-cream/[0.08] ring-cream/12'
+        }`}
+      >
         <span
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 transition-all duration-300 ${
             on
-              ? 'bg-gradient-to-br from-gold-200 to-gold-400 text-wine-dark shadow-[0_0_20px_rgba(230,200,120,0.5)]'
-              : 'bg-cream/15 text-cream'
+              ? 'bg-gradient-to-br from-gold-200 to-gold-400 text-wine-dark ring-gold-200/50'
+              : 'bg-cream/[0.12] text-cream ring-cream/10'
           }`}
         >
           <BellGlyph on={on} ringing={ringing} />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold text-cream">{t('push.rowTitle')}</p>
-          <p className={`mt-0.5 line-clamp-1 text-[11px] leading-snug ${denied ? 'text-amber-300' : on ? 'text-gold-200' : 'text-cream/60'}`}>{subtitle}</p>
+          <p className="truncate text-[13.5px] font-bold leading-tight text-cream">{t('push.rowTitle')}</p>
+          <p className={`mt-0.5 line-clamp-2 text-[11px] leading-snug ${denied ? 'text-amber-300' : on ? 'text-gold-200' : 'text-cream/65'}`}>
+            {subtitle}
+          </p>
         </div>
-        {/* مفتاح تبديل منزلق — أخضر ذهبي عند التفعيل، بحركة ناعمة */}
+        {/* مفتاح تبديل منزلق — ذهبي عند التفعيل، بحركة ناعمة */}
         <button
           role="switch"
           aria-checked={on}
           aria-label={t('push.title')}
           onClick={toggle}
           disabled={busy}
-          className={`relative h-7 w-12 shrink-0 rounded-full transition-colors duration-300 disabled:opacity-60 ${
-            on ? 'bg-gradient-to-r from-gold-300 to-gold-400 shadow-[0_0_12px_rgba(230,200,120,0.45)]' : 'bg-cream/20'
+          className={`app-tap relative h-6 w-11 shrink-0 rounded-full transition-colors duration-300 disabled:opacity-60 ${
+            on ? 'bg-gradient-to-r from-gold-300 to-gold-400' : 'bg-cream/25'
           }`}
         >
           <span
-            className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-md transition-all duration-300 ${
-              on ? 'start-[calc(100%-1.625rem)]' : 'start-0.5'
+            className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-all duration-300 ${
+              on ? 'start-[calc(100%-1.375rem)]' : 'start-0.5'
             }`}
-          >
-            {/* علامة ✓ صغيرة داخل المقبض عند التفعيل */}
-            {on && (
-              <svg viewBox="0 0 24 24" className="absolute inset-0 m-auto h-3.5 w-3.5 text-gold-500" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="m5 13 4 4L19 7" />
-              </svg>
-            )}
-          </span>
+          />
         </button>
       </div>
     );

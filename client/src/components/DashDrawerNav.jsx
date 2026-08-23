@@ -15,7 +15,7 @@ import { ArrowDownIcon } from './icons.jsx';
 
 const SCROLLED_KEY = 'bz_menu_scrolled';
 
-export default function DashDrawerNav({ groups, activeKey, onNavigate, badges = {}, children }) {
+export default function DashDrawerNav({ groups, activeKey, onNavigate, badges = {}, children, brand }) {
   const { t } = useTranslation();
   const ref = useRef(null);
   const [more, setMore] = useState(false);
@@ -52,16 +52,18 @@ export default function DashDrawerNav({ groups, activeKey, onNavigate, badges = 
 
   return (
     <div className="relative mt-3 flex min-h-0 flex-1 flex-col">
-      <nav ref={ref} className="min-h-0 flex-1 space-y-0.5 overflow-y-auto pb-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <nav ref={ref} className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex min-h-full flex-col gap-0.5 pb-4">
         {children}
         {groups.map((g) => (
-          <div key={g.id}>
-            <p
-              className="menu-row px-3 pb-1 pt-3 text-[11px] font-bold uppercase tracking-[0.14em] text-cream/40"
+          <div key={g.id} className="flex flex-col gap-0.5">
+            <div
+              className="menu-row flex items-center gap-2 px-3 pb-1.5 pt-4"
               style={{ animationDelay: `${row++ * 24}ms` }}
             >
-              {g.title}
-            </p>
+              <span className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-gold-200">{g.title}</span>
+              <span aria-hidden className="h-px flex-1 bg-gold-400/20" />
+            </div>
             {g.items.map((s) => {
               const active = s.key === activeKey;
               const badge = badges[s.key];
@@ -71,18 +73,21 @@ export default function DashDrawerNav({ groups, activeKey, onNavigate, badges = 
                   to={`/dashboard?tab=${s.key}`}
                   onClick={onNavigate}
                   aria-current={active ? 'page' : undefined}
+                  draggable={false}
                   style={{ animationDelay: `${row++ * 24}ms` }}
-                  className={`menu-row relative flex items-center gap-3 rounded-xl py-2 pe-3 ps-3.5 text-[15px] transition ${
+                  className={`menu-row app-tap relative flex items-center gap-3 rounded-2xl py-2 pe-3 ps-3.5 text-[15px] transition duration-200 active:scale-[0.985] ${
                     active
-                      ? 'bg-cream/12 font-bold text-cream ring-1 ring-gold-400/25'
-                      : 'text-cream/85 hover:bg-cream/10 hover:text-cream'
+                      ? 'bg-cream/[0.14] font-extrabold text-cream ring-1 ring-gold-400/35'
+                      : 'font-semibold text-cream hover:bg-cream/10'
                   }`}
                 >
                   {/* شريط ذهبي على حافّة البداية يعلّم القسم المفتوح */}
                   {active && <span aria-hidden className="absolute inset-y-1.5 start-0 w-[3px] rounded-full bg-gold-400" />}
                   <span
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition ${
-                      active ? 'bg-gold-400 text-wine-dark shadow-sm' : 'bg-cream/10 text-cream/75'
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 transition ${
+                      active
+                        ? 'bg-gradient-to-br from-gold-200 to-gold-400 text-wine-dark shadow-[0_4px_14px_-6px_rgba(212,175,55,0.9)] ring-gold-200/50'
+                        : 'bg-cream/[0.12] text-cream ring-cream/10'
                     }`}
                   >
                     <s.Icon className="h-[18px] w-[18px]" />
@@ -109,18 +114,20 @@ export default function DashDrawerNav({ groups, activeKey, onNavigate, badges = 
             })}
           </div>
         ))}
+        {brand && <div className="mt-auto pt-6">{brand}</div>}
+        </div>
       </nav>
 
       {/* حافّة متدرّجة + مؤشّر: «في أقسام تحت» — يختفيان عند الوصول لآخر القائمة */}
       <div
         aria-hidden
-        className={`pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-wine-dark via-wine-dark/85 to-transparent transition-opacity duration-300 ${more ? 'opacity-100' : 'opacity-0'}`}
+        className={`dash-drawer-fade pointer-events-none absolute inset-x-0 bottom-0 h-14 transition-opacity duration-300 ${more ? 'opacity-100' : 'opacity-0'}`}
       />
       <button
         type="button"
         onClick={scrollMore}
         tabIndex={more ? 0 : -1}
-        className={`absolute inset-x-0 bottom-1 mx-auto flex w-max items-center gap-1 rounded-full bg-gold-400 px-3 py-1 text-[11px] font-extrabold text-wine-dark shadow-lg transition-opacity duration-300 ${
+        className={`app-tap absolute inset-x-0 bottom-1 mx-auto flex w-max items-center gap-1 rounded-full bg-gradient-to-br from-gold-200 to-gold-400 px-3 py-1 text-[11px] font-extrabold text-wine-dark shadow-[0_6px_18px_-6px_rgba(212,175,55,0.8)] transition-opacity duration-300 ${
           more ? 'opacity-100' : 'pointer-events-none opacity-0'
         } ${more && nudge ? 'menu-nudge' : ''}`}
       >

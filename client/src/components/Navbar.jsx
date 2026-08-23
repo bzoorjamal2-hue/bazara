@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -332,13 +333,13 @@ export default function Navbar() {
       </nav>
 
       {/* قائمة الحساب — درج جانبي أنيق (مثل درج المتجر) */}
-      {user && menuOpen && (
-        <div className="fixed inset-0 z-[70]">
+      {user && menuOpen && createPortal(
+        <div className="fixed inset-0 z-[80]">
           {/* خلفية معتّمة — تُغلق الدرج بالضغط خارجه */}
           <div className="absolute inset-0 bg-black/50 animate-fade-up" onClick={() => setMenuOpen(false)} />
           <aside
             onClick={(e) => e.stopPropagation()}
-            className={`absolute inset-y-0 start-0 flex w-[17.5rem] max-w-[80%] flex-col bg-wine-dark px-5 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+96px)] text-cream shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}
+            className={`dash-drawer absolute inset-y-0 start-0 flex h-[100dvh] max-h-[100dvh] w-[17.5rem] max-w-[80%] flex-col px-5 pb-[calc(env(safe-area-inset-bottom,0px)+14px)] pt-5 text-cream shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}
           >
             {/* أعلى: إغلاق + اللغة */}
             <div className="flex items-center justify-between">
@@ -366,20 +367,49 @@ export default function Navbar() {
               activeKey={pathname.startsWith('/dashboard') ? (new URLSearchParams(search).get('tab') || (isAdmin ? 'adminOverview' : 'overview')) : ''}
               onNavigate={() => setMenuOpen(false)}
               badges={{ myOrders: newOrders, stockRequests: stockReady }}
+              brand={(
+                <div className="app-tap select-none px-3 pb-1 text-center">
+                  <p className="font-display text-lg font-extrabold tracking-wide text-cream/45">Bazara</p>
+                  <p className="mt-0.5 text-[10px] tracking-[0.2em] text-cream/25">{t('dashboard.title')}</p>
+                </div>
+              )}
             >
               <NavBell variant="row" />
             </DashDrawerNav>
+
+            {/* ذيل الدرج: كان فراغاً بنّياً كبيراً تحت آخر قسم. صار فعلين
+                يحتاجهما صاحب المتجر يومياً — يفتح متجره كما تراه الزبونة، ويخرج */}
+            <div className="mt-2 shrink-0 space-y-1.5 border-t border-cream/10 pt-3">
+              {!isAdmin && store?.slug && (
+                <Link
+                  to={`/store/${store.slug}`}
+                  onClick={() => setMenuOpen(false)}
+                  draggable={false}
+                  className="app-tap flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-gold-200 to-gold-400 px-3 py-2.5 text-sm font-extrabold text-wine-dark shadow-[0_8px_22px_-10px_rgba(212,175,55,0.9)] transition active:scale-[0.985]"
+                >
+                  <StoreIcon className="h-4 w-4" /> {t('dashboard.viewStore')}
+                </Link>
+              )}
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="app-tap flex w-full items-center justify-center gap-2 rounded-2xl px-3 py-2.5 text-sm font-bold text-red-300 ring-1 ring-red-400/25 transition active:scale-[0.985] hover:bg-red-500/10"
+              >
+                <LogoutIcon className="h-4 w-4" /> {t('nav.logout')}
+              </button>
+            </div>
           </aside>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* قائمة الزائر — تصفّح الفئات + روابط سريعة */}
-      {!user && menuOpen && (
-        <div className="fixed inset-0 z-[70]">
+      {!user && menuOpen && createPortal(
+        <div className="fixed inset-0 z-[80]">
           <div className="absolute inset-0 bg-black/50 animate-fade-up" onClick={() => setMenuOpen(false)} />
           <aside
             onClick={(e) => e.stopPropagation()}
-            className={`absolute inset-y-0 start-0 flex w-[17.5rem] max-w-[80%] flex-col bg-wine-dark px-5 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+96px)] text-cream shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}
+            className={`dash-drawer absolute inset-y-0 start-0 flex h-[100dvh] max-h-[100dvh] w-[17.5rem] max-w-[80%] flex-col px-5 pb-[calc(env(safe-area-inset-bottom,0px)+14px)] pt-5 text-cream shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}
           >
             <div className="flex items-center justify-between">
               <CloseButton onClick={() => setMenuOpen(false)} variant="cream" size="h-10 w-10" />
@@ -407,7 +437,8 @@ export default function Navbar() {
               </div>
             )}
           </aside>
-        </div>
+        </div>,
+        document.body
       )}
     </header>
   );

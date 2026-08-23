@@ -7,7 +7,7 @@ import { buildWhatsappLink, waCandidates } from '../../utils/whatsapp.js';
 import { getCache, setCache } from '../../utils/apiCache.js';
 import { downloadXlsx } from '../../utils/xlsx.js';
 import { htmlToPngBlob, safeFileName, downloadBlob } from '../../utils/htmlImage.js';
-import { PAPERS, getPaper, savePaper, paperCss, honorsPageSize } from '../../utils/invoicePaper.js';
+import { PAPERS, getPaper, savePaper, paperCss, honorsPageSize, paperById } from '../../utils/invoicePaper.js';
 import { printSheet } from '../../utils/printSheet.js';
 import { PinIcon, NoteIcon, TicketIcon, WhatsAppIcon, TruckIcon, BellIcon, TrashIcon, BagIcon, ReceiptIcon, SearchIcon, XIcon, DownloadIcon, CheckIcon, CopyIcon, PhoneIcon, PrintIcon, ImageIcon } from '../../components/icons.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -306,7 +306,10 @@ export default function OrdersManager() {
   const saveInvoiceImage = async (o) => {
     try {
       setToast(t('dashboard.ordersSection.savingImage'));
-      const blob = await htmlToPngBlob(invoiceBody(o), INVOICE_CSS);
+      // الصورة تتبع مقاس الورق المختار كمان: الملصق/الرول يعطي صورة مضغوطة
+      // ضيّقة (أنسب لواتساب)، والورق العادي يعطي الفاتورة الكاملة
+      const p = paperById(paper);
+      const blob = await htmlToPngBlob(invoiceBody(o), `${INVOICE_CSS}${paperCss(paper, { zoom: false })}`, p.narrow ? 480 : 820);
       downloadBlob(blob, `${invoiceName(o)}.png`);
       setToast(t('dashboard.ordersSection.imageSaved'));
     } catch (e) {
