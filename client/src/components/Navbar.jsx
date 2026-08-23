@@ -185,8 +185,10 @@ export default function Navbar() {
     navigate('/shop', { replace: true });
   };
 
-  // أقسام لوحة التحكم (تظهر في قائمة المستخدم) — المدير: تحكّم فقط بلا بيع
-  const sections = isAdmin
+  // أقسام لوحة التحكم (تظهر في قائمة المستخدم) — المدير: تحكّم فقط بلا بيع.
+  // للزائر: مصفوفة فارغة بلا أي t() — نصوص اللوحة بحزمة مؤجّلة، ولمسها هنا كان
+  // يجرّها لكل زائر (٢٢ كيلوبايت مضغوطة) بلا داعي.
+  const sections = !user ? [] : isAdmin
     ? [
         { key: 'adminOverview', label: t('admin.ov.nav'), Icon: ChartIcon },
         { key: 'subscribers', label: t('admin.subscribersNav'), Icon: UsersIcon },

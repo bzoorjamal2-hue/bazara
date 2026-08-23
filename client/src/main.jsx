@@ -15,7 +15,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
-import './i18n.js';
+import { ready as i18nReady } from './i18n.js';
 import './index.css';
 import App from './App.jsx';
 import { applyPerfTier } from './utils/perfTier.js';
@@ -68,7 +68,8 @@ window.addEventListener('vite:preloadError', async () => {
   window.location.reload();
 });
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+// ننتظر نصوص اللغة المختارة قبل أول رسمة (العربية مُضمّنة فتُحلّ فوراً)
+i18nReady.finally(() => ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>
     <HelmetProvider>
@@ -86,4 +87,4 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     </HelmetProvider>
     </ErrorBoundary>
   </React.StrictMode>
-);
+));

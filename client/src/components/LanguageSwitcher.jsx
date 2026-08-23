@@ -1,9 +1,10 @@
 import { useTranslation } from 'react-i18next';
+import { switchLanguage } from '../i18n.js';
 
 export default function LanguageSwitcher({ onChanged }) {
   const { i18n } = useTranslation();
   const toggle = () => {
-    i18n.changeLanguage(i18n.language === 'ar' ? 'en' : 'ar');
+    switchLanguage(i18n.language === 'ar' ? 'en' : 'ar');
     onChanged?.();
   };
 

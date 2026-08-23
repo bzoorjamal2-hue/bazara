@@ -10,6 +10,7 @@ import Search from './pages/Search.jsx'; // البحث يفتح من الهيد�
 import AppWelcome from './components/AppWelcome.jsx';
 import Splash from './components/Splash.jsx';
 import { isStandalone, hasStoredToken } from './utils/pwa.js';
+import { ensureDash } from './i18n.js';
 import { useAuth } from './context/AuthContext.jsx';
 
 // داخل التطبيق المثبّت:
@@ -35,7 +36,8 @@ const Login = lazy(() => import('./pages/Login.jsx'));
 const Register = lazy(() => import('./pages/Register.jsx'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword.jsx'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword.jsx'));
-const Dashboard = lazy(() => import('./pages/Dashboard.jsx'));
+// اللوحة تجلب نصوصها (ar.dash.json) بالتوازي مع صفحتها — فما تظهر أبداً بلا نصوص
+const Dashboard = lazy(() => Promise.all([import('./pages/Dashboard.jsx'), ensureDash()]).then(([m]) => m));
 const Subscribe = lazy(() => import('./pages/Subscribe.jsx'));
 const StorePage = lazy(() => import('./pages/StorePage.jsx'));
 const CategoryPage = lazy(() => import('./pages/CategoryPage.jsx'));
