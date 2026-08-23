@@ -8,6 +8,7 @@ import { getCache, setCache } from '../../utils/apiCache.js';
 import { downloadXlsx } from '../../utils/xlsx.js';
 import { htmlToPngBlob, safeFileName, downloadBlob } from '../../utils/htmlImage.js';
 import { PAPERS, getPaper, savePaper, paperCss } from '../../utils/invoicePaper.js';
+import { printSheet } from '../../utils/printSheet.js';
 import { PinIcon, NoteIcon, TicketIcon, WhatsAppIcon, TruckIcon, BellIcon, TrashIcon, BagIcon, ReceiptIcon, SearchIcon, XIcon, DownloadIcon, CheckIcon, CopyIcon, PhoneIcon, PrintIcon, ImageIcon } from '../../components/icons.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useCouriers, syncCourierStatuses, courierOf, CourierLock, CourierSend } from '../../components/couriers.jsx';
@@ -288,21 +289,9 @@ export default function OrdersManager() {
     .thanks{margin-top:10px;text-align:center;color:#8a7f75;font-size:11.5px}
   `;
 
-  // الطباعة داخل إطار مخفيّ (أوثق من نافذة منبثقة تحجبها المتصفّحات)
-  const printHtml = (body, title) => {
-    const html = `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>${escHtml(title)}</title><style>${INVOICE_CSS}${paperCss(paper)}</style></head><body>${body}</body></html>`;
-    const f = document.createElement('iframe');
-    f.setAttribute('aria-hidden', 'true');
-    f.style.cssText = 'position:fixed;inset-inline-end:-9999px;width:0;height:0;border:0';
-    document.body.appendChild(f);
-    const doc = f.contentWindow.document;
-    doc.open(); doc.write(html); doc.close();
-    setTimeout(() => {
-      f.contentWindow.focus();
-      f.contentWindow.print();
-      setTimeout(() => f.remove(), 1500);
-    }, 300);
-  };
+  // الطباعة من الصفحة نفسها (printSheet) لا من إطار مخفيّ — سفاري على الآيفون
+  // كان يحجب الطباعة من الإطارات المخفية برسالة «حُجبت الطباعة التلقائية».
+  const printHtml = (body, title) => printSheet(body, `${INVOICE_CSS}${paperCss(paper)}`, title);
 
   // اسم الملف = اسم الزبونة بالضبط (PDF من حوار الطباعة، وPNG عند حفظ الصورة) —
   // فلمّا يوصلها الملف بواتساب تلاقي اسمها عليه لا "فاتورة - #1234". بلا اسم:

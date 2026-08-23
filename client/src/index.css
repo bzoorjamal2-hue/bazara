@@ -1110,3 +1110,17 @@ html.dark .theme-pub .text-indigo-700 { color: #a5b4fc; }
 /* عنوان قسم فاخر بالرئيسية — تدرّج ذهبي-خمري ثابت (بلا حركة مستمرة = صفر استهلاك) */
 .bz-title { background: linear-gradient(100deg, #5e4636 0%, #8a6a4f 50%, #4a3526 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
 html.dark .bz-title { background: linear-gradient(100deg, #e0c25f 0%, #f0dca6 50%, #c79a3a 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* ===== طباعة الفواتير =====
+   الفاتورة تُحقن داخل #bz-print-root بالصفحة نفسها (لا إطار مخفيّ — سفاري على
+   الآيفون يحجب الطباعة من الإطارات المخفية). على الشاشة مخفيّة، وعند الطباعة
+   تظهر وحدها ويختفي كل ما عداها. */
+#bz-print-root { display: none; }
+
+@media print {
+  /* لوحة التحكّم داكنة — نُثبّت مخطّطاً فاتحاً كي لا يقلب المتصفّح ألوان الورقة */
+  html { color-scheme: light !important; }
+  html, body { background: #fff !important; }
+  body > *:not(#bz-print-root) { display: none !important; }
+  #bz-print-root { display: block; }
+}
