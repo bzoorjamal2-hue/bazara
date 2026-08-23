@@ -703,7 +703,8 @@
       "label10x15": "Label 10×15 cm",
       "label10x10": "Label 10×10 cm",
       "roll80": "80 mm roll",
-      "roll58": "58 mm roll"
+      "roll58": "58 mm roll",
+      "deviceHint": "On iPhone the paper is picked in the print dialog itself — this choice sets the invoice layout"
     }
   },
   "admin": {

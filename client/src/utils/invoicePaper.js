@@ -39,12 +39,34 @@ export function savePaper(id) {
   try { localStorage.setItem(KEY, paperById(id).id); } catch { /* وضع التصفّح الخاص */ }
 }
 
+// هل يحترم المتصفّح قياس الورقة المكتوب بالـCSS؟
+//
+// كروم/إيدج/فايرفوكس: آه — @page{size:…} بتضبط الورقة بحوار الطباعة.
+// سفاري وكل متصفّحات الآيفون (كلها WebKit): لأ — قائمة «Paper Size» بحوار
+// الطباعة بتجي من الطابعة نفسها (AirPrint) لا من الصفحة، فقياسنا بينتجاهل
+// وبتضلّ الورقة اللي مختارها الجهاز. لو فرضنا مقاساً صغيراً (ملصق ١٠×١٠) على
+// ورقة A4، بتطلع الفاتورة مربّعاً صغيراً بزاوية الورقة والباقي فاضي.
+// الحل: على هالأجهزة نخلّي القياس auto — فتملأ الفاتورة الورقة اللي اختارها
+// الجهاز مهما كانت، ويضلّ اختيار صاحب المتجر فاعلاً بالتخطيط (مضغوط أو عادي).
+export function honorsPageSize() {
+  if (typeof navigator === 'undefined') return true;
+  const ua = navigator.userAgent || '';
+  const iOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const safari = /Safari/.test(ua) && !/Chrome|Chromium|CriOS|FxiOS|Edg|Android/.test(ua);
+  return !(iOS || safari);
+}
+
 // أنماط خاصة بالمقاس تُضاف فوق أنماط الفاتورة الأساسية
 export function paperCss(id) {
   const p = paperById(id);
+  const honors = honorsPageSize();
+  const size = honors ? p.page : 'auto';
+  // بلا قياس معروف لا معنى للتكبير المحسوب لورقة بعينها — نخلّيه ١ فتملأ الفاتورة
+  // الورقة اللي يعطينا إيّاها الجهاز بحجم خطّ طبيعي.
+  const zoom = honors ? p.zoom : 1;
   return `
-    @page{size:${p.page};margin:${p.margin}}
-    .inv{zoom:${p.zoom}}
+    @page{size:${size};margin:${p.margin}}
+    .inv{zoom:${zoom}}
     ${p.narrow ? `
     .inv{padding:10px 12px;max-width:100%}
     .head{flex-direction:column;gap:6px}

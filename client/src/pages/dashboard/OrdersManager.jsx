@@ -7,7 +7,7 @@ import { buildWhatsappLink, waCandidates } from '../../utils/whatsapp.js';
 import { getCache, setCache } from '../../utils/apiCache.js';
 import { downloadXlsx } from '../../utils/xlsx.js';
 import { htmlToPngBlob, safeFileName, downloadBlob } from '../../utils/htmlImage.js';
-import { PAPERS, getPaper, savePaper, paperCss } from '../../utils/invoicePaper.js';
+import { PAPERS, getPaper, savePaper, paperCss, honorsPageSize } from '../../utils/invoicePaper.js';
 import { printSheet } from '../../utils/printSheet.js';
 import { PinIcon, NoteIcon, TicketIcon, WhatsAppIcon, TruckIcon, BellIcon, TrashIcon, BagIcon, ReceiptIcon, SearchIcon, XIcon, DownloadIcon, CheckIcon, CopyIcon, PhoneIcon, PrintIcon, ImageIcon } from '../../components/icons.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -53,6 +53,9 @@ export default function OrdersManager() {
   const [toast, setToast] = useState(''); // رسالة خاطفة (نسخ التفاصيل)
   const [paper, setPaperState] = useState(getPaper); // مقاس ورق الطابعة (لكل جهاز)
   const choosePaper = (id) => { setPaperState(id); savePaper(id); };
+  // على الآيفون/سفاري الورقة تُختار من حوار الطباعة (AirPrint) لا من الصفحة —
+  // نقول هذا لصاحب المتجر بدل ما يدوّر على مقاسه بقائمة الجهاز ولا يلاقيه.
+  const paperFromDevice = !honorsPageSize();
 
   useEffect(() => {
     let on = true;
@@ -548,6 +551,9 @@ export default function OrdersManager() {
                 options={PAPERS.map((x) => ({ value: x.id, label: t(`dashboard.paper.${x.id}`) }))}
                 className="w-full whitespace-nowrap sm:w-40"
               />
+              {paperFromDevice && (
+                <p className="mt-1 text-[11px] leading-snug text-stone-400 sm:w-40">{t('dashboard.paper.deviceHint')}</p>
+              )}
             </span>
             <button
               onClick={printAllInvoices}
