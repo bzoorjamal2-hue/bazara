@@ -705,6 +705,14 @@
       "roll80": "80 mm roll",
       "roll58": "58 mm roll",
       "deviceHint": "On iPhone the paper is picked in the print dialog itself — this choice sets the invoice layout"
+    },
+    "menu": {
+      "store": "My store",
+      "grow": "Growth",
+      "account": "Admin & account",
+      "supervise": "Supervision",
+      "content": "Content",
+      "more": "More below"
     }
   },
   "admin": {

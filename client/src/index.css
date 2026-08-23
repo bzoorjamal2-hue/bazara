@@ -1136,3 +1136,24 @@ html.dark .bz-title { background: linear-gradient(100deg, #e0c25f 0%, #f0dca6 50
   /* هامش سفليّ لآخر عنصر بيولّد ورقة زيادة كمان */
   #bz-print-root > :last-child { margin-bottom: 0 !important; }
 }
+
+/* ===== قائمة أقسام اللوحة (الدرج الجانبي) =====
+   دخول متتابع للصفوف: تبان القائمة مرتّبة بدل ما تظهر دفعةً واحدة. التأخير
+   يُمرَّر سطرياً (animation-delay) من المكوّن حسب ترتيب الصفّ. */
+@keyframes bz-menu-row {
+  from { opacity: 0; transform: translateY(7px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .menu-row { animation: bz-menu-row 0.34s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+}
+
+/* نطّة خفيفة لمؤشّر «في أقسام تحت» — لمن لم يمرّر القائمة ولا مرّة */
+@keyframes bz-menu-nudge {
+  0%, 70%, 100% { transform: translateY(0); }
+  80% { transform: translateY(3px); }
+  90% { transform: translateY(1px); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .menu-nudge { animation: bz-menu-nudge 2.4s ease-in-out infinite; }
+}

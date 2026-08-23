@@ -11,6 +11,7 @@ import { CartIcon, HeartIcon, MenuIcon, UserIcon, SearchIcon, MailIcon, Instagra
 import ThemeToggle from './ThemeToggle.jsx';
 import NavBell from './NavBell.jsx';
 import CloseButton from './CloseButton.jsx';
+import DashDrawerNav from './DashDrawerNav.jsx';
 import { isStandalone } from '../utils/pwa.js';
 import CatThumb from './CatThumb.jsx';
 import { cldThumb } from '../utils/cloudinary.js';
@@ -185,35 +186,48 @@ export default function Navbar() {
     navigate('/shop', { replace: true });
   };
 
-  // أقسام لوحة التحكم (تظهر في قائمة المستخدم) — المدير: تحكّم فقط بلا بيع.
-  // للزائر: مصفوفة فارغة بلا أي t() — نصوص اللوحة بحزمة مؤجّلة، ولمسها هنا كان
-  // يجرّها لكل زائر (٢٢ كيلوبايت مضغوطة) بلا داعي.
-  const sections = !user ? [] : isAdmin
+  // أقسام اللوحة مجموعةً بمعنى: كانت اثني عشر رابطاً بلا ترتيب، نصفها تحت
+  // حافّة الشاشة. للزائر: مصفوفة فارغة بلا أي t() — نصوص اللوحة بحزمة مؤجّلة،
+  // ولمسها هنا كان يجرّها لكل زائر (٢٢ كيلوبايت مضغوطة) بلا داعي.
+  const menuGroups = !user ? [] : isAdmin
     ? [
-        { key: 'adminOverview', label: t('admin.ov.nav'), Icon: ChartIcon },
-        { key: 'subscribers', label: t('admin.subscribersNav'), Icon: UsersIcon },
-        { key: 'admin', label: t('admin.nav'), Icon: ShieldCheckIcon },
-        { key: 'adminLog', label: t('admin.logTitle'), Icon: ShieldCheckIcon },
-        { key: 'adminSettings', label: t('admin.settingsTitle'), Icon: GearIcon },
-        { key: 'siteSliders', label: t('admin.siteSliders'), Icon: GridIcon },
-        { key: 'newsletter', label: t('admin.newsletter'), Icon: MailIcon },
-        { key: 'broadcast', label: t('admin.bc.nav'), Icon: MailIcon },
-        { key: 'profile', label: t('dashboard.profile'), Icon: UserIcon },
+        { id: 'supervise', title: t('dashboard.menu.supervise'), items: [
+          { key: 'adminOverview', label: t('admin.ov.nav'), Icon: ChartIcon },
+          { key: 'subscribers', label: t('admin.subscribersNav'), Icon: UsersIcon },
+          { key: 'admin', label: t('admin.nav'), Icon: ShieldCheckIcon },
+          { key: 'adminLog', label: t('admin.logTitle'), Icon: ShieldCheckIcon },
+        ] },
+        { id: 'content', title: t('dashboard.menu.content'), items: [
+          { key: 'siteSliders', label: t('admin.siteSliders'), Icon: GridIcon },
+          { key: 'newsletter', label: t('admin.newsletter'), Icon: MailIcon },
+          { key: 'broadcast', label: t('admin.bc.nav'), Icon: MailIcon },
+        ] },
+        { id: 'account', title: t('dashboard.menu.account'), items: [
+          { key: 'adminSettings', label: t('admin.settingsTitle'), Icon: GearIcon },
+          { key: 'profile', label: t('dashboard.profile'), Icon: UserIcon },
+        ] },
       ]
     : [
-        { key: 'overview', label: t('dashboard.overview'), Icon: GridIcon },
-        { key: 'analytics', label: t('dashboard.analytics.title'), Icon: ChartIcon },
-        { key: 'finance', label: t('finance.title'), Icon: CashIcon },
-        { key: 'profile', label: t('dashboard.profile'), Icon: UserIcon },
-        { key: 'storeSettings', label: t('dashboard.storeSettings'), Icon: GearIcon },
-        { key: 'myProducts', label: t('dashboard.myProducts'), Icon: BagIcon },
-        { key: 'instagram', label: t('dashboard.instagram.title'), Icon: InstagramIcon },
-        { key: 'myOrders', label: t('dashboard.myOrders'), Icon: ReceiptIcon },
-        { key: 'coupons', label: t('dashboard.coupons.title'), Icon: TicketIcon },
-        { key: 'referrals', label: t('dashboard.referrals.title'), Icon: UserIcon },
-        { key: 'campaign', label: t('campaign.title'), Icon: MegaphoneIcon },
-        { key: 'stockRequests', label: t('dashboard.stockRequests.title'), Icon: BellIcon },
+        { id: 'store', title: t('dashboard.menu.store'), items: [
+          { key: 'overview', label: t('dashboard.overview'), Icon: GridIcon },
+          { key: 'myProducts', label: t('dashboard.myProducts'), Icon: BagIcon },
+          { key: 'myOrders', label: t('dashboard.myOrders'), Icon: ReceiptIcon },
+          { key: 'stockRequests', label: t('dashboard.stockRequests.title'), Icon: BellIcon, badgeTone: 'green' },
+        ] },
+        { id: 'grow', title: t('dashboard.menu.grow'), items: [
+          { key: 'analytics', label: t('dashboard.analytics.title'), Icon: ChartIcon },
+          { key: 'coupons', label: t('dashboard.coupons.title'), Icon: TicketIcon },
+          { key: 'referrals', label: t('dashboard.referrals.title'), Icon: UserIcon },
+          { key: 'campaign', label: t('campaign.title'), Icon: MegaphoneIcon },
+          { key: 'instagram', label: t('dashboard.instagram.title'), Icon: InstagramIcon },
+        ] },
+        { id: 'account', title: t('dashboard.menu.account'), items: [
+          { key: 'finance', label: t('finance.title'), Icon: CashIcon },
+          { key: 'storeSettings', label: t('dashboard.storeSettings'), Icon: GearIcon },
+          { key: 'profile', label: t('dashboard.profile'), Icon: UserIcon },
+        ] },
       ];
+
 
   return (
     <header className="sticky top-0 z-50">
@@ -344,38 +358,17 @@ export default function Navbar() {
               </div>
             </div>
 
-            {/* الروابط — تأخذ المساحة وتتمرّر داخلياً. بطاقة الإشعارات أول عنصر داخل
-                منطقة التمرير (لا ثابتة) حتى لا تسرق مساحة الأزرار السفلية */}
-            <nav className="mt-3 min-h-0 flex-1 space-y-1 overflow-y-auto">
+            {/* الأقسام: مجموعات + مؤشّر «في المزيد تحت» + دخول متتابع.
+                بطاقة الإشعارات أول عنصر داخل منطقة التمرير (لا ثابتة) حتى لا
+                تسرق مساحة الأزرار السفلية */}
+            <DashDrawerNav
+              groups={menuGroups}
+              activeKey={pathname.startsWith('/dashboard') ? (new URLSearchParams(search).get('tab') || (isAdmin ? 'adminOverview' : 'overview')) : ''}
+              onNavigate={() => setMenuOpen(false)}
+              badges={{ myOrders: newOrders, stockRequests: stockReady }}
+            >
               <NavBell variant="row" />
-              {sections.map((s) => {
-                const curTab = new URLSearchParams(search).get('tab') || (isAdmin ? 'adminOverview' : 'overview');
-                const active = pathname.startsWith('/dashboard') && curTab === s.key;
-                return (
-                  <Link
-                    key={s.key}
-                    to={`/dashboard?tab=${s.key}`}
-                    onClick={() => setMenuOpen(false)}
-                    className={`flex items-center gap-3 rounded-xl px-3 py-3 text-base transition ${active ? 'bg-cream/15 font-bold text-cream' : 'text-cream/85 hover:bg-cream/10 hover:text-cream'}`}
-                  >
-                    <s.Icon className="h-5 w-5 shrink-0 text-cream/80" />
-                    <span className="flex-1">{s.label}</span>
-                    {s.key === 'myOrders' && newOrders > 0 && (
-                      <span className="relative flex h-6 min-w-6 items-center justify-center">
-                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gold-400/50" style={{ animationDuration: '1.8s' }} />
-                        <span className="relative flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-extrabold text-wine-dark shadow-sm ring-1 ring-cream/50" style={{ background: 'linear-gradient(135deg, #f4e0a4 0%, #e6c878 55%, #d4af37 100%)' }}>{newOrders > 99 ? '99+' : newOrders}</span>
-                      </span>
-                    )}
-                    {s.key === 'stockRequests' && stockReady > 0 && (
-                      <span className="relative flex h-6 min-w-6 items-center justify-center">
-                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/50" style={{ animationDuration: '1.8s' }} />
-                        <span className="relative flex h-6 min-w-6 items-center justify-center rounded-full bg-emerald-500 px-1.5 text-xs font-extrabold text-white shadow-sm ring-1 ring-cream/50">{stockReady > 99 ? '99+' : stockReady}</span>
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
-            </nav>
+            </DashDrawerNav>
           </aside>
         </div>
       )}
