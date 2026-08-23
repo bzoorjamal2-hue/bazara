@@ -1232,3 +1232,11 @@ a, button, [role='button'], summary {
   html { scrollbar-width: thin; scrollbar-color: rgba(94, 70, 54, 0.38) transparent; }
   html.dark { scrollbar-color: rgba(224, 194, 95, 0.45) transparent; }
 }
+
+/* الأزرار لا يُحدَّد نصّها (لا معنى لتحديد كلمة «حفظ») — والروابط تبقى قابلة
+   للتحديد للنسخ. منع السحب نفسه يتكفّل به حارس dragstart في main.jsx. */
+button, [role='button'], summary {
+  user-select: none;
+  -webkit-user-select: none;
+}
+img, svg { -webkit-user-drag: none; }

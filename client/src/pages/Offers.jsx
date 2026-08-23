@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import useSessionState from '../hooks/useSessionState.js';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
@@ -14,7 +15,7 @@ export default function Offers() {
   const { t } = useTranslation();
   const [products, setProducts] = useState(() => getCache('offers') || null);
   const [error, setError] = useState('');
-  const [tier, setTier] = useState('all');
+  const [tier, setTier] = useSessionState('offers:tier', 'all'); // تصفيتها تبقى بالعودة
 
   const load = () => {
     setError('');

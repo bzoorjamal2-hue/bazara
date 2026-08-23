@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import useSessionState from '../hooks/useSessionState.js';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
@@ -35,7 +36,8 @@ export default function Track() {
       .then((r) => { setCache(`store:${storeScope}`, r.data); setStoreObj(r.data.store); })
       .catch(() => { /* الفوتر لا يظهر إن فشل الجلب */ });
   }, [storeScope]);
-  const [phone, setPhone] = useState('');
+  // رقمها يبقى بالعودة للصفحة: كانت تكتبه ثم تخرج لتتأكّد منه فترجع لحقلٍ فارغ
+  const [phone, setPhone] = useSessionState('track:phone', '');
   const [orders, setOrders] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
