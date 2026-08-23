@@ -7,6 +7,7 @@ import { buildWhatsappLink, waCandidates } from '../../utils/whatsapp.js';
 import { getCache, setCache } from '../../utils/apiCache.js';
 import { downloadXlsx } from '../../utils/xlsx.js';
 import { htmlToPngBlob, safeFileName, downloadBlob } from '../../utils/htmlImage.js';
+import { PAPERS, getPaper, savePaper, paperCss } from '../../utils/invoicePaper.js';
 import { PinIcon, NoteIcon, TicketIcon, WhatsAppIcon, TruckIcon, BellIcon, TrashIcon, BagIcon, ReceiptIcon, SearchIcon, XIcon, DownloadIcon, CheckIcon, CopyIcon, PhoneIcon, PrintIcon, ImageIcon } from '../../components/icons.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useCouriers, syncCourierStatuses, courierOf, CourierLock, CourierSend } from '../../components/couriers.jsx';
@@ -49,6 +50,8 @@ export default function OrdersManager() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [oq, setOq] = useState('');
   const [toast, setToast] = useState(''); // رسالة خاطفة (نسخ التفاصيل)
+  const [paper, setPaperState] = useState(getPaper); // مقاس ورق الطابعة (لكل جهاز)
+  const choosePaper = (id) => { setPaperState(id); savePaper(id); };
 
   useEffect(() => {
     let on = true;
@@ -189,7 +192,7 @@ export default function OrdersManager() {
       <td>${e(it.name)}</td>
       <td class="c">${e(it.size || '—')}</td>
       <td class="c">${e(it.color || '—')}</td>
-      <td class="e">${cur}${Number(it.price || 0).toFixed(2)}</td>
+      <td class="e u">${cur}${Number(it.price || 0).toFixed(2)}</td>
       <td class="c">${e(it.qty)}</td>
       <td class="e b">${cur}${((it.price || 0) * (it.qty || 0)).toFixed(2)}</td>
     </tr>`).join('');
@@ -235,7 +238,7 @@ export default function OrdersManager() {
             <th>${e(t('dashboard.product.name'))}</th>
             <th class="c">${e(t('dashboard.product.size'))}</th>
             <th class="c">${e(t('dashboard.product.color'))}</th>
-            <th class="e">${e(t('dashboard.ordersSection.unitPrice'))}</th>
+            <th class="e u">${e(t('dashboard.ordersSection.unitPrice'))}</th>
             <th class="c">${e(t('dashboard.product.qty'))}</th>
             <th class="e">${e(t('dashboard.ordersSection.lineTotal'))}</th>
           </tr></thead>
@@ -253,7 +256,8 @@ export default function OrdersManager() {
       </div>`;
   };
 
-  // أنماط الفاتورة (A4) — مشتركة بين فاتورة واحدة وطباعة عدّة فواتير
+  // أنماط الفاتورة الأساسية — مشتركة بين الطباعة وحفظ الصورة. قياس الورقة نفسه
+  // (@page والتخطيط المضغوط) يُضاف عند الطباعة حسب اختيار صاحب المتجر لطابعته.
   const INVOICE_CSS = `
     *{box-sizing:border-box}
     body{font-family:'Cairo','Segoe UI',Tahoma,sans-serif;color:#2b2b2b;margin:0;padding:0;background:#fff}
@@ -282,12 +286,11 @@ export default function OrdersManager() {
     small{color:#6b6b6b}
     .pay{margin-top:10px;font-size:12px;color:#3f2e22;background:#f6f1e8;border-radius:8px;padding:7px 10px}
     .thanks{margin-top:10px;text-align:center;color:#8a7f75;font-size:11.5px}
-    @page{size:A4;margin:10mm}
   `;
 
   // الطباعة داخل إطار مخفيّ (أوثق من نافذة منبثقة تحجبها المتصفّحات)
   const printHtml = (body, title) => {
-    const html = `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>${escHtml(title)}</title><style>${INVOICE_CSS}</style></head><body>${body}</body></html>`;
+    const html = `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>${escHtml(title)}</title><style>${INVOICE_CSS}${paperCss(paper)}</style></head><body>${body}</body></html>`;
     const f = document.createElement('iframe');
     f.setAttribute('aria-hidden', 'true');
     f.style.cssText = 'position:fixed;inset-inline-end:-9999px;width:0;height:0;border:0';
@@ -301,9 +304,10 @@ export default function OrdersManager() {
     }, 300);
   };
 
-  // عنوان المستند يصير اسم ملف PDF عند «حفظ كـPDF» بحوار الطباعة — نجعله باسم
-  // الزبونة ورقم طلبها بدل عنوان لوحة بازارا.
-  const invoiceName = (o) => safeFileName(`${t('dashboard.ordersSection.invoice')} - ${o.customerName || ''} - ${orderNo(o)}`);
+  // اسم الملف = اسم الزبونة بالضبط (PDF من حوار الطباعة، وPNG عند حفظ الصورة) —
+  // فلمّا يوصلها الملف بواتساب تلاقي اسمها عليه لا "فاتورة - #1234". بلا اسم:
+  // رقم الطلب حتى ما يصير الملف بلا هوية.
+  const invoiceName = (o) => safeFileName(o.customerName || orderNo(o), orderNo(o));
   const printInvoice = (o) => printHtml(invoiceBody(o), invoiceName(o));
 
   // حفظ الفاتورة صورة PNG — أسهل للإرسال بواتساب من ملف PDF
@@ -545,6 +549,15 @@ export default function OrdersManager() {
         hint={t('dashboard.ordersSection.stockHint')}
         action={orders?.length > 0 ? (
           <span className="flex shrink-0 items-center gap-1.5">
+            {/* مقاس ورق الطابعة — يسري على طباعة فاتورة واحدة وعلى «طباعة الكل» */}
+            <span title={t('dashboard.paper.title')} className="shrink-0">
+            <Select
+              value={paper}
+              onChange={choosePaper}
+              options={PAPERS.map((x) => ({ value: x.id, label: t(`dashboard.paper.${x.id}`) }))}
+              className="w-36"
+            />
+            </span>
             <button
               onClick={printAllInvoices}
               title={t('dashboard.ordersSection.printAll')}

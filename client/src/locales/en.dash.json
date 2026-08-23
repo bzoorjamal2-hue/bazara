@@ -692,7 +692,19 @@
       "qtyMissing_other": "{{count}} sizes have no quantity — the colour will not save until they are filled"
     },
     "heroNewOrders_one": "1 new order",
-    "heroNewOrders_other": "{{count}} new orders"
+    "heroNewOrders_other": "{{count}} new orders",
+    "paper": {
+      "title": "Printer paper size",
+      "a4": "A4 paper",
+      "a5": "A5 paper",
+      "a3": "A3 paper",
+      "a2": "A2 paper",
+      "letter": "Letter paper",
+      "label10x15": "Label 10×15 cm",
+      "label10x10": "Label 10×10 cm",
+      "roll80": "80 mm roll",
+      "roll58": "58 mm roll"
+    }
   },
   "admin": {
     "hint": "Review subscription requests and issue activation codes for stores.",

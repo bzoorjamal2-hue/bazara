@@ -725,7 +725,19 @@
     "heroNewOrders_two": "طلبان جديدان",
     "heroNewOrders_few": "{{count}} طلبات جديدة",
     "heroNewOrders_many": "{{count}} طلباً جديداً",
-    "heroNewOrders_other": "{{count}} طلب جديد"
+    "heroNewOrders_other": "{{count}} طلب جديد",
+    "paper": {
+      "title": "مقاس ورق الطابعة",
+      "a4": "ورق A4",
+      "a5": "ورق A5",
+      "a3": "ورق A3",
+      "a2": "ورق A2",
+      "letter": "ورق Letter",
+      "label10x15": "ملصق ١٠×١٥ سم",
+      "label10x10": "ملصق ١٠×١٠ سم",
+      "roll80": "رول ٨٠ مم",
+      "roll58": "رول ٥٨ مم"
+    }
   },
   "admin": {
     "hint": "مراجعة طلبات الاشتراك وإصدار أكواد التفعيل للمتاجر.",
