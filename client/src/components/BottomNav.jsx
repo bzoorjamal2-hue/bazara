@@ -108,6 +108,36 @@ export default function BottomNav() {
     return () => { document.removeEventListener('focusin', onIn); document.removeEventListener('focusout', onOut); };
   }, []);
 
+  // موضعه يتبع «المنفذ المرئي» لا التخطيطي.
+  //
+  // على iOS يبقى العنصر fixed مربوطاً بالمنفذ التخطيطي: يفتح الكيبورد أو يتحرّك
+  // شريط العنوان أو ينتهي تمرير بالزخم — فيطفو الشريط لنصّ الشاشة ويعلق هناك حتى
+  // تمرير جديد. visualViewport يعطينا الحافّة السفلية المرئية فعلاً، فنزحزح الشريط
+  // إليها مع كل تغيّر. النتيجة: يظلّ بالقاع دائماً مهما فعل النظام.
+  const [vvInset, setVvInset] = useState(0);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return undefined;
+    let raf = 0;
+    const update = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const inset = Math.round(window.innerHeight - vv.height - vv.offsetTop);
+        setVvInset(inset > 1 ? inset : 0);
+      });
+    };
+    update();
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+    window.addEventListener('orientationchange', update);
+    return () => {
+      cancelAnimationFrame(raf);
+      vv.removeEventListener('resize', update);
+      vv.removeEventListener('scroll', update);
+      window.removeEventListener('orientationchange', update);
+    };
+  }, []);
+
   // إخفاء الشريط عند ظهور شريط الشراء الثابت في صفحة المنتج (يحلّ محلّه بنفس الموضع)
   const [buyBar, setBuyBar] = useState(false);
   useEffect(() => {
@@ -185,7 +215,10 @@ export default function BottomNav() {
   // بلا backdrop-blur: ضبابية دائمة فوق المحتوى تُرهق معالج الرسم مع كل فريم تمرير،
   // والخلفية 95% معتمة أصلاً فالفرق البصري صفر والفرق بالأداء محسوس
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-[78] border-t border-wine/10 bg-white/95 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 shadow-[0_-6px_20px_rgba(94,70,54,0.08)]">
+    <nav
+      className="fixed inset-x-0 bottom-0 z-[78] border-t border-wine/10 bg-white/95 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 shadow-[0_-6px_20px_rgba(94,70,54,0.08)]"
+      style={vvInset ? { transform: `translateY(-${vvInset}px)` } : undefined}
+    >
       <div className="mx-auto flex max-w-md items-stretch justify-around px-2">
         {items.map(({ key, label, Icon, active, badge, onClick }) => (
           <button

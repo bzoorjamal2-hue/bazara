@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
+import useDraft, { clearDraft } from '../../hooks/useDraft.js';
 import api, { getErrorMessage } from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import ImageInput from '../../components/ImageInput.jsx';
@@ -64,6 +65,10 @@ export default function ProductForm({ initial, onClose, onSaved }) {
   );
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  // مسودّة المنتج: يكتب نصف البيانات، يخرج ليتأكّد من شي، فيرجع ويلاقيها كما تركها.
+  // المفتاح بهويّة المنتج كي لا تُسكب مسودّة «منتج جديد» على تعديل منتج قائم.
+  const draftKey = `product:${initial?.id || 'new'}`;
+  useDraft(draftKey, form, (draft) => setForm((cur) => ({ ...cur, ...draft })));
   const [colorInput, setColorInput] = useState('');
   useScrollLock(true); // تجميد الخلفية أثناء فتح نموذج المنتج
 
@@ -173,6 +178,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
     try {
       if (isEdit) await api.put(`/products/${initial.id}`, payload);
       else await api.post('/products', payload);
+      clearDraft(draftKey); // حُفظ فعلاً
       onSaved(isEdit ? t('dashboard.product.updated') : t('dashboard.product.created'));
     } catch (err) {
       setError(getErrorMessage(err, t('errors.generic')));

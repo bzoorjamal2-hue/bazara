@@ -10,6 +10,7 @@ import OpostConnect from '../../components/OpostConnect.jsx';
 import EpsConnect from '../../components/EpsConnect.jsx';
 import GoboxConnect from '../../components/GoboxConnect.jsx';
 import { Field, SectionHead, RowTools, PageHead, DateInput } from '../../components/FormField.jsx';
+import useDraft, { clearDraft } from '../../hooks/useDraft.js';
 import {
   SaveIcon, TruckIcon, ImageIcon, GiftIcon, FolderIcon, MegaphoneIcon, RulerIcon, ShieldIcon,
   StoreIcon, PhoneIcon, BoltIcon, ChartIcon, TagIcon, CardIcon, GearIcon, CheckIcon, CopyIcon, LinkIcon, ShareIcon,
@@ -164,6 +165,9 @@ export default function StoreSettings() {
 
   // إبراز القسم الظاهر بشريط التنقّل — نراقب دخول الأقسام لنطاق الرؤية (بعد تحميل النموذج)
   const loaded = form !== null;
+
+  // مسودّة الإعدادات: ما يُكتب هنا يبقى لو تنقّل صاحب المتجر بين الأقسام ورجع
+  useDraft('store-settings', form, (draft) => setForm((cur) => ({ ...cur, ...draft })), { ready: loaded });
   useEffect(() => {
     if (!loaded) return undefined;
     const obs = new IntersectionObserver(
@@ -230,6 +234,7 @@ export default function StoreSettings() {
       await refresh();
       clearCachePrefixes(['home', 'storepage:']); // الإعدادات الجديدة (شعار/بانر/فلاش) تظهر فوراً
       savedRef.current = JSON.stringify(form);
+      clearDraft('store-settings'); // حُفظ فعلاً — لا داعي لمسودّة بعده
       setMsg(t('dashboard.store.saved'));
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
