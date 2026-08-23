@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import useSessionState from '../../hooks/useSessionState.js';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
@@ -32,13 +33,16 @@ export default function ProductsManager({ onCount }) {
   const [products, setProducts] = useState(null);
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');
-  const [modal, setModal] = useState(null);
+  // نموذج المنتج المفتوح يبقى مفتوحاً لو خرج صاحب المتجر من اللوحة ورجع — ومع
+  // مسودّة الحقول (useDraft داخل النموذج) يرجع كما تركه تماماً. يُنسى عند
+  // الإغلاق المتعمّد أو بعد الحفظ.
+  const [modal, setModal] = useSessionState('products:modal', null);
   const [confirmDel, setConfirmDel] = useState(null); // المنتج المراد حذفه
   const [delBusy, setDelBusy] = useState(false);
-  const [stockFilter, setStockFilter] = useState('all'); // all | low | out — متابعة سريعة للمخزون
-  const [q, setQ] = useState(''); // بحث بالاسم أو الفئة — يصير ضرورياً مع كثرة القطع
-  const [cat, setCat] = useState('all'); // تصفية حسب الفئة
-  const [sort, setSort] = useState('newest'); // newest | priceAsc | priceDesc | stockAsc
+  const [stockFilter, setStockFilter] = useSessionState('products:stock', 'all'); // all | low | out — متابعة سريعة للمخزون
+  const [q, setQ] = useSessionState('products:q', ''); // بحث بالاسم أو الفئة — يصير ضرورياً مع كثرة القطع
+  const [cat, setCat] = useSessionState('products:cat', 'all'); // تصفية حسب الفئة
+  const [sort, setSort] = useSessionState('products:sort', 'newest'); // newest | priceAsc | priceDesc | stockAsc
 
   const load = useCallback(async () => {
     try {

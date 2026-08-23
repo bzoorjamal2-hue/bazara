@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import useSessionState from '../../hooks/useSessionState.js';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
@@ -23,9 +24,9 @@ export default function StockRequestsManager() {
   const { t } = useTranslation();
   const [reqs, setReqs] = useState(null);
   const [error, setError] = useState('');
-  const [filter, setFilter] = useState('all');
-  const [q, setQ] = useState('');
-  const [openForm, setOpenForm] = useState(''); // id طلب التوفّر المفتوح نموذج تحويله
+  const [filter, setFilter] = useSessionState('stockReq:filter', 'all');
+  const [q, setQ] = useSessionState('stockReq:q', '');
+  const [openForm, setOpenForm] = useSessionState('stockReq:openForm', ''); // id طلب التوفّر المفتوح نموذج تحويله
   const [busy, setBusy] = useState('');
   // قائمة الأماكن وأجورها (نفس ما يراه الزبون بالسلة) — تُجلب عند أول فتح لنموذج التحويل
   const [zones, setZones] = useState(null);

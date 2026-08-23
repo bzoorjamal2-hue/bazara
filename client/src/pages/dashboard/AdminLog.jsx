@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import useSessionState from '../../hooks/useSessionState.js';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
@@ -39,7 +40,7 @@ export default function AdminLog() {
   const { t, i18n } = useTranslation();
   const [actions, setActions] = useState(null);
   const [error, setError] = useState('');
-  const [kind, setKind] = useState('all');
+  const [kind, setKind] = useSessionState('adminLog:kind', 'all');
 
   useEffect(() => {
     api.get('/subscription/admin-log')

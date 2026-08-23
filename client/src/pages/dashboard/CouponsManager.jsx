@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import useSessionState from '../../hooks/useSessionState.js';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
@@ -14,13 +15,14 @@ export default function CouponsManager() {
   const [coupons, setCoupons] = useState(null);
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');
-  const [form, setForm] = useState(EMPTY);
-  const [editId, setEditId] = useState(null);
+  // ما كُتب بنموذج الكوبون والكوبون قيد التحرير يبقيان بالخروج والعودة
+  const [form, setForm] = useSessionState('coupons:form', EMPTY);
+  const [editId, setEditId] = useSessionState('coupons:editId', null);
   const [busy, setBusy] = useState(false);
   const [confirmDel, setConfirmDel] = useState(null);
   const [copied, setCopied] = useState('');
-  const [q, setQ] = useState(''); // بحث بالكود
-  const [stateFilter, setStateFilter] = useState('all'); // all | on | off
+  const [q, setQ] = useSessionState('coupons:q', ''); // بحث بالكود
+  const [stateFilter, setStateFilter] = useSessionState('coupons:state', 'all'); // all | on | off
 
   const load = () => api.get('/coupons').then((r) => setCoupons(r.data.coupons)).catch((e) => setError(getErrorMessage(e)));
   useEffect(() => { load(); }, []);

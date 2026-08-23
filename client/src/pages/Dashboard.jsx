@@ -61,10 +61,12 @@ const ADMIN_SECTIONS = [
   { key: 'profile', Icon: UserIcon },
 ];
 
+const TAB_KEY = 'bz_dash_tab'; // آخر قسم فُتح باللوحة (لهذه الجلسة)
+
 export default function Dashboard() {
   const { t } = useTranslation();
   const { user, store, subscription } = useAuth();
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const [productsCount, setProductsCount] = useState(null);
   const [newOrders, setNewOrders] = useState(0);
   const isAdmin = subscription?.isAdmin;
@@ -78,9 +80,23 @@ export default function Dashboard() {
   // التنقّل بين الأقسام عبر قائمة ☰ (Navbar) — المصدر الوحيد بلا تكرار
   const allowed = (isAdmin ? ADMIN_SECTIONS : SECTIONS).map((s) => s.key);
   const defaultTab = isAdmin ? 'adminOverview' : 'overview';
-  const raw = params.get('tab') || defaultTab;
+  // فتح اللوحة بلا ?tab (من زرّ «حسابي» بالشريط السفلي مثلاً) يرجع لآخر قسمٍ كان
+  // فيه صاحب المتجر لا لـ«نظرة عامة»: كان يخرج ليتأكّد من شي فيرجع من الصفر.
+  const remembered = (() => { try { return sessionStorage.getItem(TAB_KEY) || ''; } catch { return ''; } })();
+  const raw = params.get('tab') || remembered || defaultTab;
   // المدير لا يصل لأقسام البيع حتى عبر الرابط
   const section = allowed.includes(raw) ? raw : defaultTab;
+
+  // نُثبّت القسم بالرابط كي يتطابق إبراز القائمة الجانبية واستعادة موضع التمرير
+  useEffect(() => {
+    if (!params.get('tab') && section !== defaultTab) {
+      const next = new URLSearchParams(params); // نُبقي أي معاملات أخرى بالرابط
+      next.set('tab', section);
+      setParams(next, { replace: true });
+    }
+    try { sessionStorage.setItem(TAB_KEY, section); } catch { /* تصفّح خاص */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [section]);
 
   const avatar = user?.avatarUrl ? (
     <img src={user.avatarUrl} alt={user.name} className="h-14 w-14 rounded-full object-cover ring-2 ring-[#e6c878]/60" />

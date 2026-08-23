@@ -1,4 +1,5 @@
 import { useEffect, useState, Fragment } from 'react';
+import useSessionState from '../../hooks/useSessionState.js';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
@@ -48,8 +49,8 @@ export default function OrdersManager() {
   // طلبات لم تكتمل (سلات متروكة ببيانات تواصل) — لمتابعتها برسالة وإنقاذ البيع
   const [abandoned, setAbandoned] = useState([]);
   // فلترة وبحث بالطلبات: حالة + اسم/هاتف/رقم طلب — للوصول لأي طلب بثوانٍ
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [oq, setOq] = useState('');
+  const [statusFilter, setStatusFilter] = useSessionState('orders:status', 'all');
+  const [oq, setOq] = useSessionState('orders:q', '');
   const [toast, setToast] = useState(''); // رسالة خاطفة (نسخ التفاصيل)
   const [paper, setPaperState] = useState(getPaper); // مقاس ورق الطابعة (لكل جهاز)
   const choosePaper = (id) => { setPaperState(id); savePaper(id); };

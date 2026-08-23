@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import useSessionState from '../../hooks/useSessionState.js';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import api, { getErrorMessage } from '../../api/client.js';
@@ -12,7 +13,7 @@ export default function ReferralsManager() {
   const { t } = useTranslation();
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
-  const [q, setQ] = useState('');
+  const [q, setQ] = useSessionState('referrals:q', '');
   const [copied, setCopied] = useState('');
 
   const load = () => {
