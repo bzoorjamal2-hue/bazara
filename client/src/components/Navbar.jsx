@@ -374,20 +374,23 @@ export default function Navbar() {
                 </div>
               )}
             >
-              <NavBell variant="row" />
+              {/* بطاقة إشعارات الطلبات تخصّ صاحب المتجر — المدير بلا طلبات */}
+              {!isAdmin && <NavBell variant="row" />}
             </DashDrawerNav>
 
             {/* ذيل الدرج: كان فراغاً بنّياً كبيراً تحت آخر قسم. صار فعلين
                 يحتاجهما صاحب المتجر يومياً — يفتح متجره كما تراه الزبونة، ويخرج */}
             <div className="mt-2 shrink-0 space-y-1.5 border-t border-cream/10 pt-3">
-              {!isAdmin && store?.slug && (
+              {/* المدير بلا متجر — زرّه يفتح واجهة المنصّة العامة كما يراها الزوّار،
+                  فلا يبقى ذيل الدرج بزرّ خروجٍ وحيد */}
+              {(isAdmin || store?.slug) && (
                 <Link
-                  to={`/store/${store.slug}`}
+                  to={isAdmin ? '/shop' : `/store/${store.slug}`}
                   onClick={() => setMenuOpen(false)}
                   draggable={false}
                   className="app-tap flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-gold-200 to-gold-400 px-3 py-2.5 text-sm font-extrabold text-wine-dark shadow-[0_8px_22px_-10px_rgba(212,175,55,0.9)] transition active:scale-[0.985]"
                 >
-                  <StoreIcon className="h-4 w-4" /> {t('dashboard.viewStore')}
+                  <StoreIcon className="h-4 w-4" /> {isAdmin ? t('nav.home') : t('dashboard.viewStore')}
                 </Link>
               )}
               <button

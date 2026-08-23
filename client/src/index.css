@@ -396,10 +396,15 @@ input[type='datetime-local']::-webkit-datetime-edit {
 }
 
 /* شريط تمرير ذهبي لطيف */
-::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar { width: 9px; height: 9px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.25); border-radius: 999px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(212, 175, 55, 0.4); }
+::-webkit-scrollbar-thumb {
+  background: rgba(224, 194, 95, 0.34);
+  border: 2px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(236, 217, 155, 0.6); background-clip: content-box; }
 
 /* قص النص لعدة أسطر */
 .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
@@ -590,8 +595,10 @@ html.dark .bz-select-opt.is-active {
 }
 
 /* شريط التمرير خمري داخل الثيم العام */
-.theme-pub ::-webkit-scrollbar-thumb { background: rgba(94, 70, 54, 0.28); }
-.theme-pub ::-webkit-scrollbar-thumb:hover { background: rgba(94, 70, 54, 0.45); }
+.theme-pub ::-webkit-scrollbar-thumb { background: rgba(94, 70, 54, 0.32); background-clip: content-box; }
+.theme-pub ::-webkit-scrollbar-thumb:hover { background: rgba(94, 70, 54, 0.55); background-clip: content-box; }
+html.dark .theme-pub ::-webkit-scrollbar-thumb { background: rgba(224, 194, 95, 0.34); background-clip: content-box; }
+html.dark .theme-pub ::-webkit-scrollbar-thumb:hover { background: rgba(236, 217, 155, 0.6); background-clip: content-box; }
 
 /* ===== الشريط العلوي الخمري (Navbar) ===== */
 .pub-navbar {
@@ -1193,4 +1200,35 @@ a, button, [role='button'], summary {
   user-select: none;
   -webkit-user-select: none;
   touch-action: manipulation;
+}
+
+/* ===== سحّاب قائمة اللوحة =====
+   على اللمس نخفيه (الإصبع يمرّر، والمؤشّر الذهبي يدلّ على وجود المزيد)، وعلى
+   الحاسوب يظهر رفيعاً ذهبياً — بلا سحّاب كان صاحب المتجر لا يرى أنّ القائمة
+   تُمرّر أصلاً. */
+.dash-menu-scroll { scrollbar-width: none; }
+.dash-menu-scroll::-webkit-scrollbar { width: 0; height: 0; }
+
+@media (pointer: fine) {
+  .dash-menu-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(224, 194, 95, 0.6) transparent;
+  }
+  .dash-menu-scroll::-webkit-scrollbar { width: 7px; }
+  .dash-menu-scroll::-webkit-scrollbar-track { background: rgba(244, 237, 226, 0.06); border-radius: 99px; }
+  .dash-menu-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(236, 217, 155, 0.75), rgba(212, 175, 55, 0.65));
+    border-radius: 99px;
+  }
+  .dash-menu-scroll::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #ecd99b, #d4af37); }
+}
+
+/* ===== سحّاب التمرير في كل الصفحات =====
+   كان سحّاب النظام الرمادي الفجّ: يشقّ الخلفية الكريمية نهاراً، ويكاد يختفي على
+   الداكنة ليلاً. صار بلون الهوية بالوضعين — بنّي هادئ نهاراً وذهبي خفيف ليلاً —
+   ورفيعاً على الحاسوب فقط (اللمس لا سحّاب له أصلاً). */
+@media (pointer: fine) {
+  /* فايرفوكس: اللون يُورَّث لكل حاويات التمرير */
+  html { scrollbar-width: thin; scrollbar-color: rgba(94, 70, 54, 0.38) transparent; }
+  html.dark { scrollbar-color: rgba(224, 194, 95, 0.45) transparent; }
 }

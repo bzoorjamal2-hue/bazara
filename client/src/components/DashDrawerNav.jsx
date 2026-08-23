@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowDownIcon } from './icons.jsx';
@@ -14,6 +14,7 @@ import { ArrowDownIcon } from './icons.jsx';
 // كل حساب بياخدها: صاحب متجر ومدير — نفس المكوّن بمجموعاتٍ مختلفة.
 
 const SCROLLED_KEY = 'bz_menu_scrolled';
+const POS_KEY = 'bz_menu_scroll_top'; // موضع القائمة — يبقى كما تركه صاحب المتجر
 
 export default function DashDrawerNav({ groups, activeKey, onNavigate, badges = {}, children, brand }) {
   const { t } = useTranslation();
@@ -24,12 +25,31 @@ export default function DashDrawerNav({ groups, activeKey, onNavigate, badges = 
     try { return !localStorage.getItem(SCROLLED_KEY); } catch { return true; }
   });
 
+  // استعادة موضع القائمة قبل الرسم: يفتح الدرج فيلاقيه كما تركه، لا مقذوفاً للأعلى.
+  // وإن لم يكن له موضع محفوظ نُظهر القسم المفتوح (قد يكون تحت الحافّة).
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    let top = 0;
+    try { top = Number(sessionStorage.getItem(POS_KEY)) || 0; } catch { top = 0; }
+    if (top > 0) {
+      el.scrollTop = Math.min(top, el.scrollHeight - el.clientHeight);
+    } else {
+      const current = el.querySelector('[aria-current="page"]');
+      if (current && current.offsetTop + current.offsetHeight > el.clientHeight) {
+        el.scrollTop = current.offsetTop - el.clientHeight / 2 + current.offsetHeight;
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     const el = ref.current;
     if (!el) return undefined;
     const check = () => setMore(el.scrollHeight - el.scrollTop - el.clientHeight > 8);
     const onScroll = () => {
       check();
+      try { sessionStorage.setItem(POS_KEY, String(Math.round(el.scrollTop))); } catch { /* تصفّح خاص */ }
       if (el.scrollTop > 24) {
         setNudge(false);
         try { localStorage.setItem(SCROLLED_KEY, '1'); } catch { /* تصفّح خاص */ }
@@ -52,7 +72,7 @@ export default function DashDrawerNav({ groups, activeKey, onNavigate, badges = 
 
   return (
     <div className="relative mt-3 flex min-h-0 flex-1 flex-col">
-      <nav ref={ref} className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <nav ref={ref} className="dash-menu-scroll min-h-0 flex-1 overflow-y-auto">
         <div className="flex min-h-full flex-col gap-0.5 pb-4">
         {children}
         {groups.map((g) => (
