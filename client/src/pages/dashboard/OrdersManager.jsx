@@ -550,13 +550,15 @@ export default function OrdersManager() {
         action={orders?.length > 0 ? (
           <span className="flex shrink-0 items-center gap-1.5">
             {/* مقاس ورق الطابعة — يسري على طباعة فاتورة واحدة وعلى «طباعة الكل» */}
-            <span title={t('dashboard.paper.title')} className="shrink-0">
-            <Select
-              value={paper}
-              onChange={choosePaper}
-              options={PAPERS.map((x) => ({ value: x.id, label: t(`dashboard.paper.${x.id}`) }))}
-              className="w-36"
-            />
+            {/* عرض كامل على الجوال (PageHead يرصّ الإجراءات عمودياً هناك) وثابت على
+                الحاسوب — وبلا التفاف للتسمية كي يبقى بارتفاع زرّي الطباعة والتصدير */}
+            <span title={t('dashboard.paper.title')} className="w-full sm:w-auto">
+              <Select
+                value={paper}
+                onChange={choosePaper}
+                options={PAPERS.map((x) => ({ value: x.id, label: t(`dashboard.paper.${x.id}`) }))}
+                className="w-full whitespace-nowrap sm:w-40"
+              />
             </span>
             <button
               onClick={printAllInvoices}
