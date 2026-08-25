@@ -664,6 +664,19 @@ html.dark .theme-pub .app-navbar.shadow-md { box-shadow: 0 12px 28px -8px rgba(0
 }
 .animate-ann-shine { animation: ann-shine 5.5s ease-in-out infinite; }
 
+/* نصّ الشريط: تدرّج ذهبي مصقول يتحرّك ببطء فتبدو الحروف كالمعدن اللامع.
+   نُبقي لوناً صلباً fallback أولاً كي لا يختفي النص لو لم يُدعم background-clip. */
+.ann-text {
+  color: #f3e6c2;
+  background: linear-gradient(100deg, #e9cf87 0%, #fff6da 22%, #d4af37 45%, #fff2cf 66%, #e6c878 100%);
+  background-size: 220% auto;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,.5));
+  animation: ann-textshine 6s linear infinite;
+}
+@keyframes ann-textshine { to { background-position: 220% center; } }
+
 /* انزلاق درج من اليسار (للوضع الإنجليزي LTR) */
 @keyframes slide-in-left {
   from { transform: translateX(-100%); }

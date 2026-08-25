@@ -22,8 +22,8 @@ export default function AnnouncementBar({ ar, en }) {
   const Group = ({ hidden }) => (
     <div className="flex shrink-0 items-center" aria-hidden={hidden}>
       {Array.from({ length: groupCount }).map((_, k) => (
-        <span key={k} className="flex items-center gap-2.5 whitespace-nowrap px-6 text-[13px] font-bold tracking-wide text-[#f3e6c2] [text-shadow:0_1px_2px_rgba(0,0,0,.45)]" dir="auto">
-          <SparkleIcon className="h-3.5 w-3.5 shrink-0 text-[#f0d488] drop-shadow-[0_0_4px_rgba(224,194,95,.6)]" />
+        <span key={k} className="ann-text flex items-center gap-2.5 whitespace-nowrap px-6 text-[13px] font-extrabold tracking-wide" dir="auto">
+          <SparkleIcon className="h-3.5 w-3.5 shrink-0 text-[#f4dc93] drop-shadow-[0_0_5px_rgba(224,194,95,.75)]" />
           {items[k % items.length]}
         </span>
       ))}
@@ -31,19 +31,24 @@ export default function AnnouncementBar({ ar, en }) {
   );
 
   return (
-    <div dir="ltr" className="group relative -mx-4 mb-5 overflow-hidden border-y border-gold-400/50 bg-gradient-to-r from-[#241610] via-[#3a2718] to-[#241610] py-2 shadow-[0_2px_10px_rgba(0,0,0,.35),inset_0_1px_0_rgba(224,194,95,.15)] sm:-mx-6">
+    <div dir="ltr" className="group relative -mx-4 mb-5 overflow-hidden border-y border-gold-400/60 bg-gradient-to-r from-[#1f130d] via-[#3f2a19] to-[#1f130d] py-2 shadow-[0_3px_14px_rgba(0,0,0,.4),inset_0_1px_0_rgba(224,194,95,.22),inset_0_-1px_0_rgba(0,0,0,.4)] sm:-mx-6">
+      {/* خطّ ذهبي رفيع علوي وسفلي — يعطي حدّاً مزدوجاً فاخراً */}
+      <span className="pointer-events-none absolute inset-x-0 top-0 z-10 h-px bg-gradient-to-r from-transparent via-[#f0d488]/70 to-transparent" />
+      <span className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-px bg-gradient-to-r from-transparent via-[#f0d488]/45 to-transparent" />
+      {/* توهّج دافئ خفيف بمنتصف الشريط خلف النص */}
+      <span className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(80%_140%_at_50%_50%,rgba(224,194,95,.14),transparent_70%)]" />
       {/* لمعة ذهبية تمسح الشريط تلقائياً — تعطيه إحساس المعدن الفاخر */}
-      <span className="animate-ann-shine pointer-events-none absolute inset-y-0 z-20 w-1/3 bg-[linear-gradient(105deg,transparent,rgba(255,240,200,.3)_50%,transparent)]" />
+      <span className="animate-ann-shine pointer-events-none absolute inset-y-0 z-20 w-1/3 bg-[linear-gradient(105deg,transparent,rgba(255,244,210,.34)_50%,transparent)]" />
       <div
-        className="flex w-max animate-marquee group-hover:[animation-play-state:paused]"
+        className="relative z-[5] flex w-max animate-marquee group-hover:[animation-play-state:paused]"
         style={{ animationDuration: `${dur}s`, animationDirection: rtl ? 'normal' : 'reverse' }}
       >
         <Group />
         <Group hidden />
       </div>
       {/* تلاشٍ ناعم عند الحوافّ ليبدو أكثر أناقة */}
-      <span className="pointer-events-none absolute inset-y-0 left-0 z-10 w-14 bg-gradient-to-r from-[#241610] to-transparent" />
-      <span className="pointer-events-none absolute inset-y-0 right-0 z-10 w-14 bg-gradient-to-l from-[#241610] to-transparent" />
+      <span className="pointer-events-none absolute inset-y-0 left-0 z-20 w-14 bg-gradient-to-r from-[#1f130d] to-transparent" />
+      <span className="pointer-events-none absolute inset-y-0 right-0 z-20 w-14 bg-gradient-to-l from-[#1f130d] to-transparent" />
     </div>
   );
 }

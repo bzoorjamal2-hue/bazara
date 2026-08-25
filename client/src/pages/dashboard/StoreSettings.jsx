@@ -113,6 +113,36 @@ const waValid = (v) => {
   return d.length >= 10 && d.length <= 15 && !d.startsWith('0');
 };
 
+// معاينة شريط الإعلانات — مطابقة لِما يراه الزبون بأعلى المتجر (غامق ذهبي بلمعة
+// ونصٍّ ذهبيّ متحرّك). تعرض الإعلانات بالتناوب فعلاً كي تتأكّد التاجرة من الشكل.
+function AnnouncementPreview({ items }) {
+  const list = items.length ? items : [''];
+  return (
+    <div dir="ltr" className="group relative overflow-hidden rounded-xl border-y border-gold-400/60 bg-gradient-to-r from-[#1f130d] via-[#3f2a19] to-[#1f130d] py-2 shadow-[inset_0_1px_0_rgba(224,194,95,.22),inset_0_-1px_0_rgba(0,0,0,.4)]">
+      <span className="pointer-events-none absolute inset-x-0 top-0 z-10 h-px bg-gradient-to-r from-transparent via-[#f0d488]/70 to-transparent" />
+      <span className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-px bg-gradient-to-r from-transparent via-[#f0d488]/45 to-transparent" />
+      <span className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(80%_140%_at_50%_50%,rgba(224,194,95,.14),transparent_70%)]" />
+      <span className="animate-ann-shine pointer-events-none absolute inset-y-0 z-20 w-1/3 bg-[linear-gradient(105deg,transparent,rgba(255,244,210,.34)_50%,transparent)]" />
+      <div className="relative z-[5] flex w-max animate-marquee" style={{ animationDuration: `${Math.min(90, Math.max(18, list.join('  ').length * 0.45))}s` }}>
+        {[0, 1].map((g) => (
+          <div key={g} className="flex shrink-0 items-center" aria-hidden={g === 1}>
+            {Array.from({ length: Math.max(6, list.length * 3) }).map((_, k) => (
+              <span key={k} className="ann-text flex items-center gap-2 whitespace-nowrap px-5 text-[12px] font-extrabold" dir="auto">
+                <svg viewBox="0 0 24 24" className="h-3 w-3 shrink-0 text-[#f4dc93] drop-shadow-[0_0_5px_rgba(224,194,95,.75)]" style={{ WebkitTextFillColor: 'initial' }} fill="currentColor">
+                  <path d="M12 2c.5 3.8 2.2 5.5 6 6-3.8.5-5.5 2.2-6 6-.5-3.8-2.2-5.5-6-6 3.8-.5 5.5-2.2 6-6Z" />
+                </svg>
+                {list[k % list.length]}
+              </span>
+            ))}
+          </div>
+        ))}
+      </div>
+      <span className="pointer-events-none absolute inset-y-0 left-0 z-20 w-10 bg-gradient-to-r from-[#1f130d] to-transparent" />
+      <span className="pointer-events-none absolute inset-y-0 right-0 z-20 w-10 bg-gradient-to-l from-[#1f130d] to-transparent" />
+    </div>
+  );
+}
+
 export default function StoreSettings() {
   const { t } = useTranslation();
   const { refresh } = useAuth();
@@ -890,12 +920,15 @@ export default function StoreSettings() {
 
           <Field label={t('dashboard.store.announcement')} tip={t('dashboard.store.announcementHint')} hint={t('dashboard.store.announcementHint')} max={500} value={form.announcement}>
             <textarea rows={3} maxLength={500} className="input resize-none" placeholder={t('dashboard.store.announcementPlaceholder')} value={form.announcement} onChange={set('announcement')} />
-            {/* معاينة الشريط كما يظهر بأعلى المتجر */}
+            {/* تلميح: كل سطر إعلانٌ مستقلّ يتناوب مع البقية */}
+            <p className="mt-1.5 text-[11px] leading-relaxed text-cream/50">
+              💡 اكتبي كل إعلان بسطر مستقلّ — تظهر كلها بالتناوب على شريط أعلى متجرِكِ.
+            </p>
+            {/* معاينة مطابقة للشريط الحقيقي كما يراه الزبون */}
             {String(form.announcement || '').trim() && (
-              <div className="mt-2 overflow-hidden rounded-xl bg-gradient-to-r from-wine to-wine-dark px-3 py-2">
-                <p className="truncate text-[11px] font-semibold text-cream">
-                  {form.announcement.split('\n').map((l) => l.trim()).filter(Boolean).join('   ✦   ')}
-                </p>
+              <div className="mt-2">
+                <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-cream/40">معاينة</span>
+                <AnnouncementPreview items={form.announcement.split('\n').map((l) => l.trim()).filter(Boolean)} />
               </div>
             )}
           </Field>
