@@ -27,7 +27,7 @@ import useInViewOnce from '../hooks/useInViewOnce.js';
 import ScrollProgress from '../components/ScrollProgress.jsx';
 import StoriesRow from '../components/StoriesRow.jsx';
 import { BAZARA_WHATSAPP } from '../config/site.js';
-import { usePlatformCatKeys, platformCatKeys } from '../utils/platformCategories.js';
+import { usePlatformCatKeys, platformCatKeys, storeOnlyCats } from '../utils/platformCategories.js';
 
 export default function Home() {
   const { t, i18n } = useTranslation();
@@ -46,7 +46,7 @@ export default function Home() {
   };
   // الفئات المخصّصة المجمّعة من كل المتاجر (يعيدها /public/home) — تظهر بشبكة فئات
   // الرئيسية العامة كفئات بازارا الأصلية، والضغط عليها يفتح منتجاتها من كل المتاجر.
-  const customCats = Array.isArray(data?.customCategories) ? data.customCategories : [];
+  const customCats = storeOnlyCats(data?.customCategories, platformKeys);
   // مفاتيح المنصّة من المصدر الموحّد لا من قائمةٍ مكتوبة هنا: كانت السبع مكرّرةً
   // بهذا الملف، فأي فئة يضيفها المدير للمنصّة لا تظهر بشبكة الرئيسية أبداً.
   const gridCats = [

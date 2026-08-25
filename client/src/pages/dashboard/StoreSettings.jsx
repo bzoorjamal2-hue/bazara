@@ -18,6 +18,7 @@ import {
 } from '../../components/icons.jsx';
 import { cldThumb } from '../../utils/cloudinary.js';
 import { SIZE_CHART } from '../../utils/sizes.js';
+import { usePlatformCatKeys } from '../../utils/platformCategories.js';
 
 // أيقونتا إخفاء/إظهار (عين مشطوبة / عين) — للتحكم بظهور الفئة بالمتجر
 const EyeOffGlyph = (p) => (
@@ -93,8 +94,14 @@ function toLocalInput(iso) {
 
 // نمر دليل المقاسات القابل للتخصيص
 const CHART_SIZES = ['36', '38', '40', '42', '44', '46', '48'];
+
+// سقوف تطابق ما يقبله الخادم بالضبط — أي فارقٍ بينهما يعني إدخالاً يضيع بصمت
+const MAX_CUSTOM_CATS = 20;
+const MAX_COLLECTIONS = 12;
 // الفئات الثابتة (قابلة للتخصيص بصورة/اسم)
-const STORE_CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
+// فئات المنصّة من مصدرها الموحّد: كانت السبع مكرّرةً هنا، فالفئة التي يضيفها
+// المدير لا تظهر بشاشة تخصيص الفئات — لا تستطيع المالكة إعطاءها صورةً ولا اسماً
+// ولا إخفاءها، وتبقى بواجهة متجرها بأيقونتها الافتراضية بلا حيلة.
 
 // تنظيف ما يُلصق بخانات التواصل: كثيراً ما يُلصق رابط كامل بدل اسم المستخدم
 const cleanHandle = (v) =>
@@ -146,6 +153,7 @@ function AnnouncementPreview({ items }) {
 
 export default function StoreSettings() {
   const { t } = useTranslation();
+  const platformKeys = usePlatformCatKeys();
   const { refresh } = useAuth();
   const [form, setForm] = useState(null);
   const [msg, setMsg] = useState('');
@@ -772,7 +780,7 @@ export default function StoreSettings() {
         <div id="s-categories" className={CARD}>
           <SectionHead icon={<FolderIcon className="h-5 w-5" />} title={t('dashboard.store.categories')} desc={t('dashboard.store.categoriesHint')} done={doneMap['s-categories']} />
           <div className="space-y-3">
-            {STORE_CATS.map((c) => {
+            {platformKeys.map((c) => {
               const meta = form.categoryMeta?.[c] || {};
               const hidden = !!meta.hidden;
               // الاسم الظاهر: اسم المالكة إن وُجد وإلا الافتراضي — يُعرَض مرّة واحدة بالعنوان
@@ -821,11 +829,14 @@ export default function StoreSettings() {
             })}
           </div>
 
-          {/* فئات إضافية مخصّصة — يضيفها المشترك بلا حدود */}
+          {/* فئات إضافية مخصّصة — حتى MAX_CUSTOM_CATS، وهو سقف الخادم نفسه:
+              لو سمحنا بأكثر لقُصّت الزائدة بصمتٍ بعد «تم الحفظ». */}
           <div className="border-t border-gold-400/10 pt-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <h3 className="font-display text-base font-bold text-stone-100">{t('dashboard.store.customCategories')}</h3>
-              <button type="button" onClick={addCustomCat} className="btn-ghost !py-1.5 text-sm">＋ {t('dashboard.store.addCategory')}</button>
+              {(form.customCategories || []).length < MAX_CUSTOM_CATS && (
+                <button type="button" onClick={addCustomCat} className="btn-ghost !py-1.5 text-sm">＋ {t('dashboard.store.addCategory')}</button>
+              )}
             </div>
             {(form.customCategories || []).length === 0 ? (
               <button type="button" onClick={addCustomCat} className="flex w-full flex-col items-center gap-1.5 rounded-2xl border border-dashed border-gold-400/25 bg-black/15 p-5 text-center transition hover:border-gold-400/50 hover:bg-gold-400/5">
@@ -846,7 +857,7 @@ export default function StoreSettings() {
                       <RowTools
                         index={idx} count={form.customCategories.length}
                         onMove={(dir) => moveIn('customCategories', idx, dir)}
-                        onDuplicate={() => duplicateIn('customCategories', idx, 30, newCatKey)}
+                        onDuplicate={() => duplicateIn('customCategories', idx, MAX_CUSTOM_CATS, newCatKey)}
                         onRemove={() => removeCustomCat(idx)}
                       />
                     </div>
@@ -867,7 +878,7 @@ export default function StoreSettings() {
               {(form.collections || []).length > 0 && (
                 <span className="text-[11px] tabular-nums text-stone-400">{(form.collections || []).length}/12</span>
               )}
-              {(form.collections || []).length < 12 && (
+              {(form.collections || []).length < MAX_COLLECTIONS && (
                 <button type="button" onClick={addCollection} className="btn-ghost !py-1.5 text-sm">＋ {t('common.add')}</button>
               )}
             </div>
@@ -886,8 +897,8 @@ export default function StoreSettings() {
                     <RowTools
                       index={idx} count={form.collections.length}
                       onMove={(dir) => moveIn('collections', idx, dir)}
-                      onDuplicate={() => duplicateIn('collections', idx, 12)}
-                      canDuplicate={form.collections.length < 12}
+                      onDuplicate={() => duplicateIn('collections', idx, MAX_COLLECTIONS)}
+                      canDuplicate={form.collections.length < MAX_COLLECTIONS}
                       onRemove={() => removeCollection(idx)}
                     />
                   </div>

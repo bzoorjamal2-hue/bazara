@@ -87,7 +87,11 @@ export const storeUpdateRules = [
   body('paymentInfo').optional({ nullable: true }).trim().isLength({ max: 1000 }),
 ];
 
-const CATEGORIES = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
+// مفتاح الفئة: الأصلية السبع، أو فئةٌ يضيفها المدير للمنصّة أو المتجر لنفسه.
+// النمط لازم يسع كلّ ما تقبله المصادر: المدير يسمح بالشرطة (a-z0-9-) والمتجر
+// بالشرطة السفلية (a-z0-9_) — ولو ضيّقناه هنا صارت الفئة تُضاف وتظهر بالقائمة
+// ثم يُرفض كلّ منتجٍ عليها بـ«فئة غير صالحة» بلا سببٍ مفهوم لصاحبة المتجر.
+const CATEGORY_KEY_RE = /^[a-z0-9_-]{2,50}$/i;
 
 export const productRules = [
   body('name').trim().isLength({ min: 2, max: 150 }).withMessage('اسم المنتج مطلوب (2-150 حرف).'),
@@ -96,9 +100,8 @@ export const productRules = [
   body('description').optional({ nullable: true }).trim().isLength({ max: 2000 }).withMessage('الوصف طويل جداً.'),
   body('size').optional({ nullable: true }).trim().isLength({ max: 50 }),
   body('color').optional({ nullable: true }).trim().isLength({ max: 50 }),
-  // الفئة: إمّا واحدة من الأصلية، أو مفتاح فئة مخصّصة للمتجر (حروف/أرقام/شرطة سفلية)
   body('category')
-    .custom((v) => CATEGORIES.includes(v) || (typeof v === 'string' && /^[a-z0-9_]{2,50}$/i.test(v)))
+    .custom((v) => typeof v === 'string' && CATEGORY_KEY_RE.test(v))
     .withMessage('فئة غير صالحة.'),
   body('imageUrl').optional({ nullable: true, checkFalsy: true }).custom(isUrlOrDataImage).withMessage('صورة غير صالحة.'),
   body('images').optional({ nullable: true }).isArray({ max: 6 }).withMessage('عدد الصور كثير (6 كحد أقصى).'),

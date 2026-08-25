@@ -31,7 +31,7 @@ import { saveRef } from '../utils/referral.js';
 import { initPixels, trackPixel } from '../utils/pixels.js';
 import { norm } from '../utils/match.js';
 import Countdown from '../components/Countdown.jsx';
-import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys } from '../utils/platformCategories.js';
+import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys, storeOnlyCats } from '../utils/platformCategories.js';
 
 const PAGE_SIZE = 8;
 
@@ -268,7 +268,7 @@ export default function StorePage() {
     .slice(0, 8);
   // تخصيص المالكة للفئات (صورة/اسم) + الفئات الإضافية المخصّصة
   const catMeta = store.categoryMeta || {};
-  const customCats = Array.isArray(store.customCategories) ? store.customCategories : [];
+  const customCats = storeOnlyCats(store.customCategories, catKeys);
   const catNames = {};
   for (const c of catKeys) catNames[c] = (catMeta[c]?.name || '').trim();
   for (const cc of customCats) catNames[cc.key] = cc.name;

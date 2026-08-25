@@ -16,7 +16,7 @@ import StoreFollowButton from './StoreFollowButton.jsx';
 import { cldThumb } from '../utils/cloudinary.js';
 import { productThumb } from '../utils/recentlyViewed.js';
 import { norm } from '../utils/match.js';
-import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys } from '../utils/platformCategories.js';
+import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys, storeOnlyCats } from '../utils/platformCategories.js';
 
 
 
@@ -264,7 +264,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
                 </button>
               ))}
               {/* الفئات المخصّصة الجديدة — تظهر بالدرج تماماً مثل الأصلية */}
-              {(Array.isArray(store.customCategories) ? store.customCategories : []).map((cc) => (
+              {storeOnlyCats(store.customCategories, catKeys).map((cc) => (
                 <button
                   key={cc.key}
                   onClick={() => pick(cc.key)}

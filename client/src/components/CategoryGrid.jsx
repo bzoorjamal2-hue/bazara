@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { cldThumb } from '../utils/cloudinary.js';
+import { usePlatformCatKeys } from '../utils/platformCategories.js';
 
-const BUILTIN = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
+// لا قائمةَ مكتوبةً هنا: الاحتياطيّ يُبنى من مفاتيح المنصّة الحيّة، وإلا لم تظهر
+// الفئة التي يضيفها المدير في أي شبكةٍ لم تُمرَّر إليها cats صراحةً.
 
 // عدد البطاقات المعروضة حسب عرض الشاشة (جوال 2 · آيباد 3 · كمبيوتر 5)
 function getPerPage() {
@@ -76,10 +78,11 @@ function Arrow({ dir, rtl, onClick }) {
 // cats: قائمة كائنات {key, name, image, builtin}. إن لم تُمرَّر، نبني من الفئات الأصلية الخمس.
 export default function CategoryGrid({ onSelect, active, images = {}, names = {}, cats }) {
   const { i18n } = useTranslation();
+  const platformKeys = usePlatformCatKeys();
   const rtl = i18n.language !== 'en';
   const list = cats && cats.length
     ? cats
-    : BUILTIN.map((k) => ({ key: k, name: names[k], image: images[k], builtin: true }));
+    : platformKeys.map((k) => ({ key: k, name: names[k], image: images[k], builtin: true }));
   const [perPage, setPerPage] = useState(getPerPage());
   const [page, setPage] = useState(0);
 

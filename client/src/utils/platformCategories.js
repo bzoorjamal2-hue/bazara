@@ -68,3 +68,20 @@ export function usePlatformCatKeys() {
   useEffect(() => onPlatformCategoriesChange(() => setKeys(platformCatKeys())), []);
   return keys;
 }
+
+// فئات المتجر الخاصّة، مطروحاً منها ما صار فئةَ منصّة.
+//
+// المتجر يختار مفاتيح فئاته بنفسه، والمدير يضيف فئات المنصّة لاحقاً: لو تصادف
+// المفتاحان ظهرت الفئة مرّتين بكلّ قائمة (وبمفتاح React مكرّر). نُبقي نسخة
+// المنصّة — هي المشتركة بين كل المتاجر — ونُسقط المكرّرة.
+export function storeOnlyCats(customCategories, keys = platformCatKeys()) {
+  const seen = new Set(keys);
+  const out = [];
+  for (const cc of Array.isArray(customCategories) ? customCategories : []) {
+    const key = cc?.key;
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(cc);
+  }
+  return out;
+}

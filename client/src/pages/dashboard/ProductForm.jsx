@@ -7,13 +7,16 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import ImageInput from '../../components/ImageInput.jsx';
 import VideoInput from '../../components/VideoInput.jsx';
 import Select from '../../components/Select.jsx';
+import { usePlatformCatKeys, platformCatName, storeOnlyCats } from '../../utils/platformCategories.js';
 import useScrollLock from '../../hooks/useScrollLock.js';
 import { XIcon, ClockIcon, PaletteIcon, CameraIcon, StarIcon, EditIcon, TagIcon, CashIcon, TrashIcon } from '../../components/icons.jsx';
 import { Field, DateInput, Tip } from '../../components/FormField.jsx';
 import { SIZES, sizeLabel } from '../../utils/sizes.js';
 import { colorToCss, COLOR_SUGGESTIONS } from '../../utils/colorDot.js';
 
-const CATEGORIES = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
+// فئات المنصّة من مصدرها الموحّد لا مكتوبةً هنا: كانت السبع مكرّرةً بهذا الملف،
+// فالفئة التي يضيفها المدير لا تظهر بقائمة اختيار الفئة عند إضافة منتج — تبقى
+// معروضةً بالواجهة وفارغةً للأبد لأن لا أحد يستطيع إسناد منتجٍ إليها.
 const EMPTY = {
   name: '', price: '', cost: '', oldPrice: '', description: '', size: '', color: '',
   category: 'abaya', imageUrl: '', images: [], videoUrl: '', stock: '', featured: false, sizeStock: {}, colorStock: {}, colorImages: {}, saleEndsAt: '',
@@ -38,13 +41,14 @@ function Section({ icon, title, children }) {
 }
 
 export default function ProductForm({ initial, onClose, onSaved }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const platformKeys = usePlatformCatKeys();
   const { store } = useAuth();
   const isEdit = Boolean(initial?.id);
-  // خيارات الفئة: الأصلية الخمس + الفئات المخصّصة للمتجر
+  // خيارات الفئة: فئات المنصّة (المدمجة + ما يضيفه المدير) ثم فئات المتجر الخاصّة
   const categoryOptions = [
-    ...CATEGORIES.map((c) => ({ value: c, label: t(`categories.${c}`) })),
-    ...(Array.isArray(store?.customCategories) ? store.customCategories : []).map((cc) => ({ value: cc.key, label: cc.name })),
+    ...platformKeys.map((c) => ({ value: c, label: platformCatName(c, t, i18n.language) })),
+    ...storeOnlyCats(store?.customCategories, platformKeys).map((cc) => ({ value: cc.key, label: cc.name })),
   ];
   const [form, setForm] = useState(
     initial

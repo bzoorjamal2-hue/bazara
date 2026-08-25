@@ -77,8 +77,10 @@ function sanitizeCustomCategories(raw) {
 // (كانت مستدعاة بلا تعريف → ReferenceError يُسقط كل حفظ إعدادات + ينهار الخادم.)
 function sanitizeStoreCollections(raw) {
   if (!Array.isArray(raw)) return [];
+  // 12: نفس السقف الذي تسمح به لوحة المالكة. كان 8 هنا، فالبطاقات
+  // التاسعة فما فوق تُرمى بصمتٍ بعد رسالة «تم الحفظ» وتعود المالكة فلا تجدها.
   return raw
-    .slice(0, 8)
+    .slice(0, 12)
     .map((c) => ({
       title: String(c?.title ?? '').slice(0, 60).trim(),
       titleEn: String(c?.titleEn ?? '').slice(0, 60).trim(),
@@ -88,11 +90,24 @@ function sanitizeStoreCollections(raw) {
     .filter((c) => c.title && c.q); // بلا عنوان أو كلمة بحث لا معنى للبطاقة
 }
 
-// تنقية تخصيص الفئات: {"dress": {image, name}} — مفاتيح معروفة فقط، نصوص آمنة
+// تنقية تخصيص الفئات: {"dress": {image, name}} — نصوص آمنة ومفاتيح بنمطٍ صارم.
+//
+// كنّا نلفّ على الفئات السبع الثابتة وحدها، فتخصيص أي فئةٍ يضيفها المدير
+// للمنصّة (صورة/اسم/إخفاء) يُرمى بصمتٍ ولا يُحفظ — تظنّ المالكة أنها حفظت
+// وتعود فتجده كما كان. نقبل الآن أي مفتاحٍ يطابق نمط مفاتيح المنصّة نفسه
+// (a-z و0-9 وشرطة/شرطة سفلية، 2–50 محرفاً) فيبقى الإدخال مقيّداً.
+const CAT_KEY_RE = /^[a-z0-9_-]{2,50}$/i;
+// مفاتيح تُلوّث النموذج الأولي لو أُسندت على كائنٍ عاديّ — يمرّرها النمط لأنها
+// حروفٌ وشرطات سفلية، فنستبعدها صراحةً.
+const UNSAFE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
 function sanitizeCategoryMeta(raw) {
   if (!raw || typeof raw !== 'object') return {};
-  const out = {};
-  for (const c of CATEGORY_KEYS) {
+  const out = Object.create(null);
+  const keys = Object.keys(raw)
+    .filter((k) => CAT_KEY_RE.test(k) && !UNSAFE_KEYS.has(k.toLowerCase()))
+    .slice(0, 40);
+  for (const c of keys) {
     const m = raw[c];
     if (!m || typeof m !== 'object') continue;
     const image = typeof m.image === 'string' ? m.image.trim().slice(0, 2000) : '';

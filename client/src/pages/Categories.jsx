@@ -5,7 +5,7 @@ import Seo from '../components/Seo.jsx';
 import api from '../api/client.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { cldThumb } from '../utils/cloudinary.js';
-import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys } from '../utils/platformCategories.js';
+import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys, storeOnlyCats } from '../utils/platformCategories.js';
 
 
 
@@ -23,7 +23,7 @@ export default function Categories() {
   }, []);
   const items = [
     ...catKeys.map((c) => ({ key: c, name: platformCatName(c, t, i18n.language), to: `/category/${c}`, img: platformCatImage(c) })),
-    ...custom.map((c) => ({ key: c.key, name: c.name, to: `/category/${c.key}`, img: c.image || '' })),
+    ...storeOnlyCats(custom, catKeys).map((c) => ({ key: c.key, name: c.name, to: `/category/${c.key}`, img: c.image || '' })),
   ];
 
   return (
