@@ -570,7 +570,8 @@ export default function StorePage() {
           )}
 
           <Reveal>
-            <section className="mb-16 mt-10 sm:mb-20">
+            {/* مرساة زرّ «تسوّقي الآن» بالسلايدر — scroll-mt يترك مساحةً للرأس اللاصق */}
+            <section id="cats" className="mb-16 mt-10 scroll-mt-24 sm:mb-20">
               <SectionTitle>{t('store.browseByCategory')}</SectionTitle>
               <CategoryGrid onSelect={pickCategory} active={cat} cats={gridCats} />
             </section>
@@ -941,6 +942,13 @@ function OffersSheet({ value, onClose, onApply }) {
 }
 
 // سلايدر البانرات: شريحة أولى ثابتة (اسم المتجر + شعار/تاغلاين) + شرايح المالك المتغيّرة.
+// تمرير ناعم إلى قسم التصنيفات. لا نستعمل رابط «#cats» لأن الوجهة هي المسار
+// نفسه، فلا يعيد React Router التوجيه ولا يقع تمرير — الزرّ يبدو معطّلاً.
+function scrollToCats() {
+  const el = document.getElementById('cats');
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 // زرّ شريحة السلايدر: تكتبه المالكة بمحرّر البانرات (نصّ + رابط).
 // الرابط الخارجي يُفتح بتبويب جديد مع rel آمن، والداخلي عبر Link بلا إعادة تحميل،
 // وإن تُرك فارغاً فالزرّ ينقل لتصنيفات المتجر — فلا يكون زرّاً بلا وجهة.
@@ -1102,7 +1110,9 @@ function HeroSlider({ store }) {
                 <div
                   // الارتفاع ينمو مع العرض: كان يتوقّف عند 340px فيبدو شريطاً رفيعاً
                   // (نسبة ~5:1) على الشاشات العريضة بعد توسيع الحاوية
-                  className={`relative isolate flex h-[260px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[340px] lg:h-[420px] 2xl:h-[500px] ${idx === i ? 'bz-hero-active' : ''} ${custom ? 'bg-[#241712]' : 'bg-wine-dark pub-hero'}`}
+                  // ارتفاع الجوال 300 لا 260: بعد إضافة زرّ «تسوّقي الآن» صار محتوى
+                  // الشريحة الثابتة أطول من الصندوق، فانزاح الشعار لأعلى وخرج عن الإطار.
+                  className={`relative isolate flex h-[300px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[360px] lg:h-[430px] 2xl:h-[500px] ${idx === i ? 'bz-hero-active' : ''} ${custom ? 'bg-[#241712]' : 'bg-wine-dark pub-hero'}`}
                   style={style}
                 >
                   {/* وسائط الشريحة (صورة أو فيديو) بنفس التعتيم تماماً — معتّمة من أول لحظة بلا وميض */}
@@ -1151,9 +1161,13 @@ function HeroSlider({ store }) {
                       <div className="pointer-events-none absolute inset-0 overflow-hidden">
                         <div className="bz-hero-sweep absolute inset-y-0 -inset-x-1/4 m-auto w-1/4 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
                       </div>
-                      {/* إطار ذهبي داخلي + زوايا مضيئة (خصائص منطقية تتبع اتجاه النص) */}
+                      {/* إطار ذهبي داخلي + زوايا مضيئة (خصائص منطقية تتبع اتجاه النص).
+                          الأربع كلها: كانت اثنتين فقط (بداية-أعلى ونهاية-أسفل) فيبدو
+                          الركنان الخاليان نقصاً لا تصميماً. */}
                       <div className="bz-hero-frame pointer-events-none absolute inset-3 rounded-2xl sm:inset-4" />
                       <span className="bz-hero-corner pointer-events-none absolute start-4 top-4 h-5 w-5 rounded-ss-lg border-s-2 border-t-2 sm:start-5 sm:top-5" />
+                      <span className="bz-hero-corner pointer-events-none absolute end-4 top-4 h-5 w-5 rounded-se-lg border-e-2 border-t-2 sm:end-5 sm:top-5" />
+                      <span className="bz-hero-corner pointer-events-none absolute start-4 bottom-4 h-5 w-5 rounded-es-lg border-s-2 border-b-2 sm:start-5 sm:bottom-5" />
                       <span className="bz-hero-corner pointer-events-none absolute end-4 bottom-4 h-5 w-5 rounded-ee-lg border-e-2 border-b-2 sm:end-5 sm:bottom-5" />
                     </>
                   )}
@@ -1166,7 +1180,7 @@ function HeroSlider({ store }) {
                           <div className="relative mx-auto mb-4 h-20 w-20 sm:h-24 sm:w-24">
                             {/* هالة ذهبية نابضة خلف الشعار */}
                             <span aria-hidden className="bz-logo-halo pointer-events-none absolute -inset-3 rounded-full blur-md" style={{ background: 'radial-gradient(circle, rgba(230,200,120,0.55), transparent 70%)' }} />
-                            <img src={store.logoUrl} alt={store.name} className="bz-hero-el relative h-full w-full rounded-2xl border-2 border-cream/30 object-cover shadow-lg" />
+                            <img src={store.logoUrl} alt={store.name} className="bz-hero-el relative h-full w-full rounded-2xl border-2 border-[#e6c878]/70 object-cover shadow-[0_10px_30px_-8px_rgba(0,0,0,.7)] ring-1 ring-black/20" />
                           </div>
                         )}
                         <h1 className="bz-hero-el bz-gold-name font-display text-3xl font-extrabold sm:text-5xl">{store.name}</h1>
@@ -1176,12 +1190,13 @@ function HeroSlider({ store }) {
                         {heroTaglineSub && (
                           <p className="bz-hero-el mt-1 text-xs tracking-[0.25em] text-cream/55 sm:text-sm">{heroTaglineSub}</p>
                         )}
-                        <Link
-                          to={`/store/${store.slug}/#cats`}
+                        <button
+                          type="button"
+                          onClick={scrollToCats}
                           className="bz-hero-el mt-5 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#f3e2b4] to-[#d4af37] px-6 py-2.5 text-sm font-bold text-[#2a1c14] shadow-lg transition hover:brightness-110 sm:text-base"
                         >
                           {t('storePage.shopNow')}
-                        </Link>
+                        </button>
                       </>
                     ) : (
                       <>
