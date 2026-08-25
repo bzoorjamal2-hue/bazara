@@ -626,9 +626,11 @@ html.dark .theme-pub ::-webkit-scrollbar-thumb:hover { background: rgba(236, 217
   -webkit-backdrop-filter: saturate(180%) blur(14px);
   backdrop-filter: saturate(180%) blur(14px);
   border-bottom: 1px solid rgba(199, 154, 58, 0.30);
-  position: relative;
 }
-/* خيط ذهبي متوهّج أسفل الشريط — اللمسة التي تجعله يُقرأ فاخراً لا وظيفياً */
+/* خيط ذهبي متوهّج أسفل الشريط — اللمسة التي تجعله يُقرأ فاخراً لا وظيفياً.
+   لا نضع position:relative هنا: الهيدران موضوعان أصلاً (المتاجر sticky
+   والرئيسية relative)، وهذا الملف يأتي بعد @tailwind utilities فكانت
+   position:relative تتغلّب على sticky فيتوقّف هيدر المتاجر عن اللصوق. */
 .app-navbar::after {
   content: '';
   position: absolute;
@@ -667,12 +669,16 @@ html.dark .theme-pub .app-navbar div.bg-white {
   background-color: #1c150e;
   border-color: rgba(230, 200, 120, 0.22);
 }
-/* حلقات الأزرار: ring-wine/15 غير مرئية على الداكن */
+/* حلقات الأزرار: ring-wine/* غير مرئية على الداكن. هيدر بازارا يستعمل /10
+   وهيدر المتاجر /15 و/20 — نغطّيها كلها فلا تبقى واحدة بلا مقابل. */
+html.dark .theme-pub .app-navbar .ring-wine\/10,
 html.dark .theme-pub .app-navbar .ring-wine\/15,
 html.dark .theme-pub .app-navbar .ring-wine\/20 { --tw-ring-color: rgba(230, 200, 120, 0.30); }
 /* أيقونات الأزرار كانت text-wine (خمريّ غامق) فتختفي على خلفية داكنة */
 html.dark .theme-pub .app-navbar .text-wine { color: #f0dca6; }
-html.dark .theme-pub .app-navbar .text-wine\/50 { color: rgba(240, 220, 166, 0.6); }
+html.dark .theme-pub .app-navbar .text-wine\/45,
+html.dark .theme-pub .app-navbar .text-wine\/50,
+html.dark .theme-pub .app-navbar .text-wine\/60 { color: rgba(240, 220, 166, 0.6); }
 /* التمرير: الأصل يقلبها لخمريّ داكن فتختفي — نُبقيها ذهبيةً واضحة */
 html.dark .theme-pub .app-navbar .hover\:bg-wine:hover { background-color: rgba(230, 200, 120, 0.18); }
 html.dark .theme-pub .app-navbar .hover\:text-cream:hover { color: #fff6da; }
