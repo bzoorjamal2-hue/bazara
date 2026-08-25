@@ -30,7 +30,6 @@ export default function CollectionsRow({ collections, storeSlug = '' }) {
           والبطاقة أضيق من قبل (44% لا 52%) فيظهر طرفُ التالية دائماً — وهو
           ما يخبر العين أن الصفّ يُسحب، مع تلاشٍ عند الحافّة يؤكّد ذلك. */}
       <div className="relative -mx-4 sm:mx-0">
-        <span className="bz-row-fade pointer-events-none absolute inset-y-0 end-0 z-10 w-8 sm:hidden" />
         <div
           className="flex gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-4 sm:px-0"
           style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorX: 'contain', scrollBehavior: 'auto' }}

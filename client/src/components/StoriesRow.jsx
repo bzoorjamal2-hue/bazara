@@ -35,8 +35,6 @@ export default function StoriesRow() {
 
   return (
     <div className="relative mt-5">
-      {/* تلاشٍ عند الحافّة يُلمّح أن الصف يُمرَّر أفقياً حين تزيد المتاجر */}
-      <span className="bz-row-fade pointer-events-none absolute inset-y-0 end-0 z-10 w-10 sm:hidden" />
       <div className="-mx-4 overflow-x-auto px-4 [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0" style={{ scrollbarWidth: 'none' }}>
         <div className="flex gap-4">
           {ordered.map((s) => {
