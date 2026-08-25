@@ -657,6 +657,13 @@ html.dark .theme-pub .app-navbar.shadow-md { box-shadow: 0 12px 28px -8px rgba(0
 /* شريط الإعلانات يمشي دائماً — لا نوقفه مع "تقليل الحركة" بـiOS وإلا يختفي بالجوال */
 .animate-marquee { animation: marquee 20s linear infinite; }
 
+/* لمعة ذهبية تمسح شريط الإعلانات الغامق — تعطيه إحساس المعدن الفاخر */
+@keyframes ann-shine {
+  0% { transform: translateX(-60%); }
+  55%, 100% { transform: translateX(160%); }
+}
+.animate-ann-shine { animation: ann-shine 5.5s ease-in-out infinite; }
+
 /* انزلاق درج من اليسار (للوضع الإنجليزي LTR) */
 @keyframes slide-in-left {
   from { transform: translateX(-100%); }

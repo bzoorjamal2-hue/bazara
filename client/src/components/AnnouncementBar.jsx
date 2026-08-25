@@ -22,8 +22,8 @@ export default function AnnouncementBar({ ar, en }) {
   const Group = ({ hidden }) => (
     <div className="flex shrink-0 items-center" aria-hidden={hidden}>
       {Array.from({ length: groupCount }).map((_, k) => (
-        <span key={k} className="flex items-center gap-2 whitespace-nowrap px-5 text-xs font-semibold tracking-wide text-[#5e4636]" dir="auto">
-          <SparkleIcon className="h-3 w-3 shrink-0 text-[#c79a3a]" />
+        <span key={k} className="flex items-center gap-2.5 whitespace-nowrap px-6 text-[13px] font-bold tracking-wide text-[#f3e6c2] [text-shadow:0_1px_2px_rgba(0,0,0,.45)]" dir="auto">
+          <SparkleIcon className="h-3.5 w-3.5 shrink-0 text-[#f0d488] drop-shadow-[0_0_4px_rgba(224,194,95,.6)]" />
           {items[k % items.length]}
         </span>
       ))}
@@ -31,17 +31,19 @@ export default function AnnouncementBar({ ar, en }) {
   );
 
   return (
-    <div dir="ltr" className="relative -mx-4 mb-5 overflow-hidden border-y border-gold-400/40 bg-gradient-to-r from-[#f5ead6] via-[#efe1c6] to-[#f5ead6] py-1.5 shadow-sm sm:-mx-6">
+    <div dir="ltr" className="group relative -mx-4 mb-5 overflow-hidden border-y border-gold-400/50 bg-gradient-to-r from-[#241610] via-[#3a2718] to-[#241610] py-2 shadow-[0_2px_10px_rgba(0,0,0,.35),inset_0_1px_0_rgba(224,194,95,.15)] sm:-mx-6">
+      {/* لمعة ذهبية تمسح الشريط تلقائياً — تعطيه إحساس المعدن الفاخر */}
+      <span className="animate-ann-shine pointer-events-none absolute inset-y-0 z-20 w-1/3 bg-[linear-gradient(105deg,transparent,rgba(255,240,200,.3)_50%,transparent)]" />
       <div
-        className="flex w-max animate-marquee"
+        className="flex w-max animate-marquee group-hover:[animation-play-state:paused]"
         style={{ animationDuration: `${dur}s`, animationDirection: rtl ? 'normal' : 'reverse' }}
       >
         <Group />
         <Group hidden />
       </div>
       {/* تلاشٍ ناعم عند الحوافّ ليبدو أكثر أناقة */}
-      <span className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-[#f5ead6] to-transparent" />
-      <span className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-[#f5ead6] to-transparent" />
+      <span className="pointer-events-none absolute inset-y-0 left-0 z-10 w-14 bg-gradient-to-r from-[#241610] to-transparent" />
+      <span className="pointer-events-none absolute inset-y-0 right-0 z-10 w-14 bg-gradient-to-l from-[#241610] to-transparent" />
     </div>
   );
 }
