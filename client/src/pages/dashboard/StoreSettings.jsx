@@ -123,7 +123,8 @@ function AnnouncementPreview({ items }) {
       <span className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-px bg-gradient-to-r from-transparent via-[#f0d488]/45 to-transparent" />
       <span className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(80%_140%_at_50%_50%,rgba(224,194,95,.14),transparent_70%)]" />
       <span className="animate-ann-shine pointer-events-none absolute inset-y-0 z-20 w-1/3 bg-[linear-gradient(105deg,transparent,rgba(255,244,210,.34)_50%,transparent)]" />
-      <div className="relative z-[5] flex w-max animate-marquee" style={{ animationDuration: `${Math.min(90, Math.max(18, list.join('  ').length * 0.45))}s` }}>
+      {/* أبطأ من الشريط الحقيقي عمداً: المعاينة صغيرة والتاجرة تقرأ نصّها للتدقيق */}
+      <div className="relative z-[5] flex w-max animate-marquee" style={{ animationDuration: `${Math.min(160, Math.max(34, list.join('  ').length * 0.95))}s` }}>
         {[0, 1].map((g) => (
           <div key={g} className="flex shrink-0 items-center" aria-hidden={g === 1}>
             {Array.from({ length: Math.max(6, list.length * 3) }).map((_, k) => (
@@ -920,14 +921,13 @@ export default function StoreSettings() {
 
           <Field label={t('dashboard.store.announcement')} tip={t('dashboard.store.announcementHint')} hint={t('dashboard.store.announcementHint')} max={500} value={form.announcement}>
             <textarea rows={3} maxLength={500} className="input resize-none" placeholder={t('dashboard.store.announcementPlaceholder')} value={form.announcement} onChange={set('announcement')} />
-            {/* تلميح: كل سطر إعلانٌ مستقلّ يتناوب مع البقية */}
-            <p className="mt-1.5 text-[11px] leading-relaxed text-cream/50">
-              💡 اكتبي كل إعلان بسطر مستقلّ — تظهر كلها بالتناوب على شريط أعلى متجرِكِ.
-            </p>
-            {/* معاينة مطابقة للشريط الحقيقي كما يراه الزبون */}
+            {/* معاينة مطابقة للشريط الحقيقي كما يراه الزبون. التلميح تحت الحقل
+                يشرح أصلاً أن كل سطر إعلانٌ مستقلّ، فلا نكرّره هنا. */}
             {String(form.announcement || '').trim() && (
               <div className="mt-2">
-                <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-cream/40">معاينة</span>
+                <span className="mb-1 block text-[10px] font-semibold tracking-wide text-stone-400">
+                  {t('dashboard.store.announcementPreview')}
+                </span>
                 <AnnouncementPreview items={form.announcement.split('\n').map((l) => l.trim()).filter(Boolean)} />
               </div>
             )}

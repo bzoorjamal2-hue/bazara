@@ -569,6 +569,7 @@
       "announcement": "Top announcement bar",
       "announcementPlaceholder": "Free shipping on orders over ₪200 🎉\nNew collection just arrived ✨\n10% off with code WELCOME",
       "announcementHint": "An elegant moving bar at the top of your store. Write each announcement on a separate line; they all show in sequence. Leave empty to hide.",
+      "announcementPreview": "Preview",
       "announcementEn": "Announcement bar (English)",
       "announcementEnPlaceholder": "Free shipping over ₪200 🎉\nNew collection arrived ✨\n10% off with code WELCOME",
       "announcementEnHint": "Shown in the bar when the language is switched to English. Leave empty to show the Arabic text in both languages.",

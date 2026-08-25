@@ -587,6 +587,7 @@
       "announcement": "شريط إعلانات علوي",
       "announcementPlaceholder": "شحن مجاني للطلبات فوق ٢٠٠ ₪ 🎉\nتشكيلة جديدة وصلت ✨\nخصم ١٠٪ بكود WELCOME",
       "announcementHint": "شريط متحرّك فخم بأعلى متجرك. اكتبي كل إعلان بسطر منفصل وتظهر كلها بتتابع. اتركيه فارغاً لإخفائه.",
+      "announcementPreview": "معاينة",
       "announcementEn": "شريط الإعلانات بالإنجليزية",
       "announcementEnPlaceholder": "Free shipping over ₪200 🎉\nNew collection arrived ✨\n10% off with code WELCOME",
       "announcementEnHint": "النص الذي يظهر بالشريط عند تحويل اللغة للإنجليزية. اتركيه فارغاً فيظهر النص العربي في الحالتين.",
