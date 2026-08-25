@@ -27,11 +27,11 @@ import useInViewOnce from '../hooks/useInViewOnce.js';
 import ScrollProgress from '../components/ScrollProgress.jsx';
 import StoriesRow from '../components/StoriesRow.jsx';
 import { BAZARA_WHATSAPP } from '../config/site.js';
-
-const BUILTIN_CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
+import { usePlatformCatKeys, platformCatKeys } from '../utils/platformCategories.js';
 
 export default function Home() {
   const { t, i18n } = useTranslation();
+  const platformKeys = usePlatformCatKeys();
   const rtl = i18n.language !== 'en';
   const [data, setData] = useState(() => getCache('home') || null);
   const [loading, setLoading] = useState(() => !getCache('home'));
@@ -47,19 +47,22 @@ export default function Home() {
   // الفئات المخصّصة المجمّعة من كل المتاجر (يعيدها /public/home) — تظهر بشبكة فئات
   // الرئيسية العامة كفئات بازارا الأصلية، والضغط عليها يفتح منتجاتها من كل المتاجر.
   const customCats = Array.isArray(data?.customCategories) ? data.customCategories : [];
+  // مفاتيح المنصّة من المصدر الموحّد لا من قائمةٍ مكتوبة هنا: كانت السبع مكرّرةً
+  // بهذا الملف، فأي فئة يضيفها المدير للمنصّة لا تظهر بشبكة الرئيسية أبداً.
   const gridCats = [
-    ...BUILTIN_CATS.map((k) => ({ key: k, builtin: true })),
+    ...platformKeys.map((k) => ({ key: k, builtin: true })),
     ...customCats.map((c) => ({ key: c.key, name: c.name, image: c.image, builtin: false })),
   ];
 
   // "مقترحات لكِ": نتعلّم الفئة الأكثر مشاهدة من تصفّحها ونجلب منتجاتها (تخصيص محلي بلا حساب)
   const [forYou, setForYou] = useState(() => getCache('forYou') || []);
   useEffect(() => {
-    const BUILTIN = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
     const counts = {};
     recent.forEach((r) => { if (r.category) counts[r.category] = (counts[r.category] || 0) + 1; });
     const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
-    if (!top || !BUILTIN.includes(top)) return;
+    // مفاتيح المنصّة الحيّة لا قائمةً مكتوبة: كانت السبع مكرّرةً هنا أيضاً، فالفئة
+    // التي يضيفها المدير لا تدخل «مقترحات لكِ» مهما تصفّحتها الزبونة.
+    if (!top || !platformCatKeys().includes(top)) return;
     const seen = new Set(recent.map((r) => r.id));
     api.get(`/public/category/${top}`)
       .then((r) => {

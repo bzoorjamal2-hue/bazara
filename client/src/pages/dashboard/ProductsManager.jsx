@@ -11,9 +11,11 @@ import { clearCachePrefixes } from '../../utils/apiCache.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { PageHead, SectionHead } from '../../components/FormField.jsx';
 import Select from '../../components/Select.jsx';
+import { platformCatName } from '../../utils/platformCategories.js';
 
-// الفئات الأصلية السبع — ما عداها فئة مخصّصة للمتجر نجلب اسمها من إعداداته
-const BUILTIN_CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
+// فئات المنصّة تُقرأ من مصدرها الموحّد لا من قائمةٍ مكتوبة هنا: كانت السبع
+// مكرّرةً بهذا الملف، فالفئة التي يضيفها المدير كانت تظهر بمفتاحها الخام
+// («c_a1b2c3») بدل اسمها بجدول منتجات كل متجر.
 
 // بعد حذف/تعديل/إضافة منتج: نفرّغ كاش الصفحات العامة كي يختفي/يظهر التغيير فوراً
 // (الرئيسية، صفحة المتجر، الفئات، العروض، المقترحات، وصفحة المنتج نفسها)
@@ -22,13 +24,14 @@ const purgePublicCaches = () => clearCachePrefixes(['home', 'storepage:', 'cat:'
 const PH = 'https://placehold.co/48x48/121214/d4af37?text=%F0%9F%91%97';
 
 export default function ProductsManager({ onCount }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { store } = useAuth();
   // اسم الفئة الظاهر: أصلية → ترجمة، مخصّصة → اسمها من إعدادات المتجر، وإلا المفتاح نفسه
   const catLabel = (key) => {
-    if (BUILTIN_CATS.includes(key)) return t(`categories.${key}`);
+    // فئة متجرٍ خاصّة أولاً (اسمها من إعداداته)، وإلا فئة منصّة تُسمّى بمصدرها
     const cc = (store?.customCategories || []).find((c) => c.key === key);
-    return cc?.name || key;
+    if (cc?.name) return cc.name;
+    return platformCatName(key, t, i18n.language);
   };
   const [products, setProducts] = useState(null);
   const [error, setError] = useState('');
