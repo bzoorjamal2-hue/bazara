@@ -1371,76 +1371,277 @@ button, [role='button'], summary {
 }
 img, svg { -webkit-user-drag: none; }
 
-/* ===== لوحة الإشعارات =====
-   تُرسَم عبر Portal على <body> خارج .theme-pub مثل القائمة المنسدلة، فلا
-   تصلها قواعد الثيم. نلوّنها هنا صراحةً بالوضعين — بلا هذا تبقى بيضاء
-   بنصٍّ داكن ليلاً، وهي أكثر ما تفتحه المالكة بعد كل طلب. */
-/* لون نصٍّ افتراضي للّوحة كلّها: أي عنصرٍ ننساه بلا صنفٍ صريح يبقى مقروءاً
-   بدل أن يرث الرمادي الداكن فيختفي على الخلفية الليلية. */
-.bz-notif-sheet { background: #ffffff; color: #5e4636; }
-html.dark .bz-notif-sheet {
-  background: #241712;
+/* ═══════════════════ الإشعارات: الجرس ولوحته ═══════════════════
+   اللوحة تُرسَم Portal على <body> خارج .theme-pub مثل القائمة المنسدلة، فلا
+   تصلها قواعد الثيم إطلاقاً. نلوّن كلّ شيءٍ هنا صراحةً بالوضعين — بلا ذلك
+   تبقى بيضاء بنصٍّ داكن ليلاً، وهي أكثر ما تفتحه المالكة بعد كل طلب. */
+
+/* ───── الجرس بالرأس ───── */
+.bz-bell {
+  position: relative;
+  display: flex;
+  height: 2.5rem;
+  width: 2.5rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(244, 237, 226, 0.10);
   color: #f4ede2;
-  box-shadow: 0 24px 60px -18px rgba(0, 0, 0, 0.8);
+  box-shadow: inset 0 0 0 1px rgba(230, 200, 120, 0.30);
+  transition: background-color 0.25s ease, box-shadow 0.25s ease, transform 0.15s ease;
+}
+@media (hover: hover) {
+  .bz-bell:hover { background: rgba(244, 237, 226, 0.20); }
+}
+.bz-bell:active { transform: scale(0.94); }
+/* وجود غير مقروء يستحقّ فرقاً يُرى بلمحة، لا رقماً صغيراً وحده */
+.bz-bell-on {
+  background: linear-gradient(140deg, rgba(230, 200, 120, 0.32), rgba(230, 200, 120, 0.12));
+  color: #f6e6b6;
+  box-shadow: inset 0 0 0 1px rgba(230, 200, 120, 0.60), 0 0 18px -6px rgba(230, 200, 120, 0.55);
 }
 
-.bz-notif-head,
-.bz-notif-foot { border-color: rgba(94, 70, 54, 0.10); }
-.bz-notif-head { border-bottom-width: 1px; border-bottom-style: solid; }
-.bz-notif-foot { border-top-width: 1px; border-top-style: solid; }
-html.dark .bz-notif-head,
-html.dark .bz-notif-foot { border-color: rgba(255, 255, 255, 0.10); }
+/* العدّاد: كبسولة تتّسع لثلاثة محارف (99+) بلا أن تتشوّه */
+.bz-bell-count {
+  position: absolute;
+  inset-inline-end: -2px;
+  top: -3px;
+  display: flex;
+  height: 18px;
+  min-width: 18px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #f2544a, #d92d20);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.45), 0 2px 6px -1px rgba(217, 45, 32, 0.7);
+}
 
-.bz-notif-title { color: #5e4636; }
+/* رنّة الوصول: تمايلٌ قصير وهالةٌ ذهبية تتمدّد وتخفت */
+.bz-bell-ring svg { animation: bz-bell-swing 1s ease-in-out; transform-origin: 50% 10%; }
+@keyframes bz-bell-swing {
+  0%, 100% { transform: rotate(0); }
+  12% { transform: rotate(15deg); }
+  28% { transform: rotate(-13deg); }
+  44% { transform: rotate(9deg); }
+  60% { transform: rotate(-6deg); }
+  76% { transform: rotate(3deg); }
+}
+.bz-bell-halo {
+  position: absolute;
+  inset: -2px;
+  border-radius: 999px;
+  border: 2px solid rgba(230, 200, 120, 0.85);
+  animation: bz-bell-halo 1.4s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes bz-bell-halo {
+  0% { transform: scale(0.85); opacity: 0.9; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bz-bell-ring svg, .bz-bell-halo, .bz-notif-in { animation: none; }
+}
+
+/* ───── الورقة ───── */
+.bz-notif-sheet {
+  background: #fffdfa;
+  color: #5e4636;
+}
+html.dark .bz-notif-sheet {
+  background: #201510;
+  color: #f4ede2;
+  box-shadow: 0 28px 70px -20px rgba(0, 0, 0, 0.85), inset 0 0 0 1px rgba(230, 200, 120, 0.14);
+}
+
+/* مقبض السحب — إشارة «هذه ورقة تُسحب»، يختفي على الشاشات الكبيرة */
+.bz-notif-grip {
+  display: block;
+  width: 2.5rem;
+  height: 4px;
+  margin: 8px auto 2px;
+  border-radius: 999px;
+  background: rgba(94, 70, 54, 0.22);
+}
+html.dark .bz-notif-grip { background: rgba(244, 237, 226, 0.22); }
+@media (min-width: 640px) { .bz-notif-grip { display: none; } }
+
+/* الرأس: تدرّج ذهبي خافت وخيط رفيع بدل حدٍّ رمادي — يربط اللوحة بهوية الموقع */
+.bz-notif-head {
+  border-bottom: 1px solid rgba(94, 70, 54, 0.10);
+  background: linear-gradient(180deg, rgba(230, 200, 120, 0.12), transparent);
+}
+html.dark .bz-notif-head {
+  border-bottom-color: rgba(230, 200, 120, 0.16);
+  background: linear-gradient(180deg, rgba(230, 200, 120, 0.09), transparent);
+}
+.bz-notif-headico {
+  background: linear-gradient(140deg, #e6c878, #c9a94f);
+  color: #3a2a1c;
+  box-shadow: 0 4px 12px -4px rgba(201, 169, 79, 0.7);
+}
+html.dark .bz-notif-headico { box-shadow: 0 4px 14px -4px rgba(230, 200, 120, 0.55); }
+
+.bz-notif-foot {
+  border-top: 1px solid rgba(94, 70, 54, 0.10);
+  background: rgba(94, 70, 54, 0.03);
+}
+html.dark .bz-notif-foot {
+  border-top-color: rgba(230, 200, 120, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* ───── نصوص ───── */
+.bz-notif-title { color: #4a3628; }
 html.dark .bz-notif-title { color: #f4ede2; }
-
-.bz-notif-sub { color: #78716c; }
-html.dark .bz-notif-sub { color: #d9c9a8; }
-
+.bz-notif-sub { color: #7c7268; }
+html.dark .bz-notif-sub { color: #cbbb9c; }
 .bz-notif-time { color: #a8a29e; }
-html.dark .bz-notif-time { color: rgba(217, 201, 168, 0.7); }
+html.dark .bz-notif-time { color: rgba(203, 187, 156, 0.65); }
 
-.bz-notif-act { color: rgba(94, 70, 54, 0.75); }
+/* عنوان اليوم/أمس/أقدم — صغير وهادئ، يفصل بلا أن يزاحم */
+.bz-notif-day {
+  color: #a08e6a;
+  letter-spacing: 0.04em;
+}
+html.dark .bz-notif-day { color: rgba(230, 200, 120, 0.62); }
+
+/* ───── المرشّح (الكل / غير المقروء) ───── */
+.bz-seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(94, 70, 54, 0.07);
+}
+html.dark .bz-seg { background: rgba(255, 255, 255, 0.07); }
+.bz-seg-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 13px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(94, 70, 54, 0.62);
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+html.dark .bz-seg-btn { color: rgba(203, 187, 156, 0.72); }
+.bz-seg-on {
+  background: #ffffff;
+  color: #4a3628;
+  box-shadow: 0 1px 4px -1px rgba(94, 70, 54, 0.28);
+}
+html.dark .bz-seg-on {
+  background: rgba(230, 200, 120, 0.20);
+  color: #f6e6b6;
+  box-shadow: inset 0 0 0 1px rgba(230, 200, 120, 0.30);
+}
+.bz-seg-count {
+  min-width: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #d92d20;
+  font-size: 9.5px;
+  font-weight: 800;
+  line-height: 16px;
+  color: #fff;
+}
+
+/* زر «تعليم الكل» */
+.bz-notif-act { color: rgba(94, 70, 54, 0.72); }
 html.dark .bz-notif-act { color: #e6c878; }
 @media (hover: hover) {
-  .bz-notif-act:hover { background: rgba(94, 70, 54, 0.09); }
-  html.dark .bz-notif-act:hover { background: rgba(255, 255, 255, 0.10); }
+  .bz-notif-act:hover { background: rgba(94, 70, 54, 0.08); }
+  html.dark .bz-notif-act:hover { background: rgba(230, 200, 120, 0.12); }
 }
 
-.bz-notif-list > li + li { border-top: 1px solid rgba(94, 70, 54, 0.08); }
-html.dark .bz-notif-list > li + li { border-top-color: rgba(255, 255, 255, 0.08); }
+/* زر الإغلاق: variant="wine" مصنوعٌ للنوافذ الفاتحة، وعلى الخلفية الليلية
+   يصير شبه مختفٍ. نقلبه هنا لليلي فقط. */
+html.dark .bz-notif-close { background: rgba(255, 255, 255, 0.10); color: #f4ede2; }
+@media (hover: hover) {
+  html.dark .bz-notif-close:hover { background: rgba(255, 255, 255, 0.18); color: #fff; }
+}
 
-.bz-notif-item { transition: background-color 0.18s ease; }
+/* ───── الصفوف ───── */
+.bz-notif-list > li + li { border-top: 1px solid rgba(94, 70, 54, 0.07); }
+html.dark .bz-notif-list > li + li { border-top-color: rgba(255, 255, 255, 0.06); }
+
+.bz-notif-item {
+  position: relative;
+  transition: background-color 0.18s ease;
+}
 @media (hover: hover) {
   .bz-notif-item:hover { background: rgba(94, 70, 54, 0.04); }
   html.dark .bz-notif-item:hover { background: rgba(255, 255, 255, 0.05); }
 }
-/* غير المقروء: مسحة ذهبية خفيفة تُميّزه بالوضعين بلا أن تصرخ */
-.bz-notif-unread { background: rgba(230, 200, 120, 0.13); }
-html.dark .bz-notif-unread { background: rgba(230, 200, 120, 0.09); }
+.bz-notif-item:active { background: rgba(94, 70, 54, 0.07); }
+html.dark .bz-notif-item:active { background: rgba(255, 255, 255, 0.08); }
 
-.bz-notif-ico { background: rgba(94, 70, 54, 0.07); }
-html.dark .bz-notif-ico { background: rgba(255, 255, 255, 0.10); }
-
-.bz-notif-skel { background: rgba(94, 70, 54, 0.07); }
-html.dark .bz-notif-skel { background: rgba(255, 255, 255, 0.06); }
-
-.bz-notif-more { background: rgba(94, 70, 54, 0.07); color: #5e4636; }
-html.dark .bz-notif-more { background: rgba(255, 255, 255, 0.10); color: #f4ede2; }
-@media (hover: hover) {
-  .bz-notif-more:hover { background: rgba(94, 70, 54, 0.12); }
-  html.dark .bz-notif-more:hover { background: rgba(255, 255, 255, 0.15); }
+/* غير المقروء: شريطٌ ذهبي على الحافّة البادئة + مسحة خفيفة. الشريط يُقرأ
+   بلمحة العين على طول القائمة — أوضح من نقطةٍ صغيرة وحدها. */
+.bz-notif-unread { background: rgba(230, 200, 120, 0.10); }
+html.dark .bz-notif-unread { background: rgba(230, 200, 120, 0.07); }
+.bz-notif-unread::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 3px;
+  background: linear-gradient(180deg, #e6c878, #c9a94f);
+}
+/* ليلاً الذهب الصريح يصرخ على الخلفية الداكنة — نخفّه قليلاً */
+html.dark .bz-notif-unread::before { background: linear-gradient(180deg, rgba(230, 200, 120, 0.75), rgba(201, 169, 79, 0.55)); }
+/* دخول الصفوف بتتابعٍ خفيف عند فتح اللوحة */
+.bz-notif-in { animation: bz-notif-in 0.28s ease-out both; }
+@keyframes bz-notif-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
 }
 
-/* زر إغلاق اللوحة: variant="wine" مصنوعٌ للنوافذ الفاتحة (نصّ خمري داكن)،
-   وعلى خلفية اللوحة الليلية #241712 يصير شبه مختفٍ. نقلبه هنا لليلي فقط. */
-html.dark .bz-notif-close {
-  background: rgba(255, 255, 255, 0.10);
-  color: #f4ede2;
+/* ───── مربّعات الأيقونات: لونٌ لكل نوع ───── */
+.bz-notif-ico { box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05); }
+html.dark .bz-notif-ico { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07); }
+
+.bz-tone-gold   { background: rgba(201, 169, 79, 0.18);  color: #96751c; }
+.bz-tone-amber  { background: rgba(217, 119, 6, 0.14);   color: #b45309; }
+.bz-tone-red    { background: rgba(217, 45, 32, 0.13);   color: #b42318; }
+.bz-tone-teal   { background: rgba(13, 148, 136, 0.13);  color: #0f766e; }
+.bz-tone-pink   { background: rgba(219, 39, 119, 0.12);  color: #be185d; }
+.bz-tone-violet { background: rgba(124, 58, 237, 0.12);  color: #6d28d9; }
+
+html.dark .bz-tone-gold   { background: rgba(230, 200, 120, 0.16); color: #ecd08a; }
+html.dark .bz-tone-amber  { background: rgba(251, 191, 36, 0.14);  color: #fcd34d; }
+html.dark .bz-tone-red    { background: rgba(248, 113, 113, 0.14); color: #fca5a5; }
+html.dark .bz-tone-teal   { background: rgba(45, 212, 191, 0.14);  color: #5eead4; }
+html.dark .bz-tone-pink   { background: rgba(244, 114, 182, 0.14); color: #f9a8d4; }
+html.dark .bz-tone-violet { background: rgba(167, 139, 250, 0.15); color: #c4b5fd; }
+
+/* ───── حالات أخرى ───── */
+.bz-notif-empty {
+  background: linear-gradient(140deg, rgba(230, 200, 120, 0.24), rgba(230, 200, 120, 0.06));
+  color: #b89a52;
+  box-shadow: inset 0 0 0 1px rgba(230, 200, 120, 0.30);
 }
+html.dark .bz-notif-empty { color: #e6c878; box-shadow: inset 0 0 0 1px rgba(230, 200, 120, 0.22); }
+
+.bz-notif-skel { background: rgba(94, 70, 54, 0.06); }
+html.dark .bz-notif-skel { background: rgba(255, 255, 255, 0.05); }
+
+.bz-notif-more { background: rgba(94, 70, 54, 0.06); color: #4a3628; transition: background-color 0.2s ease; }
+html.dark .bz-notif-more { background: rgba(255, 255, 255, 0.08); color: #f4ede2; }
 @media (hover: hover) {
-  html.dark .bz-notif-close:hover {
-    background: rgba(255, 255, 255, 0.18);
-    color: #ffffff;
-  }
+  .bz-notif-more:hover { background: rgba(94, 70, 54, 0.11); }
+  html.dark .bz-notif-more:hover { background: rgba(255, 255, 255, 0.14); }
+}
+
+.bz-notif-clear { color: rgba(180, 35, 24, 0.85); transition: background-color 0.2s ease; }
+html.dark .bz-notif-clear { color: #fca5a5; }
+@media (hover: hover) {
+  .bz-notif-clear:hover { background: rgba(217, 45, 32, 0.10); }
 }
