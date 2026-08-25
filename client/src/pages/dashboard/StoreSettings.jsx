@@ -175,6 +175,8 @@ export default function StoreSettings() {
           returnPolicy: s.returnPolicy || '',
           announcement: s.announcement || '',
           announcementEn: s.announcementEn || '',
+          tagline: s.tagline || '',
+          taglineEn: s.taglineEn || '',
           welcomeOffer: s.welcomeOffer || '',
           categoryMeta: s.categoryMeta && typeof s.categoryMeta === 'object' ? s.categoryMeta : {},
           customCategories: Array.isArray(s.customCategories) ? s.customCategories : [],
@@ -567,6 +569,14 @@ export default function StoreSettings() {
                 <LinkIcon className="h-3.5 w-3.5" /> {t('dashboard.store.openStore')}
               </a>
             </div>
+          </Field>
+
+          <Field label={t('dashboard.store.tagline')} tip={t('dashboard.store.taglineTip')} hint={t('dashboard.store.taglineHint')} optional max={120} value={form.tagline}>
+            <input type="text" maxLength={120} className="input" placeholder={t('dashboard.store.taglinePlaceholder')} value={form.tagline} onChange={set('tagline')} />
+          </Field>
+
+          <Field label={t('dashboard.store.taglineEn')} optional max={120} value={form.taglineEn}>
+            <input type="text" maxLength={120} dir="ltr" className="input text-start" placeholder={t('dashboard.store.taglineEnPlaceholder')} value={form.taglineEn} onChange={set('taglineEn')} />
           </Field>
 
           <Field label={t('dashboard.store.description')} tip={t('dashboard.store.descriptionTip')} max={300} value={form.description}>

@@ -190,6 +190,10 @@ async function ensureColumns() {
     await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS welcome_offer VARCHAR(300) DEFAULT '';");
     // إعلان الشريط بالإنجليزية (اختياري) — يظهر عند تحويل اللغة للإنجليزي
     await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS announcement_en VARCHAR(500) DEFAULT '';");
+    // شعار المتجر على شريحة السلايدر الأولى. كان النصّ مكتوباً بالكود
+    // («أناقة · حشمة · تميّز») فكانت كل المتاجر تعرض الجملة نفسها.
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS tagline VARCHAR(120) DEFAULT '';");
+    await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS tagline_en VARCHAR(120) DEFAULT '';");
     // تخصيص الفئات لكل متجر: {"dress": {"image": "...", "name": "..."}, ...}
     await pool.query("ALTER TABLE stores ADD COLUMN IF NOT EXISTS category_meta JSONB DEFAULT '{}'::jsonb;");
     // فئات إضافية مخصّصة لكل متجر: [{"key":"c_xxx","name":"...","image":"..."}]

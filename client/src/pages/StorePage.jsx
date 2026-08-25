@@ -941,9 +941,30 @@ function OffersSheet({ value, onClose, onApply }) {
 }
 
 // سلايدر البانرات: شريحة أولى ثابتة (اسم المتجر + شعار/تاغلاين) + شرايح المالك المتغيّرة.
+// زرّ شريحة السلايدر: تكتبه المالكة بمحرّر البانرات (نصّ + رابط).
+// الرابط الخارجي يُفتح بتبويب جديد مع rel آمن، والداخلي عبر Link بلا إعادة تحميل،
+// وإن تُرك فارغاً فالزرّ ينقل لتصنيفات المتجر — فلا يكون زرّاً بلا وجهة.
+function SlideButton({ href, label, slug }) {
+  const raw = String(href || '').trim();
+  const cls = 'bz-hero-el mt-5 inline-flex items-center gap-2 rounded-full bg-cream/95 px-6 py-2.5 text-sm font-bold text-wine shadow-lg transition hover:brightness-105 sm:text-base';
+  if (/^https?:\/\//i.test(raw)) {
+    return <a href={raw} target="_blank" rel="noopener noreferrer nofollow" className={cls}>{label}</a>;
+  }
+  const to = raw.startsWith('/') ? raw : `/store/${slug}/#cats`;
+  return <Link to={to} className={cls}>{label}</Link>;
+}
+
 // تشغيل تلقائي + سحب باللمس + نقاط تنقّل.
 function HeroSlider({ store }) {
+  const { t, i18n } = useTranslation();
+  const isEn = i18n.language === 'en';
   const banners = Array.isArray(store.banners) ? store.banners.filter(Boolean) : [];
+  // شعار المتجر: ما كتبته المالكة بلغة العرض (مع رجوعٍ للّغة الأخرى)، وإلا الجملة
+  // العامة. السطر اللاتيني الصغير يظهر فقط مع الجملة العامة — لا معنى لترجمةٍ
+  // لاتينية مخترَعة تحت شعارٍ خاصٍّ كتبته المالكة بنفسها.
+  const ownTagline = (isEn ? (store.taglineEn || store.tagline) : (store.tagline || store.taglineEn)) || '';
+  const heroTagline = ownTagline.trim() || t('storePage.defaultTagline');
+  const heroTaglineSub = ownTagline.trim() ? '' : 'ELEGANCE · MODESTY · DISTINCTION';
   // شريحة اسم المتجر الذهبية تتصدّر دائماً (كشريحة Bazara بالموقع العام) — فيظهر اسم
   // كل متجر باللون الذهبي على سلايدره حتى لو أضاف المالك بانراته، ثم تتبعها بانراته.
   const slides = [{ fixed: true }, ...banners];
@@ -1149,13 +1170,27 @@ function HeroSlider({ store }) {
                           </div>
                         )}
                         <h1 className="bz-hero-el bz-gold-name font-display text-3xl font-extrabold sm:text-5xl">{store.name}</h1>
-                        <p className="bz-hero-el mt-3 font-display text-lg text-cream/90 sm:text-2xl">أناقة · حشمة · تميّز</p>
-                        <p className="bz-hero-el mt-1 text-xs tracking-[0.25em] text-cream/55 sm:text-sm">ELEGANCE · MODESTY · DISTINCTION</p>
+                        {/* شعار المتجر من إعداداته — وإن لم تكتبه المالكة فالجملة العامة.
+                            كانت مكتوبةً بالكود فتظهر نفسها على كل المتاجر بلا استثناء. */}
+                        <p className="bz-hero-el mt-3 font-display text-lg text-cream/90 sm:text-2xl">{heroTagline}</p>
+                        {heroTaglineSub && (
+                          <p className="bz-hero-el mt-1 text-xs tracking-[0.25em] text-cream/55 sm:text-sm">{heroTaglineSub}</p>
+                        )}
+                        <Link
+                          to={`/store/${store.slug}/#cats`}
+                          className="bz-hero-el mt-5 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#f3e2b4] to-[#d4af37] px-6 py-2.5 text-sm font-bold text-[#2a1c14] shadow-lg transition hover:brightness-110 sm:text-base"
+                        >
+                          {t('storePage.shopNow')}
+                        </Link>
                       </>
                     ) : (
                       <>
                         <h2 className="bz-hero-el font-display text-3xl font-extrabold text-cream drop-shadow sm:text-5xl">{s.title}</h2>
                         {s.subtitle && <p className="bz-hero-el mx-auto mt-3 max-w-xl text-cream/90 drop-shadow sm:text-lg">{s.subtitle}</p>}
+                        {/* زرّ الشريحة: تكتبه المالكة بمحرّر البانرات وكان لا يُعرض أبداً */}
+                        {String(s.btnLabel || '').trim() && (
+                          <SlideButton href={s.btnHref} label={s.btnLabel} slug={store.slug} />
+                        )}
                       </>
                     )}
                   </div>

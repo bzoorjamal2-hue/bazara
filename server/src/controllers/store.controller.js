@@ -31,6 +31,8 @@ function mapStore(s) {
     returnPolicy: s.return_policy || '',
     announcement: s.announcement || '',
     announcementEn: s.announcement_en || '',
+    tagline: s.tagline || '',
+    taglineEn: s.tagline_en || '',
     welcomeOffer: s.welcome_offer || '',
     categoryMeta: s.category_meta && typeof s.category_meta === 'object' ? s.category_meta : {},
     customCategories: Array.isArray(s.custom_categories) ? s.custom_categories : [],
@@ -181,6 +183,8 @@ export async function updateMyStore(req, res, next) {
   const returnPolicy = String(req.body.returnPolicy || '').slice(0, 2000);
   const announcement = String(req.body.announcement || '').slice(0, 500);
   const announcementEn = String(req.body.announcementEn || '').slice(0, 500);
+  const tagline = String(req.body.tagline || '').slice(0, 120);
+  const taglineEn = String(req.body.taglineEn || '').slice(0, 120);
   const welcomeOffer = String(req.body.welcomeOffer || '').slice(0, 300);
   const categoryMeta = sanitizeCategoryMeta(req.body.categoryMeta);
   const customCategories = sanitizeCustomCategories(req.body.customCategories);
@@ -236,7 +240,8 @@ export async function updateMyStore(req, res, next) {
          announcement_en = $24, old_slugs = $25::text[], delivery_phone = $26,
          fb_pixel = $27, tiktok_pixel = $28, ga_id = $29,
          loyalty_every = $30, loyalty_percent = $31,
-         flash_percent = $32, flash_ends_at = $33, delivery_tiers = $35::jsonb, updated_at = now()
+         flash_percent = $32, flash_ends_at = $33, delivery_tiers = $35::jsonb,
+         tagline = $36, tagline_en = $37, updated_at = now()
        WHERE id = $22
        RETURNING *`,
       [
@@ -275,6 +280,8 @@ export async function updateMyStore(req, res, next) {
         flashEndsAt,
         JSON.stringify(collections),
         JSON.stringify(deliveryTiers),
+        tagline,
+        taglineEn,
       ]
     );
 

@@ -599,7 +599,13 @@
       "collectionsHint": "“Shop by occasion” cards on your store page. Each is an image + keyword that opens your store search.",
       "collectionsEmpty": "No collections yet — add one to show on your store.",
       "collectionTitle": "Title (e.g. Eid looks)",
-      "collectionQuery": "Search keyword (e.g. evening dress)"
+      "collectionQuery": "Search keyword (e.g. evening dress)",
+      "tagline": "Store tagline",
+      "taglineTip": "A short line shown under your store name on the first slide.",
+      "taglineHint": "Leave empty to show the default line.",
+      "taglinePlaceholder": "Luxury abayas · Made to order",
+      "taglineEn": "Tagline (English)",
+      "taglineEnPlaceholder": "Luxury abayas · Made to order"
     },
     "product": {
       "cost": "Cost price",

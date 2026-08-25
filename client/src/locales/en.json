@@ -727,5 +727,9 @@
     "product": {
       "color": "Color"
     }
+  },
+  "storePage": {
+    "shopNow": "Shop now",
+    "defaultTagline": "Elegance · Modesty · Distinction"
   }
 }

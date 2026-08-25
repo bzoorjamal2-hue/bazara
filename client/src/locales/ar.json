@@ -760,5 +760,9 @@
     "product": {
       "color": "اللون"
     }
+  },
+  "storePage": {
+    "shopNow": "تسوّقي الآن",
+    "defaultTagline": "أناقة · حشمة · تميّز"
   }
 }

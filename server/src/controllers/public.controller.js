@@ -50,6 +50,8 @@ function mapStorePublic(s) {
     returnPolicy: s.return_policy || '',
     announcement: s.announcement || '',
     announcementEn: s.announcement_en || '',
+    tagline: s.tagline || '',
+    taglineEn: s.tagline_en || '',
     welcomeOffer: s.welcome_offer || '',
     categoryMeta: s.category_meta && typeof s.category_meta === 'object' ? s.category_meta : {},
     customCategories: Array.isArray(s.custom_categories) ? s.custom_categories : [],
