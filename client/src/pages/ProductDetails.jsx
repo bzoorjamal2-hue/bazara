@@ -267,10 +267,16 @@ export default function ProductDetails() {
   const hasSizeStock = hasColorStock ? true : (sizes.length > 0 && sizes.some((s) => typeof sizeStock[s] === 'number'));
   // عند تتبّع كميات لكل نمرة نعرض المتبقّي على كل نمرة (بدل حبّة المخزون العامة) لتفادي تعدّد الصيغ
   const perSize = hasColorStock || hasSizeStock;
-  // نفد المنتج: المخزون العام = 0، أو كل الكميات = 0
-  const allSoldOut = hasColorStock
-    ? Object.values(colorStock).every((sz) => Object.values(sz).every((q) => q === 0))
-    : (hasSizeStock && sizes.every((s) => sizeStock[s] === 0));
+  // نفد المنتج: المخزون العام = 0، أو كل الكميات المُدخَلة = 0.
+  //
+  // ننظر إلى الكميات المُدخَلة فعلاً لا إلى الأشكال الفارغة: [].every() ترجع
+  // true دائماً، فلونٌ أضافته المالكة بلا نمر ({"أسود":{}}) كان يُحسب نافداً
+  // ويُقفل زرّا الشراء على منتجٍ متوفّر. الآن اللون بلا نمر لا يُحسب أصلاً،
+  // وإن لم تُدخَل أيّ كمية فالمنتج ليس نافداً بل غير متتبَّع الكمية.
+  const allQtys = hasColorStock
+    ? Object.values(colorStock).flatMap((sz) => (sz && typeof sz === 'object' ? Object.values(sz) : []))
+    : sizes.map((s) => sizeStock[s]).filter((q) => typeof q === 'number');
+  const allSoldOut = allQtys.length > 0 && allQtys.every((q) => q === 0);
   const outOfStock = product.stock === 0 || allSoldOut;
   // الكمية المتبقّية للمقاس المختار (إن وُجدت)
   const selSizeQty = (() => { const q = qtyFor(selSize); return typeof q === 'number' ? q : null; })();
