@@ -13,7 +13,8 @@ import useScrollLock from '../hooks/useScrollLock.js';
 const IMG_MS = 3500; // مدة عرض الصورة (أسرع)
 
 // عارض ستوري بأسلوب إنستغرام: أشرطة تقدّم، انتقال تلقائي، نقر يمين/يسار،
-// ضغط مطوّل للإيقاف، وحذف للمالك. الفيديو يعتمد مدته، والصورة ٥ ثوانٍ.
+// ضغط مطوّل للإيقاف، سحبٌ للأسفل للإغلاق، وحذف للمالك.
+// الفيديو يعتمد مدته، والصورة IMG_MS أعلاه.
 export default function StoryViewer({ stories, store, startIndex = 0, isOwner = false, onClose, onDeleted, onSeen }) {
   const { t, i18n } = useTranslation();
   const rtl = i18n.language !== 'en';
@@ -93,6 +94,8 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
   };
   const onUpZone = (where) => {
     clearTimeout(holdRef.current.timer);
+    // سحبٌ رأسيّ لا نقرة: لولا هذا لتقدّمت الستوري أثناء السحب للإغلاق
+    if (dragY > 8) { if (holdRef.current.held) { holdRef.current.held = false; setPaused(false); } return; }
     if (holdRef.current.held) { holdRef.current.held = false; setPaused(false); return; }
     // يتبع اللغة: إنجليزي → يسار=سابق/يمين=تالي | عربي → يسار=تالي/يمين=سابق
     if (where === 'prev') (rtl ? goNext : goPrev)();
@@ -117,6 +120,25 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
     setReply('');
   };
 
+  // السحب للأسفل يُغلق — حركةٌ يتوقّعها كل من استعمل ستوري إنستغرام، ولم تكن
+  // موجودة فكان الإغلاق بزرّ (×) وحده. نتبع الإصبع حيّاً ثم نُغلق بعد ١٠٠px.
+  const drag = useRef({ y: 0, active: false });
+  const [dragY, setDragY] = useState(0);
+  const onDragStart = (e) => {
+    if (e.pointerType === 'mouse') return;
+    drag.current = { y: e.clientY, active: true };
+  };
+  const onDragMove = (e) => {
+    if (!drag.current.active) return;
+    const dy = e.clientY - drag.current.y;
+    if (dy > 0) setDragY(dy);
+  };
+  const onDragEnd = () => {
+    if (!drag.current.active) return;
+    drag.current.active = false;
+    setDragY((d) => { if (d > 100) onClose(); return 0; });
+  };
+
   const ago = (() => {
     const mins = Math.max(0, Math.floor((Date.now() - new Date(cur?.createdAt).getTime()) / 60000));
     if (mins < 60) return t('story.minsAgo', { count: mins });
@@ -131,7 +153,24 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
       dir="ltr"
       style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none', WebkitTapHighlightColor: 'transparent' }}
     >
-      <div className="relative h-full w-full sm:max-w-[480px]">
+      <div
+        className="relative h-full w-full overflow-hidden sm:max-w-[480px]"
+        onPointerDown={onDragStart}
+        onPointerMove={onDragMove}
+        onPointerUp={onDragEnd}
+        onPointerCancel={onDragEnd}
+        style={{
+          transform: dragY ? `translateY(${dragY}px) scale(${Math.max(0.88, 1 - dragY / 900)})` : undefined,
+          borderRadius: dragY ? 22 : undefined,
+          transition: drag.current.active ? 'none' : 'transform 260ms cubic-bezier(0.22,0.61,0.36,1), border-radius 260ms',
+        }}
+      >
+        {/* تدرّجان داكنان خلف الرأس والأسفل. بدونهما يُكتب اسم المتجر والتعليق
+            أبيضَ فوق الوسيط مباشرة، فيختفيان تماماً على ستوري فاتحة (فستان أبيض
+            أو خلفية بيضاء) — ظلّ النصّ وحده لا يكفي. */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-32 bg-gradient-to-b from-black/65 via-black/25 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-44 bg-gradient-to-t from-black/70 via-black/25 to-transparent" />
+
         {/* أشرطة التقدّم — تتبع اللغة: عربي الأول يمين والتعبئة من اليمين، إنجليزي بالعكس */}
         <div className="absolute inset-x-0 top-0 z-30 flex gap-1 px-2.5" dir={rtl ? 'rtl' : 'ltr'} style={{ paddingTop: 'calc(env(safe-area-inset-top,0px) + 8px)' }}>
           {stories.map((s, i) => (
