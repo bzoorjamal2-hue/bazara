@@ -24,22 +24,24 @@ export default function CollectionsRow({ collections, storeSlug = '' }) {
         <span aria-hidden className="text-sm text-wine/40">❖</span>
       </div>
 
-      {/* صفٌّ يُسحب بالإصبع. التمرير أفقيّ أصليّ لا محاكاةً بجافاسكربت.
-          snap-proximity لا mandatory عمداً: الإجباريّ يخطف الصفّ إلى أقرب بطاقة
-          فور رفع الإصبع، فيبدو قفزاتٍ لا انسياباً — واللطيف يترك الحركة تكمل
-          بزخمها وتستقرّ وحدها إن قاربت بطاقة. عرض البطاقة نسبةٌ من الشاشة
-          فتتناسب مع كل جهاز تلقائياً. */}
-      <div
-        className="-mx-4 flex snap-x snap-proximity gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:gap-4 sm:px-0"
-        style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorX: 'contain', scrollBehavior: 'auto' }}
-      >
+      {/* صفٌّ يُسحب بالإصبع. التمرير أفقيّ أصليّ لا محاكاةً بجافاسكربت، فيتبع
+          الإصبع تماماً ويكمل بزخمه. أُزيل snap نهائياً: حتى proximity كان يخطف
+          الصفّ إلى أقرب بطاقة عند رفع الإصبع فيُحسّ قفزةً صغيرة.
+          والبطاقة أضيق من قبل (44% لا 52%) فيظهر طرفُ التالية دائماً — وهو
+          ما يخبر العين أن الصفّ يُسحب، مع تلاشٍ عند الحافّة يؤكّد ذلك. */}
+      <div className="relative -mx-4 sm:mx-0">
+        <span className="bz-row-fade pointer-events-none absolute inset-y-0 end-0 z-10 w-8 sm:hidden" />
+        <div
+          className="flex gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-4 sm:px-0"
+          style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorX: 'contain', scrollBehavior: 'auto' }}
+        >
         {list.map((c, i) => {
           const title = (isEn ? (c.titleEn || c.title) : c.title) || '';
           return (
             <Link
               key={`${c.q}-${i}`}
               to={linkFor(c.q)}
-              className="group animate-fade-up relative aspect-square w-[52%] shrink-0 snap-start overflow-hidden rounded-[1.25rem] bg-wine/10 shadow-[0_10px_28px_-12px_rgba(94,70,54,0.5)] ring-1 ring-[#e6c878]/30 transition duration-300 active:scale-[0.98] hover:-translate-y-1 sm:w-[34%] lg:w-[23%] xl:w-[18%]"
+              className="group animate-fade-up relative aspect-square w-[44%] shrink-0 overflow-hidden rounded-[1.25rem] bg-wine/10 shadow-[0_10px_28px_-12px_rgba(94,70,54,0.5)] ring-1 ring-[#e6c878]/30 transition duration-300 active:scale-[0.98] hover:-translate-y-1 sm:w-[30%] lg:w-[21%] xl:w-[17%]"
               style={{ animationDelay: `${i * 60}ms` }}
             >
               {c.image ? (
@@ -82,6 +84,7 @@ export default function CollectionsRow({ collections, storeSlug = '' }) {
             </Link>
           );
         })}
+        </div>
       </div>
     </section>
   );
