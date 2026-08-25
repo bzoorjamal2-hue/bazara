@@ -125,7 +125,9 @@
     "captionPlaceholder": "أضيفي تعليقاً (اختياري)",
     "linkProduct": "اربطي منتجاً (اختياري)",
     "noProduct": "بدون منتج",
-    "publish": "نشر الستوري"
+    "publish": "نشر الستوري",
+    "changeMedia": "تغيير الصورة",
+    "uploading": "جارٍ الرفع…"
   },
   "common": {
     "search": "بحث",

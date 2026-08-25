@@ -119,7 +119,9 @@
     "captionPlaceholder": "Add a caption (optional)",
     "linkProduct": "Link a product (optional)",
     "noProduct": "No product",
-    "publish": "Publish story"
+    "publish": "Publish story",
+    "changeMedia": "Change media",
+    "uploading": "Uploading…"
   },
   "common": {
     "search": "Search",

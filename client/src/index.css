@@ -672,6 +672,30 @@ html.dark .theme-pub .app-navbar.shadow-md { box-shadow: 0 12px 28px -8px rgba(0
 /* شريط الإعلانات يمشي دائماً — لا نوقفه مع "تقليل الحركة" بـiOS وإلا يختفي بالجوال */
 .animate-marquee { animation: marquee 20s linear infinite; }
 
+/* شيت نشر الستوري: يُرسَم عبر Portal على <body> فيخرج عن .theme-pub ولا تصله
+   قواعد الثيم — كان الشيت أبيضَ ثابتاً وحقله يرث .input الأساسيّ الداكن،
+   فيظهر حقلٌ أسود على بطاقةٍ بيضاء. نلوّنه بصنفٍ مخصّص بالوضعين. */
+.bz-sheet { background: #ffffff; color: #5e4636; }
+.bz-sheet .bz-sheet-input {
+  width: 100%; border-radius: 0.75rem; padding: 0.7rem 1rem; transition: all .15s;
+  background: #ffffff; border: 1px solid rgba(94, 70, 54, 0.18); color: #2b2b2b;
+}
+.bz-sheet .bz-sheet-input::placeholder { color: #a89ca0; }
+.bz-sheet .bz-sheet-input:focus { outline: none; border-color: rgba(94, 70, 54, 0.5); box-shadow: 0 0 0 3px rgba(94, 70, 54, 0.14); }
+.bz-sheet .bz-sheet-muted { color: #8a7d6b; }
+/* زرّ ثانوي: تايلويند لا يطبّق شفافيةً على currentColor فلا يصحّ border-current/25 */
+.bz-sheet .bz-sheet-ghost { border: 1px solid rgba(94, 70, 54, 0.28); color: #5e4636; }
+.bz-sheet .bz-sheet-ghost:hover { background: rgba(94, 70, 54, 0.06); }
+html.dark .bz-sheet { background: #1e1510; color: #f0e6d2; }
+html.dark .bz-sheet .bz-sheet-input {
+  background: rgba(0, 0, 0, 0.32); border-color: rgba(230, 200, 120, 0.22); color: #f3ead6;
+}
+html.dark .bz-sheet .bz-sheet-input::placeholder { color: #9c8d74; }
+html.dark .bz-sheet .bz-sheet-input:focus { border-color: rgba(230, 200, 120, 0.6); box-shadow: 0 0 0 3px rgba(230, 200, 120, 0.16); }
+html.dark .bz-sheet .bz-sheet-muted { color: #b3a68f; }
+html.dark .bz-sheet .bz-sheet-ghost { border-color: rgba(230, 200, 120, 0.3); color: #e8dcc0; }
+html.dark .bz-sheet .bz-sheet-ghost:hover { background: rgba(230, 200, 120, 0.1); }
+
 /* حلقة ستوري المتجر. كان التدرّج gold→wine→gold، والخمريّ الغامق بمنتصفه
    يُوسِّخ الذهب فتبدو الحلقة إطاراً بنّياً عادياً لا ذهباً. الآن تدرّجٌ مخروطيّ
    ذهبيّ خالص بتوهّجٍ خفيف — يلفت النظر كما تفعل حلقة إنستغرام. */

@@ -104,28 +104,56 @@ export default function StoryBar({ store, stories, isOwner, onAdded, onDeleted, 
       {file && createPortal(
         <div className="fixed inset-0 z-[95] flex items-end justify-center sm:items-center" onClick={() => !busy && closeCompose()}>
           <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px]" />
-          <div className="relative w-full max-w-md rounded-t-3xl bg-white p-5 pb-[calc(env(safe-area-inset-bottom,0px)+18px)] text-wine sm:rounded-3xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bz-sheet relative w-full max-w-md rounded-t-3xl p-5 pb-[calc(env(safe-area-inset-bottom,0px)+18px)] shadow-2xl sm:rounded-3xl" onClick={(e) => e.stopPropagation()}>
+            {/* مقبض السحب — إشارةٌ بصريّة أن الشيت يُغلق بالسحب/النقر خارجه */}
+            <span className="mx-auto mb-3 block h-1 w-10 rounded-full bg-current opacity-20 sm:hidden" />
             <h3 className="mb-3 font-display text-lg font-bold">{t('story.newStory')}</h3>
-            <div className="mb-3 overflow-hidden rounded-2xl bg-black">
+
+            {/* المعاينة بنسبة الستوري نفسها (9:16) وأطول من قبل — كانت max-h-64
+                فتظهر اللقطة العمودية شريطاً صغيراً لا يُقيَّم منه شيء. */}
+            <div className="relative mb-3 overflow-hidden rounded-2xl bg-black" style={{ aspectRatio: '9 / 16', maxHeight: '46vh' }}>
               {file.type.startsWith('video')
-                ? <video src={preview} className="mx-auto max-h-64 w-auto" muted autoPlay loop playsInline />
-                : <img src={preview} alt="" className="mx-auto max-h-64 w-auto object-contain" />}
+                ? <video src={preview} className="h-full w-full object-contain" muted autoPlay loop playsInline />
+                : <img src={preview} alt="" className="h-full w-full object-contain" />}
+              {/* تغيير اللقطة بلا إلغاء الشيت وإعادة فتحه */}
+              {!busy && (
+                <button type="button" onClick={pick}
+                  className="absolute end-2 top-2 rounded-full bg-black/60 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-sm transition hover:bg-black/75">
+                  {t('story.changeMedia')}
+                </button>
+              )}
+              {/* شريط رفعٍ حقيقي فوق المعاينة — كان الرقم وحده على الزرّ */}
+              {busy && (
+                <div className="absolute inset-x-0 bottom-0 bg-black/55 p-3 backdrop-blur-sm">
+                  <div className="mb-1.5 flex items-center justify-between text-[11px] font-bold text-white">
+                    <span>{t('story.uploading')}</span><span>{progress}%</span>
+                  </div>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-white/25">
+                    <div className="h-full rounded-full bg-gradient-to-r from-[#d4af37] to-[#fff6da] transition-[width] duration-200" style={{ width: `${progress}%` }} />
+                  </div>
+                </div>
+              )}
             </div>
-            <input value={caption} onChange={(e) => setCaption(e.target.value)} maxLength={200} placeholder={t('story.captionPlaceholder')}
-              className="input mb-3 w-full" />
+
+            <div className="relative mb-3">
+              <input value={caption} onChange={(e) => setCaption(e.target.value)} maxLength={200} placeholder={t('story.captionPlaceholder')}
+                className="bz-sheet-input pe-14" />
+              <span className="bz-sheet-muted pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-[11px] tabular-nums">{caption.length}/200</span>
+            </div>
+
             {products.length > 0 && (
               <div className="mb-4">
-                <p className="mb-1.5 text-xs font-medium text-stone-500">{t('story.linkProduct')}</p>
+                <p className="bz-sheet-muted mb-1.5 text-xs font-medium">{t('story.linkProduct')}</p>
                 <Select value={prod} onChange={setProd} placeholder={t('story.noProduct')}
                   options={[{ value: '', label: t('story.noProduct') }, ...products.map((p) => ({ value: p.id, label: p.name }))]} />
               </div>
             )}
-            {err && <p className="mb-2 text-sm font-medium text-red-600">{err}</p>}
+            {err && <p className="mb-2 text-sm font-medium text-red-500">{err}</p>}
             <div className="flex gap-2">
-              <button onClick={publish} disabled={busy} className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-wine py-3 font-bold text-cream transition active:scale-[0.98] disabled:opacity-50">
+              <button onClick={publish} disabled={busy} className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#f3e2b4] via-[#e6c878] to-[#d4af37] py-3 font-extrabold text-[#2a1c14] shadow-[0_8px_22px_-8px_rgba(212,175,55,.9)] transition active:scale-[0.98] disabled:opacity-50">
                 {busy ? `${progress}%` : <span className="inline-flex items-center gap-1.5"><SparkleIcon className="h-4 w-4" /> {t('story.publish')}</span>}
               </button>
-              <button onClick={closeCompose} disabled={busy} className="rounded-2xl border border-wine/30 px-5 font-semibold text-wine disabled:opacity-50">{t('common.cancel')}</button>
+              <button onClick={closeCompose} disabled={busy} className="bz-sheet-ghost rounded-2xl px-5 font-semibold transition disabled:opacity-50">{t('common.cancel')}</button>
             </div>
           </div>
         </div>,
