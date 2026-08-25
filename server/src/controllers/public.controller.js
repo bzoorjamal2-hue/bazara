@@ -682,6 +682,7 @@ export async function addReview(req, res, next) {
 
     // إشعار المالك بتقييم جديد (بالخلفية)
     notifyStoreOwner(product.store_id, {
+      type: 'stockRequest',
       title: `⭐ تقييم جديد (${stars}/5) — ${product.name}`,
       body: `${name}${(comment || '').trim() ? `: ${(comment || '').trim().slice(0, 80)}` : ''}`,
       url: '/dashboard?tab=myProducts',

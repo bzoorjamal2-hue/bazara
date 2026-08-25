@@ -58,7 +58,9 @@ function sendToToken(deviceToken, payload) {
       aps: {
         alert: { title: payload.title || 'Bazara', body: payload.body || '' },
         sound: 'default',
-        badge: 1,
+        // العدد الحقيقي لغير المقروء، لا 1 ثابتة: كانت الأيقونة تُظهر «1»
+        // سواء انتظرها إشعارٌ واحد أو عشرون، فلا تعرف المالكة كم فاتها.
+        badge: Number.isFinite(payload.badge) ? Math.max(0, payload.badge) : 1,
       },
       url: payload.url || '/',
     });
@@ -79,6 +81,48 @@ function sendToToken(deviceToken, payload) {
     req.write(body);
     req.end();
   });
+}
+
+// تحديث رقم الشارة وحده بلا إشعارٍ مرئي (دفعة خلفية صامتة).
+// نحتاجها حين تقرأ المالكة إشعاراتها داخل التطبيق: بلا هذه تبقى الأيقونة
+// تحمل رقماً قديماً لين يصلها إشعارٌ جديد. لا نستخدم Web Push لهذا لأنّ
+// اشتراكه userVisibleOnly، والويب يضبط شارته بنفسه وهو مفتوح.
+function sendBadgeToToken(deviceToken, badge) {
+  return new Promise((resolve) => {
+    const client = http2.connect(HOST);
+    client.on('error', () => resolve(0));
+    const body = JSON.stringify({ aps: { badge: Math.max(0, badge | 0), 'content-available': 1 } });
+    const req = client.request({
+      ':method': 'POST',
+      ':path': `/3/device/${deviceToken}`,
+      authorization: `bearer ${authToken()}`,
+      'apns-topic': TOPIC,
+      'apns-push-type': 'background',
+      'apns-priority': '5', // آبل ترفض أولوية 10 للدفعات الخلفية
+      'content-type': 'application/json',
+    });
+    let status = 0;
+    req.on('response', (h) => { status = h[':status']; });
+    req.on('end', () => { client.close(); resolve(status); });
+    req.on('error', () => { client.close(); resolve(0); });
+    req.setEncoding('utf8');
+    req.on('data', () => {});
+    req.write(body);
+    req.end();
+  });
+}
+
+export async function sendBadgeToUser(userId, badge) {
+  if (!configured || !userId) return;
+  try {
+    const r = await query(
+      "SELECT token FROM native_push_tokens WHERE user_id = $1 AND platform = 'ios'",
+      [userId]
+    );
+    await Promise.all(r.rows.map((t) => sendBadgeToToken(t.token, badge)));
+  } catch (err) {
+    console.error('sendBadgeToUser:', err.message);
+  }
 }
 
 // إرسال لكل أجهزة آيفون مسجّلة لمستخدم — يحذف التوكنات المنتهية تلقائياً

@@ -1,7 +1,6 @@
 import { query } from '../config/db.js';
 import { applyOrderStatus } from './order.controller.js';
-import { sendPushToUser } from '../config/push.js';
-import { sendNativeToUser } from '../config/nativePush.js';
+import { notifyUser } from '../utils/notify.js';
 import { normalizeMobile } from '../utils/phone.js';
 import {
   isOpostConfigured,
@@ -398,12 +397,12 @@ export async function syncAllConnectedStores() {
         const { changed } = await syncStoreOrders(store);
         for (const c of changed) {
           const payload = {
+            type: 'shipping',
             title: `🚚 تحديث شحنة — ${store.name}`,
             body: `${c.customer || 'طلب'}: ${statusLabelAr(c.status)}`,
             url: '/dashboard?tab=myOrders',
           };
-          sendPushToUser(store.user_id, payload);
-          sendNativeToUser(store.user_id, payload);
+          notifyUser(store.user_id, payload);
         }
       } catch (e) {
         console.error('opost sync store', store.id, e.message);

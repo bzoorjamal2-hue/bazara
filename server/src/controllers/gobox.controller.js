@@ -1,7 +1,6 @@
 import { query } from '../config/db.js';
 import { applyOrderStatus } from './order.controller.js';
-import { sendPushToUser } from '../config/push.js';
-import { sendNativeToUser } from '../config/nativePush.js';
+import { notifyUser } from '../utils/notify.js';
 import { encrypt, decrypt } from '../config/opost.js';
 // حالات LogesTechs موحّدة مع EPS (نفس النظام) — نعيد استخدامها بلا تكرار.
 import { epsStatusLabelAr as goboxLabelAr, epsToBazaraStatus as goboxToBazara, EPS_TERMINAL as GOBOX_TERMINAL } from '../config/eps.js';
@@ -227,12 +226,12 @@ async function applyGoboxStatus(order, status, { notes = '' } = {}) {
   const bz = goboxToBazara(status);
   if (bz) await applyOrderStatus(order.store_id, order.id, bz).catch(() => {});
   const payload = {
+    type: 'shipping',
     title: `🚚 تحديث شحنة gobox — ${order.store_name}`,
     body: `${order.customer_name || 'طلب'}: ${goboxLabelAr(status)}${notes ? ` — ${notes}` : ''}`,
     url: '/dashboard?tab=myOrders',
   };
-  sendPushToUser(order.store_user_id, payload);
-  sendNativeToUser(order.store_user_id, payload);
+  notifyUser(order.store_user_id, payload);
   return true;
 }
 

@@ -1,8 +1,7 @@
 import crypto from 'crypto';
 import { query } from '../config/db.js';
 import { encrypt, decrypt } from '../config/opost.js';
-import { sendPushToUser } from '../config/push.js';
-import { sendNativeToUser } from '../config/nativePush.js';
+import { notifyUser } from '../utils/notify.js';
 import {
   isInstagramConfigured,
   verifySignature,
@@ -126,12 +125,12 @@ async function processWebhook(body) {
 
       // إشعار المتجر برسالة إنستغرام جديدة (دفع على الجوال — ويب وأصلي)
       const payload = {
+        type: 'instagram',
         title: '💬 رسالة إنستغرام جديدة',
         body: preview.slice(0, 120),
         url: '/dashboard?tab=instagram',
       };
-      sendPushToUser(store.user_id, payload);
-      sendNativeToUser(store.user_id, payload);
+      notifyUser(store.user_id, payload);
     }
   }
 }

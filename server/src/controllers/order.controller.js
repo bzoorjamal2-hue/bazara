@@ -4,8 +4,7 @@ import { isLahzaConfigured, initializeTransaction, verifyTransaction, PAY_CURREN
 import { evaluateCoupon } from './coupon.controller.js';
 import { clearAbandoned } from './abandoned.controller.js';
 import { sendMail, isMailConfigured } from '../utils/mail.js';
-import { sendPushToUser } from '../config/push.js';
-import { sendNativeToUser } from '../config/nativePush.js';
+import { notifyUser } from '../utils/notify.js';
 import { feeForCity, cityOfVillage } from '../config/deliveryCities.js';
 import { variantInStock } from './stockRequest.controller.js';
 import { normalizeMobile, isValidMobile } from '../utils/phone.js';
@@ -25,9 +24,9 @@ async function notifyOwnerNewOrder(storeId, info) {
       title: `🛍️ طلب جديد — ${row.store_name}`,
       body: `${info.name} · ₪${Number(info.total).toFixed(2)}`,
       url: '/dashboard?tab=myOrders',
+      type: 'order',
     };
-    sendPushToUser(row.user_id, pushPayload);
-    sendNativeToUser(row.user_id, pushPayload);
+    notifyUser(row.user_id, pushPayload);
 
     if (!isMailConfigured() || !row.email) return;
     const rows = (info.items || [])
@@ -381,9 +380,9 @@ async function notifySoldOut(storeId, items) {
       title: `⚠️ نفدت الكمية — ${s.name}`,
       body: `"${p.name}" خلص مخزونه بالكامل — أعد توفيره أو أوقف إعلانه`,
       url: '/dashboard?tab=products',
+      type: 'stock',
     };
-    sendPushToUser(s.user_id, payload);
-    sendNativeToUser(s.user_id, payload);
+    notifyUser(s.user_id, payload);
   }
 }
 

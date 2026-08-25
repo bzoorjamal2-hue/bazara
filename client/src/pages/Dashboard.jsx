@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import NotificationsBell from '../components/NotificationsBell.jsx';
 import { Link, useSearchParams } from 'react-router-dom';
 import api from '../api/client.js';
 import { useTranslation } from 'react-i18next';
@@ -123,6 +124,8 @@ export default function Dashboard() {
               {isAdmin ? t('admin.nav') : (store?.name || t('dashboard.title'))}
             </h1>
           </div>
+          {/* جرس الإشعارات: رقمه هو نفسه رقم شارة أيقونة التطبيق */}
+          {!isAdmin && <NotificationsBell />}
           {/* على الموبايل الزر يأخذ سطراً كاملاً لوحده — يترك عرض الشاشة لاسم المتجر */}
           {!isAdmin && store && (
             <Link

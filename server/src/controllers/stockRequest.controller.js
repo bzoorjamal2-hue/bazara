@@ -48,6 +48,7 @@ export async function createStockRequest(req, res, next) {
     const variant = [color, size].filter(Boolean).join(' - ');
     const who = name ? `${name} — ${phone}` : phone;
     notifyStoreOwner(product.store_id, {
+      type: 'stockRequest',
       title: `🔔 طلب توفّر — ${product.name}`,
       body: `${who} ينتظر توفّر${variant ? ` (${variant})` : ''}`,
       url: '/dashboard?tab=stockRequests',
@@ -252,6 +253,7 @@ export async function alertOwnerOnRestock(productId) {
     await query('UPDATE stock_requests SET restocked_at = now() WHERE id = ANY($1::uuid[])', [back.map((r) => r.id)]);
     const n = back.length;
     await notifyStoreOwner(p.store_id, {
+      type: 'stockRequest',
       title: 'رجع متوفّر 🎉',
       body: `${p.name} — ${n === 1 ? 'زبونة واحدة تنتظره' : `${n} زبونات ينتظرنه`}. بلّغيهنّ الآن.`,
       url: '/dashboard?tab=stockRequests',

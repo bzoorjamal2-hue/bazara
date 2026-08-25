@@ -1370,3 +1370,77 @@ button, [role='button'], summary {
   -webkit-user-select: none;
 }
 img, svg { -webkit-user-drag: none; }
+
+/* ===== لوحة الإشعارات =====
+   تُرسَم عبر Portal على <body> خارج .theme-pub مثل القائمة المنسدلة، فلا
+   تصلها قواعد الثيم. نلوّنها هنا صراحةً بالوضعين — بلا هذا تبقى بيضاء
+   بنصٍّ داكن ليلاً، وهي أكثر ما تفتحه المالكة بعد كل طلب. */
+/* لون نصٍّ افتراضي للّوحة كلّها: أي عنصرٍ ننساه بلا صنفٍ صريح يبقى مقروءاً
+   بدل أن يرث الرمادي الداكن فيختفي على الخلفية الليلية. */
+.bz-notif-sheet { background: #ffffff; color: #5e4636; }
+html.dark .bz-notif-sheet {
+  background: #241712;
+  color: #f4ede2;
+  box-shadow: 0 24px 60px -18px rgba(0, 0, 0, 0.8);
+}
+
+.bz-notif-head,
+.bz-notif-foot { border-color: rgba(94, 70, 54, 0.10); }
+.bz-notif-head { border-bottom-width: 1px; border-bottom-style: solid; }
+.bz-notif-foot { border-top-width: 1px; border-top-style: solid; }
+html.dark .bz-notif-head,
+html.dark .bz-notif-foot { border-color: rgba(255, 255, 255, 0.10); }
+
+.bz-notif-title { color: #5e4636; }
+html.dark .bz-notif-title { color: #f4ede2; }
+
+.bz-notif-sub { color: #78716c; }
+html.dark .bz-notif-sub { color: #d9c9a8; }
+
+.bz-notif-time { color: #a8a29e; }
+html.dark .bz-notif-time { color: rgba(217, 201, 168, 0.7); }
+
+.bz-notif-act { color: rgba(94, 70, 54, 0.75); }
+html.dark .bz-notif-act { color: #e6c878; }
+@media (hover: hover) {
+  .bz-notif-act:hover { background: rgba(94, 70, 54, 0.09); }
+  html.dark .bz-notif-act:hover { background: rgba(255, 255, 255, 0.10); }
+}
+
+.bz-notif-list > li + li { border-top: 1px solid rgba(94, 70, 54, 0.08); }
+html.dark .bz-notif-list > li + li { border-top-color: rgba(255, 255, 255, 0.08); }
+
+.bz-notif-item { transition: background-color 0.18s ease; }
+@media (hover: hover) {
+  .bz-notif-item:hover { background: rgba(94, 70, 54, 0.04); }
+  html.dark .bz-notif-item:hover { background: rgba(255, 255, 255, 0.05); }
+}
+/* غير المقروء: مسحة ذهبية خفيفة تُميّزه بالوضعين بلا أن تصرخ */
+.bz-notif-unread { background: rgba(230, 200, 120, 0.13); }
+html.dark .bz-notif-unread { background: rgba(230, 200, 120, 0.09); }
+
+.bz-notif-ico { background: rgba(94, 70, 54, 0.07); }
+html.dark .bz-notif-ico { background: rgba(255, 255, 255, 0.10); }
+
+.bz-notif-skel { background: rgba(94, 70, 54, 0.07); }
+html.dark .bz-notif-skel { background: rgba(255, 255, 255, 0.06); }
+
+.bz-notif-more { background: rgba(94, 70, 54, 0.07); color: #5e4636; }
+html.dark .bz-notif-more { background: rgba(255, 255, 255, 0.10); color: #f4ede2; }
+@media (hover: hover) {
+  .bz-notif-more:hover { background: rgba(94, 70, 54, 0.12); }
+  html.dark .bz-notif-more:hover { background: rgba(255, 255, 255, 0.15); }
+}
+
+/* زر إغلاق اللوحة: variant="wine" مصنوعٌ للنوافذ الفاتحة (نصّ خمري داكن)،
+   وعلى خلفية اللوحة الليلية #241712 يصير شبه مختفٍ. نقلبه هنا لليلي فقط. */
+html.dark .bz-notif-close {
+  background: rgba(255, 255, 255, 0.10);
+  color: #f4ede2;
+}
+@media (hover: hover) {
+  html.dark .bz-notif-close:hover {
+    background: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+  }
+}

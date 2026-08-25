@@ -1,7 +1,6 @@
 import { query } from '../config/db.js';
 import { applyOrderStatus } from './order.controller.js';
-import { sendPushToUser } from '../config/push.js';
-import { sendNativeToUser } from '../config/nativePush.js';
+import { notifyUser } from '../utils/notify.js';
 import { encrypt, decrypt } from '../config/opost.js';
 import {
   fetchEpsCities,
@@ -215,12 +214,12 @@ async function applyEpsStatus(order, status, { notes = '' } = {}) {
   const bz = epsToBazaraStatus(status);
   if (bz) await applyOrderStatus(order.store_id, order.id, bz).catch(() => {});
   const payload = {
+    type: 'shipping',
     title: `🚚 تحديث شحنة EPS — ${order.store_name}`,
     body: `${order.customer_name || 'طلب'}: ${epsStatusLabelAr(status)}${notes ? ` — ${notes}` : ''}`,
     url: '/dashboard?tab=myOrders',
   };
-  sendPushToUser(order.store_user_id, payload);
-  sendNativeToUser(order.store_user_id, payload);
+  notifyUser(order.store_user_id, payload);
   return true;
 }
 

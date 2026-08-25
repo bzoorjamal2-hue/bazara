@@ -28,6 +28,7 @@ import { AuthProvider } from './context/AuthContext.jsx';
 import { CartProvider } from './context/CartContext.jsx';
 import { WishlistProvider } from './context/WishlistContext.jsx';
 import { ThemeProvider } from './context/ThemeContext.jsx';
+import { NotificationsProvider } from './context/NotificationsContext.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 
 // تسجيل الـ Service Worker مع فحص تحديث تلقائي متكرّر — حتى يلتقط التطبيق المثبّت
@@ -87,11 +88,13 @@ i18nReady.finally(() => ReactDOM.createRoot(document.getElementById('root')).ren
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <ThemeProvider>
           <AuthProvider>
-            <WishlistProvider>
-              <CartProvider>
-                <App />
-              </CartProvider>
-            </WishlistProvider>
+            <NotificationsProvider>
+              <WishlistProvider>
+                <CartProvider>
+                  <App />
+                </CartProvider>
+              </WishlistProvider>
+            </NotificationsProvider>
           </AuthProvider>
         </ThemeProvider>
       </BrowserRouter>

@@ -733,5 +733,17 @@
   "storePage": {
     "shopNow": "Shop now",
     "defaultTagline": "Elegance · Modesty · Distinction"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAll": "Mark all read",
+    "clearAll": "Clear all",
+    "more": "Load more",
+    "emptyTitle": "No notifications yet",
+    "emptyHint": "New orders, abandoned carts and shipping updates land here.",
+    "now": "Just now",
+    "minutes": "{{n}}m ago",
+    "hours": "{{n}}h ago",
+    "days": "{{n}}d ago"
   }
 }

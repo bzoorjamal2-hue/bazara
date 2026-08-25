@@ -1,6 +1,5 @@
 import { query } from '../config/db.js';
-import { sendPushToUser } from '../config/push.js';
-import { sendNativeToUser } from '../config/nativePush.js';
+import { notifyUser } from '../utils/notify.js';
 
 // ───────── الطلبات غير المكتملة (إنقاذ السلات المتروكة) ─────────
 // الزبونة تدخل بياناتها بشاشة إتمام الطلب ولا تؤكّد؟ نحفظ مسودة يراها صاحب
@@ -106,10 +105,10 @@ export async function notifyAbandonedCheckouts() {
         title: `🛒 طلب لم يكتمل — ${a.store_name}`,
         body: `${a.name || a.phone} تركت سلة بقيمة ₪${Number(a.total || 0).toFixed(0)} — راسلها لإنقاذ الطلب`,
         url: '/dashboard?tab=myOrders',
+        type: 'abandoned',
       };
       try {
-        sendPushToUser(a.user_id, payload);
-        sendNativeToUser(a.user_id, payload);
+        notifyUser(a.user_id, payload);
         await query('UPDATE abandoned_checkouts SET notified = true WHERE id = $1', [a.id]);
       } catch { /* نحاول بالدورة القادمة */ }
     }

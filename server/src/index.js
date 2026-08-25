@@ -19,6 +19,7 @@ import financeRoutes from './routes/finance.routes.js';
 import stockRequestRoutes from './routes/stockRequest.routes.js';
 import referralRoutes from './routes/referral.routes.js';
 import pushRoutes from './routes/push.routes.js';
+import notificationRoutes from './routes/notification.routes.js';
 import storyRoutes from './routes/story.routes.js';
 import siteRoutes from './routes/site.routes.js';
 import opostRoutes from './routes/opost.routes.js';
@@ -133,6 +134,7 @@ app.use('/api/finance', financeRoutes);
 app.use('/api/stock-requests', stockRequestRoutes);
 app.use('/api/referrals', referralRoutes);
 app.use('/api/push', pushRoutes);
+app.use('/api/notifications', notificationRoutes);
 app.use('/api/stories', storyRoutes);
 app.use('/api/site', siteRoutes);
 app.use('/api/opost', opostRoutes);
@@ -522,6 +524,23 @@ END $;`,
     'ALTER TABLE users ADD COLUMN IF NOT EXISTS suspended_by UUID REFERENCES users(id) ON DELETE SET NULL;',
     // فئات المنصّة التي يعرّفها المدير: { extra: [{key,name,nameEn,image}], hidden: [] }
     "ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS platform_categories JSONB NOT NULL DEFAULT '{}'::jsonb;",
+    // سجلّ الإشعارات. كانت الإشعارات تُرسَل دفعاً ولا تُخزَّن: يقفل الهاتف أو
+    // تُمسح الإشعارة فيضيع الطلب بلا أثر، ولا سبيل لمعرفة كم إشعاراً لم يُقرأ
+    // (فشارة التطبيق كانت 1 دائماً). صار لكلّ إشعار صفّ يُقرأ ويُعدّ.
+    `CREATE TABLE IF NOT EXISTS notifications (
+  id BIGSERIAL PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  store_id UUID,
+  type VARCHAR(30) NOT NULL DEFAULT 'general',
+  title VARCHAR(200) NOT NULL DEFAULT '',
+  body VARCHAR(500) NOT NULL DEFAULT '',
+  url VARCHAR(300) NOT NULL DEFAULT '/dashboard',
+  read_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);`,
+    // الفهرس الوحيد المهم: قائمة مستخدمٍ مرتّبة زمنياً + عدّ غير المقروء
+    'CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, created_at DESC);',
+    'CREATE INDEX IF NOT EXISTS idx_notifications_unread ON notifications(user_id) WHERE read_at IS NULL;',
   ];
   // كل جملة على حدة: فشل واحدة لا يمنع البقية
   for (const sql of steps) {
