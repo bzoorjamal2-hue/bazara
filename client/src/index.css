@@ -707,6 +707,15 @@ html.dark .bz-sheet .bz-sheet-ghost:hover { background: rgba(230, 200, 120, 0.1)
 /* المُشاهَدة: خيطٌ رفيع هادئ بدل حلقةٍ سميكة باهتة */
 .bz-story-ring-seen { background: none; box-shadow: inset 0 0 0 2px rgba(94, 70, 54, 0.22); }
 html.dark .bz-story-ring-seen { box-shadow: inset 0 0 0 2px rgba(230, 200, 120, 0.28); }
+/* فجوة الحلقة تأخذ لون الخلفية: الأبيض الثابت يصير طوقاً ساطعاً ليلاً.
+   الألوان هي ألوان .app-bg نفسها (#F4EDE2 نهاراً و#131009 ليلاً). */
+.bz-story-gap { background: #F4EDE2; }
+html.dark .bz-story-gap { background: #1c1610; }
+/* تلاشي حافّة صفّ الستوريات — يُلمّح أنه يُمرَّر أفقياً */
+.bz-row-fade { background: linear-gradient(to left, #F4EDE2, transparent); }
+html.dark .bz-row-fade { background: linear-gradient(to left, #131009, transparent); }
+[dir='ltr'] .bz-row-fade { background: linear-gradient(to right, #F4EDE2, transparent); }
+html.dark [dir='ltr'] .bz-row-fade { background: linear-gradient(to right, #131009, transparent); }
 
 /* لمعة ذهبية تمسح شريط الإعلانات الغامق — تعطيه إحساس المعدن الفاخر */
 @keyframes ann-shine {

@@ -25,6 +25,7 @@ import LookbookSection from '../components/LookbookSection.jsx';
 import Reveal from '../components/Reveal.jsx';
 import useInViewOnce from '../hooks/useInViewOnce.js';
 import ScrollProgress from '../components/ScrollProgress.jsx';
+import StoriesRow from '../components/StoriesRow.jsx';
 import { BAZARA_WHATSAPP } from '../config/site.js';
 
 const BUILTIN_CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
@@ -101,6 +102,10 @@ export default function Home() {
       {(data?.announcement || data?.announcementEn) && (
         <AnnouncementBar ar={data.announcement} en={data.announcementEn} />
       )}
+
+      {/* ستوريات المتاجر — تحت الهيدر وفوق السلايدر كما بإنستغرام.
+          كان المكوّن موجوداً بلا أي استدعاء، فلم يكن يظهر إطلاقاً. */}
+      <StoriesRow />
 
       {/* Hero — سلايدر يتحكّم به المدير. نعرض هيكل تحميل ريثما نعرف البانرات (بدل وميض
           السلايدر الافتراضي القديم)، ونستخدم البانرات المحفوظة محلياً لظهورٍ فوري.

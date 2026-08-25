@@ -76,7 +76,7 @@ export default function StoryBar({ store, stories, isOwner, onAdded, onDeleted, 
       <div className="flex flex-col items-center gap-1.5">
         <button onClick={onCircle} className="relative shrink-0 active:scale-95" aria-label="story">
           <span className={`block rounded-full ${ringPad} ${goldRing ? 'bz-story-ring' : 'bz-story-ring-seen'}`}>
-            <span className="block rounded-full bg-white p-[2px]">
+            <span className="bz-story-gap block rounded-full p-[2px]">
               {store.logoUrl
                 ? <img src={cldThumb(store.logoUrl, 160)} alt={store.name} className={`${logoSize} rounded-full object-cover`} />
                 : <span className={`flex ${logoSize} items-center justify-center rounded-full bg-cream text-wine`}><StoreIcon className="h-5 w-5" /></span>}

@@ -23,26 +23,40 @@ export default function StoriesRow() {
 
   const onSeen = (id) => { markSeen(id); setSeen(getSeenSet()); };
 
+  // المتاجر غير المُشاهَدة أوّلاً — كما بإنستغرام. بلا هذا تبقى المتاجر التي
+  // شاهدتها الزبونة متصدّرةً الصف فتضيع الجديدة في آخره ولا تُرى.
+  const ordered = [...feed].sort((a, b) => {
+    const ua = a.stories.some((x) => !seen.has(x.id)) ? 0 : 1;
+    const ub = b.stories.some((x) => !seen.has(x.id)) ? 0 : 1;
+    return ua - ub;
+  });
+
   if (feed.length === 0) return null;
 
   return (
-    <div className="mt-6 -mx-4 overflow-x-auto px-4 [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0" style={{ scrollbarWidth: 'none' }}>
-      <div className="flex gap-4">
-        {feed.map((s) => {
-          const gold = s.stories.some((x) => !seen.has(x.id));
-          return (
-            <button key={s.slug} onClick={() => setActive(s)} className="flex w-[4.5rem] shrink-0 flex-col items-center gap-1.5 active:scale-95" aria-label={s.name}>
-              <span className={`block rounded-full p-[3px] ${gold ? 'bz-story-ring' : 'bz-story-ring-seen'}`}>
-                <span className="block rounded-full bg-white p-[2px]">
-                  {s.logoUrl
-                    ? <img src={cldThumb(s.logoUrl, 160)} alt={s.name} className="h-14 w-14 rounded-full object-cover" />
-                    : <span className="flex h-14 w-14 items-center justify-center rounded-full bg-cream text-wine"><StoreIcon className="h-7 w-7" /></span>}
+    <div className="relative mt-5">
+      {/* تلاشٍ عند الحافّة يُلمّح أن الصف يُمرَّر أفقياً حين تزيد المتاجر */}
+      <span className="bz-row-fade pointer-events-none absolute inset-y-0 end-0 z-10 w-10 sm:hidden" />
+      <div className="-mx-4 overflow-x-auto px-4 [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0" style={{ scrollbarWidth: 'none' }}>
+        <div className="flex gap-4">
+          {ordered.map((s) => {
+            const gold = s.stories.some((x) => !seen.has(x.id));
+            return (
+              <button key={s.slug} onClick={() => setActive(s)} className="flex w-[4.5rem] shrink-0 flex-col items-center gap-1.5 transition active:scale-95" aria-label={s.name}>
+                <span className={`block rounded-full p-[3px] ${gold ? 'bz-story-ring' : 'bz-story-ring-seen'}`}>
+                  {/* فجوة الحلقة بلون الخلفية لا بالأبيض دائماً — الأبيض يصير
+                      طوقاً ساطعاً غريباً بالوضع الليلي */}
+                  <span className="bz-story-gap block rounded-full p-[2px]">
+                    {s.logoUrl
+                      ? <img src={cldThumb(s.logoUrl, 160)} alt={s.name} className="h-14 w-14 rounded-full object-cover" />
+                      : <span className="flex h-14 w-14 items-center justify-center rounded-full bg-cream text-wine"><StoreIcon className="h-7 w-7" /></span>}
+                  </span>
                 </span>
-              </span>
-              <span className="max-w-[4.5rem] truncate text-[11px] font-medium text-wine">{s.name}</span>
-            </button>
-          );
-        })}
+                <span className={`max-w-[4.5rem] truncate text-[11px] text-wine ${gold ? 'font-bold' : 'font-medium opacity-70'}`}>{s.name}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {active && (
