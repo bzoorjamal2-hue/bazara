@@ -66,7 +66,7 @@ export default function StoryBar({ store, stories, isOwner, onAdded, onDeleted, 
   if (!compact && !isOwner && !hasStories) return null;
 
   const logoSize = compact ? 'h-8 w-8' : 'h-16 w-16';
-  const ringPad = compact ? 'p-[1.5px]' : 'p-[3px]';
+  const ringPad = compact ? 'p-[2px]' : 'p-[3.5px]';
   const plusSize = compact ? 'h-4 w-4' : 'h-6 w-6';
   const plusIcon = compact ? 'h-2.5 w-2.5' : 'h-3.5 w-3.5';
   const plusPos = compact ? 'bottom-0 end-0' : '-bottom-0.5 -end-0.5';
@@ -75,7 +75,7 @@ export default function StoryBar({ store, stories, isOwner, onAdded, onDeleted, 
     <div className={compact ? 'inline-flex' : 'mb-5 flex items-center gap-4'}>
       <div className="flex flex-col items-center gap-1.5">
         <button onClick={onCircle} className="relative shrink-0 active:scale-95" aria-label="story">
-          <span className={`block rounded-full ${ringPad} ${goldRing ? 'bg-gradient-to-tr from-gold-400 via-wine to-gold-300' : 'bg-wine/20'}`}>
+          <span className={`block rounded-full ${ringPad} ${goldRing ? 'bz-story-ring' : 'bz-story-ring-seen'}`}>
             <span className="block rounded-full bg-white p-[2px]">
               {store.logoUrl
                 ? <img src={cldThumb(store.logoUrl, 160)} alt={store.name} className={`${logoSize} rounded-full object-cover`} />
@@ -84,7 +84,7 @@ export default function StoryBar({ store, stories, isOwner, onAdded, onDeleted, 
           </span>
           {isOwner && (
             <span role="button" onClick={(e) => { e.stopPropagation(); pick(); }} aria-label="add"
-              className={`absolute ${plusPos} flex ${plusSize} items-center justify-center rounded-full border-2 border-white bg-wine text-cream shadow`}>
+              className={`absolute ${plusPos} flex ${plusSize} items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-[#e6c878] to-[#b8932c] text-[#2a1c14] shadow-md`}>
               <svg viewBox="0 0 24 24" className={plusIcon} fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
             </span>
           )}

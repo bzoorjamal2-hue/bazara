@@ -32,7 +32,7 @@ export default function StoriesRow() {
           const gold = s.stories.some((x) => !seen.has(x.id));
           return (
             <button key={s.slug} onClick={() => setActive(s)} className="flex w-[4.5rem] shrink-0 flex-col items-center gap-1.5 active:scale-95" aria-label={s.name}>
-              <span className={`block rounded-full p-[2.5px] ${gold ? 'bg-gradient-to-tr from-gold-400 via-wine to-gold-300' : 'bg-wine/20'}`}>
+              <span className={`block rounded-full p-[3px] ${gold ? 'bz-story-ring' : 'bz-story-ring-seen'}`}>
                 <span className="block rounded-full bg-white p-[2px]">
                   {s.logoUrl
                     ? <img src={cldThumb(s.logoUrl, 160)} alt={s.name} className="h-14 w-14 rounded-full object-cover" />

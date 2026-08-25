@@ -174,8 +174,11 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
         {/* أشرطة التقدّم — تتبع اللغة: عربي الأول يمين والتعبئة من اليمين، إنجليزي بالعكس */}
         <div className="absolute inset-x-0 top-0 z-30 flex gap-1 px-2.5" dir={rtl ? 'rtl' : 'ltr'} style={{ paddingTop: 'calc(env(safe-area-inset-top,0px) + 8px)' }}>
           {stories.map((s, i) => (
-            <div key={s.id} className="h-1 flex-1 overflow-hidden rounded-full bg-white/25">
-              <div className="h-full rounded-full bg-gradient-to-r from-[#e6c878] to-white" style={{ width: `${i < idx ? 100 : i === idx ? progress : 0}%` }} />
+            <div key={s.id} className="h-[3px] flex-1 overflow-hidden rounded-full bg-white/30 shadow-[0_1px_2px_rgba(0,0,0,.35)]">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-[#d4af37] via-[#f7e7b0] to-[#fff6da] shadow-[0_0_6px_rgba(230,200,120,.8)]"
+                style={{ width: `${i < idx ? 100 : i === idx ? progress : 0}%` }}
+              />
             </div>
           ))}
         </div>
@@ -224,7 +227,7 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
           )}
           {cur.productId && (
             <Link to={`/product/${cur.productId}`} onClick={onClose}
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-white py-3 text-sm font-bold text-wine shadow-lg transition active:scale-[0.98]">
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#f7e7b0] via-[#e6c878] to-[#d4af37] py-3 text-sm font-extrabold text-[#2a1c14] shadow-[0_8px_24px_-6px_rgba(212,175,55,.8)] transition active:scale-[0.98]">
               <BagIcon className="h-5 w-5" /> {t('story.shopNow')}
             </Link>
           )}
