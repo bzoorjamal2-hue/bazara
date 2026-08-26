@@ -2079,7 +2079,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   box-shadow: inset 0 0 0 1px rgba(63, 46, 34, 0.10);
 }
 .bz-sec-light .bz-card-t { color: var(--w-dark); }
-.bz-sec-light .bz-card-d { color: rgba(63, 46, 34, 0.62); }
+.bz-sec-light .bz-card-d { color: rgba(63, 46, 34, 0.78); }
 .bz-sec-light .bz-quote {
   border-color: rgba(63, 46, 34, 0.10);
   background: #fff;
@@ -2158,7 +2158,9 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   box-shadow: inset 0 0 0 1px rgba(244, 237, 226, 0.12);
 }
 .bz-card-t { margin-top: 1rem; font-size: 1.02rem; font-weight: 800; color: var(--cream); }
-.bz-card-d { margin-top: 0.45rem; font-size: 0.86rem; line-height: 1.75; color: rgba(244, 237, 226, 0.64); }
+/* متنُ بطاقات الميزات — وهو متنُ البيع الأساسيّ بالصفحة. كان 0.64 أي
+   تباين 3.99 والحدّ 4.5. */
+.bz-card-d { margin-top: 0.45rem; font-size: 0.86rem; line-height: 1.75; color: rgba(244, 237, 226, 0.78); }
 
 /* ───────── الخطوات ───────── */
 .bz-path {
@@ -3592,3 +3594,66 @@ html.dark .theme-pub .bz-card-name { color: #f6efe0; }
 html.dark .theme-pub .bz-dot { background: rgba(228, 216, 197, 0.28); }
 @media (hover: hover) { html.dark .theme-pub .bz-dot:hover { background: rgba(228, 216, 197, 0.5); } }
 html.dark .theme-pub .bz-dot-on { background: #e4d8c5; }
+
+/* ═══════════════ نظامٌ طباعيّ واحد ═══════════════
+   كان العنوان والمتن بخطٍّ واحد: الفرق بينهما الحجمُ والسماكة فحسب. والموقع
+   يحمّل Playfair وEl Messiri — وجهين للعرض — ثمّ لا يستعملهما: العربية كانت
+   تذهب إلى Cairo (سانس هندسيّ)، والأصنافُ التي بنيتُها حديثاً بلا خطٍّ أصلاً
+   فترث خطّ المتن. فصارت ثلاثةُ أصواتٍ للعناوين بصفحةٍ واحدة، ولا واحدَ منها
+   يقول شيئاً.
+   الفرقُ بين «موقعٍ نظيف» و«علامةٍ فاخرة» بالأزياء تباينٌ طباعيّ: عنوانٌ له
+   شخصية فوق متنٍ هادئ. هنا وجهان لا أكثر، وسلّمُ أحجامٍ واحد. */
+:root {
+  --bz-display: 'Playfair Display', 'El Messiri', Georgia, serif;
+  --bz-body: 'Inter', 'Tajawal', system-ui, sans-serif;
+
+  /* سلّم الأحجام: كانت قِيَمُ clamp متفرّقةً مكتوبةً عند كلّ عنوان */
+  --bz-t-hero: clamp(2.3rem, 6.4vw, 4.4rem);
+  --bz-t-h1: clamp(1.55rem, 4.4vw, 2.15rem);
+  --bz-t-h2: clamp(1.4rem, 4vw, 2.4rem);
+  --bz-t-h3: clamp(1.05rem, 2.4vw, 1.2rem);
+}
+/* العربية: El Messiri وجهُ العرض — أقربُ لروح دار الأزياء من السانس الهندسيّ.
+   وPlayfair يبقى أوّلاً للّاتينيّ لأنّ لا عربيّ فيه، فيسقط الحرفُ العربيّ
+   إليه تلقائياً. */
+html[lang='ar'] {
+  --bz-display: 'El Messiri', 'Playfair Display', Georgia, serif;
+}
+html[lang='ar'] .font-display { font-family: var(--bz-display); }
+
+/* ── ما يلبس وجهَ العرض: العناوين والأرقام الكبيرة وحدها ── */
+.bz-h1,
+.bz-h2,
+.bz-ph-t,
+.bz-state-t,
+.bz-price,
+.dash-stat,
+.bz-card-t,
+.bz-node-t,
+.bz-step-t,
+.bz-card-name,
+.bz-menu-link {
+  font-family: var(--bz-display);
+}
+
+/* السلّم مطبَّقاً — والسماكة تنزل درجةً: وجهُ العرض أثقلُ بصرياً من السانس،
+   فـ800 عليه تُغلق العدّادات وتصير الكلمةُ كتلةً. */
+.bz-h1 { font-size: var(--bz-t-hero); font-weight: 700; letter-spacing: -0.01em; }
+.bz-h2 { font-size: var(--bz-t-h2); font-weight: 700; letter-spacing: -0.005em; }
+.bz-ph-t { font-size: var(--bz-t-h1); font-weight: 700; }
+.bz-card-t, .bz-node-t, .bz-step-t { font-size: var(--bz-t-h3); font-weight: 700; }
+.bz-state-t { font-size: 1.08rem; font-weight: 700; }
+.bz-price, .dash-stat { font-weight: 700; }
+
+/* ── ما يبقى بخطّ المتن: كلّ ما يُقرأ لا يُتأمَّل ──
+   أسماءُ المنتجات نصٌّ صغيرٌ متكرّرٌ بالعشرات على الرفّ — وجهُ العرض عليه
+   يُتعب لا يُزيّن. وكانت Cairo: صوتٌ ثالثٌ لا لزوم له. */
+.bz-pname,
+.bz-sub-h,
+.bz-eyebrow,
+.bz-ph-sub,
+.bz-state-p,
+.bz-lead { font-family: var(--bz-body); }
+/* سعرُ البطاقة بوجه العرض: الرقمُ هو ما تبحث عنه العين أوّلاً على الرفّ */
+.bz-pprice { font-family: var(--bz-display); color: #5e4636; }
+html.dark .theme-pub .bz-pprice { color: #f6efe0; }
