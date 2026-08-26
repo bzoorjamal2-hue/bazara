@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { openSocial, socialWebUrl } from '../utils/social.js';
 import { GiftIcon } from './icons.jsx';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
 
@@ -8,13 +9,13 @@ import { buildWhatsappLink } from '../utils/whatsapp.js';
 export default function StoreFooter({ store, wa, onShare }) {
   const { t, i18n } = useTranslation();
   const ltr = i18n.language === 'en';
-  const ig = store.instagram ? `https://instagram.com/${store.instagram.replace(/^@/, '')}` : '';
-  const fb = store.facebook ? (/^https?:\/\//.test(store.facebook) ? store.facebook : `https://facebook.com/${store.facebook.replace(/^@/, '')}`) : '';
+  const ig = socialWebUrl('instagram', store.instagram);
+  const fb = socialWebUrl('facebook', store.facebook);
   const waLink = wa ? buildWhatsappLink(wa) : '';
   const socials = [
     waLink && { label: 'WhatsApp', href: waLink, icon: <WAGlyph /> },
-    ig && { label: 'Instagram', href: ig, icon: <IGGlyph /> },
-    fb && { label: 'Facebook', href: fb, icon: <FBGlyph /> },
+    ig && { label: 'Instagram', kind: 'instagram', raw: store.instagram, href: ig, icon: <IGGlyph /> },
+    fb && { label: 'Facebook', kind: 'facebook', raw: store.facebook, href: fb, icon: <FBGlyph /> },
   ].filter(Boolean);
 
   return (
@@ -33,6 +34,7 @@ export default function StoreFooter({ store, wa, onShare }) {
                 target="_blank"
                 rel="noreferrer"
                 aria-label={s.label}
+                onClick={(e) => s.kind && openSocial(s.kind, s.raw, e)}
                 className="flex h-11 w-11 items-center justify-center rounded-full border border-cream/25 text-cream/90 transition duration-300 hover:-translate-y-0.5 hover:border-gold-400/60 hover:bg-cream/10 hover:text-gold-200"
               >
                 {s.icon}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { openSocial, socialWebUrl } from '../utils/social.js';
 import { Link, useLocation } from 'react-router-dom';
 import api from '../api/client.js';
 import Navbar from './Navbar.jsx';
@@ -118,12 +119,8 @@ function PublicFooter({ bottomNav = false }) {
         <div className="mt-6 flex items-center justify-center gap-3">
           {[
             BAZARA_WHATSAPP && { label: 'WhatsApp', href: buildWhatsappLink(BAZARA_WHATSAPP), icon: <WhatsAppIcon className="h-5 w-5" /> },
-            ig && { label: 'Instagram', href: `https://instagram.com/${ig.replace(/^@/, '')}`, icon: <InstagramIcon className="h-5 w-5" /> },
-            fb && {
-              label: 'Facebook',
-              href: /^https?:\/\//.test(fb) ? fb : `https://facebook.com/${fb.replace(/^@/, '')}`,
-              icon: <FacebookIcon className="h-5 w-5" />,
-            },
+            ig && { label: 'Instagram', kind: 'instagram', raw: ig, href: socialWebUrl('instagram', ig), icon: <InstagramIcon className="h-5 w-5" /> },
+            fb && { label: 'Facebook', kind: 'facebook', raw: fb, href: socialWebUrl('facebook', fb), icon: <FacebookIcon className="h-5 w-5" /> },
           ]
             .filter(Boolean)
             .map((s) => (
@@ -133,6 +130,7 @@ function PublicFooter({ bottomNav = false }) {
                 target="_blank"
                 rel="noreferrer"
                 aria-label={s.label}
+                onClick={(e) => s.kind && openSocial(s.kind, s.raw, e)}
                 className="flex h-10 w-10 items-center justify-center rounded-full border border-cream/25 text-cream/90 transition hover:bg-cream/10"
               >
                 {s.icon}

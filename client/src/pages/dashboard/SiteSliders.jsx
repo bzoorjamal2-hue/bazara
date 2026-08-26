@@ -25,6 +25,8 @@ export default function SiteSliders() {
   const [lb, setLb] = useState({ image: '', title: '', titleEn: '', productIds: [] });
   const [collections, setCollections] = useState([]);
   const [platCats, setPlatCats] = useState({ extra: [], hidden: [] });
+  // حسابا المنصّة انتقلا إلى «إعدادات المنصّة» — مكانهما الطبيعيّ. نحتفظ بهما
+  // هنا قراءةً وإرسالاً فقط كي لا يمسحهما حفظُ الشرائح.
   const [instagram, setInstagram] = useState('');
   const [facebook, setFacebook] = useState('');
   const [msg, setMsg] = useState('');
@@ -241,18 +243,6 @@ export default function SiteSliders() {
           onChange={(e) => setLb({ ...lb, productIds: e.target.value.split(',').map((n) => Number(n.trim())).filter((n) => Number.isInteger(n) && n > 0) })}
           dir="ltr" placeholder={t('admin.lookbookIds')} className="input w-full"
         />
-      </div>
-
-      {/* حسابات المنصّة الرسمية — تظهر في فوتر كل صفحات المتجر العام (زي سوشيال المتاجر) */}
-      <div className="glass space-y-3 p-6">
-        <div>
-          <h2 className="font-display text-lg font-bold text-gold-200">{t('dashboard.store.contact')}</h2>
-          <p className="mt-1 text-xs text-stone-400">{t('admin.socialHint')}</p>
-        </div>
-        <div className="grid gap-2 sm:grid-cols-2">
-          <input value={instagram} onChange={(e) => setInstagram(e.target.value)} maxLength={200} dir="ltr" placeholder={t('dashboard.store.instagram')} className="input" />
-          <input value={facebook} onChange={(e) => setFacebook(e.target.value)} maxLength={200} dir="ltr" placeholder={t('dashboard.store.facebook')} className="input" />
-        </div>
       </div>
 
       <button onClick={save} disabled={busy} className="btn-primary">{busy ? t('common.loading') : t('common.save')}</button>

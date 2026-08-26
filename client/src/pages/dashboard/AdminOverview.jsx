@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
-import { UsersIcon, BagIcon, ReceiptIcon, MailIcon, BellIcon, CrownIcon, ChartIcon, ClockIcon, WarnIcon } from '../../components/icons.jsx';
+import { UsersIcon, BagIcon, ReceiptIcon, MailIcon, BellIcon, CrownIcon, ChartIcon, ClockIcon, WarnIcon, LockIcon } from '../../components/icons.jsx';
 import CountUp from '../../components/CountUp.jsx';
 import { PageHead, SectionHead, Tip } from '../../components/FormField.jsx';
 
@@ -98,9 +98,14 @@ export default function AdminOverview() {
             <Stat Icon={UsersIcon} tone="gold" label={t('admin.ov.stores')} value={<CountUp value={data.totalStores} />}
               tip={t('admin.ov.storesTip')}
               sub={data.newStoresThisMonth > 0 ? t('admin.ov.newThisMonth', { count: data.newStoresThisMonth }) : null}
-              to="/dashboard?tab=subscribers" />
-            <Stat Icon={CrownIcon} tone="emerald" label={t('admin.ov.activeSubs')} value={<CountUp value={data.activeSubs} />} tip={t('admin.ov.activeTip')} to="/dashboard?tab=subscribers" />
-            <Stat Icon={CrownIcon} tone="red" label={t('admin.ov.expiredSubs')} value={<CountUp value={data.expiredSubs} />} tip={t('admin.ov.expiredTip')} to="/dashboard?tab=subscribers" />
+              to="/dashboard?tab=subscribers&filter=all" />
+            <Stat Icon={CrownIcon} tone="emerald" label={t('admin.ov.activeSubs')} value={<CountUp value={data.activeSubs} />} tip={t('admin.ov.activeTip')} to="/dashboard?tab=subscribers&filter=active" />
+            <Stat Icon={CrownIcon} tone="red" label={t('admin.ov.expiredSubs')} value={<CountUp value={data.expiredSubs} />} tip={t('admin.ov.expiredTip')} to="/dashboard?tab=subscribers&filter=expired" />
+            {/* الموقوف إدارياً بطاقةٌ مستقلّة: كان يُطرح مع المنتهين فيُقرأ
+                كخسارةِ تجديد، وهو قرارُك أنتِ ولا يرفعه تجديد. */}
+            {data.suspendedStores > 0 && (
+              <Stat Icon={LockIcon} tone="red" label={t('admin.ov.suspended')} value={<CountUp value={data.suspendedStores} />} tip={t('admin.ov.suspendedTip')} to="/dashboard?tab=subscribers&filter=suspended" />
+            )}
             <Stat Icon={BagIcon} tone="wine" label={t('admin.ov.products')} value={<CountUp value={data.totalProducts} />} tip={t('admin.ov.productsTip')} />
             <Stat Icon={ReceiptIcon} tone="wine" label={t('admin.ov.orders')} value={<CountUp value={data.totalOrders} />}
               tip={t('admin.ov.ordersTip')}

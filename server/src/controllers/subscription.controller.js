@@ -5,6 +5,37 @@ import { clearPublicCache } from '../middleware/cache.js';
 import { logAdmin } from '../utils/adminLog.js';
 
 const PLANS = { monthly: true, yearly: true };
+
+// ─────────────── حالة الحساب: مصدر حقيقةٍ واحد ───────────────
+//
+// كانت كلّ عمليةٍ تُرجع ما غيّرته هي فقط، فتُكمِل الواجهة الباقي بالتخمين:
+// «فعّلتُ الاشتراك ⇐ صار فعّالاً». لكنّ الإيقاف الإداريّ يعلو على الاشتراك،
+// فيظهر الصفّ «موقوف» و«فعّال» معاً بينما متجرها ما زال مخفياً عن الزوّار،
+// ويكفي تحديث الصفحة ليعود الحال. صارت كلّ عملية تُعيد قراءة الحساب وترجع
+// حالته كاملة، فتطبّقها الواجهة كما هي ولا تخمّن شيئاً.
+export async function accountState(email) {
+  const r = await query(
+    `SELECT email, subscription_status, subscription_plan, subscription_started_at,
+            current_period_end, suspended_at, suspended_reason, created_at
+       FROM users WHERE lower(email) = lower($1)`,
+    [email]
+  );
+  const u = r.rows[0];
+  if (!u) return null;
+  const admin = isAdminEmail(u.email);
+  return {
+    email: u.email,
+    status: u.subscription_status,
+    plan: u.subscription_plan,
+    startedAt: u.subscription_started_at || (admin ? u.created_at : null),
+    currentPeriodEnd: u.current_period_end,
+    suspended: Boolean(u.suspended_at),
+    suspendedReason: u.suspended_reason || '',
+    active: isUserActive(u),
+    isAdmin: admin,
+    lifetime: admin,
+  };
+}
 const planLabel = (p) => (p === 'yearly' ? 'سنوية' : 'شهرية');
 
 // تعليمات الدفع: من قاعدة البيانات (يحرّرها المدير)، وإلا من المتغيّر، وإلا نص افتراضي.
@@ -36,6 +67,7 @@ export async function updateSettings(req, res, next) {
        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
       [paymentInfo || '']
     );
+    await logAdmin(req, 'settings.payment', { type: 'settings', id: 'payment_info', label: 'تعليمات الدفع', details: { length: String(paymentInfo || '').length } });
     res.json({ message: 'تم حفظ تعليمات الدفع.', paymentInfo: paymentInfo || '' });
   } catch (err) {
     next(err);
@@ -123,8 +155,10 @@ export async function redeemCode(req, res, next) {
     const end = planPeriodEnd(c.plan, from);
 
     await query(
-      "UPDATE users SET subscription_status='active', subscription_plan=$1, current_period_end=$2, subscription_started_at=$3 WHERE id=$4",
-      [c.plan, end, from, req.user.id]
+      `UPDATE users SET subscription_status='active', subscription_plan=$1, current_period_end=$2,
+              subscription_started_at = COALESCE(subscription_started_at, now())
+         WHERE id=$3`,
+      [c.plan, end, req.user.id]
     );
     await query('UPDATE activation_codes SET used=true, used_by=$1, used_at=now() WHERE id=$2', [req.user.id, c.id]);
 
@@ -154,6 +188,7 @@ export async function generateCodes(req, res, next) {
       await query('INSERT INTO activation_codes (code, plan) VALUES ($1, $2)', [code, plan]);
       created.push(code);
     }
+    await logAdmin(req, 'codes.generate', { type: 'codes', id: plan, label: `${created.length} كود ${planLabel(plan)}`, details: { count: created.length, plan } });
     res.json({ codes: created, plan });
   } catch (err) {
     next(err);
@@ -195,6 +230,7 @@ export async function sendCodeToSubscriber(req, res, next) {
         console.error('sendCode mail failed:', e.message);
       }
     }
+    await logAdmin(req, 'codes.send', { type: 'user', id: email, label: email, details: { plan, mailed } });
     res.json({ message: mailed ? 'تم إرسال الكود إلى بريد المشترك.' : 'تم توليد الكود (تعذّر الإرسال بالبريد، أرسله يدوياً).', code, mailed });
   } catch (err) {
     next(err);
@@ -222,13 +258,20 @@ export async function getAdminStats(_req, res, next) {
              AND u.current_period_end IS NOT NULL
              AND u.current_period_end <= now() + interval '7 days'
          )::int AS expiring_soon,
+         -- الموقوف إدارياً ليس «منتهي الاشتراك»: كان يسقط في طرح (الإجمالي −
+         -- الفعّالة) فيُقرأ كخسارةِ تجديد، والتجديد لا يفتح متجره أصلاً.
+         COUNT(*) FILTER (WHERE u.suspended_at IS NOT NULL)::int AS suspended_stores,
          -- متجر بلا منتج واحد: اشترك ولم يُطلق. مؤشّر تعثّرٍ مبكّر لا يظهر
          -- في «إجمالي المتاجر» إطلاقاً.
          COUNT(*) FILTER (WHERE NOT EXISTS (SELECT 1 FROM products p WHERE p.store_id = s.id))::int AS empty_stores
        FROM stores s JOIN users u ON u.id = s.user_id
        WHERE TRUE ${notAdmin}`
     );
-    const productsQ = await query('SELECT COUNT(*)::int AS c FROM products');
+    // متاجر الإدارة مستثناة من كلّ رقمٍ هنا، لا من عدّ المتاجر وحده: كان
+    // متجر الاختبار يدخل بالمنتجات والطلبات والمبيعات ويغيب عن عدّ المتاجر،
+    // فلا يجمع أيّ رقمين على المنصّة نفسها.
+    const NON_ADMIN_STORES = `SELECT s.id FROM stores s JOIN users u ON u.id = s.user_id WHERE TRUE ${notAdmin}`;
+    const productsQ = await query(`SELECT COUNT(*)::int AS c FROM products WHERE store_id IN (${NON_ADMIN_STORES})`);
     const PAID = "status IN ('confirmed','shipped','delivered')";
     const ordersQ = await query(
       `SELECT COUNT(*)::int AS total_orders,
@@ -241,7 +284,7 @@ export async function getAdminStats(_req, res, next) {
                   AND created_at >= date_trunc('month', now()) - interval '1 month'
                   AND created_at <  date_trunc('month', now())
               ), 0) AS gmv_last_month
-       FROM orders`
+       FROM orders WHERE store_id IN (${NON_ADMIN_STORES})`
     );
     const newsQ = await query('SELECT COUNT(*)::int AS c FROM subscribers');
     const reqQ = await query("SELECT COUNT(*)::int AS c FROM subscription_requests WHERE status = 'pending'");
@@ -256,7 +299,9 @@ export async function getAdminStats(_req, res, next) {
     res.json({
       totalStores: s.total_stores,
       activeSubs: s.active_subs,
-      expiredSubs: Math.max(0, s.total_stores - s.active_subs),
+      // منتهية = ليست فعّالة وليست موقوفة. الموقوفة تُعرض على حدة.
+      expiredSubs: Math.max(0, s.total_stores - s.active_subs - s.suspended_stores),
+      suspendedStores: s.suspended_stores,
       newStoresThisMonth: s.new_this_month,
       expiringSoon: s.expiring_soon,
       emptyStores: s.empty_stores,
@@ -309,6 +354,7 @@ export async function broadcastMessage(req, res, next) {
       emails = r.rows.map((x) => x.email);
     }
     emails = [...new Set(emails.filter(Boolean))];
+    await logAdmin(req, 'broadcast.send', { type: 'broadcast', id: String(emails.length), label: subject, details: { recipients: emails.length } });
     res.json({ queued: emails.length });
 
     const html = broadcastHtml(subject, body);
@@ -438,8 +484,25 @@ export async function getStoreDetail(req, res, next) {
     const PAID = "o.status IN ('confirmed','shipped','delivered')";
     const [prod, ord, recent, top] = await Promise.all([
       query(
+        // «نفد مخزونه» كان stock = 0 وحده، وnull لا يساوي صفراً بـSQL: نصف
+        // المنتجات تقريباً مخزونها لكلّ لون/نمرة وstock عندها فارغ، فكانت
+        // تخرج من العدّ كلّياً ويبقى الرقم صفراً بينما الزبونة ترى «نفد
+        // المخزون» ويصل المالكة إشعار «نفدت الكمية». نجمع التفصيليّ هنا
+        // بنفس منطق البطاقة والإشعار حرفياً.
         `SELECT COUNT(*)::int AS total,
-                COUNT(*) FILTER (WHERE stock = 0)::int AS out_of_stock,
+                COUNT(*) FILTER (
+                  WHERE CASE
+                    WHEN stock IS NOT NULL THEN stock <= 0
+                    WHEN color_stock IS NOT NULL AND color_stock <> '{}'::jsonb THEN (
+                      SELECT COALESCE(SUM(q.v), 0) FROM jsonb_each(color_stock) c,
+                             LATERAL (SELECT SUM((e.value)::int) AS v FROM jsonb_each_text(c.value) e) q
+                    ) <= 0
+                    WHEN size_stock IS NOT NULL AND size_stock <> '{}'::jsonb THEN (
+                      SELECT COALESCE(SUM((e.value)::int), 0) FROM jsonb_each_text(size_stock) e
+                    ) <= 0
+                    ELSE FALSE  -- بلا مخزونٍ محدَّد = متوفّر دائماً
+                  END
+                )::int AS out_of_stock,
                 COUNT(*) FILTER (WHERE old_price IS NOT NULL AND old_price > price)::int AS on_sale
          FROM products WHERE store_id = $1`,
         [st.id]
@@ -593,13 +656,13 @@ export async function suspendSubscriber(req, res, next) {
 
     const r = await query(
       `UPDATE users SET suspended_at = now(), suspended_reason = $2, suspended_by = $3
-       WHERE email = $1 RETURNING email`,
+       WHERE lower(email) = lower($1) RETURNING email`,
       [email, reason, req.user?.id || null]
     );
     if (!r.rows[0]) return res.status(404).json({ error: 'لا يوجد حساب بهذا البريد.' });
 
     await logAdmin(req, 'account.suspend', { type: 'user', id: email, label: email, details: { reason } });
-    res.json({ ok: true, email, suspended: true, suspendedReason: reason });
+    res.json({ ok: true, state: await accountState(email) });
   } catch (err) {
     next(err);
   }
@@ -612,13 +675,14 @@ export async function unsuspendSubscriber(req, res, next) {
     if (!email) return res.status(400).json({ error: 'البريد مطلوب.' });
     const r = await query(
       `UPDATE users SET suspended_at = NULL, suspended_reason = '', suspended_by = NULL
-       WHERE email = $1 RETURNING email`,
+       WHERE lower(email) = lower($1) RETURNING email`,
       [email]
     );
     if (!r.rows[0]) return res.status(404).json({ error: 'لا يوجد حساب بهذا البريد.' });
 
     await logAdmin(req, 'account.unsuspend', { type: 'user', id: email, label: email });
-    res.json({ ok: true, email, suspended: false });
+    // رفع الإيقاف قد يعيد الحساب فعّالاً أو لا (قد يكون اشتراكه منتهياً أصلاً)
+    res.json({ ok: true, state: await accountState(email) });
   } catch (err) {
     next(err);
   }
@@ -714,11 +778,17 @@ export async function setSubscription(req, res, next) {
     const end = new Date(planPeriodEnd(plan, from).getTime() + remainingMs);
 
     await query(
-      "UPDATE users SET subscription_status='active', subscription_plan=$1, subscription_started_at=$2, current_period_end=$3 WHERE id=$4",
-      [plan, from, end, cur.rows[0].id]
+      // تاريخ البدء = أوّل تفعيلٍ للحساب، لا آخر تعديل: كان يُصفَّر مع كلّ
+      // تغيير خطّة فيبدو المشترك القديم كأنّه اشترك اليوم.
+      `UPDATE users SET subscription_status='active', subscription_plan=$1, current_period_end=$2,
+              subscription_started_at = COALESCE(subscription_started_at, $3)
+         WHERE id=$4`,
+      [plan, end, from, cur.rows[0].id]
     );
     await logAdmin(req, 'subscription.set', { type: 'user', id: email, label: email, details: { plan, currentPeriodEnd: end } });
-    res.json({ message: 'تم تحديث الاشتراك.', plan, startedAt: from, currentPeriodEnd: end });
+    // الحالة الحقيقية بعد التغيير: الحساب الموقوف يبقى موقوفاً ومتجره مخفيّاً
+    // مهما فُعّل اشتراكه — نقولها بدل أن تفترض الواجهة أنّه صار فعّالاً.
+    res.json({ message: 'تم تحديث الاشتراك.', state: await accountState(email) });
   } catch (err) {
     next(err);
   }
@@ -750,7 +820,7 @@ export async function addSubscriptionDays(req, res, next) {
       [end, cur.rows[0].id]
     );
     await logAdmin(req, 'subscription.addDays', { type: 'user', id: email, label: email, details: { days, currentPeriodEnd: end } });
-    res.json({ message: 'تمت إضافة الأيام.', currentPeriodEnd: end, addedDays: days });
+    res.json({ message: 'تمت إضافة الأيام.', addedDays: days, state: await accountState(email) });
   } catch (err) {
     next(err);
   }
@@ -835,7 +905,10 @@ export async function approveRequest(req, res, next) {
     const end = planPeriodEnd(sr.plan, from);
 
     await query(
-      "UPDATE users SET subscription_status='active', subscription_plan=$1, current_period_end=$2 WHERE id=$3",
+      // COALESCE: أول تفعيلٍ يكتب تاريخ البدء، والتجديد يُبقي الأصليّ.
+      `UPDATE users SET subscription_status='active', subscription_plan=$1, current_period_end=$2,
+              subscription_started_at = COALESCE(subscription_started_at, now())
+         WHERE id=$3`,
       [sr.plan, end, sr.user_id]
     );
     await query("UPDATE subscription_requests SET status='approved', reviewed_at=now() WHERE id=$1", [id]);

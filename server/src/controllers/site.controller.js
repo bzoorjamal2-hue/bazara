@@ -1,6 +1,7 @@
 import { query } from '../config/db.js';
 import { sanitizeBanners } from './store.controller.js';
 import { clearPublicCache } from '../middleware/cache.js';
+import { logAdmin } from '../utils/adminLog.js';
 
 // إعدادات الموقع العامة (صف واحد id=1) — يتحكّم بها المدير العام.
 async function readSettings() {
@@ -118,6 +119,20 @@ export async function updateSiteBanners(req, res, next) {
       [JSON.stringify(banners), announcement, announcementEn, JSON.stringify(collections), JSON.stringify(lookbook), instagram, facebook, JSON.stringify(platformCategories)]
     );
     clearPublicCache(); // إبطال كاش الذاكرة فوراً (/home و/site-info) فتظهر التعديلات حالاً
+    // هذه أوسع صلاحيةٍ أثراً: تغيّر واجهة المنصّة لكلّ زائر وكلّ متجر. نسجّل
+    // ما تغيّر بالضبط لا مجرّد «حُفظت الإعدادات».
+    await logAdmin(req, 'site.settings', {
+      type: 'settings',
+      id: 'site',
+      label: 'إعدادات الموقع العامّة',
+      details: {
+        banners: banners.length,
+        collections: collections.length,
+        platformCats: (platformCategories?.extra || []).length,
+        hiddenCats: (platformCategories?.hidden || []).length,
+        announcement: Boolean(announcement),
+      },
+    });
     res.json({ banners, announcement, announcementEn, collections, lookbook, instagram, facebook, platformCategories });
   } catch (err) {
     next(err);

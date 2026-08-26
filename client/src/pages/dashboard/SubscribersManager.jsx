@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
@@ -49,8 +50,8 @@ function SubRow({ s, onDeleted, onUpdated, onOpen }) {
     if (!why) return;
     setToolBusy(true); setErr('');
     try {
-      await api.post('/subscription/suspend', { email: s.email, reason: why });
-      onUpdated?.(s.email, { suspended: true, suspendedReason: why, active: false });
+      const r = await api.post('/subscription/suspend', { email: s.email, reason: why });
+      onUpdated?.(s.email, r.data.state);
       setPanel(''); setReason('');
       setMsg(t('admin.suspendDone'));
       setTimeout(() => setMsg(''), 3000);
@@ -60,8 +61,8 @@ function SubRow({ s, onDeleted, onUpdated, onOpen }) {
   const doUnsuspend = async () => {
     setToolBusy(true); setErr('');
     try {
-      await api.post('/subscription/unsuspend', { email: s.email });
-      onUpdated?.(s.email, { suspended: false, suspendedReason: '' });
+      const r = await api.post('/subscription/unsuspend', { email: s.email });
+      onUpdated?.(s.email, r.data.state);
       setMsg(t('admin.unsuspendDone'));
       setTimeout(() => setMsg(''), 3000);
     } catch (e) { setErr(getErrorMessage(e, t('errors.generic'))); } finally { setToolBusy(false); }
@@ -110,19 +111,16 @@ function SubRow({ s, onDeleted, onUpdated, onOpen }) {
     }
   };
 
-  // حفظ التعديلات: يضبط الخطة ويعيد ضبط تاريخ البدء = الآن والانتهاء = الآن + المدة
+  // حفظ التعديلات: يضبط الخطة، والانتهاء = الآن + مدّة الخطة + ما تبقّى من
+  // الفترة الحالية (فلا يخسر المشترك أيامه). تاريخ البدء يبقى أوّل تفعيل.
+  // نطبّق ما يرجعه الخادم حرفياً — الحساب الموقوف يبقى موقوفاً ومتجره مخفيّاً
+  // مهما فُعّل اشتراكه، وكانت الواجهة تفترض «فعّال» فيتناقض الصفّ مع نفسه.
   const save = async () => {
     setMsg(''); setErr(''); setSaveBusy(true);
     try {
       const r = await api.post('/subscription/set-subscription', { email: s.email, plan });
-      onUpdated?.(s.email, {
-        plan,
-        status: 'active',
-        active: true,
-        startedAt: r.data.startedAt,
-        currentPeriodEnd: r.data.currentPeriodEnd,
-      });
-      setMsg(t('admin.subSaved'));
+      onUpdated?.(s.email, r.data.state);
+      setMsg(r.data.state?.suspended ? t('admin.savedStillSuspended') : t('admin.subSaved'));
       setTimeout(() => setMsg(''), 3000);
     } catch (e) {
       setErr(getErrorMessage(e, t('errors.generic')));
@@ -139,7 +137,7 @@ function SubRow({ s, onDeleted, onUpdated, onOpen }) {
     setDaysBusy(true);
     try {
       const r = await api.post('/subscription/add-days', { email: s.email, days: n });
-      onUpdated?.(s.email, { status: 'active', active: true, currentPeriodEnd: r.data.currentPeriodEnd });
+      onUpdated?.(s.email, r.data.state);
       setDays('');
       setMsg(t('admin.daysAdded', { count: n }));
       setTimeout(() => setMsg(''), 3000);
@@ -383,7 +381,13 @@ export default function SubscribersManager() {
   const [subs, setSubs] = useState(null);
   const [error, setError] = useState('');
   const [q, setQ] = useState('');
-  const [filter, setFilter] = useState('all'); // all | active | expired | requested
+  // المرشّح يأتي من الرابط أولاً: بطاقات «نظرة عامة» تفتح هذا القسم على
+  // الشريحة التي ضُغطت بالضبط — كان الضغط على «منتهية» يفتح القائمة كاملةً
+  // فتبحث المديرة بنفسها عمّا رأته للتوّ.
+  const [params] = useSearchParams();
+  const FILTERS = ['all', 'active', 'expired', 'suspended', 'requested'];
+  const urlFilter = params.get('filter');
+  const [filter, setFilter] = useState(FILTERS.includes(urlFilter) ? urlFilter : 'all');
   const [sort, setSort] = useState('newest');  // newest | gmv | orders | expiry
   const [openSlug, setOpenSlug] = useState('');
 
@@ -397,9 +401,10 @@ export default function SubscribersManager() {
   const query = q.trim().toLowerCase();
   const shown = [...(subs || [])].filter((s) => {
     if (query && !`${s.name} ${s.email} ${s.storeName || ''}`.toLowerCase().includes(query)) return false;
-    if (filter === 'active') return s.active;
-    if (filter === 'expired') return !s.active && !s.isAdmin;
-    if (filter === 'requested') return s.requestedStatus === 'pending';
+    if (filter === 'active') return s.active && !s.isAdmin;
+    if (filter === 'expired') return !s.active && !s.suspended && !s.isAdmin;
+    if (filter === 'suspended') return s.suspended;
+    if (filter === 'requested') return s.requestedStatus === 'pending' && !s.isAdmin;
     return true;
   });
 
@@ -417,16 +422,23 @@ export default function SubscribersManager() {
   };
   shown.sort(sorters[sort] || sorters.newest);
 
+  // العدّ يستثني حسابات الإدارة في كلّ خانة — كانت «الكل» و«فعّالة» تشملها
+  // و«منتهية» تستثنيها، وبطاقة «إجمالي المتاجر» بالنظرة العامة تستثنيها كذلك:
+  // فتضغط المديرة على رقمٍ وتصل إلى قائمةٍ تقول رقماً آخر. والموقوف صنفٌ
+  // قائم بذاته: التجديد لا يفتح متجره فلا معنى لعدّه مع المنتهين.
+  const real = (subs || []).filter((x) => !x.isAdmin);
   const counts = {
-    all: subs?.length || 0,
-    active: (subs || []).filter((s) => s.active).length,
-    expired: (subs || []).filter((s) => !s.active && !s.isAdmin).length,
-    requested: (subs || []).filter((s) => s.requestedStatus === 'pending').length,
+    all: real.length,
+    active: real.filter((x) => x.active).length,
+    expired: real.filter((x) => !x.active && !x.suspended).length,
+    suspended: real.filter((x) => x.suspended).length,
+    requested: real.filter((x) => x.requestedStatus === 'pending').length,
   };
   const chips = [
     { key: 'all', label: t('admin.filterAll') },
     { key: 'active', label: t('admin.statusActive') },
     { key: 'expired', label: t('admin.statusLocked') },
+    { key: 'suspended', label: t('admin.filterSuspended') },
     { key: 'requested', label: t('admin.requested') },
   ];
 

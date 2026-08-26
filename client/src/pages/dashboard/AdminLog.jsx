@@ -5,7 +5,7 @@ import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
 import { PageHead, Tip } from '../../components/FormField.jsx';
-import { ShieldIcon, EyeOffIcon, EyeIcon, CrownIcon, TrashIcon, StarIcon, CheckIcon, XIcon, PlusIcon, LockIcon, LockOpenIcon, EditIcon } from '../../components/icons.jsx';
+import { ShieldIcon, EyeOffIcon, EyeIcon, CrownIcon, TrashIcon, StarIcon, CheckIcon, XIcon, PlusIcon, LockIcon, LockOpenIcon, EditIcon, TicketIcon, MailIcon, MegaphoneIcon, CardIcon, ImageIcon } from '../../components/icons.jsx';
 
 // لون كل فعل بحسب أثره: الأحمر لما يحجب أو يحذف، الأخضر لما يمنح، والرمادي
 // لما يعدّل. ألوان صريحة مصمتة كي تُقرأ في الوضعين.
@@ -24,6 +24,13 @@ const ACTIONS = {
   'account.suspend': { tone: '#b91c1c', Icon: LockIcon },
   'account.unsuspend': { tone: '#047857', Icon: LockOpenIcon },
   'account.fix': { tone: '#57534e', Icon: EditIcon },
+  // خمسة أفعالٍ كانت تُنفَّذ بلا أثر: الكود اشتراكٌ مجاني، والرسالة الجماعية
+  // بريدٌ لكلّ المتاجر، وإعدادات الموقع تغيّر واجهة المنصّة لكلّ زائر.
+  'codes.generate': { tone: '#92400e', Icon: TicketIcon },
+  'codes.send': { tone: '#92400e', Icon: MailIcon },
+  'broadcast.send': { tone: '#57534e', Icon: MegaphoneIcon },
+  'settings.payment': { tone: '#57534e', Icon: CardIcon },
+  'site.settings': { tone: '#57534e', Icon: ImageIcon },
 };
 
 // قيمة الحقل كما تُقرأ: التاريخ بصيغة محلّية لا ISO، والبقيّة نصّاً مقصوصاً.

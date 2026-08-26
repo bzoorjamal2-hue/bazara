@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import { PageHead, SectionHead, Field, Tip } from '../../components/FormField.jsx';
-import { GearIcon, CardIcon, LockOpenIcon, MailIcon, CheckIcon, WarnIcon } from '../../components/icons.jsx';
+import { GearIcon, CardIcon, LockOpenIcon, MailIcon, CheckIcon, WarnIcon, InstagramIcon, FacebookIcon } from '../../components/icons.jsx';
+import { socialWebUrl } from '../../utils/social.js';
 
 // كلمة سرّ مؤقّتة قويّة — للمسار اليدويّ وحده، وبأحرف لا تلتبس (بلا l/1/O/0)
 function genPassword() {
@@ -22,6 +23,13 @@ function genPassword() {
 export default function AdminSettings() {
   const { t } = useTranslation();
 
+  // حسابا المنصّة الرسميّان. كانا مدفونين تحت «سلايدر الموقع» بلا صلةٍ به:
+  // هما هويّة بازارا نفسها، لا شريحةً من شرائح الصفحة الرئيسية.
+  const [ig, setIg] = useState('');
+  const [fb, setFb] = useState('');
+  const [socialMsg, setSocialMsg] = useState('');
+  const [socialBusy, setSocialBusy] = useState(false);
+
   const [payInfo, setPayInfo] = useState('');
   const [payMsg, setPayMsg] = useState('');
   const [payBusy, setPayBusy] = useState(false);
@@ -35,7 +43,24 @@ export default function AdminSettings() {
 
   useEffect(() => {
     api.get('/subscription/settings').then((r) => setPayInfo(r.data.paymentInfo || '')).catch(() => {});
+    api.get('/site/banners').then((r) => { setIg(r.data.instagram || ''); setFb(r.data.facebook || ''); }).catch(() => {});
   }, []);
+
+  // نرسل الحقلين وحدهما: الخادم يُبقي كلّ ما لم يُرسَل كما هو، فلا يمسح
+  // حفظُ الحسابات شرائحَ الصفحة الرئيسية ولا مجموعاتها.
+  const saveSocial = async (e) => {
+    e.preventDefault();
+    setSocialBusy(true); setSocialMsg(''); setErr('');
+    try {
+      await api.put('/site/banners', { instagram: ig.trim(), facebook: fb.trim() });
+      setSocialMsg(t('admin.socialSaved'));
+      setTimeout(() => setSocialMsg(''), 3000);
+    } catch (e2) {
+      setErr(getErrorMessage(e2, t('errors.generic')));
+    } finally {
+      setSocialBusy(false);
+    }
+  };
 
   const savePayment = async (e) => {
     e.preventDefault();
@@ -90,6 +115,33 @@ export default function AdminSettings() {
         </div>
       )}
       {err && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">{err}</div>}
+
+      {/* حسابا بازارا الرسميّان — يظهران بفوتر كل صفحة بالموقع */}
+      <form onSubmit={saveSocial} className={CARD}>
+        <SectionHead icon={<InstagramIcon className="h-5 w-5" />} title={t('admin.socialTitle')} desc={t('admin.socialHint')} />
+        {socialMsg && (
+          <p className="flex items-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-400">
+            <CheckIcon className="h-3.5 w-3.5 shrink-0" /> {socialMsg}
+          </p>
+        )}
+        <Field label={t('dashboard.store.instagram')} tip={t('admin.socialTip')}>
+          <input value={ig} onChange={(e) => setIg(e.target.value)} maxLength={200} dir="ltr" className="input" placeholder="bazara.ps" />
+        </Field>
+        <Field label={t('dashboard.store.facebook')} tip={t('admin.socialTip')}>
+          <input value={fb} onChange={(e) => setFb(e.target.value)} maxLength={200} dir="ltr" className="input" placeholder="bazara.ps" />
+        </Field>
+        {/* معاينة الرابط النهائي: الاسم وحده أو رابط كامل ينتهيان لنفس الشكل */}
+        {(ig.trim() || fb.trim()) && (
+          <div className="space-y-1 rounded-xl border border-gold-400/15 bg-black/20 px-3 py-2">
+            {ig.trim() && <p dir="ltr" className="truncate text-[11px] text-stone-400"><InstagramIcon className="me-1 inline h-3 w-3" />{socialWebUrl('instagram', ig)}</p>}
+            {fb.trim() && <p dir="ltr" className="truncate text-[11px] text-stone-400"><FacebookIcon className="me-1 inline h-3 w-3" />{socialWebUrl('facebook', fb)}</p>}
+          </div>
+        )}
+        <p className="text-[11px] leading-relaxed text-stone-400">{t('admin.socialAppNote')}</p>
+        <button type="submit" disabled={socialBusy} className="btn-primary w-full">
+          {socialBusy ? t('common.loading') : t('admin.saveSocial')}
+        </button>
+      </form>
 
       {/* تعليمات الدفع — تظهر لصاحبات المتاجر عند طلب الاشتراك */}
       <form onSubmit={savePayment} className={CARD}>
