@@ -150,7 +150,7 @@ export default function StoryBar({ store, stories, isOwner, onAdded, onDeleted, 
             )}
             {err && <p className="mb-2 text-sm font-medium text-red-500">{err}</p>}
             <div className="flex gap-2">
-              <button onClick={publish} disabled={busy} className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#eee6d8] via-[#cdbda4] to-[#b09a7e] py-3 font-extrabold text-[#2a1c14] shadow-[0_8px_22px_-8px_rgba(176, 154, 126, .9)] transition active:scale-[0.98] disabled:opacity-50">
+              <button onClick={publish} disabled={busy} className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#eee6d8] via-[#cdbda4] to-[#b09a7e] py-3 font-extrabold text-[#2a1c14] shadow-[0_8px_22px_-8px_rgba(176,_154,_126,_.9)] transition active:scale-[0.98] disabled:opacity-50">
                 {busy ? `${progress}%` : <span className="inline-flex items-center gap-1.5"><SparkleIcon className="h-4 w-4" /> {t('story.publish')}</span>}
               </button>
               <button onClick={closeCompose} disabled={busy} className="bz-sheet-ghost rounded-2xl px-5 font-semibold transition disabled:opacity-50">{t('common.cancel')}</button>

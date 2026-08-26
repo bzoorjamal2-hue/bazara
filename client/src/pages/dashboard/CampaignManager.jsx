@@ -182,8 +182,8 @@ export default function CampaignManager() {
         {/* معاينة حيّة: هيك بيوصل الإشعار لجوال المتابِعة قبل ما تبعثيه */}
         <div>
           <p className="mb-1.5 text-xs font-medium text-stone-400">{t('campaign.previewLabel')}</p>
-          <div className="flex items-start gap-3 rounded-2xl border border-gold-400/20 bg-gradient-to-br from-gold-400/10 to-transparent p-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl border border-gold-400/25 bg-black/25">
+          <div className="dash-preview flex items-start gap-3 rounded-2xl p-3">
+            <span className="dash-avatar grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl">
               {store?.logoUrl
                 ? <img src={cldThumb(store.logoUrl, 120)} alt="" className="h-full w-full object-cover" />
                 : <StoreIcon className="h-5 w-5 text-stone-500" />}

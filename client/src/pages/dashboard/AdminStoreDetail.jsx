@@ -94,7 +94,7 @@ export default function AdminStoreDetail({ slug, onClose }) {
       >
         {/* رأس لاصق: النافذة تُمرَّر طويلاً ولا يصحّ أن يختفي الإغلاق */}
         <div className="flex shrink-0 items-center gap-3 border-b border-gold-400/15 px-4 py-3.5 sm:px-6">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-gold-400 to-amber-500 text-white shadow-md">
+          <span className="dash-ico flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl">
             {data?.store?.logoUrl
               ? <img src={data.store.logoUrl} alt="" className="h-full w-full object-cover" />
               : <StoreIcon className="h-5 w-5" />}

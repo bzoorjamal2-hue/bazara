@@ -3495,3 +3495,67 @@ html.dark .theme-pub .bz-pill-hot { background: #c2410c; color: #fff; }
 /* نقطة تعداد المنتجات — زخرفة (aria-hidden) لا نصّ يُقرأ */
 .bz-bullet { color: rgba(94, 70, 54, 0.4); }
 html.dark .theme-pub .bz-bullet { color: rgba(228, 216, 197, 0.4); }
+
+/* ═══════════ بلاطات لوحة التاجرة ═══════════
+   بلاطةُ أيقونة الترويسة كانت تدرّجاً من الرمليّ إلى amber-500 — وهو برتقاليّ
+   صريح. وهي تتصدّر كلّ تبويبٍ باللوحة (٤١ موضعاً)، فكان أوّل ما تراه العينُ
+   في كل شاشةٍ لمعةً برتقالية. والكهرمانيّ باقٍ حيث يعني «انتبهي»: التحذيرات،
+   والمخزون المنخفض، والتغييرات غير المحفوظة — هناك اللون يقول شيئاً. */
+.dash-ico {
+  background: #5e4636;
+  color: #F4EDE2;
+  box-shadow: 0 8px 20px -12px rgba(94, 70, 54, 0.7);
+}
+/* بلاطة القسم: أخفت — القسم أدنى من الصفحة رتبةً */
+.dash-ico-sec {
+  background: rgba(94, 70, 54, 0.09);
+  color: #5e4636;
+  box-shadow: inset 0 0 0 1px rgba(94, 70, 54, 0.16);
+}
+/* لوحُ معاينةٍ محايد (شكل متجرك · شكل حسابك) بدل تدرّجٍ بحدٍّ رمليّ */
+.dash-preview {
+  background: rgba(94, 70, 54, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(94, 70, 54, 0.12);
+}
+.dash-avatar {
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(94, 70, 54, 0.16);
+}
+
+html.dark .theme-pub .dash-ico { background: #e4d8c5; color: #2b1d12; box-shadow: none; }
+html.dark .theme-pub .dash-ico-sec {
+  background: rgba(228, 216, 197, 0.12);
+  color: #e4d8c5;
+  box-shadow: inset 0 0 0 1px rgba(228, 216, 197, 0.18);
+}
+html.dark .theme-pub .dash-preview {
+  background: rgba(228, 216, 197, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(228, 216, 197, 0.14);
+}
+html.dark .theme-pub .dash-avatar {
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(228, 216, 197, 0.18);
+}
+
+/* رقمُ الإحصاء: كان لكلّ بطاقةٍ لونُ رقمٍ مختلف (أخضر، رمليّ، كهرمانيّ،
+   عاجيّ) — أربعةُ ألوانٍ لأربعة أرقامٍ متجاورة لا يفرّقها اللون بشيء. */
+.dash-stat { color: #3f2e22; }
+html.dark .theme-pub .dash-stat { color: #f6efe0; }
+
+/* مراحل القمع: التدرّج فيها يعني «كم تبقّى» لا نوعَ المرحلة — فدرجةٌ واحدة
+   تخفّ مع النزول أصدق من أربعة ألوانٍ لا رابط بينها. */
+/* حدودُ الدرجات ليست ذوقاً: الرقم مكتوبٌ داخل الشريط، فأفتحُ درجةٍ
+   نهاراً وأغمقُها ليلاً يجب أن تُبقيَه فوق ٤٫٥. قِستُها: أضعفُها ٤٫٨ نهاراً
+   و٦٫٠ ليلاً. (كانت ٣٫٢ و٤٫٣ قبل الضبط.) */
+.bz-fun-1 { background: #2b1d12; }
+.bz-fun-2 { background: #4a3628; }
+.bz-fun-3 { background: #5e4636; }
+.bz-fun-4 { background: #7d6350; }
+html.dark .theme-pub .bz-fun-1 { background: #f6efe0; }
+html.dark .theme-pub .bz-fun-2 { background: #e4d8c5; }
+html.dark .theme-pub .bz-fun-3 { background: #cdbda4; }
+html.dark .theme-pub .bz-fun-4 { background: #b09a7e; }
+/* رقمُ المرحلة داخل الشريط: الشريط داكنٌ نهاراً وفاتحٌ ليلاً، فلونُ الرقم
+   ينقلب معه. كان أبيضَ ثابتاً — أي غيرَ مرئيّ ليلاً على شريطٍ عاجيّ. */
+.bz-fun-n { color: #F4EDE2; }
+html.dark .theme-pub .bz-fun-n { color: #2b1d12; }

@@ -560,7 +560,7 @@ function ManualOrderPanel() {
   return (
     <div className="glass overflow-hidden">
       <div className="flex items-start gap-3 p-4">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-400 to-amber-500 text-wine-dark shadow-md">
+        <span className="dash-ico flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl">
           <BagIcon className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">

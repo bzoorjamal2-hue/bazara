@@ -200,7 +200,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
       <div className="glass-strong flex max-h-[92vh] w-full max-w-lg animate-fade-up flex-col overflow-hidden">
         {/* الرأس لاصق: النموذج طويل، وكانت العودة للإغلاق تتطلّب تمريراً للأعلى */}
         <div className="flex shrink-0 items-center gap-3 border-b border-gold-400/15 px-4 py-4 sm:px-6">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-400 to-amber-500 text-white shadow-md">
+          <span className="dash-ico flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl">
             <TagIcon className="h-5 w-5" />
           </span>
           <div className="min-w-0 flex-1">

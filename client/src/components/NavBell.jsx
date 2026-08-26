@@ -79,7 +79,7 @@ export default function NavBell({ variant = 'bar' }) {
         <span
           className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 transition-all duration-300 ${
             on
-              ? 'bg-gradient-to-br from-gold-200 to-gold-400 text-wine-dark ring-gold-200/50'
+              ? 'bg-[#e4d8c5] text-[#2b1d12] ring-[#e4d8c5]/50'
               : 'bg-cream/[0.12] text-cream ring-cream/10'
           }`}
         >

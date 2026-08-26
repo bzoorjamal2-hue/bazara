@@ -29,12 +29,12 @@ function FunnelGlyph({ className = 'h-5 w-5' }) {
 
 // بطاقة إحصاء: بطاقة فرعية داخل قسم (لا بطاقة زجاجية مستقلّة) — نفس نمط
 // إعدادات المتجر والنظرة العامة، فلا تتداخل طبقتا زجاج ويبقى الإيقاع واحداً.
-function StatCard({ label, value, accent = 'text-gold-300', grad = 'from-gold-400 to-amber-500', icon, tip, badge }) {
+function StatCard({ label, value, icon, tip, badge }) {
   const Icon = I[icon];
   return (
     <div className="rounded-2xl border border-gold-400/15 bg-black/20 p-4">
       <div className="flex items-start justify-between gap-2">
-        <span className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-md ${grad}`}>
+        <span className="dash-ico inline-flex h-11 w-11 items-center justify-center rounded-2xl">
           {Icon && Icon('h-[22px] w-[22px]')}
         </span>
         {badge}
@@ -43,7 +43,7 @@ function StatCard({ label, value, accent = 'text-gold-300', grad = 'from-gold-40
         <span className="truncate">{label}</span>
         <Tip text={tip} />
       </p>
-      <p className={`mt-1 truncate font-display text-3xl font-extrabold leading-tight ${accent}`}>{value}</p>
+      <p className="dash-stat mt-1 truncate text-3xl font-extrabold leading-tight">{value}</p>
     </div>
   );
 }
@@ -86,10 +86,10 @@ export default function AnalyticsManager() {
       <div className={CARD}>
         <SectionHead icon={<ChartIcon className="h-5 w-5" />} title={t('dashboard.analytics.metricsTitle')} desc={t('dashboard.analytics.metricsHint')} />
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <StatCard icon="revenue" grad="from-emerald-500 to-emerald-700" accent="text-emerald-400" label={t('dashboard.analytics.revenue')} tip={t('dashboard.analytics.revenueTip')} value={<CountUp value={data.revenue} format={(x) => `${cur}${Math.round(x).toLocaleString()}`} />} />
-          <StatCard icon="confirmed" grad="from-gold-400 to-amber-500" accent="text-gold-300" label={t('dashboard.analytics.confirmed')} tip={t('dashboard.analytics.confirmedTip')} value={<CountUp value={data.confirmedOrders} />} />
-          <StatCard icon="newOrders" grad="from-amber-400 to-amber-600" accent="text-amber-400" label={t('dashboard.analytics.newOrders')} tip={t('dashboard.analytics.newOrdersTip')} value={<CountUp value={data.newOrders} />} />
-          <StatCard icon="products" grad="from-wine to-wine-dark" accent="text-stone-100" label={t('dashboard.productsCount')} tip={t('dashboard.analytics.productsTip')} value={<CountUp value={data.productsCount} />} />
+          <StatCard icon="revenue" label={t('dashboard.analytics.revenue')} tip={t('dashboard.analytics.revenueTip')} value={<CountUp value={data.revenue} format={(x) => `${cur}${Math.round(x).toLocaleString()}`} />} />
+          <StatCard icon="confirmed" label={t('dashboard.analytics.confirmed')} tip={t('dashboard.analytics.confirmedTip')} value={<CountUp value={data.confirmedOrders} />} />
+          <StatCard icon="newOrders" label={t('dashboard.analytics.newOrders')} tip={t('dashboard.analytics.newOrdersTip')} value={<CountUp value={data.newOrders} />} />
+          <StatCard icon="products" label={t('dashboard.productsCount')} tip={t('dashboard.analytics.productsTip')} value={<CountUp value={data.productsCount} />} />
         </div>
       </div>
 
@@ -138,10 +138,10 @@ export default function AnalyticsManager() {
           {(() => {
             const f = data.funnel;
             const steps = [
-              { key: 'visitors', value: f.visitors, grad: 'from-[#8a6a4f] to-[#5e4636]' },
-              { key: 'startedCheckout', value: f.startedCheckout, grad: 'from-amber-400 to-orange-500' },
-              { key: 'orders', value: f.orders, grad: 'from-gold-400 to-amber-500' },
-              { key: 'delivered', value: f.delivered, grad: 'from-emerald-500 to-emerald-700' },
+              { key: 'visitors', value: f.visitors, grad: 'bz-fun-1' },
+              { key: 'startedCheckout', value: f.startedCheckout, grad: 'bz-fun-2' },
+              { key: 'orders', value: f.orders, grad: 'bz-fun-3' },
+              { key: 'delivered', value: f.delivered, grad: 'bz-fun-4' },
             ];
             const max = Math.max(1, f.visitors);
             const pct = (n, d) => (d > 0 ? Math.round((n / d) * 100) : 0);
@@ -151,8 +151,8 @@ export default function AnalyticsManager() {
                   <div key={s.key} className="flex items-center gap-3">
                     <span className="w-24 shrink-0 text-xs font-semibold text-stone-300 sm:w-28">{t(`dashboard.analytics.funnel.${s.key}`)}</span>
                     <div className="relative h-7 flex-1 overflow-hidden rounded-lg bg-white/5">
-                      <div className={`flex h-full items-center rounded-lg bg-gradient-to-r ${s.grad} px-2`} style={{ width: `${Math.max(6, (s.value / max) * 100)}%` }}>
-                        <span className="text-xs font-bold text-white drop-shadow">{s.value}</span>
+                      <div className={`flex h-full items-center rounded-lg px-2 ${s.grad}`} style={{ width: `${Math.max(6, (s.value / max) * 100)}%` }}>
+                        <span className="bz-fun-n text-xs font-bold">{s.value}</span>
                       </div>
                     </div>
                     {/* نسبة التحويل من الخطوة السابقة */}
@@ -161,11 +161,11 @@ export default function AnalyticsManager() {
                   </div>
                 ))}
                 {/* الخلاصة الذهبية: معدّل التحويل الكلي (زائر → طلب) */}
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-gold-400/10 px-4 py-3 ring-1 ring-gold-400/20">
+                <div className="dash-preview mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl px-4 py-3">
                   <span className="flex items-center gap-1.5 text-sm font-semibold text-stone-200">
                     {t('dashboard.analytics.convRate')} <Tip text={t('dashboard.analytics.convRateTip')} />
                   </span>
-                  <span className="font-display text-2xl font-extrabold text-gold-300">{pct(f.orders, f.visitors)}%</span>
+                  <span className="dash-stat text-2xl font-extrabold">{pct(f.orders, f.visitors)}%</span>
                 </div>
               </div>
             );
@@ -288,7 +288,7 @@ export default function AnalyticsManager() {
                     <span className="shrink-0 text-xs font-bold text-gold-200">{p.qty}</span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-white/5">
-                    <div className="h-full rounded-full bg-gradient-to-r from-gold-400 to-wine" style={{ width: `${(p.qty / maxTop) * 100}%` }} />
+                    <div className="bz-fun-3 h-full rounded-full" style={{ width: `${(p.qty / maxTop) * 100}%` }} />
                   </div>
                 </div>
               </div>

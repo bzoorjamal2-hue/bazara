@@ -266,12 +266,12 @@ function Overview({ productsCount }) {
           <MetricCard
             label={t('dashboard.analytics.revenue')} tip={t('dashboard.ovRevenueTip')}
             value={stats ? <CountUp value={stats.revenue} format={(x) => `${cur}${Math.round(x).toLocaleString()}`} /> : '—'}
-            Icon={WalletGlyph} grad="from-emerald-500 to-emerald-700" accent="text-emerald-400"
+            Icon={WalletGlyph}
             badge={stats && stats.lastMonth > 0 ? <GrowthBadge pct={stats.monthGrowth} /> : null}
           />
-          <MetricCard label={t('dashboard.analytics.newOrders')} tip={t('dashboard.ovNewOrdersTip')} value={stats ? <CountUp value={stats.newOrders} /> : '—'} Icon={ReceiptIcon} grad="from-gold-400 to-amber-500" accent="text-gold-300" />
-          <MetricCard label={t('dashboard.visitors')} tip={t('dashboard.ovVisitorsTip')} value={visitors != null ? <CountUp value={visitors} /> : '—'} Icon={UsersIcon} grad="from-[#8a6a4f] to-[#3f2e22]" accent="text-stone-100" />
-          <MetricCard label={t('dashboard.productsCount')} tip={t('dashboard.ovProductsTip')} value={productCount != null ? <CountUp value={productCount} /> : '—'} Icon={BagIcon} grad="from-wine to-wine-dark" accent="text-stone-100" />
+          <MetricCard label={t('dashboard.analytics.newOrders')} tip={t('dashboard.ovNewOrdersTip')} value={stats ? <CountUp value={stats.newOrders} /> : '—'} Icon={ReceiptIcon} />
+          <MetricCard label={t('dashboard.visitors')} tip={t('dashboard.ovVisitorsTip')} value={visitors != null ? <CountUp value={visitors} /> : '—'} Icon={UsersIcon} />
+          <MetricCard label={t('dashboard.productsCount')} tip={t('dashboard.ovProductsTip')} value={productCount != null ? <CountUp value={productCount} /> : '—'} Icon={BagIcon} />
         </div>
 
         {/* اتجاه آخر ٧ أيام — يقرأ الشكل العام بلمحة قبل فتح صفحة الإحصائيات */}
@@ -392,11 +392,11 @@ function Overview({ productsCount }) {
 // overflow-hidden لا يقصّ عنصر البلور هناك، فيظهر مربّع باهت مقزّز بالزاوية.)
 // (صارت بطاقة فرعية داخل قسم لا بطاقة زجاجية مستقلّة — نفس نمط البطاقات الفرعية
 //  بصفحة الإعدادات، فلا تتداخل طبقتا زجاج ويبقى الإيقاع البصري واحداً.)
-function MetricCard({ label, value, Icon, grad, accent, tip, badge }) {
+function MetricCard({ label, value, Icon, tip, badge }) {
   return (
     <div className="rounded-2xl border border-gold-400/15 bg-black/20 p-4">
       <div className="flex items-start justify-between gap-2">
-        <span className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-md ${grad}`}>
+        <span className="dash-ico inline-flex h-11 w-11 items-center justify-center rounded-2xl">
           <Icon className="h-[22px] w-[22px]" />
         </span>
         {badge}
@@ -405,7 +405,7 @@ function MetricCard({ label, value, Icon, grad, accent, tip, badge }) {
         <span className="truncate">{label}</span>
         <Tip text={tip} />
       </p>
-      <p className={`mt-1 truncate font-display text-3xl font-extrabold leading-tight ${accent}`}>{value}</p>
+      <p className="dash-stat mt-1 truncate text-3xl font-extrabold leading-tight">{value}</p>
     </div>
   );
 }

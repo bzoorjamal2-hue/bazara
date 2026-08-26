@@ -106,7 +106,7 @@ export default function DashDrawerNav({ groups, activeKey, onNavigate, badges = 
                   <span
                     className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 transition ${
                       active
-                        ? 'bg-gradient-to-br from-gold-200 to-gold-400 text-wine-dark shadow-[0_4px_14px_-6px_rgba(176, 154, 126, 0.9)] ring-gold-200/50'
+                        ? 'bg-[#e4d8c5] text-[#2b1d12] ring-[#e4d8c5]/50'
                         : 'bg-cream/[0.12] text-cream ring-cream/10'
                     }`}
                   >
@@ -147,7 +147,7 @@ export default function DashDrawerNav({ groups, activeKey, onNavigate, badges = 
         type="button"
         onClick={scrollMore}
         tabIndex={more ? 0 : -1}
-        className={`app-tap absolute inset-x-0 bottom-1 mx-auto flex w-max items-center gap-1 rounded-full bg-gradient-to-br from-gold-200 to-gold-400 px-3 py-1 text-[11px] font-extrabold text-wine-dark shadow-[0_6px_18px_-6px_rgba(176, 154, 126, 0.8)] transition-opacity duration-300 ${
+        className={`app-tap absolute inset-x-0 bottom-1 mx-auto flex w-max items-center gap-1 rounded-full bg-[#e4d8c5] px-3 py-1 text-[11px] font-extrabold text-[#2b1d12] shadow-[0_6px_18px_-6px_rgba(0,0,0,0.5)] transition-opacity duration-300 ${
           more ? 'opacity-100' : 'pointer-events-none opacity-0'
         } ${more && nudge ? 'menu-nudge' : ''}`}
       >

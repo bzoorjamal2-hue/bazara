@@ -134,8 +134,8 @@ export default function Profile() {
         <SectionHead icon={<UserIcon className="h-5 w-5" />} title={t('dashboard.profileSection.identity')} desc={t('dashboard.profileSection.identityHint')} />
 
         {/* معاينة حيّة: هيك بيظهر حسابك بالقائمة الجانبية وشريط الحساب */}
-        <div className="flex items-center gap-3 rounded-2xl border border-gold-400/20 bg-gradient-to-br from-gold-400/10 to-transparent p-3">
-          <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-full border border-gold-400/30 bg-black/25">
+        <div className="dash-preview flex items-center gap-3 rounded-2xl p-3">
+          <span className="dash-avatar grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-full">
             {form.avatarUrl
               ? <img src={cldThumb(form.avatarUrl, 160)} alt="" className="h-full w-full object-cover" />
               : <span className="font-display text-xl font-bold text-gold-300">{(form.name || user?.name || '؟').trim()[0]}</span>}

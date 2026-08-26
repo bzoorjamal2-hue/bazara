@@ -206,7 +206,7 @@ export function PageHead({ icon, title, hint, action }) {
 
   return (
     <div className="flex flex-wrap items-start gap-x-3 gap-y-3">
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-400 to-amber-500 text-white shadow-md sm:h-12 sm:w-12">
+      <span className="dash-ico flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl sm:h-12 sm:w-12">
         {icon}
       </span>
       {/* items-start لا items-center: توسيط البلاطة أمام كتلة (عنوان + تلميح)
@@ -249,11 +249,11 @@ export function PageHead({ icon, title, hint, action }) {
   );
 }
 
-// رأس قسم موحّد: بلاطة أيقونة ذهبية متدرّجة + عنوان + وصف + علامة اكتمال
+// رأس قسم موحّد: بلاطة أيقونة هادئة + عنوان + وصف + علامة اكتمال
 export function SectionHead({ icon, title, desc, done }) {
   return (
     <div className="flex items-start gap-2.5">
-      <span className="relative mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-400/25 to-gold-400/5 text-gold-300 ring-1 ring-gold-400/25">
+      <span className="dash-ico-sec relative mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl">
         {icon}
         {done && (
           <span className="absolute -bottom-1 -end-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-white">
