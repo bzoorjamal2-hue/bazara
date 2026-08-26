@@ -148,11 +148,14 @@ export async function loginWithCode(req, res, next) {
 }
 
 export function logout(_req, res) {
-  // نمسح بنفس خصائص الإنشاء (خاصةً domain) وإلا لا يُمسح الكوكي فيبقى المستخدم داخلاً
-  res.clearCookie('token', {
-    path: '/',
-    ...(process.env.COOKIE_DOMAIN ? { domain: process.env.COOKIE_DOMAIN } : {}),
-  });
+  // المسح يطابق الإنشاء بكلّ خاصّية لا بالمسار والنطاق وحدهما: المتصفّح يعتبر
+  // كوكيّاً بـsameSite/secure مختلفين كوكيّاً آخر فلا يمسحه — فيبقى المستخدم
+  // داخلاً بعد «تسجيل الخروج»، وأوّل نداءٍ لـ/auth/me يعيده إلى حسابه.
+  const { maxAge, ...opts } = cookieOptions();
+  res.clearCookie('token', opts);
+  // وكتابته فارغاً منتهيَ الصلاحية: حزامٌ ثانٍ حين يرفض المتصفّح Set-Cookie
+  // الحذفَ لاختلافٍ دقيق بالخصائص.
+  res.cookie('token', '', { ...opts, maxAge: 0, expires: new Date(0) });
   res.json({ message: 'تم تسجيل الخروج.' });
 }
 

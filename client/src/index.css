@@ -2032,15 +2032,23 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
 }
 .bz-stat-l { font-size: 0.68rem; font-weight: 600; color: rgba(244, 237, 226, 0.6); }
 
-/* حبيباتٌ لا تكاد تُرى فوق الغامق: التدرّجات الكبيرة النقية تُظهر أشرطةً
-   على الشاشات الرخيصة وتبدو رقميّةً باردة. الحبيبات تُذيبها وتعطي ملمساً. */
+/* الملمس فوق الغامق — بتدرّجٍ قطريّ لا بضجيج SVG.
+   كان feTurbulence: فلترٌ يُحسب ويُرسَم ثم يُكرَّر على مساحات كبيرة، وهو من
+   أشهر أسباب تقطيع التمرير على الجوّال. التدرّج المتكرّر يعطي كسرَ الانبساط
+   نفسه بكلفةٍ تقارب الصفر. */
 .bz-grain::after {
   content: '';
   position: absolute;
   inset: 0;
   pointer-events: none;
   opacity: 0.5;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.055'/%3E%3C/svg%3E");
+  background-image: repeating-linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0.014) 0px,
+    rgba(255, 255, 255, 0.014) 1px,
+    transparent 1px,
+    transparent 3px
+  );
 }
 
 /* ───────── الأقسام ───────── */
@@ -2719,7 +2727,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 1.6rem 0 0.4rem;
+  padding: 1.6rem 0 1.5rem;
   text-align: center;
 }
 /* على الشاشة الواسعة يصير اللوح تحريرياً: محاذاة البداية ووعدٌ كبير */
@@ -2796,7 +2804,9 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
 /* على الجوّال: ورقةٌ بعرض الشاشة تطلع من تحت لوح الهوية — بلا إطارٍ حولها */
 @media (max-width: 899px) {
   .bz-auth-card {
-    margin-top: -2.25rem;
+    /* بلا رفعٍ فوق لوح الهوية: الهامش السالب كان يقصّ سطر «وجهتك للأزياء
+       الفاخرة» تحت الاسم. الحافّة المستديرة وحدها تكفي لإحساس الورقة. */
+    margin-top: 0;
     max-width: none;
     border-radius: 2rem 2rem 0 0;
     flex: 1;
@@ -2900,3 +2910,23 @@ html.dark .theme-pub .bz-feat {
   box-shadow: inset 0 0 0 1px rgba(240, 220, 166, 0.14);
 }
 html.dark .theme-pub .bz-feat-ico { background: rgba(240, 220, 166, 0.12); color: #f0dca6; }
+
+/* ───── الوضع الخفيف يشمل صفحة المنصّة وصفحات الحساب ─────
+   أُضيفت بعد bz-lite فلم تكن تحترمه: توهّجاتها الضبابية وضبابية الشريط
+   العلويّ والحبيبات هي أغلى ما يُقطّع التمرير على الأجهزة الضعيفة، وهي
+   زخرفةٌ بحتة — إخفاؤها لا يغيّر معنى الصفحة. */
+.bz-lite .bz-hero-glow,
+.bz-lite .bz-grain::after { display: none; }
+.bz-lite .bz-nav-on {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: #241708;
+}
+/* الهالة المتمدّدة حول الجرس ودوران حلقة الشعار: حركة مستمرّة على الرسم */
+.bz-lite .bz-logo-ring { animation: none; }
+.bz-lite .bz-reveal { transition-duration: 0.32s; }
+
+/* والحركة المستمرّة تتوقّف كذلك عند طلب تقليل الحركة */
+@media (prefers-reduced-motion: reduce) {
+  .bz-grain::after { display: none; }
+}

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import api, { setAuthToken, clearAuthToken } from '../api/client.js';
 
 const AuthContext = createContext(null);
@@ -9,9 +9,17 @@ export function AuthProvider({ children }) {
   const [subscription, setSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // بعد الخروج نرفض أي استعادةٍ للجلسة حتى لو ردّ /auth/me بمستخدم: كوكي
+  // الجلسة قد يبقى لحظاتٍ (أو للأبد إن فشل نداء الخروج)، فكان أوّل تحميلٍ
+  // للصفحة يعيد صاحبه إلى حسابه رغم خروجه. useRef لا useState: القيمة تُقرأ
+  // داخل نداءٍ جارٍ ولا يجوز أن تنتظر إعادة رسم.
+  const loggedOut = useRef(false);
+
   const refresh = useCallback(async () => {
     try {
       const { data } = await api.get('/auth/me');
+      // خرج المستخدم أثناء الطلب (أو قبله والكوكي لم يُمسح بعد) — لا نستعيده
+      if (loggedOut.current) { setLoading(false); return null; }
       setUser(data.user);
       setStore(data.store);
       setSubscription(data.subscription || null);
@@ -31,6 +39,7 @@ export function AuthProvider({ children }) {
   }, [refresh]);
 
   const login = async (email, password) => {
+    loggedOut.current = false;
     const { data } = await api.post('/auth/login', { email, password });
     if (data?.token) setAuthToken(data.token); // بقاء الجلسة في التطبيق المثبّت
     return await refresh();
@@ -50,15 +59,21 @@ export function AuthProvider({ children }) {
     return await refresh();
   };
 
-  const logout = () => {
-    // نُفرِغ الجلسة محلياً فوراً ثم نُبلغ الخادم بالخلفية (بلا await) — كي لا يعلّق الخروج
-    // على خادم Render البطيء/النائم: كان await للخادم يؤخّر التنقّل للصفحة العامة ثوانيَ
-    // طويلة (بدا وكأنّ الخروج لا يوجّه للرئيسية).
+  const logout = async () => {
+    // نُفرِغ محلياً أوّلاً فلا تعلّق الواجهة على خادمٍ نائم…
+    loggedOut.current = true;
     clearAuthToken();
     setUser(null);
     setStore(null);
     setSubscription(null);
-    api.post('/auth/logout').catch(() => { /* الكوكي يُمسح لاحقاً؛ الجلسة المحلية مُفرَّغة */ });
+    // …ثمّ ننتظر مسح الكوكي بمهلةٍ قصيرة. الانتظار ضروريّ: الكوكي هو ما يوثّق
+    // الطلب التالي، وبلا مسحه يعود المستخدم داخلاً. والمهلة تمنع التعليق.
+    try {
+      await Promise.race([
+        api.post('/auth/logout'),
+        new Promise((r) => setTimeout(r, 2500)),
+      ]);
+    } catch { /* الجلسة المحلية مُفرَّغة والحارس أعلاه يمنع الاستعادة */ }
   };
 
   const updateProfile = async (payload) => {
