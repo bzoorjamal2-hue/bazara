@@ -2930,3 +2930,65 @@ html.dark .theme-pub .bz-feat-ico { background: rgba(240, 220, 166, 0.12); color
 @media (prefers-reduced-motion: reduce) {
   .bz-grain::after { display: none; }
 }
+
+/* ═══════════ سلايدر المتجر — بلغة صفحة المنصّة ═══════════
+   كانت الشريحة الثابتة تحمل سبع طبقات زخرفية معاً (ثلاث فقاعات ضبابية
+   تطفو، ومسحة ضوء تمرّ، وإطار ذهبي، وأربع زوايا مضيئة، وهالة نابضة خلف
+   الشعار، واسمٌ متدرّج). كلّها تتحرّك فوق اسم المتجر فتسرق النظر منه،
+   والثلاث الضبابيات وحدها تُثقل الرسم على الجوّال. */
+
+/* توهّجٌ واحد ساكن بدل ثلاث فقاعات متحرّكة */
+.bz-sh-glow {
+  background:
+    radial-gradient(70% 90% at 24% -10%, rgba(212, 175, 55, 0.16), transparent 62%),
+    radial-gradient(60% 80% at 88% 112%, rgba(138, 106, 79, 0.34), transparent 60%);
+}
+
+/* الشعار: حدٌّ عاجيّ رفيع واحد بدل حدٍّ ذهبيّ مزدوج وهالةٍ نابضة */
+.bz-sh-logo {
+  box-shadow: 0 14px 34px -14px rgba(0, 0, 0, 0.75), inset 0 0 0 1px rgba(244, 237, 226, 0.28);
+}
+
+/* اسم المتجر: عاجيّ مصمت */
+.bz-sh-name {
+  color: #fffaf2;
+  letter-spacing: -0.015em;
+  text-shadow: 0 2px 22px rgba(0, 0, 0, 0.5);
+  text-wrap: balance;
+}
+
+/* السطر اللاتيني: خطٌّ ذهبيّ قصير يسبقه بدل تباعدٍ صارخ */
+.bz-sh-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: rgba(244, 237, 226, 0.6);
+}
+.bz-sh-sub::before,
+.bz-sh-sub::after {
+  content: '';
+  display: block;
+  height: 1px;
+  width: 1.4rem;
+  background: rgba(212, 175, 55, 0.8);
+}
+
+/* الزرّ: عاجيّ صلب — نفس زرّ صفحة المنصّة */
+.bz-sh-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  background: #fbf6ea;
+  padding: 0.72rem 1.7rem;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #2b1d12;
+  box-shadow: 0 14px 30px -16px rgba(0, 0, 0, 0.9);
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+@media (hover: hover) { .bz-sh-cta:hover { background: #ffffff; } }
+.bz-sh-cta:active { transform: scale(0.97); }

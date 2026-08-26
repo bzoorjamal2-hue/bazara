@@ -679,17 +679,14 @@ function WelcomePopup({ store }) {
     <div className="fixed inset-0 z-[90] flex items-center justify-center p-4" onClick={() => setOpen(false)}>
       <div className="absolute inset-0 bg-black/55 animate-fade-up" />
       <div onClick={(e) => e.stopPropagation()} className="animate-pop relative w-full max-w-sm overflow-hidden rounded-3xl bg-white p-6 text-center shadow-2xl">
-        <span className="dash-hairline absolute inset-x-0 top-0" />
+        {/* كانت: خيطٌ ذهبيّ علويّ، وحلقةٌ ذهبية حول الأيقونة، وخطّان ذهبيّان
+            تحت العنوان، وزرٌّ بتدرّجٍ ذهبيّ ثلاثيّ وحلقة — خمس لمسات ذهبية
+            بنافذةٍ واحدة صغيرة. */}
         <CloseButton onClick={() => setOpen(false)} variant="wine" className="absolute end-3 top-3" />
-        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-wine/10 text-wine ring-2 ring-gold-400/40"><GiftIcon className="h-7 w-7" /></div>
-        <h3 className="font-display text-2xl font-bold text-wine">{t('store.welcomeTitle')}</h3>
-        {/* زخرفة ماسية تحت العنوان */}
-        <div className="mt-2 flex items-center justify-center gap-2 text-gold-400/70">
-          <span className="h-px w-8 bg-gradient-to-r from-transparent to-[#d4af37]/50" />
-          <span className="h-px w-8 bg-gradient-to-l from-transparent to-[#d4af37]/50" />
-        </div>
+        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-wine/8 text-wine"><GiftIcon className="h-7 w-7" /></div>
+        <h3 className="bz-title font-display text-2xl font-bold">{t('store.welcomeTitle')}</h3>
         <p className="mt-3 whitespace-pre-line text-[15px] leading-relaxed text-wine/80">{store.welcomeOffer}</p>
-        <button onClick={() => setOpen(false)} className="mt-5 w-full rounded-full bg-gradient-to-r from-[#e6c878] via-[#d4af37] to-[#c79a3a] py-3.5 font-bold text-[#3f2e22] shadow-lg ring-1 ring-[#b8932c]/40 transition hover:brightness-105">
+        <button onClick={() => setOpen(false)} className="auth-submit mt-5">
           {t('store.welcomeCta')}
         </button>
       </div>
@@ -1143,56 +1140,43 @@ function HeroSlider({ store }) {
                   )}
                   {/* الشريحة الثابتة (اسم المتجر): خلفية حيّة فاخرة — فقاعات ذهبية/عاجية
                       طافية بسرعات مختلفة + مسحة ضوء قطرية + إطار ذهبي بزوايا مضيئة */}
-                  {!custom && (
-                    <>
-                      <div className="pointer-events-none absolute -top-16 start-[14%] h-48 w-48 animate-float rounded-full bg-gold-400/20 blur-3xl" style={{ animationDuration: '7s' }} />
-                      <div className="pointer-events-none absolute -bottom-20 end-[8%] h-56 w-56 animate-float rounded-full bg-cream/12 blur-3xl" style={{ animationDuration: '9s', animationDelay: '1.2s' }} />
-                      <div className="pointer-events-none absolute top-1/4 end-1/4 h-24 w-24 animate-float rounded-full bg-[#e6c25f]/15 blur-2xl" style={{ animationDuration: '6s', animationDelay: '.6s' }} />
-                      {/* مسحة ضوء ذهبية قطرية تمرّ دورياً */}
-                      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                        <div className="bz-hero-sweep absolute inset-y-0 -inset-x-1/4 m-auto w-1/4 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-                      </div>
-                      {/* إطار ذهبي داخلي + زوايا مضيئة (خصائص منطقية تتبع اتجاه النص).
-                          الأربع كلها: كانت اثنتين فقط (بداية-أعلى ونهاية-أسفل) فيبدو
-                          الركنان الخاليان نقصاً لا تصميماً. */}
-                      <div className="bz-hero-frame pointer-events-none absolute inset-3 rounded-2xl sm:inset-4" />
-                      <span className="bz-hero-corner pointer-events-none absolute start-4 top-4 h-5 w-5 rounded-ss-lg border-s-2 border-t-2 sm:start-5 sm:top-5" />
-                      <span className="bz-hero-corner pointer-events-none absolute end-4 top-4 h-5 w-5 rounded-se-lg border-e-2 border-t-2 sm:end-5 sm:top-5" />
-                      <span className="bz-hero-corner pointer-events-none absolute start-4 bottom-4 h-5 w-5 rounded-es-lg border-s-2 border-b-2 sm:start-5 sm:bottom-5" />
-                      <span className="bz-hero-corner pointer-events-none absolute end-4 bottom-4 h-5 w-5 rounded-ee-lg border-e-2 border-b-2 sm:end-5 sm:bottom-5" />
-                    </>
-                  )}
+                  {/* كانت سبع طبقات زخرفية فوق شريحةٍ واحدة: ثلاث فقاعات
+                      ضبابية تطفو، ومسحة ضوء تمرّ، وإطار ذهبي، وأربع زوايا
+                      مضيئة. كلّها تتحرّك معاً فوق اسم المتجر — تسرق النظر منه
+                      وتُثقل الرسم على الجوّال. توهّجٌ واحد ساكن يكفي. */}
+                  {!custom && <span className="bz-sh-glow pointer-events-none absolute inset-0" aria-hidden="true" />}
 
                   {/* النص فوق الفيديو دائماً (طبقة GPU مستقلة لتفادي اختفائه على iOS أثناء الانتقال) */}
                   <div className="relative z-10" style={{ transform: 'translateZ(0)' }}>
                     {s.fixed ? (
                       <>
                         {store.logoUrl && (
-                          <div className="relative mx-auto mb-4 h-20 w-20 sm:h-24 sm:w-24">
-                            {/* هالة ذهبية نابضة خلف الشعار */}
-                            <span aria-hidden className="bz-logo-halo pointer-events-none absolute -inset-3 rounded-full blur-md" style={{ background: 'radial-gradient(circle, rgba(230,200,120,0.55), transparent 70%)' }} />
-                            <img src={store.logoUrl} alt={store.name} className="bz-hero-el relative h-full w-full rounded-2xl border-2 border-[#e6c878]/70 object-cover shadow-[0_10px_30px_-8px_rgba(0,0,0,.7)] ring-1 ring-black/20" />
+                          <div className="relative mx-auto mb-5 h-20 w-20 sm:h-[5.5rem] sm:w-[5.5rem]">
+                            <img src={store.logoUrl} alt={store.name} className="bz-hero-el bz-sh-logo h-full w-full rounded-2xl object-cover" />
                           </div>
                         )}
-                        <h1 className="bz-hero-el bz-gold-name font-display text-3xl font-extrabold sm:text-5xl">{store.name}</h1>
+                        {/* عاجيّ مصمت: التدرّج على النصّ أوّل ما يوحي بصفحةٍ
+                            مُولَّدة، واسم المتجر أولى الكلمات بأن تُقرأ لا أن
+                            تُزخرَف. */}
+                        <h1 className="bz-hero-el bz-sh-name font-display text-[2rem] font-extrabold leading-tight sm:text-5xl">{store.name}</h1>
                         {/* شعار المتجر من إعداداته — وإن لم تكتبه المالكة فالجملة العامة.
                             كانت مكتوبةً بالكود فتظهر نفسها على كل المتاجر بلا استثناء. */}
-                        <p className="bz-hero-el mt-3 font-display text-lg text-cream/90 sm:text-2xl">{heroTagline}</p>
+                        <p className="bz-hero-el mt-3 text-[0.95rem] leading-relaxed text-cream/80 sm:text-lg">{heroTagline}</p>
                         {heroTaglineSub && (
-                          <p className="bz-hero-el mt-1 text-xs tracking-[0.25em] text-cream/55 sm:text-sm">{heroTaglineSub}</p>
+                          <p className="bz-hero-el bz-sh-sub mt-2">{heroTaglineSub}</p>
                         )}
                         <button
                           type="button"
                           onClick={scrollToCats}
-                          className="bz-hero-el mt-5 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#f3e2b4] to-[#d4af37] px-6 py-2.5 text-sm font-bold text-[#2a1c14] shadow-lg transition hover:brightness-110 sm:text-base"
+                          className="bz-hero-el bz-sh-cta mt-6"
                         >
                           {t('storePage.shopNow')}
                         </button>
                       </>
                     ) : (
                       <>
-                        <h2 className="bz-hero-el font-display text-3xl font-extrabold text-cream drop-shadow sm:text-5xl">{s.title}</h2>
-                        {s.subtitle && <p className="bz-hero-el mx-auto mt-3 max-w-xl text-cream/90 drop-shadow sm:text-lg">{s.subtitle}</p>}
+                        <h2 className="bz-hero-el bz-sh-name font-display text-[2rem] font-extrabold leading-tight sm:text-5xl">{s.title}</h2>
+                        {s.subtitle && <p className="bz-hero-el mx-auto mt-3 max-w-xl text-[0.95rem] leading-relaxed text-cream/80 sm:text-lg">{s.subtitle}</p>}
                         {/* زرّ الشريحة: تكتبه المالكة بمحرّر البانرات وكان لا يُعرض أبداً */}
                         {String(s.btnLabel || '').trim() && (
                           <SlideButton href={s.btnHref} label={s.btnLabel} slug={store.slug} />
