@@ -524,6 +524,8 @@ END $;`,
     'ALTER TABLE users ADD COLUMN IF NOT EXISTS suspended_by UUID REFERENCES users(id) ON DELETE SET NULL;',
     // فئات المنصّة التي يعرّفها المدير: { extra: [{key,name,nameEn,image}], hidden: [] }
     "ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS platform_categories JSONB NOT NULL DEFAULT '{}'::jsonb;",
+    // محتوى صفحة الواجهة الذي يحرّره المدير — الفارغ يعني «النصّ الأصلي»
+    "ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS landing JSONB NOT NULL DEFAULT '{}'::jsonb;",
     // سجلّ الإشعارات. كانت الإشعارات تُرسَل دفعاً ولا تُخزَّن: يقفل الهاتف أو
     // تُمسح الإشعارة فيضيع الطلب بلا أثر، ولا سبيل لمعرفة كم إشعاراً لم يُقرأ
     // (فشارة التطبيق كانت 1 دائماً). صار لكلّ إشعار صفّ يُقرأ ويُعدّ.

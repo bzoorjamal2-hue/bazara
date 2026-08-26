@@ -28,6 +28,7 @@ import AdminLog from './dashboard/AdminLog.jsx';
 import AdminSettings from './dashboard/AdminSettings.jsx';
 import SubscribersManager from './dashboard/SubscribersManager.jsx';
 import SiteSliders from './dashboard/SiteSliders.jsx';
+import LandingEditor from './dashboard/LandingEditor.jsx';
 import NewsletterManager from './dashboard/NewsletterManager.jsx';
 import InstagramInbox from './dashboard/InstagramInbox.jsx';
 import CampaignManager from './dashboard/CampaignManager.jsx';
@@ -56,6 +57,7 @@ const ADMIN_SECTIONS = [
   { key: 'admin', Icon: ShieldIcon },
   { key: 'adminLog', Icon: ShieldIcon },
   { key: 'adminSettings', Icon: GearIcon },
+  { key: 'landing', Icon: HomeIcon },
   { key: 'siteSliders', Icon: ImageIcon },
   { key: 'newsletter', Icon: MailIcon },
   { key: 'broadcast', Icon: MailIcon },
@@ -205,6 +207,7 @@ export default function Dashboard() {
         {section === 'admin' && isAdmin && <AdminRequests />}
         {section === 'adminLog' && isAdmin && <AdminLog />}
         {section === 'adminSettings' && isAdmin && <AdminSettings />}
+        {section === 'landing' && isAdmin && <LandingEditor />}
         {section === 'siteSliders' && isAdmin && <SiteSliders />}
         {section === 'newsletter' && isAdmin && <NewsletterManager />}
         {section === 'broadcast' && isAdmin && <BroadcastManager />}

@@ -11,6 +11,11 @@ export default function CountUp({ value = 0, format = (n) => Math.round(n).toLoc
 
   useEffect(() => {
     const el = ref.current;
+    // القيمة الجديدة تُلغي «سبق أن عددت»: أرقام تصل بعد الرسم الأول (نداء
+    // شبكة) كانت تجد started=true من عدّةٍ سابقة على صفر، فيرفض العدّاد
+    // العدّ ويبقى صفراً إلى الأبد رغم وصول الرقم الصحيح.
+    started.current = false;
+
     const reduce = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     if (reduce || typeof IntersectionObserver === 'undefined') { setN(target); return undefined; }
 
@@ -34,7 +39,11 @@ export default function CountUp({ value = 0, format = (n) => Math.round(n).toLoc
     if (!el) { run(); return () => cleanup.raf?.(); }
     const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { run(); io.disconnect(); } }, { threshold: 0.2 });
     io.observe(el);
-    return () => { io.disconnect(); cleanup.raf?.(); };
+    // شبكة أمان: المراقب لا يُطلق في صفحةٍ لا تُرسم (تبويب بالخلفية، لقطة
+    // آلية، مستعرض داخل تطبيق). بلا هذه يبقى الرقم صفراً — وصفرٌ معروض
+    // أسوأ من رقمٍ بلا حركة، لأنّه يبدو حقيقةً لا انتظاراً.
+    const failsafe = setTimeout(() => { if (!started.current) { started.current = true; setN(target); } }, 1200);
+    return () => { clearTimeout(failsafe); io.disconnect(); cleanup.raf?.(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target]);
 

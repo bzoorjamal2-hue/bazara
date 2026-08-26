@@ -191,13 +191,6 @@
   "offline": {
     "message": "No internet connection — only the home page is available"
   },
-  "appWelcome": {
-    "browse": "Start shopping",
-    "openStore": "Create your store now",
-    "feat1": "Delivery across Palestine",
-    "feat2": "Cash on delivery",
-    "feat3": "Easy exchange"
-  },
   "pwa": {
     "title": "Get the Bazara app",
     "desc": "Shop faster — an icon on your home screen that opens full-screen.",
@@ -753,5 +746,98 @@
     "minutes": "{{n}}m ago",
     "hours": "{{n}}h ago",
     "days": "{{n}}d ago"
+  },
+  "landing": {
+    "wordmark": "ELEGANCE",
+    "seoTitle": "Bazara — the Palestinian fashion marketplace",
+    "seoDesc": "Open your online store in minutes, or shop dozens of Palestinian boutiques. Delivery across Palestine, cash on delivery.",
+    "badge": "Palestinian platform · Fashion & modest wear",
+    "title": "Your online store starts today",
+    "subtitle": "Bazara brings Palestinian fashion stores together: shop dozens of boutiques, or open your own in minutes — no technical skills, no setup fees.",
+    "chip1": "Delivery across Palestine",
+    "chip2": "Cash on delivery",
+    "chip3": "Easy exchange",
+    "shopNow": "Shop now",
+    "openStore": "Open your store",
+    "openStoreShort": "Sell",
+    "statStores": "stores",
+    "statProducts": "products",
+    "statOrders": "orders",
+    "featEyebrow": "Why Bazara",
+    "featTitle": "Everything your store needs, ready",
+    "featDesc": "No hosting, no developer, no complicated setup — open the store and start selling.",
+    "features": [
+      {
+        "title": "A store in minutes",
+        "desc": "Your own link, your logo and colours, and a page worthy of your pieces — without a line of code."
+      },
+      {
+        "title": "Design that is yours",
+        "desc": "Sliders, banners, stories and categories you choose, plus shop-by-occasion collections."
+      },
+      {
+        "title": "Shipping, connected",
+        "desc": "Opost, EPS and gobox wired in: the order is sent and its status updates itself."
+      },
+      {
+        "title": "Numbers you understand",
+        "desc": "Sales, profit, best sellers, expenses and net profit — all in one place."
+      },
+      {
+        "title": "Instagram in one inbox",
+        "desc": "Your page messages land in the dashboard, and turn into an order with one tap."
+      },
+      {
+        "title": "Coupons and referrals",
+        "desc": "Discounts, codes and a share-and-earn programme that brings you new customers."
+      },
+      {
+        "title": "Stock by size and colour",
+        "desc": "Every colour and size with its own count, and an alert the moment a piece sells out."
+      },
+      {
+        "title": "Notifications you never miss",
+        "desc": "New order, abandoned cart, shipping update — on your phone the moment they happen."
+      }
+    ],
+    "stepEyebrow": "Start selling",
+    "stepTitle": "Three steps and you are selling",
+    "stepDesc": "From signup to first order — no complexity, no waiting.",
+    "steps": [
+      {
+        "title": "Open your store",
+        "desc": "Sign up, pick your store name and link, upload your logo. Minutes and it is live."
+      },
+      {
+        "title": "Add your pieces",
+        "desc": "Photos, prices, colours and sizes, and categories you arrange however you like."
+      },
+      {
+        "title": "Take your orders",
+        "desc": "Share your link; orders reach your dashboard and your phone — and ship with one tap."
+      }
+    ],
+    "tstEyebrow": "What they say",
+    "tstTitle": "Stores that started here",
+    "testimonials": [
+      {
+        "text": "I sold through Instagram and kept losing track of messages. Now I have a store and a link to send, and every order in one place.",
+        "name": "Store owner",
+        "store": "Ramallah"
+      },
+      {
+        "text": "Shipping was the biggest relief: I send the order from the dashboard and follow its status without a single phone call.",
+        "name": "Store owner",
+        "store": "Nablus"
+      },
+      {
+        "text": "The numbers showed me what actually sells — before, I was guessing.",
+        "name": "Store owner",
+        "store": "Jerusalem"
+      }
+    ],
+    "ctaTitle": "Your store is minutes away",
+    "ctaDesc": "Join stores selling every day through Bazara — or browse first and see for yourself.",
+    "askUs": "Got a question? Message us"
   }
 }

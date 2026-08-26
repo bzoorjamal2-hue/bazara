@@ -2,10 +2,11 @@ import { query } from '../config/db.js';
 import { sanitizeBanners } from './store.controller.js';
 import { clearPublicCache } from '../middleware/cache.js';
 import { logAdmin } from '../utils/adminLog.js';
+import { activeStoreSql } from '../utils/subscription.js';
 
 // إعدادات الموقع العامة (صف واحد id=1) — يتحكّم بها المدير العام.
 async function readSettings() {
-  const r = await query('SELECT home_banners, announcement, announcement_en, collections, lookbook, instagram, facebook, platform_categories FROM site_settings WHERE id = 1');
+  const r = await query('SELECT home_banners, announcement, announcement_en, collections, lookbook, instagram, facebook, platform_categories, landing FROM site_settings WHERE id = 1');
   const row = r.rows[0];
   return {
     banners: Array.isArray(row?.home_banners) ? row.home_banners : [],
@@ -19,6 +20,71 @@ async function readSettings() {
     platformCategories: (row?.platform_categories && typeof row.platform_categories === 'object')
       ? { extra: row.platform_categories.extra || [], hidden: row.platform_categories.hidden || [] }
       : { extra: [], hidden: [] },
+    landing: (row?.landing && typeof row.landing === 'object' && !Array.isArray(row.landing)) ? row.landing : {},
+  };
+}
+
+// ───────────────── صفحة الواجهة (الهبوط) ─────────────────
+// كلّ نصّ فيها يحرّره المدير. لا نخزّن قيماً افتراضية بقاعدة البيانات: الفارغ
+// يعني «استخدم النصّ المترجَم الأصلي»، فتبقى الصفحة كاملةً قبل أن يفتح أحدٌ
+// المحرّر، وتبقى ثنائية اللغة إلى أن يُكتب نصٌّ مخصّص.
+const txt = (v, max = 200) => String(v ?? '').trim().slice(0, max);
+// صورة: رابط https أو صورة مضمّنة (base64) — لا javascript: ولا بروتوكول حرّ
+const img = (v) => {
+  const x = String(v ?? '').trim();
+  if (/^https?:\/\//i.test(x)) return x.slice(0, 900000);
+  if (/^data:image\/(png|jpe?g|webp|avif|gif);base64,/i.test(x)) return x.slice(0, 900000);
+  return '';
+};
+
+// فيديو: رابط https ينتهي بامتداد فيديو معروف
+const vid = (v) => {
+  const x = String(v ?? '').trim();
+  return /^https:\/\/\S+\.(mp4|webm|mov|m4v)(\?\S*)?$/i.test(x) ? x.slice(0, 500) : '';
+};
+
+const MAX_ITEMS = 8;
+const list = (raw, map) =>
+  (Array.isArray(raw) ? raw : []).slice(0, MAX_ITEMS).map(map).filter((x) => x.title || x.text);
+
+function sanitizeLanding(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  const h = raw.hero && typeof raw.hero === 'object' ? raw.hero : {};
+  const c = raw.cta && typeof raw.cta === 'object' ? raw.cta : {};
+  return {
+    hero: {
+      badge: txt(h.badge, 60), badgeEn: txt(h.badgeEn, 60),
+      title: txt(h.title, 120), titleEn: txt(h.titleEn, 120),
+      subtitle: txt(h.subtitle, 300), subtitleEn: txt(h.subtitleEn, 300),
+      image: img(h.image),
+      // فيديو الهيرو: رابط مباشر لملفٍ يُشغَّل داخل الصفحة. لا نقبل روابط
+      // يوتيوب/انستغرام — تلك صفحاتٌ لا ملفّات، ووضعها بـ<video> يعطي إطاراً
+      // فارغاً. والصورة تبقى غلافاً يظهر ريثما يُحمّل الفيديو أو إن تعذّر.
+      video: vid(h.video),
+      chips: (Array.isArray(h.chips) ? h.chips : []).slice(0, 4)
+        .map((x) => ({ label: txt(x?.label, 40), labelEn: txt(x?.labelEn, 40) }))
+        .filter((x) => x.label || x.labelEn),
+    },
+    features: list(raw.features, (x) => ({
+      title: txt(x?.title, 60), titleEn: txt(x?.titleEn, 60),
+      desc: txt(x?.desc, 220), descEn: txt(x?.descEn, 220),
+    })),
+    steps: list(raw.steps, (x) => ({
+      title: txt(x?.title, 60), titleEn: txt(x?.titleEn, 60),
+      desc: txt(x?.desc, 220), descEn: txt(x?.descEn, 220),
+    })),
+    testimonials: list(raw.testimonials, (x) => ({
+      text: txt(x?.text, 300), textEn: txt(x?.textEn, 300),
+      name: txt(x?.name, 60), store: txt(x?.store, 60), image: img(x?.image),
+      title: '', // ليمرّ من مرشّح list
+    })).map(({ title, ...rest }) => rest),
+    cta: {
+      title: txt(c.title, 120), titleEn: txt(c.titleEn, 120),
+      subtitle: txt(c.subtitle, 300), subtitleEn: txt(c.subtitleEn, 300),
+    },
+    // إخفاء أقسام بأكملها — بعض المتاجر لا تريد الشهادات مثلاً
+    hidden: (Array.isArray(raw.hidden) ? raw.hidden : [])
+      .map((k) => txt(k, 20)).filter((k) => ['stats', 'features', 'steps', 'testimonials'].includes(k)),
   };
 }
 
@@ -108,15 +174,16 @@ export async function updateSiteBanners(req, res, next) {
     const platformCategories = req.body.platformCategories === undefined
       ? cur.platformCategories
       : sanitizePlatformCats(req.body.platformCategories);
+    const landing = req.body.landing === undefined ? cur.landing : sanitizeLanding(req.body.landing);
     await query(
-      `INSERT INTO site_settings (id, home_banners, announcement, announcement_en, collections, lookbook, instagram, facebook, platform_categories, updated_at)
-       VALUES (1, $1::jsonb, $2, $3, $4::jsonb, $5::jsonb, $6, $7, $8::jsonb, now())
+      `INSERT INTO site_settings (id, home_banners, announcement, announcement_en, collections, lookbook, instagram, facebook, platform_categories, landing, updated_at)
+       VALUES (1, $1::jsonb, $2, $3, $4::jsonb, $5::jsonb, $6, $7, $8::jsonb, $9::jsonb, now())
        ON CONFLICT (id) DO UPDATE SET home_banners = EXCLUDED.home_banners,
          announcement = EXCLUDED.announcement, announcement_en = EXCLUDED.announcement_en,
          collections = EXCLUDED.collections, lookbook = EXCLUDED.lookbook,
          instagram = EXCLUDED.instagram, facebook = EXCLUDED.facebook,
-         platform_categories = EXCLUDED.platform_categories, updated_at = now()`,
-      [JSON.stringify(banners), announcement, announcementEn, JSON.stringify(collections), JSON.stringify(lookbook), instagram, facebook, JSON.stringify(platformCategories)]
+         platform_categories = EXCLUDED.platform_categories, landing = EXCLUDED.landing, updated_at = now()`,
+      [JSON.stringify(banners), announcement, announcementEn, JSON.stringify(collections), JSON.stringify(lookbook), instagram, facebook, JSON.stringify(platformCategories), JSON.stringify(landing)]
     );
     clearPublicCache(); // إبطال كاش الذاكرة فوراً (/home و/site-info) فتظهر التعديلات حالاً
     // هذه أوسع صلاحيةٍ أثراً: تغيّر واجهة المنصّة لكلّ زائر وكلّ متجر. نسجّل
@@ -131,9 +198,10 @@ export async function updateSiteBanners(req, res, next) {
         platformCats: (platformCategories?.extra || []).length,
         hiddenCats: (platformCategories?.hidden || []).length,
         announcement: Boolean(announcement),
+        landingEdited: Boolean(req.body.landing !== undefined),
       },
     });
-    res.json({ banners, announcement, announcementEn, collections, lookbook, instagram, facebook, platformCategories });
+    res.json({ banners, announcement, announcementEn, collections, lookbook, instagram, facebook, platformCategories, landing });
   } catch (err) {
     next(err);
   }
@@ -143,8 +211,23 @@ export async function updateSiteBanners(req, res, next) {
 export async function getSiteInfo(_req, res, next) {
   try {
     const s = await readSettings();
+    // أرقام الثقة: مجاميع لا تكشف عن أيّ متجرٍ بعينه. تُحسب مع نفس النداء
+    // المُخزَّن مؤقتاً (٥ دقائق) فلا تكلّف استعلاماً لكلّ زائر.
+    let stats = { stores: 0, products: 0, orders: 0 };
+    try {
+      const active = activeStoreSql('u');
+      const r = await query(
+        `SELECT
+           (SELECT COUNT(*)::int FROM stores s JOIN users u ON u.id = s.user_id WHERE ${active}) AS stores,
+           (SELECT COUNT(*)::int FROM products p JOIN stores s ON s.id = p.store_id
+              JOIN users u ON u.id = s.user_id WHERE ${active}) AS products,
+           (SELECT COUNT(*)::int FROM orders o JOIN stores s ON s.id = o.store_id
+              JOIN users u ON u.id = s.user_id WHERE ${active}) AS orders`
+      );
+      stats = { stores: r.rows[0].stores, products: r.rows[0].products, orders: r.rows[0].orders };
+    } catch { /* الأرقام زينة: غيابها لا يُسقط الصفحة */ }
     res.set('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=600');
-    res.json({ instagram: s.instagram, facebook: s.facebook, platformCategories: s.platformCategories });
+    res.json({ instagram: s.instagram, facebook: s.facebook, platformCategories: s.platformCategories, landing: s.landing, stats });
   } catch (err) {
     next(err);
   }

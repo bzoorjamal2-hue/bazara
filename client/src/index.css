@@ -1696,3 +1696,697 @@ html.dark .bz-imp-bar { background: linear-gradient(90deg, #92400e, #b45309); }
 
 /* المحتوى ينزل بمقدار الشريط فلا يختفي الهيدر تحته */
 body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px)); }
+
+/* ═══════════════════ واجهة بازارا (صفحة الهبوط) ═══════════════════
+   كل لونٍ هنا من لوحة الموقع نفسها ولا لون خارجها:
+     الخمري   #3f2e22 · #5e4636 · #8a6a4f      (wine dark/DEFAULT/light)
+     الكريمي  #F4EDE2                            (cream)
+     الذهبي   #d4af37 · #e0c25f · #ecd99b · #f6edcf  (gold 400/300/200/100)
+   لا وضعَ ليليّ منفصل: الصفحة خمريّة داكنة أصلاً بالوضعين — هي «الغلاف»
+   الفاخر للمنصّة، وقلبها لا ينقلب بتبديل الثيم. */
+
+.bz-land {
+  /* الصفحة تملأ الشاشة: كانت خلفية الموقع الفاتحة تظهر شريطاً أسفلها حين
+     يقصر المحتوى عن الشاشة (وعلى الشاشات الطويلة جداً). */
+  min-height: 100svh;
+  /* اللوحة نفسها، بمدىً أوسع: بنّي الموقع لا يكفي وحده لصفحةٍ بهذا الطول —
+     الغامق كلّه بدرجةٍ واحدة يبدو مسطّحاً. أضفنا طرفين من العائلة نفسها:
+     إسبريسو شبه أسود للعمق، وشامبانيا أفتح من الذهب للبريق. */
+  --espresso: #140d07;
+  --w-dark: #3f2e22;
+  --w: #5e4636;
+  --w-light: #8a6a4f;
+  --cream: #F4EDE2;
+  --sand: #efe3cf;
+  --gold: #d4af37;
+  --gold-2: #e0c25f;
+  --gold-3: #ecd99b;
+  --champagne: #f7e9c4;
+  background: var(--w-dark);
+  color: var(--cream);
+  overflow-x: clip;
+}
+
+/* ───────── الهيرو ───────── */
+.bz-hero {
+  position: relative;
+  display: flex;
+  /* 88svh لا 100: يظهر طرفُ شريط الأرقام أسفل الطيّة فيُعرَف أنّ تحته
+     صفحةً كاملة — الهيرو المالئ للشاشة تماماً يبدو نهايةَ الموقع فيُغلَق
+     عنده. والسقف 860px كي لا يتمدّد بلا معنى على شاشات 4K. */
+  min-height: min(88svh, 860px);
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: 2rem;
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(212, 175, 55, 0.20), transparent 55%),
+    radial-gradient(100% 70% at 50% 115%, rgba(138, 106, 79, 0.45), transparent 62%),
+    linear-gradient(165deg, #4a3521 0%, #33241a 42%, var(--espresso) 100%);
+}
+/* صورة المدير: مقصوصة تغطيةً بأي مقاس، وتحتها حجابٌ خمريّ كي يبقى النصّ
+   مقروءاً مهما كانت الصورة فاتحةً أو مزدحمة. */
+.bz-hero-img {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.42;
+}
+/* الفيديو يملأ الإطار قصّاً لا تمدّداً، فلا يتشوّه بأي نسبة شاشة */
+.bz-hero-video { height: 100%; width: 100%; object-fit: cover; }
+/* من يطلب تقليل الحركة لا يُفرَض عليه فيديو يتحرّك خلف النصّ */
+@media (prefers-reduced-motion: reduce) { .bz-hero-video { display: none; } }
+.bz-hero-veil {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(63, 46, 34, 0.62) 0%, rgba(63, 46, 34, 0.80) 55%, #2a1d14 100%);
+}
+.bz-hero-glow {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(64px);
+  pointer-events: none;
+}
+.bz-hero-glow-a {
+  inset-inline-start: 12%;
+  top: -6rem;
+  height: 20rem;
+  width: 20rem;
+  background: rgba(212, 175, 55, 0.16);
+}
+.bz-hero-glow-b {
+  inset-inline-end: -4rem;
+  bottom: -3rem;
+  height: 22rem;
+  width: 22rem;
+  background: rgba(138, 106, 79, 0.40);
+}
+
+.bz-hero-top {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: max(env(safe-area-inset-top), 1rem) 1.25rem 0;
+}
+@media (min-width: 768px) { .bz-hero-top { padding-inline: 2.5rem; } }
+.bz-wordmark {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.34em;
+  color: rgba(244, 237, 226, 0.55);
+  /* الحرف الأخير يرث المسافة فيبدو مزاحاً — نسحبها منه */
+  margin-inline-end: -0.34em;
+}
+
+.bz-hero-body {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  padding: 2.5rem 1.25rem 2rem;
+}
+@media (min-width: 640px) { .bz-hero-body { padding-inline: 2.5rem; } }
+@media (min-width: 1024px) { .bz-hero-body { padding-inline: clamp(2.5rem, 7vw, 7rem); } }
+
+/* كتلة النصّ: عرضٌ محدود بعدد المحارف لا بالبكسل، فتبقى أسطر القراءة مريحة
+   على أي شاشة — من 360px إلى 4K — بلا نقاط كسرٍ يدوية. */
+.bz-hero-block {
+  position: relative;
+  width: 100%;
+  max-width: 40rem;
+  text-align: start;
+}
+
+.bz-logo-wrap { position: relative; display: grid; place-items: center; }
+.bz-logo-ring {
+  position: absolute;
+  inset: -20px;
+  border-radius: 999px;
+  background: conic-gradient(from 0deg, transparent, rgba(212, 175, 55, 0.55), transparent 62%);
+  animation: bz-spin 9s linear infinite;
+}
+.bz-logo-halo {
+  position: absolute;
+  inset: -6px;
+  border-radius: 999px;
+  background: rgba(244, 237, 226, 0.14);
+  filter: blur(22px);
+}
+@keyframes bz-spin { to { transform: rotate(1turn); } }
+
+.bz-badge {
+  margin-top: 0;
+  display: inline-block;
+  border-radius: 999px;
+  border: 1px solid rgba(212, 175, 55, 0.32);
+  background: rgba(244, 237, 226, 0.06);
+  padding: 0.35rem 0.95rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--gold-3);
+}
+
+/* العنوان: يكبر مع الشاشة بسلاسة (clamp) بدل قفزاتٍ عند نقاط الكسر */
+.bz-h1 {
+  margin-top: 1.2rem;
+  max-width: 16ch;
+  font-size: clamp(2.4rem, 6.6vw, 5rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+  background: linear-gradient(160deg, #fffaf0 0%, var(--cream) 38%, var(--gold-3) 72%, var(--gold) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.bz-divider {
+  margin-top: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--gold-2);
+}
+.bz-divider > span {
+  display: block;
+  height: 1px;
+  width: 2.75rem;
+  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.7));
+}
+.bz-divider > span:last-child { background: linear-gradient(270deg, transparent, rgba(212, 175, 55, 0.7)); }
+
+.bz-hero-sub {
+  margin-top: 1.2rem;
+  max-width: 44ch;
+  font-size: clamp(0.95rem, 2.1vw, 1.15rem);
+  line-height: 1.75;
+  color: rgba(244, 237, 226, 0.82);
+}
+
+.bz-ticks {
+  margin-top: 1.7rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 1.4rem;
+}
+.bz-tick {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: rgba(244, 237, 226, 0.9);
+}
+.bz-tick-b {
+  display: grid;
+  height: 1.15rem;
+  width: 1.15rem;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 999px;
+  background: linear-gradient(140deg, var(--gold-3), var(--gold));
+  color: var(--w-dark);
+}
+
+.bz-chips {
+  margin-top: 1.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.bz-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(212, 175, 55, 0.26);
+  background: rgba(244, 237, 226, 0.06);
+  padding: 0.42rem 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(244, 237, 226, 0.88);
+}
+.bz-chip svg { color: var(--gold-2); }
+
+.bz-hero-actions { margin-top: 2.2rem; width: 100%; }
+.bz-hero-actions .bz-acts { justify-content: flex-start; }
+
+/* ───────── الأزرار الثلاثة ───────── */
+.bz-btn-gold,
+.bz-btn-outline,
+.bz-btn-ghost {
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  padding: 0.95rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  /* بلا لفٍّ: «أنشئ متجرك الآن» كان ينكسر سطرين فيختلّ ارتفاع الأزرار الثلاثة */
+  white-space: nowrap;
+  transition: transform 0.15s ease, background-color 0.25s ease, box-shadow 0.25s ease, color 0.25s ease;
+}
+@media (min-width: 640px) {
+  .bz-btn-gold, .bz-btn-outline, .bz-btn-ghost { width: auto; padding-inline: 1.9rem; }
+}
+.bz-btn-gold {
+  background: linear-gradient(135deg, #f6edcf 0%, var(--cream) 45%, var(--gold-3) 100%);
+  color: var(--w-dark);
+  box-shadow: 0 18px 38px -18px rgba(212, 175, 55, 0.75);
+}
+.bz-btn-outline {
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  color: var(--cream);
+}
+.bz-btn-ghost { color: rgba(244, 237, 226, 0.8); }
+@media (hover: hover) {
+  .bz-btn-gold:hover { box-shadow: 0 22px 46px -18px rgba(212, 175, 55, 0.9); }
+  .bz-btn-outline:hover { background: rgba(244, 237, 226, 0.10); }
+  .bz-btn-ghost:hover { color: var(--cream); background: rgba(244, 237, 226, 0.07); }
+}
+.bz-btn-gold:active, .bz-btn-outline:active, .bz-btn-ghost:active { transform: scale(0.975); }
+
+/* ───────── الأرقام الحيّة ───────── */
+.bz-stats {
+  position: relative;
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  border-top: 1px solid rgba(212, 175, 55, 0.2);
+  background: rgba(212, 175, 55, 0.2);
+}
+.bz-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  background: #2a1d14;
+  padding: 1.1rem 0.5rem;
+  text-align: center;
+}
+.bz-stat-ico { color: var(--gold-2); opacity: 0.85; }
+.bz-stat-n {
+  font-size: clamp(1.15rem, 4.4vw, 1.6rem);
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--cream);
+}
+.bz-stat-l { font-size: 0.68rem; font-weight: 600; color: rgba(244, 237, 226, 0.6); }
+
+/* حبيباتٌ لا تكاد تُرى فوق الغامق: التدرّجات الكبيرة النقية تُظهر أشرطةً
+   على الشاشات الرخيصة وتبدو رقميّةً باردة. الحبيبات تُذيبها وتعطي ملمساً. */
+.bz-grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.055'/%3E%3C/svg%3E");
+}
+
+/* ───────── الأقسام ───────── */
+.bz-sec { position: relative; padding: clamp(3.5rem, 9vw, 6.5rem) 1.25rem; }
+@media (min-width: 768px) { .bz-sec { padding-inline: 2.5rem; } }
+/* قسمٌ بلونٍ أفتح قليلاً — إيقاعٌ بصريّ بلا لونٍ جديد */
+.bz-sec-alt { background: linear-gradient(180deg, var(--espresso) 0%, #2b1d12 50%, var(--espresso) 100%); }
+
+/* القسم الفاتح: كريميّ الموقع بنصٍّ خمريّ — نفس اللوحة، بالمقلوب. يكسر
+   رتابة الغامق المتواصل ويجعل الصفحة تتنفّس. */
+/* الفاتح ليس أبيض ولا كريميّ مسطّح: رمليّ بتدرّجٍ خافت نحو الكريمي. */
+.bz-sec-light { background: linear-gradient(180deg, var(--sand) 0%, var(--cream) 40%, var(--sand) 100%); }
+.bz-sec-light .bz-h2 { color: var(--w-dark); }
+.bz-sec-light .bz-lead { color: rgba(63, 46, 34, 0.66); }
+.bz-sec-light .bz-eyebrow { color: #a37d22; }
+.bz-sec-light .bz-card {
+  border-color: rgba(63, 46, 34, 0.10);
+  background: #fff;
+  box-shadow: 0 10px 30px -22px rgba(63, 46, 34, 0.5);
+}
+@media (hover: hover) { .bz-sec-light .bz-card:hover { border-color: rgba(212, 175, 55, 0.55); } }
+.bz-sec-light .bz-card-ico {
+  background: linear-gradient(150deg, rgba(212, 175, 55, 0.22), rgba(212, 175, 55, 0.08));
+  color: #a37d22;
+  box-shadow: inset 0 0 0 1px rgba(212, 175, 55, 0.28);
+}
+.bz-sec-light .bz-card-t { color: var(--w-dark); }
+.bz-sec-light .bz-card-d { color: rgba(63, 46, 34, 0.62); }
+.bz-sec-light .bz-quote {
+  border-color: rgba(63, 46, 34, 0.10);
+  background: #fff;
+  box-shadow: 0 10px 30px -22px rgba(63, 46, 34, 0.5);
+}
+.bz-sec-light .bz-quote-t { color: rgba(63, 46, 34, 0.84); }
+.bz-sec-light .bz-quote-by { color: var(--w-dark); border-top-color: rgba(63, 46, 34, 0.12); }
+.bz-sec-light .bz-quote-mark { color: rgba(212, 175, 55, 0.45); }
+.bz-sec-light .bz-quote-av { background: rgba(212, 175, 55, 0.2); color: #a37d22; }
+
+.bz-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  color: var(--gold-2);
+  margin-inline-end: -0.22em;
+}
+.bz-h2 {
+  margin-top: 0.7rem;
+  font-size: clamp(1.75rem, 4.8vw, 3rem);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+  color: var(--cream);
+}
+.bz-lead {
+  font-size: clamp(0.9rem, 2vw, 1.02rem);
+  line-height: 1.8;
+  color: rgba(244, 237, 226, 0.66);
+}
+
+/* شبكة الميزات: عمود على الجوّال، عمودان على اللوح، أربعة على الشاشات الكبيرة */
+.bz-bento {
+  margin-inline: auto;
+  display: grid;
+  max-width: 78rem;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+}
+@media (min-width: 640px) { .bz-bento { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .bz-bento { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+/* البطاقة الأولى تأخذ عمودين — مدخلُ العين وترتيبُ القراءة */
+@media (min-width: 640px) { .bz-bento-lg { grid-column: span 2; } }
+.bz-card-lg { display: flex; flex-direction: column; justify-content: center; padding: 1.9rem; }
+.bz-card-lg .bz-card-t { font-size: 1.32rem; }
+.bz-card-lg .bz-card-d { font-size: 0.94rem; max-width: 34ch; }
+.bz-card-lg .bz-card-ico { height: 3.6rem; width: 3.6rem; border-radius: 1.1rem; }
+
+.bz-grid {
+  margin-inline: auto;
+  display: grid;
+  max-width: 78rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: 0.85rem;
+}
+.bz-card {
+  height: 100%;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(212, 175, 55, 0.16);
+  background: linear-gradient(160deg, rgba(244, 237, 226, 0.07), rgba(244, 237, 226, 0.02));
+  padding: 1.4rem;
+  transition: transform 0.25s ease, border-color 0.25s ease, background-color 0.25s ease;
+}
+@media (hover: hover) {
+  .bz-card:hover { transform: translateY(-3px); border-color: rgba(212, 175, 55, 0.4); }
+}
+.bz-card-ico {
+  display: grid;
+  height: 3rem;
+  width: 3rem;
+  place-items: center;
+  border-radius: 0.9rem;
+  background: linear-gradient(150deg, rgba(212, 175, 55, 0.28), rgba(212, 175, 55, 0.08));
+  color: var(--gold-3);
+  box-shadow: inset 0 0 0 1px rgba(212, 175, 55, 0.22);
+}
+.bz-card-t { margin-top: 1rem; font-size: 1.02rem; font-weight: 800; color: var(--cream); }
+.bz-card-d { margin-top: 0.45rem; font-size: 0.86rem; line-height: 1.75; color: rgba(244, 237, 226, 0.64); }
+
+/* ───────── الخطوات ───────── */
+.bz-path {
+  position: relative;
+  margin-inline: auto;
+  display: grid;
+  max-width: 68rem;
+  list-style: none;
+  padding: 0;
+  gap: 2.4rem;
+}
+@media (min-width: 768px) {
+  .bz-path { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.2rem; }
+  /* الخطّ الواصل بين العُقد — يمرّ خلفها بمستوى مركز الدائرة */
+  .bz-path::before {
+    content: '';
+    position: absolute;
+    inset-inline: 12%;
+    top: 1.6rem;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.5) 12%, rgba(212, 175, 55, 0.5) 88%, transparent);
+  }
+}
+.bz-node { position: relative; text-align: center; padding-inline: 0.5rem; }
+.bz-node-dot {
+  position: relative;
+  display: grid;
+  height: 3.2rem;
+  width: 3.2rem;
+  margin-inline: auto;
+  place-items: center;
+  border-radius: 999px;
+  background: linear-gradient(140deg, var(--champagne), var(--gold));
+  color: #2b1d12;
+  box-shadow: 0 0 0 6px var(--espresso), 0 14px 30px -12px rgba(212, 175, 55, 0.9);
+}
+/* الرقم شارةٌ صغيرة على حافّة الدائرة */
+.bz-node-dot b {
+  position: absolute;
+  inset-inline-end: -0.3rem;
+  top: -0.3rem;
+  display: grid;
+  height: 1.35rem;
+  width: 1.35rem;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--espresso);
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--gold-3);
+  box-shadow: inset 0 0 0 1px rgba(212, 175, 55, 0.45);
+}
+.bz-node-t { margin-top: 1.15rem; font-size: 1.14rem; font-weight: 800; color: var(--cream); }
+.bz-node-d {
+  margin-top: 0.5rem;
+  margin-inline: auto;
+  max-width: 30ch;
+  font-size: 0.88rem;
+  line-height: 1.8;
+  color: rgba(244, 237, 226, 0.62);
+}
+
+.bz-steps {
+  margin-inline: auto;
+  display: grid;
+  max-width: 66rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: 0.85rem;
+}
+.bz-step {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 1.35rem;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: linear-gradient(155deg, rgba(244, 237, 226, 0.08), rgba(244, 237, 226, 0.02));
+  padding: 1.6rem 1.4rem;
+}
+/* الرقم كبيرٌ باهت بالخلفية — يعطي ترتيباً بلا زحمة */
+.bz-step-n {
+  position: absolute;
+  inset-inline-end: 0.9rem;
+  top: 0.2rem;
+  font-size: 3.6rem;
+  font-weight: 800;
+  line-height: 1;
+  color: rgba(212, 175, 55, 0.15);
+  pointer-events: none;
+}
+.bz-step-ico {
+  display: grid;
+  height: 3rem;
+  width: 3rem;
+  place-items: center;
+  border-radius: 999px;
+  background: linear-gradient(140deg, var(--gold-3), var(--gold));
+  color: var(--w-dark);
+  box-shadow: 0 10px 24px -10px rgba(212, 175, 55, 0.8);
+}
+.bz-step-t { margin-top: 1rem; font-size: 1.08rem; font-weight: 800; color: var(--cream); }
+.bz-step-d { margin-top: 0.45rem; font-size: 0.87rem; line-height: 1.75; color: rgba(244, 237, 226, 0.66); }
+
+/* ───────── الشهادات ───────── */
+.bz-quotes {
+  margin-inline: auto;
+  display: grid;
+  max-width: 72rem;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+}
+@media (min-width: 900px) {
+  .bz-quotes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* الأولى تعبر العمودين فتُقرأ فعلاً، والباقيتان تحتها بصفٍّ مستوٍ — كانت
+     ثلاثاً متساوية فلا تُقرأ منها واحدة، ثم تركت الثالثة معلّقةً بفجوة. */
+  .bz-quote-lead { grid-column: 1 / -1; }
+}
+.bz-quote-big { padding: 2.1rem 2rem 1.6rem; }
+.bz-quote-big .bz-quote-t { font-size: clamp(1.02rem, 1.6vw, 1.24rem); line-height: 1.9; }
+.bz-quote-big .bz-quote-mark { font-size: 4.2rem; }
+.bz-quote {
+  position: relative;
+  height: 100%;
+  margin: 0;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(212, 175, 55, 0.16);
+  background: rgba(244, 237, 226, 0.05);
+  padding: 1.5rem 1.4rem 1.25rem;
+}
+.bz-quote-mark {
+  position: absolute;
+  inset-inline-start: 1.1rem;
+  top: 0.1rem;
+  font-size: 3rem;
+  line-height: 1;
+  color: rgba(212, 175, 55, 0.28);
+}
+.bz-quote-t {
+  margin: 0;
+  padding-top: 1rem;
+  font-size: 0.92rem;
+  line-height: 1.85;
+  color: rgba(244, 237, 226, 0.86);
+}
+.bz-quote-by {
+  margin-top: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border-top: 1px solid rgba(212, 175, 55, 0.14);
+  padding-top: 0.9rem;
+  font-size: 0.83rem;
+  color: var(--cream);
+}
+.bz-quote-av {
+  display: grid;
+  height: 2.25rem;
+  width: 2.25rem;
+  flex-shrink: 0;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(212, 175, 55, 0.18);
+  color: var(--gold-3);
+}
+.bz-quote-av img { height: 100%; width: 100%; object-fit: cover; }
+
+/* ───────── الختام ───────── */
+.bz-cta {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(4rem, 10vw, 7rem) 1.25rem calc(clamp(4rem, 10vw, 7rem) + env(safe-area-inset-bottom, 0px));
+  background:
+    radial-gradient(90% 120% at 50% 0%, rgba(212, 175, 55, 0.17), transparent 62%),
+    linear-gradient(180deg, #2b1d12 0%, var(--espresso) 100%);
+}
+.bz-cta-ico {
+  display: inline-grid;
+  height: 4rem;
+  width: 4rem;
+  place-items: center;
+  border-radius: 999px;
+  background: linear-gradient(140deg, var(--gold-3), var(--gold));
+  color: var(--w-dark);
+  box-shadow: 0 16px 36px -14px rgba(212, 175, 55, 0.85);
+}
+.bz-cta-wa {
+  margin-top: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.83rem;
+  font-weight: 700;
+  color: rgba(244, 237, 226, 0.7);
+  transition: color 0.2s ease;
+}
+@media (hover: hover) { .bz-cta-wa:hover { color: var(--gold-3); } }
+
+/* ───────── الظهور عند التمرير ───────── */
+.bz-reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.bz-reveal-in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .bz-reveal { opacity: 1; transform: none; transition: none; }
+  .bz-logo-ring { animation: none; }
+}
+
+/* ───────── الشريط العلويّ ─────────
+   ثابتٌ فوق الصفحة كلّها: يبدأ شفّافاً على الهيرو ثم يلبس خلفيةً ضبابية عند
+   النزول. الأزرار الثلاثة حاضرة فيه فلا يحتاج الزائر العودة للأعلى. */
+.bz-nav {
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: max(env(safe-area-inset-top), 0.6rem) 0.9rem 0.6rem;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease, backdrop-filter 0.3s ease;
+}
+@media (min-width: 768px) { .bz-nav { padding-inline: 2rem; } }
+.bz-nav-on {
+  background: rgba(42, 29, 20, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 1px 0 0 rgba(212, 175, 55, 0.18), 0 14px 30px -22px rgba(0, 0, 0, 0.9);
+}
+
+.bz-nav-brand { display: inline-flex; align-items: center; gap: 0.55rem; min-width: 0; flex-shrink: 0; }
+.bz-nav-name {
+  font-size: 1.02rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: var(--cream);
+}
+@media (max-width: 380px) { .bz-nav-name { display: none; } }
+
+.bz-nav-side { display: flex; align-items: center; gap: 0.35rem; }
+.bz-nav-link {
+  border-radius: 999px;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.83rem;
+  font-weight: 700;
+  color: rgba(244, 237, 226, 0.82);
+  transition: background-color 0.2s ease, color 0.2s ease;
+  white-space: nowrap;
+}
+@media (hover: hover) { .bz-nav-link:hover { background: rgba(244, 237, 226, 0.10); color: var(--cream); } }
+/* «تسجيل الدخول» يختفي على أضيق الشاشات — يبقى داخل الهيرو وبالختام */
+@media (max-width: 460px) { .bz-nav-link-sm { display: none; } }
+
+.bz-nav-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--cream), var(--gold-3));
+  padding: 0.45rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--w-dark);
+  box-shadow: 0 10px 24px -12px rgba(212, 175, 55, 0.8);
+  white-space: nowrap;
+  transition: transform 0.15s ease;
+}
+.bz-nav-cta:active { transform: scale(0.96); }
+
+/* الهيرو ينزل بمقدار الشريط فلا يختبئ الشعار تحته */
+.bz-hero-body { padding-top: calc(4.5rem + env(safe-area-inset-top, 0px)); }

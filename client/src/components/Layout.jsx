@@ -32,18 +32,20 @@ export default function Layout({ children }) {
   const isStoreSearch = pathname === '/search' && storeParam;
   const isStoreTrack = pathname === '/track' && storeParam;
   // شاشة افتتاح التطبيق المثبّت (الجذر) — بلا شريط/فوتر ليبدو كتطبيق كامل
-  const isAppWelcome = pathname === '/' && isStandalone();
+  // صفحة المنصّة (الجذر بالمتصفّح): شريطها وفوترها من داخلها، فتُخفى قشرة
+  // الموقع كاملةً — كانت تُخفى للتطبيق المثبّت وحده.
+  const isLanding = pathname === '/';
   // صفحات الحساب — تصميم بملء الشاشة (هيرو + نموذج) بلا شريط/فوتر
   const isAuthFull = ['/login', '/register', '/forgot-password', '/reset'].includes(pathname);
   // الريلز = ملء الشاشة (كتيك توك) — الهيدر كان يظهر فوقها ويغطي المحتوى
   const isReels = pathname === '/reels';
-  const hideChrome = isStorePage || isProduct || isStoreSearch || isStoreTrack || isAppWelcome || isAuthFull || isReels;
+  const hideChrome = isStorePage || isProduct || isStoreSearch || isStoreTrack || isLanding || isAuthFull || isReels;
   // لوحة التحكم/الاشتراك: لها شريط وتنقّل عام لكن بلا فوتر المنصّة التسويقي (سياق إدارة لا تسوّق)
   const isDashboard = /^\/dashboard/.test(pathname) || pathname === '/subscribe';
   const showFooter = !hideChrome && !isDashboard;
   // شريط التنقّل السفلي يظهر داخل التطبيق المثبّت على كل الصفحات (بما فيها المتجر) عدا الترحيب/الدخول
   // الشريط السفلي يظهر على كل الأجهزة (جوال/آيباد/كمبيوتر) عدا شاشات الترحيب/الدخول
-  const showBottomNav = !isAppWelcome && !isAuthFull;
+  const showBottomNav = !isLanding && !isAuthFull;
 
   // إغلاق لوحة المفاتيح فور بدء التمرير (سحب الشاشة) — يمنع تعليق الشاشة والقفز
   // أثناء فتح أي شريط بحث، ويعطي إحساس التطبيقات الأصلية. يطبَّق على كل الموقع.
@@ -83,12 +85,19 @@ export default function Layout({ children }) {
           داخل main قبله ولا يغطّيه الشريط. */}
       {/* صفحة تتبّع المتجر: نجعل main عموداً مرناً كي يملأ غلاف المسار الارتفاع
           (flex-1) فيلتصق فوتر المتجر بالأسفل بدل طفوه لأعلى — flex-grow لا نسبة % */}
-      <main className={`mx-auto w-full max-w-6xl flex-1 px-4 pt-5 sm:px-6 xl:max-w-[1320px] 2xl:max-w-[1600px] ${isStoreTrack ? 'flex flex-col' : ''} ${showBottomNav && !showFooter ? 'pb-bottomnav' : 'pb-8'}`}>{children}</main>
+      {/* صفحة المنصّة تملأ الشاشة من حافةٍ لحافة: غلاف المحتوى المحدود بعرضٍ
+          وحشوةٍ جانبية كان يحبس هيروها فيظهر لون الخلفية على الجانبين، ويقصّ
+          شريطها العلويّ. أقسامها تتولّى عرضها وحشوتها بنفسها. */}
+      {isLanding ? (
+        <main className="w-full flex-1">{children}</main>
+      ) : (
+        <main className={`mx-auto w-full max-w-6xl flex-1 px-4 pt-5 sm:px-6 xl:max-w-[1320px] 2xl:max-w-[1600px] ${isStoreTrack ? 'flex flex-col' : ''} ${showBottomNav && !showFooter ? 'pb-bottomnav' : 'pb-8'}`}>{children}</main>
+      )}
       {showFooter && <PublicFooter bottomNav={showBottomNav} />}
       <CartDrawer />
       <WishlistDrawer />
       {/* لا نُظهر تذكير السلة على صفحات الحساب/الترحيب (يغطّي النموذج) */}
-      {!isAuthFull && !isAppWelcome && <CartReminder />}
+      {!isAuthFull && !isLanding && <CartReminder />}
       <OfflineBanner />
       {/* زر «العودة للأعلى» العائم بجهة البداية-الأسفل كان يطبق فوق زر الحفظ في نماذج
           لوحة التحكم الطويلة (سلايدر الموقع، إعدادات المتجر...) فيغطّيه. نخفيه في لوحة

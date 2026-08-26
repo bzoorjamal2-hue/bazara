@@ -720,6 +720,9 @@
       "supervise": "Supervision",
       "content": "Content",
       "more": "More below"
+    },
+    "nav": {
+      "landing": "Landing page"
     }
   },
   "admin": {
@@ -1046,7 +1049,51 @@
     "impNote": "Admin tools are blocked, and everything you do is in her name",
     "impExit": "Exit",
     "impLeftMin": "ends in {{n}} min",
-    "impLeftSoon": "ending shortly"
+    "impLeftSoon": "ending shortly",
+    "land": {
+      "title": "Landing page",
+      "hint": "The first thing a visitor from Google or an Instagram link sees. Any empty field means 'use the original text'.",
+      "heroTitle": "Hero",
+      "heroHint": "Headline, description and background — the most important screen on the site.",
+      "badge": "Small badge",
+      "badgeTip": "A short line above the headline, e.g. 'Palestinian platform · Fashion'.",
+      "headline": "Headline",
+      "headlineTip": "As short and clear as possible. Long lines get read less.",
+      "sub": "Description",
+      "heroImage": "Background image",
+      "heroImageTip": "Sits under a dark layer so the text stays readable. Landscape works best.",
+      "heroVideo": "Background video",
+      "heroVideoTip": "A direct mp4/webm link (not a YouTube link). Plays muted and looped; the image above is its poster.",
+      "videoBad": "Not accepted: must be https and end in mp4, webm or mov — YouTube links do not work.",
+      "ticks": "Feature ticks",
+      "ticksEmpty": "Empty — the original ticks show (delivery, cash on delivery, exchange).",
+      "secTitle": "Page sections",
+      "secHint": "Tap a section to hide or show it.",
+      "secStats": "Live numbers",
+      "secFeatures": "Features",
+      "secSteps": "Steps",
+      "secQuotes": "Testimonials",
+      "featTitle": "Features",
+      "stepTitle": "Steps",
+      "quoteTitle": "Testimonials",
+      "listHint": "Empty = the original list shows. The moment you add one item, your list replaces it entirely.",
+      "feature": "Feature",
+      "step": "Step",
+      "quote": "Testimonial",
+      "itemTitle": "Title",
+      "itemDesc": "Description",
+      "quoteText": "Quote",
+      "quoteName": "Name",
+      "quoteStore": "Store or city",
+      "addFeature": "Add a feature",
+      "addStep": "Add a step",
+      "addQuote": "Add a testimonial",
+      "ctaTitle": "Closing section",
+      "ctaHint": "The last invitation before the visitor leaves.",
+      "save": "Save landing page",
+      "saved": "Saved — open the page to see it.",
+      "preview": "Preview the page ↗"
+    }
   },
   "finance": {
     "title": "Profit & expenses",

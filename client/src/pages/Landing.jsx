@@ -1,0 +1,327 @@
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import api from '../api/client.js';
+import Seo from '../components/Seo.jsx';
+import Logo from '../components/Logo.jsx';
+import LanguageSwitcher from '../components/LanguageSwitcher.jsx';
+import CountUp from '../components/CountUp.jsx';
+import useInViewOnce from '../hooks/useInViewOnce.js';
+import {
+  BagIcon, ForwardIcon, TruckIcon, CashIcon, CheckIcon, StoreIcon, ChartIcon,
+  InstagramIcon, PackageIcon, SparkleIcon, ShieldIcon, PaletteIcon, TicketIcon,
+  UsersIcon, CrownIcon, WhatsAppIcon,
+} from '../components/icons.jsx';
+import { BAZARA_WHATSAPP } from '../config/site.js';
+import { buildWhatsappLink } from '../utils/whatsapp.js';
+
+// ═══════════════ واجهة بازارا ═══════════════
+//
+// كانت شاشةَ افتتاحٍ للتطبيق المثبّت وحده: شعار واسمٌ وثلاثة أزرار، ولا تراها
+// إلا من نصّبت التطبيق. الزائر من جوجل أو من رابطٍ بإنستغرام كان يهبط مباشرةً
+// على شبكة المنتجات بلا أن يعرف ما بازارا ولا لماذا يفتح متجره فيها.
+//
+// صارت صفحةَ المنصّة: تعمل على كل مقاس، وكلّ نصٍّ فيها يحرّره المدير، وأرقامها
+// حيّة من قاعدة البيانات. وكل ألوانها من لوحة الموقع نفسها — لا لون خارجها.
+
+// قسمٌ يظهر بانزلاقٍ خفيف حين يصل إليه النظر (مرّة واحدة، بلا مكتبة)
+function Reveal({ children, delay = 0, className = '' }) {
+  const [ref, seen] = useInViewOnce();
+  return (
+    <div
+      ref={ref}
+      className={`bz-reveal ${seen ? 'bz-reveal-in' : ''} ${className}`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      {children}
+    </div>
+  );
+}
+
+// عنوان قسم موحّد: كلمة صغيرة ذهبية فوق، عنوان بخط العرض، وشرح هادئ
+function SectionTitle({ eyebrow, title, desc }) {
+  return (
+    <div className="mx-auto max-w-2xl text-center">
+      {eyebrow && <p className="bz-eyebrow">{eyebrow}</p>}
+      <h2 className="bz-h2">{title}</h2>
+      {desc && <p className="bz-lead mx-auto mt-3 max-w-xl">{desc}</p>}
+    </div>
+  );
+}
+
+// الأزرار الثلاثة — تتكرّر بالأعلى وبالأسفل: التسوّق، الدخول، فتح متجر
+function Actions({ t, compact = false }) {
+  return (
+    <div className={`bz-acts flex w-full flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:justify-center ${compact ? '' : 'sm:gap-4'}`}>
+      <Link to="/shop" className="bz-btn-gold">
+        <BagIcon className="h-5 w-5" /> {t('landing.shopNow')}
+      </Link>
+      <Link to="/login" className="bz-btn-outline">
+        {t('nav.login')}
+      </Link>
+      <Link to="/register" className="bz-btn-ghost">
+        <StoreIcon className="h-4 w-4" /> {t('landing.openStore')} <ForwardIcon className="h-3.5 w-3.5 rtl:rotate-180" />
+      </Link>
+    </div>
+  );
+}
+
+const FEATURE_ICONS = [StoreIcon, PaletteIcon, TruckIcon, ChartIcon, InstagramIcon, TicketIcon, PackageIcon, ShieldIcon];
+const STEP_ICONS = [StoreIcon, PackageIcon, SparkleIcon];
+
+export default function Landing() {
+  const { t, i18n } = useTranslation();
+  const en = i18n.language === 'en';
+  const [site, setSite] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem('bz_landing') || 'null') || {}; } catch { return {}; }
+  });
+  const [scrolled, setScrolled] = useState(false);
+
+  // الشريط العلويّ يلبس خلفيته بعد أول نزول. passive حتى لا يعرقل التمرير.
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    api.get('/public/site-info')
+      .then((r) => {
+        const s = { landing: r.data?.landing || {}, stats: r.data?.stats || null };
+        setSite(s);
+        try { sessionStorage.setItem('bz_landing', JSON.stringify(s)); } catch { /* ممتلئ */ }
+      })
+      .catch(() => { /* الصفحة كاملة بنصوصها الأصلية بلا الخادم */ });
+  }, []);
+
+  const L = site.landing || {};
+  // نصّ المدير إن كتبه، وإلا النصّ المترجَم الأصلي — فالصفحة كاملة دائماً
+  const pick = (obj, key, fallback) => {
+    const v = en ? obj?.[`${key}En`] : obj?.[key];
+    return (v && String(v).trim()) || (en ? obj?.[key] : null) || fallback;
+  };
+  const hidden = new Set(Array.isArray(L.hidden) ? L.hidden : []);
+
+  const hero = L.hero || {};
+  const chips = (hero.chips?.length ? hero.chips : null) || [
+    { label: t('landing.chip1') }, { label: t('landing.chip2') }, { label: t('landing.chip3') },
+  ];
+  const chipIcons = [TruckIcon, CashIcon, CheckIcon, ShieldIcon];
+
+  const features = useMemo(() => {
+    if (L.features?.length) return L.features;
+    return t('landing.features', { returnObjects: true }) || [];
+  }, [L.features, t]);
+
+  const steps = useMemo(() => {
+    if (L.steps?.length) return L.steps;
+    return t('landing.steps', { returnObjects: true }) || [];
+  }, [L.steps, t]);
+
+  const testimonials = L.testimonials?.length ? L.testimonials : (t('landing.testimonials', { returnObjects: true }) || []);
+  const stats = site.stats;
+
+  return (
+    <div className="bz-land">
+      <Seo title={t('landing.seoTitle')} description={t('landing.seoDesc')} />
+
+      {/* ─────────── الهيرو ─────────── */}
+      <header className="bz-hero bz-grain">
+        {/* خلفية الهيرو: فيديو يضعه المدير، أو صورة، أو تدرّج الهوية وحده.
+            الفيديو صامتٌ ويعمل داخل الصفحة (playsInline) — بلا ذلك يفتحه iOS
+            بمشغّلٍ ملء الشاشة فوق الموقع. والصورة غلافُه (poster) فتظهر فوراً
+            ريثما يُحمّل، ويبقى شيءٌ إن تعذّر تشغيله. */}
+        {hero.image && !hero.video && (
+          <div className="bz-hero-img" style={{ backgroundImage: `url(${hero.image})` }} aria-hidden="true" />
+        )}
+        {hero.video && (
+          <video
+            className="bz-hero-img bz-hero-video"
+            src={hero.video}
+            poster={hero.image || undefined}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            aria-hidden="true"
+            tabIndex={-1}
+          />
+        )}
+        <div className="bz-hero-veil" aria-hidden="true" />
+        <span className="bz-hero-glow bz-hero-glow-a" aria-hidden="true" />
+        <span className="bz-hero-glow bz-hero-glow-b" aria-hidden="true" />
+
+        {/* شريط علويّ ثابت: يبدأ شفّافاً فوق الهيرو، ويلبس خلفيةً ضبابية
+            بمجرّد النزول فيبقى مقروءاً فوق أي قسم. الأزرار الثلاثة حاضرة
+            هنا أيضاً — لا يحتاج الزائر أن يعود للأعلى ليجد مدخلاً. */}
+        <nav className={`bz-nav ${scrolled ? 'bz-nav-on' : ''}`}>
+          <Link to="/" className="bz-nav-brand" aria-label={t('app.name')}>
+            <Logo className="h-9 w-9" />
+            <span className="bz-nav-name">{t('app.name')}</span>
+          </Link>
+          <div className="bz-nav-side">
+            <Link to="/shop" className="bz-nav-link">{t('landing.shopNow')}</Link>
+            <Link to="/login" className="bz-nav-link bz-nav-link-sm">{t('nav.login')}</Link>
+            <Link to="/register" className="bz-nav-cta">
+              <StoreIcon className="h-4 w-4" />
+              <span className="hidden sm:inline">{t('landing.openStore')}</span>
+              <span className="sm:hidden">{t('landing.openStoreShort')}</span>
+            </Link>
+            <LanguageSwitcher />
+          </div>
+        </nav>
+
+        {/* الهيرو تحريريّ لا متمركز: كتلة النصّ على حافّة البداية فوق الصورة —
+            العين تقرأ سطراً واحداً متّصلاً بدل أن تقفز يميناً ويساراً، والصورة
+            تبقى ظاهرةً بالجهة الأخرى بدل أن يغطّيها النصّ. */}
+        <div className="bz-hero-body">
+          <div className="bz-hero-block">
+            <p className="bz-badge">{pick(hero, 'badge', t('landing.badge'))}</p>
+
+            <h1 className="bz-h1">{pick(hero, 'title', t('landing.title'))}</h1>
+
+            <p className="bz-hero-sub">{pick(hero, 'subtitle', t('landing.subtitle'))}</p>
+
+            {/* صفّ الميزات بعلامات صحّ — سطرٌ واحد على الشاشات الواسعة */}
+            <div className="bz-ticks">
+              {chips.slice(0, 4).map((c, i) => {
+                const label = (en ? c.labelEn : c.label) || c.label || c.labelEn;
+                return label ? (
+                  <span key={label} className="bz-tick">
+                    <span className="bz-tick-b"><CheckIcon className="h-3 w-3" /></span>{label}
+                  </span>
+                ) : null;
+              })}
+            </div>
+
+            <div className="bz-hero-actions"><Actions t={t} /></div>
+          </div>
+        </div>
+
+        {/* أرقام حيّة من قاعدة البيانات — لا أرقام مكتوبة باليد */}
+        {!hidden.has('stats') && stats && (stats.stores > 0 || stats.products > 0) && (
+          <div className="bz-stats">
+            {[
+              { n: stats.stores, label: t('landing.statStores'), Icon: StoreIcon },
+              { n: stats.products, label: t('landing.statProducts'), Icon: PackageIcon },
+              { n: stats.orders, label: t('landing.statOrders'), Icon: BagIcon },
+            ].map(({ n, label, Icon }) => (
+              <div key={label} className="bz-stat">
+                <Icon className="bz-stat-ico h-5 w-5" />
+                <span className="bz-stat-n"><CountUp value={n} />{n >= 50 ? '+' : ''}</span>
+                <span className="bz-stat-l">{label}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </header>
+
+      {/* ─────────── الميزات ─────────── */}
+      {!hidden.has('features') && features.length > 0 && (
+        <section className="bz-sec bz-sec-light">
+          <Reveal><SectionTitle eyebrow={t('landing.featEyebrow')} title={t('landing.featTitle')} desc={t('landing.featDesc')} /></Reveal>
+          {/* بنتو لا شبكة متساوية: الأولى تأخذ عمودين وتكبر، والباقيات أصغر.
+              ثمانية مربّعات متطابقة تُقرأ كجدولٍ فتُتخطّى دفعةً واحدة؛ اختلاف
+              الأحجام يعطي العين مدخلاً وترتيباً. */}
+          <div className="bz-bento mt-10">
+            {/* سبع لا ثمان: الأولى تشغل خانتين، فيمتلئ الصفّان تماماً بلا بطاقةٍ
+                يتيمة بسطرٍ وحدها. */}
+            {features.slice(0, 7).map((f, i) => {
+              const Icon = FEATURE_ICONS[i % FEATURE_ICONS.length];
+              return (
+                <Reveal key={pick(f, 'title', i)} delay={i * 55} className={i === 0 ? 'bz-bento-lg' : ''}>
+                  <article className={`bz-card ${i === 0 ? 'bz-card-lg' : ''}`}>
+                    <span className="bz-card-ico"><Icon className={i === 0 ? 'h-7 w-7' : 'h-6 w-6'} /></span>
+                    <h3 className="bz-card-t">{pick(f, 'title', '')}</h3>
+                    <p className="bz-card-d">{pick(f, 'desc', '')}</p>
+                  </article>
+                </Reveal>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* ─────────── الخطوات ─────────── */}
+      {!hidden.has('steps') && steps.length > 0 && (
+        <section className="bz-sec bz-sec-alt bz-grain">
+          <Reveal><SectionTitle eyebrow={t('landing.stepEyebrow')} title={t('landing.stepTitle')} desc={t('landing.stepDesc')} /></Reveal>
+          {/* خطٌّ ذهبيّ يصل الخطوات فتُقرأ كمسار، لا ثلاث بطاقات متجاورة
+              لا رابط بينها. الرقم على الخطّ نفسه — هو العُقدة. */}
+          <ol className="bz-path mt-12">
+            {steps.slice(0, 4).map((s, i) => {
+              const Icon = STEP_ICONS[i % STEP_ICONS.length];
+              return (
+                <Reveal key={pick(s, 'title', i)} delay={i * 110}>
+                  <li className="bz-node">
+                    <span className="bz-node-dot">
+                      <Icon className="h-5 w-5" />
+                      <b>{i + 1}</b>
+                    </span>
+                    <h3 className="bz-node-t">{pick(s, 'title', '')}</h3>
+                    <p className="bz-node-d">{pick(s, 'desc', '')}</p>
+                  </li>
+                </Reveal>
+              );
+            })}
+          </ol>
+          <Reveal delay={200}>
+            <div className="mt-9 flex justify-center">
+              <Link to="/register" className="bz-btn-gold sm:!w-auto sm:!px-9">
+                <StoreIcon className="h-5 w-5" /> {t('landing.openStore')}
+              </Link>
+            </div>
+          </Reveal>
+        </section>
+      )}
+
+      {/* ─────────── شهادات ─────────── */}
+      {!hidden.has('testimonials') && testimonials.length > 0 && (
+        <section className="bz-sec bz-sec-light">
+          <Reveal><SectionTitle eyebrow={t('landing.tstEyebrow')} title={t('landing.tstTitle')} /></Reveal>
+          {/* الأولى كبيرة تُقرأ، والباقيات إلى جانبها — بدل ثلاثٍ متساوية
+              لا تُقرأ منها واحدة. */}
+          <div className="bz-quotes mt-10">
+            {testimonials.slice(0, 6).map((q, i) => (
+              <Reveal key={(q.name || '') + i} delay={i * 70} className={i === 0 ? 'bz-quote-lead' : ''}>
+                <figure className={`bz-quote ${i === 0 ? 'bz-quote-big' : ''}`}>
+                  <span className="bz-quote-mark" aria-hidden="true">”</span>
+                  <blockquote className="bz-quote-t">{(en ? q.textEn : q.text) || q.text || q.textEn}</blockquote>
+                  <figcaption className="bz-quote-by">
+                    <span className="bz-quote-av">
+                      {q.image ? <img src={q.image} alt="" /> : <CrownIcon className="h-4 w-4" />}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate font-bold">{q.name}</span>
+                      {q.store && <span className="block truncate text-[11.5px] opacity-70">{q.store}</span>}
+                    </span>
+                  </figcaption>
+                </figure>
+              </Reveal>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ─────────── الختام: الأزرار الثلاثة مرّةً أخرى ─────────── */}
+      <section className="bz-cta bz-grain">
+        <span className="bz-hero-glow bz-hero-glow-a" aria-hidden="true" />
+        <Reveal>
+          <div className="relative mx-auto max-w-2xl text-center">
+            <span className="bz-cta-ico"><UsersIcon className="h-7 w-7" /></span>
+            <h2 className="bz-h2 mt-5">{pick(L.cta || {}, 'title', t('landing.ctaTitle'))}</h2>
+            <p className="bz-lead mx-auto mt-3">{pick(L.cta || {}, 'subtitle', t('landing.ctaDesc'))}</p>
+            <div className="mt-8"><Actions t={t} /></div>
+            {BAZARA_WHATSAPP && (
+              <a href={buildWhatsappLink(BAZARA_WHATSAPP)} target="_blank" rel="noreferrer" className="bz-cta-wa">
+                <WhatsAppIcon className="h-4 w-4" /> {t('landing.askUs')}
+              </a>
+            )}
+          </div>
+        </Reveal>
+      </section>
+    </div>
+  );
+}

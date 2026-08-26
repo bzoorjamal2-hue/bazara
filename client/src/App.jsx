@@ -7,28 +7,33 @@ import RequireSubscription from './components/RequireSubscription.jsx';
 import Spinner from './components/Spinner.jsx';
 import Home from './pages/Home.jsx'; // الصفحة الرئيسية تبقى فورية (أول ما يفتح الزائر)
 import Search from './pages/Search.jsx'; // البحث يفتح من الهيدر مباشرة — ضمن الحزمة الأساسية ليفتح فورياً بلا وميض تحميل
-import AppWelcome from './components/AppWelcome.jsx';
+import Landing from './pages/Landing.jsx'; // صفحة المنصّة — أول ما يراه الزائر بالويب
 import Splash from './components/Splash.jsx';
 import { isStandalone, hasStoredToken } from './utils/pwa.js';
 import { ensureDash } from './i18n.js';
 import { useAuth } from './context/AuthContext.jsx';
 
-// داخل التطبيق المثبّت:
-// - مشترك مسجّل دخوله → يفتح مباشرة على لوحة التحكم (حسابه).
-// - زائر → شاشة افتتاح أنيقة.
-// في المتصفح: يعرض الصفحة الرئيسية العامة كالمعتاد.
+// جذر الموقع، ووجهتان مختلفتان عن قصد:
+//
+// • التطبيق المثبّت: من نصّبه على شاشته صاحبةُ متجرٍ تدخل لتُدير — لا زائرةٌ
+//   تُقنَع. المشتركة الداخلة تذهب للوحتها، وغيرها لتسجيل الدخول مباشرةً.
+//   صفحة التعريف بينهما كانت خطوةً زائدة تُلمَس كل يوم.
+//
+// • المتصفّح: صفحة المنصّة الكاملة. الزائرة من جوجل أو من رابطٍ بإنستغرام
+//   كانت تهبط على شبكة المنتجات بلا أن تعرف ما بازارا ولا لماذا تفتح متجرها
+//   فيها؛ ومنها تدخل للتسوّق (/shop) أو تسجّل دخولها أو تفتح متجرها.
 function Root() {
   const { user, loading } = useAuth();
-  // مهلة قصوى للسبلاش: لو تأخّر الخادم (Render نائم) لا نعلّق — نعرض شاشة الترحيب بعد 6 ثوانٍ
+  // مهلة قصوى للسبلاش: لو تأخّر الخادم (Render نائم) لا نعلّق — نمضي بعد 6 ثوانٍ
   const [waited, setWaited] = useState(false);
   useEffect(() => {
     const id = setTimeout(() => setWaited(true), 6000);
     return () => clearTimeout(id);
   }, []);
-  if (!isStandalone()) return <Home />;
+  if (!isStandalone()) return <Landing />;
   if (user) return <Navigate to="/dashboard" replace />;
   if (loading && hasStoredToken() && !waited) return <Splash />;
-  return <AppWelcome />;
+  return <Navigate to="/login" replace />;
 }
 
 // باقي الصفحات تُحمّل عند الحاجة فقط (code-splitting) — يقلّل حجم التحميل الأولي كثيراً
