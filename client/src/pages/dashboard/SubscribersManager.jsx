@@ -4,9 +4,10 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
-import { CrownIcon, LinkIcon, BellIcon, SaveIcon, PlusIcon, MailIcon, TrashIcon, StarIcon, UsersIcon, ChartIcon, BagIcon, ReceiptIcon, LockIcon, LockOpenIcon, EditIcon, WarnIcon } from '../../components/icons.jsx';
+import { CrownIcon, LinkIcon, BellIcon, SaveIcon, PlusIcon, MailIcon, TrashIcon, StarIcon, UsersIcon, ChartIcon, BagIcon, ReceiptIcon, LockIcon, LockOpenIcon, EditIcon, WarnIcon, EyeIcon, XIcon } from '../../components/icons.jsx';
 import { PageHead } from '../../components/FormField.jsx';
 import AdminStoreDetail from './AdminStoreDetail.jsx';
+import { startImpersonation } from '../../utils/impersonation.js';
 
 function fmt(d) {
   return d ? new Date(d).toLocaleString() : '—';
@@ -43,6 +44,7 @@ function SubRow({ s, onDeleted, onUpdated, onOpen }) {
   const [reason, setReason] = useState('');
   const [fix, setFix] = useState({ newEmail: '', newSlug: '' });
   const [toolBusy, setToolBusy] = useState(false);
+  const [stopReason, setStopReason] = useState('');
 
   // الإيقاف الإداريّ: يُخفي المتجر فوراً ويُعرض سببه لصاحبته
   const doSuspend = async () => {
@@ -56,6 +58,29 @@ function SubRow({ s, onDeleted, onUpdated, onOpen }) {
       setMsg(t('admin.suspendDone'));
       setTimeout(() => setMsg(''), 3000);
     } catch (e) { setErr(getErrorMessage(e, t('errors.generic'))); } finally { setToolBusy(false); }
+  };
+
+  // إنهاء الاشتراك: لم تدفع أو ألغت. يختلف عن الإيقاف الإداريّ — هذا يقول
+  // لها «انتهى اشتراكك» ويضع زرّ التجديد أمامها، وذاك يقول «موقوف: <سبب>»
+  // بلا مخرج. الخلط بينهما يجعلها تظنّ أنّها خالفت شيئاً وهي فقط لم تدفع.
+  const doStop = async () => {
+    const why = stopReason.trim();
+    setToolBusy(true); setErr('');
+    try {
+      const r = await api.post('/subscription/stop-subscription', { email: s.email, reason: why });
+      onUpdated?.(s.email, r.data.state);
+      setPanel(''); setStopReason('');
+      setMsg(t('admin.stopDone'));
+      setTimeout(() => setMsg(''), 3000);
+    } catch (e) { setErr(getErrorMessage(e, t('errors.generic'))); } finally { setToolBusy(false); }
+  };
+
+  // جلسة «أرى ما تراه هي» — تعيد تحميل التطبيق كاملاً بحسابها
+  const doImpersonate = async () => {
+    setToolBusy(true); setErr('');
+    try {
+      await startImpersonation(s.email);
+    } catch (e) { setErr(getErrorMessage(e, t('errors.generic'))); setToolBusy(false); }
   };
 
   const doUnsuspend = async () => {
@@ -213,6 +238,30 @@ function SubRow({ s, onDeleted, onUpdated, onOpen }) {
               {s.suspended ? <LockOpenIcon className="h-3.5 w-3.5" /> : <LockIcon className="h-3.5 w-3.5" />}
               {s.suspended ? t('admin.unsuspend') : t('admin.suspend')}
             </button>
+            {/* إنهاء الاشتراك — يظهر فقط لمن اشتراكها قائم */}
+            {!s.isAdmin && s.active && (
+              <button
+                type="button"
+                onClick={() => setPanel(panel === 'stop' ? '' : 'stop')}
+                disabled={toolBusy}
+                title={t('admin.stopSub')}
+                className="inline-flex items-center gap-1 rounded-full border border-amber-400/40 px-2.5 py-1 text-xs font-bold text-amber-300 transition hover:bg-amber-500/10 disabled:opacity-40"
+              >
+                <XIcon className="h-3.5 w-3.5" /> {t('admin.stopSub')}
+              </button>
+            )}
+            {/* التصفّح كصاحبة المتجر — أقوى أداة دعم */}
+            {!s.isAdmin && (
+              <button
+                type="button"
+                onClick={doImpersonate}
+                disabled={toolBusy}
+                title={t('admin.impStart')}
+                className="inline-flex items-center gap-1 rounded-full border border-sky-400/40 px-2.5 py-1 text-xs font-bold text-sky-300 transition hover:bg-sky-500/10 disabled:opacity-40"
+              >
+                <EyeIcon className="h-3.5 w-3.5" /> {t('admin.impStart')}
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setPanel(panel === 'fix' ? '' : 'fix')}
@@ -248,6 +297,25 @@ function SubRow({ s, onDeleted, onUpdated, onOpen }) {
       </div>
 
       {/* سبب الإيقاف إلزاميّ: يُعرض لصاحبته فيعرف ما يرفعه */}
+      {panel === 'stop' && (
+        <div className="mt-2 space-y-2 rounded-xl border border-amber-400/30 bg-amber-500/[0.07] p-3">
+          <p className="text-[11.5px] font-semibold leading-relaxed text-amber-300">{t('admin.stopWarn')}</p>
+          <input
+            value={stopReason}
+            onChange={(e) => setStopReason(e.target.value)}
+            maxLength={200}
+            placeholder={t('admin.stopReasonPlaceholder')}
+            className="input"
+          />
+          <div className="flex gap-2">
+            <button type="button" onClick={doStop} disabled={toolBusy} className="btn-primary flex-1 !py-1.5 text-xs">
+              {toolBusy ? t('common.loading') : t('admin.stopConfirm')}
+            </button>
+            <button type="button" onClick={() => setPanel('')} className="btn-ghost !py-1.5 text-xs">{t('common.cancel')}</button>
+          </div>
+        </div>
+      )}
+
       {panel === 'suspend' && !s.suspended && (
         <div className="mt-2.5 space-y-2 rounded-xl border border-red-400/35 bg-red-500/[0.07] p-2.5">
           <p className="text-[11px] font-semibold text-red-300">{t('admin.suspendWhat')}</p>

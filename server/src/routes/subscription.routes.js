@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import rateLimit from 'express-rate-limit';
 import {
   getStatus,
   requestSubscription,
@@ -23,6 +24,8 @@ import {
   deleteSubscriber,
   setSubscription,
   addSubscriptionDays,
+  stopSubscription,
+  impersonate,
   getAdminStats,
   setStoreFeatured,
   broadcastMessage,
@@ -31,6 +34,14 @@ import { requireAuth, requireAdmin } from '../middleware/auth.js';
 import { handleValidation, idParamRule } from '../middleware/validate.js';
 
 const router = Router();
+
+const impersonateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'محاولات كثيرة لفتح جلسات تصفّح. حاول لاحقاً.' },
+});
 
 // للمستخدم
 router.get('/status', requireAuth, getStatus);
@@ -53,6 +64,11 @@ router.post('/unsuspend', requireAuth, requireAdmin, unsuspendSubscriber);
 router.post('/fix-account', requireAuth, requireAdmin, fixAccount);
 router.post('/set-subscription', requireAuth, requireAdmin, setSubscription);
 router.post('/add-days', requireAuth, requireAdmin, addSubscriptionDays);
+// إنهاء اشتراك (لم تدفع/ألغت) — يُغلق المتجر برسالة «انتهى اشتراكك» لا «موقوف»
+router.post('/stop-subscription', requireAuth, requireAdmin, stopSubscription);
+// جلسة تصفّح نيابيّ قصيرة الأجل. حدّ صارم: أداة دعمٍ لا تُفتح عشرات المرّات
+// بالساعة، وأيّ اندفاعٍ عليها إشارةٌ تستحقّ الوقوف عندها.
+router.post('/impersonate', requireAuth, requireAdmin, impersonateLimiter, impersonate);
 router.post('/delete-subscriber', requireAuth, requireAdmin, deleteSubscriber);
 router.post('/set-featured', requireAuth, requireAdmin, setStoreFeatured);
 router.post('/broadcast', requireAuth, requireAdmin, broadcastMessage);

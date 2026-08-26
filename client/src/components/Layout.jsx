@@ -17,6 +17,8 @@ import { buildWhatsappLink } from '../utils/whatsapp.js';
 import { WhatsAppIcon, InstagramIcon, FacebookIcon } from './icons.jsx';
 import { BAZARA_WHATSAPP, BAZARA_INSTAGRAM, BAZARA_FACEBOOK } from '../config/site.js';
 import { setPlatformCategories } from '../utils/platformCategories.js';
+import ImpersonationBar from './ImpersonationBar.jsx';
+import { isImpersonating } from '../utils/impersonation.js';
 
 // الهوية الخمرية/العاجية الفاخرة مطبّقة على كل الموقع (متجر عام + لوحة تحكم لكل المشتركين).
 export default function Layout({ children }) {
@@ -58,8 +60,17 @@ export default function Layout({ children }) {
     return () => { window.removeEventListener('touchmove', dismiss); window.removeEventListener('wheel', dismiss); };
   }, []);
 
+  // صنف على body يدفع كل الصفحة تحت شريط الجلسة النيابية — لو تركناه ثابتاً
+  // فوق المحتوى وحده لغطّى الهيدر بكل صفحة.
+  useEffect(() => {
+    const on = isImpersonating();
+    document.body.classList.toggle('bz-impersonating', on);
+    return () => document.body.classList.remove('bz-impersonating');
+  }, []);
+
   return (
     <div className="app-bg theme-pub flex min-h-screen flex-col">
+      <ImpersonationBar />
       <PullToRefresh />
       {/* سحب من الحافة للرجوع (التطبيق المثبّت فقط) — إحساس أصلي كإنستغرام/iOS */}
       <SwipeBack />

@@ -932,7 +932,9 @@
       "codes.send": "Sent code to subscriber",
       "broadcast.send": "Broadcast email",
       "settings.payment": "Edited payment instructions",
-      "site.settings": "Edited site settings"
+      "site.settings": "Edited site settings",
+      "subscription.stop": "Ended subscription",
+      "account.impersonate": "Opened browse session"
     },
     "logCount_one": "1 action",
     "logCount_other": "{{count}} actions",
@@ -1033,7 +1035,18 @@
     "socialTip": "Enter just the handle (bazara.ps) or paste the full link — both end up the same.",
     "socialAppNote": "On mobile these open the Instagram/Facebook app directly when installed, otherwise the browser.",
     "saveSocial": "Save accounts",
-    "socialSaved": "Accounts saved."
+    "socialSaved": "Accounts saved.",
+    "stopSub": "End subscription",
+    "stopWarn": "Her store closes immediately with an 'your subscription ended' notice and a renew button. Nothing is deleted, and any pending subscription request is rejected. This is not the admin suspension, which tells her 'suspended' with no way out.",
+    "stopReasonPlaceholder": "Reason (optional) — e.g. payment never arrived",
+    "stopConfirm": "Yes, end it",
+    "stopDone": "Subscription ended — her store is closed until she renews.",
+    "impStart": "Browse as owner",
+    "impNow": "You are browsing as {{name}}",
+    "impNote": "Admin tools are blocked, and everything you do is in her name",
+    "impExit": "Exit",
+    "impLeftMin": "ends in {{n}} min",
+    "impLeftSoon": "ending shortly"
   },
   "finance": {
     "title": "Profit & expenses",

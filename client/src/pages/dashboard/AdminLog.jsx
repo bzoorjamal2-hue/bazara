@@ -5,7 +5,7 @@ import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
 import { PageHead, Tip } from '../../components/FormField.jsx';
-import { ShieldIcon, EyeOffIcon, EyeIcon, CrownIcon, TrashIcon, StarIcon, CheckIcon, XIcon, PlusIcon, LockIcon, LockOpenIcon, EditIcon, TicketIcon, MailIcon, MegaphoneIcon, CardIcon, ImageIcon } from '../../components/icons.jsx';
+import { ShieldIcon, EyeOffIcon, EyeIcon, CrownIcon, TrashIcon, StarIcon, CheckIcon, XIcon, PlusIcon, LockIcon, LockOpenIcon, EditIcon, TicketIcon, MailIcon, MegaphoneIcon, CardIcon, ImageIcon, EyeIcon as EyeGlyph, XIcon as XGlyph } from '../../components/icons.jsx';
 
 // لون كل فعل بحسب أثره: الأحمر لما يحجب أو يحذف، الأخضر لما يمنح، والرمادي
 // لما يعدّل. ألوان صريحة مصمتة كي تُقرأ في الوضعين.
@@ -31,6 +31,8 @@ const ACTIONS = {
   'broadcast.send': { tone: '#57534e', Icon: MegaphoneIcon },
   'settings.payment': { tone: '#57534e', Icon: CardIcon },
   'site.settings': { tone: '#57534e', Icon: ImageIcon },
+  'subscription.stop': { tone: '#92400e', Icon: XGlyph },
+  'account.impersonate': { tone: '#0369a1', Icon: EyeGlyph },
 };
 
 // قيمة الحقل كما تُقرأ: التاريخ بصيغة محلّية لا ISO، والبقيّة نصّاً مقصوصاً.

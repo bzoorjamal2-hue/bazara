@@ -1,3 +1,4 @@
+import jwt from 'jsonwebtoken';
 import { query } from '../config/db.js';
 import { isUserActive, daysRemaining, isAdminEmail, planPeriodEnd, adminEmails, activeStoreSql } from '../utils/subscription.js';
 import { sendMail, isMailConfigured } from '../utils/mail.js';
@@ -930,6 +931,88 @@ export async function rejectRequest(req, res, next) {
     if (r.rows.length === 0) return res.status(404).json({ error: 'الطلب غير موجود.' });
     await logAdmin(req, 'request.reject', { type: 'request', id: String(id), label: String(id) });
     res.json({ message: 'تم رفض الطلب.' });
+  } catch (err) {
+    next(err);
+  }
+}
+
+
+// ── POST /api/subscription/stop-subscription ───────────────────────────────
+// إنهاء اشتراكٍ فوراً: لم تدفع، أو ألغت، أو رُدّ التحويل.
+//
+// كان المتاح إمّا الانتظار حتى ينتهي وحده (فتبقى تبيع شهراً بلا دفع) أو
+// الإيقاف الإداريّ — وهو رسالةٌ أخرى تماماً: تظهر لها «موقوف: <سبب>» فتظنّ
+// أنّها خالفت شيئاً، ولا زرّ تجديدٍ أمامها. الإنهاء يُغلق المتجر برسالة
+// «انتهى اشتراكك» ويضع زرّ التجديد في طريقها — وهو المطلوب حين لا تدفع.
+export async function stopSubscription(req, res, next) {
+  const email = (req.body.email || '').trim().toLowerCase();
+  const reason = String(req.body?.reason || '').trim().slice(0, 200);
+  if (!email) return res.status(400).json({ error: 'البريد مطلوب.' });
+  if (isAdminEmail(email)) return res.status(400).json({ error: 'لا يمكن إنهاء اشتراك حساب المدير.' });
+  try {
+    const cur = await query('SELECT id FROM users WHERE lower(email) = lower($1)', [email]);
+    if (!cur.rows.length) return res.status(404).json({ error: 'لا يوجد حساب بهذا البريد.' });
+
+    // نهاية الفترة = الآن لا NULL: التاريخ يبقى شاهداً على متى انتهى فعلاً،
+    // ولو مسحناه لبدا الحساب كأنّه لم يشترك قطّ فيضيع سجلّه.
+    await query(
+      "UPDATE users SET subscription_status='expired', current_period_end=now() WHERE id=$1",
+      [cur.rows[0].id]
+    );
+    // طلبٌ معلّق لم يعد له معنى بعد الإنهاء
+    await query("UPDATE subscription_requests SET status='rejected', reviewed_at=now() WHERE user_id=$1 AND status='pending'", [cur.rows[0].id]);
+
+    await logAdmin(req, 'subscription.stop', { type: 'user', id: email, label: email, details: reason ? { reason } : {} });
+    res.json({ message: 'تم إنهاء الاشتراك.', state: await accountState(email) });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ── POST /api/subscription/impersonate ─────────────────────────────────────
+// جلسة «أرى ما تراه هي»: توكن قصير الأجل باسم صاحبة المتجر، يحمل ختم من
+// فتحه. أقوى أداة دعم ممكنة — تُشخَّص مشكلتها من داخل لوحتها بلا أن تُطلب
+// كلمة سرّها ولا أن تُوصف لك الشاشة عبر الهاتف.
+//
+// حدودها مقصودة: لا تُفتح على حساب إدارة، ومدّتها ساعة، وأدوات الإدارة
+// محجوبة داخلها (requireAdmin يرفض التوكن المختوم)، وكلّ فتحٍ يُسجَّل.
+const IMPERSONATE_MINUTES = 60;
+
+export async function impersonate(req, res, next) {
+  const email = (req.body.email || '').trim().toLowerCase();
+  if (!email) return res.status(400).json({ error: 'البريد مطلوب.' });
+  if (isAdminEmail(email)) return res.status(400).json({ error: 'لا يمكن فتح جلسة على حساب إدارة.' });
+  try {
+    const r = await query(
+      `SELECT u.id, u.email, u.name, s.name AS store_name, s.slug
+         FROM users u LEFT JOIN stores s ON s.user_id = u.id
+        WHERE lower(u.email) = lower($1)`,
+      [email]
+    );
+    const u = r.rows[0];
+    if (!u) return res.status(404).json({ error: 'لا يوجد حساب بهذا البريد.' });
+
+    const token = jwt.sign(
+      {
+        sub: u.id,
+        email: u.email,
+        // ختم الجلسة: يمنع صلاحيات الإدارة ويُبقي أثر من فتحها
+        imp: { by: req.user.id, byEmail: req.user.email, at: Date.now() },
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: `${IMPERSONATE_MINUTES}m` }
+    );
+
+    await logAdmin(req, 'account.impersonate', {
+      type: 'user', id: email, label: email,
+      details: { store: u.store_name || '', minutes: IMPERSONATE_MINUTES },
+    });
+
+    res.json({
+      token,
+      minutes: IMPERSONATE_MINUTES,
+      user: { name: u.name, email: u.email, storeName: u.store_name || '', slug: u.slug || '' },
+    });
   } catch (err) {
     next(err);
   }
