@@ -123,7 +123,7 @@ export default function DashDrawerNav({ groups, activeKey, onNavigate, badges = 
                         className={`relative flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-extrabold shadow-sm ring-1 ring-cream/50 ${
                           s.badgeTone === 'green' ? 'bg-emerald-500 text-white' : 'text-wine-dark'
                         }`}
-                        style={s.badgeTone === 'green' ? undefined : { background: 'linear-gradient(135deg, #f4e0a4 0%, #cdbda4 55%, #b09a7e 100%)' }}
+                        style={s.badgeTone === 'green' ? undefined : { background: 'linear-gradient(135deg, #eae0cf 0%, #cdbda4 55%, #b09a7e 100%)' }}
                       >
                         {badge > 99 ? '99+' : badge}
                       </span>

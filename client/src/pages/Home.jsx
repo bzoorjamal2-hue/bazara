@@ -542,7 +542,7 @@ function HomeHero({ banners = [] }) {
                       </>
                     )}
                     {/* شارة ذهبية رفيعة تعطي إحساس دور الأزياء العالمية */}
-                    <span className={`bz-hero-el bz-kicker mb-4 text-[11px] font-semibold uppercase sm:text-xs ${onMedia ? 'text-gold-200/90' : 'text-[#a9812f]'}`}>Bazara</span>
+                    <span className={`bz-hero-el bz-kicker mb-4 text-[11px] font-semibold uppercase sm:text-xs ${onMedia ? 'text-gold-200/90' : 'text-[#9a8463]'}`}>Bazara</span>
                     {s.title && <h1 className={`bz-hero-el font-display text-3xl font-extrabold leading-tight sm:text-5xl ${onMedia ? 'text-cream drop-shadow-lg' : 'text-[#5e4636]'}`}>{s.title}</h1>}
                     {s.subtitle && <p className={`bz-hero-el mx-auto mt-4 max-w-2xl sm:text-lg ${onMedia ? 'text-cream/85 drop-shadow' : 'text-[#6e5340]'}`}>{s.subtitle}</p>}
                     {s.btnLabel && s.btnHref && <div className="bz-hero-el"><SlideButton href={s.btnHref} label={s.btnLabel} onLight={!onMedia} /></div>}
@@ -555,7 +555,7 @@ function HomeHero({ banners = [] }) {
               <div key={idx} className="w-full shrink-0" dir="rtl">
                 <div className={`relative flex h-[340px] flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#f6ecd9] via-[#efe1c6] to-[#f6ecd9] px-6 text-center sm:h-[420px] lg:h-[500px] 2xl:h-[580px] ${idx === i ? 'bz-hero-active' : ''}`}>
                   <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-wine/5 blur-3xl" />
-                  <p className="bz-hero-el bz-kicker mb-4 text-[11px] font-semibold uppercase text-[#a9812f] sm:text-xs">{s.eyebrow}</p>
+                  <p className="bz-hero-el bz-kicker mb-4 text-[11px] font-semibold uppercase text-[#9a8463] sm:text-xs">{s.eyebrow}</p>
                   <h1 className="bz-hero-el font-display text-3xl font-extrabold leading-tight text-[#5e4636] sm:text-5xl">
                     {s.title}
                     {s.highlight && <> <span className="underline decoration-[#9c866a] decoration-2 underline-offset-8">{s.highlight}</span></>}

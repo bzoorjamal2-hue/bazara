@@ -268,7 +268,7 @@ export default function OrdersManager() {
     body{font-family:'Cairo','Segoe UI',Tahoma,sans-serif;color:#2b2b2b;margin:0;padding:0;background:#fff}
     .inv{padding:22px 24px;max-width:800px;margin:0 auto}
     .inv + .inv{page-break-before:always}
-    h1{font-size:19px;margin:0 0 4px;color:#8a6a2f}
+    h1{font-size:19px;margin:0 0 4px;color:#7f6c4d}
     .muted{color:#6b6b6b;font-size:11.5px;line-height:1.7}
     /* خيط ذهبي متدرّج أسفل الترويسة بدل خطّ مصمت — هوية بازارا الذهبية */
     .head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding-bottom:12px;margin-bottom:14px;border-bottom:3px solid;border-image:linear-gradient(90deg,#cdbda4,#b09a7e,#8a7657) 1}

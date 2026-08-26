@@ -176,7 +176,7 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
           {stories.map((s, i) => (
             <div key={s.id} className="h-[3px] flex-1 overflow-hidden rounded-full bg-white/30 shadow-[0_1px_2px_rgba(0,0,0,.35)]">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-[#b09a7e] via-[#f7e7b0] to-[#fff6da] shadow-[0_0_6px_rgba(205, 189, 164, .8)]"
+                className="h-full rounded-full bg-gradient-to-r from-[#b09a7e] via-[#eee6d8] to-[#fff6da] shadow-[0_0_6px_rgba(205, 189, 164, .8)]"
                 style={{ width: `${i < idx ? 100 : i === idx ? progress : 0}%` }}
               />
             </div>
@@ -227,7 +227,7 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
           )}
           {cur.productId && (
             <Link to={`/product/${cur.productId}`} onClick={onClose}
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#f7e7b0] via-[#cdbda4] to-[#b09a7e] py-3 text-sm font-extrabold text-[#2a1c14] shadow-[0_8px_24px_-6px_rgba(176, 154, 126, .8)] transition active:scale-[0.98]">
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#eee6d8] via-[#cdbda4] to-[#b09a7e] py-3 text-sm font-extrabold text-[#2a1c14] shadow-[0_8px_24px_-6px_rgba(176, 154, 126, .8)] transition active:scale-[0.98]">
               <BagIcon className="h-5 w-5" /> {t('story.shopNow')}
             </Link>
           )}

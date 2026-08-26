@@ -125,10 +125,10 @@ const waValid = (v) => {
 function AnnouncementPreview({ items }) {
   const list = items.length ? items : [''];
   return (
-    <div dir="ltr" className="group relative overflow-hidden rounded-xl border-y border-gold-400/60 bg-gradient-to-r from-[#1f130d] via-[#3f2a19] to-[#1f130d] py-2 shadow-[inset_0_1px_0_rgba(224,194,95,.22),inset_0_-1px_0_rgba(0,0,0,.4)]">
-      <span className="pointer-events-none absolute inset-x-0 top-0 z-10 h-px bg-gradient-to-r from-transparent via-[#f0d488]/70 to-transparent" />
-      <span className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-px bg-gradient-to-r from-transparent via-[#f0d488]/45 to-transparent" />
-      <span className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(80%_140%_at_50%_50%,rgba(224,194,95,.14),transparent_70%)]" />
+    <div dir="ltr" className="group relative overflow-hidden rounded-xl border-y border-gold-400/60 bg-gradient-to-r from-[#1f130d] via-[#3f2a19] to-[#1f130d] py-2 shadow-[inset_0_1px_0_rgba(209, 194, 170,.22),inset_0_-1px_0_rgba(0,0,0,.4)]">
+      <span className="pointer-events-none absolute inset-x-0 top-0 z-10 h-px bg-gradient-to-r from-transparent via-[#e1d5c1]/70 to-transparent" />
+      <span className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-px bg-gradient-to-r from-transparent via-[#e1d5c1]/45 to-transparent" />
+      <span className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(80%_140%_at_50%_50%,rgba(209, 194, 170,.14),transparent_70%)]" />
       <span className="animate-ann-shine pointer-events-none absolute inset-y-0 z-20 w-1/3 bg-[linear-gradient(105deg,transparent,rgba(255,244,210,.34)_50%,transparent)]" />
       {/* أبطأ من الشريط الحقيقي عمداً: المعاينة صغيرة والتاجرة تقرأ نصّها للتدقيق */}
       <div className="relative z-[5] flex w-max animate-marquee" style={{ animationDuration: `${Math.min(160, Math.max(34, list.join('  ').length * 0.95))}s` }}>
@@ -136,7 +136,7 @@ function AnnouncementPreview({ items }) {
           <div key={g} className="flex shrink-0 items-center" aria-hidden={g === 1}>
             {Array.from({ length: Math.max(6, list.length * 3) }).map((_, k) => (
               <span key={k} className="ann-text flex items-center gap-2 whitespace-nowrap px-5 text-[12px] font-extrabold" dir="auto">
-                <svg viewBox="0 0 24 24" className="h-3 w-3 shrink-0 text-[#f4dc93] drop-shadow-[0_0_5px_rgba(224,194,95,.75)]" style={{ WebkitTextFillColor: 'initial' }} fill="currentColor">
+                <svg viewBox="0 0 24 24" className="h-3 w-3 shrink-0 text-[#e7dcca] drop-shadow-[0_0_5px_rgba(209, 194, 170,.75)]" style={{ WebkitTextFillColor: 'initial' }} fill="currentColor">
                   <path d="M12 2c.5 3.8 2.2 5.5 6 6-3.8.5-5.5 2.2-6 6-.5-3.8-2.2-5.5-6-6 3.8-.5 5.5-2.2 6-6Z" />
                 </svg>
                 {list[k % list.length]}
