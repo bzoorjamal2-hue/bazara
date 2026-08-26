@@ -514,7 +514,7 @@ input[type='datetime-local']::-webkit-datetime-edit {
 .theme-pub .text-stone-100,
 .theme-pub .text-stone-200 { color: #2b2b2b; }
 .theme-pub .text-stone-300 { color: #4a4145; }
-.theme-pub .text-stone-400 { color: #7a6f73; }
+.theme-pub .text-stone-400 { color: #6f6660; }   /* كان #7a6f73 = 4.47 والحدّ 4.5 */
 .theme-pub .text-stone-500 { color: #9c9296; }
 .theme-pub .text-gold-100,
 .theme-pub .text-gold-200,
@@ -3559,3 +3559,10 @@ html.dark .theme-pub .bz-fun-4 { background: #b09a7e; }
    ينقلب معه. كان أبيضَ ثابتاً — أي غيرَ مرئيّ ليلاً على شريطٍ عاجيّ. */
 .bz-fun-n { color: #F4EDE2; }
 html.dark .theme-pub .bz-fun-n { color: #2b1d12; }
+
+/* نبرةُ «تمام» — كانت emerald-400: درجةُ وضعٍ داكن على صفحةٍ فاتحة (٣٫٠٥) */
+.bz-tone-ok { background: rgba(5, 150, 105, 0.13); color: #065f46; }
+html.dark .bz-tone-ok { background: rgba(52, 211, 153, 0.14); color: #6ee7b7; }
+/* بلاطةُ أيقونةٍ بنبرة التحذير — مصمتة كباقي بلاطات اللوحة، لا تدرّج */
+.bz-ico-amber { background: #b45309; color: #fff; }
+html.dark .theme-pub .bz-ico-amber { background: #fcd34d; color: #422006; }

@@ -55,7 +55,13 @@ export default function AnalyticsManager() {
 
   const load = () => {
     setError('');
-    api.get('/orders/stats').then((r) => setData(r.data)).catch((e) => setError(getErrorMessage(e)));
+    // قوائمُ فارغةٌ افتراضاً: القوائم الأربع تُقرأ بلا حارس (data.daily.map)،
+    // فلو نقص حقلٌ واحد من الردّ ماتَ التبويب كلّه بشاشة خطأ بدل أن يخلو قسمٌ
+    // منه. الحماية سطرٌ واحد هنا، لا حارسٌ عند كلّ استعمال.
+    const EMPTY = { daily: [], topProducts: [], lowStock: [], topCities: [], courierMonth: [] };
+    api.get('/orders/stats')
+      .then((r) => setData({ ...EMPTY, ...r.data }))
+      .catch((e) => setError(getErrorMessage(e)));
   };
   useEffect(load, []);
 

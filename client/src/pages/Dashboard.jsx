@@ -320,13 +320,13 @@ function Overview({ productsCount }) {
       {stats?.abandonedCount > 0 && (
         <Link
           to="/dashboard?tab=analytics"
-          className="group flex items-center gap-3 rounded-2xl bg-amber-500/10 p-4 ring-1 ring-amber-400/30 transition hover:-translate-y-0.5"
+          className="bz-tone-amber group flex items-center gap-3 rounded-2xl p-4 transition hover:-translate-y-0.5"
         >
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-md">
+          <span className="bz-ico-amber flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl">
             <CartGlyph className="h-[22px] w-[22px]" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-amber-300">
+            <p className="text-sm font-bold">
               {t('dashboard.ovAbandoned', { count: stats.abandonedCount, value: `${cur}${Math.round(stats.abandonedValue).toLocaleString()}` })}
             </p>
             <p className="mt-0.5 truncate text-xs text-stone-400">{t('dashboard.ovAbandonedCta')}</p>
@@ -432,7 +432,7 @@ function GrowthBadge({ pct }) {
   return (
     <span
       className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold tabular-nums ${
-        up ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-300'
+        up ? 'bz-tone-ok' : 'bz-tone-red'
       }`}
     >
       {up ? '▲' : '▼'} {Math.abs(pct)}%
