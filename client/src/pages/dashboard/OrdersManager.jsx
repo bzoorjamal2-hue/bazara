@@ -265,7 +265,7 @@ export default function OrdersManager() {
   // (@page والتخطيط المضغوط) يُضاف عند الطباعة حسب اختيار صاحب المتجر لطابعته.
   const INVOICE_CSS = `
     *{box-sizing:border-box}
-    body{font-family:'Cairo','Segoe UI',Tahoma,sans-serif;color:#2b2b2b;margin:0;padding:0;background:#fff}
+    body{font-family:'Tajawal','Segoe UI',Tahoma,sans-serif;color:#2b2b2b;margin:0;padding:0;background:#fff}
     .inv{padding:22px 24px;max-width:800px;margin:0 auto}
     .inv + .inv{page-break-before:always}
     h1{font-size:19px;margin:0 0 4px;color:#7f6c4d}
