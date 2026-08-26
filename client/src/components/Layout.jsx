@@ -102,7 +102,7 @@ export default function Layout({ children }) {
       {/* زر «العودة للأعلى» العائم بجهة البداية-الأسفل كان يطبق فوق زر الحفظ في نماذج
           لوحة التحكم الطويلة (سلايدر الموقع، إعدادات المتجر...) فيغطّيه. نخفيه في لوحة
           التحكم/الاشتراك — منطقة إدارة بهيكلها الخاص لا تحتاج زراً عائماً يزاحم الأزرار. */}
-      {!isReels && !isDashboard && <ScrollToTopButton />}
+      {!isReels && !isDashboard && !isLanding && <ScrollToTopButton />}
       {showBottomNav && <BottomNav />}
     </div>
   );

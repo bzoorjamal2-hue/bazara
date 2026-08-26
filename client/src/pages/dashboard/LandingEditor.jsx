@@ -48,6 +48,8 @@ export default function LandingEditor() {
           steps: d.steps || [],
           testimonials: d.testimonials || [],
           cta: { title: '', subtitle: '', ...(d.cta || {}) },
+          about: { title: '', text: '', ...(d.about || {}) },
+          contact: { title: '', email: '', phone: '', address: '', hours: '', ...(d.contact || {}) },
           hidden: d.hidden || [],
         });
       })
@@ -58,6 +60,8 @@ export default function LandingEditor() {
 
   const setHero = (k, v) => setL((p) => ({ ...p, hero: { ...p.hero, [k]: v } }));
   const setCta = (k, v) => setL((p) => ({ ...p, cta: { ...p.cta, [k]: v } }));
+  const setAbout = (k, v) => setL((p) => ({ ...p, about: { ...p.about, [k]: v } }));
+  const setContact = (k, v) => setL((p) => ({ ...p, contact: { ...p.contact, [k]: v } }));
   const setIn = (key, i, k, v) =>
     setL((p) => ({ ...p, [key]: p[key].map((x, j) => (j === i ? { ...x, [k]: v } : x)) }));
   const addTo = (key, blank) => setL((p) => ({ ...p, [key]: [...p[key], blank] }));
@@ -279,6 +283,39 @@ export default function LandingEditor() {
         </Field>
         <Field label={t('admin.land.sub')} max={300} value={L.cta.subtitle}>
           <textarea rows={2} className="input resize-none" maxLength={300} value={L.cta.subtitle} onChange={(e) => setCta('subtitle', e.target.value)} placeholder={t('landing.ctaDesc')} />
+        </Field>
+      </div>
+
+      {/* ─── من نحن ─── */}
+      <div className={CARD}>
+        <SectionHead icon={<UsersIcon className="h-5 w-5" />} title={t('admin.land.aboutTitle')} desc={t('admin.land.aboutHint')} />
+        <Field label={t('admin.land.headline')} max={80} value={L.about.title}>
+          <input className="input" maxLength={80} value={L.about.title} onChange={(e) => setAbout('title', e.target.value)} placeholder={t('landing.aboutTitle')} />
+        </Field>
+        <Field label={t('admin.land.sub')} max={700} value={L.about.text}>
+          <textarea rows={6} className="input resize-none" maxLength={700} value={L.about.text} onChange={(e) => setAbout('text', e.target.value)} placeholder={t('landing.aboutText')} />
+        </Field>
+      </div>
+
+      {/* ─── تواصلوا معنا ─── */}
+      <div className={CARD}>
+        <SectionHead icon={<MailIcon className="h-5 w-5" />} title={t('admin.land.contactTitle')} desc={t('admin.land.contactHint')} />
+        <Field label={t('admin.land.headline')} max={80} value={L.contact.title}>
+          <input className="input" maxLength={80} value={L.contact.title} onChange={(e) => setContact('title', e.target.value)} placeholder={t('landing.contactTitle')} />
+        </Field>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label={t('admin.land.fEmail')} max={120} value={L.contact.email}>
+            <input type="email" dir="ltr" className="input" maxLength={120} value={L.contact.email} onChange={(e) => setContact('email', e.target.value)} placeholder="hello@bazarastore.site" />
+          </Field>
+          <Field label={t('admin.land.fPhone')} max={20} value={L.contact.phone}>
+            <input type="tel" dir="ltr" className="input" maxLength={20} value={L.contact.phone} onChange={(e) => setContact('phone', e.target.value)} placeholder="+970599000000" />
+          </Field>
+        </div>
+        <Field label={t('admin.land.fAddress')} max={160} value={L.contact.address}>
+          <input className="input" maxLength={160} value={L.contact.address} onChange={(e) => setContact('address', e.target.value)} />
+        </Field>
+        <Field label={t('admin.land.fHours')} max={120} value={L.contact.hours}>
+          <input className="input" maxLength={120} value={L.contact.hours} onChange={(e) => setContact('hours', e.target.value)} placeholder={t('admin.land.fHoursPh')} />
         </Field>
       </div>
 

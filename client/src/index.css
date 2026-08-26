@@ -2534,3 +2534,113 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
 .bz-more svg { animation: bz-bob 1.9s ease-in-out infinite; }
 @keyframes bz-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
 @media (prefers-reduced-motion: reduce) { .bz-more svg { animation: none; } }
+
+/* ───────── بنود القائمة: رقم + تسمية + سهم ───────── */
+.bz-menu-link {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  border-bottom: 1px solid rgba(244, 237, 226, 0.08);
+  border-radius: 0;
+  padding: 1rem 0.4rem;
+}
+.bz-menu-link:last-child { border-bottom: 0; }
+.bz-menu-n {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: rgba(212, 175, 55, 0.75);
+  font-variant-numeric: tabular-nums;
+}
+.bz-menu-lbl { flex: 1; min-width: 0; }
+.bz-menu-arrow { flex-shrink: 0; opacity: 0.35; transition: opacity 0.2s ease, transform 0.2s ease; }
+@media (hover: hover) {
+  .bz-menu-link:hover { background: transparent; padding-inline-start: 0.4rem; }
+  .bz-menu-link:hover .bz-menu-arrow { opacity: 0.9; transform: translateX(-4px); }
+  html[dir='ltr'] .bz-menu-link:hover .bz-menu-arrow { transform: translateX(4px); }
+}
+
+/* ───────── الفوتر: من نحن · تواصلوا معنا · روابط ───────── */
+.bz-foot {
+  position: relative;
+  padding: clamp(3rem, 7vw, 5rem) 1.25rem 0;
+  background: linear-gradient(180deg, var(--espresso) 0%, #100a05 100%);
+}
+@media (min-width: 768px) { .bz-foot { padding-inline: 2.5rem; } }
+
+.bz-foot-grid {
+  margin-inline: auto;
+  display: grid;
+  max-width: 72rem;
+  grid-template-columns: 1fr;
+  gap: 2.2rem;
+}
+/* «من نحن» تأخذ ضعف عرض العمودين الآخرين — هي نصٌّ يُقرأ لا قائمة روابط */
+@media (min-width: 860px) { .bz-foot-grid { grid-template-columns: 2fr 1fr 1fr; gap: 3rem; } }
+
+.bz-foot-h {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--cream);
+  margin-bottom: 0.9rem;
+}
+.bz-foot-p {
+  font-size: 0.88rem;
+  line-height: 1.9;
+  color: rgba(244, 237, 226, 0.6);
+  max-width: 46ch;
+}
+.bz-foot-cta {
+  margin-top: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgba(244, 237, 226, 0.25);
+  padding: 0.55rem 1.15rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--cream);
+  transition: background-color 0.2s ease;
+}
+@media (hover: hover) { .bz-foot-cta:hover { background: rgba(244, 237, 226, 0.1); } }
+
+.bz-foot-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.7rem; }
+.bz-foot-list a,
+.bz-foot-list span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.86rem;
+  color: rgba(244, 237, 226, 0.66);
+  transition: color 0.2s ease;
+}
+.bz-foot-list svg { flex-shrink: 0; color: rgba(212, 175, 55, 0.7); }
+@media (hover: hover) { .bz-foot-list a:hover { color: var(--cream); } }
+
+.bz-foot-bar {
+  margin-inline: auto;
+  margin-top: clamp(2.2rem, 5vw, 3.2rem);
+  display: flex;
+  max-width: 72rem;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  border-top: 1px solid rgba(244, 237, 226, 0.1);
+  padding: 1.1rem 0 calc(1.4rem + env(safe-area-inset-bottom, 0px));
+  font-size: 0.76rem;
+  color: rgba(244, 237, 226, 0.42);
+}
+.bz-foot-top {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgba(244, 237, 226, 0.16);
+  padding: 0.42rem 0.9rem;
+  font-weight: 700;
+  color: rgba(244, 237, 226, 0.7);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+@media (hover: hover) { .bz-foot-top:hover { background: rgba(244, 237, 226, 0.09); color: var(--cream); } }

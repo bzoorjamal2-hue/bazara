@@ -92,6 +92,19 @@ function sanitizeLanding(raw) {
       title: txt(c.title, 120), titleEn: txt(c.titleEn, 120),
       subtitle: txt(c.subtitle, 300), subtitleEn: txt(c.subtitleEn, 300),
     },
+    // الفوتر: «من نحن» و«تواصلوا معنا». الزائر الجادّ يبحث عن مَن خلف
+    // المنصّة وكيف يصل إليها قبل أن يسلّمها متجره.
+    about: {
+      title: txt(raw.about?.title, 80), titleEn: txt(raw.about?.titleEn, 80),
+      text: txt(raw.about?.text, 700), textEn: txt(raw.about?.textEn, 700),
+    },
+    contact: {
+      title: txt(raw.contact?.title, 80), titleEn: txt(raw.contact?.titleEn, 80),
+      email: txt(raw.contact?.email, 120),
+      phone: String(raw.contact?.phone ?? '').replace(/[^\d+]/g, '').slice(0, 20),
+      address: txt(raw.contact?.address, 160), addressEn: txt(raw.contact?.addressEn, 160),
+      hours: txt(raw.contact?.hours, 120), hoursEn: txt(raw.contact?.hoursEn, 120),
+    },
     // إخفاء أقسام بأكملها — بعض المتاجر لا تريد الشهادات مثلاً
     hidden: (Array.isArray(raw.hidden) ? raw.hidden : [])
       .map((k) => txt(k, 20)).filter((k) => ['stats', 'features', 'steps', 'testimonials'].includes(k)),

@@ -1099,7 +1099,16 @@
       "dimHigh": "Dark — text shows",
       "dimSample": "Your online store starts today",
       "dimSampleSub": "This is how the text reads over your background",
-      "dimVideoNote": "Upload an image above to preview against your own background — it doubles as the video poster."
+      "dimVideoNote": "Upload an image above to preview against your own background — it doubles as the video poster.",
+      "aboutTitle": "About us",
+      "aboutHint": "Shown at the bottom of the page. Who you are and who you build for.",
+      "contactTitle": "Contact us",
+      "contactHint": "How a visitor reaches you. Empty fields simply do not appear.",
+      "fEmail": "Email",
+      "fPhone": "Phone",
+      "fAddress": "Address",
+      "fHours": "Working hours",
+      "fHoursPh": "Sat–Thu · 9am – 6pm"
     }
   },
   "finance": {

@@ -10,7 +10,8 @@ import useInViewOnce from '../hooks/useInViewOnce.js';
 import {
   BagIcon, ForwardIcon, TruckIcon, CashIcon, CheckIcon, StoreIcon, ChartIcon,
   InstagramIcon, PackageIcon, SparkleIcon, ShieldIcon, PaletteIcon, TicketIcon,
-  UsersIcon, CrownIcon, WhatsAppIcon, MenuIcon, XIcon, ArrowDownIcon,
+  UsersIcon, CrownIcon, WhatsAppIcon, MenuIcon, XIcon, ArrowDownIcon, ArrowUpIcon,
+  MailIcon, PhoneIcon, PinIcon, ClockIcon,
 } from '../components/icons.jsx';
 import { BAZARA_WHATSAPP } from '../config/site.js';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
@@ -25,11 +26,12 @@ import { buildWhatsappLink } from '../utils/whatsapp.js';
 // حيّة من قاعدة البيانات. وكل ألوانها من لوحة الموقع نفسها — لا لون خارجها.
 
 // قسمٌ يظهر بانزلاقٍ خفيف حين يصل إليه النظر (مرّة واحدة، بلا مكتبة)
-function Reveal({ children, delay = 0, className = '' }) {
+function Reveal({ children, delay = 0, className = '', id }) {
   const [ref, seen] = useInViewOnce();
   return (
     <div
       ref={ref}
+      id={id}
       className={`bz-reveal ${seen ? 'bz-reveal-in' : ''} ${className}`}
       style={{ transitionDelay: `${delay}ms` }}
     >
@@ -139,6 +141,8 @@ export default function Landing() {
 
   const testimonials = L.testimonials?.length ? L.testimonials : (t('landing.testimonials', { returnObjects: true }) || []);
   const stats = site.stats;
+  const L_ = L;
+  const contact = L.contact || {};
 
   return (
     <div className="bz-land">
@@ -222,20 +226,25 @@ export default function Landing() {
             </div>
 
             <nav className="bz-menu-links">
+              {/* تسميات قصيرة: كانت عناوين الأقسام كاملةً («كل ما يحتاجه
+                  متجرك، جاهزاً») — جملةٌ لا تصلح بنداً بقائمة. */}
               {[
-                !hidden.has('features') && ['features', t('landing.featTitle')],
-                !hidden.has('steps') && ['steps', t('landing.stepTitle')],
-                !hidden.has('testimonials') && ['quotes', t('landing.tstTitle')],
-                ['cta', t('landing.ctaTitle')],
+                !hidden.has('features') && ['features', t('landing.navFeatures')],
+                !hidden.has('steps') && ['steps', t('landing.navSteps')],
+                !hidden.has('testimonials') && ['quotes', t('landing.navQuotes')],
+                ['about', t('landing.navAbout')],
+                ['contact', t('landing.navContact')],
               ].filter(Boolean).map(([id, label], i) => (
                 <button
                   key={id}
                   type="button"
                   onClick={() => goTo(id)}
                   className="bz-menu-link bz-in"
-                  style={{ animationDelay: `${60 + i * 70}ms` }}
+                  style={{ animationDelay: `${60 + i * 60}ms` }}
                 >
-                  {label}
+                  <span className="bz-menu-n">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="bz-menu-lbl">{label}</span>
+                  <ForwardIcon className="bz-menu-arrow h-4 w-4 rtl:rotate-180" />
                 </button>
               ))}
             </nav>
@@ -404,6 +413,68 @@ export default function Landing() {
           </div>
         </Reveal>
       </section>
+
+      {/* ─────────── من نحن · تواصلوا معنا ───────────
+          الزائر الجادّ يسأل مَن خلف المنصّة وكيف يصل إليها قبل أن يسلّمها
+          متجره. غياب هذا وحده يجعل الموقع يبدو مؤقّتاً. */}
+      <footer className="bz-foot bz-grain">
+        <div className="bz-foot-grid">
+          <Reveal id="about">
+            <div className="bz-foot-col">
+              <h3 className="bz-foot-h">{pick(L_.about || {}, 'title', t('landing.aboutTitle'))}</h3>
+              <p className="bz-foot-p">{pick(L_.about || {}, 'text', t('landing.aboutText'))}</p>
+              <Link to="/register" className="bz-foot-cta">
+                <StoreIcon className="h-4 w-4" /> {t('landing.openStore')}
+              </Link>
+            </div>
+          </Reveal>
+
+          <Reveal delay={90} id="contact">
+            <div className="bz-foot-col">
+              <h3 className="bz-foot-h">{pick(L_.contact || {}, 'title', t('landing.contactTitle'))}</h3>
+              <ul className="bz-foot-list">
+                {BAZARA_WHATSAPP && (
+                  <li><a href={buildWhatsappLink(BAZARA_WHATSAPP)} target="_blank" rel="noreferrer">
+                    <WhatsAppIcon className="h-4 w-4" /> {t('landing.whatsapp')}
+                  </a></li>
+                )}
+                {contact.email && (
+                  <li><a href={`mailto:${contact.email}`} dir="ltr"><MailIcon className="h-4 w-4" /> {contact.email}</a></li>
+                )}
+                {contact.phone && (
+                  <li><a href={`tel:${contact.phone}`} dir="ltr"><PhoneIcon className="h-4 w-4" /> {contact.phone}</a></li>
+                )}
+                {(pick(contact, 'address', '')) && (
+                  <li><span><PinIcon className="h-4 w-4" /> {pick(contact, 'address', '')}</span></li>
+                )}
+                {(pick(contact, 'hours', '')) && (
+                  <li><span><ClockIcon className="h-4 w-4" /> {pick(contact, 'hours', '')}</span></li>
+                )}
+              </ul>
+            </div>
+          </Reveal>
+
+          <Reveal delay={170}>
+            <div className="bz-foot-col">
+              <h3 className="bz-foot-h">{t('landing.linksTitle')}</h3>
+              <ul className="bz-foot-list">
+                <li><Link to="/shop"><BagIcon className="h-4 w-4" /> {t('landing.shopNow')}</Link></li>
+                <li><Link to="/login"><UsersIcon className="h-4 w-4" /> {t('nav.login')}</Link></li>
+                <li><Link to="/register"><StoreIcon className="h-4 w-4" /> {t('landing.openStore')}</Link></li>
+                <li><Link to="/privacy"><ShieldIcon className="h-4 w-4" /> {t('landing.privacy')}</Link></li>
+              </ul>
+            </div>
+          </Reveal>
+        </div>
+
+        <div className="bz-foot-bar">
+          <span>© {new Date().getFullYear()} {t('app.name')} — {t('footer.rights')}</span>
+          {/* العودة للأعلى هنا لا كزرٍّ عائم يطبق على النصّ */}
+          <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="bz-foot-top">
+            {t('landing.toTop')} <ArrowUpIcon className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </footer>
     </div>
   );
 }
