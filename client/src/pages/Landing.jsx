@@ -5,6 +5,7 @@ import api from '../api/client.js';
 import Seo from '../components/Seo.jsx';
 import Logo from '../components/Logo.jsx';
 import LanguageSwitcher from '../components/LanguageSwitcher.jsx';
+import { switchLanguage } from '../i18n.js';
 import CountUp from '../components/CountUp.jsx';
 import useInViewOnce from '../hooks/useInViewOnce.js';
 import {
@@ -244,13 +245,28 @@ export default function Landing() {
                 >
                   <span className="bz-menu-n">{String(i + 1).padStart(2, '0')}</span>
                   <span className="bz-menu-lbl">{label}</span>
-                  <ForwardIcon className="bz-menu-arrow h-4 w-4 rtl:rotate-180" />
+                  <ForwardIcon className="bz-menu-arrow h-4 w-4" />
                 </button>
               ))}
             </nav>
 
             <div className="bz-menu-foot bz-in" style={{ animationDelay: '380ms' }}>
-              <Actions t={t} />
+              <Actions t={t} compact />
+              {/* سطرٌ أخير للأفعال الصغيرة: اللغة وسياسة الخصوصية — كانتا
+                  تُطلبان من الفوتر وحده، وهو على بُعد صفحةٍ كاملة من هنا. */}
+              <div className="bz-menu-meta">
+                <button
+                  type="button"
+                  onClick={() => switchLanguage(en ? 'ar' : 'en')}
+                  className="bz-menu-lang app-tap"
+                  title="عربي / English"
+                >
+                  <b>{en ? 'AR' : 'EN'}</b> {en ? 'العربية' : 'English'}
+                </button>
+                <Link to="/privacy" onClick={() => setMenu(false)} className="bz-menu-mini">
+                  <ShieldIcon className="h-3.5 w-3.5" /> {t('landing.privacy')}
+                </Link>
+              </div>
             </div>
           </div>
         )}
