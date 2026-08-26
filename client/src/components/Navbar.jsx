@@ -8,7 +8,7 @@ import api from '../api/client.js';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import LanguageSwitcher from './LanguageSwitcher.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
-import { CartIcon, HeartIcon, MenuIcon, UserIcon, SearchIcon, MailIcon, InstagramIcon, GridIcon, StoreIcon, BagIcon, ReceiptIcon, UsersIcon, TicketIcon, ChartIcon, BellIcon, MegaphoneIcon, GearIcon, CashIcon } from './icons.jsx';
+import { CartIcon, HeartIcon, MenuIcon, UserIcon, SearchIcon, MailIcon, InstagramIcon, GridIcon, StoreIcon, BagIcon, ReceiptIcon, UsersIcon, TicketIcon, ChartIcon, BellIcon, MegaphoneIcon, GearIcon, CashIcon , HomeIcon } from './icons.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import NavBell from './NavBell.jsx';
 import CloseButton from './CloseButton.jsx';
@@ -199,6 +199,7 @@ export default function Navbar() {
           { key: 'adminLog', label: t('admin.logTitle'), Icon: ShieldCheckIcon },
         ] },
         { id: 'content', title: t('dashboard.menu.content'), items: [
+          { key: 'landing', label: t('admin.land.title'), Icon: HomeIcon },
           { key: 'siteSliders', label: t('admin.siteSliders'), Icon: GridIcon },
           { key: 'newsletter', label: t('admin.newsletter'), Icon: MailIcon },
           { key: 'broadcast', label: t('admin.bc.nav'), Icon: MailIcon },
