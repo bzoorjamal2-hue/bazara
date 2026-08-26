@@ -1092,7 +1092,14 @@
       "ctaHint": "The last invitation before the visitor leaves.",
       "save": "Save landing page",
       "saved": "Saved — open the page to see it.",
-      "preview": "Preview the page ↗"
+      "preview": "Preview the page ↗",
+      "dim": "Background dimming",
+      "dimTip": "The image or video sits under a wine veil. Raise it when the background is light or busy and swallows the text; lower it when it is already dark.",
+      "dimLow": "Clear — image shows",
+      "dimHigh": "Dark — text shows",
+      "dimSample": "Your online store starts today",
+      "dimSampleSub": "This is how the text reads over your background",
+      "dimVideoNote": "Upload an image above to preview against your own background — it doubles as the video poster."
     }
   },
   "finance": {

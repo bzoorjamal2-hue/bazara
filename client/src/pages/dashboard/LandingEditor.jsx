@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
-import { PageHead, SectionHead, Field } from '../../components/FormField.jsx';
+import { PageHead, SectionHead, Field, Tip } from '../../components/FormField.jsx';
 import ImageInput from '../../components/ImageInput.jsx';
 import {
   HomeIcon, SparkleIcon, CheckIcon, TrashIcon, PlusIcon, VideoIcon,
@@ -43,7 +43,7 @@ export default function LandingEditor() {
       .then((r) => {
         const d = r.data?.landing || {};
         setL({
-          hero: { badge: '', title: '', subtitle: '', image: '', video: '', chips: [], ...(d.hero || {}) },
+          hero: { badge: '', title: '', subtitle: '', image: '', video: '', dim: 62, chips: [], ...(d.hero || {}) },
           features: d.features || [],
           steps: d.steps || [],
           testimonials: d.testimonials || [],
@@ -128,6 +128,51 @@ export default function LandingEditor() {
         </Field>
         {L.hero.video && !/^https:\/\/\S+\.(mp4|webm|mov|m4v)(\?\S*)?$/i.test(L.hero.video.trim()) && (
           <p className="text-[11px] font-semibold text-amber-400">{t('admin.land.videoBad')}</p>
+        )}
+
+        {/* التعتيم — يظهر فقط حين توجد خلفية، فلا معنى له بلا صورة أو فيديو.
+            المعاينة بنفس تدرّج الصفحة حرفياً، فما تُرى هنا هو ما سيظهر. */}
+        {(L.hero.image || L.hero.video) && (
+          <div className="space-y-2 border-t border-gold-400/10 pt-4">
+            <div className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-1.5 text-[13px] font-bold text-stone-100">
+                {t('admin.land.dim')} <Tip text={t('admin.land.dimTip')} />
+              </span>
+
+            </div>
+            <input
+              type="range" min={0} max={100} step={1}
+              value={L.hero.dim ?? 62}
+              onChange={(e) => setHero('dim', Number(e.target.value))}
+              className="bz-range w-full"
+              aria-label={t('admin.land.dim')}
+            />
+            <div className="flex justify-between text-[10.5px] font-semibold text-stone-400">
+              <span>{t('admin.land.dimLow')}</span>
+              <span>{t('admin.land.dimHigh')}</span>
+            </div>
+
+            <div
+              className="relative h-32 overflow-hidden rounded-2xl ring-1 ring-gold-400/20"
+              style={{
+                backgroundImage: L.hero.image ? `url(${L.hero.image})` : undefined,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundColor: '#3f2e22',
+                // eslint-disable-next-line
+                ['--bz-dim']: (L.hero.dim ?? 62) / 100,
+              }}
+            >
+              <span className="bz-veil-preview absolute inset-0" aria-hidden="true" />
+              <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 px-3 text-center">
+                <span className="text-[15px] font-extrabold text-[#F4EDE2]">{t('admin.land.dimSample')}</span>
+                <span className="text-[11px] text-[#F4EDE2]/80">{t('admin.land.dimSampleSub')}</span>
+              </span>
+            </div>
+            {!L.hero.image && L.hero.video && (
+              <p className="text-[11px] text-stone-400">{t('admin.land.dimVideoNote')}</p>
+            )}
+          </div>
         )}
 
         {/* شارات الميزات فوق الأزرار */}

@@ -43,6 +43,12 @@ const vid = (v) => {
   return /^https:\/\/\S+\.(mp4|webm|mov|m4v)(\?\S*)?$/i.test(x) ? x.slice(0, 500) : '';
 };
 
+// عدد ضمن مدى، بقيمةٍ افتراضية عند الغياب أو الفساد
+const num = (v, min, max, dflt) => {
+  const n = Math.round(Number(v));
+  return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : dflt;
+};
+
 const MAX_ITEMS = 8;
 const list = (raw, map) =>
   (Array.isArray(raw) ? raw : []).slice(0, MAX_ITEMS).map(map).filter((x) => x.title || x.text);
@@ -57,6 +63,10 @@ function sanitizeLanding(raw) {
       title: txt(h.title, 120), titleEn: txt(h.titleEn, 120),
       subtitle: txt(h.subtitle, 300), subtitleEn: txt(h.subtitleEn, 300),
       image: img(h.image),
+      // تعتيم الخلفية (٠–١٠٠): صورةٌ فاتحة أو فيديو مزدحم يبتلعان النصّ
+      // الأبيض فوقهما. القيمة تتحكّم بحجاب خمريٍّ فوق الخلفية، والافتراضي
+      // ٦٢ — يكفي لأغلب الصور ويُرفع أو يُخفَّض حسب الصورة نفسها.
+      dim: num(h.dim, 0, 100, 62),
       // فيديو الهيرو: رابط مباشر لملفٍ يُشغَّل داخل الصفحة. لا نقبل روابط
       // يوتيوب/انستغرام — تلك صفحاتٌ لا ملفّات، ووضعها بـ<video> يعطي إطاراً
       // فارغاً. والصورة تبقى غلافاً يظهر ريثما يُحمّل الفيديو أو إن تعذّر.

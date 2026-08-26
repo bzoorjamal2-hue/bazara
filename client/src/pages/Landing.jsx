@@ -10,7 +10,7 @@ import useInViewOnce from '../hooks/useInViewOnce.js';
 import {
   BagIcon, ForwardIcon, TruckIcon, CashIcon, CheckIcon, StoreIcon, ChartIcon,
   InstagramIcon, PackageIcon, SparkleIcon, ShieldIcon, PaletteIcon, TicketIcon,
-  UsersIcon, CrownIcon, WhatsAppIcon,
+  UsersIcon, CrownIcon, WhatsAppIcon, MenuIcon, XIcon, ArrowDownIcon,
 } from '../components/icons.jsx';
 import { BAZARA_WHATSAPP } from '../config/site.js';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
@@ -76,6 +76,7 @@ export default function Landing() {
     try { return JSON.parse(sessionStorage.getItem('bz_landing') || 'null') || {}; } catch { return {}; }
   });
   const [scrolled, setScrolled] = useState(false);
+  const [menu, setMenu] = useState(false);
 
   // الشريط العلويّ يلبس خلفيته بعد أول نزول. passive حتى لا يعرقل التمرير.
   useEffect(() => {
@@ -84,6 +85,23 @@ export default function Landing() {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  // القائمة الكاملة: نقفل تمرير الصفحة خلفها ونغلقها بـEsc
+  useEffect(() => {
+    if (!menu) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e) => { if (e.key === 'Escape') setMenu(false); };
+    window.addEventListener('keydown', onKey);
+    return () => { document.body.style.overflow = prev; window.removeEventListener('keydown', onKey); };
+  }, [menu]);
+
+  // تمريرٌ ناعم لقسمٍ بالصفحة (من القائمة أو من سهم «اعرف أكثر»)
+  const goTo = (id) => {
+    setMenu(false);
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   useEffect(() => {
     api.get('/public/site-info')
@@ -127,7 +145,12 @@ export default function Landing() {
       <Seo title={t('landing.seoTitle')} description={t('landing.seoDesc')} />
 
       {/* ─────────── الهيرو ─────────── */}
-      <header className="bz-hero bz-grain">
+      <header
+        className="bz-hero bz-grain"
+        // التعتيم من لوحة المدير: صورةٌ فاتحة تبتلع النصّ الأبيض فوقها،
+        // وصورةٌ داكنة لا تحتاج حجاباً ثقيلاً. رقمٌ واحد يضبط الحالتين.
+        style={{ '--bz-dim': (hero.dim ?? 62) / 100 }}
+      >
         {/* خلفية الهيرو: فيديو يضعه المدير، أو صورة، أو تدرّج الهوية وحده.
             الفيديو صامتٌ ويعمل داخل الصفحة (playsInline) — بلا ذلك يفتحه iOS
             بمشغّلٍ ملء الشاشة فوق الموقع. والصورة غلافُه (poster) فتظهر فوراً
@@ -162,7 +185,7 @@ export default function Landing() {
             <span className="bz-nav-name">{t('app.name')}</span>
           </Link>
           <div className="bz-nav-side">
-            <Link to="/shop" className="bz-nav-link">{t('landing.shopNow')}</Link>
+            <Link to="/shop" className="bz-nav-link bz-nav-link-sm">{t('landing.shopNow')}</Link>
             <Link to="/login" className="bz-nav-link bz-nav-link-sm">{t('nav.login')}</Link>
             <Link to="/register" className="bz-nav-cta">
               <StoreIcon className="h-4 w-4" />
@@ -170,22 +193,75 @@ export default function Landing() {
               <span className="sm:hidden">{t('landing.openStoreShort')}</span>
             </Link>
             <LanguageSwitcher />
+            {/* ☰ — أقسام الصفحة كاملةً. على الجوّال هي المدخل الوحيد لها،
+                وعلى الكمبيوتر تختصر النزول الطويل. */}
+            <button
+              type="button"
+              onClick={() => setMenu(true)}
+              aria-label={t('landing.menu')}
+              aria-expanded={menu}
+              className="bz-nav-burger app-tap"
+            >
+              <MenuIcon className="h-5 w-5" />
+            </button>
           </div>
         </nav>
+
+        {/* القائمة الكاملة — تغطّي الشاشة بخلفية المنصّة، لا لوحاً أبيض
+            دخيلاً. روابطها أقسامُ الصفحة نفسها ثمّ الأفعال الثلاثة. */}
+        {menu && (
+          <div className="bz-menu" role="dialog" aria-modal="true">
+            <div className="bz-menu-top">
+              <button type="button" onClick={() => setMenu(false)} aria-label={t('common.close')} className="bz-nav-burger app-tap">
+                <XIcon className="h-5 w-5" />
+              </button>
+              <span className="bz-nav-brand">
+                <Logo className="h-9 w-9" />
+                <span className="bz-nav-name">{t('app.name')}</span>
+              </span>
+            </div>
+
+            <nav className="bz-menu-links">
+              {[
+                !hidden.has('features') && ['features', t('landing.featTitle')],
+                !hidden.has('steps') && ['steps', t('landing.stepTitle')],
+                !hidden.has('testimonials') && ['quotes', t('landing.tstTitle')],
+                ['cta', t('landing.ctaTitle')],
+              ].filter(Boolean).map(([id, label], i) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => goTo(id)}
+                  className="bz-menu-link bz-in"
+                  style={{ animationDelay: `${60 + i * 70}ms` }}
+                >
+                  {label}
+                </button>
+              ))}
+            </nav>
+
+            <div className="bz-menu-foot bz-in" style={{ animationDelay: '380ms' }}>
+              <Actions t={t} />
+            </div>
+          </div>
+        )}
 
         {/* الهيرو تحريريّ لا متمركز: كتلة النصّ على حافّة البداية فوق الصورة —
             العين تقرأ سطراً واحداً متّصلاً بدل أن تقفز يميناً ويساراً، والصورة
             تبقى ظاهرةً بالجهة الأخرى بدل أن يغطّيها النصّ. */}
         <div className="bz-hero-body">
+          {/* دخولٌ متتابع لعناصر الهيرو — نفس إحساس بطاقات المتاجر: كلٌّ
+              يصعد ويتّضح بعد سابقه بلحظة، فتُقرأ الشاشة سطراً سطراً بدل أن
+              تظهر دفعةً واحدة. */}
           <div className="bz-hero-block">
-            <p className="bz-badge">{pick(hero, 'badge', t('landing.badge'))}</p>
+            <p className="bz-badge bz-in" style={{ animationDelay: '60ms' }}>{pick(hero, 'badge', t('landing.badge'))}</p>
 
-            <h1 className="bz-h1">{pick(hero, 'title', t('landing.title'))}</h1>
+            <h1 className="bz-h1 bz-in" style={{ animationDelay: '160ms' }}>{pick(hero, 'title', t('landing.title'))}</h1>
 
-            <p className="bz-hero-sub">{pick(hero, 'subtitle', t('landing.subtitle'))}</p>
+            <p className="bz-hero-sub bz-in" style={{ animationDelay: '280ms' }}>{pick(hero, 'subtitle', t('landing.subtitle'))}</p>
 
             {/* صفّ الميزات بعلامات صحّ — سطرٌ واحد على الشاشات الواسعة */}
-            <div className="bz-ticks">
+            <div className="bz-ticks bz-in" style={{ animationDelay: '380ms' }}>
               {chips.slice(0, 4).map((c, i) => {
                 const label = (en ? c.labelEn : c.label) || c.label || c.labelEn;
                 return label ? (
@@ -196,9 +272,15 @@ export default function Landing() {
               })}
             </div>
 
-            <div className="bz-hero-actions"><Actions t={t} /></div>
+            <div className="bz-hero-actions bz-in" style={{ animationDelay: '470ms' }}><Actions t={t} /></div>
           </div>
         </div>
+
+        {/* «اعرف أكثر ↓» — يقول للزائر إنّ تحته صفحةً كاملة، ويأخذه إليها
+            بضغطة بدل أن يبحث عن التمرير. */}
+        <button type="button" onClick={() => goTo('features')} className="bz-more bz-in" style={{ animationDelay: '640ms' }}>
+          {t('landing.more')} <ArrowDownIcon className="h-4 w-4" />
+        </button>
 
         {/* أرقام حيّة من قاعدة البيانات — لا أرقام مكتوبة باليد */}
         {!hidden.has('stats') && stats && (stats.stores > 0 || stats.products > 0) && (
@@ -207,8 +289,8 @@ export default function Landing() {
               { n: stats.stores, label: t('landing.statStores'), Icon: StoreIcon },
               { n: stats.products, label: t('landing.statProducts'), Icon: PackageIcon },
               { n: stats.orders, label: t('landing.statOrders'), Icon: BagIcon },
-            ].map(({ n, label, Icon }) => (
-              <div key={label} className="bz-stat">
+            ].map(({ n, label, Icon }, i) => (
+              <div key={label} className="bz-stat bz-in" style={{ animationDelay: `${580 + i * 90}ms` }}>
                 <Icon className="bz-stat-ico h-5 w-5" />
                 <span className="bz-stat-n"><CountUp value={n} />{n >= 50 ? '+' : ''}</span>
                 <span className="bz-stat-l">{label}</span>
@@ -220,7 +302,7 @@ export default function Landing() {
 
       {/* ─────────── الميزات ─────────── */}
       {!hidden.has('features') && features.length > 0 && (
-        <section className="bz-sec bz-sec-light">
+        <section id="features" className="bz-sec bz-sec-light">
           <Reveal><SectionTitle eyebrow={t('landing.featEyebrow')} title={t('landing.featTitle')} desc={t('landing.featDesc')} /></Reveal>
           {/* بنتو لا شبكة متساوية: الأولى تأخذ عمودين وتكبر، والباقيات أصغر.
               ثمانية مربّعات متطابقة تُقرأ كجدولٍ فتُتخطّى دفعةً واحدة؛ اختلاف
@@ -246,7 +328,7 @@ export default function Landing() {
 
       {/* ─────────── الخطوات ─────────── */}
       {!hidden.has('steps') && steps.length > 0 && (
-        <section className="bz-sec bz-sec-alt bz-grain">
+        <section id="steps" className="bz-sec bz-sec-alt bz-grain">
           <Reveal><SectionTitle eyebrow={t('landing.stepEyebrow')} title={t('landing.stepTitle')} desc={t('landing.stepDesc')} /></Reveal>
           {/* خطٌّ ذهبيّ يصل الخطوات فتُقرأ كمسار، لا ثلاث بطاقات متجاورة
               لا رابط بينها. الرقم على الخطّ نفسه — هو العُقدة. */}
@@ -279,7 +361,7 @@ export default function Landing() {
 
       {/* ─────────── شهادات ─────────── */}
       {!hidden.has('testimonials') && testimonials.length > 0 && (
-        <section className="bz-sec bz-sec-light">
+        <section id="quotes" className="bz-sec bz-sec-light">
           <Reveal><SectionTitle eyebrow={t('landing.tstEyebrow')} title={t('landing.tstTitle')} /></Reveal>
           {/* الأولى كبيرة تُقرأ، والباقيات إلى جانبها — بدل ثلاثٍ متساوية
               لا تُقرأ منها واحدة. */}
@@ -306,7 +388,7 @@ export default function Landing() {
       )}
 
       {/* ─────────── الختام: الأزرار الثلاثة مرّةً أخرى ─────────── */}
-      <section className="bz-cta bz-grain">
+      <section id="cta" className="bz-cta bz-grain">
         <span className="bz-hero-glow bz-hero-glow-a" aria-hidden="true" />
         <Reveal>
           <div className="relative mx-auto max-w-2xl text-center">

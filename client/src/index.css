@@ -1750,17 +1750,23 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   inset: 0;
   background-size: cover;
   background-position: center;
-  opacity: 0.42;
 }
 /* الفيديو يملأ الإطار قصّاً لا تمدّداً، فلا يتشوّه بأي نسبة شاشة */
 .bz-hero-video { height: 100%; width: 100%; object-fit: cover; }
 /* من يطلب تقليل الحركة لا يُفرَض عليه فيديو يتحرّك خلف النصّ */
 @media (prefers-reduced-motion: reduce) { .bz-hero-video { display: none; } }
+/* الحجاب: شدّته من لوحة المدير (--bz-dim). يشتدّ نحو الأسفل حيث النصّ
+   والأزرار، ويصل للإسبريسو الصلب عند حافّة شريط الأرقام فلا يظهر خطّ فصل. */
 .bz-hero-veil {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(180deg, rgba(63, 46, 34, 0.62) 0%, rgba(63, 46, 34, 0.80) 55%, #2a1d14 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(32, 22, 14, calc(var(--bz-dim, 0.62) * 0.72)) 0%,
+    rgba(32, 22, 14, var(--bz-dim, 0.62)) 45%,
+    rgba(32, 22, 14, calc(var(--bz-dim, 0.62) * 0.55 + 0.45)) 78%,
+    var(--espresso) 100%
+  );
 }
 .bz-hero-glow {
   position: absolute;
@@ -1768,20 +1774,15 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   filter: blur(64px);
   pointer-events: none;
 }
+/* توهّجٌ واحد خافت جداً، دافئ لا ذهبيّ — عمقٌ لا لمعان */
 .bz-hero-glow-a {
-  inset-inline-start: 12%;
-  top: -6rem;
-  height: 20rem;
-  width: 20rem;
-  background: rgba(212, 175, 55, 0.16);
-}
-.bz-hero-glow-b {
-  inset-inline-end: -4rem;
-  bottom: -3rem;
+  inset-inline-start: 8%;
+  top: -8rem;
   height: 22rem;
   width: 22rem;
-  background: rgba(138, 106, 79, 0.40);
+  background: rgba(138, 106, 79, 0.28);
 }
+.bz-hero-glow-b { display: none; }
 
 .bz-hero-top {
   position: relative;
@@ -1837,17 +1838,23 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
 }
 @keyframes bz-spin { to { transform: rotate(1turn); } }
 
+/* شارةٌ هادئة: خطٌّ ذهبيّ قصير يسبق النصّ بدل إطارٍ ذهبيٍّ كامل */
 .bz-badge {
   margin-top: 0;
-  display: inline-block;
-  border-radius: 999px;
-  border: 1px solid rgba(212, 175, 55, 0.32);
-  background: rgba(244, 237, 226, 0.06);
-  padding: 0.35rem 0.95rem;
-  font-size: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--gold-3);
+  letter-spacing: 0.14em;
+  color: rgba(244, 237, 226, 0.72);
+}
+.bz-badge::before {
+  content: '';
+  display: block;
+  height: 1px;
+  width: 1.9rem;
+  background: var(--gold);
 }
 
 /* العنوان: يكبر مع الشاشة بسلاسة (clamp) بدل قفزاتٍ عند نقاط الكسر */
@@ -1859,10 +1866,8 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   line-height: 1.1;
   letter-spacing: -0.015em;
   text-wrap: balance;
-  background: linear-gradient(160deg, #fffaf0 0%, var(--cream) 38%, var(--gold-3) 72%, var(--gold) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: #fffaf2;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.45);
 }
 
 .bz-divider {
@@ -1904,13 +1909,14 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
 }
 .bz-tick-b {
   display: grid;
-  height: 1.15rem;
-  width: 1.15rem;
+  height: 1.1rem;
+  width: 1.1rem;
   flex-shrink: 0;
   place-items: center;
   border-radius: 999px;
-  background: linear-gradient(140deg, var(--gold-3), var(--gold));
-  color: var(--w-dark);
+  background: rgba(244, 237, 226, 0.14);
+  color: var(--gold-3);
+  box-shadow: inset 0 0 0 1px rgba(244, 237, 226, 0.2);
 }
 
 .bz-chips {
@@ -1957,17 +1963,17 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   .bz-btn-gold, .bz-btn-outline, .bz-btn-ghost { width: auto; padding-inline: 1.9rem; }
 }
 .bz-btn-gold {
-  background: linear-gradient(135deg, #f6edcf 0%, var(--cream) 45%, var(--gold-3) 100%);
-  color: var(--w-dark);
-  box-shadow: 0 18px 38px -18px rgba(212, 175, 55, 0.75);
+  background: #fbf6ea;
+  color: #2b1d12;
+  box-shadow: 0 14px 30px -18px rgba(0, 0, 0, 0.9);
 }
 .bz-btn-outline {
-  border: 1px solid rgba(212, 175, 55, 0.45);
+  border: 1px solid rgba(244, 237, 226, 0.32);
   color: var(--cream);
 }
 .bz-btn-ghost { color: rgba(244, 237, 226, 0.8); }
 @media (hover: hover) {
-  .bz-btn-gold:hover { box-shadow: 0 22px 46px -18px rgba(212, 175, 55, 0.9); }
+  .bz-btn-gold:hover { background: #ffffff; }
   .bz-btn-outline:hover { background: rgba(244, 237, 226, 0.10); }
   .bz-btn-ghost:hover { color: var(--cream); background: rgba(244, 237, 226, 0.07); }
 }
@@ -1980,8 +1986,8 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   width: 100%;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1px;
-  border-top: 1px solid rgba(212, 175, 55, 0.2);
-  background: rgba(212, 175, 55, 0.2);
+  border-top: 1px solid rgba(244, 237, 226, 0.12);
+  background: rgba(244, 237, 226, 0.10);
 }
 .bz-stat {
   display: flex;
@@ -1992,7 +1998,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   padding: 1.1rem 0.5rem;
   text-align: center;
 }
-.bz-stat-ico { color: var(--gold-2); opacity: 0.85; }
+.bz-stat-ico { color: rgba(244, 237, 226, 0.45); }
 .bz-stat-n {
   font-size: clamp(1.15rem, 4.4vw, 1.6rem);
   font-weight: 800;
@@ -2024,7 +2030,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
 .bz-sec-light { background: linear-gradient(180deg, var(--sand) 0%, var(--cream) 40%, var(--sand) 100%); }
 .bz-sec-light .bz-h2 { color: var(--w-dark); }
 .bz-sec-light .bz-lead { color: rgba(63, 46, 34, 0.66); }
-.bz-sec-light .bz-eyebrow { color: #a37d22; }
+.bz-sec-light .bz-eyebrow { color: rgba(63, 46, 34, 0.5); }
 .bz-sec-light .bz-card {
   border-color: rgba(63, 46, 34, 0.10);
   background: #fff;
@@ -2032,9 +2038,9 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
 }
 @media (hover: hover) { .bz-sec-light .bz-card:hover { border-color: rgba(212, 175, 55, 0.55); } }
 .bz-sec-light .bz-card-ico {
-  background: linear-gradient(150deg, rgba(212, 175, 55, 0.22), rgba(212, 175, 55, 0.08));
-  color: #a37d22;
-  box-shadow: inset 0 0 0 1px rgba(212, 175, 55, 0.28);
+  background: rgba(63, 46, 34, 0.07);
+  color: #5e4636;
+  box-shadow: inset 0 0 0 1px rgba(63, 46, 34, 0.10);
 }
 .bz-sec-light .bz-card-t { color: var(--w-dark); }
 .bz-sec-light .bz-card-d { color: rgba(63, 46, 34, 0.62); }
@@ -2052,7 +2058,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   font-size: 0.7rem;
   font-weight: 800;
   letter-spacing: 0.22em;
-  color: var(--gold-2);
+  color: rgba(244, 237, 226, 0.5);
   margin-inline-end: -0.22em;
 }
 .bz-h2 {
@@ -2111,9 +2117,9 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   width: 3rem;
   place-items: center;
   border-radius: 0.9rem;
-  background: linear-gradient(150deg, rgba(212, 175, 55, 0.28), rgba(212, 175, 55, 0.08));
-  color: var(--gold-3);
-  box-shadow: inset 0 0 0 1px rgba(212, 175, 55, 0.22);
+  background: rgba(244, 237, 226, 0.08);
+  color: rgba(244, 237, 226, 0.85);
+  box-shadow: inset 0 0 0 1px rgba(244, 237, 226, 0.12);
 }
 .bz-card-t { margin-top: 1rem; font-size: 1.02rem; font-weight: 800; color: var(--cream); }
 .bz-card-d { margin-top: 0.45rem; font-size: 0.86rem; line-height: 1.75; color: rgba(244, 237, 226, 0.64); }
@@ -2137,7 +2143,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
     inset-inline: 12%;
     top: 1.6rem;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.5) 12%, rgba(212, 175, 55, 0.5) 88%, transparent);
+    background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.34) 12%, rgba(212, 175, 55, 0.34) 88%, transparent);
   }
 }
 .bz-node { position: relative; text-align: center; padding-inline: 0.5rem; }
@@ -2149,9 +2155,9 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   margin-inline: auto;
   place-items: center;
   border-radius: 999px;
-  background: linear-gradient(140deg, var(--champagne), var(--gold));
+  background: #fbf6ea;
   color: #2b1d12;
-  box-shadow: 0 0 0 6px var(--espresso), 0 14px 30px -12px rgba(212, 175, 55, 0.9);
+  box-shadow: 0 0 0 7px var(--espresso);
 }
 /* الرقم شارةٌ صغيرة على حافّة الدائرة */
 .bz-node-dot b {
@@ -2294,13 +2300,13 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
 }
 .bz-cta-ico {
   display: inline-grid;
-  height: 4rem;
-  width: 4rem;
+  height: 3.6rem;
+  width: 3.6rem;
   place-items: center;
   border-radius: 999px;
-  background: linear-gradient(140deg, var(--gold-3), var(--gold));
-  color: var(--w-dark);
-  box-shadow: 0 16px 36px -14px rgba(212, 175, 55, 0.85);
+  background: rgba(244, 237, 226, 0.08);
+  color: var(--gold-3);
+  box-shadow: inset 0 0 0 1px rgba(244, 237, 226, 0.16);
 }
 .bz-cta-wa {
   margin-top: 1.5rem;
@@ -2313,6 +2319,15 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   transition: color 0.2s ease;
 }
 @media (hover: hover) { .bz-cta-wa:hover { color: var(--gold-3); } }
+
+/* دخولٌ متتابع: يصعد ويتّضح مرّةً واحدة عند التحميل (للهيرو الذي يُرى فوراً
+   فلا يحتاج مراقب تقاطع). backwards كي يبدأ مخفيّاً قبل بدء التأخير. */
+.bz-in { animation: bz-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+@keyframes bz-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .bz-in { animation: none; } }
 
 /* ───────── الظهور عند التمرير ───────── */
 .bz-reveal {
@@ -2346,7 +2361,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   background: rgba(42, 29, 20, 0.82);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 1px 0 0 rgba(212, 175, 55, 0.18), 0 14px 30px -22px rgba(0, 0, 0, 0.9);
+  box-shadow: 0 1px 0 0 rgba(244, 237, 226, 0.10), 0 14px 30px -22px rgba(0, 0, 0, 0.9);
 }
 
 .bz-nav-brand { display: inline-flex; align-items: center; gap: 0.55rem; min-width: 0; flex-shrink: 0; }
@@ -2377,12 +2392,11 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   align-items: center;
   gap: 0.35rem;
   border-radius: 999px;
-  background: linear-gradient(135deg, var(--cream), var(--gold-3));
+  background: #fbf6ea;
   padding: 0.45rem 0.85rem;
   font-size: 0.82rem;
   font-weight: 800;
-  color: var(--w-dark);
-  box-shadow: 0 10px 24px -12px rgba(212, 175, 55, 0.8);
+  color: #2b1d12;
   white-space: nowrap;
   transition: transform 0.15s ease;
 }
@@ -2390,3 +2404,133 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
 
 /* الهيرو ينزل بمقدار الشريط فلا يختبئ الشعار تحته */
 .bz-hero-body { padding-top: calc(4.5rem + env(safe-area-inset-top, 0px)); }
+
+/* معاينة التعتيم بمحرّر الواجهة — نفس تدرّج حجاب الهيرو حرفياً كي يكون ما
+   يُرى بالمحرّر هو ما يظهر بالصفحة، لا تقريباً له. */
+.bz-veil-preview {
+  background: linear-gradient(
+    180deg,
+    rgba(32, 22, 14, calc(var(--bz-dim, 0.62) * 0.72)) 0%,
+    rgba(32, 22, 14, var(--bz-dim, 0.62)) 45%,
+    rgba(32, 22, 14, calc(var(--bz-dim, 0.62) * 0.55 + 0.45)) 78%,
+    #140d07 100%
+  );
+}
+
+/* مقياس منزلق بهوية الموقع — الافتراضي أزرق النظام، دخيلٌ وسط الذهبي */
+.bz-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(244, 237, 226, 0.14), rgba(212, 175, 55, 0.55));
+  outline: none;
+}
+.bz-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 20px;
+  width: 20px;
+  border-radius: 999px;
+  background: linear-gradient(140deg, #f6edcf, #d4af37);
+  border: 2px solid #241712;
+  box-shadow: 0 3px 10px -3px rgba(212, 175, 55, 0.9);
+  cursor: pointer;
+}
+.bz-range::-moz-range-thumb {
+  height: 18px;
+  width: 18px;
+  border-radius: 999px;
+  background: linear-gradient(140deg, #f6edcf, #d4af37);
+  border: 2px solid #241712;
+  cursor: pointer;
+}
+
+/* ───────── زرّ ☰ والقائمة الكاملة ─────────
+   القائمة تغطّي الشاشة بخلفية المنصّة نفسها لا بلوحٍ أبيض دخيل. */
+.bz-nav-burger {
+  display: grid;
+  height: 2.35rem;
+  width: 2.35rem;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 999px;
+  color: var(--cream, #F4EDE2);
+  background: rgba(244, 237, 226, 0.10);
+  box-shadow: inset 0 0 0 1px rgba(244, 237, 226, 0.16);
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+@media (hover: hover) { .bz-nav-burger:hover { background: rgba(244, 237, 226, 0.2); } }
+.bz-nav-burger:active { transform: scale(0.94); }
+
+.bz-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  padding: max(env(safe-area-inset-top), 0.6rem) 1.25rem calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  background:
+    radial-gradient(90% 60% at 50% 0%, rgba(212, 175, 55, 0.14), transparent 60%),
+    linear-gradient(180deg, #2b1d12 0%, var(--espresso, #140d07) 100%);
+  animation: bz-menu-in 0.3s ease-out;
+}
+@keyframes bz-menu-in { from { opacity: 0; } to { opacity: 1; } }
+
+.bz-menu-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.6rem;
+}
+
+.bz-menu-links {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 2rem 0;
+}
+.bz-menu-link {
+  border-radius: 1rem;
+  padding: 0.85rem 0.9rem;
+  text-align: start;
+  font-size: clamp(1.5rem, 5.5vw, 2.1rem);
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--cream, #F4EDE2);
+  transition: background-color 0.2s ease, color 0.2s ease, padding-inline-start 0.25s ease;
+}
+@media (hover: hover) {
+  .bz-menu-link:hover {
+    background: rgba(244, 237, 226, 0.06);
+    color: var(--gold-3, #ecd99b);
+    padding-inline-start: 1.4rem;
+  }
+}
+.bz-menu-foot { border-top: 1px solid rgba(212, 175, 55, 0.18); padding-top: 1.25rem; }
+
+/* ───────── «اعرف أكثر ↓» ───────── */
+.bz-more {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-self: center;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 auto 1.4rem;
+  border-radius: 999px;
+  background: rgba(244, 237, 226, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(244, 237, 226, 0.18);
+  padding: 0.6rem 1.25rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: rgba(244, 237, 226, 0.9);
+  transition: background-color 0.2s ease;
+}
+@media (hover: hover) { .bz-more:hover { background: rgba(244, 237, 226, 0.16); } }
+/* السهم يتنفّس نزولاً — دعوةٌ صامتة للتمرير */
+.bz-more svg { animation: bz-bob 1.9s ease-in-out infinite; }
+@keyframes bz-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
+@media (prefers-reduced-motion: reduce) { .bz-more svg { animation: none; } }
