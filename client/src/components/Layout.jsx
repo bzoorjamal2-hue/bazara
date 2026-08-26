@@ -35,11 +35,14 @@ export default function Layout({ children }) {
   // صفحة المنصّة (الجذر بالمتصفّح): شريطها وفوترها من داخلها، فتُخفى قشرة
   // الموقع كاملةً — كانت تُخفى للتطبيق المثبّت وحده.
   const isLanding = pathname === '/';
+  // صفحات المستندات (الخصوصية وما شابهها) تحمل شريط صفحة المنصّة بنفسها —
+  // شريطُ التسوّق بسلّته ومفضّلته لا معنى له بصفحةٍ تُفتح من الفوتر.
+  const isDoc = pathname === '/privacy';
   // صفحات الحساب — تصميم بملء الشاشة (هيرو + نموذج) بلا شريط/فوتر
   const isAuthFull = ['/login', '/register', '/forgot-password', '/reset'].includes(pathname);
   // الريلز = ملء الشاشة (كتيك توك) — الهيدر كان يظهر فوقها ويغطي المحتوى
   const isReels = pathname === '/reels';
-  const hideChrome = isStorePage || isProduct || isStoreSearch || isStoreTrack || isLanding || isAuthFull || isReels;
+  const hideChrome = isStorePage || isProduct || isStoreSearch || isStoreTrack || isLanding || isDoc || isAuthFull || isReels;
   // لوحة التحكم/الاشتراك: لها شريط وتنقّل عام لكن بلا فوتر المنصّة التسويقي (سياق إدارة لا تسوّق)
   const isDashboard = /^\/dashboard/.test(pathname) || pathname === '/subscribe';
   const showFooter = !hideChrome && !isDashboard;
@@ -88,7 +91,7 @@ export default function Layout({ children }) {
       {/* صفحة المنصّة تملأ الشاشة من حافةٍ لحافة: غلاف المحتوى المحدود بعرضٍ
           وحشوةٍ جانبية كان يحبس هيروها فيظهر لون الخلفية على الجانبين، ويقصّ
           شريطها العلويّ. أقسامها تتولّى عرضها وحشوتها بنفسها. */}
-      {isLanding || isAuthFull ? (
+      {isLanding || isAuthFull || isDoc ? (
         <main className="w-full flex-1">{children}</main>
       ) : (
         <main className={`mx-auto w-full max-w-6xl flex-1 px-4 pt-5 sm:px-6 xl:max-w-[1320px] 2xl:max-w-[1600px] ${isStoreTrack ? 'flex flex-col' : ''} ${showBottomNav && !showFooter ? 'pb-bottomnav' : 'pb-8'}`}>{children}</main>

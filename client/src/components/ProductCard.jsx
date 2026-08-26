@@ -238,13 +238,17 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
 
         {/* شارات — ألوان بوتيك هادئة معتمة (بلا backdrop-blur: يسبّب تعليق تمرير على iOS مع كثرة البطاقات) */}
         <div className="absolute start-2 top-2 z-10 flex flex-col gap-1">
-          {isNew && <span className="badge bg-[#3f2e22] text-[#F4EDE2] shadow-sm">{t('product.new')}</span>}
-          {isBestSeller && <span className="badge flex items-center gap-0.5 bg-emerald-600 text-white shadow-sm"><FireIcon className="h-3 w-3" /> {t('product.bestSeller')}</span>}
-          {product.featured && <span className="badge flex items-center gap-0.5 bg-gold-400 text-ink-950 shadow-sm"><StarIcon className="h-3 w-3" /> {t('product.featured')}</span>}
-          {hasDiscount && <span className="badge bg-[#8a2438] text-[#F4EDE2] shadow-sm">-{discountPct}%</span>}
+          {/* لونان لا أربعة: الغامق للحياد (جديد/مميّز/الأكثر مبيعاً) والأحمر
+              للخصم وحده — هو الرقم الذي يجب أن يُرى أوّلاً. كانت أربعة ألوان
+              على بطاقةٍ واحدة (بنّي، أخضر، ذهبي، خمري #8a2438 من خارج اللوحة)
+              فتفقد كلّها معناها. */}
+          {isNew && <span className="bz-pb">{t('product.new')}</span>}
+          {isBestSeller && <span className="bz-pb flex items-center gap-0.5"><FireIcon className="h-3 w-3" /> {t('product.bestSeller')}</span>}
+          {product.featured && <span className="bz-pb flex items-center gap-0.5"><StarIcon className="h-3 w-3" /> {t('product.featured')}</span>}
+          {hasDiscount && <span className="bz-pb bz-pb-sale">-{discountPct}%</span>}
           {/* نزل سعرها منذ حفظها بالمفضّلة (تمرّره صفحة المفضّلة فقط) */}
           {priceDrop > product.price && (
-            <span className="badge flex items-center gap-0.5 bg-emerald-600 text-white shadow-sm">↓ {t('wishlist.priceDrop')}</span>
+            <span className="bz-pb bz-pb-sale flex items-center gap-0.5">↓ {t('wishlist.priceDrop')}</span>
           )}
         </div>
 

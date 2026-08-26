@@ -24,15 +24,15 @@ import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys 
 // تعرض شعار المتجر، فيبدوان هويتين مختلفتين لنفس الحساب.
 function Avatar({ user, store, size = 'h-8 w-8' }) {
   if (user?.avatarUrl) {
-    return <img src={cldThumb(user.avatarUrl, 140)} alt={user.name} loading="eager" decoding="async" className={`${size} rounded-full border border-gold-400/40 object-cover`} />;
+    return <img src={cldThumb(user.avatarUrl, 140)} alt={user.name} loading="eager" decoding="async" className={`${size} bz-av rounded-full object-cover`} />;
   }
   if (store?.logoUrl) {
     // الشعار غالباً مربّع بهوامش — object-contain كي لا تُقصّ أطرافه داخل الدائرة
-    return <img src={cldThumb(store.logoUrl, 140)} alt={store.name} loading="eager" decoding="async" className={`${size} rounded-full border border-gold-400/40 bg-cream/10 object-contain p-[3px]`} />;
+    return <img src={cldThumb(store.logoUrl, 140)} alt={store.name} loading="eager" decoding="async" className={`${size} bz-av rounded-full bg-cream/10 object-contain p-[3px]`} />;
   }
   const initial = user?.name?.trim()?.[0] || <UserIcon className="h-5 w-5" />;
   return (
-    <span className={`${size} flex items-center justify-center rounded-full border border-gold-400/40 bg-gold-400/15 text-sm font-bold text-gold-200`}>
+    <span className={`${size} bz-av flex items-center justify-center rounded-full bg-cream/12 text-sm font-bold text-cream`}>
       {initial}
     </span>
   );
@@ -53,7 +53,7 @@ function AccountMenu({ user, store, subscription, isAdmin, onClose, onLogout }) 
   const active = subscription?.active;
   const days = subscription?.daysRemaining;
   const pill = isAdmin
-    ? { cls: 'bg-gold-400/15 text-gold-300', text: t('nav.adminRole') }
+    ? { cls: 'bz-rolechip', text: t('nav.adminRole') }
     : active
       ? days != null && days <= 5
         ? { cls: 'bg-orange-400/15 text-orange-500', text: t('subscription.daysLeft', { count: days }) }
@@ -64,12 +64,11 @@ function AccountMenu({ user, store, subscription, isAdmin, onClose, onLogout }) 
     <>
       {/* خلفية شفافة تُغلق القائمة بالضغط خارجها */}
       <div className="fixed inset-0 z-[55]" onClick={onClose} />
-      <div className="absolute end-0 top-[calc(100%+8px)] z-[60] w-[13rem] max-w-[72vw] origin-top-end animate-pop overflow-hidden rounded-2xl border border-gold-400/30 bg-white text-wine shadow-[0_16px_40px_-10px_rgba(94,70,54,0.45)]">
+      <div className="bz-usermenu absolute end-0 top-[calc(100%+8px)] z-[60] w-[13rem] max-w-[72vw] origin-top-end animate-pop overflow-hidden rounded-2xl bg-white text-wine">
         {/* رأس فخم بتدرّج خمري + لمعة ذهبية */}
         <div className="relative overflow-hidden bg-gradient-to-br from-wine to-wine-dark px-3 py-3 text-cream">
-          <span aria-hidden className="pointer-events-none absolute -end-5 -top-6 h-16 w-16 rounded-full bg-gold-400/25 blur-2xl" />
           <div className="relative flex items-center gap-2.5">
-            <span className="shrink-0 rounded-full p-[2px] ring-1 ring-gold-300/60"><Avatar user={user} store={isAdmin ? null : store} size="h-9 w-9" /></span>
+            <span className="shrink-0 rounded-full p-[2px]"><Avatar user={user} store={isAdmin ? null : store} size="h-9 w-9" /></span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-[13px] font-bold leading-tight text-cream">{user.name}</p>
               <span className={`mt-1 inline-flex items-center gap-1 rounded-full px-1.5 py-px text-[10px] font-bold ${pill.cls}`}>
@@ -78,7 +77,7 @@ function AccountMenu({ user, store, subscription, isAdmin, onClose, onLogout }) 
             </div>
           </div>
         </div>
-        <div className="h-px bg-gradient-to-r from-transparent via-gold-400/45 to-transparent" />
+        <div className="h-px bg-wine/10" />
 
         <div className="p-1.5">
           {!isAdmin && store?.slug && <MenuRow to={`/store/${store.slug}`} onClick={onClose} Icon={StoreIcon} label={t('nav.openStore')} />}
@@ -389,7 +388,7 @@ export default function Navbar() {
                   to={isAdmin ? '/shop' : `/store/${store.slug}`}
                   onClick={() => setMenuOpen(false)}
                   draggable={false}
-                  className="app-tap flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-gold-200 to-gold-400 px-3 py-2.5 text-sm font-extrabold text-wine-dark shadow-[0_8px_22px_-10px_rgba(212,175,55,0.9)] transition active:scale-[0.985]"
+                  className="bz-drawer-cta app-tap flex items-center justify-center gap-2 rounded-2xl px-3 py-2.5 text-sm font-extrabold transition active:scale-[0.985]"
                 >
                   <StoreIcon className="h-4 w-4" /> {isAdmin ? t('nav.home') : t('dashboard.viewStore')}
                 </Link>

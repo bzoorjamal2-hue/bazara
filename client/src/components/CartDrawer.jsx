@@ -380,7 +380,7 @@ export default function CartDrawer() {
           </div>
         ) : items.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center text-stone-400">
-            <span className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-wine/20 to-gold-400/15 text-gold-200 ring-1 ring-gold-400/30">
+            <span className="flex h-20 w-20 items-center justify-center rounded-full bz-softico-dark">
               <BagIcon className="h-9 w-9" />
             </span>
             <p>{t('cart.empty')}</p>
@@ -453,7 +453,7 @@ export default function CartDrawer() {
                             <TruckIcon className="h-4 w-4 shrink-0" /> {t('co.freeShippingHint', { amount: (freeOver - total).toFixed(2) })}
                           </p>
                           <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10">
-                            <div className="h-full rounded-full bg-gradient-to-r from-[#e6c878] to-[#b8932c] transition-all duration-500" style={{ width: `${Math.min(100, Math.round((total / freeOver) * 100))}%` }} />
+                            <div className="h-full rounded-full bz-progress transition-all duration-500" style={{ width: `${Math.min(100, Math.round((total / freeOver) * 100))}%` }} />
                           </div>
                         </>
                       )}
@@ -625,7 +625,7 @@ export default function CartDrawer() {
                         </p>
                         <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10">
                           <div
-                            className="h-full rounded-full bg-gradient-to-r from-[#e6c878] to-[#b8932c] transition-all duration-500"
+                            className="h-full rounded-full bz-progress transition-all duration-500"
                             style={{ width: `${Math.min(100, Math.round((afterDiscount / freeOver) * 100))}%` }}
                           />
                         </div>

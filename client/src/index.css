@@ -3020,3 +3020,88 @@ html.dark .theme-pub .bz-storecard {
 html.dark .theme-pub .bz-storecard-top { box-shadow: inset 0 0 0 1px rgba(212, 175, 55, 0.42), inset 0 3px 0 0 #d4af37; }
 html.dark .theme-pub .bz-storecard-logo { box-shadow: inset 0 0 0 1px rgba(240, 220, 166, 0.2); }
 html.dark .theme-pub .bz-softico { background: rgba(240, 220, 166, 0.12); color: #f0dca6; }
+
+/* شارات بطاقة المنتج: لونان لا أربعة.
+   كانت بنّياً وأخضر وذهبياً وخمرياً (#8a2438 من خارج اللوحة) على بطاقةٍ
+   واحدة — وأربعُ شاراتٍ ملوّنة معاً لا تميّز شيئاً، تزحم الصورة فحسب.
+   الغامق للحياد، والأحمر للخصم وحده: هو الرقم الذي يجب أن يُرى أوّلاً. */
+.bz-pb {
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.5;
+  background: rgba(28, 19, 9, 0.86);
+  color: #F4EDE2;
+  box-shadow: inset 0 0 0 1px rgba(244, 237, 226, 0.14);
+}
+.bz-pb-sale { background: #b42318; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18); }
+
+/* شريط تقدّم (الشحن المجاني بالسلة): ذهبٌ مصمت لا تدرّجٌ بين درجتين.
+   التدرّج على شريطٍ بعرض 4px لا يُرى أصلاً — يُضيف كلفةً بلا أثر. */
+.bz-progress { background: #d4af37; }
+/* مربّع أيقونة محايد على الأسطح الداكنة (الأدراج) */
+.bz-softico-dark {
+  background: rgba(240, 220, 166, 0.10);
+  color: #f0dca6;
+  box-shadow: inset 0 0 0 1px rgba(240, 220, 166, 0.16);
+}
+
+/* ═══════ صفحات المستندات (سياسة الخصوصية وما شابهها) ═══════
+   كانت تستعمل بادئة dark: من Tailwind، وثيم الموقع ليس كذلك: قواعده
+   html.dark .theme-pub — فلا يصلها الوضع الليليّ إطلاقاً، وتبقى بألوان
+   النهار على خلفيةٍ داكنة. وحتى نهاراً كان تباينها 2.9 والعناوين و1.6
+   لسطر التاريخ، والحدّ المقروء 4.5. */
+.bz-doc { color: #33251a; line-height: 1.9; }
+.bz-doc-h1 { color: #241708; }
+.bz-doc-h2 { color: #2b1d12; }
+.bz-doc-meta { color: #6b6560; }
+
+html.dark .theme-pub .bz-doc { color: #e6ddcc; }
+html.dark .theme-pub .bz-doc-h1 { color: #f6edcf; }
+html.dark .theme-pub .bz-doc-h2 { color: #ecd99b; }
+html.dark .theme-pub .bz-doc-meta { color: rgba(230, 221, 204, 0.62); }
+
+/* ═══════ الدرج الجانبي: ذهبٌ يميّز لا ذهبٌ يعمّ ═══════
+   كانت تسع لمساتٍ ذهبية داخل درجٍ خلفيّته ذهبيّة أصلاً: حدود الأفاتار
+   الثلاثة، وشارة الدور، وحدّ القائمة المنسدلة، وهالةٌ بزاويتها، وحلقةٌ حول
+   الصورة، وخيطٌ فاصل متدرّج، وزرٌّ بتدرّجٍ ذهبيّ. «ذهبيّ بذهبيّ» — لا شيء
+   يبرز لأنّ كلّ شيءٍ يبرز. */
+.bz-av { box-shadow: inset 0 0 0 1px rgba(244, 237, 226, 0.28); }
+.bz-rolechip { background: rgba(244, 237, 226, 0.14); color: #F4EDE2; }
+.bz-usermenu { box-shadow: 0 16px 40px -10px rgba(94, 70, 54, 0.45), inset 0 0 0 1px rgba(94, 70, 54, 0.12); }
+
+/* الزرّ الوحيد الذي يجب أن يبرز — عاجيّ صلب على الدرج الغامق */
+.bz-drawer-cta {
+  background: #fbf6ea;
+  color: #2b1d12;
+  box-shadow: 0 10px 26px -14px rgba(0, 0, 0, 0.9);
+}
+@media (hover: hover) { .bz-drawer-cta:hover { background: #ffffff; } }
+
+/* وخلفية الدرج بلا توهّجٍ ذهبيّ: التدرّج البنّي وحده يكفي لفصله عمّا خلفه */
+.dash-drawer { background: linear-gradient(180deg, #4a3628 0%, #3f2e22 42%, #34251b 100%); }
+html.dark .dash-drawer { background: linear-gradient(180deg, #2b1f17 0%, #241a13 50%, #1b130e 100%); }
+
+/* ═══════ صفحات المستندات: شريط صفحة المنصّة نفسه ═══════
+   كانت تُفتح بشريط التسوّق (سلّة ومفضّلة وحساب ومبدّل الوضع) — لا معنى له
+   بصفحةٍ تُفتح من فوتر الواجهة، ويقطع الإحساس بأنّها الموقع نفسه. */
+.bz-docpage { min-height: 100svh; background: #F4EDE2; }
+html.dark .theme-pub .bz-docpage { background: #1a130c; }
+
+.bz-dochead {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: max(env(safe-area-inset-top), 0.6rem) 0.9rem 0.6rem;
+  background: linear-gradient(180deg, #2b1d12 0%, #241708 100%);
+}
+@media (min-width: 768px) { .bz-dochead { padding-inline: 2rem; } }
+/* الشريط غامق دائماً — فألوان أبنائه عاجيّة بالوضعين */
+.bz-dochead .bz-nav-name { color: #F4EDE2; }
+.bz-dochead .bz-nav-link { color: rgba(244, 237, 226, 0.82); }
+@media (hover: hover) { .bz-dochead .bz-nav-link:hover { background: rgba(244, 237, 226, 0.10); color: #F4EDE2; } }
