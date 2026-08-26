@@ -56,8 +56,8 @@ export default {
       },
       boxShadow: {
         glass: '0 8px 32px 0 rgba(0, 0, 0, 0.55)',
-        glow: '0 0 35px -8px rgba(212, 175, 55, 0.45)',
-        gold: '0 10px 30px -10px rgba(212, 175, 55, 0.5)',
+        glow: '0 0 35px -8px rgba(176, 154, 126, 0.45)',
+        gold: '0 10px 30px -10px rgba(176, 154, 126, 0.5)',
       },
       keyframes: {
         'fade-up': {

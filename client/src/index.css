@@ -3147,3 +3147,351 @@ html.dark .theme-pub .bz-docpage { background: #1a130c; }
 .bz-dochead .bz-nav-name { color: #F4EDE2; }
 .bz-dochead .bz-nav-link { color: rgba(244, 237, 226, 0.82); }
 @media (hover: hover) { .bz-dochead .bz-nav-link:hover { background: rgba(244, 237, 226, 0.10); color: #F4EDE2; } }
+
+/* ═══════════ لغةٌ واحدة لصفحات الزبونة ═══════════
+   كانت كلُّ صفحةٍ تُعيد اختراع عناصرها: عنوانٌ بترتيبٍ مختلف، وبطاقةُ
+   حالةٍ بـglass وحلقةٍ ذهبية، وزرٌّ بتدرّجٍ مكتوبٍ داخل السطر (style=…)
+   منسوخٍ حرفياً بخمسة ملفات. فإن غُيّر الزرّ غُيّر بخمسة مواضع — أو نُسي
+   واحد. هنا تُكتب مرّةً وتُستعمل في كلّ مكان. */
+
+/* ── ترويسة الصفحة: أيقونةٌ هادئة + عنوانٌ تحته خطّ + سطرُ شرح ── */
+.bz-ph { margin-bottom: 1.5rem; text-align: center; }
+.bz-ph-ico {
+  display: inline-flex;
+  height: 2.75rem;
+  width: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.9rem;
+  margin-bottom: 0.7rem;
+  background: rgba(94, 70, 54, 0.07);
+  color: #5e4636;
+}
+.bz-ph-t {
+  font-size: clamp(1.32rem, 4.2vw, 1.7rem);
+  font-weight: 800;
+  line-height: 1.3;
+  color: #3f2e22;
+}
+.bz-ph-sub {
+  margin-top: 0.5rem;
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: #6b6259;
+}
+
+/* ── سطحٌ واحد للبطاقات: نفس ظلّ بطاقة المتجر بالرئيسية ── */
+.bz-panel {
+  border-radius: 1.25rem;
+  background: #fff;
+  box-shadow: 0 6px 22px -12px rgba(94, 70, 54, 0.26), inset 0 0 0 1px rgba(94, 70, 54, 0.07);
+}
+
+/* ── بطاقة حالة: فراغٌ أو خطأ. أيقونةٌ ونصٌّ ومخرج ── */
+.bz-state {
+  margin-inline: auto;
+  display: flex;
+  max-width: 30rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  border-radius: 1.25rem;
+  padding: clamp(2rem, 6vw, 2.75rem) 1.5rem;
+  text-align: center;
+  background: #fff;
+  box-shadow: 0 6px 22px -12px rgba(94, 70, 54, 0.26), inset 0 0 0 1px rgba(94, 70, 54, 0.07);
+}
+.bz-state-ico {
+  display: flex;
+  height: 3.5rem;
+  width: 3.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1rem;
+  background: rgba(94, 70, 54, 0.07);
+  color: #5e4636;
+}
+.bz-state-t { font-size: 1rem; font-weight: 700; color: #3f2e22; }
+.bz-state-p { font-size: 0.88rem; line-height: 1.7; color: #6b6259; }
+.bz-state-acts { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem; margin-top: 0.25rem; }
+
+/* ── الأفعال: زرّان لا خمسة تدرّجاتٍ مكتوبةٍ داخل السطر ── */
+.bz-act, .bz-act-2 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  padding: 0.7rem 1.5rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.12s ease;
+}
+.bz-act {
+  background: #2b1d12;
+  color: #F4EDE2;
+  box-shadow: 0 12px 26px -14px rgba(20, 13, 7, 0.7);
+}
+.bz-act-2 {
+  color: #3f2e22;
+  box-shadow: inset 0 0 0 1px rgba(94, 70, 54, 0.28);
+}
+@media (hover: hover) {
+  .bz-act:hover { background: #3f2e22; }
+  .bz-act-2:hover { background: rgba(94, 70, 54, 0.07); }
+}
+.bz-act:active, .bz-act-2:active { transform: scale(0.97); }
+.bz-act:disabled, .bz-act-2:disabled { opacity: 0.55; }
+
+/* ── حقل إدخال ── */
+.bz-field {
+  width: 100%;
+  border-radius: 999px;
+  background: #fff;
+  padding: 0.8rem 1rem;
+  font-size: 16px;          /* أقلّ من 16 يجعل سفاري يُقرّب الصفحة عند اللمس */
+  color: #2b2b2b;
+  box-shadow: inset 0 0 0 1px rgba(94, 70, 54, 0.16);
+  outline: none;
+  transition: box-shadow 0.2s ease;
+}
+.bz-field::placeholder { color: #9a908a; }
+.bz-field:focus { box-shadow: inset 0 0 0 1.5px rgba(94, 70, 54, 0.45); }
+
+/* ── حبّة/شريحة: فئة مقترحة، بحثٌ سابق، مرشِّح ── */
+.bz-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: #3f2e22;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(94, 70, 54, 0.14);
+  transition: box-shadow 0.2s ease, background-color 0.2s ease;
+}
+@media (hover: hover) { .bz-pill:hover { box-shadow: inset 0 0 0 1px rgba(94, 70, 54, 0.36); } }
+.bz-pill-on { background: #2b1d12; color: #F4EDE2; box-shadow: none; }
+
+/* ── عنوان قسمٍ صغير داخل الصفحة ── */
+.bz-sub-h { font-size: 0.85rem; font-weight: 700; color: #4a3628; }
+.bz-sub-h span { font-weight: 500; color: #6b6259; }
+
+/* ═══════ الوضع الليليّ ═══════ */
+html.dark .theme-pub .bz-ph-ico { background: rgba(228, 216, 197, 0.12); color: #e4d8c5; }
+html.dark .theme-pub .bz-ph-t { color: #f6efe0; }
+html.dark .theme-pub .bz-ph-sub { color: #b9ab91; }
+html.dark .theme-pub .bz-panel,
+html.dark .theme-pub .bz-state {
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(228, 216, 197, 0.14);
+}
+html.dark .theme-pub .bz-state-ico { background: rgba(228, 216, 197, 0.12); color: #e4d8c5; }
+html.dark .theme-pub .bz-state-t { color: #f6efe0; }
+html.dark .theme-pub .bz-state-p { color: #b9ab91; }
+/* الزرّ الأساسيّ ينقلب: عاجيٌّ على داكن — الداكن على داكنٍ لا يُرى */
+html.dark .theme-pub .bz-act { background: #f6efe0; color: #2b1d12; box-shadow: none; }
+html.dark .theme-pub .bz-act-2 { color: #e4d8c5; box-shadow: inset 0 0 0 1px rgba(228, 216, 197, 0.28); }
+@media (hover: hover) {
+  html.dark .theme-pub .bz-act:hover { background: #fff; }
+  html.dark .theme-pub .bz-act-2:hover { background: rgba(228, 216, 197, 0.10); }
+}
+html.dark .theme-pub .bz-field {
+  background: rgba(255, 255, 255, 0.06);
+  color: #f6efe0;
+  box-shadow: inset 0 0 0 1px rgba(228, 216, 197, 0.18);
+}
+html.dark .theme-pub .bz-field::placeholder { color: #9b8f80; }
+html.dark .theme-pub .bz-field:focus { box-shadow: inset 0 0 0 1.5px rgba(228, 216, 197, 0.45); }
+html.dark .theme-pub .bz-pill {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ded2bc;
+  box-shadow: inset 0 0 0 1px rgba(228, 216, 197, 0.16);
+}
+@media (hover: hover) { html.dark .theme-pub .bz-pill:hover { box-shadow: inset 0 0 0 1px rgba(228, 216, 197, 0.38); } }
+html.dark .theme-pub .bz-pill-on { background: #f6efe0; color: #2b1d12; box-shadow: none; }
+html.dark .theme-pub .bz-sub-h { color: #f6efe0; }
+html.dark .theme-pub .bz-sub-h span { color: #b9ab91; }
+
+/* ── قِطعٌ صغيرة تتكرّر: زرّ أيقونة، أيقونة داخل حقل، مسحُ حقل، زرّ نصّيّ ── */
+.bz-iconbtn {
+  display: flex;
+  height: 2.75rem;
+  width: 2.75rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: #5e4636;
+  transition: background-color 0.2s ease, transform 0.12s ease;
+}
+@media (hover: hover) { .bz-iconbtn:hover { background: rgba(94, 70, 54, 0.09); } }
+.bz-iconbtn:active { transform: scale(0.93); }
+
+.bz-field-ico { color: rgba(94, 70, 54, 0.55); }
+.bz-field-x {
+  background: rgba(94, 70, 54, 0.10);
+  color: #5e4636;
+  transition: background-color 0.2s ease;
+}
+@media (hover: hover) { .bz-field-x:hover { background: rgba(94, 70, 54, 0.2); } }
+
+.bz-mini-btn {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b6259;
+  transition: color 0.2s ease;
+}
+@media (hover: hover) { .bz-mini-btn:hover { color: #3f2e22; } }
+
+.bz-pill-x { color: #8b8079; transition: background-color 0.2s ease, color 0.2s ease; }
+@media (hover: hover) { .bz-pill-x:hover { background: rgba(94, 70, 54, 0.12); color: #3f2e22; } }
+
+html.dark .theme-pub .bz-iconbtn { color: #e4d8c5; }
+@media (hover: hover) { html.dark .theme-pub .bz-iconbtn:hover { background: rgba(228, 216, 197, 0.12); } }
+html.dark .theme-pub .bz-field-ico { color: rgba(228, 216, 197, 0.6); }
+html.dark .theme-pub .bz-field-x { background: rgba(228, 216, 197, 0.14); color: #e4d8c5; }
+@media (hover: hover) { html.dark .theme-pub .bz-field-x:hover { background: rgba(228, 216, 197, 0.26); } }
+html.dark .theme-pub .bz-mini-btn { color: #b9ab91; }
+@media (hover: hover) { html.dark .theme-pub .bz-mini-btn:hover { color: #f6efe0; } }
+html.dark .theme-pub .bz-pill-x { color: #a2957f; }
+@media (hover: hover) { html.dark .theme-pub .bz-pill-x:hover { background: rgba(228, 216, 197, 0.14); color: #f6efe0; } }
+
+/* نصّ ثانويّ كان تباينه 2.6 على العاجيّ و3.0 على الأبيض — والحدّ 4.5.
+   الأسعار المشطوبة وعدّادات النتائج كانت تكاد لا تُقرأ. */
+.theme-pub .text-stone-500 { color: #6b6259; }
+
+/* ── تتبّع الطلب ──
+   شارات الحالة كانت خمسة ألوان (كهرمانيّ وذهبيّ وبنّي وأخضر وأحمر) على
+   قائمةٍ واحدة. اللون حين يُصرف على كلّ حالةٍ لا يُنبّه لأيّها: الحالات
+   العادية درجاتُ البنّي نفسه، ويُحجز الأخضر للتسليم والأحمر للإلغاء. */
+.bz-ob {
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+  background: rgba(94, 70, 54, 0.09);
+  color: #4a3628;
+}
+.bz-ob-on { background: rgba(94, 70, 54, 0.16); color: #3f2e22; }
+.bz-ob-ok { background: rgba(21, 128, 61, 0.12); color: #15803d; }
+.bz-ob-no { background: rgba(180, 35, 24, 0.11); color: #b42318; }
+
+/* رقم الطلب/التتبّع: يُنسخ بضغطة — فيبدو قابلاً للضغط لا نصّاً جامداً */
+.bz-ref {
+  background: rgba(94, 70, 54, 0.07);
+  color: #6b6259;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+@media (hover: hover) { .bz-ref:hover { background: rgba(94, 70, 54, 0.14); color: #3f2e22; } }
+
+/* الخطّ الزمنيّ: كان للخطوة الحالية هالةٌ نابضة وحلقةٌ رمليّة وتدرّجٌ داخل
+   السطر — ثلاث إشاراتٍ لشيءٍ واحد. صارت واحدة: المنجَز مصمتٌ داكن. */
+.bz-tl-dot {
+  position: relative;
+  display: flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(94, 70, 54, 0.07);
+  color: #6b6259;
+  box-shadow: inset 0 0 0 1px rgba(94, 70, 54, 0.14);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+.bz-tl-done { background: #5e4636; color: #F4EDE2; box-shadow: none; }
+.bz-tl-now { box-shadow: 0 0 0 3px rgba(94, 70, 54, 0.18); }
+.bz-tl-lbl { margin-top: 0.35rem; font-size: 0.62rem; color: #8b8079; }
+.bz-tl-lbl-on { font-weight: 700; color: #4a3628; }
+.bz-tl-bar { margin-inline: 0.25rem; height: 3px; flex: 1; border-radius: 999px; background: rgba(94, 70, 54, 0.12); }
+.bz-tl-bar-on { background: #5e4636; }
+
+/* لوحةُ تنبيهٍ محايدة (شركة التوصيل) — كانت بحدٍّ وخلفيةٍ ذهبيّين */
+.bz-note {
+  border-radius: 1rem;
+  background: rgba(94, 70, 54, 0.05);
+  color: #4a3628;
+  box-shadow: inset 0 0 0 1px rgba(94, 70, 54, 0.12);
+}
+.bz-hr-t { border-top: 1px solid rgba(94, 70, 54, 0.12); }
+.bz-total { color: #3f2e22; }
+.bz-err {
+  border-radius: 0.9rem;
+  padding: 0.65rem 1rem;
+  font-size: 0.85rem;
+  background: rgba(180, 35, 24, 0.09);
+  color: #b42318;
+}
+
+html.dark .theme-pub .bz-ob { background: rgba(228, 216, 197, 0.12); color: #ded2bc; }
+html.dark .theme-pub .bz-ob-on { background: rgba(228, 216, 197, 0.2); color: #f6efe0; }
+html.dark .theme-pub .bz-ob-ok { background: rgba(74, 222, 128, 0.16); color: #86efac; }
+html.dark .theme-pub .bz-ob-no { background: rgba(248, 113, 113, 0.16); color: #fca5a5; }
+html.dark .theme-pub .bz-ref { background: rgba(228, 216, 197, 0.10); color: #b9ab91; }
+@media (hover: hover) { html.dark .theme-pub .bz-ref:hover { background: rgba(228, 216, 197, 0.2); color: #f6efe0; } }
+html.dark .theme-pub .bz-tl-dot {
+  background: rgba(228, 216, 197, 0.08);
+  color: #b9ab91;
+  box-shadow: inset 0 0 0 1px rgba(228, 216, 197, 0.16);
+}
+html.dark .theme-pub .bz-tl-done { background: #e4d8c5; color: #2b1d12; box-shadow: none; }
+html.dark .theme-pub .bz-tl-now { box-shadow: 0 0 0 3px rgba(228, 216, 197, 0.22); }
+html.dark .theme-pub .bz-tl-lbl { color: #9c8d74; }
+html.dark .theme-pub .bz-tl-lbl-on { color: #f6efe0; }
+html.dark .theme-pub .bz-tl-bar { background: rgba(228, 216, 197, 0.14); }
+html.dark .theme-pub .bz-tl-bar-on { background: #e4d8c5; }
+html.dark .theme-pub .bz-note {
+  background: rgba(228, 216, 197, 0.06);
+  color: #ded2bc;
+  box-shadow: inset 0 0 0 1px rgba(228, 216, 197, 0.14);
+}
+html.dark .theme-pub .bz-hr-t { border-top-color: rgba(228, 216, 197, 0.14); }
+html.dark .theme-pub .bz-total { color: #f6efe0; }
+html.dark .theme-pub .bz-err { background: rgba(248, 113, 113, 0.14); color: #fca5a5; }
+
+/* ── الاشتراك: الباقة المميّزة، والسعر ── */
+.bz-plan-top { box-shadow: 0 6px 22px -12px rgba(94, 70, 54, 0.26), inset 0 0 0 1px rgba(94, 70, 54, 0.16), inset 0 3px 0 0 #5e4636; }
+.bz-price { font-size: clamp(2.4rem, 9vw, 3rem); font-weight: 800; line-height: 1; color: #3f2e22; }
+html.dark .theme-pub .bz-plan-top { box-shadow: inset 0 0 0 1px rgba(228, 216, 197, 0.22), inset 0 3px 0 0 #e4d8c5; }
+html.dark .theme-pub .bz-price { color: #f6efe0; }
+
+/* ── صفحة المنتج ── */
+.bz-shot { box-shadow: inset 0 0 0 1px rgba(94, 70, 54, 0.12); }
+.bz-thumb { box-shadow: inset 0 0 0 1px rgba(94, 70, 54, 0.10); }
+.bz-thumb-on { box-shadow: 0 0 0 2px #5e4636; opacity: 1; }
+/* الأزرار الدائرية (مشاركة/مفضّلة): كانت بحلقةٍ ذهبية وخلفيةٍ ذهبية عند المرور */
+.bz-roundbtn {
+  color: #5e4636;
+  box-shadow: inset 0 0 0 1px rgba(94, 70, 54, 0.22);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+@media (hover: hover) { .bz-roundbtn:hover { background: rgba(94, 70, 54, 0.08); } }
+.bz-roundbtn-liked { color: #b42318; box-shadow: inset 0 0 0 1px rgba(180, 35, 24, 0.5); background: rgba(180, 35, 24, 0.08); }
+/* «مقاسي المعتاد»: كانت حلقةً ذهبيةً بإزاحة — صارت علامةً بلون النصّ نفسه */
+.bz-usual { box-shadow: 0 0 0 2px rgba(94, 70, 54, 0.55); }
+.bz-usual-dot { box-shadow: inset 0 0 0 2px rgba(94, 70, 54, 0.65); }
+/* شارات الثقة: كانت بتدرّجٍ أبيض→كريميّ وحدٍّ ذهبيّ وحلقةٍ ذهبية حول الأيقونة */
+.bz-trust { background: rgba(94, 70, 54, 0.04); box-shadow: inset 0 0 0 1px rgba(94, 70, 54, 0.10); }
+
+html.dark .theme-pub .bz-shot { box-shadow: inset 0 0 0 1px rgba(228, 216, 197, 0.14); }
+html.dark .theme-pub .bz-thumb { box-shadow: inset 0 0 0 1px rgba(228, 216, 197, 0.12); }
+html.dark .theme-pub .bz-thumb-on { box-shadow: 0 0 0 2px #e4d8c5; }
+html.dark .theme-pub .bz-roundbtn { color: #e4d8c5; box-shadow: inset 0 0 0 1px rgba(228, 216, 197, 0.26); }
+@media (hover: hover) { html.dark .theme-pub .bz-roundbtn:hover { background: rgba(228, 216, 197, 0.10); } }
+html.dark .theme-pub .bz-roundbtn-liked { color: #fca5a5; box-shadow: inset 0 0 0 1px rgba(252, 165, 165, 0.5); background: rgba(248, 113, 113, 0.14); }
+html.dark .theme-pub .bz-usual { box-shadow: 0 0 0 2px rgba(228, 216, 197, 0.6); }
+html.dark .theme-pub .bz-usual-dot { box-shadow: inset 0 0 0 2px rgba(228, 216, 197, 0.7); }
+html.dark .theme-pub .bz-trust { background: rgba(228, 216, 197, 0.05); box-shadow: inset 0 0 0 1px rgba(228, 216, 197, 0.12); }
+/* الشارة العاجلة (ينتهي اليوم): الحمرة تُحجز للاستعجال وحده */
+.bz-pill-hot { background: #9a3412; color: #F4EDE2; box-shadow: none; }
+html.dark .theme-pub .bz-pill-hot { background: #c2410c; color: #fff; }
+/* نقطة تعداد المنتجات — زخرفة (aria-hidden) لا نصّ يُقرأ */
+.bz-bullet { color: rgba(94, 70, 54, 0.4); }
+html.dark .theme-pub .bz-bullet { color: rgba(228, 216, 197, 0.4); }

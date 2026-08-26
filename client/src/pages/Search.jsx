@@ -6,7 +6,8 @@ import Seo from '../components/Seo.jsx';
 import FilteredProductGrid from '../components/FilteredProductGrid.jsx';
 import StoreHeader from '../components/StoreHeader.jsx';
 import { ProductGridSkeleton } from '../components/Skeleton.jsx';
-import { SearchIcon, StoreIcon, XIcon } from '../components/icons.jsx';
+import { SearchIcon, StoreIcon, XIcon, BackIcon } from '../components/icons.jsx';
+import { StateCard, SubHead } from '../components/PageUI.jsx';
 import { cldThumb } from '../utils/cloudinary.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { goBack } from '../utils/nav.js';
@@ -29,8 +30,7 @@ const pushRecentSearch = (q) => {
 
 export default function Search() {
   const catKeys = usePlatformCatKeys();
-  const { t, i18n } = useTranslation();
-  const rtl = i18n.language !== 'en';
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const q = (params.get('q') || '').trim();
@@ -125,14 +125,12 @@ export default function Search() {
           type="button"
           onClick={() => goBack(navigate, storeScope ? `/store/${storeScope}` : '/shop')}
           aria-label={t('common.back')}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-wine transition hover:bg-wine/10"
+          className="bz-iconbtn app-tap"
         >
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d={rtl ? 'm9 6 6 6-6 6' : 'm15 6-6 6 6 6'} />
-          </svg>
+          <BackIcon className="h-5 w-5" />
         </button>
         <div className="relative flex-1">
-          <SearchIcon className="pointer-events-none absolute start-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-wine/50" />
+          <SearchIcon className="bz-field-ico pointer-events-none absolute start-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2" />
           <input
             ref={inputRef}
             value={input}
@@ -140,14 +138,14 @@ export default function Search() {
             onKeyDown={(e) => { if (e.key === 'Enter') { clearTimeout(timerRef.current); const v = input.trim(); setParams(v ? withScope({ q: v }) : withScope({}), { replace: true }); inputRef.current?.blur(); } }}
             placeholder={t('searchPage.placeholder')}
             enterKeyHint="search"
-            className="w-full rounded-full border border-wine/15 bg-white py-3 pe-11 ps-11 text-[16px] text-stone-100 shadow-[0_6px_18px_-12px_rgba(94,70,54,0.35)] outline-none transition focus:border-wine/40"
+            className="bz-field pe-11 ps-11"
           />
           {input && (
             <button
               type="button"
               onClick={() => { setInput(''); setParams(withScope({}), { replace: true }); inputRef.current?.focus(); }}
               aria-label={t('common.remove')}
-              className="absolute end-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-wine/10 text-wine transition hover:bg-wine/20"
+              className="bz-field-x absolute end-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full"
             >
               <XIcon className="h-3.5 w-3.5" />
             </button>
@@ -161,19 +159,19 @@ export default function Search() {
           {recents.length > 0 && (
             <section>
               <div className="mb-2.5 flex items-center justify-between">
-                <h2 className="text-sm font-bold text-stone-300">{t('searchPage.recent')}</h2>
-                <button type="button" onClick={clearRecents} className="text-xs font-semibold text-stone-500 transition hover:text-wine">{t('searchPage.clear')}</button>
+                <SubHead>{t('searchPage.recent')}</SubHead>
+                <button type="button" onClick={clearRecents} className="bz-mini-btn">{t('searchPage.clear')}</button>
               </div>
               <div className="flex flex-wrap gap-2">
                 {recents.map((r) => (
-                  <span key={r} className="inline-flex items-center rounded-full border border-wine/15 bg-white transition hover:border-wine/40">
-                    <button type="button" onClick={() => searchFor(r)} className="max-w-[10rem] truncate py-1.5 pe-1.5 ps-3.5 text-sm text-stone-200">{r}</button>
+                  <span key={r} className="bz-pill !gap-0 !px-0">
+                    <button type="button" onClick={() => searchFor(r)} className="max-w-[10rem] truncate py-1.5 pe-1.5 ps-3.5 text-sm">{r}</button>
                     <button
                       type="button"
                       onClick={() => removeRecent(r)}
                       aria-label={`${t('common.remove')} ${r}`}
                       title={t('common.remove')}
-                      className="flex h-6 w-6 me-1.5 items-center justify-center rounded-full text-stone-400 transition hover:bg-wine/10 hover:text-wine"
+                      className="bz-pill-x flex h-6 w-6 me-1.5 items-center justify-center rounded-full"
                     >
                       <XIcon className="h-3 w-3" />
                     </button>
@@ -183,11 +181,10 @@ export default function Search() {
             </section>
           )}
           <section>
-            <h2 className="mb-2.5 text-sm font-bold text-stone-300">{t('searchPage.tryCats')}</h2>
+            <SubHead className="mb-2.5 block">{t('searchPage.tryCats')}</SubHead>
             <div className="flex flex-wrap gap-2">
               {catKeys.map((c) => (
-                <Link key={c} to={catLink(c)}
-                  className="rounded-full border border-gold-400/30 bg-gold-400/10 px-3.5 py-1.5 text-sm font-semibold text-gold-200 transition hover:border-gold-400/60">
+                <Link key={c} to={catLink(c)} className="bz-pill">
                   {t(`categories.${c}`)}
                 </Link>
               ))}
@@ -206,15 +203,15 @@ export default function Search() {
               {/* متاجر مطابقة */}
               {results.stores.length > 0 && (
                 <section className="mb-6">
-                  <h2 className="mb-2.5 text-sm font-bold text-stone-300">{t('searchPage.stores')} <span className="font-medium text-stone-500">· {results.stores.length}</span></h2>
+                  <SubHead className="mb-2.5 block" count={results.stores.length}>{t('searchPage.stores')}</SubHead>
                   <div className="flex flex-wrap gap-2.5">
                     {results.stores.map((s) => (
                       <Link key={s.slug} to={`/store/${s.slug}`}
-                        className="flex items-center gap-2 rounded-full border border-wine/15 bg-white py-1.5 pe-4 ps-1.5 shadow-sm transition hover:border-wine/40">
+                        className="bz-pill !py-1.5 !pe-4 !ps-1.5">
                         {s.logoUrl
-                          ? <img src={cldThumb(s.logoUrl, 80)} alt="" className="h-8 w-8 rounded-full object-cover ring-1 ring-gold-400/40" />
-                          : <span className="flex h-8 w-8 items-center justify-center rounded-full bg-wine/10 text-wine"><StoreIcon className="h-4 w-4" /></span>}
-                        <span className="text-sm font-semibold text-stone-100">{s.name}</span>
+                          ? <img src={cldThumb(s.logoUrl, 80)} alt="" className="bz-storecard-logo h-8 w-8 rounded-full object-cover" />
+                          : <span className="bz-softico flex h-8 w-8 items-center justify-center rounded-full"><StoreIcon className="h-4 w-4" /></span>}
+                        <span className="text-sm font-semibold">{s.name}</span>
                       </Link>
                     ))}
                   </div>
@@ -223,25 +220,15 @@ export default function Search() {
 
               {results.products.length > 0 ? (
                 <section>
-                  <h2 className="mb-3 text-sm font-bold text-stone-300">{t('searchPage.results')} <span className="font-medium text-stone-500">· {results.products.length} {t('store.products')}</span></h2>
+                  <h2 className="bz-sub-h mb-3">{t('searchPage.results')} <span>· {results.products.length} {t('store.products')}</span></h2>
                   <FilteredProductGrid products={results.products} />
                 </section>
               ) : results.stores.length === 0 && !busy && (
-                <div className="glass relative overflow-hidden p-10 text-center">
-                  <span className="dash-hairline absolute inset-x-0 top-0" />
-                  <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-wine/12 to-gold-400/15 text-wine ring-1 ring-gold-400/40">
-                    <SearchIcon className="h-8 w-8" />
-                  </span>
-                  <p className="mt-4 font-semibold text-stone-200">{t('searchPage.noResults', { q })}</p>
-                  <div className="mt-5 flex flex-wrap justify-center gap-2">
-                    {catKeys.slice(0, 4).map((c) => (
-                      <Link key={c} to={catLink(c)}
-                        className="rounded-full border border-gold-400/30 bg-gold-400/10 px-3.5 py-1.5 text-sm font-semibold text-gold-200">
-                        {t(`categories.${c}`)}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
+                <StateCard icon={<SearchIcon className="h-7 w-7" />} title={t('searchPage.noResults', { q })}>
+                  {catKeys.slice(0, 4).map((c) => (
+                    <Link key={c} to={catLink(c)} className="bz-pill">{t(`categories.${c}`)}</Link>
+                  ))}
+                </StateCard>
               )}
             </>
           )}

@@ -183,7 +183,7 @@ export default function BannerEditor({ banners = [], onChange, withButtons = fal
                             key={key}
                             onClick={() => setBannerBg(idx, val)}
                             className={`flex flex-col items-center gap-1 rounded-xl border px-1 py-2 text-[10px] font-semibold transition ${
-                              on ? 'border-[#d4af37] bg-[#d4af37] text-[#3f2e22]' : 'border-gold-400/20 bg-gold-400/5 text-stone-300 hover:bg-gold-400/15 hover:text-gold-200'
+                              on ? 'border-[#e4d8c5] bg-[#e4d8c5] text-[#2b1d12]' : 'border-white/15 bg-white/5 text-stone-300 hover:bg-white/10'
                             }`}
                           >
                             <Icon className="h-4 w-4" />
@@ -202,7 +202,7 @@ export default function BannerEditor({ banners = [], onChange, withButtons = fal
                           <button
                             key={c} type="button" onClick={() => setBanner(idx, 'bgValue', c)}
                             aria-label={c} title={c}
-                            className={`h-7 w-7 rounded-full border-2 transition ${(b.bgValue || '').toLowerCase() === c ? 'border-[#d4af37] scale-110' : 'border-white/20 hover:scale-105'}`}
+                            className={`h-7 w-7 rounded-full border-2 transition ${(b.bgValue || '').toLowerCase() === c ? 'border-[#e4d8c5] scale-110' : 'border-white/20 hover:scale-105'}`}
                             style={{ background: c }}
                           />
                         ))}

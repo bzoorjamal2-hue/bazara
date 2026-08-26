@@ -6,18 +6,19 @@ import api, { getErrorMessage } from '../api/client.js';
 import Seo from '../components/Seo.jsx';
 import StoreHeader from '../components/StoreHeader.jsx';
 import StoreFooter from '../components/StoreFooter.jsx';
-import { PackageIcon, CheckIcon, SearchIcon, TruckIcon, CartIcon, XIcon } from '../components/icons.jsx';
+import { PackageIcon, CheckIcon, SearchIcon, TruckIcon, CartIcon, XIcon, BackIcon } from '../components/icons.jsx';
+import { PageTitle, StateCard } from '../components/PageUI.jsx';
 import { goBack } from '../utils/nav.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { useCart } from '../context/CartContext.jsx';
 
 const STEPS = ['new', 'confirmed', 'shipped', 'delivered'];
 const BADGE = {
-  new: 'bg-amber-500/15 text-amber-700 ring-amber-500/25',
-  confirmed: 'bg-gold-400/20 text-wine ring-gold-400/30',
-  shipped: 'bg-wine/10 text-wine ring-wine/20',
-  delivered: 'bg-emerald-500/15 text-emerald-700 ring-emerald-500/25',
-  cancelled: 'bg-red-500/15 text-red-700 ring-red-500/25',
+  new: 'bz-ob',
+  confirmed: 'bz-ob',
+  shipped: 'bz-ob bz-ob-on',
+  delivered: 'bz-ob bz-ob-ok',
+  cancelled: 'bz-ob bz-ob-no',
 };
 
 export default function Track() {
@@ -126,33 +127,25 @@ export default function Track() {
             <button
               onClick={() => goBack(navigate, '/shop')}
               aria-label={t('common.back')}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-wine/10 text-wine transition hover:bg-wine hover:text-cream"
+              className="bz-iconbtn app-tap"
             >
-              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={rtl ? 'M9 6l6 6-6 6' : 'M15 6l-6 6 6 6'} /></svg>
+              <BackIcon className="h-5 w-5" />
             </button>
           </div>
         )}
-        <div className="mb-1 flex items-center justify-center gap-2 text-wine sm:gap-2.5">
-          <span className="h-px w-5 bg-gradient-to-r from-transparent to-wine/30 sm:w-8" />
-          <h1 className="flex items-center gap-2 whitespace-nowrap font-display text-xl font-bold sm:text-2xl">
-            <PackageIcon className="h-5 w-5 sm:h-6 sm:w-6" /> {t('track.title')}
-          </h1>
-          <span className="h-px w-5 bg-gradient-to-l from-transparent to-wine/30 sm:w-8" />
-        </div>
-        <p className="mb-5 text-center text-sm text-stone-500">{t('track.hint')}</p>
+        <PageTitle icon={<PackageIcon className="h-6 w-6" />} title={t('track.title')} sub={t('track.hint')} />
 
         {/* نموذج البحث — بطاقة فاخرة بحقل حبّي وزر خمري ناري */}
-        <form onSubmit={search} className="glass relative overflow-hidden p-4">
-          <span className="dash-hairline absolute inset-x-0 top-0" />
+        <form onSubmit={search} className="bz-panel p-4">
           <div className="flex gap-2">
             {/* الحقل ltr داخل صفحة rtl → نموضع الأيقونة والحشوة فيزيائياً (يسار) حتى لا يغطيها النص */}
             <div className="relative min-w-0 flex-1">
-              <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-wine/40" />
+              <SearchIcon className="bz-field-ico pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2" />
               <input
                 dir="ltr"
                 inputMode="tel"
                 autoComplete="tel"
-                className={`w-full rounded-full border border-wine/15 bg-white py-3 pl-10 text-end text-[#2b2b2b] placeholder:text-stone-400 focus:border-wine/40 focus:outline-none focus:ring-2 focus:ring-wine/15 ${phone ? 'pr-10' : 'pr-4'}`}
+                className={`bz-field pl-10 text-end ${phone ? 'pr-10' : 'pr-4'}`}
                 placeholder={t('track.phonePlaceholder')}
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -164,7 +157,7 @@ export default function Track() {
                   type="button"
                   onClick={() => setPhone('')}
                   title={t('common.clear')} aria-label={t('common.clear')}
-                  className="absolute right-2 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full text-wine/70 transition hover:bg-wine/10 hover:text-wine"
+                  className="bz-field-x absolute right-2 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full"
                 >
                   <XIcon className="h-4 w-4" />
                 </button>
@@ -173,22 +166,20 @@ export default function Track() {
             <button
               type="submit"
               disabled={busy}
-              className="shrink-0 rounded-full px-6 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110 disabled:opacity-60"
-              style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)', boxShadow: '0 12px 26px -12px rgba(20, 13, 7, 0.6)' }}
+              className="bz-act shrink-0 px-6"
             >
               {busy ? '…' : t('track.search')}
             </button>
           </div>
         </form>
 
-        {error && <p className="mt-4 rounded-xl bg-red-500/10 px-4 py-2.5 text-sm text-red-600">{error}</p>}
+        {error && <p className="bz-err mt-4">{error}</p>}
 
         {/* النتائج */}
         {orders && (
           orders.length === 0 ? (
-            <div className="glass mt-6 flex flex-col items-center gap-3 p-10 text-center text-stone-400">
-              <PackageIcon className="h-12 w-12 text-wine/30" />
-              {t('track.notFound')}
+            <div className="mt-6">
+              <StateCard icon={<PackageIcon className="h-7 w-7" />} text={t('track.notFound')} />
             </div>
           ) : (
             <div className="mt-6 space-y-4">
@@ -196,23 +187,22 @@ export default function Track() {
                 const cancelled = o.status === 'cancelled';
                 const stepIdx = STEPS.indexOf(o.status);
                 return (
-                  <div key={o.reference} className="glass relative overflow-hidden p-5">
-                    <span className="dash-hairline absolute inset-x-0 top-0" />
+                  <div key={o.reference} className="bz-panel p-5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="min-w-0">
-                        <span className="font-display text-lg font-bold text-wine">{o.storeName}</span>
+                        <span className="text-base font-bold text-[#3f2e22] dark:text-inherit">{o.storeName}</span>
                         {/* رقم الطلب ينُسخ بضغطة (لإرساله للمتجر عند الاستفسار) */}
                         <button
                           type="button"
                           onClick={() => { try { navigator.clipboard.writeText(o.reference); setCopiedRef(o.reference); setTimeout(() => setCopiedRef(''), 1500); } catch { /* تجاهل */ } }}
-                          className="ms-2 rounded-full bg-wine/5 px-2 py-0.5 font-mono text-[11px] text-stone-400 transition hover:bg-wine/10"
+                          className="bz-ref ms-2 rounded-full px-2 py-0.5 font-mono text-[11px]"
                           dir="ltr"
                           title={t('co.doneCopy')}
                         >
                           {copiedRef === o.reference ? t('common.copied') : o.reference}
                         </button>
                       </div>
-                      <span className={`rounded-full px-3 py-1 text-xs font-bold ring-1 ${BADGE[o.status] || ''}`}>
+                      <span className={BADGE[o.status] || 'bz-ob'}>
                         {t(`dashboard.ordersSection.${o.status}`)}
                       </span>
                     </div>
@@ -227,27 +217,16 @@ export default function Track() {
                             <div key={s} className="flex flex-1 items-center last:flex-none">
                               <div className="flex flex-col items-center">
                                 <span className="relative flex h-9 w-9 items-center justify-center">
-                                  {current && <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#cdbda4]/50" style={{ animationDuration: '1.8s' }} />}
                                   <span
-                                    className={`relative flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold transition ${
-                                      done ? 'text-cream shadow-md' : 'border border-wine/20 bg-wine/5 text-wine/40'
-                                    } ${current ? 'ring-2 ring-[#cdbda4]/70' : ''}`}
-                                    style={done ? { background: 'linear-gradient(135deg, #6e5340 0%, #5e4636 55%, #3f2e22 100%)' } : undefined}
+                                    className={`bz-tl-dot ${done ? 'bz-tl-done' : ''} ${current ? 'bz-tl-now' : ''}`}
                                   >
                                     {done ? <CheckIcon className="h-4 w-4" /> : i + 1}
                                   </span>
                                 </span>
-                                <span className={`mt-1.5 text-[10px] ${done ? 'font-bold text-wine' : 'text-stone-400'}`}>{t(`dashboard.ordersSection.${s}`)}</span>
+                                <span className={`bz-tl-lbl ${done ? 'bz-tl-lbl-on' : ''}`}>{t(`dashboard.ordersSection.${s}`)}</span>
                               </div>
                               {i < STEPS.length - 1 && (
-                                <span
-                                  className="mx-1 h-[3px] flex-1 rounded-full"
-                                  style={{
-                                    background: i < stepIdx
-                                      ? 'linear-gradient(90deg, #5e4636, #8a7657)'
-                                      : 'rgba(94, 70, 54, 0.12)',
-                                  }}
-                                />
+                                <span className={`bz-tl-bar ${i < stepIdx ? 'bz-tl-bar-on' : ''}`} />
                               )}
                             </div>
                           );
@@ -257,12 +236,12 @@ export default function Track() {
 
                     {/* شركة التوصيل: الحالة الحيّة عند الشركة + رقم التتبّع (يظهر بعد إرسال الشحنة) */}
                     {o.courier && (
-                      <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-2xl border border-gold-400/25 bg-gold-400/5 px-3.5 py-2.5 text-xs">
-                        <span className="flex items-center gap-1.5 font-bold text-wine">
+                      <div className="bz-note mt-4 flex flex-wrap items-center gap-x-3 gap-y-1.5 px-3.5 py-2.5 text-xs">
+                        <span className="flex items-center gap-1.5 font-bold">
                           <TruckIcon className="h-4 w-4" /> {t('track.courier')}: {o.courier}
                         </span>
                         {o.courierStatus && (
-                          <span className="rounded-full bg-wine/10 px-2.5 py-0.5 font-semibold text-wine">{o.courierStatus}</span>
+                          <span className="bz-ref rounded-full px-2.5 py-0.5 font-semibold">{o.courierStatus}</span>
                         )}
                         {o.tracking && (
                           <span className="text-stone-500">
@@ -272,7 +251,7 @@ export default function Track() {
                               onClick={() => { try { navigator.clipboard.writeText(o.tracking); setCopiedTrack(o.tracking); setTimeout(() => setCopiedTrack(''), 1500); } catch { /* تجاهل */ } }}
                               dir="ltr"
                               title={t('co.doneCopy')}
-                              className="rounded-full px-1.5 font-mono font-semibold text-stone-600 transition hover:bg-wine/10 hover:text-wine"
+                              className="bz-ref rounded-full px-1.5 font-mono font-semibold"
                             >
                               {copiedTrack === o.tracking ? t('common.copied') : o.tracking}
                             </button>
@@ -282,10 +261,10 @@ export default function Track() {
                     )}
 
                     {/* المنتجات */}
-                    <ul className="mt-4 space-y-1 border-t border-wine/10 pt-3 text-sm text-stone-600">
+                    <ul className="bz-hr-t mt-4 space-y-1 pt-3 text-sm text-stone-600">
                       {(o.items || []).map((it, i) => (
                         <li key={i} className="flex items-baseline gap-1.5">
-                          <span aria-hidden className="text-[8px] text-wine/40">◆</span>
+                          <span aria-hidden className="bz-bullet text-[8px]">◆</span>
                           <span className="min-w-0 flex-1">{it.name}{it.color ? ` - ${it.color}` : ''}{it.size ? ` (${it.size})` : ''} ×{it.qty}</span>
                         </li>
                       ))}
@@ -296,13 +275,13 @@ export default function Track() {
                         {' · '}
                         {(o.items || []).reduce((s, it) => s + (Number(it.qty) || 1), 0)} {t('store.products')}
                       </span>
-                      <span className="font-display text-lg font-bold gradient-text">{t('common.currency')}{o.total.toFixed(2)}</span>
+                      <span className="bz-total text-lg font-bold">{t('common.currency')}{o.total.toFixed(2)}</span>
                     </div>
                     {/* إعادة الطلب بضغطة — نفس القطع بالمقاسات والألوان (بأسعار اليوم) */}
                     <button
                       onClick={() => reorder(o)}
                       disabled={Boolean(reordering)}
-                      className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-wine/30 py-2.5 text-sm font-bold text-wine transition hover:bg-wine hover:text-cream disabled:opacity-60"
+                      className="bz-act-2 mt-3 w-full"
                     >
                       <CartIcon className="h-4 w-4" /> {reordering === o.reference ? t('common.loading') : t('track.reorder')}
                     </button>

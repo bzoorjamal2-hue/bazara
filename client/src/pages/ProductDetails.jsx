@@ -19,14 +19,15 @@ import { getCache, setCache } from '../utils/apiCache.js';
 import { sizeLabel } from '../utils/sizes.js';
 import ColorSwatches from '../components/ColorSwatches.jsx';
 import Countdown from '../components/Countdown.jsx';
-import { HeartIcon, BagIcon, CartIcon, BellIcon, SparkleIcon, FireIcon, HandIcon } from '../components/icons.jsx';
+import { HeartIcon, BagIcon, CartIcon, BellIcon, SparkleIcon, FireIcon, HandIcon, BackIcon } from '../components/icons.jsx';
+import { StateCard, Act } from '../components/PageUI.jsx';
 import { goBack } from '../utils/nav.js';
 import SizeGuideModal from '../components/SizeGuideModal.jsx';
 import ImageInput from '../components/ImageInput.jsx';
 import { initPixels, trackPixel } from '../utils/pixels.js';
 import { setStoreScope } from '../utils/storeScope.js';
 
-const PH = 'https://placehold.co/600x600/121214/d4af37?text=%F0%9F%91%97';
+const PH = 'https://placehold.co/600x600/2b1d12/b09a7e?text=%F0%9F%91%97';
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -226,17 +227,9 @@ export default function ProductDetails() {
   // منتج محذوف/رابط قديم: بطاقة أنيقة بمخرج واضح بدل نص عارٍ يترك الزائرة عالقة
   if (error) {
     return (
-      <div className="glass mx-auto flex max-w-md flex-col items-center gap-4 p-10 text-center">
-        <BagIcon className="h-12 w-12 text-wine/25" />
-        <p className="text-stone-300">{error}</p>
-        <Link
-          to="/shop"
-          className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
-          style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
-        >
-          {t('co.doneKeepShopping')}
-        </Link>
-      </div>
+      <StateCard icon={<BagIcon className="h-7 w-7" />} text={error}>
+        <Act to="/shop">{t('co.doneKeepShopping')}</Act>
+      </StateCard>
     );
   }
   if (!product) return <ProductDetailsSkeleton />;
@@ -374,15 +367,13 @@ export default function ProductDetails() {
       {/* رجوع للصفحة السابقة (الفئة/المتجر/البحث) — وإن لم يوجد سجلّ نرجع للمتجر */}
       <button
         onClick={() => goBack(navigate, `/store/${product.storeSlug}`)}
-        className="mb-4 inline-flex items-center gap-1.5 text-sm text-gold-300 transition hover:text-gold-200"
+        className="bz-mini-btn mb-4 inline-flex items-center gap-1.5"
       >
-        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d={rtl ? 'M9 6l6 6-6 6' : 'M15 6l-6 6 6 6'} />
-        </svg>
+        <BackIcon className="h-4 w-4" />
         {t('common.back')}
       </button>
 
-      <div className="glass-strong grid gap-8 overflow-hidden p-6 md:grid-cols-2">
+      <div className="bz-panel grid gap-8 overflow-hidden p-6 md:grid-cols-2">
         {/* معرض الصور */}
         <div>
           {hasImages && (
@@ -406,7 +397,7 @@ export default function ProductDetails() {
                 وعلى الكمبيوتر تتبع حركة المؤشّر بتكبير عدسي. الغلاف يقصّ الزائد
                 (overflow) كي لا تتجاوز الصورة المكبّرة إطارها */}
             <span
-              className="block overflow-hidden rounded-2xl ring-1 ring-gold-400/15"
+              className="bz-shot block overflow-hidden rounded-2xl"
               onMouseMove={onZoomMove}
               onMouseLeave={onZoomLeave}
             >
@@ -423,7 +414,7 @@ export default function ProductDetails() {
                 onError={(e) => { e.currentTarget.srcset = ''; e.currentTarget.src = PH; }}
               />
             </span>
-            {hasDiscount && <span className="badge absolute start-3 top-3 bg-[#8a2438] text-[#F4EDE2] shadow-sm">-{Math.round((1 - product.price / product.oldPrice) * 100)}%</span>}
+            {hasDiscount && <span className="bz-pb bz-pb-sale absolute start-3 top-3">-{Math.round((1 - product.price / product.oldPrice) * 100)}%</span>}
             {/* أيقونة تكبير */}
             <button onClick={() => setLightbox(true)} aria-label="zoom" className="absolute end-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur transition hover:bg-black/65">
               <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3M11 8v6M8 11h6" /></svg>
@@ -436,7 +427,7 @@ export default function ProductDetails() {
                 <button
                   key={i}
                   onClick={() => setActive(i)}
-                  className={`h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl transition duration-300 ${i === active ? 'ring-2 ring-gold-400 ring-offset-1 ring-offset-transparent' : 'opacity-60 hover:opacity-100'}`}
+                  className={`bz-thumb h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl transition duration-300 ${i === active ? 'bz-thumb-on' : 'opacity-60 hover:opacity-100'}`}
                 >
                   <img src={cldThumb(g, 160)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
                 </button>
@@ -462,7 +453,7 @@ export default function ProductDetails() {
             ببداية العمود (لا نمدّه لملء المساحة لمجرّد وجودها). */}
         <div className="flex w-full flex-col 2xl:max-w-[620px]">
           <div className="flex items-start justify-between gap-3">
-            <span className="badge bg-gold-400/10 text-gold-200">{product.categoryName || t(`categories.${product.category}`)}</span>
+            <span className="bz-pill !py-1 !text-[0.76rem]">{product.categoryName || t(`categories.${product.category}`)}</span>
             <div className="flex items-center gap-2">
               {/* مشاركة المنتج */}
               <div className="relative">
@@ -470,7 +461,7 @@ export default function ProductDetails() {
                   onClick={shareProduct}
                   aria-label={t('product.share')}
                   title={t('product.share')}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-gold-400/30 text-wine transition hover:bg-gold-400/10"
+                  className="bz-roundbtn flex h-10 w-10 items-center justify-center rounded-full"
                 >
                   <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
@@ -485,20 +476,20 @@ export default function ProductDetails() {
               </div>
               <button
                 onClick={() => toggle(product)}
-                className={`flex h-10 w-10 items-center justify-center rounded-full border transition ${liked ? 'border-red-400 bg-red-500/20' : 'border-gold-400/30 hover:bg-gold-400/10'}`}
+                className={`bz-roundbtn flex h-10 w-10 items-center justify-center rounded-full ${liked ? 'bz-roundbtn-liked' : ''}`}
               >
                 <HeartIcon className="h-6 w-6" filled={liked} />
               </button>
             </div>
           </div>
 
-          <h1 className="mt-2 font-display text-3xl font-extrabold text-stone-100">{product.name}</h1>
+          <h1 className="bz-ph-t mt-2 !text-2xl sm:!text-3xl">{product.name}</h1>
 
           {product.ratingCount > 0 && (
             <button
               type="button"
               onClick={() => document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-              className="mt-2 flex items-center gap-2 text-sm text-stone-400 transition hover:text-gold-200"
+              className="bz-mini-btn mt-2 flex items-center gap-2 !text-sm"
             >
               <StarRating value={Math.round(product.ratingAvg)} /> {product.ratingAvg} <span className="underline underline-offset-2">({product.ratingCount})</span>
             </button>
@@ -506,7 +497,7 @@ export default function ProductDetails() {
 
           {/* بلوك السعر الفاخر: سعر ضخم + القديم مشطوباً بالمنتصف + شارة توفير خمرية */}
           <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-            <span className="font-display text-4xl font-extrabold gradient-text">{t('common.currency')}{product.price}</span>
+            <span className="bz-price !text-[2.1rem]">{t('common.currency')}{product.price}</span>
             {/* التفاصيل الثلاث (القديم المشطوب + نسبة الخصم + مبلغ التوفير) في مجموعة
                 واحدة items-center وبنفس المقاس — كان القديم text-lg وعلى خط أساس السعر
                 الضخم، فتظهر الثلاثة بأحجام ومستويات مختلفة */}
@@ -618,7 +609,7 @@ export default function ProductDetails() {
                           onClick={() => { setSelSize(s); setMySize(s); setPickErr(''); }}
                           className={`relative flex min-w-[3.75rem] flex-col items-center rounded-xl border px-3 py-1.5 text-center transition ${
                             on ? 'border-wine bg-wine text-cream' : 'border-wine/30 text-wine hover:bg-wine/10'
-                          } ${soldOut ? 'cursor-not-allowed border-stone-300/50 bg-transparent text-stone-400 opacity-60' : ''} ${usual ? 'ring-2 ring-gold-400/70 ring-offset-1' : ''}`}
+                          } ${soldOut ? 'cursor-not-allowed border-stone-300/50 bg-transparent text-stone-400 opacity-60' : ''} ${usual ? 'bz-usual' : ''}`}
                         >
                           <span className={`text-sm font-bold leading-none ${soldOut ? 'strike' : ''}`}>{sizeLabel(s, t)}</span>
                           {/* المتبقّي بنفس التنسيق لكل النمر: رمادي = متوفّر، أحمر = نفد */}
@@ -633,8 +624,8 @@ export default function ProductDetails() {
                   </div>
                   {/* شرح الحلقة الذهبية — يظهر فقط إن كان مقاسها المعتاد متاحاً هنا وغير مختار بعد */}
                   {mySize && !selSize && availSizes.includes(mySize) && !sizeSoldOut(mySize) && (
-                    <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-gold-600">
-                      <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-gold-400/70" />
+                    <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-[#5e4636] dark:text-inherit">
+                      <span aria-hidden className="bz-usual-dot h-2.5 w-2.5 shrink-0 rounded-full" />
                       {t('product.mySizeHint', { size: sizeLabel(mySize, t) })}
                     </p>
                   )}
@@ -736,8 +727,8 @@ export default function ProductDetails() {
                 { label: t('product.trustCod'), d: <><rect x="2.5" y="6.5" width="19" height="11" rx="2" /><circle cx="12" cy="12" r="2.3" /></> },
                 { label: t('product.trustExchange'), d: <path d="M4 9h13l-3-3M20 15H7l3 3" /> },
               ].map((it, i) => (
-                <div key={i} className="flex flex-col items-center gap-2 rounded-xl border border-gold-400/20 bg-gradient-to-b from-white to-cream/40 px-2 py-3 text-center">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-wine/12 to-gold-400/15 text-wine ring-1 ring-gold-400/40">
+                <div key={i} className="bz-trust flex flex-col items-center gap-2 rounded-xl px-2 py-3 text-center">
+                  <span className="bz-softico flex h-9 w-9 items-center justify-center rounded-full">
                     <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{it.d}</svg>
                   </span>
                   <span className="text-[11px] font-semibold leading-tight text-stone-300">{it.label}</span>
@@ -881,8 +872,8 @@ function Reviews({ productId, reviews, onAdded }) {
   return (
     <section id="reviews" className="mt-8 grid scroll-mt-20 gap-6 lg:grid-cols-[1fr_360px]">
       {/* قائمة المراجعات */}
-      <div className="glass p-6">
-        <h2 className="mb-4 font-display text-xl font-bold gradient-text">{t('product.reviews')}</h2>
+      <div className="bz-panel p-6">
+        <h2 className="bz-ph-t mb-4 !text-xl">{t('product.reviews')}</h2>
         {/* صور الزبائن — دليل اجتماعي بصري بارز (أسلوب المتاجر العالمية) */}
         {photos.length > 0 && (
           <div className="mb-5">
@@ -919,8 +910,8 @@ function Reviews({ productId, reviews, onAdded }) {
       </div>
 
       {/* نموذج إضافة تقييم */}
-      <div className="glass h-fit p-6">
-        <h3 className="mb-4 font-display text-lg font-bold text-stone-100">{t('product.writeReview')}</h3>
+      <div className="bz-panel h-fit p-6">
+        <h3 className="bz-ph-t mb-4 !text-lg">{t('product.writeReview')}</h3>
         {msg && <div className="mb-3 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">{msg}</div>}
         {error && <div className="mb-3 rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">{error}</div>}
         <form onSubmit={submit} className="space-y-3">

@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { CardIcon, KeyIcon, BackIcon } from '../components/icons.jsx';
 import Seo from '../components/Seo.jsx';
 import Spinner from '../components/Spinner.jsx';
+import { PageTitle, Act } from '../components/PageUI.jsx';
 
 const PLANS = [
   { key: 'monthly', price: 25, per: 'perMonth' },
@@ -53,64 +54,56 @@ export default function Subscribe() {
   return (
     <div className="mx-auto max-w-3xl">
       <Seo title={t('subscription.title')} />
-      <div className="mb-8 text-center">
-        <h1 className="font-display text-3xl font-extrabold gradient-text sm:text-4xl">{t('subscription.title')}</h1>
-        <p className="mt-3 text-stone-300">{t('subscription.subtitle')}</p>
-      </div>
+      <PageTitle icon={<CardIcon className="h-6 w-6" />} title={t('subscription.title')} sub={t('subscription.subtitle')} />
 
-      {error && <div className="mb-5 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
+      {error && <p className="bz-err mb-5">{error}</p>}
 
       {!selected ? (
         // بطاقات باقات فاخرة: خيط ذهبي علوي + سعر ضخم + زر حبة ناري (السنوية مميّزة بإطار ذهبي)
         <div className="grid gap-5 sm:grid-cols-2">
           {PLANS.map((p) => (
-            <div key={p.key} className={`glass-strong relative flex flex-col overflow-hidden rounded-3xl p-7 ${p.key === 'yearly' ? 'ring-2 ring-gold-400/60' : ''}`}>
-              <span className="dash-hairline absolute inset-x-0 top-0" />
-              {p.badge && <span className="badge absolute end-5 top-5 bg-gold-400 text-ink-950 shadow-sm">{t(`subscription.${p.badge}`)}</span>}
-              <h2 className="font-display text-xl font-bold text-stone-100">{t(`subscription.${p.key}`)}</h2>
+            <div key={p.key} className={`bz-panel relative flex flex-col p-7 ${p.key === 'yearly' ? 'bz-plan-top' : ''}`}>
+              {p.badge && <span className="bz-pb absolute end-5 top-5">{t(`subscription.${p.badge}`)}</span>}
+              <h2 className="bz-state-t">{t(`subscription.${p.key}`)}</h2>
               <div className="mt-4 flex items-baseline gap-1">
-                <span className="font-display text-5xl font-extrabold gradient-text">${p.price}</span>
-                <span className="text-stone-400">{t(`subscription.${p.per}`)}</span>
+                <span className="bz-price">${p.price}</span>
+                <span className="bz-state-p">{t(`subscription.${p.per}`)}</span>
               </div>
-              <p className="mt-4 text-sm leading-relaxed text-stone-400">{t('subscription.features')}</p>
-              <button
-                onClick={() => setSelected(p.key)}
-                className="mt-6 w-full rounded-full py-3.5 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
-                style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)', boxShadow: '0 14px 30px -12px rgba(20, 13, 7, 0.6)' }}
-              >
+              <p className="bz-state-p mt-4">{t('subscription.features')}</p>
+              <Act onClick={() => setSelected(p.key)} className="mt-6 w-full !py-3.5">
                 {t('subscription.choose')}
-              </button>
+              </Act>
             </div>
           ))}
         </div>
       ) : (
-        <div className="glass-strong mx-auto max-w-lg animate-fade-up p-7">
-          <button onClick={() => setSelected(null)} className="mb-4 inline-flex items-center gap-1 text-sm text-gold-300 hover:text-gold-200"><BackIcon className="h-3.5 w-3.5" /> {t('subscription.back')}</button>
-          <h2 className="font-display text-xl font-bold gradient-text">
+        <div className="bz-panel mx-auto max-w-lg animate-fade-up p-7">
+          <button type="button" onClick={() => setSelected(null)} className="bz-mini-btn mb-4 inline-flex items-center gap-1"><BackIcon className="h-3.5 w-3.5" /> {t('subscription.back')}</button>
+          <h2 className="bz-ph-t !text-xl">
             {t('subscription.payTitle', { plan: t(`subscription.${selected}`) })}
           </h2>
 
           {/* تعليمات الدفع (التحويل المباشر) */}
-          <div className="mt-4 rounded-xl border border-gold-400/20 bg-black/30 p-4">
-            <p className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-gold-200"><CardIcon className="h-4 w-4" /> {t('subscription.payInstructions')}</p>
-            <p className="whitespace-pre-line text-sm text-stone-300">{status.paymentInfo}</p>
+          <div className="bz-note mt-4 p-4">
+            <p className="mb-1 flex items-center gap-1.5 text-sm font-bold"><CardIcon className="h-4 w-4" /> {t('subscription.payInstructions')}</p>
+            <p className="bz-state-p whitespace-pre-line !text-start">{status.paymentInfo}</p>
           </div>
 
           {/* إدخال كود التفعيل */}
           <form onSubmit={redeem} className="mt-5 space-y-3">
-            <label className="label flex items-center gap-1.5"><KeyIcon className="h-4 w-4" /> {t('subscription.haveCode')}</label>
+            <label className="bz-sub-h flex items-center gap-1.5"><KeyIcon className="h-4 w-4" /> {t('subscription.haveCode')}</label>
             <input
               type="text"
               dir="ltr"
               inputMode="numeric"
               maxLength={6}
-              className="input text-center text-2xl font-bold tracking-[0.5em]"
+              className="bz-field !rounded-2xl text-center text-2xl font-bold tracking-[0.5em]"
               placeholder="••••••"
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
             />
-            <p className="text-xs text-stone-400">{t('subscription.codeHint')}</p>
-            <button type="submit" disabled={busy} className="btn-primary w-full">
+            <p className="bz-state-p !text-xs !text-start">{t('subscription.codeHint')}</p>
+            <button type="submit" disabled={busy} className="bz-act w-full">
               {busy ? t('common.loading') : t('subscription.activate')}
             </button>
           </form>

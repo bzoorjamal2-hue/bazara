@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import useSessionState from '../hooks/useSessionState.js';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import Seo from '../components/Seo.jsx';
 import { ProductGridSkeleton } from '../components/Skeleton.jsx';
 import FilteredProductGrid from '../components/FilteredProductGrid.jsx';
 import { TagIcon } from '../components/icons.jsx';
+import { PageTitle, StateCard, Act, Act2 } from '../components/PageUI.jsx';
 import OffersBar, { filterByTier } from '../components/OffersBar.jsx';
 import { getCache, setCache } from '../utils/apiCache.js';
 
@@ -32,46 +32,21 @@ export default function Offers() {
     <>
       <Seo title={t('offers.title')} description={t('offers.subtitle')} />
 
-      <div className="mb-6 text-center">
-        <div className="flex items-center justify-center gap-2.5 sm:gap-3">
-          <h1 className="flex items-center gap-2 font-display text-2xl font-bold"><TagIcon className="h-6 w-6 text-wine" /> <span className="bz-title">{t('offers.title')}</span></h1>
-        </div>
-        <p className="mt-1 text-sm text-wine/60">{t('offers.subtitle')}</p>
-      </div>
+      <PageTitle icon={<TagIcon className="h-6 w-6" />} title={t('offers.title')} sub={t('offers.subtitle')} />
 
       {error ? (
         // خطأ شبكة: بطاقة بمخرجين (إعادة محاولة + متابعة التسوّق) بدل نص عارٍ يترك الزائرة معلّقة
-        <div className="glass mx-auto flex max-w-md flex-col items-center gap-4 p-10 text-center">
-          <p className="text-stone-300">{error}</p>
-          <div className="flex flex-wrap justify-center gap-3">
-            <button
-              type="button"
-              onClick={load}
-              className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
-              style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
-            >
-              {t('assistant.retry')}
-            </button>
-            <Link to="/shop" className="rounded-full border border-wine/30 px-6 py-3 text-sm font-bold text-wine transition hover:bg-wine hover:text-cream">
-              {t('co.doneKeepShopping')}
-            </Link>
-          </div>
-        </div>
+        <StateCard icon={<TagIcon className="h-7 w-7" />} text={error}>
+          <Act onClick={load}>{t('assistant.retry')}</Act>
+          <Act2 to="/shop">{t('co.doneKeepShopping')}</Act2>
+        </StateCard>
       ) : !products ? (
         <ProductGridSkeleton count={8} />
       ) : products.length === 0 ? (
         // حالة فراغ لائقة بأيقونة ومخرج — كباقي الصفحات، بدل نص عارٍ يترك الزائرة معلّقة
-        <div className="glass mx-auto flex max-w-md flex-col items-center gap-4 p-10 text-center">
-          <span aria-hidden className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-wine/12 to-gold-400/15 text-wine ring-1 ring-gold-400/40"><TagIcon className="h-8 w-8" /></span>
-          <p className="text-stone-300">{t('offers.empty')}</p>
-          <Link
-            to="/shop"
-            className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
-            style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
-          >
-            {t('co.doneKeepShopping')}
-          </Link>
-        </div>
+        <StateCard icon={<TagIcon className="h-7 w-7" />} text={t('offers.empty')}>
+          <Act to="/shop">{t('co.doneKeepShopping')}</Act>
+        </StateCard>
       ) : (
         <>
           <OffersBar products={products} tier={tier} onTier={setTier} />
