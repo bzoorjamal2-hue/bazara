@@ -7,8 +7,6 @@ import { getCache, setCache } from '../utils/apiCache.js';
 import { cldThumb } from '../utils/cloudinary.js';
 import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys, storeOnlyCats } from '../utils/platformCategories.js';
 
-
-
 // صفحة تصنيفات الموقع العام (بازارا) — فئات بازارا الأصلية + الفئات المخصّصة المجمّعة من
 // كل المتاجر (يعيدها /public/categories). أي فئة يضيفها أي متجر تظهر هنا تلقائياً بنفس
 // شكل الفئات الأصلية. لا تعتمد على متجر صاحب الحساب المسجّل (الصفحة تبقى بازارا خالصة).
@@ -30,11 +28,7 @@ export default function Categories() {
     <>
       <Seo title={t('nav.categories')} />
       <div className="mb-8 flex items-center justify-center gap-2.5 sm:mb-10 sm:gap-3">
-        <span aria-hidden className="text-sm text-[#c79a3a]/70">❖</span>
-        <span className="h-px w-7 bg-gradient-to-r from-transparent to-[#c79a3a]/45 sm:w-14" />
         <h1 className="bz-title whitespace-nowrap font-display text-2xl font-bold">{t('nav.categories')}</h1>
-        <span className="h-px w-7 bg-gradient-to-l from-transparent to-[#c79a3a]/45 sm:w-14" />
-        <span aria-hidden className="text-sm text-[#c79a3a]/70">❖</span>
       </div>
 
       {/* بطاقات glass فاخرة بنفس ستايل بطاقات الموقع (hairline ذهبي + رفعة وظل عند المرور) */}

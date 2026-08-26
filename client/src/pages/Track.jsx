@@ -133,13 +133,11 @@ export default function Track() {
           </div>
         )}
         <div className="mb-1 flex items-center justify-center gap-2 text-wine sm:gap-2.5">
-          <span aria-hidden className="text-sm text-wine/40">❖</span>
           <span className="h-px w-5 bg-gradient-to-r from-transparent to-wine/30 sm:w-8" />
           <h1 className="flex items-center gap-2 whitespace-nowrap font-display text-xl font-bold sm:text-2xl">
             <PackageIcon className="h-5 w-5 sm:h-6 sm:w-6" /> {t('track.title')}
           </h1>
           <span className="h-px w-5 bg-gradient-to-l from-transparent to-wine/30 sm:w-8" />
-          <span aria-hidden className="text-sm text-wine/40">❖</span>
         </div>
         <p className="mb-5 text-center text-sm text-stone-500">{t('track.hint')}</p>
 

@@ -35,7 +35,6 @@ import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys,
 
 const PAGE_SIZE = 8;
 
-
 // نفد المخزون: صفر عام أو نفاد كل كميات الألوان/النمر (النموذج التفصيلي)
 const isSoldOut = (p) => {
   const cs = p?.colorStock && typeof p.colorStock === 'object' ? p.colorStock : null;
@@ -597,11 +596,9 @@ export default function StorePage() {
                 />
               )}
               <div className="mt-4 flex items-center justify-center gap-2.5">
-                <span aria-hidden className="text-sm text-[#c79a3a]/70">❖</span>
                 <span className="h-px w-8 bg-gradient-to-r from-transparent to-[#c79a3a]/45" />
                 <h2 className="bz-title font-display text-xl font-bold">{store.name}</h2>
                 <span className="h-px w-8 bg-gradient-to-l from-transparent to-[#c79a3a]/45" />
-                <span aria-hidden className="text-sm text-[#c79a3a]/70">❖</span>
               </div>
               <p className="mx-auto mt-3 max-w-2xl whitespace-pre-line leading-relaxed text-stone-300">{store.description}</p>
             </section></Reveal>
@@ -689,7 +686,6 @@ function WelcomePopup({ store }) {
         {/* زخرفة ماسية تحت العنوان */}
         <div className="mt-2 flex items-center justify-center gap-2 text-gold-400/70">
           <span className="h-px w-8 bg-gradient-to-r from-transparent to-[#d4af37]/50" />
-          <span aria-hidden className="text-[10px]">❖</span>
           <span className="h-px w-8 bg-gradient-to-l from-transparent to-[#d4af37]/50" />
         </div>
         <p className="mt-3 whitespace-pre-line text-[15px] leading-relaxed text-wine/80">{store.welcomeOffer}</p>
@@ -761,7 +757,6 @@ function CrumbHere({ icon, label, text }) {
   );
 }
 
-
 // لوقو بيت أنيق (زر العودة للصفحة الرئيسية للمتجر)
 function HomeGlyph({ className = 'h-[18px] w-[18px]' }) {
   return (
@@ -797,11 +792,7 @@ function ChevronGlyph({ className = 'h-5 w-5' }) {
 function SectionTitle({ children }) {
   return (
     <div className="mb-8 flex items-center justify-center gap-2.5 sm:mb-10 sm:gap-3">
-      <span aria-hidden className="text-sm text-[#c79a3a]/70">❖</span>
-      <span className="h-px w-7 bg-gradient-to-r from-transparent to-[#c79a3a]/45 sm:w-14" />
       <h2 className="bz-title whitespace-nowrap font-display text-xl font-bold sm:text-2xl">{children}</h2>
-      <span className="h-px w-7 bg-gradient-to-l from-transparent to-[#c79a3a]/45 sm:w-14" />
-      <span aria-hidden className="text-sm text-[#c79a3a]/70">❖</span>
     </div>
   );
 }

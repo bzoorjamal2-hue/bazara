@@ -28,11 +28,9 @@ export default function LookbookSection({ lookbook }) {
   return (
     <section className="mt-14">
       <div className="mb-6 flex items-center justify-center gap-2.5 text-wine sm:gap-3">
-        <span aria-hidden className="text-sm text-wine/40">❖</span>
         <span className="h-px w-7 bg-gradient-to-r from-transparent to-wine/30 sm:w-12" />
         <h2 className="whitespace-nowrap font-display text-xl font-bold sm:text-2xl">{title}</h2>
         <span className="h-px w-7 bg-gradient-to-l from-transparent to-wine/30 sm:w-12" />
-        <span aria-hidden className="text-sm text-wine/40">❖</span>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[1fr_1.1fr]">

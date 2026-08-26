@@ -1249,8 +1249,29 @@ html.dark .theme-pub .text-indigo-700 { color: #a5b4fc; }
 .bz-lite .blur-3xl, .bz-lite .blur-2xl { filter: none; opacity: 0; }
 
 /* عنوان قسم فاخر بالرئيسية — تدرّج ذهبي-خمري ثابت (بلا حركة مستمرة = صفر استهلاك) */
-.bz-title { background: linear-gradient(100deg, #5e4636 0%, #8a6a4f 50%, #4a3526 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
-html.dark .bz-title { background: linear-gradient(100deg, #e0c25f 0%, #f0dca6 50%, #c79a3a 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+/* عنوان القسم: لونٌ مصمت وخطٌّ ذهبيّ قصير تحته.
+   كان نصّاً متدرّجاً بين ثلاثة ألوان، تحفّه ماستان وخطّان ذهبيّان — أربع
+   زخارف حول كلمتين. التدرّج على النصّ أوّل ما يوحي بصفحةٍ مُولَّدة، والزخارف
+   الأربع تتكرّر ثلاث مرّات بكل صفحة فتفقد قيمتها. زخرفةٌ واحدة تكفي. */
+.bz-title {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 0.55rem;
+  color: #4a3628;
+}
+.bz-title::after {
+  content: '';
+  position: absolute;
+  inset-inline-start: 50%;
+  bottom: 0;
+  height: 2px;
+  width: 2.4rem;
+  transform: translateX(50%);
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #c79a3a, transparent);
+}
+html[dir='ltr'] .bz-title::after { transform: translateX(-50%); }
+html.dark .bz-title { color: #f0dca6; }
 
 /* ===== طباعة الفواتير =====
    الفاتورة تُحقن داخل #bz-print-root بالصفحة نفسها (لا إطار مخفيّ — سفاري على

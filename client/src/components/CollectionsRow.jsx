@@ -16,12 +16,8 @@ export default function CollectionsRow({ collections, storeSlug = '' }) {
 
   return (
     <section className="mt-14 mb-16 sm:mb-20">
-      <div className="mb-6 flex items-center justify-center gap-2.5 text-wine sm:gap-3">
-        <span aria-hidden className="text-sm text-wine/40">❖</span>
-        <span className="h-px w-7 bg-gradient-to-r from-transparent to-wine/30 sm:w-12" />
-        <h2 className="whitespace-nowrap font-display text-xl font-bold sm:text-2xl">{t('home.shopByOccasion')}</h2>
-        <span className="h-px w-7 bg-gradient-to-l from-transparent to-wine/30 sm:w-12" />
-        <span aria-hidden className="text-sm text-wine/40">❖</span>
+      <div className="mb-6 flex items-center justify-center">
+        <h2 className="bz-title whitespace-nowrap font-display text-xl font-bold sm:text-2xl">{t('home.shopByOccasion')}</h2>
       </div>
 
       {/* صفٌّ يُسحب بالإصبع. التمرير أفقيّ أصليّ لا محاكاةً بجافاسكربت، فيتبع

@@ -34,11 +34,7 @@ export default function Offers() {
 
       <div className="mb-6 text-center">
         <div className="flex items-center justify-center gap-2.5 sm:gap-3">
-          <span aria-hidden className="text-sm text-[#c79a3a]/70">❖</span>
-          <span className="h-px w-7 bg-gradient-to-r from-transparent to-[#c79a3a]/45 sm:w-14" />
           <h1 className="flex items-center gap-2 font-display text-2xl font-bold"><TagIcon className="h-6 w-6 text-wine" /> <span className="bz-title">{t('offers.title')}</span></h1>
-          <span className="h-px w-7 bg-gradient-to-l from-transparent to-[#c79a3a]/45 sm:w-14" />
-          <span aria-hidden className="text-sm text-[#c79a3a]/70">❖</span>
         </div>
         <p className="mt-1 text-sm text-wine/60">{t('offers.subtitle')}</p>
       </div>
