@@ -165,9 +165,9 @@ function PublicFooter({ bottomNav = false }) {
 
         <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-cream/80">
           <Link to="/track" className="hover:text-cream">{t('nav.track')}</Link>
-          <span className="text-cream/30">•</span>
+          <span aria-hidden className="text-cream/60">•</span>
           <Link to="/wishlist" className="hover:text-cream">{t('nav.wishlist')}</Link>
-          <span className="text-cream/30">•</span>
+          <span aria-hidden className="text-cream/60">•</span>
           <Link to="/" className="hover:text-cream">{t('nav.home')}</Link>
         </div>
 

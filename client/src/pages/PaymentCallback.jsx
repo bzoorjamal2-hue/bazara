@@ -29,7 +29,7 @@ export default function PaymentCallback() {
   return (
     <div className="mx-auto max-w-md text-center">
       <Seo title={t('checkout.title')} />
-      <div className="glass-strong animate-fade-up p-8">
+      <div className="bz-panel animate-fade-up p-8">
         {state === 'verifying' && (
           <>
             <Spinner />
@@ -39,7 +39,7 @@ export default function PaymentCallback() {
         {state === 'paid' && (
           <>
             <p className="mb-3 flex justify-center text-emerald-500"><PartyIcon className="h-16 w-16" /></p>
-            <h1 className="font-display text-2xl font-bold gradient-text">{t('checkout.success')}</h1>
+            <h1 className="bz-ph-t !text-2xl">{t('checkout.success')}</h1>
             <Link to="/" className="btn-primary mt-6 inline-block">{t('checkout.backToStore')}</Link>
           </>
         )}

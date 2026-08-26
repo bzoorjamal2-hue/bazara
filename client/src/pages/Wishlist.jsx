@@ -8,6 +8,7 @@ import ProductCard from '../components/ProductCard.jsx';
 import { ProductGridSkeleton } from '../components/Skeleton.jsx';
 import { HeartIcon, LinkIcon, SparkleIcon } from '../components/icons.jsx';
 import { goBack } from '../utils/nav.js';
+import { StateCard, Act, Act2 } from '../components/PageUI.jsx';
 
 const GRID = 'grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5';
 const MAX_SHARE = 20; // سقف معقول لطول الرابط
@@ -88,7 +89,7 @@ export default function Wishlist() {
       <div className="mb-8 flex items-center justify-center gap-2.5 sm:mb-10 sm:gap-3">
         <h1 className="flex items-center gap-2 whitespace-nowrap font-display text-xl font-bold sm:text-2xl">
           <HeartIcon className="h-6 w-6 text-wine" filled /> <span className="bz-title">{title}</span>
-          {list?.length > 0 && <span className="rounded-full bg-gold-400/15 px-2 py-0.5 text-sm font-bold text-gold-300">{list.length}</span>}
+          {list?.length > 0 && <span className="bz-count">{list.length}</span>}
         </h1>
       </div>
 
@@ -97,13 +98,9 @@ export default function Wishlist() {
         shared === null ? (
           <ProductGridSkeleton count={6} />
         ) : shared.length === 0 ? (
-          <div className="glass flex flex-col items-center gap-4 p-12 text-center text-stone-400">
-            <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-wine/12 to-gold-400/15 text-wine ring-1 ring-gold-400/40"><HeartIcon className="h-8 w-8" filled /></span>
-            <p>{t('wishlist.sharedGone')}</p>
-            <Link to="/shop" className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110" style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}>
-              {t('co.doneKeepShopping')}
-            </Link>
-          </div>
+          <StateCard icon={<HeartIcon className="h-7 w-7" filled />} text={t('wishlist.sharedGone')}>
+            <Act to="/shop">{t('co.doneKeepShopping')}</Act>
+          </StateCard>
         ) : (
           <>
             <p className="mb-4 text-center text-sm text-stone-400">{t('wishlist.sharedHint')}</p>
@@ -111,27 +108,15 @@ export default function Wishlist() {
               {shared.map((p, i) => <ProductCard key={p.id} product={p} index={i} whatsapp={p.storeWhatsapp || p.whatsapp} />)}
             </div>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-              <button onClick={keepAll} className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110" style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}>
-                {t('wishlist.keepAll')}
-              </button>
-              <Link to="/wishlist" className="rounded-full border border-wine/30 px-6 py-3 text-sm font-bold text-wine transition hover:bg-wine hover:text-cream">
-                {t('wishlist.mine')}
-              </Link>
+              <Act onClick={keepAll}>{t('wishlist.keepAll')}</Act>
+              <Act2 to="/wishlist">{t('wishlist.mine')}</Act2>
             </div>
           </>
         )
       ) : items.length === 0 ? (
-        <div className="glass flex flex-col items-center gap-4 p-12 text-center text-stone-400">
-          <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-wine/12 to-gold-400/15 text-wine ring-1 ring-gold-400/40"><HeartIcon className="h-8 w-8" filled /></span>
-          <p>{t('wishlist.empty')}</p>
-          <Link
-            to="/shop"
-            className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
-            style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
-          >
-            {t('co.doneKeepShopping')}
-          </Link>
-        </div>
+        <StateCard icon={<HeartIcon className="h-7 w-7" filled />} text={t('wishlist.empty')}>
+          <Act to="/shop">{t('co.doneKeepShopping')}</Act>
+        </StateCard>
       ) : (
         <>
           {dropCount > 0 && (

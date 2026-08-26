@@ -3,6 +3,7 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import Seo from '../components/Seo.jsx';
+import { StateCard, Act } from '../components/PageUI.jsx';
 import { ProductGridSkeleton } from '../components/Skeleton.jsx';
 import ProductCard from '../components/ProductCard.jsx';
 import FilteredProductGrid from '../components/FilteredProductGrid.jsx';
@@ -337,32 +338,15 @@ function HomeCategoryView({ cat, onHome, custom = [] }) {
       </nav>
 
       {error ? (
-        <div className="glass mx-auto flex max-w-md flex-col items-center gap-4 p-10 text-center">
-          <p className="text-stone-300">{error}</p>
-          <button
-            type="button"
-            onClick={onHome}
-            className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
-            style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
-          >
-            {t('nav.home')}
-          </button>
-        </div>
+        <StateCard icon={<GridGlyph className="h-7 w-7" />} text={error}>
+          <Act onClick={onHome}>{t('nav.home')}</Act>
+        </StateCard>
       ) : !products ? (
         <ProductGridSkeleton count={8} />
       ) : products.length === 0 ? (
-        <div className="glass mx-auto flex max-w-md flex-col items-center gap-4 p-10 text-center">
-          <span aria-hidden className="flex h-16 w-16 items-center justify-center rounded-full bg-wine/10 text-wine"><GridGlyph className="h-8 w-8" /></span>
-          <p className="text-stone-300">{t('common.noResults')}</p>
-          <button
-            type="button"
-            onClick={onHome}
-            className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
-            style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
-          >
-            {t('nav.home')}
-          </button>
-        </div>
+        <StateCard icon={<GridGlyph className="h-7 w-7" />} text={t('common.noResults')}>
+          <Act onClick={onHome}>{t('nav.home')}</Act>
+        </StateCard>
       ) : (
         <FilteredProductGrid products={products} />
       )}
@@ -582,7 +566,7 @@ function HomeHero({ banners = [] }) {
             key={idx}
             onClick={() => go(idx)}
             aria-label={`slide ${idx + 1}`}
-            className={`h-1.5 rounded-full transition-all duration-500 ${idx === i ? 'w-8 bg-gradient-to-r from-gold-400 to-wine' : 'w-1.5 bg-wine/25 hover:bg-wine/40'}`}
+            className={`bz-dot h-1.5 rounded-full transition-all duration-500 ${idx === i ? 'bz-dot-on w-8' : 'w-1.5'}`}
           />
         ))}
       </div>
@@ -657,21 +641,15 @@ function StoreCard({ s, index = 0, rtl }) {
   );
 }
 
-// حالة فارغة أنيقة (بدل نص جافّ) — بطاقة زجاجية بأيقونة ذهبية ونداء اختياري.
+// حالة فارغة — نفس بطاقة الحالة المستعملة بكلّ الموقع، لا بطاقةً خاصّةً بها.
 // تظهر على المنصّة الناشئة فتبدو مقصودة لا ناقصة.
 function EmptyState({ icon, text, ctaLabel, ctaTo }) {
   return (
-    <div className="glass relative flex flex-col items-center overflow-hidden p-10 text-center">
-      <span className="bz-softico flex h-16 w-16 items-center justify-center rounded-2xl">
-        {icon}
-      </span>
-      <p className="mt-4 max-w-sm text-sm text-stone-400">{text}</p>
+    <StateCard icon={icon} text={text}>
       {ctaLabel && ctaTo && (
-        <Link to={ctaTo} className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-wine px-6 py-2.5 text-sm font-bold text-cream shadow-lg transition hover:-translate-y-0.5 hover:bg-wine-dark">
-          {ctaLabel} <ForwardIcon className="h-3.5 w-3.5 rtl-flip" />
-        </Link>
+        <Act to={ctaTo}>{ctaLabel} <ForwardIcon className="h-3.5 w-3.5" /></Act>
       )}
-    </div>
+    </StateCard>
   );
 }
 

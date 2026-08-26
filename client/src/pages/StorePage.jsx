@@ -5,6 +5,7 @@ import api, { getErrorMessage } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
 import Seo from '../components/Seo.jsx';
+import { StateCard, Act, Act2 } from '../components/PageUI.jsx';
 import { StorePageSkeleton } from '../components/Skeleton.jsx';
 import ProductCard from '../components/ProductCard.jsx';
 import OffersBar from '../components/OffersBar.jsx';
@@ -233,19 +234,14 @@ export default function StorePage() {
   // متجر غير موجود/رابط خاطئ: بطاقة بمخرج واضح بدل نص عارٍ
   if (error) {
     return (
-      <div className="glass mx-auto flex max-w-md flex-col items-center gap-4 p-10 text-center">
-        <svg viewBox="0 0 24 24" className="h-12 w-12 text-wine/25" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <StateCard
+        icon={<svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M4 7 6 3h12l2 4M4 7h16M4 7v13h16V7M9 20v-6h6v6" />
-        </svg>
-        <p className="text-stone-300">{error}</p>
-        <Link
-          to="/shop"
-          className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
-          style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
-        >
-          {t('co.doneKeepShopping')}
-        </Link>
-      </div>
+        </svg>}
+        text={error}
+      >
+        <Act to="/shop">{t('co.doneKeepShopping')}</Act>
+      </StateCard>
     );
   }
   if (!data) return <StorePageSkeleton />;
@@ -386,15 +382,13 @@ export default function StorePage() {
                   key={c.key}
                   type="button"
                   onClick={() => pickCategory(c.key)}
-                  className="glass group animate-fade-up relative flex flex-col items-center overflow-hidden p-4 text-center transition duration-300 hover:-translate-y-1.5 hover:shadow-glow"
+                  className="bz-storecard group animate-fade-up relative flex flex-col items-center overflow-hidden rounded-2xl p-4 text-center transition duration-300 hover:-translate-y-1.5"
                   style={{ animationDelay: `${Math.min(i, 8) * 60}ms` }}
                 >
-                  <span className="dash-hairline absolute inset-x-0 top-0" />
                   {/* شارة العروض على الزاوية: توجّه الزائرة إلى حيث الخصم مباشرةً */}
                   {cnt.sale > 0 && (
                     <span
-                      className="absolute end-2 top-2 z-10 rounded-full px-2 py-0.5 text-[10px] font-bold text-cream ring-1 ring-[#cdbda4]/40"
-                      style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #241708 100%)' }}
+                      className="bz-pb absolute end-2 top-2 z-10 !px-2 !text-[10px]"
                     >
                       {t('store.catSale', { count: cnt.sale })}
                     </span>
@@ -505,23 +499,17 @@ export default function StorePage() {
           )}
 
           {filtered.length === 0 ? (
-            <div className="glass relative flex flex-col items-center gap-4 overflow-hidden p-10 text-center text-stone-400">
-              <span className="dash-hairline absolute inset-x-0 top-0" />
-              <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-wine/12 to-gold-400/15 text-wine ring-1 ring-gold-400/40">
-                <BoltIcon className="h-8 w-8" />
-              </span>
-              <p className="max-w-sm text-sm">{data.products.length === 0 ? t('store.noProducts') : t('common.noResults')}</p>
+            <StateCard
+              icon={<BoltIcon className="h-7 w-7" />}
+              text={data.products.length === 0 ? t('store.noProducts') : t('common.noResults')}
+            >
               {/* عند وجود فلاتر نشطة نعطي مخرجاً بضغطة (بحث/فئة/مقاس/لون/عروض) */}
               {data.products.length > 0 && (q || cat !== 'all' || sizesSel.length || colorsSel.length || offersOnly || stockOnly) && (
-                <button
-                  type="button"
-                  onClick={() => { setQ(''); setSizesSel([]); setColorsSel([]); setOffersOnly(false); setStockOnly(false); setSearchParams({}); }}
-                  className="rounded-full border border-wine/30 px-5 py-2 text-sm font-bold text-wine transition hover:bg-wine hover:text-cream"
-                >
+                <Act2 onClick={() => { setQ(''); setSizesSel([]); setColorsSel([]); setOffersOnly(false); setStockOnly(false); setSearchParams({}); }}>
                   {t('filters.clear')}
-                </button>
+                </Act2>
               )}
-            </div>
+            </StateCard>
           ) : (
             <>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
@@ -534,8 +522,7 @@ export default function StorePage() {
                   <button
                     type="button"
                     onClick={() => setPage((n) => n + 1)}
-                    className="rounded-full px-8 py-3 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
-                    style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
+                    className="bz-act px-8"
                   >
                     {t('store.loadMore')}
                   </button>
@@ -585,21 +572,16 @@ export default function StorePage() {
           {/* قصة العلامة — كان وصف المتجر مدفوناً بالفوتر وحده. لمسة تحريرية تعرّف
               الزائرة بالمتجر قبل التصفّح (تظهر فقط إن كتبت المالكة وصفاً) */}
           {store.description && (
-            <Reveal><section className="glass relative mb-16 overflow-hidden p-8 text-center sm:mb-20">
-              <span className="dash-hairline absolute inset-x-0 top-0" />
+            <Reveal><section className="bz-panel mb-16 p-8 text-center sm:mb-20">
               {store.logoUrl && (
                 <img
                   src={cldThumb(store.logoUrl, 160)}
                   alt=""
                   loading="lazy"
-                  className="mx-auto h-16 w-16 rounded-full bg-white object-cover shadow-md ring-2 ring-gold-400/50"
+                  className="bz-storecard-logo mx-auto h-16 w-16 rounded-full bg-white object-cover"
                 />
               )}
-              <div className="mt-4 flex items-center justify-center gap-2.5">
-                <span className="h-px w-8 bg-gradient-to-r from-transparent to-[#9c866a]/45" />
-                <h2 className="bz-title font-display text-xl font-bold">{store.name}</h2>
-                <span className="h-px w-8 bg-gradient-to-l from-transparent to-[#9c866a]/45" />
-              </div>
+              <h2 className="bz-ph-t mt-4 !text-xl">{store.name}</h2>
               <p className="mx-auto mt-3 max-w-2xl whitespace-pre-line leading-relaxed text-stone-300">{store.description}</p>
             </section></Reveal>
           )}
@@ -612,8 +594,7 @@ export default function StorePage() {
             <div className="mb-16 text-center sm:mb-20">
               <button
                 onClick={() => { setViewAll(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                className="rounded-full px-10 py-3.5 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition duration-300 hover:-translate-y-0.5 hover:brightness-110"
-                style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)', boxShadow: '0 16px 34px -14px rgba(20, 13, 7, 0.65)' }}
+                className="bz-act px-10 py-3.5 transition duration-300 hover:-translate-y-0.5"
               >
                 {t('store.viewAllProducts')}
               </button>
@@ -745,7 +726,7 @@ function CrumbHere({ icon, label, text }) {
     <>
       <span
         aria-label={label} title={label}
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-wine text-cream shadow-sm ring-1 ring-[#cdbda4]/40"
+        className="bz-softico flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
       >
         {icon}
       </span>
@@ -1227,7 +1208,7 @@ function HeroSlider({ store }) {
               {idx === i && (
                 <span
                   key={i}
-                  className="bz-dot-progress absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-gold-400 to-wine"
+                  className="bz-dot-progress absolute inset-y-0 left-0 rounded-full bg-[#F4EDE2]"
                   style={{ animationPlayState: paused ? 'paused' : 'running' }}
                 />
               )}

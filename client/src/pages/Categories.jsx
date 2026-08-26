@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Seo from '../components/Seo.jsx';
+import { PageTitle } from '../components/PageUI.jsx';
+import { GridIcon } from '../components/icons.jsx';
 import api from '../api/client.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { cldThumb } from '../utils/cloudinary.js';
@@ -27,20 +29,17 @@ export default function Categories() {
   return (
     <>
       <Seo title={t('nav.categories')} />
-      <div className="mb-8 flex items-center justify-center gap-2.5 sm:mb-10 sm:gap-3">
-        <h1 className="bz-title whitespace-nowrap font-display text-2xl font-bold">{t('nav.categories')}</h1>
-      </div>
+      <PageTitle icon={<GridIcon className="h-6 w-6" />} title={t('nav.categories')} />
 
-      {/* بطاقات glass فاخرة بنفس ستايل بطاقات الموقع (hairline ذهبي + رفعة وظل عند المرور) */}
+      {/* بطاقةٌ واحدة هادئة كبطاقات المتاجر بالرئيسية — بلا خيطٍ علويّ ولا هالة */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
         {items.map((it, i) => (
           <Link
             key={it.key}
             to={it.to}
-            className="glass group animate-fade-up relative flex flex-col items-center overflow-hidden p-4 text-center transition duration-300 hover:-translate-y-1.5 hover:shadow-glow"
+            className="bz-storecard group animate-fade-up relative flex flex-col items-center overflow-hidden rounded-2xl p-4 text-center transition duration-300 hover:-translate-y-1.5"
             style={{ animationDelay: `${Math.min(i, 8) * 60}ms` }}
           >
-            <span className="dash-hairline absolute inset-x-0 top-0" />
             <div className="flex aspect-square w-full items-center justify-center overflow-hidden">
               {it.img ? (
                 <img
@@ -51,13 +50,13 @@ export default function Categories() {
                   className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
                 />
               ) : (
-                <svg viewBox="0 0 24 24" className="h-1/2 w-1/2 text-wine/60" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <svg viewBox="0 0 24 24" className="bz-field-ico h-1/2 w-1/2" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M9 4a3 3 0 0 0 6 0" />
                   <path d="M12 4 4.5 9v3l3-1.5V20h9V10.5l3 1.5V9L12 4Z" />
                 </svg>
               )}
             </div>
-            <span className="mt-2 font-display text-sm font-bold text-stone-100">{it.name}</span>
+            <span className="bz-card-name mt-2 text-sm font-bold">{it.name}</span>
             <span className="mt-2 inline-flex items-center gap-1 rounded-full border border-wine/25 px-3.5 py-1 text-[11px] font-bold text-wine transition group-hover:border-wine group-hover:bg-wine group-hover:text-cream">
               {t('home.shopNow')}
             </span>

@@ -796,7 +796,7 @@ function ReelPlayer({ product: p, muted, t, onUnmute, onEnded, isLast, showHint,
           </button>
         )}
         <div className="flex items-baseline gap-2">
-          <span className="rounded-full bg-black/50 px-3 py-1 font-display text-lg font-extrabold text-gold-200 ring-1 ring-[#cdbda4]/30">{t('common.currency')}{p.price}</span>
+          <span className="rounded-full bg-black/60 px-3 py-1 text-lg font-extrabold text-white ring-1 ring-[#cdbda4]/30">{t('common.currency')}{p.price}</span>
           {hasDiscount && <Strike className="text-sm text-white/70">{t('common.currency')}{p.oldPrice}</Strike>}
           {hasDiscount && <span className="rounded-full bg-emerald-600/85 px-2 py-0.5 text-[11px] font-bold text-white drop-shadow">{t('product.saveAmount', { amount: `${t('common.currency')}${(p.oldPrice - p.price).toFixed(2).replace(/\.00$/, '')}` })}</span>}
         </div>

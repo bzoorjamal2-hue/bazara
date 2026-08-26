@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import Seo from '../components/Seo.jsx';
+import { StateCard, Act } from '../components/PageUI.jsx';
 import { ProductGridSkeleton } from '../components/Skeleton.jsx';
 import FilteredProductGrid from '../components/FilteredProductGrid.jsx';
 import CatThumb from '../components/CatThumb.jsx';
@@ -114,32 +115,15 @@ export default function CategoryPage() {
       </nav>
 
       {error ? (
-        <div className="glass mx-auto flex max-w-md flex-col items-center gap-4 p-10 text-center">
-          <p className="text-stone-300">{error}</p>
-          <button
-            type="button"
-            onClick={() => smartNav(navigate, homeTo)}
-            className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
-            style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
-          >
-            {t('nav.home')}
-          </button>
-        </div>
+        <StateCard icon={<GridGlyph className="h-7 w-7" />} text={error}>
+          <Act onClick={() => smartNav(navigate, homeTo)}>{t('nav.home')}</Act>
+        </StateCard>
       ) : !products ? (
         <ProductGridSkeleton count={8} />
       ) : products.length === 0 ? (
-        <div className="glass mx-auto flex max-w-md flex-col items-center gap-4 p-10 text-center">
-          <span aria-hidden className="flex h-16 w-16 items-center justify-center rounded-full bg-wine/10 text-wine"><GridGlyph className="h-8 w-8" /></span>
-          <p className="text-stone-300">{t('common.noResults')}</p>
-          <button
-            type="button"
-            onClick={() => smartNav(navigate, '/categories')}
-            className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
-            style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
-          >
-            {t('nav.categories')}
-          </button>
-        </div>
+        <StateCard icon={<GridGlyph className="h-7 w-7" />} text={t('common.noResults')}>
+          <Act onClick={() => smartNav(navigate, '/categories')}>{t('nav.categories')}</Act>
+        </StateCard>
       ) : (
         <FilteredProductGrid products={products} />
       )}

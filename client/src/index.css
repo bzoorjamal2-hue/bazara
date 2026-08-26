@@ -3569,3 +3569,26 @@ html.dark .bz-tone-ok { background: rgba(52, 211, 153, 0.14); color: #6ee7b7; }
 /* بلاطةُ أيقونةٍ بنبرة التحذير — مصمتة كباقي بلاطات اللوحة، لا تدرّج */
 .bz-ico-amber { background: #b45309; color: #fff; }
 html.dark .theme-pub .bz-ico-amber { background: #fcd34d; color: #422006; }
+
+/* رقم 404 داخل بطاقة الحالة — كان بتدرّجٍ ثلاثيّ بحجم 7xl يطغى على الرسالة */
+.bz-404 { font-size: 1.35rem; font-weight: 800; letter-spacing: 0.02em; }
+/* عدّادٌ صغير بجانب عنوان (المفضّلة) — كان رمليّاً على رمليّ */
+.bz-count {
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  background: rgba(94, 70, 54, 0.1);
+  color: #4a3628;
+}
+html.dark .theme-pub .bz-count { background: rgba(228, 216, 197, 0.14); color: #f6efe0; }
+/* اسم الفئة داخل بطاقتها */
+.bz-card-name { color: #3f2e22; }
+html.dark .theme-pub .bz-card-name { color: #f6efe0; }
+/* نقاط السلايدر: التدرّج على شريطٍ ارتفاعه 6px لا يُرى — لونٌ مصمت */
+.bz-dot { background: rgba(94, 70, 54, 0.25); }
+@media (hover: hover) { .bz-dot:hover { background: rgba(94, 70, 54, 0.45); } }
+.bz-dot-on { background: #5e4636; }
+html.dark .theme-pub .bz-dot { background: rgba(228, 216, 197, 0.28); }
+@media (hover: hover) { html.dark .theme-pub .bz-dot:hover { background: rgba(228, 216, 197, 0.5); } }
+html.dark .theme-pub .bz-dot-on { background: #e4d8c5; }
