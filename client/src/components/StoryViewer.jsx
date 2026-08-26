@@ -176,7 +176,7 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
           {stories.map((s, i) => (
             <div key={s.id} className="h-[3px] flex-1 overflow-hidden rounded-full bg-white/30 shadow-[0_1px_2px_rgba(0,0,0,.35)]">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-[#d4af37] via-[#f7e7b0] to-[#fff6da] shadow-[0_0_6px_rgba(230,200,120,.8)]"
+                className="h-full rounded-full bg-gradient-to-r from-[#b09a7e] via-[#f7e7b0] to-[#fff6da] shadow-[0_0_6px_rgba(205, 189, 164, .8)]"
                 style={{ width: `${i < idx ? 100 : i === idx ? progress : 0}%` }}
               />
             </div>
@@ -186,7 +186,7 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
         {/* رأس: شعار المتجر + الاسم + الوقت + حذف/إغلاق */}
         <div className="absolute inset-x-0 top-0 z-30 flex items-center gap-3 px-3 pt-5" style={{ paddingTop: 'calc(env(safe-area-inset-top,0px) + 20px)' }} dir={rtl ? 'rtl' : 'ltr'}>
           {store?.logoUrl
-            ? <img src={cldThumb(store.logoUrl, 80)} alt="" className="h-9 w-9 rounded-full object-cover ring-2 ring-[#e6c878]/80" />
+            ? <img src={cldThumb(store.logoUrl, 80)} alt="" className="h-9 w-9 rounded-full object-cover ring-2 ring-[#cdbda4]/80" />
             : <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-white"><StoreIcon className="h-5 w-5" /></span>}
           <div className="min-w-0 flex-1 leading-tight">
             <p className="truncate text-sm font-bold text-white drop-shadow">{store?.name}</p>
@@ -227,7 +227,7 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
           )}
           {cur.productId && (
             <Link to={`/product/${cur.productId}`} onClick={onClose}
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#f7e7b0] via-[#e6c878] to-[#d4af37] py-3 text-sm font-extrabold text-[#2a1c14] shadow-[0_8px_24px_-6px_rgba(212,175,55,.8)] transition active:scale-[0.98]">
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#f7e7b0] via-[#cdbda4] to-[#b09a7e] py-3 text-sm font-extrabold text-[#2a1c14] shadow-[0_8px_24px_-6px_rgba(176, 154, 126, .8)] transition active:scale-[0.98]">
               <BagIcon className="h-5 w-5" /> {t('story.shopNow')}
             </Link>
           )}

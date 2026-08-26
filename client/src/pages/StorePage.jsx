@@ -240,7 +240,7 @@ export default function StorePage() {
         <p className="text-stone-300">{error}</p>
         <Link
           to="/shop"
-          className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
+          className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
           style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
         >
           {t('co.doneKeepShopping')}
@@ -393,7 +393,7 @@ export default function StorePage() {
                   {/* شارة العروض على الزاوية: توجّه الزائرة إلى حيث الخصم مباشرةً */}
                   {cnt.sale > 0 && (
                     <span
-                      className="absolute end-2 top-2 z-10 rounded-full px-2 py-0.5 text-[10px] font-bold text-cream ring-1 ring-[#e6c878]/40"
+                      className="absolute end-2 top-2 z-10 rounded-full px-2 py-0.5 text-[10px] font-bold text-cream ring-1 ring-[#cdbda4]/40"
                       style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #241708 100%)' }}
                     >
                       {t('store.catSale', { count: cnt.sale })}
@@ -534,7 +534,7 @@ export default function StorePage() {
                   <button
                     type="button"
                     onClick={() => setPage((n) => n + 1)}
-                    className="rounded-full px-8 py-3 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
+                    className="rounded-full px-8 py-3 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
                     style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
                   >
                     {t('store.loadMore')}
@@ -596,9 +596,9 @@ export default function StorePage() {
                 />
               )}
               <div className="mt-4 flex items-center justify-center gap-2.5">
-                <span className="h-px w-8 bg-gradient-to-r from-transparent to-[#c79a3a]/45" />
+                <span className="h-px w-8 bg-gradient-to-r from-transparent to-[#9c866a]/45" />
                 <h2 className="bz-title font-display text-xl font-bold">{store.name}</h2>
-                <span className="h-px w-8 bg-gradient-to-l from-transparent to-[#c79a3a]/45" />
+                <span className="h-px w-8 bg-gradient-to-l from-transparent to-[#9c866a]/45" />
               </div>
               <p className="mx-auto mt-3 max-w-2xl whitespace-pre-line leading-relaxed text-stone-300">{store.description}</p>
             </section></Reveal>
@@ -612,7 +612,7 @@ export default function StorePage() {
             <div className="mb-16 text-center sm:mb-20">
               <button
                 onClick={() => { setViewAll(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                className="rounded-full px-10 py-3.5 font-bold text-cream ring-1 ring-[#e6c878]/35 transition duration-300 hover:-translate-y-0.5 hover:brightness-110"
+                className="rounded-full px-10 py-3.5 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition duration-300 hover:-translate-y-0.5 hover:brightness-110"
                 style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)', boxShadow: '0 16px 34px -14px rgba(20, 13, 7, 0.65)' }}
               >
                 {t('store.viewAllProducts')}
@@ -745,7 +745,7 @@ function CrumbHere({ icon, label, text }) {
     <>
       <span
         aria-label={label} title={label}
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-wine text-cream shadow-sm ring-1 ring-[#e6c878]/40"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-wine text-cream shadow-sm ring-1 ring-[#cdbda4]/40"
       >
         {icon}
       </span>

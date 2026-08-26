@@ -28,12 +28,12 @@ export default class ErrorBoundary extends Component {
       <div className="flex min-h-screen items-center justify-center p-6" style={{ background: '#F4EDE2' }}>
         <div
           className="w-full max-w-sm rounded-3xl p-8 text-center"
-          style={{ background: '#ffffff', boxShadow: '0 18px 48px -18px rgba(94,70,54,0.45)', border: '1px solid rgba(212,175,55,0.35)' }}
+          style={{ background: '#ffffff', boxShadow: '0 18px 48px -18px rgba(94,70,54,0.45)', border: '1px solid rgba(176, 154, 126, 0.35)' }}
         >
           <span
             aria-hidden
             className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl text-2xl"
-            style={{ background: 'rgba(212,175,55,0.15)', color: '#8a2438' }}
+            style={{ background: 'rgba(176, 154, 126, 0.15)', color: '#8a2438' }}
           >
             ⚠
           </span>

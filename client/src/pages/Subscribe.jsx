@@ -75,7 +75,7 @@ export default function Subscribe() {
               <p className="mt-4 text-sm leading-relaxed text-stone-400">{t('subscription.features')}</p>
               <button
                 onClick={() => setSelected(p.key)}
-                className="mt-6 w-full rounded-full py-3.5 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
+                className="mt-6 w-full rounded-full py-3.5 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
                 style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)', boxShadow: '0 14px 30px -12px rgba(20, 13, 7, 0.6)' }}
               >
                 {t('subscription.choose')}

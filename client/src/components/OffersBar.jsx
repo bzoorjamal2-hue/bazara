@@ -49,7 +49,7 @@ function Pill({ icon, children, strong = false, urgent = false }) {
   if (strong || urgent) {
     return (
       <span
-        className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold text-cream ring-1 ring-[#e6c878]/35"
+        className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold text-cream ring-1 ring-[#cdbda4]/35"
         style={{ background: urgent ? '#9a3412' : 'linear-gradient(150deg, #3f2e22 0%, #241708 100%)' }}
       >
         {icon}{children}
@@ -100,7 +100,7 @@ export default function OffersBar({ products, tier = 'all', onTier, compact = fa
                 type="button"
                 onClick={() => onTier(tr.key)}
                 aria-pressed={on}
-                className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${on ? 'ring-1 ring-[#e6c878]/50' : 'border border-wine/25 text-wine hover:bg-wine/5'}`}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${on ? 'ring-1 ring-[#cdbda4]/50' : 'border border-wine/25 text-wine hover:bg-wine/5'}`}
                 // لونان صريحان للحالة النشطة: أصناف الذهب تنقلب بنّية نهاراً
                 // فيصير النصّ بنّياً على بنّي ولا يُقرأ
                 style={on ? { background: 'linear-gradient(150deg, #3f2e22 0%, #241708 100%)', color: '#F4EDE2' } : undefined}

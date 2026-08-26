@@ -139,7 +139,7 @@ export default function StockRequestsManager() {
                 type="button"
                 onClick={() => setFilter(filter === s.k ? 'all' : s.k)}
                 className={`rounded-2xl border bg-black/20 p-3 text-center transition ${
-                  filter === s.k ? 'border-[#d4af37]' : 'border-gold-400/15 hover:border-gold-400/40'
+                  filter === s.k ? 'border-[#b09a7e]' : 'border-gold-400/15 hover:border-gold-400/40'
                 }`}
               >
                 <p className={`font-display text-2xl font-extrabold tabular-nums ${s.cls}`}>{s.v}</p>
@@ -177,7 +177,7 @@ export default function StockRequestsManager() {
                       // — بنّي على بنّي لا يُقرأ
                       className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
                         on
-                          ? 'border-[#d4af37] bg-[#d4af37] text-[#3f2e22] shadow-sm'
+                          ? 'border-[#b09a7e] bg-[#b09a7e] text-[#3f2e22] shadow-sm'
                           : 'border-gold-400/25 bg-gold-400/5 text-stone-300 hover:bg-gold-400/15 hover:text-gold-200'
                       }`}
                     >

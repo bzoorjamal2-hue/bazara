@@ -231,7 +231,7 @@ export default function ProductDetails() {
         <p className="text-stone-300">{error}</p>
         <Link
           to="/shop"
-          className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
+          className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
           style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
         >
           {t('co.doneKeepShopping')}

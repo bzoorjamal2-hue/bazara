@@ -224,7 +224,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
         {/* رقم ترتيب تحريري بزاوية الصورة (أقسام منسّقة كـ"الأكثر مبيعاً") — رقم كبير
             بخط العرض على شريحة داكنة، لا يلتقط النقر */}
         {rank > 0 && (
-          <span className="pointer-events-none absolute bottom-0 start-0 z-[3] flex h-11 w-11 items-end justify-center rounded-se-2xl bg-gradient-to-tr from-ink-950/85 to-ink-950/40 pb-1 font-display text-2xl font-extrabold leading-none text-[#e6c878]">
+          <span className="pointer-events-none absolute bottom-0 start-0 z-[3] flex h-11 w-11 items-end justify-center rounded-se-2xl bg-gradient-to-tr from-ink-950/85 to-ink-950/40 pb-1 font-display text-2xl font-extrabold leading-none text-[#cdbda4]">
             {rank}
           </span>
         )}

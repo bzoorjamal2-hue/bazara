@@ -102,9 +102,9 @@ export default function Dashboard() {
   }, [section]);
 
   const avatar = user?.avatarUrl ? (
-    <img src={user.avatarUrl} alt={user.name} className="h-14 w-14 rounded-full object-cover ring-2 ring-[#e6c878]/60" />
+    <img src={user.avatarUrl} alt={user.name} className="h-14 w-14 rounded-full object-cover ring-2 ring-[#cdbda4]/60" />
   ) : (
-    <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#F4EDE2]/10 text-xl font-bold text-[#e6c878] ring-2 ring-[#e6c878]/60">
+    <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#F4EDE2]/10 text-xl font-bold text-[#cdbda4] ring-2 ring-[#cdbda4]/60">
       {user?.name?.[0] || <UserIcon className="h-6 w-6" />}
     </span>
   );
@@ -132,7 +132,7 @@ export default function Dashboard() {
           {!isAdmin && store && (
             <Link
               to={`/store/${store.slug}`}
-              className="inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-[#e6c878]/40 bg-[#F4EDE2]/10 px-4 py-2 text-sm font-semibold text-[#F4EDE2] transition hover:bg-[#F4EDE2]/20 sm:w-auto"
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-[#cdbda4]/40 bg-[#F4EDE2]/10 px-4 py-2 text-sm font-semibold text-[#F4EDE2] transition hover:bg-[#F4EDE2]/20 sm:w-auto"
             >
               <StoreIcon className="h-4 w-4" /> {t('dashboard.viewStore')}
             </Link>
@@ -175,13 +175,13 @@ export default function Dashboard() {
 
             <Link
               to="/dashboard?tab=myProducts"
-              className="inline-flex items-center gap-1.5 rounded-full border border-[#e6c878]/40 px-3 py-1.5 text-xs font-bold text-[#F4EDE2] transition hover:bg-[#F4EDE2]/15"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#cdbda4]/40 px-3 py-1.5 text-xs font-bold text-[#F4EDE2] transition hover:bg-[#F4EDE2]/15"
             >
               <BagIcon className="h-3.5 w-3.5" /> {t('dashboard.addProduct')}
             </Link>
             <Link
               to="/dashboard?tab=finance"
-              className="inline-flex items-center gap-1.5 rounded-full border border-[#e6c878]/40 px-3 py-1.5 text-xs font-bold text-[#F4EDE2] transition hover:bg-[#F4EDE2]/15"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#cdbda4]/40 px-3 py-1.5 text-xs font-bold text-[#F4EDE2] transition hover:bg-[#F4EDE2]/15"
             >
               <CashIcon className="h-3.5 w-3.5" /> {t('finance.title')}
             </Link>
@@ -416,7 +416,7 @@ function QuickAction({ to, label, Icon }) {
     <Link to={to} className="group flex flex-col items-center gap-2.5 rounded-2xl border border-gold-400/15 bg-black/20 p-4 text-center transition duration-200 hover:-translate-y-0.5 hover:border-gold-400/40 hover:bg-gold-400/5">
       <span
         className="flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-md transition group-hover:brightness-110"
-        style={{ background: 'linear-gradient(135deg, #e6c878 0%, #d4af37 55%, #b8932c 100%)' }}
+        style={{ background: 'linear-gradient(135deg, #cdbda4 0%, #b09a7e 55%, #8a7657 100%)' }}
       >
         <Icon className="h-[22px] w-[22px]" />
       </span>
@@ -460,12 +460,12 @@ function Sparkline({ points, cur }) {
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="h-12 w-full" aria-hidden="true">
         <defs>
           <linearGradient id="bz-spark" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#d4af37" stopOpacity="0.45" />
-            <stop offset="100%" stopColor="#d4af37" stopOpacity="0" />
+            <stop offset="0%" stopColor="#b09a7e" stopOpacity="0.45" />
+            <stop offset="100%" stopColor="#b09a7e" stopOpacity="0" />
           </linearGradient>
         </defs>
         <path d={area} fill="url(#bz-spark)" />
-        <path d={line} fill="none" stroke="#d4af37" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+        <path d={line} fill="none" stroke="#b09a7e" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
       </svg>
       <div className="mt-1 flex justify-between text-[9px] text-stone-500">
         {points.map((p) => (

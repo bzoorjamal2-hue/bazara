@@ -342,7 +342,7 @@ function HomeCategoryView({ cat, onHome, custom = [] }) {
           <button
             type="button"
             onClick={onHome}
-            className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
+            className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
             style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
           >
             {t('nav.home')}
@@ -357,7 +357,7 @@ function HomeCategoryView({ cat, onHome, custom = [] }) {
           <button
             type="button"
             onClick={onHome}
-            className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
+            className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
             style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
           >
             {t('nav.home')}
@@ -558,7 +558,7 @@ function HomeHero({ banners = [] }) {
                   <p className="bz-hero-el bz-kicker mb-4 text-[11px] font-semibold uppercase text-[#a9812f] sm:text-xs">{s.eyebrow}</p>
                   <h1 className="bz-hero-el font-display text-3xl font-extrabold leading-tight text-[#5e4636] sm:text-5xl">
                     {s.title}
-                    {s.highlight && <> <span className="underline decoration-[#c79a3a] decoration-2 underline-offset-8">{s.highlight}</span></>}
+                    {s.highlight && <> <span className="underline decoration-[#9c866a] decoration-2 underline-offset-8">{s.highlight}</span></>}
                   </h1>
                   <p className="bz-hero-el mx-auto mt-4 max-w-2xl text-[#6e5340] sm:text-lg">{s.desc}</p>
                   <div className="bz-hero-el mt-7 flex flex-wrap items-center justify-center gap-3">

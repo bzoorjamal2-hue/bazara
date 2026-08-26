@@ -271,23 +271,23 @@ export default function OrdersManager() {
     h1{font-size:19px;margin:0 0 4px;color:#8a6a2f}
     .muted{color:#6b6b6b;font-size:11.5px;line-height:1.7}
     /* خيط ذهبي متدرّج أسفل الترويسة بدل خطّ مصمت — هوية بازارا الذهبية */
-    .head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding-bottom:12px;margin-bottom:14px;border-bottom:3px solid;border-image:linear-gradient(90deg,#e6c878,#d4af37,#b8932c) 1}
+    .head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding-bottom:12px;margin-bottom:14px;border-bottom:3px solid;border-image:linear-gradient(90deg,#cdbda4,#b09a7e,#8a7657) 1}
     .inv-meta{text-align:end}
-    .tag{display:inline-block;background:#d4af37;color:#3f2e22;font-weight:800;font-size:11px;padding:2px 10px;border-radius:99px;margin-bottom:4px}
+    .tag{display:inline-block;background:#b09a7e;color:#3f2e22;font-weight:800;font-size:11px;padding:2px 10px;border-radius:99px;margin-bottom:4px}
     .no{font-weight:800;font-size:14px;letter-spacing:.5px}
     .grid2{display:flex;gap:10px;margin-bottom:10px}
     .box{flex:1;border:1px solid #e3ddd3;border-radius:10px;padding:9px 11px;font-size:12.5px;line-height:1.7}
     .box-t{color:#8a7f75;font-size:10.5px;font-weight:700;margin-bottom:2px}
     .note{margin-bottom:10px}
     table{width:100%;border-collapse:collapse;font-size:12.5px}
-    th{background:linear-gradient(180deg,#f7efdc,#f1e6cd);color:#6b5320;text-align:start;padding:8px;border-bottom:2px solid #d4af37;font-size:11.5px;font-weight:700}
+    th{background:linear-gradient(180deg,#f7efdc,#f1e6cd);color:#6b5320;text-align:start;padding:8px;border-bottom:2px solid #b09a7e;font-size:11.5px;font-weight:700}
     td{padding:7px 8px;border-bottom:1px solid #f0ebe3;vertical-align:middle}
     .n{width:28px;text-align:center;color:#8a7f75}
     .c{text-align:center;width:64px}
     .e{text-align:end;width:96px}
     .b{font-weight:700}
     .lbl{color:#6b6b6b}
-    .total td{font-weight:800;font-size:15px;color:#6b5320;border-top:2px solid #d4af37;background:linear-gradient(180deg,#fdf7e8,#f9f0dc)}
+    .total td{font-weight:800;font-size:15px;color:#6b5320;border-top:2px solid #b09a7e;background:linear-gradient(180deg,#fdf7e8,#f9f0dc)}
     small{color:#6b6b6b}
     .pay{margin-top:10px;font-size:12px;color:#3f2e22;background:#f6f1e8;border-radius:8px;padding:7px 10px}
     .thanks{margin-top:10px;text-align:center;color:#8a7f75;font-size:11.5px}
@@ -661,7 +661,7 @@ export default function OrdersManager() {
                   // بنّي أغمق — بنّي على بنّي لا يُقرأ. الهيكس يتجاوز قلب الثيم.
                   className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
                     on
-                      ? 'border-[#d4af37] bg-[#d4af37] text-[#3f2e22] shadow-sm'
+                      ? 'border-[#b09a7e] bg-[#b09a7e] text-[#3f2e22] shadow-sm'
                       : 'border-gold-400/25 bg-gold-400/5 text-stone-300 hover:bg-gold-400/15 hover:text-gold-200'
                   }`}
                 >

@@ -56,7 +56,7 @@ export default function BroadcastManager() {
                   aria-pressed={on}
                   className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold transition ${on ? 'shadow-sm' : 'border border-gold-400/25 text-stone-300 hover:bg-gold-400/10'}`}
                   // لونان صريحان للحالة النشطة: أصناف الذهب تنقلب بنّية نهاراً
-                  style={on ? { background: '#d4af37', color: '#2a1c10' } : undefined}
+                  style={on ? { background: '#b09a7e', color: '#2a1c10' } : undefined}
                 >
                   <Icon className="h-4 w-4" /> {label}
                 </button>

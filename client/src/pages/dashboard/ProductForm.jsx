@@ -438,7 +438,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
                                     className={`rounded-full border px-3 py-1 text-xs font-bold transition ${on ? 'border-transparent' : 'border-gold-400/25 text-stone-300 hover:bg-white/5'}`}
                                     // لونان صريحان للحالة النشطة: أصناف الذهب تنقلب
                                     // بنّية نهاراً فيصير النصّ بنّياً على بنّي
-                                    style={on ? { background: '#d4af37', color: '#2a1c10' } : undefined}
+                                    style={on ? { background: '#b09a7e', color: '#2a1c10' } : undefined}
                                   >
                                     {sizeLabel(sz, t)}
                                   </button>

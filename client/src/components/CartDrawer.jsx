@@ -368,7 +368,7 @@ export default function CartDrawer() {
               <Link
                 to={doneStore ? `/track?store=${doneStore}` : '/track'}
                 onClick={close}
-                className="w-full rounded-full py-3.5 text-center font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
+                className="w-full rounded-full py-3.5 text-center font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
                 style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
               >
                 {t('co.doneTrack')}
@@ -386,7 +386,7 @@ export default function CartDrawer() {
             <p>{t('cart.empty')}</p>
             <button
               onClick={close}
-              className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
+              className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
               style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
             >
               {t('co.doneKeepShopping')}
@@ -475,7 +475,7 @@ export default function CartDrawer() {
                   {/* حبة إتمام فاخرة بتدرج خمري وهالة ذهبية — والسهم يتبع اتجاه اللغة */}
                   <button
                     onClick={() => { setErr(''); setView('checkout'); }}
-                    className="flex w-full items-center justify-center gap-1.5 rounded-full py-4 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
+                    className="flex w-full items-center justify-center gap-1.5 rounded-full py-4 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
                     style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)', boxShadow: '0 16px 34px -14px rgba(20, 13, 7, 0.65)' }}
                   >
                     {t('cart.proceed')} <ForwardIcon className="h-4 w-4" />

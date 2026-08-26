@@ -237,7 +237,7 @@ export default function BottomNav() {
                 // شارة فاخرة: هالة نابضة خلفها لجذب الانتباه + حبّة ذهبية متدرّجة بحدّ عاجي
                 <span className="absolute -end-1 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gold-400/60" style={{ animationDuration: '1.8s' }} />
-                  <span className="relative flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-extrabold leading-none text-wine-dark shadow-md ring-[1.5px] ring-cream" style={{ background: 'linear-gradient(135deg, #f4e0a4 0%, #e6c878 55%, #d4af37 100%)' }}>
+                  <span className="relative flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-extrabold leading-none text-wine-dark shadow-md ring-[1.5px] ring-cream" style={{ background: 'linear-gradient(135deg, #f4e0a4 0%, #cdbda4 55%, #b09a7e 100%)' }}>
                     {badge > 99 ? '99+' : badge}
                   </span>
                 </span>

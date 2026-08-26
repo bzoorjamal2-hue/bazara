@@ -106,7 +106,7 @@ export default function DashDrawerNav({ groups, activeKey, onNavigate, badges = 
                   <span
                     className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 transition ${
                       active
-                        ? 'bg-gradient-to-br from-gold-200 to-gold-400 text-wine-dark shadow-[0_4px_14px_-6px_rgba(212,175,55,0.9)] ring-gold-200/50'
+                        ? 'bg-gradient-to-br from-gold-200 to-gold-400 text-wine-dark shadow-[0_4px_14px_-6px_rgba(176, 154, 126, 0.9)] ring-gold-200/50'
                         : 'bg-cream/[0.12] text-cream ring-cream/10'
                     }`}
                   >
@@ -123,7 +123,7 @@ export default function DashDrawerNav({ groups, activeKey, onNavigate, badges = 
                         className={`relative flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-extrabold shadow-sm ring-1 ring-cream/50 ${
                           s.badgeTone === 'green' ? 'bg-emerald-500 text-white' : 'text-wine-dark'
                         }`}
-                        style={s.badgeTone === 'green' ? undefined : { background: 'linear-gradient(135deg, #f4e0a4 0%, #e6c878 55%, #d4af37 100%)' }}
+                        style={s.badgeTone === 'green' ? undefined : { background: 'linear-gradient(135deg, #f4e0a4 0%, #cdbda4 55%, #b09a7e 100%)' }}
                       >
                         {badge > 99 ? '99+' : badge}
                       </span>
@@ -147,7 +147,7 @@ export default function DashDrawerNav({ groups, activeKey, onNavigate, badges = 
         type="button"
         onClick={scrollMore}
         tabIndex={more ? 0 : -1}
-        className={`app-tap absolute inset-x-0 bottom-1 mx-auto flex w-max items-center gap-1 rounded-full bg-gradient-to-br from-gold-200 to-gold-400 px-3 py-1 text-[11px] font-extrabold text-wine-dark shadow-[0_6px_18px_-6px_rgba(212,175,55,0.8)] transition-opacity duration-300 ${
+        className={`app-tap absolute inset-x-0 bottom-1 mx-auto flex w-max items-center gap-1 rounded-full bg-gradient-to-br from-gold-200 to-gold-400 px-3 py-1 text-[11px] font-extrabold text-wine-dark shadow-[0_6px_18px_-6px_rgba(176, 154, 126, 0.8)] transition-opacity duration-300 ${
           more ? 'opacity-100' : 'pointer-events-none opacity-0'
         } ${more && nudge ? 'menu-nudge' : ''}`}
       >

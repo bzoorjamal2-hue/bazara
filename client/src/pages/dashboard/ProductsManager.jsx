@@ -293,7 +293,7 @@ export default function ProductsManager({ onCount }) {
                     <button
                       key={c} type="button" onClick={() => setCat(c)}
                       className={`rounded-full border px-3 py-1 text-[11px] font-semibold transition ${
-                        on ? 'border-[#d4af37] bg-[#d4af37] text-[#3f2e22]' : 'border-gold-400/25 bg-gold-400/5 text-stone-300 hover:bg-gold-400/15 hover:text-gold-200'
+                        on ? 'border-[#b09a7e] bg-[#b09a7e] text-[#3f2e22]' : 'border-gold-400/25 bg-gold-400/5 text-stone-300 hover:bg-gold-400/15 hover:text-gold-200'
                       }`}
                     >
                       {c === 'all' ? t('common.all') : catLabel(c)}

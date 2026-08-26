@@ -36,7 +36,7 @@ export default function CollectionsRow({ collections, storeSlug = '' }) {
             <Link
               key={`${c.q}-${i}`}
               to={linkFor(c.q)}
-              className="group animate-fade-up relative aspect-square w-[44%] shrink-0 overflow-hidden rounded-[1.25rem] bg-wine/10 shadow-[0_10px_28px_-12px_rgba(94,70,54,0.5)] ring-1 ring-[#e6c878]/30 transition duration-300 active:scale-[0.98] hover:-translate-y-1 sm:w-[30%] lg:w-[21%] xl:w-[17%]"
+              className="group animate-fade-up relative aspect-square w-[44%] shrink-0 overflow-hidden rounded-[1.25rem] bg-wine/10 shadow-[0_10px_28px_-12px_rgba(94,70,54,0.5)] ring-1 ring-[#cdbda4]/30 transition duration-300 active:scale-[0.98] hover:-translate-y-1 sm:w-[30%] lg:w-[21%] xl:w-[17%]"
               style={{ animationDelay: `${i * 60}ms` }}
             >
               {c.image ? (
@@ -69,7 +69,7 @@ export default function CollectionsRow({ collections, storeSlug = '' }) {
                 <span
                   aria-hidden
                   className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-[#2a1c10] transition group-hover:scale-110"
-                  style={{ background: '#e6c878' }}
+                  style={{ background: '#cdbda4' }}
                 >
                   <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 rtl-flip" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M9 6l6 6-6 6" />

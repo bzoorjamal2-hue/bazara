@@ -100,7 +100,7 @@ table { max-width: 100%; }
   .animate-fade-up { animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1); }
 }
 /* 4: حدّ ذهبي رفيع فاخر تحت الشريط العلوي */
-.app-navbar { border-bottom: 1px solid rgba(199, 154, 58, 0.22); }
+.app-navbar { border-bottom: 1px solid rgba(156, 134, 106, 0.22); }
 
 /* Hero عالمي: دخول نص متدرّج (kicker → عنوان → وصف → زر) مع تدرّج سينمائي فوق الوسائط.
    يُطبَّق فقط على الشريحة الظاهرة فيبدو كافتتاحية أزياء راقية. */
@@ -130,7 +130,7 @@ table { max-width: 100%; }
 /* اسم المتجر الذهبي على السلايدر — تدرّج ذهبي دائم (غير متأثّر بالثيم) فوق الحجاب
    الداكن، مع بريق خفيف يمرّ عليه لإحساس فخم. */
 .bz-gold-name {
-  background: linear-gradient(100deg, #f3dd9e 0%, #e6c25f 30%, #f7e7b0 50%, #d4af37 72%, #e6c25f 100%);
+  background: linear-gradient(100deg, #f3dd9e 0%, #c6b499 30%, #f7e7b0 50%, #b09a7e 72%, #c6b499 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
   background-size: 220% auto; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.45));
 }
@@ -145,8 +145,8 @@ table { max-width: 100%; }
    يُبرز النصّ. كان خيطاً واحداً بشفافية 0.18 — شبه معدوم. */
 .bz-hero-frame {
   box-shadow:
-    inset 0 0 0 1px rgba(230, 200, 120, 0.42),
-    inset 0 0 0 5px rgba(230, 200, 120, 0.10),
+    inset 0 0 0 1px rgba(205, 189, 164, 0.42),
+    inset 0 0 0 5px rgba(205, 189, 164, 0.10),
     inset 0 0 60px rgba(0, 0, 0, 0.45);
 }
 /* زوايا ذهبية مضيئة (L-shape) بأركان الشريحة الثابتة */
@@ -189,9 +189,9 @@ html.dark .theme-pub .glass { box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5); }
 
 /* نجوم التقييم — ألوان صريحة خارج remaps الثيم: كانت النجمة المعبّأة (gold-400→بني)
    والفاضية (stone-600 رمادي غامق) متطابقتين بصرياً بالنهاري فتبدو كلها معبّأة */
-.star-on { color: #d4af37; }
+.star-on { color: #b09a7e; }
 .star-off { color: rgba(63, 46, 34, 0.22); }
-html.dark .theme-pub .star-on { color: #e0c25f; }
+html.dark .theme-pub .star-on { color: #c6b499; }
 html.dark .theme-pub .star-off { color: rgba(244, 237, 226, 0.28); }
 
 /* لمعة ذهبية تمسح شعار شاشة الترحيب — مسحة سريعة (٤٥٪ من الدورة) ثم راحة،
@@ -224,9 +224,9 @@ html.dark .theme-pub .star-off { color: rgba(244, 237, 226, 0.28); }
   position: relative;
   min-height: 100vh;
   background:
-    radial-gradient(1100px 550px at 85% -8%, rgba(212, 175, 55, 0.14), transparent 60%),
-    radial-gradient(800px 500px at 5% 5%, rgba(212, 175, 55, 0.08), transparent 55%),
-    radial-gradient(700px 700px at 50% 120%, rgba(212, 175, 55, 0.06), transparent 60%),
+    radial-gradient(1100px 550px at 85% -8%, rgba(176, 154, 126, 0.14), transparent 60%),
+    radial-gradient(800px 500px at 5% 5%, rgba(176, 154, 126, 0.08), transparent 55%),
+    radial-gradient(700px 700px at 50% 120%, rgba(176, 154, 126, 0.06), transparent 60%),
     linear-gradient(180deg, #070708 0%, #0b0b0d 100%);
   overflow-x: clip; /* يمنع التمرير الأفقي دون كسر خاصية sticky للهيدر */
 }
@@ -259,7 +259,7 @@ button { line-height: 1.15; }
 button > svg { vertical-align: middle; }
 .btn-primary {
   @apply btn text-ink-950 shadow-gold hover:-translate-y-0.5;
-  background: linear-gradient(135deg, #e6c878 0%, #d4af37 45%, #b8932c 100%);
+  background: linear-gradient(135deg, #cdbda4 0%, #b09a7e 45%, #8a7657 100%);
 }
 .btn-ghost {
   @apply btn border border-gold-400/30 bg-white/[0.03] text-stone-100 hover:bg-gold-400/10 hover:border-gold-400/50;
@@ -276,7 +276,7 @@ button > svg { vertical-align: middle; }
    "اطلبي الآن" ممتلئ نبيذي، و"أضيفي للسلة" مفرّغ بنفس درجة النبيذي — زوج متناسق واضح الأولوية.
    الأبعاد (padding/flex-1) تُضاف عند الاستخدام. */
 .btn-buy {
-  @apply inline-flex items-center justify-center gap-2 rounded-full border-2 border-transparent font-bold text-cream ring-1 ring-[#e6c878]/35 transition disabled:cursor-not-allowed disabled:opacity-40;
+  @apply inline-flex items-center justify-center gap-2 rounded-full border-2 border-transparent font-bold text-cream ring-1 ring-[#cdbda4]/35 transition disabled:cursor-not-allowed disabled:opacity-40;
   background: linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%);
   box-shadow: 0 16px 34px -14px rgba(20, 13, 7, 0.65);
 }
@@ -289,8 +289,8 @@ button > svg { vertical-align: middle; }
 }
 @media (hover: hover) { .btn-cart:hover:not(:disabled) { background: #5e4636; color: #F4EDE2; } }
 /* الوضع الليلي: النبيذي الغامق يختفي على الخلفية الداكنة → ذهبي مضيء متناسق */
-html.dark .theme-pub .btn-cart { border-color: rgba(240, 220, 166, 0.45); color: #f0dca6; }
-@media (hover: hover) { html.dark .theme-pub .btn-cart:hover:not(:disabled) { background: #f0dca6; color: #241b12; } }
+html.dark .theme-pub .btn-cart { border-color: rgba(228, 216, 197, 0.45); color: #e4d8c5; }
+@media (hover: hover) { html.dark .theme-pub .btn-cart:hover:not(:disabled) { background: #e4d8c5; color: #241b12; } }
 
 /* حقول الإدخال — داخل طبقة components عمداً:
    هذا الملف يأتي بعد @tailwind utilities، فلو عُرِّف .input خارج الطبقة لتغلّبت
@@ -341,7 +341,7 @@ input[type='datetime-local']::-webkit-datetime-edit {
 
 /* عناوين ذهبية متدرّجة */
 .gradient-text {
-  background: linear-gradient(135deg, #f6edcf 0%, #e0c25f 45%, #d4af37 100%);
+  background: linear-gradient(135deg, #f2ebdf 0%, #c6b499 45%, #b09a7e 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -401,7 +401,7 @@ input[type='datetime-local']::-webkit-datetime-edit {
 /* فاصل ذهبي رفيع */
 .gold-divider {
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.5), transparent);
+  background: linear-gradient(90deg, transparent, rgba(176, 154, 126, 0.5), transparent);
 }
 
 /* شارة */
@@ -588,7 +588,7 @@ html.dark .theme-pub select option { background-color: #241b12; color: #f4ecdc; 
 }
 html.dark .bz-select-menu {
   background: #241b12;
-  border-color: rgba(230, 200, 120, 0.24);
+  border-color: rgba(205, 189, 164, 0.24);
   color: #f4ecdc;
   box-shadow: 0 20px 48px -16px rgba(0, 0, 0, 0.75);
 }
@@ -596,7 +596,7 @@ html.dark .bz-select-menu {
 html.dark .bz-select-opt { color: #ded2bc; }
 @media (hover: hover) {
   .bz-select-opt:hover { background: rgba(94, 70, 54, 0.06); }
-  html.dark .bz-select-opt:hover { background: rgba(230, 200, 120, 0.10); }
+  html.dark .bz-select-opt:hover { background: rgba(205, 189, 164, 0.10); }
 }
 .bz-select-opt.is-active {
   background: rgba(94, 70, 54, 0.10);
@@ -604,8 +604,8 @@ html.dark .bz-select-opt { color: #ded2bc; }
   font-weight: 600;
 }
 html.dark .bz-select-opt.is-active {
-  background: rgba(230, 200, 120, 0.16);
-  color: #f0dca6;
+  background: rgba(205, 189, 164, 0.16);
+  color: #e4d8c5;
 }
 
 /* شريط التمرير خمري داخل الثيم العام */
@@ -629,7 +629,7 @@ html.dark .theme-pub ::-webkit-scrollbar-thumb:hover { background: rgba(236, 217
   background: linear-gradient(180deg, rgba(252, 249, 243, 0.92) 0%, rgba(246, 240, 229, 0.88) 100%);
   -webkit-backdrop-filter: saturate(180%) blur(14px);
   backdrop-filter: saturate(180%) blur(14px);
-  border-bottom: 1px solid rgba(199, 154, 58, 0.30);
+  border-bottom: 1px solid rgba(156, 134, 106, 0.30);
 }
 /* خيط ذهبي متوهّج أسفل الشريط — اللمسة التي تجعله يُقرأ فاخراً لا وظيفياً.
    لا نضع position:relative هنا: الهيدران موضوعان أصلاً (المتاجر sticky
@@ -641,7 +641,7 @@ html.dark .theme-pub ::-webkit-scrollbar-thumb:hover { background: rgba(236, 217
   inset-inline: 0;
   bottom: -1px;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.75), transparent);
+  background: linear-gradient(90deg, transparent, rgba(176, 154, 126, 0.75), transparent);
   pointer-events: none;
 }
 /* ملاحظة: الأدراج كلها تُرسَم عبر Portal على <body>، فـbackdrop-filter هنا لا
@@ -651,7 +651,7 @@ html.dark .theme-pub ::-webkit-scrollbar-thumb:hover { background: rgba(236, 217
    بالخلفية والحدّ باهتاً فلا تبان معالمه) */
 html.dark .theme-pub .app-navbar {
   background: linear-gradient(180deg, rgba(43, 32, 21, 0.92) 0%, rgba(36, 26, 17, 0.88) 100%);
-  border-bottom: 1px solid rgba(230, 200, 120, 0.32);
+  border-bottom: 1px solid rgba(205, 189, 164, 0.32);
   box-shadow: 0 8px 22px -10px rgba(0, 0, 0, 0.8);
 }
 html.dark .theme-pub .app-navbar::after {
@@ -664,27 +664,27 @@ html.dark .theme-pub .app-navbar input.bg-white,
 html.dark .theme-pub .app-navbar a.bg-white,
 html.dark .theme-pub .app-navbar button.bg-white {
   background-color: rgba(13, 9, 5, 0.55);
-  border: 1px solid rgba(230, 200, 120, 0.28);
+  border: 1px solid rgba(205, 189, 164, 0.28);
   color: #f3ead6;
 }
 html.dark .theme-pub .app-navbar input.bg-white::placeholder { color: #9c8d74; }
 /* قائمة اقتراحات البحث تبقى معتمةً تماماً — الشفافية تُذيب نصّها بما تحتها */
 html.dark .theme-pub .app-navbar div.bg-white {
   background-color: #1c150e;
-  border-color: rgba(230, 200, 120, 0.22);
+  border-color: rgba(205, 189, 164, 0.22);
 }
 /* حلقات الأزرار: ring-wine/* غير مرئية على الداكن. هيدر بازارا يستعمل /10
    وهيدر المتاجر /15 و/20 — نغطّيها كلها فلا تبقى واحدة بلا مقابل. */
 html.dark .theme-pub .app-navbar .ring-wine\/10,
 html.dark .theme-pub .app-navbar .ring-wine\/15,
-html.dark .theme-pub .app-navbar .ring-wine\/20 { --tw-ring-color: rgba(230, 200, 120, 0.30); }
+html.dark .theme-pub .app-navbar .ring-wine\/20 { --tw-ring-color: rgba(205, 189, 164, 0.30); }
 /* أيقونات الأزرار كانت text-wine (خمريّ غامق) فتختفي على خلفية داكنة */
-html.dark .theme-pub .app-navbar .text-wine { color: #f0dca6; }
+html.dark .theme-pub .app-navbar .text-wine { color: #e4d8c5; }
 html.dark .theme-pub .app-navbar .text-wine\/45,
 html.dark .theme-pub .app-navbar .text-wine\/50,
-html.dark .theme-pub .app-navbar .text-wine\/60 { color: rgba(240, 220, 166, 0.6); }
+html.dark .theme-pub .app-navbar .text-wine\/60 { color: rgba(228, 216, 197, 0.6); }
 /* التمرير: الأصل يقلبها لخمريّ داكن فتختفي — نُبقيها ذهبيةً واضحة */
-html.dark .theme-pub .app-navbar .hover\:bg-wine:hover { background-color: rgba(230, 200, 120, 0.18); }
+html.dark .theme-pub .app-navbar .hover\:bg-wine:hover { background-color: rgba(205, 189, 164, 0.18); }
 html.dark .theme-pub .app-navbar .hover\:text-cream:hover { color: #fff6da; }
 html.dark .theme-pub .app-navbar.shadow-md { box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.9); }
 
@@ -702,7 +702,7 @@ html.dark .theme-pub .app-navbar.shadow-md { box-shadow: 0 12px 28px -8px rgba(0
    (#5e4636 → #6e5340) فتبدو مغبّرةً لا فاخرة، والذهب فوقها يبهت. */
 .pub-hero {
   background:
-    radial-gradient(120% 70% at 50% -10%, rgba(212, 175, 55, 0.22), transparent 62%),
+    radial-gradient(120% 70% at 50% -10%, rgba(176, 154, 126, 0.22), transparent 62%),
     radial-gradient(80% 60% at 50% 115%, rgba(120, 40, 60, 0.28), transparent 65%),
     radial-gradient(520px 280px at 84% 12%, rgba(248, 243, 236, 0.07), transparent 60%),
     linear-gradient(158deg, #2f2016 0%, #1e140d 48%, #150e08 100%);
@@ -742,25 +742,25 @@ html.dark .theme-pub .app-navbar.shadow-md { box-shadow: 0 12px 28px -8px rgba(0
 .bz-sheet .bz-sheet-ghost:hover { background: rgba(94, 70, 54, 0.06); }
 html.dark .bz-sheet { background: #1e1510; color: #f0e6d2; }
 html.dark .bz-sheet .bz-sheet-input {
-  background: rgba(0, 0, 0, 0.32); border-color: rgba(230, 200, 120, 0.22); color: #f3ead6;
+  background: rgba(0, 0, 0, 0.32); border-color: rgba(205, 189, 164, 0.22); color: #f3ead6;
 }
 html.dark .bz-sheet .bz-sheet-input::placeholder { color: #9c8d74; }
-html.dark .bz-sheet .bz-sheet-input:focus { border-color: rgba(230, 200, 120, 0.6); box-shadow: 0 0 0 3px rgba(230, 200, 120, 0.16); }
+html.dark .bz-sheet .bz-sheet-input:focus { border-color: rgba(205, 189, 164, 0.6); box-shadow: 0 0 0 3px rgba(205, 189, 164, 0.16); }
 html.dark .bz-sheet .bz-sheet-muted { color: #b3a68f; }
-html.dark .bz-sheet .bz-sheet-ghost { border-color: rgba(230, 200, 120, 0.3); color: #e8dcc0; }
-html.dark .bz-sheet .bz-sheet-ghost:hover { background: rgba(230, 200, 120, 0.1); }
+html.dark .bz-sheet .bz-sheet-ghost { border-color: rgba(205, 189, 164, 0.3); color: #e8dcc0; }
+html.dark .bz-sheet .bz-sheet-ghost:hover { background: rgba(205, 189, 164, 0.1); }
 
 /* حلقة ستوري المتجر. كان التدرّج gold→wine→gold، والخمريّ الغامق بمنتصفه
    يُوسِّخ الذهب فتبدو الحلقة إطاراً بنّياً عادياً لا ذهباً. الآن تدرّجٌ مخروطيّ
    ذهبيّ خالص بتوهّجٍ خفيف — يلفت النظر كما تفعل حلقة إنستغرام. */
 .bz-story-ring {
   background: conic-gradient(from 140deg,
-    #b8932c, #f7e7b0 18%, #d4af37 38%, #fff6da 55%, #e6c25f 72%, #b8932c 88%, #f3dd9e);
-  box-shadow: 0 0 0 1px rgba(184, 147, 44, 0.25), 0 4px 14px -3px rgba(212, 175, 55, 0.65);
+    #8a7657, #f7e7b0 18%, #b09a7e 38%, #fff6da 55%, #c6b499 72%, #8a7657 88%, #f3dd9e);
+  box-shadow: 0 0 0 1px rgba(138, 118, 87, 0.25), 0 4px 14px -3px rgba(176, 154, 126, 0.65);
 }
 /* المُشاهَدة: خيطٌ رفيع هادئ بدل حلقةٍ سميكة باهتة */
 .bz-story-ring-seen { background: none; box-shadow: inset 0 0 0 2px rgba(94, 70, 54, 0.22); }
-html.dark .bz-story-ring-seen { box-shadow: inset 0 0 0 2px rgba(230, 200, 120, 0.28); }
+html.dark .bz-story-ring-seen { box-shadow: inset 0 0 0 2px rgba(205, 189, 164, 0.28); }
 /* فجوة الحلقة تأخذ لون الخلفية: الأبيض الثابت يصير طوقاً ساطعاً ليلاً.
    الألوان هي ألوان .app-bg نفسها (#F4EDE2 نهاراً و#131009 ليلاً). */
 .bz-story-gap { background: #F4EDE2; }
@@ -777,7 +777,7 @@ html.dark .bz-story-gap { background: #1c1610; }
    نُبقي لوناً صلباً fallback أولاً كي لا يختفي النص لو لم يُدعم background-clip. */
 .ann-text {
   color: #f3e6c2;
-  background: linear-gradient(100deg, #e9cf87 0%, #fff6da 22%, #d4af37 45%, #fff2cf 66%, #e6c878 100%);
+  background: linear-gradient(100deg, #e9cf87 0%, #fff6da 22%, #b09a7e 45%, #fff2cf 66%, #cdbda4 100%);
   background-size: 220% auto;
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -867,12 +867,12 @@ html.dark .bz-story-gap { background: #1c1610; }
 
 /* الوضع الليلي — أسطح داكنة دافئة ونصوص فاتحة واضحة (لا شيء مخفي) */
 .sc-dark .sc-panel { background: #241b15; }
-.sc-dark .sc-bubble-ai { background: #33271e; color: #ece3d6; border-color: rgba(230, 200, 120, 0.18); }
+.sc-dark .sc-bubble-ai { background: #33271e; color: #ece3d6; border-color: rgba(205, 189, 164, 0.18); }
 .sc-dark .sc-muted { color: #cdbfae; }
 .sc-dark .sc-row { background: #241b15; border-color: rgba(255, 255, 255, 0.08); }
-.sc-dark .sc-input { background: #33271e; color: #f3ece0; border-color: rgba(230, 200, 120, 0.22); }
+.sc-dark .sc-input { background: #33271e; color: #f3ece0; border-color: rgba(205, 189, 164, 0.22); }
 .sc-dark .sc-input::placeholder { color: #9b8f80; }
-.sc-dark .sc-chip { background: #33271e; color: #e6c878; border-color: rgba(230, 200, 120, 0.20); }
+.sc-dark .sc-chip { background: #33271e; color: #cdbda4; border-color: rgba(205, 189, 164, 0.20); }
 @media (hover: hover) { .sc-dark .sc-chip:hover { background: #5e4636; color: #F4EDE2; } }
 
 /* ============================================================= */
@@ -881,19 +881,19 @@ html.dark .bz-story-gap { background: #1c1610; }
 /* ============================================================= */
 .dash-hero {
   background:
-    radial-gradient(460px 220px at 88% -30%, rgba(230, 200, 120, 0.25), transparent 60%),
-    radial-gradient(320px 180px at 0% 115%, rgba(230, 200, 120, 0.10), transparent 60%),
+    radial-gradient(460px 220px at 88% -30%, rgba(205, 189, 164, 0.25), transparent 60%),
+    radial-gradient(320px 180px at 0% 115%, rgba(205, 189, 164, 0.10), transparent 60%),
     linear-gradient(135deg, #2e2118 0%, #4a3628 55%, #5e4636 100%);
-  border: 1px solid rgba(230, 200, 120, 0.20);
+  border: 1px solid rgba(205, 189, 164, 0.20);
   box-shadow: 0 24px 48px -24px rgba(46, 33, 24, 0.55);
 }
 /* ليلياً: عمق أسود-بنّي غني بتوهج ذهبي أقوى — بدل التدرج البنّي الموحل */
 html.dark .theme-pub .dash-hero {
   background:
-    radial-gradient(460px 220px at 88% -30%, rgba(230, 200, 120, 0.30), transparent 60%),
-    radial-gradient(320px 180px at 0% 115%, rgba(230, 200, 120, 0.12), transparent 60%),
+    radial-gradient(460px 220px at 88% -30%, rgba(205, 189, 164, 0.30), transparent 60%),
+    radial-gradient(320px 180px at 0% 115%, rgba(205, 189, 164, 0.12), transparent 60%),
     linear-gradient(135deg, #191309 0%, #241b12 55%, #302517 100%);
-  border-color: rgba(230, 200, 120, 0.32);
+  border-color: rgba(205, 189, 164, 0.32);
   box-shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.7);
 }
 
@@ -902,7 +902,7 @@ html.dark .theme-pub .dash-hero {
 /* خيط ذهبي رفيع أعلى بطاقات الإحصائيات */
 .dash-hairline {
   height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.6), transparent);
+  background: linear-gradient(90deg, transparent, rgba(176, 154, 126, 0.6), transparent);
 }
 
 /* أقسام صفحة الإعدادات: خيط ذهبي متدرّج بأعلى كل بطاقة — يفصل الأقسام بأناقة
@@ -918,10 +918,10 @@ html.dark .theme-pub .dash-hero {
   top: 0;
   height: 2px;
   border-radius: 2px;
-  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.45), transparent);
+  background: linear-gradient(90deg, transparent, rgba(176, 154, 126, 0.45), transparent);
 }
 html.dark .theme-pub .dash-section::before {
-  background: linear-gradient(90deg, transparent, rgba(230, 200, 120, 0.55), transparent);
+  background: linear-gradient(90deg, transparent, rgba(205, 189, 164, 0.55), transparent);
 }
 
 /* بطاقات لوحة التحكم: زوايا أنعم وظل فخم متدرّج (يشمل كل الأقسام تلقائياً) */
@@ -931,7 +931,7 @@ html.dark .theme-pub .dash-section::before {
   box-shadow: 0 1px 2px rgba(94, 70, 54, 0.05), 0 22px 44px -24px rgba(94, 70, 54, 0.22);
 }
 html.dark .theme-pub .dash .glass {
-  border-color: rgba(212, 175, 55, 0.14);
+  border-color: rgba(176, 154, 126, 0.14);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 22px 44px -24px rgba(0, 0, 0, 0.65);
 }
 
@@ -959,20 +959,20 @@ html.dark .theme-pub { background: #131009; color: #f4ecdc; }
 html.dark .theme-pub.app-bg,
 html.dark .theme-pub .app-bg {
   background:
-    radial-gradient(900px 480px at 90% -10%, rgba(230, 200, 120, 0.12), transparent 60%),
-    radial-gradient(700px 460px at 0% 0%, rgba(212, 175, 55, 0.07), transparent 55%),
+    radial-gradient(900px 480px at 90% -10%, rgba(205, 189, 164, 0.12), transparent 60%),
+    radial-gradient(700px 460px at 0% 0%, rgba(176, 154, 126, 0.07), transparent 55%),
     #131009;
 }
 
 /* البطاقات: سطح داكن غني بحدود ذهبية واضحة — تنفصل عن الخلفية بوضوح */
 html.dark .theme-pub .glass {
   background: #1e1710;
-  border-color: rgba(230, 200, 120, 0.18);
+  border-color: rgba(205, 189, 164, 0.18);
   box-shadow: 0 8px 26px rgba(0, 0, 0, 0.55);
 }
 html.dark .theme-pub .glass-strong {
   background: #241b12;
-  border-color: rgba(230, 200, 120, 0.24);
+  border-color: rgba(205, 189, 164, 0.24);
   box-shadow: 0 12px 34px rgba(0, 0, 0, 0.6);
 }
 
@@ -986,18 +986,18 @@ html.dark .theme-pub .text-stone-600,
 html.dark .theme-pub .text-stone-700 { color: #d2c4aa; }
 
 /* البنّي (عناوين/أسعار) → ذهبي شمبانيا مضيء فخم */
-html.dark .theme-pub .text-wine { color: #f0dca6; }
+html.dark .theme-pub .text-wine { color: #e4d8c5; }
 /* text-gold-* يُقلب نهاراً إلى بنّي (5e4636) — ليلاً يجب أن يعود ذهبياً مضيئاً وإلا اختفى على الداكن */
 html.dark .theme-pub .text-gold-100,
 html.dark .theme-pub .text-gold-200,
 html.dark .theme-pub .text-gold-300,
-html.dark .theme-pub .text-gold-400 { color: #f0dca6; }
+html.dark .theme-pub .text-gold-400 { color: #e4d8c5; }
 @media (hover: hover) {
   html.dark .theme-pub .hover\:text-gold-100:hover,
   html.dark .theme-pub .hover\:text-gold-200:hover { color: #ffe9b8; }
 }
 html.dark .theme-pub .gradient-text {
-  background: linear-gradient(135deg, #fdf3d3 0%, #ecd28a 40%, #d4af37 100%);
+  background: linear-gradient(135deg, #fdf3d3 0%, #ecd28a 40%, #b09a7e 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -1014,7 +1014,7 @@ html.dark .theme-pub .bg-ink-700 { background-color: #33281a; }
 /* الحقول */
 html.dark .theme-pub .input {
   background: #1e1710;
-  border-color: rgba(230, 200, 120, 0.28);
+  border-color: rgba(205, 189, 164, 0.28);
   color: #f4ecdc;
 }
 html.dark .theme-pub .input::placeholder { color: #9c8d74; }
@@ -1023,24 +1023,24 @@ html.dark .theme-pub .input::placeholder { color: #9c8d74; }
    أبيض والنص شبه مخفٍ. الآن: زر داكن بإطار ونص ذهبيَين واضحَين */
 html.dark .theme-pub .btn-ghost {
   background: #241b12;
-  border-color: rgba(230, 200, 120, 0.40);
-  color: #f0dca6;
+  border-color: rgba(205, 189, 164, 0.40);
+  color: #e4d8c5;
 }
-@media (hover: hover) { html.dark .theme-pub .btn-ghost:hover { background: rgba(230, 200, 120, 0.12); border-color: #e6c878; } }
+@media (hover: hover) { html.dark .theme-pub .btn-ghost:hover { background: rgba(205, 189, 164, 0.12); border-color: #cdbda4; } }
 /* الزر الأساسي ليلياً: ذهبي مشعّ بنص داكن — أفخم وأوضح من البنّي المطفي */
 html.dark .theme-pub .btn-primary {
-  background: linear-gradient(135deg, #ecd28a 0%, #d4af37 55%, #b8932c 100%);
+  background: linear-gradient(135deg, #ecd28a 0%, #b09a7e 55%, #8a7657 100%);
   color: #1e1710;
-  box-shadow: 0 12px 28px -12px rgba(212, 175, 55, 0.45);
+  box-shadow: 0 12px 28px -12px rgba(176, 154, 126, 0.45);
 }
-@media (hover: hover) { html.dark .theme-pub .btn-primary:hover { background: linear-gradient(135deg, #f4e0a4 0%, #e6c878 55%, #d4af37 100%); } }
+@media (hover: hover) { html.dark .theme-pub .btn-primary:hover { background: linear-gradient(135deg, #f4e0a4 0%, #cdbda4 55%, #b09a7e 100%); } }
 
 /* الحدود البنّية → ذهبية خفيفة */
 html.dark .theme-pub .border-wine\/15,
 html.dark .theme-pub .border-wine\/20,
 html.dark .theme-pub .border-wine\/25,
 html.dark .theme-pub .border-wine\/30,
-html.dark .theme-pub .border-wine\/40 { border-color: rgba(230, 200, 120, 0.30); }
+html.dark .theme-pub .border-wine\/40 { border-color: rgba(205, 189, 164, 0.30); }
 
 /* حدود الذهب المستقلّة (حقول الصور/الفيديو، البطاقات الفرعية، زر التلميح «؟»):
    نهاراً تُقلب لبنّي خفيف، ولم يكن لها مقابل ليلي فتبقى بنّية داكنة على السطح
@@ -1051,22 +1051,22 @@ html.dark .theme-pub .border-gold-400\/20,
 html.dark .theme-pub .border-gold-400\/25,
 html.dark .theme-pub .border-gold-400\/30,
 html.dark .theme-pub .border-gold-400\/40,
-html.dark .theme-pub .border-gold-400\/60 { border-color: rgba(230, 200, 120, 0.30); }
-html.dark .theme-pub .border-gold-400 { border-color: #e6c878; }
+html.dark .theme-pub .border-gold-400\/60 { border-color: rgba(205, 189, 164, 0.30); }
+html.dark .theme-pub .border-gold-400 { border-color: #cdbda4; }
 @media (hover: hover) {
   html.dark .theme-pub .hover\:border-gold-400\/45:hover,
   html.dark .theme-pub .hover\:border-gold-400\/50:hover,
-  html.dark .theme-pub .hover\:border-gold-400\/60:hover { border-color: rgba(230, 200, 120, 0.55); }
+  html.dark .theme-pub .hover\:border-gold-400\/60:hover { border-color: rgba(205, 189, 164, 0.55); }
 }
 
 /* أزرار البنّي الخفيفة (chips/أزرار ثانوية) */
 html.dark .theme-pub .bg-wine\/5,
-html.dark .theme-pub .bg-wine\/10 { background-color: rgba(230, 200, 120, 0.10); }
+html.dark .theme-pub .bg-wine\/10 { background-color: rgba(205, 189, 164, 0.10); }
 /* نقاط سلايدر المتجر تستعمل هذه الدرجات — وبلا مقابلٍ ليليّ كانت تبهت على
    الخلفية الداكنة فلا يُرى إلا الشريط الذهبي المتحرّك بلا مساره. */
-html.dark .theme-pub .bg-wine\/20 { background-color: rgba(230, 200, 120, 0.18); }
-html.dark .theme-pub .bg-wine\/25 { background-color: rgba(230, 200, 120, 0.24); }
-html.dark .theme-pub .hover\:bg-wine\/40:hover { background-color: rgba(230, 200, 120, 0.42); }
+html.dark .theme-pub .bg-wine\/20 { background-color: rgba(205, 189, 164, 0.18); }
+html.dark .theme-pub .bg-wine\/25 { background-color: rgba(205, 189, 164, 0.24); }
+html.dark .theme-pub .hover\:bg-wine\/40:hover { background-color: rgba(205, 189, 164, 0.42); }
 
 /* الفوتر يبقى داكناً (متناسق) — لا تغيير */
 
@@ -1096,8 +1096,8 @@ html.dark .theme-pub .text-wine-dark { color: #ece3d6; }
 html.dark .theme-pub .text-\[\#594335\] { color: #cabdab; }
 /* حدود/فواصل بنّية شفافة → ذهبية خفيفة */
 html.dark .theme-pub .bg-wine\/10,
-html.dark .theme-pub .bg-wine\/15 { background-color: rgba(230, 200, 120, 0.12); }
-html.dark .theme-pub .border-wine\/10 { border-color: rgba(230, 200, 120, 0.18); }
+html.dark .theme-pub .bg-wine\/15 { background-color: rgba(205, 189, 164, 0.12); }
+html.dark .theme-pub .border-wine\/10 { border-color: rgba(205, 189, 164, 0.18); }
 
 /* ===== هياكل التحميل (Skeleton) — لمعان متحرّك بدل دوائر التحميل ===== */
 @keyframes skeleton-sheen {
@@ -1123,7 +1123,7 @@ html.dark .theme-pub .border-wine\/10 { border-color: rgba(230, 200, 120, 0.18);
   background-image: linear-gradient(
     90deg,
     rgba(255, 255, 255, 0) 0%,
-    rgba(212, 175, 55, 0.12) 50%,
+    rgba(176, 154, 126, 0.12) 50%,
     rgba(255, 255, 255, 0) 100%
   );
 }
@@ -1268,10 +1268,10 @@ html.dark .theme-pub .text-indigo-700 { color: #a5b4fc; }
   width: 2.4rem;
   transform: translateX(50%);
   border-radius: 999px;
-  background: linear-gradient(90deg, transparent, #c79a3a, transparent);
+  background: linear-gradient(90deg, transparent, #9c866a, transparent);
 }
 html[dir='ltr'] .bz-title::after { transform: translateX(-50%); }
-html.dark .bz-title { color: #f0dca6; }
+html.dark .bz-title { color: #e4d8c5; }
 
 /* ===== طباعة الفواتير =====
    الفاتورة تُحقن داخل #bz-print-root بالصفحة نفسها (لا إطار مخفيّ — سفاري على
@@ -1326,12 +1326,12 @@ html.dark .bz-title { color: #f0dca6; }
    الدرج منفصلاً عمّا خلفه. */
 .dash-drawer {
   background:
-    radial-gradient(130% 55% at 100% 0%, rgba(212, 175, 55, 0.18), transparent 62%),
+    radial-gradient(130% 55% at 100% 0%, rgba(176, 154, 126, 0.18), transparent 62%),
     linear-gradient(180deg, #4a3628 0%, #3f2e22 42%, #34251b 100%);
 }
 html.dark .dash-drawer {
   background:
-    radial-gradient(130% 55% at 100% 0%, rgba(212, 175, 55, 0.13), transparent 62%),
+    radial-gradient(130% 55% at 100% 0%, rgba(176, 154, 126, 0.13), transparent 62%),
     linear-gradient(180deg, #2b1f17 0%, #241a13 50%, #1b130e 100%);
 }
 
@@ -1372,10 +1372,10 @@ a, button, [role='button'], summary {
   .dash-menu-scroll::-webkit-scrollbar { width: 7px; }
   .dash-menu-scroll::-webkit-scrollbar-track { background: rgba(244, 237, 226, 0.06); border-radius: 99px; }
   .dash-menu-scroll::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, rgba(236, 217, 155, 0.75), rgba(212, 175, 55, 0.65));
+    background: linear-gradient(180deg, rgba(236, 217, 155, 0.75), rgba(176, 154, 126, 0.65));
     border-radius: 99px;
   }
-  .dash-menu-scroll::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #ecd99b, #d4af37); }
+  .dash-menu-scroll::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #e4d8c5, #b09a7e); }
 }
 
 /* ===== سحّاب التمرير في كل الصفحات =====
@@ -1413,7 +1413,7 @@ img, svg { -webkit-user-drag: none; }
   border-radius: 999px;
   background: rgba(244, 237, 226, 0.10);
   color: #f4ede2;
-  box-shadow: inset 0 0 0 1px rgba(230, 200, 120, 0.30);
+  box-shadow: inset 0 0 0 1px rgba(205, 189, 164, 0.30);
   transition: background-color 0.25s ease, box-shadow 0.25s ease, transform 0.15s ease;
 }
 @media (hover: hover) {
@@ -1422,9 +1422,9 @@ img, svg { -webkit-user-drag: none; }
 .bz-bell:active { transform: scale(0.94); }
 /* وجود غير مقروء يستحقّ فرقاً يُرى بلمحة، لا رقماً صغيراً وحده */
 .bz-bell-on {
-  background: linear-gradient(140deg, rgba(230, 200, 120, 0.32), rgba(230, 200, 120, 0.12));
+  background: linear-gradient(140deg, rgba(205, 189, 164, 0.32), rgba(205, 189, 164, 0.12));
   color: #f6e6b6;
-  box-shadow: inset 0 0 0 1px rgba(230, 200, 120, 0.60), 0 0 18px -6px rgba(230, 200, 120, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(205, 189, 164, 0.60), 0 0 18px -6px rgba(205, 189, 164, 0.55);
 }
 
 /* العدّاد: كبسولة تتّسع لثلاثة محارف (99+) بلا أن تتشوّه */
@@ -1461,7 +1461,7 @@ img, svg { -webkit-user-drag: none; }
   position: absolute;
   inset: -2px;
   border-radius: 999px;
-  border: 2px solid rgba(230, 200, 120, 0.85);
+  border: 2px solid rgba(205, 189, 164, 0.85);
   animation: bz-bell-halo 1.4s ease-out forwards;
   pointer-events: none;
 }
@@ -1481,7 +1481,7 @@ img, svg { -webkit-user-drag: none; }
 html.dark .bz-notif-sheet {
   background: #201510;
   color: #f4ede2;
-  box-shadow: 0 28px 70px -20px rgba(0, 0, 0, 0.85), inset 0 0 0 1px rgba(230, 200, 120, 0.14);
+  box-shadow: 0 28px 70px -20px rgba(0, 0, 0, 0.85), inset 0 0 0 1px rgba(205, 189, 164, 0.14);
 }
 
 /* مقبض السحب — إشارة «هذه ورقة تُسحب»، يختفي على الشاشات الكبيرة */
@@ -1499,25 +1499,25 @@ html.dark .bz-notif-grip { background: rgba(244, 237, 226, 0.22); }
 /* الرأس: تدرّج ذهبي خافت وخيط رفيع بدل حدٍّ رمادي — يربط اللوحة بهوية الموقع */
 .bz-notif-head {
   border-bottom: 1px solid rgba(94, 70, 54, 0.10);
-  background: linear-gradient(180deg, rgba(230, 200, 120, 0.12), transparent);
+  background: linear-gradient(180deg, rgba(205, 189, 164, 0.12), transparent);
 }
 html.dark .bz-notif-head {
-  border-bottom-color: rgba(230, 200, 120, 0.16);
-  background: linear-gradient(180deg, rgba(230, 200, 120, 0.09), transparent);
+  border-bottom-color: rgba(205, 189, 164, 0.16);
+  background: linear-gradient(180deg, rgba(205, 189, 164, 0.09), transparent);
 }
 .bz-notif-headico {
-  background: linear-gradient(140deg, #e6c878, #c9a94f);
+  background: linear-gradient(140deg, #cdbda4, #c9a94f);
   color: #3a2a1c;
-  box-shadow: 0 4px 12px -4px rgba(201, 169, 79, 0.7);
+  box-shadow: 0 4px 12px -4px rgba(150, 128, 95, 0.7);
 }
-html.dark .bz-notif-headico { box-shadow: 0 4px 14px -4px rgba(230, 200, 120, 0.55); }
+html.dark .bz-notif-headico { box-shadow: 0 4px 14px -4px rgba(205, 189, 164, 0.55); }
 
 .bz-notif-foot {
   border-top: 1px solid rgba(94, 70, 54, 0.10);
   background: rgba(94, 70, 54, 0.03);
 }
 html.dark .bz-notif-foot {
-  border-top-color: rgba(230, 200, 120, 0.14);
+  border-top-color: rgba(205, 189, 164, 0.14);
   background: rgba(255, 255, 255, 0.03);
 }
 
@@ -1534,7 +1534,7 @@ html.dark .bz-notif-time { color: rgba(203, 187, 156, 0.65); }
   color: #a08e6a;
   letter-spacing: 0.04em;
 }
-html.dark .bz-notif-day { color: rgba(230, 200, 120, 0.62); }
+html.dark .bz-notif-day { color: rgba(205, 189, 164, 0.62); }
 
 /* ───── المرشّح (الكل / غير المقروء) ───── */
 .bz-seg {
@@ -1563,9 +1563,9 @@ html.dark .bz-seg-btn { color: rgba(203, 187, 156, 0.72); }
   box-shadow: 0 1px 4px -1px rgba(94, 70, 54, 0.28);
 }
 html.dark .bz-seg-on {
-  background: rgba(230, 200, 120, 0.20);
+  background: rgba(205, 189, 164, 0.20);
   color: #f6e6b6;
-  box-shadow: inset 0 0 0 1px rgba(230, 200, 120, 0.30);
+  box-shadow: inset 0 0 0 1px rgba(205, 189, 164, 0.30);
 }
 .bz-seg-count {
   min-width: 16px;
@@ -1580,10 +1580,10 @@ html.dark .bz-seg-on {
 
 /* زر «تعليم الكل» */
 .bz-notif-act { color: rgba(94, 70, 54, 0.72); }
-html.dark .bz-notif-act { color: #e6c878; }
+html.dark .bz-notif-act { color: #cdbda4; }
 @media (hover: hover) {
   .bz-notif-act:hover { background: rgba(94, 70, 54, 0.08); }
-  html.dark .bz-notif-act:hover { background: rgba(230, 200, 120, 0.12); }
+  html.dark .bz-notif-act:hover { background: rgba(205, 189, 164, 0.12); }
 }
 
 /* زر الإغلاق: variant="wine" مصنوعٌ للنوافذ الفاتحة، وعلى الخلفية الليلية
@@ -1610,18 +1610,18 @@ html.dark .bz-notif-item:active { background: rgba(255, 255, 255, 0.08); }
 
 /* غير المقروء: شريطٌ ذهبي على الحافّة البادئة + مسحة خفيفة. الشريط يُقرأ
    بلمحة العين على طول القائمة — أوضح من نقطةٍ صغيرة وحدها. */
-.bz-notif-unread { background: rgba(230, 200, 120, 0.10); }
-html.dark .bz-notif-unread { background: rgba(230, 200, 120, 0.07); }
+.bz-notif-unread { background: rgba(205, 189, 164, 0.10); }
+html.dark .bz-notif-unread { background: rgba(205, 189, 164, 0.07); }
 .bz-notif-unread::before {
   content: '';
   position: absolute;
   inset-block: 0;
   inset-inline-start: 0;
   width: 3px;
-  background: linear-gradient(180deg, #e6c878, #c9a94f);
+  background: linear-gradient(180deg, #cdbda4, #c9a94f);
 }
 /* ليلاً الذهب الصريح يصرخ على الخلفية الداكنة — نخفّه قليلاً */
-html.dark .bz-notif-unread::before { background: linear-gradient(180deg, rgba(230, 200, 120, 0.75), rgba(201, 169, 79, 0.55)); }
+html.dark .bz-notif-unread::before { background: linear-gradient(180deg, rgba(205, 189, 164, 0.75), rgba(150, 128, 95, 0.55)); }
 /* دخول الصفوف بتتابعٍ خفيف عند فتح اللوحة */
 .bz-notif-in { animation: bz-notif-in 0.28s ease-out both; }
 @keyframes bz-notif-in {
@@ -1633,14 +1633,14 @@ html.dark .bz-notif-unread::before { background: linear-gradient(180deg, rgba(23
 .bz-notif-ico { box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05); }
 html.dark .bz-notif-ico { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07); }
 
-.bz-tone-gold   { background: rgba(201, 169, 79, 0.18);  color: #96751c; }
+.bz-tone-gold   { background: rgba(150, 128, 95, 0.18);  color: #6f5e42; }
 .bz-tone-amber  { background: rgba(217, 119, 6, 0.14);   color: #b45309; }
 .bz-tone-red    { background: rgba(217, 45, 32, 0.13);   color: #b42318; }
 .bz-tone-teal   { background: rgba(13, 148, 136, 0.13);  color: #0f766e; }
 .bz-tone-pink   { background: rgba(219, 39, 119, 0.12);  color: #be185d; }
 .bz-tone-violet { background: rgba(124, 58, 237, 0.12);  color: #6d28d9; }
 
-html.dark .bz-tone-gold   { background: rgba(230, 200, 120, 0.16); color: #ecd08a; }
+html.dark .bz-tone-gold   { background: rgba(205, 189, 164, 0.16); color: #ecd08a; }
 html.dark .bz-tone-amber  { background: rgba(251, 191, 36, 0.14);  color: #fcd34d; }
 html.dark .bz-tone-red    { background: rgba(248, 113, 113, 0.14); color: #fca5a5; }
 html.dark .bz-tone-teal   { background: rgba(45, 212, 191, 0.14);  color: #5eead4; }
@@ -1649,11 +1649,11 @@ html.dark .bz-tone-violet { background: rgba(167, 139, 250, 0.15); color: #c4b5f
 
 /* ───── حالات أخرى ───── */
 .bz-notif-empty {
-  background: linear-gradient(140deg, rgba(230, 200, 120, 0.24), rgba(230, 200, 120, 0.06));
-  color: #b89a52;
-  box-shadow: inset 0 0 0 1px rgba(230, 200, 120, 0.30);
+  background: linear-gradient(140deg, rgba(205, 189, 164, 0.24), rgba(205, 189, 164, 0.06));
+  color: #8e7a5e;
+  box-shadow: inset 0 0 0 1px rgba(205, 189, 164, 0.30);
 }
-html.dark .bz-notif-empty { color: #e6c878; box-shadow: inset 0 0 0 1px rgba(230, 200, 120, 0.22); }
+html.dark .bz-notif-empty { color: #cdbda4; box-shadow: inset 0 0 0 1px rgba(205, 189, 164, 0.22); }
 
 .bz-notif-skel { background: rgba(94, 70, 54, 0.06); }
 html.dark .bz-notif-skel { background: rgba(255, 255, 255, 0.05); }
@@ -1726,7 +1726,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
    كل لونٍ هنا من لوحة الموقع نفسها ولا لون خارجها:
      الخمري   #3f2e22 · #5e4636 · #8a6a4f      (wine dark/DEFAULT/light)
      الكريمي  #F4EDE2                            (cream)
-     الذهبي   #d4af37 · #e0c25f · #ecd99b · #f6edcf  (gold 400/300/200/100)
+     الذهبي   #b09a7e · #c6b499 · #e4d8c5 · #f2ebdf  (gold 400/300/200/100)
    لا وضعَ ليليّ منفصل: الصفحة خمريّة داكنة أصلاً بالوضعين — هي «الغلاف»
    الفاخر للمنصّة، وقلبها لا ينقلب بتبديل الثيم. */
 
@@ -1743,10 +1743,10 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   --w-light: #8a6a4f;
   --cream: #F4EDE2;
   --sand: #efe3cf;
-  --gold: #d4af37;
-  --gold-2: #e0c25f;
-  --gold-3: #ecd99b;
-  --champagne: #f7e9c4;
+  --gold: #b09a7e;
+  --gold-2: #c6b499;
+  --gold-3: #e4d8c5;
+  --champagne: #f2ece1;
   background: var(--w-dark);
   color: var(--cream);
   overflow-x: clip;
@@ -1764,7 +1764,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   overflow: hidden;
   padding-bottom: 2rem;
   background:
-    radial-gradient(120% 80% at 50% -10%, rgba(212, 175, 55, 0.20), transparent 55%),
+    radial-gradient(120% 80% at 50% -10%, rgba(176, 154, 126, 0.20), transparent 55%),
     radial-gradient(100% 70% at 50% 115%, rgba(138, 106, 79, 0.45), transparent 62%),
     linear-gradient(165deg, #4a3521 0%, #33241a 42%, var(--espresso) 100%);
 }
@@ -1851,7 +1851,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   position: absolute;
   inset: -20px;
   border-radius: 999px;
-  background: conic-gradient(from 0deg, transparent, rgba(212, 175, 55, 0.55), transparent 62%);
+  background: conic-gradient(from 0deg, transparent, rgba(176, 154, 126, 0.55), transparent 62%);
   animation: bz-spin 9s linear infinite;
 }
 .bz-logo-halo {
@@ -1906,9 +1906,9 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   display: block;
   height: 1px;
   width: 2.75rem;
-  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.7));
+  background: linear-gradient(90deg, transparent, rgba(176, 154, 126, 0.7));
 }
-.bz-divider > span:last-child { background: linear-gradient(270deg, transparent, rgba(212, 175, 55, 0.7)); }
+.bz-divider > span:last-child { background: linear-gradient(270deg, transparent, rgba(176, 154, 126, 0.7)); }
 
 .bz-hero-sub {
   margin-top: 1.2rem;
@@ -1955,7 +1955,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   align-items: center;
   gap: 0.4rem;
   border-radius: 999px;
-  border: 1px solid rgba(212, 175, 55, 0.26);
+  border: 1px solid rgba(176, 154, 126, 0.26);
   background: rgba(244, 237, 226, 0.06);
   padding: 0.42rem 0.85rem;
   font-size: 0.78rem;
@@ -2069,7 +2069,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   background: #fff;
   box-shadow: 0 10px 30px -22px rgba(63, 46, 34, 0.5);
 }
-@media (hover: hover) { .bz-sec-light .bz-card:hover { border-color: rgba(212, 175, 55, 0.55); } }
+@media (hover: hover) { .bz-sec-light .bz-card:hover { border-color: rgba(176, 154, 126, 0.55); } }
 .bz-sec-light .bz-card-ico {
   background: rgba(63, 46, 34, 0.07);
   color: #5e4636;
@@ -2084,8 +2084,8 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
 }
 .bz-sec-light .bz-quote-t { color: rgba(63, 46, 34, 0.84); }
 .bz-sec-light .bz-quote-by { color: var(--w-dark); border-top-color: rgba(63, 46, 34, 0.12); }
-.bz-sec-light .bz-quote-mark { color: rgba(212, 175, 55, 0.45); }
-.bz-sec-light .bz-quote-av { background: rgba(212, 175, 55, 0.2); color: #a37d22; }
+.bz-sec-light .bz-quote-mark { color: rgba(176, 154, 126, 0.45); }
+.bz-sec-light .bz-quote-av { background: rgba(176, 154, 126, 0.2); color: #7a6749; }
 
 .bz-eyebrow {
   font-size: 0.7rem;
@@ -2136,13 +2136,13 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
 .bz-card {
   height: 100%;
   border-radius: 1.25rem;
-  border: 1px solid rgba(212, 175, 55, 0.16);
+  border: 1px solid rgba(176, 154, 126, 0.16);
   background: linear-gradient(160deg, rgba(244, 237, 226, 0.07), rgba(244, 237, 226, 0.02));
   padding: 1.4rem;
   transition: transform 0.25s ease, border-color 0.25s ease, background-color 0.25s ease;
 }
 @media (hover: hover) {
-  .bz-card:hover { transform: translateY(-3px); border-color: rgba(212, 175, 55, 0.4); }
+  .bz-card:hover { transform: translateY(-3px); border-color: rgba(176, 154, 126, 0.4); }
 }
 .bz-card-ico {
   display: grid;
@@ -2176,7 +2176,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
     inset-inline: 12%;
     top: 1.6rem;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.34) 12%, rgba(212, 175, 55, 0.34) 88%, transparent);
+    background: linear-gradient(90deg, transparent, rgba(176, 154, 126, 0.34) 12%, rgba(176, 154, 126, 0.34) 88%, transparent);
   }
 }
 .bz-node { position: relative; text-align: center; padding-inline: 0.5rem; }
@@ -2206,7 +2206,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   font-size: 0.68rem;
   font-weight: 800;
   color: var(--gold-3);
-  box-shadow: inset 0 0 0 1px rgba(212, 175, 55, 0.45);
+  box-shadow: inset 0 0 0 1px rgba(176, 154, 126, 0.45);
 }
 .bz-node-t { margin-top: 1.15rem; font-size: 1.14rem; font-weight: 800; color: var(--cream); }
 .bz-node-d {
@@ -2230,7 +2230,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   height: 100%;
   overflow: hidden;
   border-radius: 1.35rem;
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  border: 1px solid rgba(176, 154, 126, 0.2);
   background: linear-gradient(155deg, rgba(244, 237, 226, 0.08), rgba(244, 237, 226, 0.02));
   padding: 1.6rem 1.4rem;
 }
@@ -2242,7 +2242,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   font-size: 3.6rem;
   font-weight: 800;
   line-height: 1;
-  color: rgba(212, 175, 55, 0.15);
+  color: rgba(176, 154, 126, 0.15);
   pointer-events: none;
 }
 .bz-step-ico {
@@ -2253,7 +2253,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   border-radius: 999px;
   background: linear-gradient(140deg, var(--gold-3), var(--gold));
   color: var(--w-dark);
-  box-shadow: 0 10px 24px -10px rgba(212, 175, 55, 0.8);
+  box-shadow: 0 10px 24px -10px rgba(176, 154, 126, 0.8);
 }
 .bz-step-t { margin-top: 1rem; font-size: 1.08rem; font-weight: 800; color: var(--cream); }
 .bz-step-d { margin-top: 0.45rem; font-size: 0.87rem; line-height: 1.75; color: rgba(244, 237, 226, 0.66); }
@@ -2280,7 +2280,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   height: 100%;
   margin: 0;
   border-radius: 1.25rem;
-  border: 1px solid rgba(212, 175, 55, 0.16);
+  border: 1px solid rgba(176, 154, 126, 0.16);
   background: rgba(244, 237, 226, 0.05);
   padding: 1.5rem 1.4rem 1.25rem;
 }
@@ -2290,7 +2290,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   top: 0.1rem;
   font-size: 3rem;
   line-height: 1;
-  color: rgba(212, 175, 55, 0.28);
+  color: rgba(176, 154, 126, 0.28);
 }
 .bz-quote-t {
   margin: 0;
@@ -2304,7 +2304,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  border-top: 1px solid rgba(212, 175, 55, 0.14);
+  border-top: 1px solid rgba(176, 154, 126, 0.14);
   padding-top: 0.9rem;
   font-size: 0.83rem;
   color: var(--cream);
@@ -2317,7 +2317,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   place-items: center;
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(212, 175, 55, 0.18);
+  background: rgba(176, 154, 126, 0.18);
   color: var(--gold-3);
 }
 .bz-quote-av img { height: 100%; width: 100%; object-fit: cover; }
@@ -2328,7 +2328,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   overflow: hidden;
   padding: clamp(4rem, 10vw, 7rem) 1.25rem calc(clamp(4rem, 10vw, 7rem) + env(safe-area-inset-bottom, 0px));
   background:
-    radial-gradient(90% 120% at 50% 0%, rgba(212, 175, 55, 0.17), transparent 62%),
+    radial-gradient(90% 120% at 50% 0%, rgba(176, 154, 126, 0.17), transparent 62%),
     linear-gradient(180deg, #2b1d12 0%, var(--espresso) 100%);
 }
 .bz-cta-ico {
@@ -2456,7 +2456,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   appearance: none;
   height: 6px;
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(244, 237, 226, 0.14), rgba(212, 175, 55, 0.55));
+  background: linear-gradient(90deg, rgba(244, 237, 226, 0.14), rgba(176, 154, 126, 0.55));
   outline: none;
 }
 .bz-range::-webkit-slider-thumb {
@@ -2464,16 +2464,16 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   height: 20px;
   width: 20px;
   border-radius: 999px;
-  background: linear-gradient(140deg, #f6edcf, #d4af37);
+  background: linear-gradient(140deg, #f2ebdf, #b09a7e);
   border: 2px solid #241712;
-  box-shadow: 0 3px 10px -3px rgba(212, 175, 55, 0.9);
+  box-shadow: 0 3px 10px -3px rgba(176, 154, 126, 0.9);
   cursor: pointer;
 }
 .bz-range::-moz-range-thumb {
   height: 18px;
   width: 18px;
   border-radius: 999px;
-  background: linear-gradient(140deg, #f6edcf, #d4af37);
+  background: linear-gradient(140deg, #f2ebdf, #b09a7e);
   border: 2px solid #241712;
   cursor: pointer;
 }
@@ -2503,7 +2503,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   flex-direction: column;
   padding: max(env(safe-area-inset-top), 0.6rem) 1.25rem calc(1.5rem + env(safe-area-inset-bottom, 0px));
   background:
-    radial-gradient(90% 60% at 50% 0%, rgba(212, 175, 55, 0.14), transparent 60%),
+    radial-gradient(90% 60% at 50% 0%, rgba(176, 154, 126, 0.14), transparent 60%),
     linear-gradient(180deg, #2b1d12 0%, var(--espresso, #140d07) 100%);
   animation: bz-menu-in 0.3s ease-out;
 }
@@ -2538,11 +2538,11 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
 @media (hover: hover) {
   .bz-menu-link:hover {
     background: rgba(244, 237, 226, 0.06);
-    color: var(--gold-3, #ecd99b);
+    color: var(--gold-3, #e4d8c5);
     padding-inline-start: 1.4rem;
   }
 }
-.bz-menu-foot { border-top: 1px solid rgba(212, 175, 55, 0.18); padding-top: 1.25rem; }
+.bz-menu-foot { border-top: 1px solid rgba(176, 154, 126, 0.18); padding-top: 1.25rem; }
 
 /* ───────── «اعرف أكثر ↓» ───────── */
 .bz-more {
@@ -2582,7 +2582,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.08em;
-  color: rgba(212, 175, 55, 0.75);
+  color: rgba(176, 154, 126, 0.75);
   font-variant-numeric: tabular-nums;
 }
 .bz-menu-lbl { flex: 1; min-width: 0; }
@@ -2648,7 +2648,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   color: rgba(244, 237, 226, 0.66);
   transition: color 0.2s ease;
 }
-.bz-foot-list svg { flex-shrink: 0; color: rgba(212, 175, 55, 0.7); }
+.bz-foot-list svg { flex-shrink: 0; color: rgba(176, 154, 126, 0.7); }
 @media (hover: hover) { .bz-foot-list a:hover { color: var(--cream); } }
 
 .bz-foot-bar {
@@ -2688,8 +2688,8 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   overflow-x: clip;
   --espresso: #140d07;
   --cream: #F4EDE2;
-  --gold: #d4af37;
-  --gold-3: #ecd99b;
+  --gold: #b09a7e;
+  --gold-3: #e4d8c5;
   display: grid;
   min-height: 100svh;
   grid-template-rows: auto 1fr;
@@ -2706,7 +2706,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   min-width: 0;
   overflow: hidden;
   background:
-    radial-gradient(120% 90% at 50% -20%, rgba(212, 175, 55, 0.16), transparent 58%),
+    radial-gradient(120% 90% at 50% -20%, rgba(176, 154, 126, 0.16), transparent 58%),
     linear-gradient(165deg, #4a3521 0%, #33241a 45%, var(--espresso) 100%);
 }
 .bz-auth-img { position: absolute; inset: 0; background-size: cover; background-position: center; }
@@ -2798,7 +2798,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   border-radius: 1.75rem;
   background: linear-gradient(180deg, #fffdf8 0%, #f7f0e4 100%);
   padding: 1.75rem 1.4rem 1.6rem;
-  box-shadow: 0 30px 70px -30px rgba(0, 0, 0, 0.85), inset 0 0 0 1px rgba(212, 175, 55, 0.14);
+  box-shadow: 0 30px 70px -30px rgba(0, 0, 0, 0.85), inset 0 0 0 1px rgba(176, 154, 126, 0.14);
 }
 @media (min-width: 640px) { .bz-auth-card { padding: 2.1rem 2rem 1.9rem; } }
 /* على الجوّال: ورقةٌ بعرض الشاشة تطلع من تحت لوح الهوية — بلا إطارٍ حولها */
@@ -2811,7 +2811,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
     border-radius: 2rem 2rem 0 0;
     flex: 1;
     padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
-    box-shadow: 0 -14px 40px -22px rgba(0, 0, 0, 0.8), inset 0 1px 0 0 rgba(212, 175, 55, 0.16);
+    box-shadow: 0 -14px 40px -22px rgba(0, 0, 0, 0.8), inset 0 1px 0 0 rgba(176, 154, 126, 0.16);
   }
   .bz-auth-form { align-items: stretch; }
 }
@@ -2879,8 +2879,8 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
 .bz-af-input::placeholder { color: rgba(63, 46, 34, 0.34); }
 .bz-af-input:focus {
   outline: none;
-  border-color: rgba(212, 175, 55, 0.7);
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.16);
+  border-color: rgba(176, 154, 126, 0.7);
+  box-shadow: 0 0 0 3px rgba(176, 154, 126, 0.16);
 }
 .bz-af-input[aria-invalid='true'] { border-color: rgba(180, 35, 24, 0.55); }
 
@@ -2907,9 +2907,9 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
 
 html.dark .theme-pub .bz-feat {
   background: rgba(255, 255, 255, 0.04);
-  box-shadow: inset 0 0 0 1px rgba(240, 220, 166, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(228, 216, 197, 0.14);
 }
-html.dark .theme-pub .bz-feat-ico { background: rgba(240, 220, 166, 0.12); color: #f0dca6; }
+html.dark .theme-pub .bz-feat-ico { background: rgba(228, 216, 197, 0.12); color: #e4d8c5; }
 
 /* ───── الوضع الخفيف يشمل صفحة المنصّة وصفحات الحساب ─────
    أُضيفت بعد bz-lite فلم تكن تحترمه: توهّجاتها الضبابية وضبابية الشريط
@@ -2940,7 +2940,7 @@ html.dark .theme-pub .bz-feat-ico { background: rgba(240, 220, 166, 0.12); color
 /* توهّجٌ واحد ساكن بدل ثلاث فقاعات متحرّكة */
 .bz-sh-glow {
   background:
-    radial-gradient(70% 90% at 24% -10%, rgba(212, 175, 55, 0.16), transparent 62%),
+    radial-gradient(70% 90% at 24% -10%, rgba(176, 154, 126, 0.16), transparent 62%),
     radial-gradient(60% 80% at 88% 112%, rgba(138, 106, 79, 0.34), transparent 60%);
 }
 
@@ -2973,7 +2973,7 @@ html.dark .theme-pub .bz-feat-ico { background: rgba(240, 220, 166, 0.12); color
   display: block;
   height: 1px;
   width: 1.4rem;
-  background: rgba(212, 175, 55, 0.8);
+  background: rgba(176, 154, 126, 0.8);
 }
 
 /* الزرّ: عاجيّ صلب — نفس زرّ صفحة المنصّة */
@@ -3006,7 +3006,7 @@ html.dark .theme-pub .bz-feat-ico { background: rgba(240, 220, 166, 0.12); color
 }
 /* المميّز: خطٌّ ذهبيّ علويّ واحد — الإشارة الوحيدة التي تعني شيئاً */
 .bz-storecard-top {
-  box-shadow: 0 6px 22px -12px rgba(94, 70, 54, 0.26), inset 0 0 0 1px rgba(212, 175, 55, 0.4), inset 0 3px 0 0 #d4af37;
+  box-shadow: 0 6px 22px -12px rgba(94, 70, 54, 0.26), inset 0 0 0 1px rgba(176, 154, 126, 0.4), inset 0 3px 0 0 #b09a7e;
 }
 .bz-storecard-logo { box-shadow: 0 6px 18px -8px rgba(94, 70, 54, 0.35), inset 0 0 0 1px rgba(94, 70, 54, 0.10); }
 
@@ -3015,11 +3015,11 @@ html.dark .theme-pub .bz-feat-ico { background: rgba(240, 220, 166, 0.12); color
 
 html.dark .theme-pub .bz-storecard {
   background: rgba(255, 255, 255, 0.04);
-  box-shadow: inset 0 0 0 1px rgba(240, 220, 166, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(228, 216, 197, 0.14);
 }
-html.dark .theme-pub .bz-storecard-top { box-shadow: inset 0 0 0 1px rgba(212, 175, 55, 0.42), inset 0 3px 0 0 #d4af37; }
-html.dark .theme-pub .bz-storecard-logo { box-shadow: inset 0 0 0 1px rgba(240, 220, 166, 0.2); }
-html.dark .theme-pub .bz-softico { background: rgba(240, 220, 166, 0.12); color: #f0dca6; }
+html.dark .theme-pub .bz-storecard-top { box-shadow: inset 0 0 0 1px rgba(176, 154, 126, 0.42), inset 0 3px 0 0 #b09a7e; }
+html.dark .theme-pub .bz-storecard-logo { box-shadow: inset 0 0 0 1px rgba(228, 216, 197, 0.2); }
+html.dark .theme-pub .bz-softico { background: rgba(228, 216, 197, 0.12); color: #e4d8c5; }
 
 /* شارات بطاقة المنتج: لونان لا أربعة.
    كانت بنّياً وأخضر وذهبياً وخمرياً (#8a2438 من خارج اللوحة) على بطاقةٍ
@@ -3039,12 +3039,12 @@ html.dark .theme-pub .bz-softico { background: rgba(240, 220, 166, 0.12); color:
 
 /* شريط تقدّم (الشحن المجاني بالسلة): ذهبٌ مصمت لا تدرّجٌ بين درجتين.
    التدرّج على شريطٍ بعرض 4px لا يُرى أصلاً — يُضيف كلفةً بلا أثر. */
-.bz-progress { background: #d4af37; }
+.bz-progress { background: #b09a7e; }
 /* مربّع أيقونة محايد على الأسطح الداكنة (الأدراج) */
 .bz-softico-dark {
-  background: rgba(240, 220, 166, 0.10);
-  color: #f0dca6;
-  box-shadow: inset 0 0 0 1px rgba(240, 220, 166, 0.16);
+  background: rgba(228, 216, 197, 0.10);
+  color: #e4d8c5;
+  box-shadow: inset 0 0 0 1px rgba(228, 216, 197, 0.16);
 }
 
 /* ═══════ صفحات المستندات (سياسة الخصوصية وما شابهها) ═══════
@@ -3058,8 +3058,8 @@ html.dark .theme-pub .bz-softico { background: rgba(240, 220, 166, 0.12); color:
 .bz-doc-meta { color: #6b6560; }
 
 html.dark .theme-pub .bz-doc { color: #e6ddcc; }
-html.dark .theme-pub .bz-doc-h1 { color: #f6edcf; }
-html.dark .theme-pub .bz-doc-h2 { color: #ecd99b; }
+html.dark .theme-pub .bz-doc-h1 { color: #f2ebdf; }
+html.dark .theme-pub .bz-doc-h2 { color: #e4d8c5; }
 html.dark .theme-pub .bz-doc-meta { color: rgba(230, 221, 204, 0.62); }
 
 /* ═══════ الدرج الجانبي: ذهبٌ يميّز لا ذهبٌ يعمّ ═══════

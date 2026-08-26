@@ -11,13 +11,13 @@ export default function NotFound() {
       <Seo title="404" />
       <div className="glass animate-fade-up relative w-full max-w-md overflow-hidden p-10 text-center">
         <span className="dash-hairline absolute inset-x-0 top-0" />
-        <span aria-hidden className="mx-auto mb-3 block h-0.5 w-10 rounded-full" style={{ background: 'linear-gradient(90deg, transparent, #c79a3a, transparent)' }} />
+        <span aria-hidden className="mx-auto mb-3 block h-0.5 w-10 rounded-full" style={{ background: 'linear-gradient(90deg, transparent, #9c866a, transparent)' }} />
         <p className="font-display text-7xl font-extrabold gradient-text">404</p>
         <p className="mt-3 text-stone-300">{t('errors.notFound')}</p>
         <div className="mt-7 flex flex-col gap-2.5 sm:flex-row sm:justify-center">
           <Link
             to="/shop"
-            className="inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
+            className="inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
             style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
           >
             <BagIcon className="h-5 w-5" /> {t('co.doneKeepShopping')}

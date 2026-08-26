@@ -173,7 +173,7 @@ export default function Track() {
             <button
               type="submit"
               disabled={busy}
-              className="shrink-0 rounded-full px-6 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110 disabled:opacity-60"
+              className="shrink-0 rounded-full px-6 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110 disabled:opacity-60"
               style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)', boxShadow: '0 12px 26px -12px rgba(20, 13, 7, 0.6)' }}
             >
               {busy ? '…' : t('track.search')}
@@ -227,11 +227,11 @@ export default function Track() {
                             <div key={s} className="flex flex-1 items-center last:flex-none">
                               <div className="flex flex-col items-center">
                                 <span className="relative flex h-9 w-9 items-center justify-center">
-                                  {current && <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#e6c878]/50" style={{ animationDuration: '1.8s' }} />}
+                                  {current && <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#cdbda4]/50" style={{ animationDuration: '1.8s' }} />}
                                   <span
                                     className={`relative flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold transition ${
                                       done ? 'text-cream shadow-md' : 'border border-wine/20 bg-wine/5 text-wine/40'
-                                    } ${current ? 'ring-2 ring-[#e6c878]/70' : ''}`}
+                                    } ${current ? 'ring-2 ring-[#cdbda4]/70' : ''}`}
                                     style={done ? { background: 'linear-gradient(135deg, #6e5340 0%, #5e4636 55%, #3f2e22 100%)' } : undefined}
                                   >
                                     {done ? <CheckIcon className="h-4 w-4" /> : i + 1}
@@ -244,7 +244,7 @@ export default function Track() {
                                   className="mx-1 h-[3px] flex-1 rounded-full"
                                   style={{
                                     background: i < stepIdx
-                                      ? 'linear-gradient(90deg, #5e4636, #b8932c)'
+                                      ? 'linear-gradient(90deg, #5e4636, #8a7657)'
                                       : 'rgba(94, 70, 54, 0.12)',
                                   }}
                                 />

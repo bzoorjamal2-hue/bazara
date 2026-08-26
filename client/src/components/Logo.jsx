@@ -6,9 +6,9 @@ export default function Logo({ className = 'h-9 w-9' }) {
     <svg viewBox="0 0 100 100" className={className} aria-hidden="true">
       <defs>
         <linearGradient id="bazaraGold" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#e6c878" />
-          <stop offset="0.5" stopColor="#d4af37" />
-          <stop offset="1" stopColor="#b8932c" />
+          <stop offset="0" stopColor="#cdbda4" />
+          <stop offset="0.5" stopColor="#b09a7e" />
+          <stop offset="1" stopColor="#8a7657" />
         </linearGradient>
         <radialGradient id="bazaraIvory" cx="0.38" cy="0.3" r="0.95">
           <stop offset="0" stopColor="#FFFDF7" />

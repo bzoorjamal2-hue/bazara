@@ -169,7 +169,7 @@ export default function CampaignManager() {
                   // ذهب صريح بالهيكس: bg-gold-400 تنقلب بنّية نهاراً وتبقى ذهبية ليلاً
                   // مع نصّ عاجي، فيضعف التباين بأحد الوضعين
                   className={`inline-flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-sm font-bold transition ${
-                    on ? 'border-[#d4af37] bg-[#d4af37] text-[#3f2e22] shadow-sm' : 'border-gold-400/25 text-stone-300 hover:bg-gold-400/10 hover:text-gold-200'
+                    on ? 'border-[#b09a7e] bg-[#b09a7e] text-[#3f2e22] shadow-sm' : 'border-gold-400/25 text-stone-300 hover:bg-gold-400/10 hover:text-gold-200'
                   }`}
                 >
                   <d.Icon className="h-4 w-4" /> {d.label}

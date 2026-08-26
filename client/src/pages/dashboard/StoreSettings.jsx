@@ -47,7 +47,7 @@ function ProgressRing({ pct }) {
         />
         <defs>
           <linearGradient id="bz-progress" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#e6c878" /><stop offset="100%" stopColor="#b8932c" />
+            <stop offset="0%" stopColor="#cdbda4" /><stop offset="100%" stopColor="#8a7657" />
           </linearGradient>
         </defs>
       </svg>
@@ -75,7 +75,7 @@ const SECTIONS = [
 
 const EMPTY = {
   name: '', slug: '', description: '', logoUrl: '', phone: '', whatsapp: '', deliveryPhone: '',
-  instagram: '', facebook: '', tiktok: '', themeColor: '#d4af37', deliveryInfo: '', paymentInfo: '', banners: [],
+  instagram: '', facebook: '', tiktok: '', themeColor: '#b09a7e', deliveryInfo: '', paymentInfo: '', banners: [],
 };
 
 // شرايح افتراضية يقترحها النظام عند عدم وجود بانرات (يقدر المالك يعدّلها أو يحذفها)
@@ -173,7 +173,7 @@ export default function StoreSettings() {
           ...EMPTY,
           name: s.name || '', slug: s.slug || '', description: s.description || '', logoUrl: s.logoUrl || '',
           phone: s.phone || '', whatsapp: s.whatsapp || '', deliveryPhone: s.deliveryPhone || '', instagram: s.instagram || '',
-          facebook: s.facebook || '', tiktok: s.tiktok || '', themeColor: s.themeColor || '#d4af37',
+          facebook: s.facebook || '', tiktok: s.tiktok || '', themeColor: s.themeColor || '#b09a7e',
           deliveryInfo: s.deliveryInfo || '', paymentInfo: s.paymentInfo || '',
           banners: Array.isArray(s.banners) && s.banners.length ? s.banners : DEFAULT_BANNERS,
           deliveryTiers: s.deliveryTiers && typeof s.deliveryTiers === 'object' ? s.deliveryTiers : { wb: 30, quds: 40, dakhel: 80 },
@@ -448,7 +448,7 @@ export default function StoreSettings() {
         {/* خيط تقدّم رفيع بأسفل الشريط — نسبة الاكتمال حاضرة دوماً أثناء النزول */}
         <span
           // start-0 منطقي: ينمو من بداية السطر بالعربية والإنجليزية على السواء
-          className="pointer-events-none absolute bottom-0 start-0 h-[2px] bg-gradient-to-r from-[#e6c878] to-[#b8932c] transition-[width] duration-700"
+          className="pointer-events-none absolute bottom-0 start-0 h-[2px] bg-gradient-to-r from-[#cdbda4] to-[#8a7657] transition-[width] duration-700"
           style={{ width: `${pct}%` }}
           aria-hidden="true"
         />
@@ -464,7 +464,7 @@ export default function StoreSettings() {
                 // الوضعين. (bg-gold-400/text-wine-dark كانا ينقلبان نهاراً لبنّي على بنّي)
                 className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
                   on
-                    ? 'border-[#d4af37] bg-[#d4af37] text-[#3f2e22]'
+                    ? 'border-[#b09a7e] bg-[#b09a7e] text-[#3f2e22]'
                     : 'border-gold-400/30 bg-gold-400/5 text-stone-300 hover:bg-gold-400/10 hover:text-gold-300'
                 }`}
               >
@@ -482,7 +482,7 @@ export default function StoreSettings() {
           // خمري ممتلئ بالحالتين (التباين مع النص العاجي يبقى عالياً نهاراً وليلاً)؛
           // الفرق بين «فيه تعديل» و«محفوظ» تحمله حلقة ذهبية ونقطة تنبيه لا شفافية اللون
           className={`relative inline-flex shrink-0 items-center gap-1.5 rounded-full bg-wine px-4 py-1.5 text-xs font-bold text-cream shadow-sm transition hover:bg-wine-dark disabled:opacity-60 ${
-            dirty ? 'ring-2 ring-[#d4af37]/60' : ''
+            dirty ? 'ring-2 ring-[#b09a7e]/60' : ''
           }`}
         >
           <SaveIcon className="h-3.5 w-3.5" /> {busy ? t('common.loading') : t('common.save')}
@@ -719,7 +719,7 @@ export default function StoreSettings() {
                   <button
                     key={p} type="button" onClick={() => setVal('flashPercent', String(p))}
                     className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold transition ${
-                      String(form.flashPercent) === String(p) ? 'border-[#d4af37] bg-[#d4af37] text-[#3f2e22]' : 'border-gold-400/25 bg-gold-400/5 text-stone-300 hover:bg-gold-400/15'
+                      String(form.flashPercent) === String(p) ? 'border-[#b09a7e] bg-[#b09a7e] text-[#3f2e22]' : 'border-gold-400/25 bg-gold-400/5 text-stone-300 hover:bg-gold-400/15'
                     }`}
                   >
                     {p}%

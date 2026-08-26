@@ -188,7 +188,7 @@ function SubRow({ s, onDeleted, onUpdated, onOpen }) {
   };
 
   const statusBadge = s.isAdmin ? (
-    <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold shadow-sm" style={{ background: '#d4af37', color: '#2a1c10' }}>
+    <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold shadow-sm" style={{ background: '#b09a7e', color: '#2a1c10' }}>
       <CrownIcon className="h-3.5 w-3.5" /> {t('admin.statusAdmin')}
     </span>
   ) : s.active ? (
@@ -544,7 +544,7 @@ export default function SubscribersManager() {
                 onClick={() => setFilter(c.key)}
                 className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${filter === c.key ? 'shadow-sm' : 'border border-gold-400/25 text-stone-300 hover:bg-gold-400/10'}`}
                 // لونان صريحان للحالة النشطة: أصناف الذهب تنقلب بنّية نهاراً
-                style={filter === c.key ? { background: '#d4af37', color: '#2a1c10' } : undefined}
+                style={filter === c.key ? { background: '#b09a7e', color: '#2a1c10' } : undefined}
               >
                 {c.label} <span className={filter === c.key ? 'opacity-75' : 'text-stone-400'}>({counts[c.key]})</span>
               </button>

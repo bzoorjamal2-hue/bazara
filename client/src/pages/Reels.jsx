@@ -213,7 +213,7 @@ export default function Reels() {
             onClick={() => setSizeOnly((v) => !v)}
             aria-pressed={sizeOnly}
             className={`pointer-events-auto inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold ring-1 backdrop-blur-sm transition active:scale-95 ${
-              sizeOnly ? 'bg-[#e6c878] text-[#3f2e22] ring-[#e6c878]' : 'bg-black/50 text-white ring-white/20 hover:bg-black/65'
+              sizeOnly ? 'bg-[#cdbda4] text-[#3f2e22] ring-[#cdbda4]' : 'bg-black/50 text-white ring-white/20 hover:bg-black/65'
             }`}
           >
             <RulerGlyph className="h-3.5 w-3.5" />
@@ -236,7 +236,7 @@ export default function Reels() {
           <VideoIcon className="h-14 w-14 text-white/50" />
           <p className="text-lg font-semibold">{sizeOnly ? t('reels.noSizeMatch', { size: sizeLabel(mySize, t) }) : t('reels.empty')}</p>
           {sizeOnly ? (
-            <button onClick={() => setSizeOnly(false)} className="rounded-full bg-[#e6c878] px-5 py-2 text-sm font-bold text-[#3f2e22] transition hover:brightness-105">{t('filters.clear')}</button>
+            <button onClick={() => setSizeOnly(false)} className="rounded-full bg-[#cdbda4] px-5 py-2 text-sm font-bold text-[#3f2e22] transition hover:brightness-105">{t('filters.clear')}</button>
           ) : (
             <button onClick={goBackFn} className="rounded-full bg-white/15 px-5 py-2 text-sm font-semibold backdrop-blur transition hover:bg-white/25">{t('reels.back')}</button>
           )}
@@ -292,7 +292,7 @@ export default function Reels() {
           {items.length > 1 && (
             <div className="pointer-events-none absolute start-2 top-1/2 z-30 h-32 w-[3px] -translate-y-1/2 overflow-hidden rounded-full bg-white/15">
               <div
-                className="absolute inset-x-0 h-6 rounded-full bg-gradient-to-b from-[#e6c878] to-white/90 transition-[top] duration-300 ease-out"
+                className="absolute inset-x-0 h-6 rounded-full bg-gradient-to-b from-[#cdbda4] to-white/90 transition-[top] duration-300 ease-out"
                 style={{ top: `${(active / Math.max(1, items.length - 1)) * (128 - 24)}px` }}
               />
             </div>
@@ -776,7 +776,7 @@ function ReelPlayer({ product: p, muted, t, onUnmute, onEnded, isLast, showHint,
       <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col gap-2 p-4 pe-16 pb-[calc(env(safe-area-inset-bottom,0px)+18px)] text-white">
         <Link to={`/store/${p.storeSlug}`} className="inline-flex max-w-fit items-center gap-2 text-sm font-semibold text-white drop-shadow">
           {p.storeLogo ? (
-            <img src={cldThumb(p.storeLogo, 80)} alt="" className="h-7 w-7 shrink-0 rounded-full object-cover ring-2 ring-[#e6c878]/70" />
+            <img src={cldThumb(p.storeLogo, 80)} alt="" className="h-7 w-7 shrink-0 rounded-full object-cover ring-2 ring-[#cdbda4]/70" />
           ) : (
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 text-white"><StoreIcon className="h-4 w-4" /></span>
           )}
@@ -796,7 +796,7 @@ function ReelPlayer({ product: p, muted, t, onUnmute, onEnded, isLast, showHint,
           </button>
         )}
         <div className="flex items-baseline gap-2">
-          <span className="rounded-full bg-black/50 px-3 py-1 font-display text-lg font-extrabold text-gold-200 ring-1 ring-[#e6c878]/30">{t('common.currency')}{p.price}</span>
+          <span className="rounded-full bg-black/50 px-3 py-1 font-display text-lg font-extrabold text-gold-200 ring-1 ring-[#cdbda4]/30">{t('common.currency')}{p.price}</span>
           {hasDiscount && <Strike className="text-sm text-white/70">{t('common.currency')}{p.oldPrice}</Strike>}
           {hasDiscount && <span className="rounded-full bg-emerald-600/85 px-2 py-0.5 text-[11px] font-bold text-white drop-shadow">{t('product.saveAmount', { amount: `${t('common.currency')}${(p.oldPrice - p.price).toFixed(2).replace(/\.00$/, '')}` })}</span>}
         </div>
