@@ -204,7 +204,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
             <TagIcon className="h-5 w-5" />
           </span>
           <div className="min-w-0 flex-1">
-            <h2 className="gradient-text font-display text-lg font-bold leading-tight sm:text-xl">
+            <h2 className="dash-stat text-lg font-bold leading-tight sm:text-xl">
               {isEdit ? t('dashboard.product.editTitle') : t('dashboard.product.newTitle')}
             </h2>
             <p className="mt-0.5 truncate text-[11px] text-stone-400">

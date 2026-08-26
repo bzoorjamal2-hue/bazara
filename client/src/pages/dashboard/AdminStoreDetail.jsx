@@ -100,7 +100,7 @@ export default function AdminStoreDetail({ slug, onClose }) {
               : <StoreIcon className="h-5 w-5" />}
           </span>
           <div className="min-w-0 flex-1">
-            <h2 className="gradient-text truncate font-display text-lg font-bold leading-tight">
+            <h2 className="dash-stat truncate text-lg font-bold leading-tight">
               {data?.store?.name || t('admin.storeDetail')}
             </h2>
             {data && <p className="mt-0.5 truncate text-[11px] text-stone-400">{data.owner.name} · {data.owner.email}</p>}
