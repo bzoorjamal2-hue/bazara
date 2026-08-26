@@ -1773,9 +1773,15 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
 }
 /* صورة المدير: مقصوصة تغطيةً بأي مقاس، وتحتها حجابٌ خمريّ كي يبقى النصّ
    مقروءاً مهما كانت الصورة فاتحةً أو مزدحمة. */
+/* صارت <img> لا <div> بخلفية — فتحتاج ملءَ الإطار قصّاً كالفيديو تماماً.
+   (background-size/position مُبقاةٌ للفيديو ولأيّ استعمالٍ قديمٍ متبقٍّ.) */
 .bz-hero-img {
   position: absolute;
   inset: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: center;
   background-size: cover;
   background-position: center;
 }

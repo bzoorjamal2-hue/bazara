@@ -12,6 +12,26 @@
         } catch (e) {}
       })();
     </script>
+    <!-- صورة الهيرو تبدأ الآن، لا بعد الحزمة.
+         رابطها يأتي من /public/site-info، أي بعد تحميل JS وتنفيذه ونداء الشبكة:
+         أربعُ جولاتٍ متسلسلة قبل أن يبدأ تنزيلُ الصورة — فيُرى البنّي أوّلاً ثمّ
+         تظهر. لكنّ الرابط نفسه لا يتغيّر إلا حين يبدّله المدير، فنحفظه من
+         الزيارة السابقة ونحقن preload هنا: يبدأ التنزيل موازياً للحزمة.
+         أوّلُ زيارةٍ وحدها تبقى بلا هذا (لا رابط محفوظ بعد). -->
+    <script>
+      (function () {
+        try {
+          var img = localStorage.getItem('bz_hero_img');
+          if (!img || !/^https?:\/\//.test(img)) return;
+          var l = document.createElement('link');
+          l.rel = 'preload';
+          l.as = 'image';
+          l.href = img;
+          l.fetchPriority = 'high';
+          document.head.appendChild(l);
+        } catch (e) {}
+      })();
+    </script>
     <!-- بلا ?v= : جدار حماية Vercel (تحدّي DDoS) يحجب الروابط ذات ?query فتُستلم
          صفحة تحدّي بدل الصورة وتختفي أيقونة التطبيق المثبّت. الروابط النظيفة تُخدم
          دائماً كملفات ثابتة. -->

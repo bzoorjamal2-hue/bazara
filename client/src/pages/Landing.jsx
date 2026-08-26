@@ -75,8 +75,15 @@ const STEP_ICONS = [StoreIcon, PackageIcon, SparkleIcon];
 export default function Landing() {
   const { t, i18n } = useTranslation();
   const en = i18n.language === 'en';
+  // الذاكرة تدوم: sessionStorage يُمسح بإغلاق التبويب، فكلُّ فتحةٍ للتطبيق
+  // تبدأ بلا رابطِ صورة — وهي الحالة المشتكى منها. localStorage يبقى، فتُرسم
+  // الصورة من أوّل نبضة وتُحدَّث بالخلفية إن غيّرها المدير.
   const [site, setSite] = useState(() => {
-    try { return JSON.parse(sessionStorage.getItem('bz_landing') || 'null') || {}; } catch { return {}; }
+    try {
+      return JSON.parse(
+        localStorage.getItem('bz_landing') || sessionStorage.getItem('bz_landing') || 'null',
+      ) || {};
+    } catch { return {}; }
   });
   const [scrolled, setScrolled] = useState(false);
   const [menu, setMenu] = useState(false);
@@ -112,6 +119,14 @@ export default function Landing() {
         const s = { landing: r.data?.landing || {}, stats: r.data?.stats || null };
         setSite(s);
         try { sessionStorage.setItem('bz_landing', JSON.stringify(s)); } catch { /* ممتلئ */ }
+        try {
+          localStorage.setItem('bz_landing', JSON.stringify(s));
+          // رابطُ الصورة بمفتاحٍ منفصل: السكربتُ الذي يسبق React بالـHTML
+          // يقرأه ويحقن preload، فيبدأ التحميلُ موازياً للحزمة لا بعدها.
+          const img = s.landing?.hero?.image || '';
+          if (img) localStorage.setItem('bz_hero_img', img);
+          else localStorage.removeItem('bz_hero_img');
+        } catch { /* ممتلئ */ }
       })
       .catch(() => { /* الصفحة كاملة بنصوصها الأصلية بلا الخادم */ });
   }, []);
@@ -160,8 +175,19 @@ export default function Landing() {
             الفيديو صامتٌ ويعمل داخل الصفحة (playsInline) — بلا ذلك يفتحه iOS
             بمشغّلٍ ملء الشاشة فوق الموقع. والصورة غلافُه (poster) فتظهر فوراً
             ريثما يُحمّل، ويبقى شيءٌ إن تعذّر تشغيله. */}
+        {/* صورةٌ حقيقية لا خلفيةَ CSS: خلفيةُ CSS يكتشفها المتصفّح متأخّراً —
+            لا يراها ماسحُ التحميل المسبق بالـHTML، ولا تبدأ إلا بعد أن تُرسم
+            العقدة ويُحسب نمطها، أي بعد الحزمة كلّها. و<img> يراه الماسح ويقبل
+            fetchpriority فيتقدّم طابور التحميل. */}
         {hero.image && !hero.video && (
-          <div className="bz-hero-img" style={{ backgroundImage: `url(${hero.image})` }} aria-hidden="true" />
+          <img
+            className="bz-hero-img"
+            src={hero.image}
+            alt=""
+            aria-hidden="true"
+            fetchpriority="high"
+            decoding="async"
+          />
         )}
         {hero.video && (
           <video

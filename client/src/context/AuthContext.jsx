@@ -15,6 +15,13 @@ export function AuthProvider({ children }) {
   // داخل نداءٍ جارٍ ولا يجوز أن تنتظر إعادة رسم.
   const loggedOut = useRef(false);
 
+  // «خارجٌ الآن»: بين مسحِ المستخدم ووصولِ المسار الجديد تمرّ رسمةٌ يكون فيها
+  // المستخدم فارغاً والمسارُ ما يزال صفحةً محميّة — فيرسم حارسُها <Navigate>
+  // إلى /login، ويُنفَّذ أثرُه بعد انتقالنا فيسحبنا إلى شاشة الدخول. ولا يكفي
+  // ترتيبُ الاستدعاءات: تحديثُ المسار وتحديثُ الحالة لا يقعان بدفعةٍ واحدة.
+  // فبدل مطاردة الترتيب، نُعلن الحالة: الحرّاس لا يوجّهون أحداً أثناءها.
+  const [loggingOut, setLoggingOut] = useState(false);
+
   const refresh = useCallback(async () => {
     try {
       const { data } = await api.get('/auth/me');
@@ -62,6 +69,7 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     // نُفرِغ محلياً أوّلاً فلا تعلّق الواجهة على خادمٍ نائم…
     loggedOut.current = true;
+    setLoggingOut(true);
     clearAuthToken();
     setUser(null);
     setStore(null);
@@ -74,6 +82,8 @@ export function AuthProvider({ children }) {
         new Promise((r) => setTimeout(r, 2500)),
       ]);
     } catch { /* الجلسة المحلية مُفرَّغة والحارس أعلاه يمنع الاستعادة */ }
+    // انتهى الانتقال: يعود الحرّاس لعملهم الطبيعيّ
+    setLoggingOut(false);
   };
 
   const updateProfile = async (payload) => {
@@ -83,7 +93,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, store, subscription, loading, login, loginWithCode, register, logout, refresh, updateProfile, setStore }}>
+    <AuthContext.Provider value={{ user, store, subscription, loading, loggingOut, login, loginWithCode, register, logout, refresh, updateProfile, setStore }}>
       {children}
     </AuthContext.Provider>
   );
