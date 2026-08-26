@@ -6,7 +6,7 @@ import { PageHead, SectionHead, Field, Tip } from '../../components/FormField.js
 import ImageInput from '../../components/ImageInput.jsx';
 import {
   HomeIcon, SparkleIcon, CheckIcon, TrashIcon, PlusIcon, VideoIcon,
-  EyeIcon, EyeOffIcon, ImageIcon, GridIcon, NoteIcon, UsersIcon,
+  EyeIcon, EyeOffIcon, ImageIcon, GridIcon, NoteIcon, UsersIcon, MailIcon,
 } from '../../components/icons.jsx';
 
 // محرّر صفحة الواجهة — أوّل ما يراه الزائر من جوجل أو من رابطٍ بإنستغرام.
