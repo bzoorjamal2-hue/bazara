@@ -176,7 +176,7 @@ export default function Track() {
               type="submit"
               disabled={busy}
               className="shrink-0 rounded-full px-6 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110 disabled:opacity-60"
-              style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)', boxShadow: '0 12px 26px -12px rgba(74, 19, 34, 0.6)' }}
+              style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)', boxShadow: '0 12px 26px -12px rgba(20, 13, 7, 0.6)' }}
             >
               {busy ? '…' : t('track.search')}
             </button>

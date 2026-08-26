@@ -369,7 +369,7 @@ export default function CartDrawer() {
                 to={doneStore ? `/track?store=${doneStore}` : '/track'}
                 onClick={close}
                 className="w-full rounded-full py-3.5 text-center font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
-                style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)' }}
+                style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
               >
                 {t('co.doneTrack')}
               </Link>
@@ -387,7 +387,7 @@ export default function CartDrawer() {
             <button
               onClick={close}
               className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
-              style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)' }}
+              style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
             >
               {t('co.doneKeepShopping')}
             </button>
@@ -476,7 +476,7 @@ export default function CartDrawer() {
                   <button
                     onClick={() => { setErr(''); setView('checkout'); }}
                     className="flex w-full items-center justify-center gap-1.5 rounded-full py-4 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
-                    style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)', boxShadow: '0 16px 34px -14px rgba(74, 19, 34, 0.65)' }}
+                    style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)', boxShadow: '0 16px 34px -14px rgba(20, 13, 7, 0.65)' }}
                   >
                     {t('cart.proceed')} <ForwardIcon className="h-4 w-4" />
                   </button>

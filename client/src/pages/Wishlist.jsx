@@ -104,7 +104,7 @@ export default function Wishlist() {
           <div className="glass flex flex-col items-center gap-4 p-12 text-center text-stone-400">
             <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-wine/12 to-gold-400/15 text-wine ring-1 ring-gold-400/40"><HeartIcon className="h-8 w-8" filled /></span>
             <p>{t('wishlist.sharedGone')}</p>
-            <Link to="/shop" className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110" style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)' }}>
+            <Link to="/shop" className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110" style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}>
               {t('co.doneKeepShopping')}
             </Link>
           </div>
@@ -115,7 +115,7 @@ export default function Wishlist() {
               {shared.map((p, i) => <ProductCard key={p.id} product={p} index={i} whatsapp={p.storeWhatsapp || p.whatsapp} />)}
             </div>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-              <button onClick={keepAll} className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110" style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)' }}>
+              <button onClick={keepAll} className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110" style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}>
                 {t('wishlist.keepAll')}
               </button>
               <Link to="/wishlist" className="rounded-full border border-wine/30 px-6 py-3 text-sm font-bold text-wine transition hover:bg-wine hover:text-cream">
@@ -131,7 +131,7 @@ export default function Wishlist() {
           <Link
             to="/shop"
             className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
-            style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)' }}
+            style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
           >
             {t('co.doneKeepShopping')}
           </Link>

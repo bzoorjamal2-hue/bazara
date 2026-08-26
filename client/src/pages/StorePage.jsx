@@ -242,7 +242,7 @@ export default function StorePage() {
         <Link
           to="/shop"
           className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
-          style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)' }}
+          style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
         >
           {t('co.doneKeepShopping')}
         </Link>
@@ -395,7 +395,7 @@ export default function StorePage() {
                   {cnt.sale > 0 && (
                     <span
                       className="absolute end-2 top-2 z-10 rounded-full px-2 py-0.5 text-[10px] font-bold text-cream ring-1 ring-[#e6c878]/40"
-                      style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 100%)' }}
+                      style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #241708 100%)' }}
                     >
                       {t('store.catSale', { count: cnt.sale })}
                     </span>
@@ -536,7 +536,7 @@ export default function StorePage() {
                     type="button"
                     onClick={() => setPage((n) => n + 1)}
                     className="rounded-full px-8 py-3 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
-                    style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)' }}
+                    style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
                   >
                     {t('store.loadMore')}
                   </button>
@@ -616,7 +616,7 @@ export default function StorePage() {
               <button
                 onClick={() => { setViewAll(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                 className="rounded-full px-10 py-3.5 font-bold text-cream ring-1 ring-[#e6c878]/35 transition duration-300 hover:-translate-y-0.5 hover:brightness-110"
-                style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)', boxShadow: '0 16px 34px -14px rgba(74, 19, 34, 0.65)' }}
+                style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)', boxShadow: '0 16px 34px -14px rgba(20, 13, 7, 0.65)' }}
               >
                 {t('store.viewAllProducts')}
               </button>

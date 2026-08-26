@@ -232,7 +232,7 @@ export default function ProductDetails() {
         <Link
           to="/shop"
           className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
-          style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)' }}
+          style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
         >
           {t('co.doneKeepShopping')}
         </Link>

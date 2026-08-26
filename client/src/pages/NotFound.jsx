@@ -24,7 +24,7 @@ export default function NotFound() {
           <Link
             to="/shop"
             className="inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
-            style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)' }}
+            style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
           >
             <BagIcon className="h-5 w-5" /> {t('co.doneKeepShopping')}
           </Link>

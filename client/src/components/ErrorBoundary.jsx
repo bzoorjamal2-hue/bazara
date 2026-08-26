@@ -46,7 +46,7 @@ export default class ErrorBoundary extends Component {
               type="button"
               onClick={() => window.location.reload()}
               className="rounded-full px-6 py-2.5 text-sm font-bold"
-              style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 100%)', color: '#F4EDE2' }}
+              style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #241708 100%)', color: '#F4EDE2' }}
             >
               تحديث الصفحة
             </button>

@@ -167,7 +167,7 @@ export default function Dashboard() {
               <Link
                 to="/dashboard?tab=myOrders"
                 className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition hover:brightness-110"
-                style={{ background: '#F4EDE2', color: '#4a1322' }}
+                style={{ background: '#F4EDE2', color: '#3f2e22' }}
               >
                 <ReceiptIcon className="h-3.5 w-3.5" /> {t('dashboard.heroNewOrders', { count: newOrders })}
               </Link>

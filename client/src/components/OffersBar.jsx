@@ -50,7 +50,7 @@ function Pill({ icon, children, strong = false, urgent = false }) {
     return (
       <span
         className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold text-cream ring-1 ring-[#e6c878]/35"
-        style={{ background: urgent ? '#9a3412' : 'linear-gradient(135deg, #6e2637 0%, #4a1322 100%)' }}
+        style={{ background: urgent ? '#9a3412' : 'linear-gradient(150deg, #3f2e22 0%, #241708 100%)' }}
       >
         {icon}{children}
       </span>
@@ -103,7 +103,7 @@ export default function OffersBar({ products, tier = 'all', onTier, compact = fa
                 className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${on ? 'ring-1 ring-[#e6c878]/50' : 'border border-wine/25 text-wine hover:bg-wine/5'}`}
                 // لونان صريحان للحالة النشطة: أصناف الذهب تنقلب بنّية نهاراً
                 // فيصير النصّ بنّياً على بنّي ولا يُقرأ
-                style={on ? { background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 100%)', color: '#F4EDE2' } : undefined}
+                style={on ? { background: 'linear-gradient(150deg, #3f2e22 0%, #241708 100%)', color: '#F4EDE2' } : undefined}
               >
                 {t(`offers.tier.${tr.key}`)}
                 <span className={`ms-1.5 tabular-nums ${on ? 'opacity-80' : 'opacity-60'}`}>{counts[tr.key]}</span>

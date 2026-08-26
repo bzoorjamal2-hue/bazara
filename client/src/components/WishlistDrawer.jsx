@@ -81,7 +81,7 @@ export default function WishlistDrawer() {
               <button
                 onClick={addAll}
                 className="flex w-full items-center justify-center gap-2 rounded-full py-4 font-bold text-cream ring-1 ring-[#e6c878]/35 transition hover:brightness-110"
-                style={{ background: 'linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%)', boxShadow: '0 16px 34px -14px rgba(74, 19, 34, 0.65)' }}
+                style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)', boxShadow: '0 16px 34px -14px rgba(20, 13, 7, 0.65)' }}
               >
                 <CartIcon className="h-5 w-5" /> {t('wishlist.addAllToCart')}
               </button>

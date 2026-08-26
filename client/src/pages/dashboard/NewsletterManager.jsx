@@ -75,7 +75,7 @@ export default function NewsletterManager() {
             <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
               <span className="rounded-full bg-wine/10 px-3 py-1.5 text-wine">{t('admin.newsletterTotal', { count: list.length })}</span>
               {emails > 0 && (
-                <span className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-cream" style={{ background: '#4a1322' }}>
+                <span className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-cream" style={{ background: '#3f2e22' }}>
                   <MailIcon className="h-3.5 w-3.5" /> {t('admin.nlEmails', { count: emails })} <Tip text={t('admin.nlEmailsTip')} />
                 </span>
               )}

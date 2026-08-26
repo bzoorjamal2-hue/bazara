@@ -277,17 +277,17 @@ button > svg { vertical-align: middle; }
    الأبعاد (padding/flex-1) تُضاف عند الاستخدام. */
 .btn-buy {
   @apply inline-flex items-center justify-center gap-2 rounded-full border-2 border-transparent font-bold text-cream ring-1 ring-[#e6c878]/35 transition disabled:cursor-not-allowed disabled:opacity-40;
-  background: linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%);
-  box-shadow: 0 16px 34px -14px rgba(74, 19, 34, 0.65);
+  background: linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%);
+  box-shadow: 0 16px 34px -14px rgba(20, 13, 7, 0.65);
 }
 @media (hover: hover) { .btn-buy:hover:not(:disabled) { filter: brightness(1.08); } }
 .btn-cart {
   @apply inline-flex items-center justify-center gap-2 rounded-full border-2 font-bold transition disabled:cursor-not-allowed disabled:opacity-40;
-  border-color: rgba(110, 38, 55, 0.4);
-  color: #6e2637;
+  border-color: rgba(94, 70, 54, 0.4);
+  color: #5e4636;
   background: transparent;
 }
-@media (hover: hover) { .btn-cart:hover:not(:disabled) { background: #6e2637; color: #F4EDE2; } }
+@media (hover: hover) { .btn-cart:hover:not(:disabled) { background: #5e4636; color: #F4EDE2; } }
 /* الوضع الليلي: النبيذي الغامق يختفي على الخلفية الداكنة → ذهبي مضيء متناسق */
 html.dark .theme-pub .btn-cart { border-color: rgba(240, 220, 166, 0.45); color: #f0dca6; }
 @media (hover: hover) { html.dark .theme-pub .btn-cart:hover:not(:disabled) { background: #f0dca6; color: #241b12; } }
@@ -362,7 +362,7 @@ input[type='datetime-local']::-webkit-datetime-edit {
 }
 
 /* زر إرسال صفحات الحساب — حبة خمرية نارية بهالة ذهبية (نفس هوية أزرار الشراء) */
-/* زرّ الحساب: إسبريسو الموقع، لا خمريّ #6e2637 — لونٌ لم يكن من اللوحة
+/* زرّ الحساب: إسبريسو الموقع، لا خمريّ #5e4636 — لونٌ لم يكن من اللوحة
    أصلاً (لا wine ولا gold) فيبدو دخيلاً وسط البنّي والعاجي. حدّه الذهبيّ
    ذهب أيضاً: التباين وحده يكفي على بطاقةٍ رملية. */
 .auth-submit {
@@ -618,7 +618,7 @@ html.dark .theme-pub ::-webkit-scrollbar-thumb:hover { background: rgba(236, 217
 .pub-navbar {
   background: #3f2e22;
   border: 1px solid rgba(248, 243, 236, 0.12);
-  box-shadow: 0 10px 28px rgba(74, 19, 34, 0.35);
+  box-shadow: 0 10px 28px rgba(20, 13, 7, 0.35);
 }
 
 /* ===== الشريط العلوي الفاتح الفاخر (Bazara) — كريمي ناعم ملاصق للأعلى =====
@@ -691,7 +691,7 @@ html.dark .theme-pub .app-navbar.shadow-md { box-shadow: 0 12px 28px -8px rgba(0
 /* ===== بطاقة الفئة الخمرية (أيقونة عاجية) ===== */
 .pub-cat {
   background: #5e4636;
-  border: 1px solid rgba(74, 19, 34, 0.4);
+  border: 1px solid rgba(20, 13, 7, 0.4);
   box-shadow: 0 8px 22px -10px rgba(94, 70, 54, 0.5);
 }
 @media (hover: hover) { .pub-cat:hover { background: #6e5340; } }
