@@ -2,6 +2,7 @@ import { Suspense, lazy, useEffect, useLayoutEffect, useState } from 'react';
 import { Routes, Route, useLocation, useNavigationType, Navigate } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
 import { recordNav } from './utils/nav.js';
+import { retryImport, installChunkGuard } from './utils/chunkReload.js';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import RequireSubscription from './components/RequireSubscription.jsx';
 import Spinner from './components/Spinner.jsx';
@@ -12,6 +13,9 @@ import Splash from './components/Splash.jsx';
 import { isStandalone, hasStoredToken } from './utils/pwa.js';
 import { ensureDash } from './i18n.js';
 import { useAuth } from './context/AuthContext.jsx';
+
+// حارس قطع الكود المفقودة بعد النشر — يُركَّب مرّة عند تحميل الوحدة
+installChunkGuard();
 
 // جذر الموقع: صفحة المنصّة للجميع، ولوحةُ صاحبته لمن سجّلت دخولها.
 //
@@ -37,27 +41,26 @@ function Root() {
 }
 
 // باقي الصفحات تُحمّل عند الحاجة فقط (code-splitting) — يقلّل حجم التحميل الأولي كثيراً
-const Login = lazy(() => import('./pages/Login.jsx'));
-const Register = lazy(() => import('./pages/Register.jsx'));
-const ForgotPassword = lazy(() => import('./pages/ForgotPassword.jsx'));
-const ResetPassword = lazy(() => import('./pages/ResetPassword.jsx'));
+const Login = lazy(() => retryImport(() => import('./pages/Login.jsx')));
+const Register = lazy(() => retryImport(() => import('./pages/Register.jsx')));
+const ForgotPassword = lazy(() => retryImport(() => import('./pages/ForgotPassword.jsx')));
+const ResetPassword = lazy(() => retryImport(() => import('./pages/ResetPassword.jsx')));
 // اللوحة تجلب نصوصها (ar.dash.json) بالتوازي مع صفحتها — فما تظهر أبداً بلا نصوص
-const Dashboard = lazy(() => Promise.all([import('./pages/Dashboard.jsx'), ensureDash()]).then(([m]) => m));
-const Subscribe = lazy(() => import('./pages/Subscribe.jsx'));
-const StorePage = lazy(() => import('./pages/StorePage.jsx'));
-const CategoryPage = lazy(() => import('./pages/CategoryPage.jsx'));
-const Categories = lazy(() => import('./pages/Categories.jsx'));
-const ProductDetails = lazy(() => import('./pages/ProductDetails.jsx'));
-const Wishlist = lazy(() => import('./pages/Wishlist.jsx'));
-const Offers = lazy(() => import('./pages/Offers.jsx'));
-const Reels = lazy(() => import('./pages/Reels.jsx'));
-const Track = lazy(() => import('./pages/Track.jsx'));
-const PaymentCallback = lazy(() => import('./pages/PaymentCallback.jsx'));
-const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy.jsx'));
-const NotFound = lazy(() => import('./pages/NotFound.jsx'));
+const Dashboard = lazy(() => retryImport(() => Promise.all([import('./pages/Dashboard.jsx'), ensureDash()])).then(([m]) => m));
+const Subscribe = lazy(() => retryImport(() => import('./pages/Subscribe.jsx')));
+const StorePage = lazy(() => retryImport(() => import('./pages/StorePage.jsx')));
+const CategoryPage = lazy(() => retryImport(() => import('./pages/CategoryPage.jsx')));
+const Categories = lazy(() => retryImport(() => import('./pages/Categories.jsx')));
+const ProductDetails = lazy(() => retryImport(() => import('./pages/ProductDetails.jsx')));
+const Wishlist = lazy(() => retryImport(() => import('./pages/Wishlist.jsx')));
+const Offers = lazy(() => retryImport(() => import('./pages/Offers.jsx')));
+const Reels = lazy(() => retryImport(() => import('./pages/Reels.jsx')));
+const Track = lazy(() => retryImport(() => import('./pages/Track.jsx')));
+const PaymentCallback = lazy(() => retryImport(() => import('./pages/PaymentCallback.jsx')));
+const PrivacyPolicy = lazy(() => retryImport(() => import('./pages/PrivacyPolicy.jsx')));
+const NotFound = lazy(() => retryImport(() => import('./pages/NotFound.jsx')));
 // معاينة تطويرية لنموذج المنتج (DEV فقط — يزيلها البناء نهائياً)
-const DevProductForm = lazy(() =>
-  import('./pages/dashboard/ProductForm.jsx').then((m) => ({
+const DevProductForm = lazy(() => retryImport(() => import('./pages/dashboard/ProductForm.jsx')).then((m) => ({
     default: () => <m.default initial={null} onClose={() => {}} onSaved={() => {}} />,
   }))
 );

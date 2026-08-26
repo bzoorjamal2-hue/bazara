@@ -2992,3 +2992,31 @@ html.dark .theme-pub .bz-feat-ico { background: rgba(240, 220, 166, 0.12); color
 }
 @media (hover: hover) { .bz-sh-cta:hover { background: #ffffff; } }
 .bz-sh-cta:active { transform: scale(0.97); }
+
+/* ═══════ بطاقات الرئيسية بلغة صفحة المنصّة ═══════
+   بطاقة المتجر كانت تحمل خمس لمسات ذهبية: خيطٌ علويّ، وهالةٌ تظهر عند
+   المرور، وحلقتان حول الشعار (واحدة تشتدّ عند المرور)، وحلقةٌ للمميّز.
+   الذهب حين يعمّ لا يميّز شيئاً — صار حدّاً واحداً هادئاً وشارةً واحدة. */
+.bz-storecard {
+  background: #fff;
+  box-shadow: 0 6px 22px -12px rgba(94, 70, 54, 0.26), inset 0 0 0 1px rgba(94, 70, 54, 0.07);
+}
+@media (hover: hover) {
+  .bz-storecard:hover { box-shadow: 0 16px 36px -18px rgba(94, 70, 54, 0.34), inset 0 0 0 1px rgba(94, 70, 54, 0.12); }
+}
+/* المميّز: خطٌّ ذهبيّ علويّ واحد — الإشارة الوحيدة التي تعني شيئاً */
+.bz-storecard-top {
+  box-shadow: 0 6px 22px -12px rgba(94, 70, 54, 0.26), inset 0 0 0 1px rgba(212, 175, 55, 0.4), inset 0 3px 0 0 #d4af37;
+}
+.bz-storecard-logo { box-shadow: 0 6px 18px -8px rgba(94, 70, 54, 0.35), inset 0 0 0 1px rgba(94, 70, 54, 0.10); }
+
+/* مربّع أيقونة محايد — يحلّ محلّ التدرّج الذهبيّ بالحلقة الذهبية */
+.bz-softico { background: rgba(94, 70, 54, 0.07); color: #5e4636; }
+
+html.dark .theme-pub .bz-storecard {
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(240, 220, 166, 0.14);
+}
+html.dark .theme-pub .bz-storecard-top { box-shadow: inset 0 0 0 1px rgba(212, 175, 55, 0.42), inset 0 3px 0 0 #d4af37; }
+html.dark .theme-pub .bz-storecard-logo { box-shadow: inset 0 0 0 1px rgba(240, 220, 166, 0.2); }
+html.dark .theme-pub .bz-softico { background: rgba(240, 220, 166, 0.12); color: #f0dca6; }

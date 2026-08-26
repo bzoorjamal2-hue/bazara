@@ -605,10 +605,10 @@ function SlideButton({ href, label, onLight }) {
 function PromoBanner() {
   const { t } = useTranslation();
   return (
-    <Link to="/shop" className="group relative mt-10 flex items-center gap-4 overflow-hidden rounded-3xl bg-gradient-to-br from-white via-white to-cream p-4 shadow-sm ring-1 ring-gold-400/25 transition hover:-translate-y-0.5 hover:shadow-md sm:p-5">
+    <Link to="/shop" className="bz-storecard group relative mt-10 flex items-center gap-4 overflow-hidden rounded-3xl p-4 transition hover:-translate-y-0.5 sm:p-5">
       {/* توهّج ذهبي خفيف يمسح البطاقة عند المرور — لمسة فخامة */}
       <span aria-hidden className="pointer-events-none absolute -inset-y-8 -start-24 w-24 -skew-x-12 bg-gradient-to-r from-transparent via-gold-400/20 to-transparent transition-all duration-700 group-hover:start-[110%]" />
-      <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-cream text-wine ring-1 ring-gold-400/40 transition group-hover:ring-gold-400"><GiftIcon className="h-7 w-7" /></span>
+      <span className="bz-softico flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl"><GiftIcon className="h-7 w-7" /></span>
       <div className="min-w-0 flex-1">
         <p className="font-display text-sm font-bold text-wine sm:text-lg">{t('home.promoTitle')}</p>
         <p className="mt-0.5 text-xs text-stone-500 sm:text-sm">{t('home.promoSub')}</p>
@@ -629,10 +629,9 @@ function StoreCard({ s, index = 0, rtl }) {
     <Link
       ref={ref}
       to={`/store/${s.slug}`}
-      className={`glass group relative flex flex-col items-center overflow-hidden p-5 text-center transition-[opacity,transform,box-shadow] duration-500 ease-out hover:!-translate-y-1.5 hover:shadow-glow ${inView ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0'} ${s.featured ? 'ring-1 ring-gold-400/50' : ''}`}
+      className={`bz-storecard group relative flex flex-col items-center overflow-hidden rounded-2xl p-5 text-center transition-[opacity,transform,box-shadow] duration-500 ease-out hover:!-translate-y-1.5 ${inView ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0'} ${s.featured ? 'bz-storecard-top' : ''}`}
       style={{ transitionDelay: inView ? `${(index % 5) * 55}ms` : '0ms' }}
     >
-      <span className="dash-hairline absolute inset-x-0 top-0" />
       {s.featured && (
         <span className="absolute end-2 top-2 z-[2] inline-flex items-center gap-1 rounded-full bg-gold-400 px-2.5 py-1 text-[10px] font-extrabold text-ink-950 shadow-sm">
           <svg viewBox="0 0 24 24" className="h-3 w-3" fill="currentColor" aria-hidden="true"><path d="M5 16L3 6l5.5 4L12 4l3.5 6L21 6l-2 10H5zm0 2h14v2H5z" /></svg>
@@ -640,12 +639,11 @@ function StoreCard({ s, index = 0, rtl }) {
         </span>
       )}
       {/* هالة ذهبية ناعمة تتوهّج خلف الشعار عند المرور — لمسة بوتيك راقية */}
-      <span aria-hidden className="pointer-events-none absolute top-5 h-24 w-24 rounded-full bg-gold-400/25 opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100" />
       <img
         src={cldThumb(s.logoUrl, 160) || 'https://placehold.co/80x80/f1e9dd/5e4636?text=%F0%9F%91%91'}
         alt={s.name}
         loading="lazy"
-        className="relative h-24 w-24 rounded-full bg-white object-cover shadow-md ring-2 ring-gold-400/50 transition duration-500 group-hover:scale-105 group-hover:ring-gold-400"
+        className="bz-storecard-logo relative h-24 w-24 rounded-full bg-white object-cover transition duration-500 group-hover:scale-105"
       />
       <h3 className="mt-3 w-full truncate font-display font-bold text-stone-100">{s.name}</h3>
       <p className="mt-0.5 text-xs text-stone-400">{s.productsCount} {t('store.products')}</p>
@@ -664,8 +662,7 @@ function StoreCard({ s, index = 0, rtl }) {
 function EmptyState({ icon, text, ctaLabel, ctaTo }) {
   return (
     <div className="glass relative flex flex-col items-center overflow-hidden p-10 text-center">
-      <span className="dash-hairline absolute inset-x-0 top-0" />
-      <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-wine/12 to-gold-400/15 text-wine ring-1 ring-gold-400/40">
+      <span className="bz-softico flex h-16 w-16 items-center justify-center rounded-2xl">
         {icon}
       </span>
       <p className="mt-4 max-w-sm text-sm text-stone-400">{text}</p>

@@ -172,7 +172,11 @@ export async function getSiteBanners(_req, res, next) {
 // اللوك بوك: صورة إطلالة + معرّفات قطعها. لا نقبل إلا http(s) وأعداداً صحيحة.
 const sanitizeLookbook = (v) => {
   if (!v || typeof v !== 'object') return {};
-  const image = /^https?:///i.test(String(v.image ?? '')) ? String(v.image).slice(0, 500) : '';
+  // كانت /^https?:///i — ثلاث شرطات: المحلّل يقرأ /^https?:/ تعبيراً نمطياً ثم
+  // يعدّ ما بعده تعليقاً، فيصير image كائنَ RegExp لا نصّاً. وشرطُ الرفض
+  // (!image) لا يتحقّق أبداً على كائن، فيمرّ أيّ مدخلٍ بلا فحص — بما فيه
+  // javascript: — ويُخزَّن كائناً فارغاً {} بعد JSON.stringify.
+  const image = /^https?:\/\//i.test(String(v.image ?? '')) ? String(v.image).slice(0, 500) : '';
   if (!image) return {}; // بلا صورة لا معنى للوك بوك
   return {
     image,

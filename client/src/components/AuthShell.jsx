@@ -1,6 +1,5 @@
 import { forwardRef, useEffect, useId, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { goBack } from '../utils/nav.js';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client.js';
 import Logo from './Logo.jsx';
@@ -150,7 +149,11 @@ export default function AuthShell({ title, subtitle, children, back = '/', compa
           <div className="bz-auth-top">
             <button
               type="button"
-              onClick={() => goBack(navigate, back)}
+              // وجهةٌ ثابتة لا رجوعٌ بالتاريخ: كان navigate(-1) يعيد الزائرة
+              // إلى الصفحة السابقة — وهي غالباً لوحةُ المتجر الذي خرجت منه
+              // للتوّ. فيبدو الخروج كأنّه لم يحدث. الزرّ يعني «الرئيسية» فليذهب
+              // إليها. وreplace كي لا يعيدها زرّ رجوع المتصفّح إلى الدخول.
+              onClick={() => navigate(back, { replace: true })}
               aria-label={t('common.back')}
               className="bz-nav-burger"
             >
