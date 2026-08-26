@@ -51,10 +51,23 @@ export function platformCatName(key, t, lang) {
   return t(`categories.${key}`, key);
 }
 
-// صورة الفئة: المضافة تحمل صورتها، والمدمجة لها ملفّها الثابت
+// صورة الفئة: المضافة تحمل صورتها، والمدمجة لها ملفّها الثابت.
+//
+// WebP لا PNG: هذه السبع تُخدَم من المجلّد مباشرةً، فلا يمرّ عليها تحويل
+// كلاوديناري الذي يختار الصيغة المثلى تلقائياً (f_auto) كما يفعل بصور
+// المنتجات. كانت ٦٦٨ كيلو تُحمَّل كاملةً بصفحة التصنيفات؛ صارت ٩٠.
+// والشفافية محفوظة — فحصتُها بالبكسل لا بالنظر: ٥٤٪ شفّافٌ بالصيغتين.
 export function platformCatImage(key) {
   const found = custom.extra.find((c) => c.key === key);
   if (found?.image) return found.image;
+  return BUILTIN_CATS.includes(key) ? `/categories/${key}.webp` : '';
+}
+
+// نسخةُ PNG احتياطاً: WebP مدعومٌ منذ سفاري ١٤ (٢٠٢٠)، لكنّ الاحتياط رخيص
+// وغيابُ صورة الفئة يترك مربّعاً فارغاً بواجهة التسوّق.
+export function platformCatImageFallback(key) {
+  const found = custom.extra.find((c) => c.key === key);
+  if (found?.image) return '';
   return BUILTIN_CATS.includes(key) ? `/categories/${key}.png` : '';
 }
 

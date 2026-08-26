@@ -7,7 +7,7 @@ import { GridIcon } from '../components/icons.jsx';
 import api from '../api/client.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { cldThumb } from '../utils/cloudinary.js';
-import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys, storeOnlyCats } from '../utils/platformCategories.js';
+import { platformCatKeys, platformCatName, platformCatImage, platformCatImageFallback, usePlatformCatKeys, storeOnlyCats } from '../utils/platformCategories.js';
 
 // صفحة تصنيفات الموقع العام (بازارا) — فئات بازارا الأصلية + الفئات المخصّصة المجمّعة من
 // كل المتاجر (يعيدها /public/categories). أي فئة يضيفها أي متجر تظهر هنا تلقائياً بنفس
@@ -22,7 +22,7 @@ export default function Categories() {
       .catch(() => { /* الفئات المخصّصة اختيارية — الأصلية تكفي */ });
   }, []);
   const items = [
-    ...catKeys.map((c) => ({ key: c, name: platformCatName(c, t, i18n.language), to: `/category/${c}`, img: platformCatImage(c) })),
+    ...catKeys.map((c) => ({ key: c, name: platformCatName(c, t, i18n.language), to: `/category/${c}`, img: platformCatImage(c), fallback: platformCatImageFallback(c) })),
     ...storeOnlyCats(custom, catKeys).map((c) => ({ key: c.key, name: c.name, to: `/category/${c.key}`, img: c.image || '' })),
   ];
 
@@ -48,6 +48,10 @@ export default function Categories() {
                   loading="eager"
                   decoding="async"
                   className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
+                  onError={(e) => {
+                    // متصفّحٌ لا يعرف WebP: نسقط للـPNG مرّةً واحدة لا حلقةً
+                    if (it.fallback && e.currentTarget.src !== it.fallback) e.currentTarget.src = it.fallback;
+                  }}
                 />
               ) : (
                 <svg viewBox="0 0 24 24" className="bz-field-ico h-1/2 w-1/2" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
