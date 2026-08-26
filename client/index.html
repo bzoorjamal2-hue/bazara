@@ -27,6 +27,10 @@
           l.rel = 'preload';
           l.as = 'image';
           l.href = img;
+          // imagesrcset/imagesizes يجب أن يطابقا ما على <img> تماماً، وإلا
+          // اختار التحميلُ المسبق نسخةً واختار الوسمُ أخرى فنُزّلت صورتان.
+          var ss = localStorage.getItem('bz_hero_srcset');
+          if (ss) { l.imageSrcset = ss; l.imageSizes = '100vw'; }
           l.fetchPriority = 'high';
           document.head.appendChild(l);
         } catch (e) {}

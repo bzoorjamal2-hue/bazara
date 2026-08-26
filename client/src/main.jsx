@@ -31,18 +31,30 @@ import { ThemeProvider } from './context/ThemeContext.jsx';
 import { NotificationsProvider } from './context/NotificationsContext.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 
-// تسجيل الـ Service Worker مع فحص تحديث تلقائي متكرّر — حتى يلتقط التطبيق المثبّت
-// أحدث نسخة بسرعة بعد كل نشر (لا ينتظر إعادة فتح التطبيق). autoUpdate يطبّق التحديث
-// ويعيد التحميل تلقائياً عند توفّر نسخة جديدة.
-registerSW({
-  immediate: true,
-  onRegisteredSW(_swUrl, r) {
-    if (!r) return;
-    const check = () => { r.update().catch(() => {}); };
-    setInterval(check, 60 * 1000); // كل دقيقة
-    document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
-  },
-});
+// تسجيل الـ Service Worker مع فحص تحديث تلقائي — حتى يلتقط التطبيق المثبّت
+// أحدث نسخة بعد كل نشر. autoUpdate يطبّق التحديث ويعيد التحميل عند توفّرها.
+//
+// بعد الإقلاع لا أثناءه: التسجيل يبدأ تخزين ٧٤ ملفاً (٢٫٧ ميغا) مسبقاً، وكان
+// immediate يطلقها بالمسار الحرج فتزاحم صورةَ الهيرو والخطوطَ والحزمة على
+// عرضٍ محدود — أي أنّ ما يخدم الزيارة القادمة كان يؤخّر الزيارة الحالية.
+// التخزين المسبق يبقى كما هو (وهو ما يجعل التطبيق يعمل بشبكةٍ ضعيفة)، لكنّه
+// ينتظر أن تُرسم الصفحة.
+function startServiceWorker() {
+  registerSW({
+    immediate: true,
+    onRegisteredSW(_swUrl, r) {
+      if (!r) return;
+      const check = () => { r.update().catch(() => {}); };
+      // كان الفحص كلّ دقيقة — طلبُ شبكةٍ كلّ ٦٠ ثانية لكلّ تبويبٍ مفتوح، طوال
+      // اليوم، على بيانات الجوّال. واللحظة التي تهمّ فعلاً هي العودةُ للتطبيق
+      // وهي مغطّاةٌ بـvisibilitychange أدناه، فيبقى المؤقّت شبكةَ أمانٍ بعيدة.
+      setInterval(check, 30 * 60 * 1000);
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
+    },
+  });
+}
+if (document.readyState === 'complete') startServiceWorker();
+else window.addEventListener('load', () => setTimeout(startServiceWorker, 1200));
 
 // تعافٍ تلقائي من فشل تحميل أجزاء الموقع (يحدث بكاش قديم بعد تحديث) — يمنع التعليق
 // على شاشة كريمية بإعادة التحميل مرة واحدة لجلب أحدث الملفات.

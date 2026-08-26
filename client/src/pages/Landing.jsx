@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client.js';
 import Seo from '../components/Seo.jsx';
+import { heroSrc, heroSrcSet } from '../utils/heroImage.js';
 import Logo from '../components/Logo.jsx';
 import LanguageSwitcher from '../components/LanguageSwitcher.jsx';
 import { switchLanguage } from '../i18n.js';
@@ -123,9 +124,18 @@ export default function Landing() {
           localStorage.setItem('bz_landing', JSON.stringify(s));
           // رابطُ الصورة بمفتاحٍ منفصل: السكربتُ الذي يسبق React بالـHTML
           // يقرأه ويحقن preload، فيبدأ التحميلُ موازياً للحزمة لا بعدها.
+          // نحفظ ما سيطلبه <img> فعلاً — لا الرابط الخام. التحميل المسبق
+          // بالرابط الخام كان يسحب نسخة 1920 قبل أن يختار المتصفّح من srcset،
+          // فتُنزَّل الكبيرة ثمّ تُهمَل. والقائمة تُحفظ معه ليحمل الرابطُ
+          // المسبق imagesrcset فيتّفق الاثنان على نسخةٍ واحدة.
           const img = s.landing?.hero?.image || '';
-          if (img) localStorage.setItem('bz_hero_img', img);
-          else localStorage.removeItem('bz_hero_img');
+          if (img) {
+            localStorage.setItem('bz_hero_img', heroSrc(img));
+            localStorage.setItem('bz_hero_srcset', heroSrcSet(img) || '');
+          } else {
+            localStorage.removeItem('bz_hero_img');
+            localStorage.removeItem('bz_hero_srcset');
+          }
         } catch { /* ممتلئ */ }
       })
       .catch(() => { /* الصفحة كاملة بنصوصها الأصلية بلا الخادم */ });
@@ -182,7 +192,9 @@ export default function Landing() {
         {hero.image && !hero.video && (
           <img
             className="bz-hero-img"
-            src={hero.image}
+            src={heroSrc(hero.image)}
+            srcSet={heroSrcSet(hero.image)}
+            sizes="100vw"
             alt=""
             aria-hidden="true"
             fetchpriority="high"
