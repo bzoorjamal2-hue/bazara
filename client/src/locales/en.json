@@ -305,7 +305,12 @@
     "expiredTitle": "Your subscription has expired ⏳",
     "expiredDesc": "To sign in again, contact the admin and pay, then enter the renewal code you receive below.",
     "renewCodeLabel": "Renewal code (6 digits)",
-    "renewBtn": "Renew & sign in"
+    "renewBtn": "Renew & sign in",
+    "emailHint": "The email you signed up with, or your phone number.",
+    "emailHint2": "Order alerts and your password-reset code go here — make sure it is right.",
+    "nameHint": "Your own name, not the store name.",
+    "namePh": "e.g. Nour Ahmad",
+    "storeHint2": "Shown to your customers and becomes part of your store link. You can change it later."
   },
   "product": {
     "new": "NEW",

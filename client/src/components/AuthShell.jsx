@@ -1,8 +1,8 @@
-import { forwardRef } from 'react';
+import { forwardRef, useEffect, useId, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { goBack } from '../utils/nav.js';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
+import api from '../api/client.js';
 import Logo from './Logo.jsx';
 import LanguageSwitcher from './LanguageSwitcher.jsx';
 
@@ -66,62 +66,93 @@ export function KeyIcon({ className = 'h-5 w-5' }) {
 }
 
 // حقل بأيقونة بادئة وعنصر لاحق اختياري (مثل زر إظهار كلمة المرور) — حبّي فاخر
-export const Field = forwardRef(function Field({ icon, trailing, className = '', ...props }, ref) {
+
+// ───────────────── حقل بتسمية وتلميح ─────────────────
+//
+// كانت الحقول نائبَ نصٍّ (placeholder) وحده: يختفي أوّل ما تكتب، فتنسى صاحبة
+// المتجر ما هذا الحقل وهي بمنتصف تعبئته — وأسوأ منه أن ما لا تعرفه (صيغة
+// الهاتف، ما اسم المتجر أصلاً) لا مكان يقوله. صار لكلّ حقل تسمية ثابتة فوقه
+// وتلميحٌ تحته عند الحاجة.
+export const Field = forwardRef(function Field(
+  { icon, trailing, label, hint, error, required, className = '', id, ...props },
+  ref
+) {
+  const auto = useId();
+  const inputId = id || auto;
+  const hintId = hint || error ? `${inputId}-h` : undefined;
   return (
-    <div className="relative">
-      {icon && (
-        <span className="pointer-events-none absolute inset-y-0 start-4 flex items-center text-wine/45">{icon}</span>
+    <div className="bz-af">
+      {label && (
+        <label htmlFor={inputId} className="bz-af-label">
+          {label}
+          {required && <span className="bz-af-req" aria-hidden="true">*</span>}
+        </label>
       )}
-      <input
-        ref={ref}
-        className={`input !rounded-full !py-4 !text-base ${icon ? '!ps-12' : ''} ${trailing ? '!pe-12' : ''} ${className}`}
-        {...props}
-      />
-      {trailing && <div className="absolute inset-y-0 end-4 flex items-center">{trailing}</div>}
+      <div className="bz-af-box">
+        {icon && <span className="bz-af-ico" aria-hidden="true">{icon}</span>}
+        <input
+          ref={ref}
+          id={inputId}
+          required={required}
+          aria-describedby={hintId}
+          aria-invalid={error ? true : undefined}
+          className={`bz-af-input ${icon ? 'has-ico' : ''} ${trailing ? 'has-trail' : ''} ${className}`}
+          {...props}
+        />
+        {trailing && <span className="bz-af-trail">{trailing}</span>}
+      </div>
+      {(hint || error) && (
+        <p id={hintId} className={error ? 'bz-af-err' : 'bz-af-hint'}>{error || hint}</p>
+      )}
     </div>
   );
 });
 
-
-// بلا حركة دخول للعناصر — الصفحة كلها تظهر بتلاشٍ واحد ناعم عبر انتقال المسار،
-// فلا يوجد أي حركة لكل عنصر قد تتعارض وتسبب "القفز/الفصل".
-const rise = {
-  hidden: { opacity: 1 },
-  show: { opacity: 1 },
-};
+// بلا حركة دخول لكل عنصر — الصفحة تظهر بتلاشٍ واحد عبر انتقال المسار
+const rise = { hidden: { opacity: 1 }, show: { opacity: 1 } };
 export { rise };
 
-// قشرة موحّدة لصفحات الحساب — تصميم بوتيك فاخر:
-// هيرو بنّي عميق بلمعة ذهبية (الرجوع/اللغة داخله) + بطاقة النموذج بيضاء "عائمة" فوقه
+// ───────────────── قشرة صفحات الحساب ─────────────────
+//
+// كانت هيرو بنّياً بحلقةٍ ذهبية دوّارة ونصٍّ متدرّج، تحته ورقة بيضاء — وعلى
+// الكمبيوتر عمودٌ ضيّق وسط فراغٍ واسع.
+//
+// صارت بهوية صفحة المنصّة نفسها: إسبريسو عميق وذهبٌ أثرٌ لا حشوة. وعلى
+// الشاشات الواسعة لوحان — لوحُ هويةٍ يحمل الصورة والوعد، وإلى جانبه النموذج
+// — فيُستعمل عرض الشاشة بدل أن يُهدر.
 export default function AuthShell({ title, subtitle, children, back = '/', compactHero = false }) {
   const { t, i18n } = useTranslation();
   const rtl = i18n.language !== 'en';
   const navigate = useNavigate();
-  return (
-    // ملء الشاشة الحقيقي: نلغي حواف/حشوات غلاف الصفحة (px-4 pt-5 pb-8) بهوامش سالبة
-    // فيمتد الهيرو البنّي من حافة لحافة وتطلع الصفحة البيضاء من تحته حتى أسفل الشاشة —
-    // قطعة واحدة متصلة بلا أي إطار كريمي حولها.
-    <div className="-mx-4 -mb-8 -mt-5 flex min-h-[100dvh] flex-col sm:-mx-6">
-      {/* الهيرو الفاخر — من حافة الشاشة للحافة */}
-      <motion.div
-        custom={0}
-        variants={rise}
-        initial="hidden"
-        animate="show"
-        className={`auth-hero dash-hero relative overflow-hidden rounded-none px-5 text-center ${compactHero ? 'pb-16' : 'pb-20'}`}
-        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.85rem)' }}
-      >
-        <div className="pointer-events-none absolute -top-10 start-1/3 h-44 w-44 rounded-full bg-[#e6c878]/15 blur-3xl" />
 
-        <div className="mx-auto w-full max-w-md">
-          {/* شريط علوي داخل الهيرو: رجوع + اللغة */}
-          <div className="relative mb-3 flex items-center justify-between">
-            {/* رجوع للصفحة السابقة الفعلية (والمسار الثابت احتياط عند الفتح المباشر) */}
+  // خلفية لوح الهوية: نفس صورة الهيرو التي يضعها المدير — فتتّسق الصفحتان
+  // مع الواجهة بلا إعدادٍ ثانٍ.
+  const [bg, setBg] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem('bz_landing') || 'null')?.landing?.hero || null; } catch { return null; }
+  });
+  useEffect(() => {
+    if (bg) return;
+    api.get('/public/site-info')
+      .then((r) => setBg(r.data?.landing?.hero || {}))
+      .catch(() => { /* التدرّج وحده يكفي */ });
+  }, [bg]);
+
+  const ticks = [t('landing.chip1'), t('landing.chip2'), t('landing.chip3')];
+
+  return (
+    <div className="bz-auth" style={{ '--bz-dim': (bg?.dim ?? 62) / 100 }}>
+      {/* ── لوح الهوية ── */}
+      <aside className="bz-auth-brand">
+        {bg?.image && <span className="bz-auth-img" style={{ backgroundImage: `url(${bg.image})` }} aria-hidden="true" />}
+        <span className="bz-hero-veil" aria-hidden="true" />
+
+        <div className="bz-auth-brand-in">
+          <div className="bz-auth-top">
             <button
               type="button"
               onClick={() => goBack(navigate, back)}
               aria-label={t('common.back')}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F4EDE2]/10 text-[#F4EDE2] ring-1 ring-[#e6c878]/30 transition hover:bg-[#F4EDE2]/20"
+              className="bz-nav-burger"
             >
               <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d={rtl ? 'm9 6 6 6-6 6' : 'm15 6-6 6 6 6'} />
@@ -130,53 +161,38 @@ export default function AuthShell({ title, subtitle, children, back = '/', compa
             <LanguageSwitcher />
           </div>
 
-          {/* الشعار بحلقة ذهبية دوّارة */}
-          <div className="relative mx-auto inline-block">
-            <motion.div
-              className="absolute inset-[-14px] -z-0 rounded-full"
-              style={{ background: 'conic-gradient(from 0deg, transparent, rgba(212,175,55,0.55), transparent 60%)' }}
-              animate={{ rotate: 360 }}
-              transition={{ duration: 14, repeat: Infinity, ease: 'linear' }}
-            />
-            <div className="relative rounded-full bg-black/25 p-1 ring-1 ring-[#e6c878]/40">
-              <Logo className={`auth-logo ${compactHero ? 'h-14 w-14 drop-shadow-xl' : 'h-20 w-20 drop-shadow-xl'}`} />
-            </div>
-          </div>
-          <h1
-            className={`mt-3 font-display font-extrabold ${compactHero ? 'text-3xl' : 'text-4xl'}`}
-            style={{ background: 'linear-gradient(180deg,#f7ecd2 0%,#e6c878 70%,#d4af37 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}
-          >
-            Bazara
-          </h1>
-          <p className="auth-tagline mt-1 text-sm text-[#F4EDE2]/85">{t('app.tagline')}</p>
-          {/* زخرفة ماسية ذهبية */}
-          <div className="auth-decor mt-3 flex items-center justify-center gap-2 text-[#e6c878]/60">
-            <span className="h-px w-10 bg-gradient-to-r from-transparent to-[#e6c878]/50" />
-            <span aria-hidden className="text-[10px]">❖</span>
-            <span className="h-px w-10 bg-gradient-to-l from-transparent to-[#e6c878]/50" />
+          <div className="bz-auth-brand-body">
+            <Logo className={`bz-auth-logo ${compactHero ? 'h-14 w-14' : 'h-16 w-16'}`} />
+            <p className="bz-auth-name">{t('app.name')}</p>
+            <p className="bz-auth-tag">{t('app.tagline')}</p>
+
+            {/* الوعد وعلامات الثقة — تظهران على الشاشات الواسعة حيث المساحة */}
+            <p className="bz-auth-promise">{t('landing.title')}</p>
+            <ul className="bz-auth-ticks">
+              {ticks.filter(Boolean).map((x) => (
+                <li key={x}><span className="bz-tick-b"><CheckGlyph /></span>{x}</li>
+              ))}
+            </ul>
           </div>
         </div>
-      </motion.div>
+      </aside>
 
-      {/* الصفحة البيضاء تطلع فوق الهيرو وتمتد حتى أسفل الشاشة — قطعة واحدة */}
-      <div
-        className="auth-sheet relative z-10 -mt-12 flex-1 rounded-t-[2rem] bg-white px-5 pt-6 shadow-[0_-18px_44px_-26px_rgba(46,33,24,0.45)] sm:px-6"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.75rem)' }}
-      >
-        <span className="dash-hairline absolute inset-x-0 top-0" />
-        <div className="mx-auto w-full max-w-md">
-          <motion.h2 custom={1} variants={rise} initial="hidden" animate="show" className="auth-title mb-1 text-center font-display text-2xl font-bold text-wine">
-            {title}
-          </motion.h2>
-          {subtitle && (
-            <motion.p custom={1} variants={rise} initial="hidden" animate="show" className="mb-5 text-center text-sm text-stone-400">
-              {subtitle}
-            </motion.p>
-          )}
-          {!subtitle && <div className="mb-4" />}
+      {/* ── لوح النموذج ── */}
+      <main className="bz-auth-form">
+        <div className="bz-auth-card">
+          <h1 className="bz-auth-title">{title}</h1>
+          {subtitle && <p className="bz-auth-sub">{subtitle}</p>}
           {children}
         </div>
-      </div>
+      </main>
     </div>
+  );
+}
+
+function CheckGlyph() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m5 13 4 4L19 7" />
+    </svg>
   );
 }

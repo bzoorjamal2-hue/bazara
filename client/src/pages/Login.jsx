@@ -113,8 +113,9 @@ export default function Login() {
               inputMode="email"
               autoCapitalize="none"
               autoCorrect="off"
-              aria-label={t('auth.emailOrPhone')}
-              placeholder={t('auth.emailOrPhone')}
+              label={t('auth.emailOrPhone')}
+              hint={t('auth.emailHint')}
+              placeholder="you@email.com"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               autoComplete="email"
@@ -126,8 +127,8 @@ export default function Login() {
               icon={<LockIcon />}
               type={showPass ? 'text' : 'password'}
               required
-              aria-label={t('auth.password')}
-              placeholder={t('auth.password')}
+              label={t('auth.password')}
+              placeholder="••••••••"
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
               autoComplete="current-password"

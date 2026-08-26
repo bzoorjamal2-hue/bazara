@@ -51,20 +51,19 @@ export default function Register() {
 
         <form onSubmit={submit} className="space-y-3.5">
           <motion.div custom={2} variants={rise} initial="hidden" animate="show">
-            <Field icon={<UserIcon />} type="text" required aria-label={t('auth.name')} placeholder={t('auth.name')} value={form.name} onChange={set('name')} />
+            <Field icon={<UserIcon />} type="text" required label={t('auth.name')} hint={t('auth.nameHint')} placeholder={t('auth.namePh')} value={form.name} onChange={set('name')} />
           </motion.div>
 
           <motion.div custom={2.5} variants={rise} initial="hidden" animate="show">
-            <Field icon={<ShopIcon />} type="text" required aria-label={t('auth.storeName')} placeholder={t('auth.storeNameHint')} value={form.storeName} onChange={set('storeName')} />
+            <Field icon={<ShopIcon />} type="text" required label={t('auth.storeName')} hint={t('auth.storeHint2')} placeholder={t('auth.storeNameHint')} value={form.storeName} onChange={set('storeName')} />
           </motion.div>
 
           <motion.div custom={3} variants={rise} initial="hidden" animate="show">
-            <Field icon={<PhoneIcon />} type="tel" required dir="ltr" aria-label={t('auth.phone')} placeholder="+970590000000" value={form.phone} onChange={set('phone')} autoComplete="tel" />
-            <p className="mt-1 ps-1 text-xs text-stone-400">{t('auth.phoneHint')}</p>
+            <Field icon={<PhoneIcon />} type="tel" required dir="ltr" label={t('auth.phone')} hint={t('auth.phoneHint')} placeholder="+970590000000" value={form.phone} onChange={set('phone')} autoComplete="tel" />
           </motion.div>
 
           <motion.div custom={3.5} variants={rise} initial="hidden" animate="show">
-            <Field ref={emailRef} icon={<MailIcon />} type="text" inputMode="email" autoCapitalize="none" autoCorrect="off" aria-label={t('auth.email')} placeholder="you@email.com" value={form.email} onChange={set('email')} autoComplete="email" />
+            <Field ref={emailRef} icon={<MailIcon />} type="text" inputMode="email" autoCapitalize="none" autoCorrect="off" label={t('auth.email')} hint={t('auth.emailHint2')} placeholder="you@email.com" value={form.email} onChange={set('email')} autoComplete="email" />
           </motion.div>
 
           <motion.div custom={4} variants={rise} initial="hidden" animate="show">
@@ -72,8 +71,8 @@ export default function Register() {
               icon={<LockIcon />}
               type={showPass ? 'text' : 'password'}
               required
-              aria-label={t('auth.password')}
-              placeholder={t('auth.password')}
+              label={t('auth.password')}
+              placeholder="••••••••"
               value={form.password}
               onChange={set('password')}
               autoComplete="new-password"
@@ -84,7 +83,7 @@ export default function Register() {
               }
             />
             <PasswordStrength password={form.password} />
-            <p className="mt-1.5 ps-1 text-xs text-stone-400">{t('auth.passwordHint')}</p>
+            <p className="bz-af-hint">{t('auth.passwordHint')}</p>
           </motion.div>
 
           <motion.button

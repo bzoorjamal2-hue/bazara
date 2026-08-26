@@ -88,7 +88,7 @@ export default function Layout({ children }) {
       {/* صفحة المنصّة تملأ الشاشة من حافةٍ لحافة: غلاف المحتوى المحدود بعرضٍ
           وحشوةٍ جانبية كان يحبس هيروها فيظهر لون الخلفية على الجانبين، ويقصّ
           شريطها العلويّ. أقسامها تتولّى عرضها وحشوتها بنفسها. */}
-      {isLanding ? (
+      {isLanding || isAuthFull ? (
         <main className="w-full flex-1">{children}</main>
       ) : (
         <main className={`mx-auto w-full max-w-6xl flex-1 px-4 pt-5 sm:px-6 xl:max-w-[1320px] 2xl:max-w-[1600px] ${isStoreTrack ? 'flex flex-col' : ''} ${showBottomNav && !showFooter ? 'pb-bottomnav' : 'pb-8'}`}>{children}</main>

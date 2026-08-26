@@ -362,13 +362,17 @@ input[type='datetime-local']::-webkit-datetime-edit {
 }
 
 /* زر إرسال صفحات الحساب — حبة خمرية نارية بهالة ذهبية (نفس هوية أزرار الشراء) */
+/* زرّ الحساب: إسبريسو الموقع، لا خمريّ #6e2637 — لونٌ لم يكن من اللوحة
+   أصلاً (لا wine ولا gold) فيبدو دخيلاً وسط البنّي والعاجي. حدّه الذهبيّ
+   ذهب أيضاً: التباين وحده يكفي على بطاقةٍ رملية. */
 .auth-submit {
-  @apply w-full rounded-full py-4 text-center font-bold transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60;
-  color: #F4EDE2;
-  border: 1px solid rgba(230, 200, 120, 0.35);
-  background: linear-gradient(135deg, #6e2637 0%, #4a1322 60%, #3f1020 100%);
-  box-shadow: 0 16px 34px -14px rgba(74, 19, 34, 0.65);
+  @apply w-full rounded-full py-4 text-center font-bold transition disabled:cursor-not-allowed disabled:opacity-60;
+  color: #fbf6ea;
+  background: linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%);
+  box-shadow: 0 16px 34px -16px rgba(20, 13, 7, 0.8);
 }
+@media (hover: hover) { .auth-submit:hover { background: linear-gradient(150deg, #4a3628 0%, #33241a 60%, #241708 100%); } }
+.auth-submit:active { transform: scale(0.985); }
 
 /* شطب مضبوط بمنتصف النص — line-through الافتراضي ينزل عن المنتصف مع الخطوط العربية،
    فنرسم الخط بأنفسنا متمركزاً عمودياً (يرث لون النص الحالي) */
@@ -2644,3 +2648,220 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 @media (hover: hover) { .bz-foot-top:hover { background: rgba(244, 237, 226, 0.09); color: var(--cream); } }
+
+/* ═══════════════ صفحات الحساب (دخول · حساب جديد · استعادة) ═══════════════
+   بهوية صفحة المنصّة نفسها: إسبريسو عميق وذهبٌ أثرٌ لا حشوة. وعلى الشاشات
+   الواسعة لوحان — هويةٌ ونموذج — بدل عمودٍ ضيّق وسط فراغ. */
+.bz-auth {
+  /* عناصر الشبكة min-width الافتراضي auto فلا تنكمش دون عرض محتواها، فتفيض
+     الصفحة أفقياً على الشاشات الضيّقة ويُقصّ النصّ. clip يقطع الفيضان ولا
+     يُنشئ سياق تمرير (بخلاف hidden). */
+  overflow-x: clip;
+  --espresso: #140d07;
+  --cream: #F4EDE2;
+  --gold: #d4af37;
+  --gold-3: #ecd99b;
+  display: grid;
+  min-height: 100svh;
+  grid-template-rows: auto 1fr;
+  background: var(--espresso);
+}
+@media (min-width: 900px) {
+  /* لوح الهوية أوسع قليلاً — هو الذي يحمل الصورة */
+  .bz-auth { grid-template-rows: none; grid-template-columns: 1.15fr 1fr; }
+}
+
+/* ───── لوح الهوية ───── */
+.bz-auth-brand {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 90% at 50% -20%, rgba(212, 175, 55, 0.16), transparent 58%),
+    linear-gradient(165deg, #4a3521 0%, #33241a 45%, var(--espresso) 100%);
+}
+.bz-auth-img { position: absolute; inset: 0; background-size: cover; background-position: center; }
+.bz-auth-brand-in {
+  position: relative;
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  padding: max(env(safe-area-inset-top), 0.9rem) 1.25rem 1.5rem;
+}
+@media (min-width: 900px) { .bz-auth-brand-in { padding: 2rem 2.5rem 2.5rem; } }
+
+.bz-auth-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+
+.bz-auth-brand-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.6rem 0 0.4rem;
+  text-align: center;
+}
+/* على الشاشة الواسعة يصير اللوح تحريرياً: محاذاة البداية ووعدٌ كبير */
+@media (min-width: 900px) {
+  .bz-auth-brand-body { align-items: flex-start; text-align: start; padding-block: 2rem; }
+}
+
+.bz-auth-logo { filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.55)); }
+.bz-auth-name {
+  margin-top: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fffaf2;
+}
+.bz-auth-tag { margin-top: 0.2rem; font-size: 0.85rem; color: rgba(244, 237, 226, 0.7); }
+
+/* الوعد وعلامات الثقة: مساحتهما الشاشة الواسعة — على الجوّال يزاحمان النموذج */
+.bz-auth-promise,
+.bz-auth-ticks { display: none; }
+@media (min-width: 900px) {
+  .bz-auth-promise {
+    display: block;
+    margin-top: 2.2rem;
+    max-width: 14ch;
+    font-size: clamp(1.9rem, 2.6vw, 2.8rem);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    color: #fffaf2;
+    text-wrap: balance;
+  }
+  .bz-auth-ticks {
+    display: grid;
+    margin: 1.6rem 0 0;
+    padding: 0;
+    list-style: none;
+    gap: 0.6rem;
+  }
+  .bz-auth-ticks li {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: rgba(244, 237, 226, 0.86);
+  }
+}
+
+/* ───── لوح النموذج ───── */
+.bz-auth-form {
+  position: relative;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  /* بلا حشوةٍ جانبية على الجوّال: كانت تترك إطاراً بنّياً حول البطاقة يبدو
+     خطأً لا تصميماً. البطاقة تمتدّ من حافةٍ لحافة كورقةٍ تطلع من تحت. */
+  padding: 0;
+  background: linear-gradient(180deg, var(--espresso) 0%, #1c1309 100%);
+}
+@media (min-width: 900px) { .bz-auth-form { align-items: center; padding: 2.5rem; } }
+
+/* البطاقة رمليّة لا بيضاء ناصعة — الأبيض النقيّ على الإسبريسو يقطع بحدّة */
+.bz-auth-card {
+  width: 100%;
+  /* السقف لا يتجاوز الشاشة أبداً مهما ضاقت */
+  max-width: min(27rem, 100%);
+  border-radius: 1.75rem;
+  background: linear-gradient(180deg, #fffdf8 0%, #f7f0e4 100%);
+  padding: 1.75rem 1.4rem 1.6rem;
+  box-shadow: 0 30px 70px -30px rgba(0, 0, 0, 0.85), inset 0 0 0 1px rgba(212, 175, 55, 0.14);
+}
+@media (min-width: 640px) { .bz-auth-card { padding: 2.1rem 2rem 1.9rem; } }
+/* على الجوّال: ورقةٌ بعرض الشاشة تطلع من تحت لوح الهوية — بلا إطارٍ حولها */
+@media (max-width: 899px) {
+  .bz-auth-card {
+    margin-top: -2.25rem;
+    max-width: none;
+    border-radius: 2rem 2rem 0 0;
+    flex: 1;
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -14px 40px -22px rgba(0, 0, 0, 0.8), inset 0 1px 0 0 rgba(212, 175, 55, 0.16);
+  }
+  .bz-auth-form { align-items: stretch; }
+}
+
+.bz-auth-title {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #3f2e22;
+  text-align: center;
+}
+.bz-auth-sub {
+  margin-top: 0.4rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: rgba(63, 46, 34, 0.62);
+  text-align: center;
+}
+
+/* ───── حقل بتسمية وتلميح ───── */
+.bz-af + .bz-af { margin-top: 1rem; }
+.bz-af-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #4a3628;
+}
+.bz-af-req { margin-inline-start: 0.2rem; color: #b42318; }
+
+.bz-af { min-width: 0; }
+.bz-af-box { position: relative; }
+.bz-af-ico {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0.95rem;
+  display: flex;
+  align-items: center;
+  color: rgba(63, 46, 34, 0.4);
+  pointer-events: none;
+}
+.bz-af-trail {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0.85rem;
+  display: flex;
+  align-items: center;
+  color: rgba(63, 46, 34, 0.45);
+}
+.bz-af-input {
+  width: 100%;
+  /* الحقل يرث عرضاً أدنى من سمة size — نلغيه ليتبع البطاقة لا العكس */
+  min-width: 0;
+  box-sizing: border-box;
+  border-radius: 999px;
+  border: 1px solid rgba(63, 46, 34, 0.16);
+  background: #fff;
+  padding: 0.9rem 1.1rem;
+  font-size: 0.95rem;
+  color: #2b1d12;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.bz-af-input.has-ico { padding-inline-start: 2.9rem; }
+.bz-af-input.has-trail { padding-inline-end: 2.9rem; }
+.bz-af-input::placeholder { color: rgba(63, 46, 34, 0.34); }
+.bz-af-input:focus {
+  outline: none;
+  border-color: rgba(212, 175, 55, 0.7);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.16);
+}
+.bz-af-input[aria-invalid='true'] { border-color: rgba(180, 35, 24, 0.55); }
+
+.bz-af-hint {
+  margin: 0.4rem 0.9rem 0;
+  font-size: 0.72rem;
+  line-height: 1.6;
+  color: rgba(63, 46, 34, 0.52);
+}
+.bz-af-err {
+  margin: 0.4rem 0.9rem 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #b42318;
+}
