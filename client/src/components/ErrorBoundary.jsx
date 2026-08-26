@@ -11,11 +11,14 @@ import { Component } from 'react';
 export default class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
-    this.state = { failed: false };
+    this.state = { failed: false, msg: '' };
   }
 
-  static getDerivedStateFromError() {
-    return { failed: true };
+  static getDerivedStateFromError(error) {
+    // نحتفظ بنصّ الخطأ لنعرضه: «حدث خطأ غير متوقّع» وحدها لا تُمكّن أحداً من
+    // إصلاح شيء — لا صاحبة الموقع ولا من تراسله. السطر الواحد يكفي لتحديد
+    // الملف والسبب، ولا يكشف بياناتِ أحد.
+    return { failed: true, msg: String(error?.message || error || '').slice(0, 240) };
   }
 
   componentDidCatch(error, info) {
@@ -41,6 +44,15 @@ export default class ErrorBoundary extends Component {
           <p className="mt-1.5 text-sm" style={{ color: '#7a6f73' }}>
             حدث خطأ غير متوقّع. جرّبي تحديث الصفحة، وإن تكرّر فارجعي للرئيسية.
           </p>
+          {this.state.msg && (
+            <p
+              dir="ltr"
+              className="mt-3 max-h-24 overflow-auto rounded-xl px-3 py-2 text-start text-[11px] leading-relaxed"
+              style={{ background: 'rgba(94,70,54,0.06)', color: '#6b6560', fontFamily: 'ui-monospace, monospace' }}
+            >
+              {this.state.msg}
+            </p>
+          )}
           <div className="mt-5 flex flex-wrap justify-center gap-2.5">
             <button
               type="button"
