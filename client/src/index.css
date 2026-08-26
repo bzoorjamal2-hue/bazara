@@ -1147,12 +1147,15 @@ html.dark .theme-pub .text-wine\/30 { color: rgba(236, 227, 214, 0.45); }
 
 /* رسائل التأكيد الخضراء الفاتحة كانت تختفي على الخلفية الكريمية الفاتحة →
    نجعلها خضراء واضحة في الوضع النهاري، وفاتحة في الوضع الليلي. */
+/* درجةٌ أغمق ممّا كانت: هذه الأصناف تُستعمل غالباً على خلفيةٍ ملوّنة
+   شفّافة من اللون نفسه (bg-emerald-500/20) لا على الأبيض — وهناك كان
+   الأخضر 3.12 والحدّ 4.5. صار 4.6 على تلك الخلفية، وأعلى على الأبيض. */
 .theme-pub .text-emerald-200,
 .theme-pub .text-emerald-300,
-.theme-pub .text-emerald-400 { color: #059669; }
+.theme-pub .text-emerald-400 { color: #047857; }
 .theme-pub .text-red-200,
 .theme-pub .text-red-300,
-.theme-pub .text-red-400 { color: #dc2626; }
+.theme-pub .text-red-400 { color: #b91c1c; }
 .theme-pub .text-orange-200,
 .theme-pub .text-orange-300,
 .theme-pub .text-orange-400 { color: #ea580c; }
