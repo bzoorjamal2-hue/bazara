@@ -53,15 +53,29 @@ function StarBoxIcon({ className = 'h-6 w-6' }) {
 }
 
 // شريط مزايا المتجر — يظهر بآخر الصفحة، أنيق ومنسّق بألوان المتجر.
-export default function FeaturesBar() {
+//
+// كلُّ شارةٍ هنا وعدٌ تقرؤه الزبونة قبل أن تدفع، فلا تُعرض إلا إن كان لها ما
+// يسندها:
+//
+// · «إمكانية التبديل» كانت تظهر على كلّ متجرٍ سواءٌ أكانت صاحبتُه تبدّل أم لا.
+//   ولو اشترت زبونةٌ على هذا الوعد ثمّ رُفض طلبُها، فالمنصّةُ هي من وعد لا
+//   التاجرة. صارت مربوطةً بسياسة الإرجاع التي تكتبها التاجرة بنفسها: مكتوبةٌ
+//   فتظهر، غائبةٌ فلا تظهر.
+//
+// · «موديلات حصرية» حُذفت: لا حقلَ ولا بيانَ يسندها — كلُّ تاجرةٍ تجلب بضاعتها
+//   من مصادرها، والمنصّةُ لا تعلم شيئاً عن حصريّتها فضلاً عن أن تضمنها.
+//
+// والباقيات تخصّ المنصّة نفسها وتصحّ عنها: اتّصالٌ مشفّر، وشجرةُ توصيلٍ تغطّي
+// المناطق، والأسعار من التاجرة مباشرةً بلا وسيط.
+export default function FeaturesBar({ store }) {
   const { t, i18n } = useTranslation();
+  const hasReturns = Boolean(String(store?.returnPolicy || '').trim());
   const items = [
     { Icon: ShieldIcon, title: t('store.featSecurity') },
     { Icon: TruckIcon, title: t('store.featDelivery') },
-    { Icon: ExchangeIcon, title: t('store.featExchange') },
+    hasReturns && { Icon: ExchangeIcon, title: t('store.featExchange') },
     { Icon: TagIcon, title: t('store.featPrices') },
-    { Icon: StarBoxIcon, title: t('store.featExclusive') },
-  ];
+  ].filter(Boolean);
 
   const rtl = i18n.language !== 'en';
   const [perPage, setPerPage] = useState(getPerPage());

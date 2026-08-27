@@ -604,7 +604,7 @@ export default function StorePage() {
       )}
 
       {/* شريط المزايا — بآخر كل صفحات المتجر، قبل الفوتر */}
-      <FeaturesBar />
+      <FeaturesBar store={store} />
 
       {/* فوتر المتجر بأيقونات تواصل مربوطة بحسابات المشترك */}
       <StoreFooter store={store} wa={wa} onShare={() => setShareOpen(true)} />
