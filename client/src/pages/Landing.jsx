@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client.js';
 import Seo from '../components/Seo.jsx';
+import LandingShelf from '../components/LandingShelf.jsx';
 import { heroSrc, heroSrcSet } from '../utils/heroImage.js';
 import Logo from '../components/Logo.jsx';
 import LanguageSwitcher from '../components/LanguageSwitcher.jsx';
@@ -167,6 +168,13 @@ export default function Landing() {
 
   const testimonials = L.testimonials?.length ? L.testimonials : (t('landing.testimonials', { returnObjects: true }) || []);
   const stats = site.stats;
+  // عتبةُ كلّ رقم: دونها لا يُعرض
+  const STAT_FLOOR = { stores: 6, products: 25, orders: 50 };
+  const shownStats = !stats ? [] : [
+    { key: 'stores', n: stats.stores, label: t('landing.statStores'), Icon: StoreIcon },
+    { key: 'products', n: stats.products, label: t('landing.statProducts'), Icon: PackageIcon },
+    { key: 'orders', n: stats.orders, label: t('landing.statOrders'), Icon: BagIcon },
+  ].filter((x) => Number(x.n) >= STAT_FLOOR[x.key]);
   const L_ = L;
   const contact = L.contact || {};
 
@@ -345,14 +353,15 @@ export default function Landing() {
           {t('landing.more')} <ArrowDownIcon className="h-4 w-4" />
         </button>
 
-        {/* أرقام حيّة من قاعدة البيانات — لا أرقام مكتوبة باليد */}
-        {!hidden.has('stats') && stats && (stats.stores > 0 || stats.products > 0) && (
+        {/* أرقام حيّة من قاعدة البيانات — لا أرقام مكتوبة باليد.
+            لكنّ الرقم الحيّ يعمل ضدّنا ما دام صغيراً: تاجرةٌ تتردّد في فتح
+            متجرها ثمّ ترى «٢ متجر» تستنتج أنّ المكان خالٍ — فيصير ما وُضع
+            دليلاً دليلاً معاكساً. فلا يظهر رقمٌ إلا حين يخدم، ولا يظهر الشريط
+            إلا إن نجا منه اثنان على الأقلّ؛ وإلّا فلا شريط، وهو أنظفُ من شريطٍ
+            يعترف بالقلّة. (العتبات اجتهادٌ لا قاعدة — تُغيَّر من هنا.) */}
+        {!hidden.has('stats') && stats && shownStats.length >= 2 && (
           <div className="bz-stats">
-            {[
-              { n: stats.stores, label: t('landing.statStores'), Icon: StoreIcon },
-              { n: stats.products, label: t('landing.statProducts'), Icon: PackageIcon },
-              { n: stats.orders, label: t('landing.statOrders'), Icon: BagIcon },
-            ].map(({ n, label, Icon }, i) => (
+            {shownStats.map(({ n, label, Icon }, i) => (
               <div key={label} className="bz-stat bz-in" style={{ animationDelay: `${580 + i * 90}ms` }}>
                 <Icon className="bz-stat-ico h-5 w-5" />
                 <span className="bz-stat-n"><CountUp value={n} />{n >= 50 ? '+' : ''}</span>
@@ -362,6 +371,12 @@ export default function Landing() {
           </div>
         )}
       </header>
+
+      {/* ─────────── الرفّ: قطعٌ حقيقيّة قبل أيّ شرح ───────────
+          تُرى البضاعة أوّلاً: منصّةُ أزياءٍ تشرح نفسها بالنصّ قبل أن تُري
+          قطعةً تطلب من الزائرة ثقةً لم تكسبها بعد. والقسمُ يُخفي نفسه إن لم
+          يجد أربع قطعٍ بصور. */}
+      {!hidden.has('shelf') && <LandingShelf />}
 
       {/* ─────────── الميزات ─────────── */}
       {!hidden.has('features') && features.length > 0 && (

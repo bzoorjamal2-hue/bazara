@@ -3672,3 +3672,77 @@ html.dark .theme-pub .bz-pprice { color: #f6efe0; }
 html.dark .theme-pub .bz-oldprice { color: #a2957f; }
 /* على وسيطٍ داكن (الريلز) — أبيضُ خافت بالوضعين */
 .bz-oldprice-light { color: rgba(255, 255, 255, 0.72); font-weight: 500; }
+
+/* ═══════ رفّ القطع بصفحة الواجهة ═══════
+   شريطٌ يُسحب أفقياً. على الجوّال يمتدّ لحافّتَي الشاشة — فيُقطع آخرُ بلاطةٍ
+   عند الحافّة، وهذا القطعُ هو ما يقول «خلفي مزيد» فيدعو للسحب. وعلى الشاشة
+   الواسعة يتوسّط بعرضٍ محدود. */
+.bz-shelf {
+  display: flex;
+  gap: 0.85rem;
+  margin-top: clamp(1.75rem, 4vw, 2.75rem);
+  padding-inline: 1.25rem;
+  padding-bottom: 0.5rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.bz-shelf::-webkit-scrollbar { display: none; }
+@media (min-width: 768px) { .bz-shelf { padding-inline: 2.5rem; gap: 1.1rem; } }
+/* الشاشة الواسعة: العشرُ قطعٍ تتّسع، فنتوسّط بدل التمدّد على متر */
+@media (min-width: 1280px) {
+  .bz-shelf { max-width: 78rem; margin-inline: auto; padding-inline: 1rem; justify-content: center; flex-wrap: nowrap; }
+}
+
+.bz-shelf-item {
+  scroll-snap-align: start;
+  display: flex;
+  flex: 0 0 auto;
+  width: clamp(9.5rem, 38vw, 12.5rem);
+  flex-direction: column;
+  text-align: start;
+}
+/* نسبة ٣:٤ — نسبةُ تصوير الأزياء، ونسبةُ لقطات الفيديو التي نبني منها */
+.bz-shelf-art {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: 1rem;
+  aspect-ratio: 3 / 4;
+  background: rgba(94, 70, 54, 0.07);
+  box-shadow: inset 0 0 0 1px rgba(94, 70, 54, 0.08);
+}
+.bz-shelf-art img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (hover: hover) { .bz-shelf-item:hover .bz-shelf-art img { transform: scale(1.05); } }
+@media (prefers-reduced-motion: reduce) { .bz-shelf-art img { transition: none; } }
+
+.bz-shelf-name {
+  margin-top: 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: #3f2e22;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.bz-shelf-price {
+  margin-top: 0.15rem;
+  font-family: var(--bz-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: #5e4636;
+}
+
+/* لا قواعدَ ليليّة هنا عن قصد: الرفُّ يسكن قسم bz-sec-light، وهو شريطٌ
+   فاتحٌ دائماً بإيقاع الصفحة لا ينقلب مع الثيم. كتبتُ أوّلاً قواعدَ ليليّة
+   بلونٍ عاجيّ فصار النصُّ عاجيّاً على عاجيّ — تباين ١٫٠٢، أي غيرُ مرئيّ.
+   قِستُه فظهر، وهذا فخُّ هذا الملفّ: theme-pub ينقلب، وbz-sec-light لا. */
