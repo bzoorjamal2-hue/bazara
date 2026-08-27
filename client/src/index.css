@@ -4037,9 +4037,13 @@ html.dark .theme-pub .bz-oldprice { color: #a2957f; }
    منها شيء — فالزائرة تجد الريلزَ والعروضَ وتتبّعَ الطلب حيث تبدأ عينُها. */
 @media (min-width: 900px) {
   .bz-tabbar {
-    position: sticky;
+    /* لا يلتصق: صفحةُ المتجر لها هيدرُها الملتصق (الاسم والبحث والسلّة)،
+       فالتصاقُ شريطين يجعلهما يتصادمان عند النزول — أحدهما ينزلق تحت الآخر.
+       والشريطُ هنا دليلُ اكتشافٍ يُقرأ مرّةً عند الفتح لا أداةٌ تُطلب كلّ
+       لحظة، فيمضي مع الصفحة ويترك الشاشةَ للبضاعة. */
+    position: relative;
     inset-inline: auto;
-    top: 0;
+    top: auto;
     bottom: auto;
     border-top: 0;
     border-bottom: 1px solid rgba(94, 70, 54, 0.10);
@@ -4077,6 +4081,24 @@ html.dark .theme-pub .bz-oldprice { color: #a2957f; }
   -webkit-backdrop-filter: saturate(1.4) blur(10px);
   backdrop-filter: saturate(1.4) blur(10px);
 }
+
+/* على الكمبيوتر يلبس لغةَ الواجهة: شريطٌ إسبريسّو داكن كأقسامها الغامقة،
+   لا أبيضَ يأتي مع أيّ قالب. والحبّةُ العاجيّة تحت البند الفعّال هي نفسُها
+   حبّةُ «تسوّقي الآن» بالهيرو — فيُقرأ الشريطُ امتداداً للصفحة لا قطعةً
+   مركّبةً عليها. */
+@media (min-width: 900px) {
+  .bz-tabbar {
+    background: linear-gradient(180deg, #2a1d13 0%, #201710 100%) !important;
+    border-bottom-color: rgba(228, 216, 197, 0.14) !important;
+    box-shadow: 0 10px 26px -20px rgba(0, 0, 0, 0.8);
+  }
+  .bz-tabbar button { color: rgba(244, 237, 226, 0.72); font-weight: 600; }
+  @media (hover: hover) {
+    .bz-tabbar button:hover { color: #F4EDE2; background: rgba(244, 237, 226, 0.08); }
+  }
+  .bz-tabbar button.is-on { background: #F4EDE2; color: #2b1d12; font-weight: 800; }
+  html.dark .theme-pub .bz-tabbar button.is-on { background: #F4EDE2; color: #2b1d12; }
+}
 .bz-tabbar button { color: #7d6350; }
 /* الفعّال: حبّةٌ مصمتة لا لونُ نصٍّ وحده — الفرقُ يُرى بلمحة لا بتدقيق */
 .bz-tabbar button > span:first-child { transition: background-color 0.2s ease, color 0.2s ease; }
@@ -4090,3 +4112,11 @@ html.dark .theme-pub .bz-tabbar {
 html.dark .theme-pub .bz-tabbar button { color: #b9ab91; }
 html.dark .theme-pub .bz-tabbar button.is-on { color: #f6efe0; }
 html.dark .theme-pub .bz-tabbar button.is-on > span:first-child { background: #e4d8c5; color: #2b1d12; }
+
+/* ── ارتفاعُ الأزرار العائمة (واتساب · مساعد الأناقة · العودة للأعلى) ──
+   كان 96px مكتوباً بالشيفرة بثلاثة مواضع — وهو ارتفاعُ الشريط السفليّ.
+   وحين صعد الشريطُ للأعلى على الكمبيوتر بقيت الأزرار مرتفعةً تتجنّب شريطاً
+   لم يعد هناك، فبدت معلّقةً بمنتصف الشاشة. صار المقدارُ متغيّراً واحداً
+   يتبع الشاشة، فلا يفترق موضعُ الزرّ عن موضع الشريط أبداً. */
+:root { --bz-fab-bottom: 96px; }
+@media (min-width: 900px) { :root { --bz-fab-bottom: 24px; } }

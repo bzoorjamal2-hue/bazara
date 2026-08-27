@@ -4,6 +4,22 @@ import { getStoreScope, subscribeStoreScope } from '../utils/storeScope.js';
 import { useTranslation } from 'react-i18next';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
+
+// شاشةٌ عريضة؟ نفسُ عتبة الـCSS (900px) بمكانٍ واحد — لو افترقتا لظهر الشريطُ
+// بشكلٍ ويتصرّف بآخر. useSyncExternalStore هو الصحيح لمصدرٍ خارج React.
+const DESKTOP = '(min-width: 900px)';
+const mq = () => (typeof window === 'undefined' ? null : window.matchMedia(DESKTOP));
+const subDesktop = (cb) => {
+  const m = mq();
+  if (!m) return () => {};
+  m.addEventListener('change', cb);
+  return () => m.removeEventListener('change', cb);
+};
+const useDesktop = () => useSyncExternalStore(
+  subDesktop,
+  () => Boolean(mq()?.matches),
+  () => false,   // بالخادم: نفترض الجوّال فيظهر البندُ ولا يختفي خطأً
+);
 import { useAuth } from '../context/AuthContext.jsx';
 import api from '../api/client.js';
 
@@ -201,8 +217,13 @@ export default function BottomNav() {
   const categoriesTo = inDest ? `/store/${destSlug}?cats=1` : '/categories';
   // السلة والمفضّلة موجودتان بالشريط العلوي بحد الأفاتار، فنستبدلهما بوجهات أنفع.
   // الترتيب يتبع اتجاه اللغة تلقائياً: عربي (حسابي أولاً يميناً)، إنجليزي (يساراً).
+  // عرضٌ عريض؟ نقرؤه مرّةً ونتابع تغيّره — البندُ المكرّر يُخفى هناك.
+  const dt = useDesktop();
   const items = [
-    { key: 'account', label: t('nav.account') || 'حسابي', Icon: UserIcon, active: !cartOpen && !wishOpen && pathname.startsWith('/dashboard'), badge: newOrders, onClick: () => goto(accountTo) },
+    // «حسابي» يُخفى على الكمبيوتر: هو أصلاً بالشريط العلويّ بحدّ
+    // الصورة الشخصية، فوجودُه هنا تكرارٌ يزحم صفّاً محدود العرض.
+    // (dt = شاشةٌ عريضة)
+    ...(dt ? [] : [{ key: 'account', label: t('nav.account') || 'حسابي', Icon: UserIcon, active: !cartOpen && !wishOpen && pathname.startsWith('/dashboard'), badge: newOrders, onClick: () => goto(accountTo) }]),
     { key: 'track', label: t('nav.track'), Icon: TrackIcon, active: !cartOpen && !wishOpen && pathname === '/track', onClick: () => goto(trackTo) },
     { key: 'offers', label: t('nav.offers'), Icon: OffersIcon, active: !cartOpen && !wishOpen && offersActive, onClick: () => goto(offersTo) },
     { key: 'reels', label: t('reels.title'), Icon: ReelsIcon, active: !cartOpen && !wishOpen && reelsActive, onClick: () => goto(reelsTo) },

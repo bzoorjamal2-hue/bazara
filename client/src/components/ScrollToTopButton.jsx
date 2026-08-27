@@ -49,7 +49,9 @@ export default function ScrollToTopButton() {
       aria-label={t('common.backToTop')}
       title={t('common.backToTop')}
       className="fixed start-5 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-wine/90 text-cream shadow-lg ring-1 ring-cream/20 transition hover:bg-wine hover:scale-110 active:scale-95 animate-fade-in"
-      style={{ bottom: bottom === BASE_BOTTOM ? `calc(env(safe-area-inset-bottom, 0px) + ${BASE_BOTTOM}px)` : `${bottom}px` }}
+      // بالوضع الافتراضيّ نتبع المتغيّر (يتبع الشاشة)، وحين يرفعه شريطُ
+      // شراءٍ أو ما شابه نحترم المقدارَ المحسوب.
+      style={{ bottom: bottom === BASE_BOTTOM ? 'calc(env(safe-area-inset-bottom, 0px) + var(--bz-fab-bottom))' : `${bottom}px` }}
     >
       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M12 19V5M5 12l7-7 7 7" />
