@@ -121,7 +121,7 @@ function sanitizeLanding(raw) {
     },
     // إخفاء أقسام بأكملها — بعض المتاجر لا تريد الشهادات مثلاً
     hidden: (Array.isArray(raw.hidden) ? raw.hidden : [])
-      .map((k) => txt(k, 20)).filter((k) => ['stats', 'shelf', 'features', 'steps', 'testimonials', 'faq'].includes(k)),
+      .map((k) => txt(k, 20)).filter((k) => ['stats', 'shelf', 'preview', 'features', 'steps', 'testimonials', 'faq'].includes(k)),
   };
 }
 

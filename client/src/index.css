@@ -3866,3 +3866,44 @@ html.dark .theme-pub .bz-oldprice { color: #a2957f; }
   color: #5b4a3c;
 }
 /* لا قواعدَ ليليّة: القسم bz-sec-light فاتحٌ دائماً لا ينقلب مع الثيم */
+
+/* ═══════ إطارُ الهاتف: لقطةُ متجرٍ حقيقيّ ═══════
+   الإطار يقول «هكذا يبدو على جوّالك» بلا كلمة. ومقاسه بنسبةٍ لا بأبعادٍ
+   ثابتة، فيصغر مع الشاشة ولا يفيض. */
+.bz-phone {
+  display: flex;
+  justify-content: center;
+  margin-top: clamp(2rem, 5vw, 3rem);
+}
+.bz-phone-body {
+  position: relative;
+  width: min(19rem, 78vw);
+  aspect-ratio: 520 / 1126;
+  border-radius: clamp(1.6rem, 5vw, 2.4rem);
+  padding: 0.5rem;
+  background: linear-gradient(160deg, #4a3a2c, #241b12 60%, #120c07);
+  box-shadow:
+    0 40px 80px -30px rgba(0, 0, 0, 0.75),
+    inset 0 0 0 1px rgba(244, 237, 226, 0.14);
+}
+.bz-phone-body img {
+  height: 100%;
+  width: 100%;
+  border-radius: clamp(1.15rem, 3.8vw, 1.95rem);
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+/* شقُّ الكاميرا — تفصيلٌ صغير يجعل الإطار يُقرأ هاتفاً فوراً */
+.bz-phone-notch {
+  position: absolute;
+  inset-inline: 0;
+  top: 0.95rem;
+  z-index: 2;
+  width: 28%;
+  margin-inline: auto;
+  height: 0.42rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+}
+@media (min-width: 768px) { .bz-phone-body { width: 21rem; } }

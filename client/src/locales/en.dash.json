@@ -1116,7 +1116,8 @@
       "question": "Question",
       "faqQ": "Question",
       "faqA": "Answer",
-      "addFaq": "Add a question"
+      "addFaq": "Add a question",
+      "secPreview": "Store preview"
     }
   },
   "finance": {

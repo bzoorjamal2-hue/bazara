@@ -387,6 +387,43 @@ export default function Landing() {
           يجد أربع قطعٍ بصور. */}
       {!hidden.has('shelf') && <LandingShelf />}
 
+      {/* ─────────── ما تحصلين عليه ───────────
+          الصفحة كانت تبيع متجراً ولا تُري متجراً: إحدى عشرة صورةً كلُّها قطعُ
+          ملابس، ولا لقطةَ واحدة لما تشتريه التاجرة. وهذا أوّلُ ما تعرضه مواقعُ
+          بناء المتاجر — لأنّ المشتري يشتري الواجهة لا وصفَها.
+          واللقطة من متجرٍ حقيقيّ على المنصّة، لا رسمٌ متخيَّل. */}
+      {!hidden.has('preview') && (
+        <section id="preview" className="bz-sec bz-sec-alt bz-grain">
+          <Reveal>
+            <SectionTitle
+              eyebrow={t('landing.seeEyebrow')}
+              title={t('landing.seeTitle')}
+              desc={t('landing.seeDesc')}
+            />
+          </Reveal>
+          <Reveal delay={120}>
+            <div className="bz-phone">
+              <div className="bz-phone-body">
+                <span className="bz-phone-notch" aria-hidden="true" />
+                <img
+                  src="/store-preview.webp"
+                  alt={t('landing.seeTitle')}
+                  loading="lazy"
+                  decoding="async"
+                  width={520}
+                  height={1126}
+                />
+              </div>
+            </div>
+          </Reveal>
+          <div className="mt-9 text-center">
+            <Link to="/shop" className="bz-btn-gold !inline-flex !w-auto px-8">
+              {t('landing.seeCta')} <ForwardIcon className="h-4 w-4" />
+            </Link>
+          </div>
+        </section>
+      )}
+
       {/* ─────────── الميزات ─────────── */}
       {!hidden.has('features') && features.length > 0 && (
         <section id="features" className="bz-sec bz-sec-light">

@@ -758,7 +758,7 @@
     "seoDesc": "Open your online store in minutes, or shop dozens of Palestinian boutiques. Delivery across Palestine, cash on delivery.",
     "badge": "Palestinian platform · Fashion & modest wear",
     "title": "Your online store starts today",
-    "subtitle": "Bazara brings Palestinian fashion stores together: shop dozens of boutiques, or open your own in minutes — no technical skills, no setup fees.",
+    "subtitle": "A Palestinian fashion platform: open your store in minutes — no technical skills, no setup fee — or browse what merchants are showing today.",
     "chip1": "Delivery across Palestine",
     "chip2": "Cash on delivery",
     "chip3": "Easy exchange",
@@ -873,6 +873,10 @@
         "q": "What if I want to stop?",
         "a": "Cancel the subscription and your store stays live until the last day you paid for. No commitment, no penalty."
       }
-    ]
+    ],
+    "seeEyebrow": "What you get",
+    "seeTitle": "A store ready in your name",
+    "seeDesc": "A screenshot of a real Bazara store — not a mockup. Slider, categories, cart, WhatsApp, order tracking and reels.",
+    "seeCta": "Visit a real store"
   }
 }

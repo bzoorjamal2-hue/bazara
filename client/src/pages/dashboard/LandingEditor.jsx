@@ -124,6 +124,7 @@ export default function LandingEditor() {
   const SECTIONS = [
     { key: 'stats', label: t('admin.land.secStats'), Icon: GridIcon },
     { key: 'shelf', label: t('admin.land.secShelf'), Icon: ImageIcon },
+    { key: 'preview', label: t('admin.land.secPreview'), Icon: ImageIcon },
     { key: 'features', label: t('admin.land.secFeatures'), Icon: SparkleIcon },
     { key: 'steps', label: t('admin.land.secSteps'), Icon: NoteIcon },
     { key: 'testimonials', label: t('admin.land.secQuotes'), Icon: UsersIcon },
