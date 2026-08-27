@@ -236,7 +236,15 @@ export default function LandingEditor() {
           ) : (
             L.hero.chips.map((c, i) => (
               <div key={i} className="flex items-center gap-2">
-                <input className="input min-w-0 flex-1" maxLength={40} value={c.label || ''} onChange={(e) => setHero('chips', L.hero.chips.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))} />
+                <div className="min-w-0 flex-1">
+                  <Bi
+                    max={40}
+                    value={c.label}
+                    valueEn={c.labelEn}
+                    onChange={(v) => setHero('chips', L.hero.chips.map((x, j) => (j === i ? { ...x, label: v } : x)))}
+                    onChangeEn={(v) => setHero('chips', L.hero.chips.map((x, j) => (j === i ? { ...x, labelEn: v } : x)))}
+                  />
+                </div>
                 <button type="button" onClick={() => setHero('chips', L.hero.chips.filter((_, j) => j !== i))} className="app-tap rounded-full p-2 text-red-300 transition hover:bg-red-500/10">
                   <TrashIcon className="h-3.5 w-3.5" />
                 </button>
@@ -310,8 +318,10 @@ export default function LandingEditor() {
             <Bi rows={2} max={300} placeholder={t('admin.land.quoteText')} value={q.text} valueEn={q.textEn}
               onChange={(v) => setIn('testimonials', i, 'text', v)} onChangeEn={(v) => setIn('testimonials', i, 'textEn', v)} />
             <div className="grid gap-2 sm:grid-cols-2">
-              <input className="input" maxLength={60} placeholder={t('admin.land.quoteName')} value={q.name || ''} onChange={(e) => setIn('testimonials', i, 'name', e.target.value)} />
-              <input className="input" maxLength={60} placeholder={t('admin.land.quoteStore')} value={q.store || ''} onChange={(e) => setIn('testimonials', i, 'store', e.target.value)} />
+              <Bi max={60} placeholder={t('admin.land.quoteName')} value={q.name} valueEn={q.nameEn}
+                onChange={(v) => setIn('testimonials', i, 'name', v)} onChangeEn={(v) => setIn('testimonials', i, 'nameEn', v)} />
+              <Bi max={60} placeholder={t('admin.land.quoteStore')} value={q.store} valueEn={q.storeEn}
+                onChange={(v) => setIn('testimonials', i, 'store', v)} onChangeEn={(v) => setIn('testimonials', i, 'storeEn', v)} />
             </div>
           </Item>
         ))}
@@ -370,7 +380,8 @@ export default function LandingEditor() {
       <div className={CARD}>
         <SectionHead icon={<MailIcon className="h-5 w-5" />} title={t('admin.land.contactTitle')} desc={t('admin.land.contactHint')} />
         <Field label={t('admin.land.headline')} max={80} value={L.contact.title}>
-          <input className="input" maxLength={80} value={L.contact.title} onChange={(e) => setContact('title', e.target.value)} placeholder={t('landing.contactTitle')} />
+          <Bi max={80} placeholder={t('landing.contactTitle')} value={L.contact.title} valueEn={L.contact.titleEn}
+            onChange={(v) => setContact('title', v)} onChangeEn={(v) => setContact('titleEn', v)} />
         </Field>
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label={t('admin.land.fEmail')} max={120} value={L.contact.email}>
@@ -381,10 +392,12 @@ export default function LandingEditor() {
           </Field>
         </div>
         <Field label={t('admin.land.fAddress')} max={160} value={L.contact.address}>
-          <input className="input" maxLength={160} value={L.contact.address} onChange={(e) => setContact('address', e.target.value)} />
+          <Bi max={160} value={L.contact.address} valueEn={L.contact.addressEn}
+            onChange={(v) => setContact('address', v)} onChangeEn={(v) => setContact('addressEn', v)} />
         </Field>
         <Field label={t('admin.land.fHours')} max={120} value={L.contact.hours}>
-          <input className="input" maxLength={120} value={L.contact.hours} onChange={(e) => setContact('hours', e.target.value)} placeholder={t('admin.land.fHoursPh')} />
+          <Bi max={120} placeholder={t('admin.land.fHoursPh')} value={L.contact.hours} valueEn={L.contact.hoursEn}
+            onChange={(v) => setContact('hours', v)} onChangeEn={(v) => setContact('hoursEn', v)} />
         </Field>
       </div>
 

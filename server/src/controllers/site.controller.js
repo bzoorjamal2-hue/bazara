@@ -85,7 +85,11 @@ function sanitizeLanding(raw) {
     })),
     testimonials: list(raw.testimonials, (x) => ({
       text: txt(x?.text, 300), textEn: txt(x?.textEn, 300),
-      name: txt(x?.name, 60), store: txt(x?.store, 60), image: img(x?.image),
+      // اسمُ صاحبة المتجر ومتجرُها بلغتين: الاسم العربيّ وسط شهادةٍ إنجليزيّة
+      // يقطع القراءة، وكثيرٌ من المتاجر لها اسمٌ لاتينيّ أصلاً.
+      name: txt(x?.name, 60), nameEn: txt(x?.nameEn, 60),
+      store: txt(x?.store, 60), storeEn: txt(x?.storeEn, 60),
+      image: img(x?.image),
       title: '', // ليمرّ من مرشّح list
     })).map(({ title, ...rest }) => rest),
     // الأسئلة الشائعة: حلّت محلّ شهاداتٍ كانت مكتوبةً للتعبئة وتُقرأ حقيقيّة.

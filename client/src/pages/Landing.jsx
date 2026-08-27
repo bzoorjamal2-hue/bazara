@@ -483,8 +483,8 @@ export default function Landing() {
                       {q.image ? <img src={q.image} alt="" /> : <CrownIcon className="h-4 w-4" />}
                     </span>
                     <span className="min-w-0">
-                      <span className="block truncate font-bold">{q.name}</span>
-                      {q.store && <span className="block truncate text-[11.5px] opacity-70">{q.store}</span>}
+                      <span className="block truncate font-bold">{pick(q, 'name', '')}</span>
+                      {pick(q, 'store', '') && <span className="block truncate text-[11.5px] opacity-70">{pick(q, 'store', '')}</span>}
                     </span>
                   </figcaption>
                 </figure>
