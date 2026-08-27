@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "icons": "node scripts/gen-icons.mjs",
-    "prebuild": "node scripts/gen-sitemap.mjs",
+    "prebuild": "node scripts/gen-sitemap.mjs && node scripts/gen-hero-preload.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "preview:shot": "node scripts/store-preview.mjs"
