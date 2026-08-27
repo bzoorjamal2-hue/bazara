@@ -166,7 +166,15 @@ export default function Landing() {
     return t('landing.steps', { returnObjects: true }) || [];
   }, [L.steps, t]);
 
-  const testimonials = L.testimonials?.length ? L.testimonials : (t('landing.testimonials', { returnObjects: true }) || []);
+  // شهاداتُ المدير وحدها — بلا نصٍّ افتراضيّ.
+  //
+  // كان بملفّ الترجمة ثلاثُ شهاداتٍ مكتوبةٍ للتعبئة، تُعرض على موقعٍ منشورٍ
+  // موقّعةً بـ«صاحبة متجر · رام الله» و«· نابلس». والزائرة تقرأها تجاربَ
+  // فعلية — وهي ليست كذلك. شهادةٌ مُختلَقة على صفحةٍ تطلب مالاً وثقةً ليست
+  // نصّاً مؤقّتاً، وانكشافُها يكلّف ثقةً أغلى بكثير ممّا تجلب.
+  // القسم الآن يظهر حين تكون هناك شهادةٌ حقيقية، ويغيب حين لا تكون.
+  const testimonials = Array.isArray(L.testimonials) ? L.testimonials : [];
+  const faq = L.faq?.length ? L.faq : (t('landing.faq', { returnObjects: true }) || []);
   const stats = site.stats;
   // عتبةُ كلّ رقم: دونها لا يُعرض
   const STAT_FLOOR = { stores: 6, products: 25, orders: 50 };
@@ -278,7 +286,8 @@ export default function Landing() {
               {[
                 !hidden.has('features') && ['features', t('landing.navFeatures')],
                 !hidden.has('steps') && ['steps', t('landing.navSteps')],
-                !hidden.has('testimonials') && ['quotes', t('landing.navQuotes')],
+                !hidden.has('testimonials') && testimonials.length > 0 && ['quotes', t('landing.navQuotes')],
+                !hidden.has('faq') && faq.length > 0 && ['faq', t('landing.faqTitle')],
                 ['about', t('landing.navAbout')],
                 ['contact', t('landing.navContact')],
               ].filter(Boolean).map(([id, label], i) => (
@@ -479,6 +488,35 @@ export default function Landing() {
                     </span>
                   </figcaption>
                 </figure>
+              </Reveal>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ─────────── الأسئلة ───────────
+          تقوم مقامَ الشهادات بالمسار نفسه: كلاهما يزيل التردّد قبل التسجيل.
+          لكنّ الشهادة تقول «غيري جرّب فارتاح»، والجواب يقول «هذا ما ستدفعينه
+          وهذا ما سيحدث» — وهذا يصحّ بمنصّةٍ عمرها شهور، وذاك لا يصحّ بعد. */}
+      {!hidden.has('faq') && faq.length > 0 && (
+        <section id="faq" className="bz-sec bz-sec-light">
+          <Reveal>
+            <SectionTitle
+              eyebrow={t('landing.faqEyebrow')}
+              title={t('landing.faqTitle')}
+              desc={t('landing.faqDesc')}
+            />
+          </Reveal>
+          <div className="bz-faq mt-10">
+            {faq.slice(0, 8).map((item, i) => (
+              <Reveal key={pick(item, 'q', i)} delay={i * 55}>
+                <details className="bz-faq-i">
+                  <summary className="bz-faq-q">
+                    <span>{pick(item, 'q', '')}</span>
+                    <span className="bz-faq-sign" aria-hidden="true" />
+                  </summary>
+                  <p className="bz-faq-a">{pick(item, 'a', '')}</p>
+                </details>
               </Reveal>
             ))}
           </div>

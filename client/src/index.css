@@ -3803,3 +3803,66 @@ html.dark .theme-pub .bz-oldprice { color: #a2957f; }
 }
 .bz-featlist-i svg { color: #7d6350; }
 /* لا قواعدَ ليليّة: القسم bz-sec-light فاتحٌ دائماً لا ينقلب مع الثيم */
+
+/* ═══════ الأسئلة الشائعة ═══════
+   حلّت محلّ شهاداتٍ مُختلَقة. <details> أصيل: يعمل بلا جافاسكربت، ويُفتح
+   بلوحة المفاتيح، ويجده البحث داخل الصفحة حتى وهو مطويّ. */
+.bz-faq {
+  display: grid;
+  gap: 0.6rem;
+  max-width: 46rem;
+  margin-inline: auto;
+}
+.bz-faq-i {
+  border-radius: 1rem;
+  background: rgba(94, 70, 54, 0.045);
+  box-shadow: inset 0 0 0 1px rgba(94, 70, 54, 0.10);
+  overflow: hidden;
+}
+.bz-faq-q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  cursor: pointer;
+  list-style: none;
+  padding: 1rem 1.15rem;
+  font-family: var(--bz-display);
+  font-size: clamp(0.98rem, 2.4vw, 1.08rem);
+  font-weight: 700;
+  line-height: 1.5;
+  color: #3f2e22;
+}
+.bz-faq-q::-webkit-details-marker { display: none; }
+.bz-faq-q:focus-visible { outline: 2px solid #5e4636; outline-offset: -2px; }
+
+/* علامةُ زائد تصير ناقصاً عند الفتح — خطّان لا أيقونة، فلا محرف يُحمَّل */
+.bz-faq-sign {
+  position: relative;
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+}
+.bz-faq-sign::before,
+.bz-faq-sign::after {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+  top: 50%;
+  width: 14px;
+  height: 2px;
+  border-radius: 2px;
+  background: #7d6350;
+  transition: transform 0.25s ease;
+}
+.bz-faq-sign::after { transform: rotate(90deg); }
+.bz-faq-i[open] .bz-faq-sign::after { transform: rotate(0deg); }
+@media (prefers-reduced-motion: reduce) { .bz-faq-sign::before, .bz-faq-sign::after { transition: none; } }
+
+.bz-faq-a {
+  padding: 0 1.15rem 1.1rem;
+  font-size: 0.92rem;
+  line-height: 1.85;
+  color: #5b4a3c;
+}
+/* لا قواعدَ ليليّة: القسم bz-sec-light فاتحٌ دائماً لا ينقلب مع الثيم */

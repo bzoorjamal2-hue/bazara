@@ -824,23 +824,6 @@
     ],
     "tstEyebrow": "What they say",
     "tstTitle": "Stores that started here",
-    "testimonials": [
-      {
-        "text": "I sold through Instagram and kept losing track of messages. Now I have a store and a link to send, and every order in one place.",
-        "name": "Store owner",
-        "store": "Ramallah"
-      },
-      {
-        "text": "Shipping was the biggest relief: I send the order from the dashboard and follow its status without a single phone call.",
-        "name": "Store owner",
-        "store": "Nablus"
-      },
-      {
-        "text": "The numbers showed me what actually sells — before, I was guessing.",
-        "name": "Store owner",
-        "store": "Jerusalem"
-      }
-    ],
     "ctaTitle": "Your store is minutes away",
     "ctaDesc": "Join stores selling every day through Bazara — or browse first and see for yourself.",
     "askUs": "Got a question? Message us",
@@ -861,6 +844,35 @@
     "shelfEyebrow": "From Bazara stores",
     "shelfTitle": "On the shelves right now",
     "shelfDesc": "Not stock photos — real pieces from merchants who opened their stores here.",
-    "shelfCta": "Browse everything"
+    "shelfCta": "Browse everything",
+    "faqEyebrow": "Before you start",
+    "faqTitle": "Questions people ask before signing up",
+    "faqDesc": "Straight answers — no small print underneath.",
+    "faq": [
+      {
+        "q": "What does it cost?",
+        "a": "₪25 a month, or ₪250 a year (two months free). That is all — no setup fee, no hidden charges."
+      },
+      {
+        "q": "Do you take a cut of each order?",
+        "a": "No. Only the subscription. Every shekel you sell is yours."
+      },
+      {
+        "q": "Do I need technical skills?",
+        "a": "No. Enter your store name and upload your pieces from your phone. No hosting, no domain, no installation."
+      },
+      {
+        "q": "How do orders reach the customer?",
+        "a": "Connect a courier (EPS, Gobox or Opost) and send the order from your dashboard — or deliver your own way and record the order manually."
+      },
+      {
+        "q": "Do products need professional photography?",
+        "a": "You can upload a video from your phone; the store takes its cover image from it automatically."
+      },
+      {
+        "q": "What if I want to stop?",
+        "a": "Cancel the subscription and your store stays live until the last day you paid for. No commitment, no penalty."
+      }
+    ]
   }
 }
