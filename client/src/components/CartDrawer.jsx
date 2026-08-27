@@ -10,6 +10,7 @@ import CitySearch from './CitySearch.jsx';
 import { CartIcon, BagIcon, XIcon, PinIcon, GiftIcon, TicketIcon, CheckIcon, ReceiptIcon, PartyIcon, TruckIcon, CashIcon, WhatsAppIcon, ForwardIcon, BackIcon, CopyIcon } from './icons.jsx';
 import api from '../api/client.js';
 import { sizeLabel } from '../utils/sizes.js';
+import { newKey, enqueue } from '../utils/orderQueue.js';
 import { colorToCss } from '../utils/colorDot.js';
 import { cldThumb } from '../utils/cloudinary.js';
 import { getRef, clearRef } from '../utils/referral.js';
@@ -289,17 +290,28 @@ export default function CartDrawer() {
     saveCustomer(cust);
     // نحفظ الطلب أولاً ونتأكّد من اكتماله — هنا يُخصم المخزون من اللون/النمرة
     let reference = '';
+    // حمولةٌ واحدة نرسلها ونحفظها إن تعثّرت — بمفتاحٍ يمنع تكرارها عند الإعادة
+    const payload = {
+      idempotencyKey: newKey(),
+      items: items.map((i) => ({ id: i.id, qty: i.qty, size: i.size, color: i.color })),
+      customer: { name: cust.name, phone: normalizePhone(cust.phone), city: cust.city, area: cust.area, address: cust.address, notes: cust.notes, deliveryFee: delivery },
+      coupon: coupon ? { code: coupon.code } : undefined,
+      referralCode: (!coupon && refDiscount > 0) ? referral?.code : undefined,
+    };
     try {
-      const r = await api.post('/orders/cod', {
-        items: items.map((i) => ({ id: i.id, qty: i.qty, size: i.size, color: i.color })),
-        customer: { name: cust.name, phone: normalizePhone(cust.phone), city: cust.city, area: cust.area, address: cust.address, notes: cust.notes, deliveryFee: delivery },
-        coupon: coupon ? { code: coupon.code } : undefined,
-        referralCode: (!coupon && refDiscount > 0) ? referral?.code : undefined,
-      });
+      const r = await api.post('/orders/cod', payload);
       reference = r.data?.reference || '';
       // حدث بكسل التمويل: شراء مكتمل (أهم حدث لقياس الإعلانات)
       trackPixel('Purchase', { value: grand, num_items: items.reduce((s, i) => s + i.qty, 0), content_ids: items.map((i) => i.id), content_type: 'product' });
-    } catch { /* تجاهل — نكمل لواتساب على أي حال */ }
+    } catch (e) {
+      // 4xx رفضٌ نهائيّ (قسيمةٌ انتهت، مخزونٌ نفد): إعادتُه لن تنجح أبداً.
+      // ما عداه شبكةٌ أو خادم — نحفظه ليُعاد تلقائياً حين تعود الشبكة.
+      const status = e?.response?.status;
+      if (!(status >= 400 && status < 500)) {
+        try { enqueue(payload); } catch { /* التخزين ممتلئ */ }
+      }
+      // ونكمل لواتساب على أيّ حال: الرسالةُ تحمل الطلب كاملاً.
+    }
     setPlacing(false);
     setDoneStore(storeSlug); // نلتقط سلاِگ المتجر قبل تفريغ السلة كي يبقى التتبّع بهويته
     clear();

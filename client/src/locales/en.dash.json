@@ -1139,7 +1139,9 @@
         "steps": "Steps",
         "quotes": "Testimonials",
         "faq": "FAQ"
-      }
+      },
+      "previewImg": "Preview image",
+      "previewImgTip": "Screenshot your store on your phone and upload it. Leave empty to keep the built-in one."
     }
   },
   "finance": {

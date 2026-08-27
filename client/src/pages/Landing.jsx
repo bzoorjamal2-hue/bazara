@@ -453,8 +453,9 @@ export default function Landing() {
                       </svg>
                     </span>
                   </div>
+                  {/* لقطةُ المديرة إن رفعتها، وإلا الملفُّ المولَّد بالسكربت */}
                   <img
-                    src="/store-preview.webp"
+                    src={L.preview?.image || '/store-preview.webp'}
                     alt={t('landing.seeTitle')}
                     loading="lazy"
                     decoding="async"

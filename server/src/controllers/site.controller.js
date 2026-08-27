@@ -117,6 +117,9 @@ function sanitizeLanding(raw) {
         }];
       }),
     ),
+    // لقطةُ المتجر بقسم «هذا ما تحصلين عليه». الافتراضيّ ملفٌّ بالمستودع
+    // يُولَّد بسكربت — والمديرُ يستبدله بلقطةٍ من جوّاله بلا نشرة.
+    preview: { image: img(raw.preview?.image) },
     seo: {
       title: txt(raw.seo?.title, 70), titleEn: txt(raw.seo?.titleEn, 70),
       desc: txt(raw.seo?.desc, 170), descEn: txt(raw.seo?.descEn, 170),

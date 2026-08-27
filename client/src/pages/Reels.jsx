@@ -10,6 +10,7 @@ import { colorToCss } from '../utils/colorDot.js';
 import CloseButton from '../components/CloseButton.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import Spinner from '../components/Spinner.jsx';
+import Seo from '../components/Seo.jsx';
 import Strike from '../components/Strike.jsx';
 import { sizeLabel } from '../utils/sizes.js';
 import { getMySize, setMySize } from '../utils/mySize.js';
@@ -179,6 +180,9 @@ export default function Reels() {
   const goBackFn = () => goBack(navigate, slug ? `/store/${slug}` : '/shop');
 
   return (
+    <>
+    {/* الصفحة الوحيدة التي كانت بلا وسوم بحث — فتُفهرَس بعنوان index.html */}
+    <Seo title={t('reels.title')} description={t('reels.seoDesc')} />
     <div
       className="fixed inset-0 z-[90] select-none bg-black"
       style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none', WebkitTapHighlightColor: 'transparent' }}
@@ -300,6 +304,7 @@ export default function Reels() {
         </>
       )}
     </div>
+    </>
   );
 }
 

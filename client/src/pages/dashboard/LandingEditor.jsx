@@ -86,6 +86,7 @@ export default function LandingEditor() {
           faq: d.faq || [],
           sec: d.sec || {},
           seo: { title: '', desc: '', ...(d.seo || {}) },
+          preview: { image: '', ...(d.preview || {}) },
           acts: { shop: '', login: '', open: '', ...(d.acts || {}) },
           cta: { title: '', subtitle: '', ...(d.cta || {}) },
           about: { title: '', text: '', ...(d.about || {}) },
@@ -103,6 +104,7 @@ export default function LandingEditor() {
   const setAbout = (k, v) => setL((p) => ({ ...p, about: { ...p.about, [k]: v } }));
   const setContact = (k, v) => setL((p) => ({ ...p, contact: { ...p.contact, [k]: v } }));
   const setSeo = (k, v) => setL((p) => ({ ...p, seo: { ...p.seo, [k]: v } }));
+  const setPreview = (k, v) => setL((p) => ({ ...p, preview: { ...p.preview, [k]: v } }));
   const setActs = (k, v) => setL((p) => ({ ...p, acts: { ...p.acts, [k]: v } }));
   const setSec = (sk, k, v) =>
     setL((p) => ({ ...p, sec: { ...p.sec, [sk]: { ...(p.sec[sk] || {}), [k]: v } } }));
@@ -358,6 +360,16 @@ export default function LandingEditor() {
               onChange={(v) => setSec(k, 'desc', v)} onChangeEn={(v) => setSec(k, 'descEn', v)} />
           </Item>
         ))}
+      </div>
+
+      {/* ─── لقطة المتجر ───
+          الافتراضيّ ملفٌّ بالمستودع يُولَّد بسكربتٍ ويُنشَر — أي أنّ تجديده
+          كان يمرّ بي. الآن تصوّر المديرةُ شاشةً من جوّالها وترفعها. */}
+      <div className={CARD}>
+        <SectionHead icon={<ImageIcon className="h-5 w-5" />} title={t('admin.land.secPreview')} desc={t('admin.land.previewImgTip')} />
+        <Field label={t('admin.land.previewImg')}>
+          <ImageInput value={L.preview.image} onChange={(v) => setPreview('image', v)} />
+        </Field>
       </div>
 
       {/* ─── نصوص الأزرار ─── */}

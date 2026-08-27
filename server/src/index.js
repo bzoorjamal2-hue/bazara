@@ -466,6 +466,11 @@ async function ensureColumns() {
 async function ensureAccounting() {
   const steps = [
     'ALTER TABLE products ADD COLUMN IF NOT EXISTS cost NUMERIC(10,2);',
+    // مفتاحُ منع التكرار: الطلبُ المتعثّر يُعاد إرساله من طابور المتصفّح حين
+    // تعود الشبكة. ولو كان الانقطاعُ بالردّ لا بالطلب، لوصل مرّتين — فالفهرسُ
+    // الفريد يجعل الثانية ترتدّ بدل أن تُسجَّل نسخةً أخرى.
+    'ALTER TABLE orders ADD COLUMN IF NOT EXISTS idempotency_key VARCHAR(64);',
+    'CREATE UNIQUE INDEX IF NOT EXISTS orders_idem_key ON orders (idempotency_key) WHERE idempotency_key IS NOT NULL;',
     `CREATE TABLE IF NOT EXISTS expenses (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,

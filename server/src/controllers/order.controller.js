@@ -211,6 +211,16 @@ export async function checkout(req, res, next) {
 // إنشاء طلب الدفع عند الاستلام (واتساب) — يُحفظ بالنظام بحالة "جديد" (بلا دفع إلكتروني)
 export async function createCodOrder(req, res, next) {
   const { items, customer } = req.body;
+  // مفتاحُ منع التكرار: يرسله المتصفّح مع الطلب ويعيده مع كلّ محاولةٍ من
+  // الطابور. فإن كان الانقطاعُ بالردّ لا بالطلب — أي سُجّل الطلبُ ولم يصل
+  // التأكيد — لم تُنشَأ نسخةٌ ثانية عند الإعادة: نردّ بالطلب الأوّل نفسه.
+  const idemKey = String(req.body?.idempotencyKey || '').trim().slice(0, 64) || null;
+  if (idemKey) {
+    const seen = await query('SELECT reference FROM orders WHERE idempotency_key = $1', [idemKey]);
+    if (seen.rows[0]) {
+      return res.status(200).json({ reference: seen.rows[0].reference, duplicate: true });
+    }
+  }
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'السلة فارغة.' });
   }
@@ -333,11 +343,11 @@ export async function createCodOrder(req, res, next) {
     const reference = 'BZ-' + crypto.randomBytes(5).toString('hex').toUpperCase();
 
     const ins = await query(
-      `INSERT INTO orders (store_id, customer_name, customer_email, customer_phone, items, total, currency, status, reference, city, area, address, notes, delivery_fee, coupon_code, discount, referral_code)
-       VALUES ($1, $2, '', $3, $4, $5, 'ILS', 'new', $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING id`,
+      `INSERT INTO orders (store_id, customer_name, customer_email, customer_phone, items, total, currency, status, reference, city, area, address, notes, delivery_fee, coupon_code, discount, referral_code, idempotency_key)
+       VALUES ($1, $2, '', $3, $4, $5, 'ILS', 'new', $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id`,
       [storeId, name, phone, JSON.stringify(orderItems), total, reference,
         cityName, areaName, (customer?.address || '').trim(), (customer?.notes || '').trim().slice(0, 500), deliveryFee,
-        appliedCoupon, discount, referralCode]
+        appliedCoupon, discount, referralCode, idemKey]
     );
 
     // ملاحظة: لا نخصم المخزون ولا نرفع عدّاد الكوبون عند الإنشاء —

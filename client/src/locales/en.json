@@ -104,7 +104,8 @@
     "less": "less",
     "saved": "Saved to wishlist ✓",
     "removed": "Removed from wishlist",
-    "noSizeMatch": "No reels in size {{size}} right now"
+    "noSizeMatch": "No reels in size {{size}} right now",
+    "seoDesc": "Short videos from Bazara stores: see the piece worn, and add it to the cart in one tap."
   },
   "story": {
     "yours": "Your story",
