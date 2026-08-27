@@ -3663,3 +3663,12 @@ html.dark .theme-pub .bz-pprice { color: #f6efe0; }
 .bz-themetoggle { transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease; }
 .bz-themetoggle:active { transform: scale(0.85) rotate(-20deg); }
 @media (prefers-reduced-motion: reduce) { .bz-themetoggle:active { transform: none; } }
+
+/* السعر المشطوب: لونٌ ووزنٌ واحدان بكلّ موضع، والحجم يبقى لكلّ سياق لأنّ
+   الأسعار نفسها تختلف حجماً. كان ٠٫٣٦ من حجم السعر بصفحة المنتج (١٢px مقابل
+   ٣٤) — والمقارنةُ بين الرقمين هي كلّ معنى الخصم، فإن لم يُقرأ القديم لم يبقَ
+   خصمٌ يُرى. والوزن ٥٠٠ لا ٤٠٠: الخطُّ المشطوب يبتلع بعض ثقل الحرف. */
+.bz-oldprice { color: #6b6259; font-weight: 500; }
+html.dark .theme-pub .bz-oldprice { color: #a2957f; }
+/* على وسيطٍ داكن (الريلز) — أبيضُ خافت بالوضعين */
+.bz-oldprice-light { color: rgba(255, 255, 255, 0.72); font-weight: 500; }

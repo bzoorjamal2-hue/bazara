@@ -185,7 +185,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
 
           <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
             <span className="font-display text-2xl font-bold text-wine">{t('common.currency')}{product.price}</span>
-            {hasDiscount && <Strike className="text-sm text-stone-400">{t('common.currency')}{product.oldPrice}</Strike>}
+            {hasDiscount && <Strike className="bz-oldprice text-lg">{t('common.currency')}{product.oldPrice}</Strike>}
             {hasDiscount && <span className="text-xs font-semibold text-[#8a2438]">{t('product.saveAmount', { amount: `${t('common.currency')}${(product.oldPrice - product.price).toFixed(2).replace(/\.00$/, '')}` })}</span>}
           </div>
 

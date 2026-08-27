@@ -356,7 +356,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
         <h3 title={product.name} className="bz-pname line-clamp-2 min-h-[2.6em] font-semibold leading-snug text-stone-100">{product.name}</h3>
         <div className="mt-0.5 flex items-baseline gap-2">
           <span className="bz-pprice text-lg font-bold">{t('common.currency')}{product.price}</span>
-          {hasDiscount && <Strike className="text-xs text-stone-500">{t('common.currency')}{product.oldPrice}</Strike>}
+          {hasDiscount && <Strike className="bz-oldprice text-sm">{t('common.currency')}{product.oldPrice}</Strike>}
         </div>
         {/* استعجال الندرة — "بقي X" عند قِلّة المخزون */}
         {lowStock && (

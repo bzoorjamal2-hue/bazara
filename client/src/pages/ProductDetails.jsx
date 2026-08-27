@@ -503,7 +503,7 @@ export default function ProductDetails() {
                 الضخم، فتظهر الثلاثة بأحجام ومستويات مختلفة */}
             {hasDiscount && (
               <span className="flex items-center gap-x-2.5">
-                <Strike className="text-xs text-stone-500">{t('common.currency')}{product.oldPrice}</Strike>
+                <Strike className="bz-oldprice text-xl">{t('common.currency')}{product.oldPrice}</Strike>
                 <span className="rounded-full bg-[#8a2438] px-2.5 py-1 text-xs font-bold leading-none text-[#F4EDE2] shadow-sm">
                   {t('product.savePct', { pct: Math.round((1 - product.price / product.oldPrice) * 100) })}
                 </span>

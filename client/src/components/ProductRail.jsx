@@ -71,7 +71,7 @@ export default function ProductRail({ title, products, currentId, icon = null, a
                 <p className="line-clamp-1 text-sm font-semibold text-stone-100">{p.name}</p>
                 <div className="mt-1 flex items-baseline justify-center gap-1.5">
                   <span className="font-bold text-wine">{t('common.currency')}{p.price}</span>
-                  {hasDiscount && <Strike className="text-xs text-stone-500">{t('common.currency')}{p.oldPrice}</Strike>}
+                  {hasDiscount && <Strike className="bz-oldprice text-sm">{t('common.currency')}{p.oldPrice}</Strike>}
                 </div>
               </div>
             </Link>
