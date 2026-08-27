@@ -8,7 +8,8 @@
     "icons": "node scripts/gen-icons.mjs",
     "prebuild": "node scripts/gen-sitemap.mjs",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "preview:shot": "node scripts/store-preview.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.0",
