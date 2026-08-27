@@ -88,6 +88,16 @@ function sanitizeLanding(raw) {
       name: txt(x?.name, 60), store: txt(x?.store, 60), image: img(x?.image),
       title: '', // ليمرّ من مرشّح list
     })).map(({ title, ...rest }) => rest),
+    // الأسئلة الشائعة: حلّت محلّ شهاداتٍ كانت مكتوبةً للتعبئة وتُقرأ حقيقيّة.
+    // list يرشّح بالحقل title، فنمرّره فارغاً ثمّ نحذفه — كما بالشهادات.
+    faq: list(raw.faq, (x) => ({
+      q: txt(x?.q, 120), qEn: txt(x?.qEn, 120),
+      a: txt(x?.a, 400), aEn: txt(x?.aEn, 400),
+      // list يُبقي ما له title أو text — فيحمل title السؤالَ ليمرّ البند، ثمّ
+      // يُحذف. ولو مرّرتُه فارغاً (كما بالشهادات) لسقطت الأسئلة كلّها بصمت:
+      // الشهادةُ تمرّ بحقل text، ولا text هنا.
+      title: txt(x?.q, 120),
+    })).map(({ title, ...rest }) => rest),
     cta: {
       title: txt(c.title, 120), titleEn: txt(c.titleEn, 120),
       subtitle: txt(c.subtitle, 300), subtitleEn: txt(c.subtitleEn, 300),
@@ -107,7 +117,7 @@ function sanitizeLanding(raw) {
     },
     // إخفاء أقسام بأكملها — بعض المتاجر لا تريد الشهادات مثلاً
     hidden: (Array.isArray(raw.hidden) ? raw.hidden : [])
-      .map((k) => txt(k, 20)).filter((k) => ['stats', 'features', 'steps', 'testimonials'].includes(k)),
+      .map((k) => txt(k, 20)).filter((k) => ['stats', 'shelf', 'features', 'steps', 'testimonials', 'faq'].includes(k)),
   };
 }
 

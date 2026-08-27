@@ -1108,7 +1108,15 @@
       "fPhone": "Phone",
       "fAddress": "Address",
       "fHours": "Working hours",
-      "fHoursPh": "Sat–Thu · 9am – 6pm"
+      "fHoursPh": "Sat–Thu · 9am – 6pm",
+      "secFaq": "FAQ",
+      "secShelf": "Product shelf",
+      "faqTitle": "Frequently asked questions",
+      "faqHint": "These do the job testimonials do: remove hesitation before signup. Keep every answer true — an overstated one is found out on the first order.",
+      "question": "Question",
+      "faqQ": "Question",
+      "faqA": "Answer",
+      "addFaq": "Add a question"
     }
   },
   "finance": {

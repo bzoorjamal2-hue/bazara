@@ -47,6 +47,7 @@ export default function LandingEditor() {
           features: d.features || [],
           steps: d.steps || [],
           testimonials: d.testimonials || [],
+          faq: d.faq || [],
           cta: { title: '', subtitle: '', ...(d.cta || {}) },
           about: { title: '', text: '', ...(d.about || {}) },
           contact: { title: '', email: '', phone: '', address: '', hours: '', ...(d.contact || {}) },
@@ -86,9 +87,11 @@ export default function LandingEditor() {
 
   const SECTIONS = [
     { key: 'stats', label: t('admin.land.secStats'), Icon: GridIcon },
+    { key: 'shelf', label: t('admin.land.secShelf'), Icon: ImageIcon },
     { key: 'features', label: t('admin.land.secFeatures'), Icon: SparkleIcon },
     { key: 'steps', label: t('admin.land.secSteps'), Icon: NoteIcon },
     { key: 'testimonials', label: t('admin.land.secQuotes'), Icon: UsersIcon },
+    { key: 'faq', label: t('admin.land.secFaq'), Icon: NoteIcon },
   ];
 
   return (
@@ -271,6 +274,35 @@ export default function LandingEditor() {
         {L.testimonials.length < 6 && (
           <button type="button" onClick={() => addTo('testimonials', { text: '', name: '', store: '' })} className="btn-ghost w-full !py-2 text-xs">
             <PlusIcon className="h-3.5 w-3.5" /> {t('admin.land.addQuote')}
+          </button>
+        )}
+      </div>
+
+      {/* ─── الأسئلة الشائعة ─── */}
+      <div className={CARD}>
+        <SectionHead icon={<NoteIcon className="h-5 w-5" />} title={t('admin.land.faqTitle')} desc={t('admin.land.faqHint')} />
+        {L.faq.map((f, i) => (
+          <Item key={i} label={`${t('admin.land.question')} ${i + 1}`} onRemove={() => rmFrom('faq', i)}>
+            <input
+              className="input"
+              maxLength={120}
+              placeholder={t('admin.land.faqQ')}
+              value={f.q || ''}
+              onChange={(e) => setIn('faq', i, 'q', e.target.value)}
+            />
+            <textarea
+              rows={2}
+              className="input resize-none"
+              maxLength={400}
+              placeholder={t('admin.land.faqA')}
+              value={f.a || ''}
+              onChange={(e) => setIn('faq', i, 'a', e.target.value)}
+            />
+          </Item>
+        ))}
+        {L.faq.length < 8 && (
+          <button type="button" onClick={() => addTo('faq', { q: '', a: '' })} className="btn-ghost w-full !py-2 text-xs">
+            <PlusIcon className="h-3.5 w-3.5" /> {t('admin.land.addFaq')}
           </button>
         )}
       </div>
