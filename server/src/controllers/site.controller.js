@@ -102,6 +102,31 @@ function sanitizeLanding(raw) {
       // الشهادةُ تمرّ بحقل text، ولا text هنا.
       title: txt(x?.q, 120),
     })).map(({ title, ...rest }) => rest),
+    // عناوينُ الأقسام ووصفُ محرّكات البحث.
+    // كان المدير يحرّر بنودَ الميزات ولا يحرّر العنوانَ فوقها، ولا النصَّ الذي
+    // يظهر بنتائج جوجل — وهو أوّلُ ما يُقرأ عن المنصّة ومنه جاء ادّعاءُ «عشرات
+    // المتاجر» الذي بقي شهراً. الشكلُ واحدٌ لكلّ قسم فيسهل تمريره ويسهل زيادةُ
+    // قسمٍ لاحقاً.
+    sec: Object.fromEntries(
+      ['shelf', 'preview', 'features', 'steps', 'quotes', 'faq'].map((k) => {
+        const v = raw.sec?.[k] || {};
+        return [k, {
+          eyebrow: txt(v.eyebrow, 60), eyebrowEn: txt(v.eyebrowEn, 60),
+          title: txt(v.title, 120), titleEn: txt(v.titleEn, 120),
+          desc: txt(v.desc, 300), descEn: txt(v.descEn, 300),
+        }];
+      }),
+    ),
+    seo: {
+      title: txt(raw.seo?.title, 70), titleEn: txt(raw.seo?.titleEn, 70),
+      desc: txt(raw.seo?.desc, 170), descEn: txt(raw.seo?.descEn, 170),
+    },
+    // نصوصُ الأزرار الثلاثة — تتكرّر بالهيرو وبالقائمة وبالختام
+    acts: {
+      shop: txt(raw.acts?.shop, 40), shopEn: txt(raw.acts?.shopEn, 40),
+      login: txt(raw.acts?.login, 40), loginEn: txt(raw.acts?.loginEn, 40),
+      open: txt(raw.acts?.open, 40), openEn: txt(raw.acts?.openEn, 40),
+    },
     cta: {
       title: txt(c.title, 120), titleEn: txt(c.titleEn, 120),
       subtitle: txt(c.subtitle, 300), subtitleEn: txt(c.subtitleEn, 300),

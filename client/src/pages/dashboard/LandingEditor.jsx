@@ -84,6 +84,9 @@ export default function LandingEditor() {
           steps: d.steps || [],
           testimonials: d.testimonials || [],
           faq: d.faq || [],
+          sec: d.sec || {},
+          seo: { title: '', desc: '', ...(d.seo || {}) },
+          acts: { shop: '', login: '', open: '', ...(d.acts || {}) },
           cta: { title: '', subtitle: '', ...(d.cta || {}) },
           about: { title: '', text: '', ...(d.about || {}) },
           contact: { title: '', email: '', phone: '', address: '', hours: '', ...(d.contact || {}) },
@@ -99,6 +102,10 @@ export default function LandingEditor() {
   const setCta = (k, v) => setL((p) => ({ ...p, cta: { ...p.cta, [k]: v } }));
   const setAbout = (k, v) => setL((p) => ({ ...p, about: { ...p.about, [k]: v } }));
   const setContact = (k, v) => setL((p) => ({ ...p, contact: { ...p.contact, [k]: v } }));
+  const setSeo = (k, v) => setL((p) => ({ ...p, seo: { ...p.seo, [k]: v } }));
+  const setActs = (k, v) => setL((p) => ({ ...p, acts: { ...p.acts, [k]: v } }));
+  const setSec = (sk, k, v) =>
+    setL((p) => ({ ...p, sec: { ...p.sec, [sk]: { ...(p.sec[sk] || {}), [k]: v } } }));
   const setIn = (key, i, k, v) =>
     setL((p) => ({ ...p, [key]: p[key].map((x, j) => (j === i ? { ...x, [k]: v } : x)) }));
   const addTo = (key, blank) => setL((p) => ({ ...p, [key]: [...p[key], blank] }));
@@ -331,6 +338,58 @@ export default function LandingEditor() {
             <PlusIcon className="h-3.5 w-3.5" /> {t('admin.land.addQuote')}
           </button>
         )}
+      </div>
+
+      {/* ─── عناوين الأقسام ───
+          كان المدير يحرّر بنودَ كلّ قسم ولا يحرّر العنوانَ فوقها. والشكلُ واحدٌ
+          للأقسام الستّة، فنُولّدها بحلقةٍ بدل ستّ كتلٍ متطابقة. */}
+      <div className={CARD}>
+        <SectionHead icon={<NoteIcon className="h-5 w-5" />} title={t('admin.land.secHeadsTitle')} desc={t('admin.land.secHeadsHint')} />
+        {['shelf', 'preview', 'features', 'steps', 'quotes', 'faq'].map((k) => (
+          <Item key={k} label={t(`admin.land.secNames.${k}`)} onRemove={() => setL((p) => ({ ...p, sec: { ...p.sec, [k]: {} } }))}>
+            <Bi max={60} placeholder={t('admin.land.eyebrow')}
+              value={L.sec[k]?.eyebrow} valueEn={L.sec[k]?.eyebrowEn}
+              onChange={(v) => setSec(k, 'eyebrow', v)} onChangeEn={(v) => setSec(k, 'eyebrowEn', v)} />
+            <Bi max={120} placeholder={t('admin.land.secTitleF')}
+              value={L.sec[k]?.title} valueEn={L.sec[k]?.titleEn}
+              onChange={(v) => setSec(k, 'title', v)} onChangeEn={(v) => setSec(k, 'titleEn', v)} />
+            <Bi rows={2} max={300} placeholder={t('admin.land.secDescF')}
+              value={L.sec[k]?.desc} valueEn={L.sec[k]?.descEn}
+              onChange={(v) => setSec(k, 'desc', v)} onChangeEn={(v) => setSec(k, 'descEn', v)} />
+          </Item>
+        ))}
+      </div>
+
+      {/* ─── نصوص الأزرار ─── */}
+      <div className={CARD}>
+        <SectionHead icon={<CheckIcon className="h-5 w-5" />} title={t('admin.land.actsTitle')} desc={t('admin.land.actsHint')} />
+        <Field label={t('admin.land.actShop')}>
+          <Bi max={40} value={L.acts.shop} valueEn={L.acts.shopEn}
+            onChange={(v) => setActs('shop', v)} onChangeEn={(v) => setActs('shopEn', v)} />
+        </Field>
+        <Field label={t('admin.land.actLogin')}>
+          <Bi max={40} value={L.acts.login} valueEn={L.acts.loginEn}
+            onChange={(v) => setActs('login', v)} onChangeEn={(v) => setActs('loginEn', v)} />
+        </Field>
+        <Field label={t('admin.land.actOpen')}>
+          <Bi max={40} value={L.acts.open} valueEn={L.acts.openEn}
+            onChange={(v) => setActs('open', v)} onChangeEn={(v) => setActs('openEn', v)} />
+        </Field>
+      </div>
+
+      {/* ─── ظهورك بجوجل ───
+          هذا النصّ هو أوّلُ ما يُقرأ عن المنصّة، ومنه جاء ادّعاءُ «عشرات
+          المتاجر» الذي بقي حتى فحصتُه — ولم يكن لأحدٍ سبيلٌ لتصحيحه. */}
+      <div className={CARD}>
+        <SectionHead icon={<GridIcon className="h-5 w-5" />} title={t('admin.land.seoTitle')} desc={t('admin.land.seoHint')} />
+        <Field label={t('admin.land.seoT')} max={70} value={L.seo.title}>
+          <Bi max={70} value={L.seo.title} valueEn={L.seo.titleEn}
+            onChange={(v) => setSeo('title', v)} onChangeEn={(v) => setSeo('titleEn', v)} />
+        </Field>
+        <Field label={t('admin.land.seoD')} max={170} value={L.seo.desc}>
+          <Bi rows={2} max={170} value={L.seo.desc} valueEn={L.seo.descEn}
+            onChange={(v) => setSeo('desc', v)} onChangeEn={(v) => setSeo('descEn', v)} />
+        </Field>
       </div>
 
       {/* ─── الأسئلة الشائعة ─── */}

@@ -54,18 +54,19 @@ function SectionTitle({ eyebrow, title, desc }) {
   );
 }
 
-// الأزرار الثلاثة — تتكرّر بالأعلى وبالأسفل: التسوّق، الدخول، فتح متجر
-function Actions({ t, compact = false }) {
+// الأزرار الثلاثة — تتكرّر بالأعلى وبالأسفل: التسوّق، الدخول، فتح متجر.
+// نصوصُها من المدير إن كتبها، وإلا المترجَمة — وهي أكثرُ ما يُضغط بالصفحة.
+function Actions({ t, compact = false, labels }) {
   return (
     <div className={`bz-acts flex w-full flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:justify-center ${compact ? '' : 'sm:gap-4'}`}>
       <Link to="/shop" className="bz-btn-gold">
-        <BagIcon className="h-5 w-5" /> {t('landing.shopNow')}
+        <BagIcon className="h-5 w-5" /> {labels?.shop || t('landing.shopNow')}
       </Link>
       <Link to="/login" className="bz-btn-outline">
-        {t('nav.login')}
+        {labels?.login || t('nav.login')}
       </Link>
       <Link to="/register" className="bz-btn-ghost">
-        <StoreIcon className="h-4 w-4" /> {t('landing.openStore')} <ForwardIcon className="h-3.5 w-3.5 rtl:rotate-180" />
+        <StoreIcon className="h-4 w-4" /> {labels?.open || t('landing.openStore')} <ForwardIcon className="h-3.5 w-3.5 rtl:rotate-180" />
       </Link>
     </div>
   );
@@ -176,6 +177,14 @@ export default function Landing() {
   const testimonials = Array.isArray(L.testimonials) ? L.testimonials : [];
   const faq = L.faq?.length ? L.faq : (t('landing.faq', { returnObjects: true }) || []);
   const stats = site.stats;
+  // عنوانُ قسمٍ: ما كتبه المدير إن كتبه، وإلا النصّ المترجَم الأصلي.
+  // كان المدير يحرّر بنودَ القسم ولا يحرّر العنوانَ فوقها.
+  const sec = (key, field, fallbackKey) => pick(L.sec?.[key] || {}, field, t(fallbackKey));
+  const acts = {
+    shop: pick(L.acts || {}, 'shop', t('landing.shopNow')),
+    login: pick(L.acts || {}, 'login', t('nav.login')),
+    open: pick(L.acts || {}, 'open', t('landing.openStore')),
+  };
   // عتبةُ كلّ رقم: دونها لا يُعرض
   const STAT_FLOOR = { stores: 6, products: 25, orders: 50 };
   const shownStats = !stats ? [] : [
@@ -188,7 +197,12 @@ export default function Landing() {
 
   return (
     <div className="bz-land">
-      <Seo title={t('landing.seoTitle')} description={t('landing.seoDesc')} />
+      {/* وصفُ نتائج البحث: أوّلُ ما يُقرأ عن المنصّة، ومنه جاء ادّعاءُ
+          «عشرات المتاجر» الذي بقي حتى فحصتُه. صار تحت يد المدير. */}
+      <Seo
+        title={pick(L.seo || {}, 'title', t('landing.seoTitle'))}
+        description={pick(L.seo || {}, 'desc', t('landing.seoDesc'))}
+      />
 
       {/* ─────────── الهيرو ─────────── */}
       <header
@@ -306,7 +320,7 @@ export default function Landing() {
             </nav>
 
             <div className="bz-menu-foot bz-in" style={{ animationDelay: '380ms' }}>
-              <Actions t={t} compact />
+              <Actions t={t} compact labels={acts} />
               {/* سطرٌ أخير للأفعال الصغيرة: اللغة وسياسة الخصوصية — كانتا
                   تُطلبان من الفوتر وحده، وهو على بُعد صفحةٍ كاملة من هنا. */}
               <div className="bz-menu-meta">
@@ -352,7 +366,7 @@ export default function Landing() {
               })}
             </div>
 
-            <div className="bz-hero-actions bz-in" style={{ animationDelay: '470ms' }}><Actions t={t} /></div>
+            <div className="bz-hero-actions bz-in" style={{ animationDelay: '470ms' }}><Actions t={t} labels={acts} /></div>
           </div>
         </div>
 
@@ -385,7 +399,15 @@ export default function Landing() {
           تُرى البضاعة أوّلاً: منصّةُ أزياءٍ تشرح نفسها بالنصّ قبل أن تُري
           قطعةً تطلب من الزائرة ثقةً لم تكسبها بعد. والقسمُ يُخفي نفسه إن لم
           يجد أربع قطعٍ بصور. */}
-      {!hidden.has('shelf') && <LandingShelf />}
+      {!hidden.has('shelf') && (
+        <LandingShelf
+          heading={{
+            eyebrow: sec('shelf', 'eyebrow', 'landing.shelfEyebrow'),
+            title: sec('shelf', 'title', 'landing.shelfTitle'),
+            desc: sec('shelf', 'desc', 'landing.shelfDesc'),
+          }}
+        />
+      )}
 
       {/* ─────────── ما تحصلين عليه ───────────
           الصفحة كانت تبيع متجراً ولا تُري متجراً: إحدى عشرة صورةً كلُّها قطعُ
@@ -396,9 +418,9 @@ export default function Landing() {
         <section id="preview" className="bz-sec bz-sec-alt bz-grain">
           <Reveal>
             <SectionTitle
-              eyebrow={t('landing.seeEyebrow')}
-              title={t('landing.seeTitle')}
-              desc={t('landing.seeDesc')}
+              eyebrow={sec('preview', 'eyebrow', 'landing.seeEyebrow')}
+              title={sec('preview', 'title', 'landing.seeTitle')}
+              desc={sec('preview', 'desc', 'landing.seeDesc')}
             />
           </Reveal>
           <Reveal delay={120}>
@@ -427,7 +449,7 @@ export default function Landing() {
       {/* ─────────── الميزات ─────────── */}
       {!hidden.has('features') && features.length > 0 && (
         <section id="features" className="bz-sec bz-sec-light">
-          <Reveal><SectionTitle eyebrow={t('landing.featEyebrow')} title={t('landing.featTitle')} desc={t('landing.featDesc')} /></Reveal>
+          <Reveal><SectionTitle eyebrow={sec('features', 'eyebrow', 'landing.featEyebrow')} title={sec('features', 'title', 'landing.featTitle')} desc={sec('features', 'desc', 'landing.featDesc')} /></Reveal>
           {/* بنتو لا شبكة متساوية: الأولى تأخذ عمودين وتكبر، والباقيات أصغر.
               ثمانية مربّعات متطابقة تُقرأ كجدولٍ فتُتخطّى دفعةً واحدة؛ اختلاف
               الأحجام يعطي العين مدخلاً وترتيباً. */}
@@ -473,7 +495,7 @@ export default function Landing() {
       {/* ─────────── الخطوات ─────────── */}
       {!hidden.has('steps') && steps.length > 0 && (
         <section id="steps" className="bz-sec bz-sec-alt bz-grain">
-          <Reveal><SectionTitle eyebrow={t('landing.stepEyebrow')} title={t('landing.stepTitle')} desc={t('landing.stepDesc')} /></Reveal>
+          <Reveal><SectionTitle eyebrow={sec('steps', 'eyebrow', 'landing.stepEyebrow')} title={sec('steps', 'title', 'landing.stepTitle')} desc={sec('steps', 'desc', 'landing.stepDesc')} /></Reveal>
           {/* خطٌّ ذهبيّ يصل الخطوات فتُقرأ كمسار، لا ثلاث بطاقات متجاورة
               لا رابط بينها. الرقم على الخطّ نفسه — هو العُقدة. */}
           <ol className="bz-path mt-12">
@@ -506,7 +528,7 @@ export default function Landing() {
       {/* ─────────── شهادات ─────────── */}
       {!hidden.has('testimonials') && testimonials.length > 0 && (
         <section id="quotes" className="bz-sec bz-sec-light">
-          <Reveal><SectionTitle eyebrow={t('landing.tstEyebrow')} title={t('landing.tstTitle')} /></Reveal>
+          <Reveal><SectionTitle eyebrow={sec('quotes', 'eyebrow', 'landing.tstEyebrow')} title={sec('quotes', 'title', 'landing.tstTitle')} desc={sec('quotes', 'desc', '')} /></Reveal>
           {/* الأولى كبيرة تُقرأ، والباقيات إلى جانبها — بدل ثلاثٍ متساوية
               لا تُقرأ منها واحدة. */}
           <div className="bz-quotes mt-10">
@@ -539,9 +561,9 @@ export default function Landing() {
         <section id="faq" className="bz-sec bz-sec-light">
           <Reveal>
             <SectionTitle
-              eyebrow={t('landing.faqEyebrow')}
-              title={t('landing.faqTitle')}
-              desc={t('landing.faqDesc')}
+              eyebrow={sec('faq', 'eyebrow', 'landing.faqEyebrow')}
+              title={sec('faq', 'title', 'landing.faqTitle')}
+              desc={sec('faq', 'desc', 'landing.faqDesc')}
             />
           </Reveal>
           <div className="bz-faq mt-10">
@@ -568,7 +590,7 @@ export default function Landing() {
             <span className="bz-cta-ico"><UsersIcon className="h-7 w-7" /></span>
             <h2 className="bz-h2 mt-5">{pick(L.cta || {}, 'title', t('landing.ctaTitle'))}</h2>
             <p className="bz-lead mx-auto mt-3">{pick(L.cta || {}, 'subtitle', t('landing.ctaDesc'))}</p>
-            <div className="mt-8"><Actions t={t} /></div>
+            <div className="mt-8"><Actions t={t} labels={acts} /></div>
             {BAZARA_WHATSAPP && (
               <a href={buildWhatsappLink(BAZARA_WHATSAPP)} target="_blank" rel="noreferrer" className="bz-cta-wa">
                 <WhatsAppIcon className="h-4 w-4" /> {t('landing.askUs')}

@@ -21,7 +21,7 @@ const posterOf = (p) => {
   return p.videoUrl ? cldVideoPoster(p.videoUrl, 500) : '';
 };
 
-export default function LandingShelf() {
+export default function LandingShelf({ heading }) {
   const { t } = useTranslation();
   const [items, setItems] = useState(null);
 
@@ -55,9 +55,9 @@ export default function LandingShelf() {
   return (
     <section id="shelf" className="bz-sec bz-sec-light">
       <div className="mx-auto max-w-2xl text-center">
-        <p className="bz-eyebrow">{t('landing.shelfEyebrow')}</p>
-        <h2 className="bz-h2">{t('landing.shelfTitle')}</h2>
-        <p className="bz-lead mx-auto mt-3 max-w-xl">{t('landing.shelfDesc')}</p>
+        <p className="bz-eyebrow">{heading?.eyebrow || t('landing.shelfEyebrow')}</p>
+        <h2 className="bz-h2">{heading?.title || t('landing.shelfTitle')}</h2>
+        <p className="bz-lead mx-auto mt-3 max-w-xl">{heading?.desc || t('landing.shelfDesc')}</p>
       </div>
 
       {/* شريطٌ يُسحب أفقياً: على الجوّال يمتدّ لحافّتَي الشاشة فيبدو أنّ خلفه

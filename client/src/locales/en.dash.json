@@ -1117,7 +1117,29 @@
       "faqQ": "Question",
       "faqA": "Answer",
       "addFaq": "Add a question",
-      "secPreview": "Store preview"
+      "secPreview": "Store preview",
+      "secHeadsTitle": "Section headings",
+      "secHeadsHint": "The heading above each section. Leave empty to keep the original.",
+      "eyebrow": "Small line above",
+      "secTitleF": "Heading",
+      "secDescF": "Description",
+      "seoTitle": "How you appear on Google",
+      "seoHint": "What searchers read before they open the site. Keep it true — every claim here is one click from being disproved.",
+      "seoT": "Result title",
+      "seoD": "Result description",
+      "actsTitle": "Button labels",
+      "actsHint": "The three buttons, repeated in the hero, menu and closing section.",
+      "actShop": "Shop button",
+      "actLogin": "Login button",
+      "actOpen": "Open-store button",
+      "secNames": {
+        "shelf": "Product shelf",
+        "preview": "Store preview",
+        "features": "Features",
+        "steps": "Steps",
+        "quotes": "Testimonials",
+        "faq": "FAQ"
+      }
     }
   },
   "finance": {
