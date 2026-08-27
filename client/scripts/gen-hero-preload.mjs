@@ -82,12 +82,38 @@ async function run() {
   const srcset = WIDTHS.map((w) => [at(image, w), w]).filter(([u]) => u);
   const src = at(image, 1440) || image;
 
+  // التحميل المسبق وحده لا يكفي — قِستُه على الإنتاج فوجدتُ الصورة تكتمل عند
+  // ١١٣ms بينما لا يظهر وسمُ <img> قبل ٣٢٧: لأنّ رابطها يأتي من الـAPI، فيبقى
+  // التدرّجُ البنّيّ وحده مرئياً بينهما — وعلى شبكة جوّالٍ بطيئة تصير الفجوةُ
+  // ثوانيَ لا أجزاءَ ثانية.
+  //
+  // فنكتب الصورةَ خلفيةً للهيرو بالـHTML أيضاً: تُرسم بمجرّد تحليل الـCSS، قبل
+  // React وقبل الـAPI. والتدرّجُ يبقى تحتها فتظهر ألوانُ الهوية إن تعذّرت
+  // الصورة. وحين يرسم React وسمَ <img> فوقها يكون الملفُّ بالذاكرة نفسها —
+  // نفس الرابط، فلا تنزيلَ ثانٍ.
+  //
+  // والمُحدِّد html .bz-hero لا .bz-hero وحده: حزمةُ الأنماط تأتي بعد هذا الوسم
+  // وتُعرّف background المختصر — وهو يمسح background-image. التخصيصُ الأعلى
+  // يفوز مهما كان الترتيب. (جرّبتُ بلا html أوّلاً فبقي البنّيُّ وحده.)
+  // الخلفيةُ نسخةٌ صغيرة جداً (٣٢٠ ≈ ١٤ كيلو): وظيفتُها أن تُرسم فوراً فلا
+  // يُرى البنّيّ، ثمّ يعلوها الوسمُ بالمقاس الصحيح من srcset. وفوق الصورة
+  // حجابٌ داكن ٦٢٪ أصلاً، فلا يُميَّز خشونتُها بالمئتَي جزءٍ من الثانية قبل
+  // وصول الأصل. جرّبتُ ١٤٤٠ فنُزِّلت نسختان ثقيلتان، و٦٤٠ فكلّفت ٤٢ كيلو
+  // زائدة — قِستُ الثلاثة واخترتُ الأرخص الذي يؤدّي الغرض.
+  const placeholder = at(image, 320) || src;
+  const styleTag =
+    `<style>html .bz-hero{background-image:url("${esc(placeholder)}"),` +
+    `radial-gradient(120% 80% at 50% -10%,rgba(176,154,126,.2),transparent 55%),` +
+    `radial-gradient(100% 70% at 50% 115%,rgba(138,106,79,.45),transparent 62%),` +
+    `linear-gradient(165deg,#4a3521 0%,#33241a 42%,#140d07 100%);` +
+    `background-size:cover;background-position:center;}</style>`;
+
   const tag =
     `${MARK_OPEN}\n    <link rel="preload" as="image" fetchpriority="high" href="${esc(src)}"` +
     (srcset.length
       ? `\n      imagesrcset="${esc(srcset.map(([u, w]) => `${u} ${w}w`).join(', '))}"\n      imagesizes="100vw"`
       : '') +
-    ` />\n    ${MARK_CLOSE}`;
+    ` />\n    ${styleTag}\n    ${MARK_CLOSE}`;
 
   // نضعه قبل </head> مباشرةً — بعد الخطوط وقبل أيّ سكربت
   const out = clean.replace('</head>', `  ${tag}\n  </head>`);
