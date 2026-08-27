@@ -3875,35 +3875,124 @@ html.dark .theme-pub .bz-oldprice { color: #a2957f; }
   justify-content: center;
   margin-top: clamp(2rem, 5vw, 3rem);
 }
+/* الإطارُ يقلّد آيفون بتفاصيله لا بمستطيلٍ مدوّر:
+   حافّةٌ من طبقتين (تيتانيوم فاتح يعكس الضوء، وحلقةٌ داكنة داخله)، ونسبةُ
+   19.5:9 وهي نسبةُ الجهاز الفعلية، وانحناءٌ متّصلٌ بين الحافّة والشاشة —
+   وأزرارُ الجانب بمواضعها الحقيقية: الصامت ثمّ زرّا الصوت يميناً بالمقلوب
+   (فالإطار مرآةٌ للجهاز الممسوك)، وزرُّ التشغيل مقابلَها.
+   والنسبةُ محسوبةٌ لا مقدّرة: 19.5/9 = 2.1667. */
 .bz-phone-body {
   position: relative;
   width: min(19rem, 78vw);
-  aspect-ratio: 520 / 1126;
-  border-radius: clamp(1.6rem, 5vw, 2.4rem);
-  padding: 0.5rem;
-  background: linear-gradient(160deg, #4a3a2c, #241b12 60%, #120c07);
+  aspect-ratio: 9 / 19.5;
+  border-radius: 15.5%/7.5%;
+  padding: 0.42rem;
+  /* حافّةُ التيتانيوم: فاتحةٌ عند الحوافّ حيث يلمع الضوء، داكنةٌ بالمنتصف */
+  background:
+    linear-gradient(115deg, #6f6a63 0%, #b9b4ac 6%, #7d7871 14%, #4a4640 50%,
+                    #7d7871 86%, #b9b4ac 94%, #6f6a63 100%);
   box-shadow:
-    0 40px 80px -30px rgba(0, 0, 0, 0.75),
-    inset 0 0 0 1px rgba(244, 237, 226, 0.14);
+    0 42px 84px -32px rgba(0, 0, 0, 0.78),
+    0 8px 22px -10px rgba(0, 0, 0, 0.45);
 }
-.bz-phone-body img {
+/* الحلقةُ السوداء بين المعدن والشاشة — بها يبدو الزجاج غائراً لا ملصقاً */
+.bz-phone-body::before {
+  content: '';
+  position: absolute;
+  inset: 0.42rem;
+  border-radius: 13.5%/6.6%;
+  background: #05060a;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+}
+/* الشاشة: شريطُ حالةٍ ثمّ اللقطة — عمودٌ واحد.
+   بلا شريطٍ كانت الجزيرةُ تجلس فوق اسم المتجر فتغطّيه، وهذا لا يحدث بهاتفٍ
+   حقيقيّ: هناك شريطُ الحالة يفصل الجزيرةَ عن المحتوى. */
+.bz-phone-screen {
+  position: relative;
+  z-index: 1;
+  display: flex;
   height: 100%;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 13.5%/6.6%;
+  background: #F4EDE2;
+}
+.bz-phone-status {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  height: 5.4%;
+  padding-inline: 8%;
+  /* الساعةُ يساراً والمؤشّراتُ يميناً — كما بiOS مهما كان اتّجاه اللغة */
+  direction: ltr;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #241b12;
+  letter-spacing: 0.01em;
+}
+.bz-phone-status svg { display: block; }
+.bz-phone-body img {
+  position: relative;
+  z-index: 1;
+  min-height: 0;
+  flex: 1;
+  height: auto;
   width: 100%;
-  border-radius: clamp(1.15rem, 3.8vw, 1.95rem);
+  border-radius: 0;
   object-fit: cover;
   object-position: top center;
   display: block;
 }
-/* شقُّ الكاميرا — تفصيلٌ صغير يجعل الإطار يُقرأ هاتفاً فوراً */
+
+/* الجزيرة الديناميكية: حبّةٌ سوداء مصمتة، وبداخلها عدسةٌ لها انعكاس */
 .bz-phone-notch {
   position: absolute;
   inset-inline: 0;
-  top: 0.95rem;
-  z-index: 2;
-  width: 28%;
+  top: 1.35%;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 27%;
   margin-inline: auto;
-  height: 0.42rem;
+  height: 3.1%;
+  min-height: 18px;
+  padding-inline-end: 7%;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.55);
+  background: #05060a;
 }
+.bz-phone-notch::after {
+  content: '';
+  width: 21%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, #3b4a63 0%, #131a26 46%, #05070c 100%);
+  box-shadow: inset 0 0 0 1px rgba(120, 150, 190, 0.28);
+}
+
+/* أزرارُ الجانب — نفسُ لون الحافّة فتبدو مقتطعةً منها لا ملصقةً عليها */
+.bz-phone-body::after {
+  content: '';
+  position: absolute;
+  inset-inline-end: -2px;
+  top: 17%;
+  width: 2px;
+  height: 30%;
+  border-radius: 2px;
+  background: linear-gradient(180deg,
+    #9a958d 0 9%, transparent 9% 15%,
+    #9a958d 15% 41%, transparent 41% 47%,
+    #9a958d 47% 73%, transparent 73% 100%);
+}
+.bz-phone-side {
+  position: absolute;
+  inset-inline-start: -2px;
+  top: 27%;
+  width: 2px;
+  height: 13%;
+  border-radius: 2px;
+  background: #9a958d;
+}
+
 @media (min-width: 768px) { .bz-phone-body { width: 21rem; } }

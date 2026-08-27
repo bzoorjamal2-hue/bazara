@@ -427,14 +427,41 @@ export default function Landing() {
             <div className="bz-phone">
               <div className="bz-phone-body">
                 <span className="bz-phone-notch" aria-hidden="true" />
-                <img
-                  src="/store-preview.webp"
-                  alt={t('landing.seeTitle')}
-                  loading="lazy"
-                  decoding="async"
-                  width={520}
-                  height={1126}
-                />
+                <span className="bz-phone-side" aria-hidden="true" />
+                <div className="bz-phone-screen">
+                  {/* شريطُ الحالة: ساعةٌ ومؤشّرات. بدونه كانت الجزيرةُ تجلس
+                      فوق اسم المتجر فتغطّيه — وهذا لا يقع بهاتفٍ حقيقيّ. */}
+                  <div className="bz-phone-status" aria-hidden="true">
+                    <span>9:41</span>
+                    <span className="flex items-center gap-[3px]">
+                      {/* إشارة · واي فاي · بطارية */}
+                      <svg viewBox="0 0 18 12" width="13" height="9" fill="currentColor">
+                        <rect x="0" y="8.5" width="3" height="3.5" rx="1" />
+                        <rect x="4.5" y="6" width="3" height="6" rx="1" />
+                        <rect x="9" y="3" width="3" height="9" rx="1" />
+                        <rect x="13.5" y="0" width="3" height="12" rx="1" opacity="0.35" />
+                      </svg>
+                      <svg viewBox="0 0 16 12" width="12" height="9" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+                        <path d="M1 4.2a10 10 0 0 1 14 0" />
+                        <path d="M3.6 7a6.4 6.4 0 0 1 8.8 0" />
+                        <circle cx="8" cy="10" r="0.9" fill="currentColor" stroke="none" />
+                      </svg>
+                      <svg viewBox="0 0 26 12" width="18" height="9" fill="none">
+                        <rect x="0.6" y="0.6" width="21" height="10.8" rx="3" stroke="currentColor" strokeWidth="1.1" opacity="0.5" />
+                        <rect x="2.2" y="2.2" width="15" height="7.6" rx="1.8" fill="currentColor" />
+                        <path d="M23.4 4.2v3.6a2 2 0 0 0 0-3.6Z" fill="currentColor" opacity="0.5" />
+                      </svg>
+                    </span>
+                  </div>
+                  <img
+                    src="/store-preview.webp"
+                    alt={t('landing.seeTitle')}
+                    loading="lazy"
+                    decoding="async"
+                    width={540}
+                    height={1170}
+                  />
+                </div>
               </div>
             </div>
           </Reveal>

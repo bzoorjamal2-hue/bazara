@@ -335,18 +335,30 @@ export default function CartDrawer() {
               <><CartIcon className="h-5 w-5" /> {t('cart.title')}
                 {count > 0 && <span className="rounded-full bg-wine/15 px-2 py-0.5 text-sm font-bold text-wine">{count}</span>}
               </>
-            ) : view === 'done' ? t('co.doneTitle') : t('co.title')}
+            ) : view === 'done' ? (doneRef ? t('co.doneTitle') : t('co.donePartialTitle')) : t('co.title')}
           </h2>
           <CloseButton onClick={close} variant="wine" />
         </div>
 
         {view === 'done' ? (
-          /* شاشة نجاح الطلب: تأكيد واضح + رقم الطلب + تتبّع (السلة كانت تختفي بصمت) */
+          /* شاشة ما بعد الطلب.
+             حفظُ الطلب قد يفشل (شبكة أو خادم)، والرسالةُ تذهب لواتساب على أيّ
+             حال — وهذا احتياطٌ جيّد يُبقي الطلب واصلاً. لكنّ الشاشة كانت تقول
+             «تم استلام طلبك 🎉 … احتفظي برقم الطلب لمتابعته» بلا رقمٍ أصلاً،
+             وتعرض زرَّ تتبّعٍ لن يجد شيئاً — والسلّة فُرِّغت فلا سبيل للإعادة.
+             فتظنّ الزبونة أنّ طلبها مسجّل، ولا تراه صاحبةُ المتجر بلوحتها.
+             الآن: نجاحٌ حين يُسجَّل، وصدقٌ حين لا يُسجَّل. */
           <div className="animate-fade-up flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
-            <span className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/15 ring-2 ring-emerald-400/40">
-              <CheckIcon className="h-10 w-10 text-emerald-300" />
-            </span>
-            <p className="text-sm leading-relaxed text-stone-300">{t('co.doneMsg')}</p>
+            {doneRef ? (
+              <span className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/15 ring-2 ring-emerald-400/40">
+                <CheckIcon className="h-10 w-10 text-emerald-300" />
+              </span>
+            ) : (
+              <span className="bz-tone-amber flex h-20 w-20 items-center justify-center rounded-full">
+                <WhatsAppIcon className="h-10 w-10" />
+              </span>
+            )}
+            <p className="text-sm leading-relaxed text-stone-300">{doneRef ? t('co.doneMsg') : t('co.donePartialMsg')}</p>
             {doneRef && (
               <button
                 type="button"
@@ -365,6 +377,8 @@ export default function CartDrawer() {
               </button>
             )}
             <div className="mt-2 flex w-full flex-col gap-2">
+              {/* بلا رقمٍ لا تتبّع: الصفحة تبحث بالمرجع فلا تجد شيئاً */}
+              {doneRef && (
               <Link
                 to={doneStore ? `/track?store=${doneStore}` : '/track'}
                 onClick={close}
@@ -373,6 +387,7 @@ export default function CartDrawer() {
               >
                 {t('co.doneTrack')}
               </Link>
+              )}
               <button onClick={close} className="w-full rounded-full border border-cream/20 py-3 font-semibold text-cream/80 transition hover:bg-cream/10">
                 {t('co.doneKeepShopping')}
               </button>

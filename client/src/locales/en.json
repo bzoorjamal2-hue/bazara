@@ -506,7 +506,9 @@
     },
     "deliveryNote": "Delivery fee is an estimate, confirmed by the store",
     "freeShipping": "Free",
-    "freeShippingHint": "Add ₪{{amount}} to get free delivery!"
+    "freeShippingHint": "Add ₪{{amount}} to get free delivery!",
+    "donePartialTitle": "Your order went via WhatsApp",
+    "donePartialMsg": "We could not register the order in the system — most likely the network. Its full details did reach the store owner on WhatsApp, so keep that message until she replies."
   },
   "track": {
     "title": "Track your order",
