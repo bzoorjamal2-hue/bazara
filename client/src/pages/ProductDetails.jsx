@@ -330,12 +330,23 @@ export default function ProductDetails() {
     }
   };
 
+  // صورةُ الفهرسة: الصورُ إن وُجدت، وإلا لقطةُ الفيديو.
+  //
+  // جوجل يشترط image لعرض بطاقة المنتج الغنيّة (السعر والتوفّر بنتائج البحث).
+  // وقِستُ البيانات فوجدتُ أنّ لا منتج من الثلاثين يحمل صورةً — التاجرات يرفعن
+  // فيديوهات. أي أنّ الشرط كان مفقوداً بكلّ منتجٍ بالمنصّة، فلا بطاقةَ غنيّة
+  // لأيّ واحدٍ منها. واللقطةُ الأولى من الفيديو صورةٌ حقيقية للقطعة نفسها،
+  // ويولّدها كلاوديناري — وهي المستعملة أصلاً غلافاً للمشغّل أسفل الصفحة.
+  const seoImages = gallery.length
+    ? gallery
+    : (product.videoUrl ? [cldVideoPoster(product.videoUrl, 1200)] : []);
+
   // بيانات Schema.org للمنتج → نتائج Google الغنية (سعر/توفّر/تقييم/علامة المتجر)
   const productLd = {
     '@context': 'https://schema.org/',
     '@type': 'Product',
     name: product.name,
-    ...(gallery.length ? { image: gallery } : {}),
+    ...(seoImages.length ? { image: seoImages } : {}),
     description: product.description || product.name,
     ...(product.storeName ? { brand: { '@type': 'Brand', name: product.storeName } } : {}),
     offers: {
@@ -357,7 +368,7 @@ export default function ProductDetails() {
 
   return (
     <>
-      <Seo title={product.name} description={product.description || product.name} image={gallery[0]} type="product" jsonLd={productLd} />
+      <Seo title={product.name} description={product.description || product.name} image={seoImages[0]} type="product" jsonLd={productLd} />
 
       {/* هيدر المتجر نفسه (اسم/شعار + درج فئاته + بحثه) — كي لا يظهر هيدر بازارا العام */}
       {headerStore.slug && (
