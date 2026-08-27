@@ -216,7 +216,7 @@ export default function BottomNav() {
   // والخلفية 95% معتمة أصلاً فالفرق البصري صفر والفرق بالأداء محسوس
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-[78] border-t border-wine/10 bg-white/95 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 shadow-[0_-6px_20px_rgba(94,70,54,0.08)]"
+      className="bz-tabbar fixed inset-x-0 bottom-0 z-[78] border-t border-wine/10 bg-white/95 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 shadow-[0_-6px_20px_rgba(94,70,54,0.08)]"
       style={vvInset ? { transform: `translateY(-${vvInset}px)` } : undefined}
     >
       <div className="mx-auto flex max-w-md items-stretch justify-around px-2">
@@ -225,7 +225,7 @@ export default function BottomNav() {
             key={key}
             onClick={onClick}
             data-cart-target={key === 'cart' ? '' : undefined}
-            className={`relative flex min-w-0 flex-1 flex-col items-center gap-1 py-1 text-[10px] font-medium leading-tight transition ${
+            className={`${active ? 'is-on ' : ''}relative flex min-w-0 flex-1 flex-col items-center gap-1 py-1 text-[10px] font-medium leading-tight transition ${
               active ? 'text-wine' : 'text-stone-400'
             }`}
           >

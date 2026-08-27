@@ -3032,7 +3032,8 @@ html.dark .theme-pub .bz-feat-ico { background: rgba(228, 216, 197, 0.12); color
 
 /* السطر اللاتيني: خطٌّ ذهبيّ قصير يسبقه بدل تباعدٍ صارخ */
 .bz-sh-sub {
-  display: inline-flex;
+  display: flex;
+  justify-content: center;
   align-items: center;
   gap: 0.6rem;
   font-size: 0.66rem;
@@ -3050,8 +3051,12 @@ html.dark .theme-pub .bz-feat-ico { background: rgba(228, 216, 197, 0.12); color
 }
 
 /* الزرّ: عاجيّ صلب — نفس زرّ صفحة المنصّة */
+/* الزرّ فِعلٌ مستقلّ فله سطرُه: كان inline-flex كسطر ELEGANCE قبله،
+   فيصطفّان جنباً إلى جنب متى اتّسع العرض — وهذا لا يظهر على الجوّال (لا
+   يتّسع) ويظهر على الكمبيوتر، فبدا الزرُّ ملحقاً بالسطر لا دعوةً للضغط. */
 .bz-sh-cta {
   display: inline-flex;
+  align-self: center;
   align-items: center;
   gap: 0.5rem;
   border-radius: 999px;
@@ -4022,3 +4027,66 @@ html.dark .theme-pub .bz-oldprice { color: #a2957f; }
 }
 
 @media (min-width: 768px) { .bz-phone-body { width: 21rem; } }
+
+/* ═══════ شريط التنقّل: أسفلَ الجوّال، وأعلى الكمبيوتر ═══════
+   الشريط السفليّ نمطُ هاتفٍ لا نمطُ تطبيق: مكانُه منطقةُ الإبهام، وهو ما
+   اعتادته الزبونة من إنستغرام. لكنّه كان يظهر على الكمبيوتر أيضاً — ولا يدَ
+   تمسك شاشةَ الكمبيوتر، فيبدو تطبيقاً محشوراً بمتصفّح ويأكل شريطاً من أسفل
+   الصفحة بلا سبب.
+   على الشاشة الواسعة يصعد شريطاً أفقياً بالأعلى: البنودُ نفسُها لا يُحذف
+   منها شيء — فالزائرة تجد الريلزَ والعروضَ وتتبّعَ الطلب حيث تبدأ عينُها. */
+@media (min-width: 900px) {
+  .bz-tabbar {
+    position: sticky;
+    inset-inline: auto;
+    top: 0;
+    bottom: auto;
+    border-top: 0;
+    border-bottom: 1px solid rgba(94, 70, 54, 0.10);
+    padding-block: 0.35rem;
+    box-shadow: 0 6px 20px -14px rgba(46, 33, 24, 0.28);
+  }
+  /* الصفُّ يتوسّط بعرضٍ مريح بدل عمودٍ ضيّق بمنتصف شاشةٍ عريضة */
+  .bz-tabbar > div { max-width: 44rem; gap: 0.25rem; }
+  /* الأيقونةُ والاسمُ جنباً إلى جنب. وflex-1 يمطّ كلّ بندٍ لسدس العرض فيفترق
+     الاسمُ عن أيقونته ويبدو البندُ بندَين — فنُلغيه ونجعل البندَ بعرض محتواه. */
+  .bz-tabbar > div > * {
+    flex: 0 1 auto;
+    flex-direction: row;
+    gap: 0.45rem;
+    align-items: center;
+    border-radius: 999px;
+    padding-inline: 0.7rem;
+    font-size: 0.82rem;
+  }
+  /* الحبّةُ تحيط بالبند كلّه لا بالأيقونة وحدها */
+  .bz-tabbar button > span:first-child { background: transparent !important; padding: 0 !important; }
+  .bz-tabbar button.is-on { background: #5e4636; color: #F4EDE2; }
+  .bz-tabbar button.is-on > span:first-child { color: inherit; }
+  .bz-tabbar button svg { height: 1.15rem; width: 1.15rem; }
+  html.dark .theme-pub .bz-tabbar button.is-on { background: #e4d8c5; color: #2b1d12; }
+}
+
+/* ── شكلُ الشريط: هويّةُ المنصّة لا أبيضُ افتراضيّ ──
+   كان أبيضَ مسطّحاً بأيقونةٍ رماديّة فوق كلمةٍ صغيرة — شكلٌ يأتي مع أيّ قالب
+   ولا يقول إنّ هذا بازارا. الآن: أرضٌ عاجيّة من لوحة الموقع، وخيطٌ رمليّ
+   يفصله، والبندُ الفعّال يلبس حبّةً بنّيّة بنصٍّ عاجيّ — يُقرأ من مسافة. */
+.bz-tabbar {
+  background: rgba(246, 241, 232, 0.96) !important;
+  border-color: rgba(94, 70, 54, 0.14) !important;
+  -webkit-backdrop-filter: saturate(1.4) blur(10px);
+  backdrop-filter: saturate(1.4) blur(10px);
+}
+.bz-tabbar button { color: #7d6350; }
+/* الفعّال: حبّةٌ مصمتة لا لونُ نصٍّ وحده — الفرقُ يُرى بلمحة لا بتدقيق */
+.bz-tabbar button > span:first-child { transition: background-color 0.2s ease, color 0.2s ease; }
+.bz-tabbar button.is-on { color: #3f2e22; }
+.bz-tabbar button.is-on > span:first-child { background: #5e4636; color: #F4EDE2; }
+
+html.dark .theme-pub .bz-tabbar {
+  background: rgba(28, 20, 13, 0.96) !important;
+  border-color: rgba(228, 216, 197, 0.16) !important;
+}
+html.dark .theme-pub .bz-tabbar button { color: #b9ab91; }
+html.dark .theme-pub .bz-tabbar button.is-on { color: #f6efe0; }
+html.dark .theme-pub .bz-tabbar button.is-on > span:first-child { background: #e4d8c5; color: #2b1d12; }
