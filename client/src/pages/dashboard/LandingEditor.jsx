@@ -31,6 +31,42 @@ function Item({ children, onRemove, label }) {
   );
 }
 
+// حقلٌ بلغتين.
+//
+// الخادم يقبل اثني عشر حقلاً إنجليزياً (titleEn وdescEn وqEn…) والواجهةُ
+// تقرأها، لكن لم تكن لأيٍّ منها خانةٌ بالمحرّر — فالإنجليزيّة كانت خارج يد
+// المدير تماماً. ومَن يفتح الموقع بالإنجليزية كان يرى النصّ العربيّ نفسه،
+// لأنّ pick يسقط إلى العربيّ حين يخلو الإنجليزيّ.
+//
+// العربيّة أوّلاً لأنّها لغة العمل هنا، والإنجليزيّة تحتها بعلامةٍ صغيرة —
+// وتركُها فارغاً مقصودٌ ومقبول: عندها يظهر العربيّ للجميع كما كان.
+function Bi({ value, valueEn, onChange, onChangeEn, placeholder, rows, max = 120 }) {
+  const cls = 'input' + (rows ? ' resize-none' : '');
+  const Tag = rows ? 'textarea' : 'input';
+  const common = { className: cls, maxLength: max, ...(rows ? { rows } : {}) };
+  return (
+    <div className="space-y-1.5">
+      <Tag {...common} placeholder={placeholder} value={value || ''} onChange={(e) => onChange(e.target.value)} />
+      <div className="flex items-start gap-1.5">
+        <span
+          className="mt-2 shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold leading-none"
+          style={{ background: 'rgba(94,70,54,0.14)' }}
+          title="English"
+        >
+          EN
+        </span>
+        <Tag
+          {...common}
+          dir="ltr"
+          placeholder={placeholder}
+          value={valueEn || ''}
+          onChange={(e) => onChangeEn(e.target.value)}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function LandingEditor() {
   const { t } = useTranslation();
   const [L, setL] = useState(null);
@@ -110,13 +146,16 @@ export default function LandingEditor() {
         <SectionHead icon={<ImageIcon className="h-5 w-5" />} title={t('admin.land.heroTitle')} desc={t('admin.land.heroHint')} />
 
         <Field label={t('admin.land.badge')} tip={t('admin.land.badgeTip')} max={60} value={L.hero.badge}>
-          <input className="input" maxLength={60} value={L.hero.badge} onChange={(e) => setHero('badge', e.target.value)} placeholder={t('landing.badge')} />
+          <Bi max={60} placeholder={t('landing.badge')} value={L.hero.badge} valueEn={L.hero.badgeEn}
+            onChange={(v) => setHero('badge', v)} onChangeEn={(v) => setHero('badgeEn', v)} />
         </Field>
         <Field label={t('admin.land.headline')} tip={t('admin.land.headlineTip')} max={120} value={L.hero.title}>
-          <input className="input" maxLength={120} value={L.hero.title} onChange={(e) => setHero('title', e.target.value)} placeholder={t('landing.title')} />
+          <Bi max={120} placeholder={t('landing.title')} value={L.hero.title} valueEn={L.hero.titleEn}
+            onChange={(v) => setHero('title', v)} onChangeEn={(v) => setHero('titleEn', v)} />
         </Field>
         <Field label={t('admin.land.sub')} max={300} value={L.hero.subtitle}>
-          <textarea rows={3} className="input resize-none" maxLength={300} value={L.hero.subtitle} onChange={(e) => setHero('subtitle', e.target.value)} placeholder={t('landing.subtitle')} />
+          <Bi rows={3} max={300} placeholder={t('landing.subtitle')} value={L.hero.subtitle} valueEn={L.hero.subtitleEn}
+            onChange={(v) => setHero('subtitle', v)} onChangeEn={(v) => setHero('subtitleEn', v)} />
         </Field>
 
         <Field label={t('admin.land.heroImage')} tip={t('admin.land.heroImageTip')}>
@@ -232,8 +271,10 @@ export default function LandingEditor() {
         <SectionHead icon={<SparkleIcon className="h-5 w-5" />} title={t('admin.land.featTitle')} desc={t('admin.land.listHint')} />
         {L.features.map((f, i) => (
           <Item key={i} label={`${t('admin.land.feature')} ${i + 1}`} onRemove={() => rmFrom('features', i)}>
-            <input className="input" maxLength={60} placeholder={t('admin.land.itemTitle')} value={f.title || ''} onChange={(e) => setIn('features', i, 'title', e.target.value)} />
-            <textarea rows={2} className="input resize-none" maxLength={220} placeholder={t('admin.land.itemDesc')} value={f.desc || ''} onChange={(e) => setIn('features', i, 'desc', e.target.value)} />
+            <Bi max={60} placeholder={t('admin.land.itemTitle')} value={f.title} valueEn={f.titleEn}
+              onChange={(v) => setIn('features', i, 'title', v)} onChangeEn={(v) => setIn('features', i, 'titleEn', v)} />
+            <Bi rows={2} max={220} placeholder={t('admin.land.itemDesc')} value={f.desc} valueEn={f.descEn}
+              onChange={(v) => setIn('features', i, 'desc', v)} onChangeEn={(v) => setIn('features', i, 'descEn', v)} />
           </Item>
         ))}
         {L.features.length < 8 && (
@@ -248,8 +289,10 @@ export default function LandingEditor() {
         <SectionHead icon={<NoteIcon className="h-5 w-5" />} title={t('admin.land.stepTitle')} desc={t('admin.land.listHint')} />
         {L.steps.map((s, i) => (
           <Item key={i} label={`${t('admin.land.step')} ${i + 1}`} onRemove={() => rmFrom('steps', i)}>
-            <input className="input" maxLength={60} placeholder={t('admin.land.itemTitle')} value={s.title || ''} onChange={(e) => setIn('steps', i, 'title', e.target.value)} />
-            <textarea rows={2} className="input resize-none" maxLength={220} placeholder={t('admin.land.itemDesc')} value={s.desc || ''} onChange={(e) => setIn('steps', i, 'desc', e.target.value)} />
+            <Bi max={60} placeholder={t('admin.land.itemTitle')} value={s.title} valueEn={s.titleEn}
+              onChange={(v) => setIn('steps', i, 'title', v)} onChangeEn={(v) => setIn('steps', i, 'titleEn', v)} />
+            <Bi rows={2} max={220} placeholder={t('admin.land.itemDesc')} value={s.desc} valueEn={s.descEn}
+              onChange={(v) => setIn('steps', i, 'desc', v)} onChangeEn={(v) => setIn('steps', i, 'descEn', v)} />
           </Item>
         ))}
         {L.steps.length < 4 && (
@@ -264,7 +307,8 @@ export default function LandingEditor() {
         <SectionHead icon={<UsersIcon className="h-5 w-5" />} title={t('admin.land.quoteTitle')} desc={t('admin.land.listHint')} />
         {L.testimonials.map((q, i) => (
           <Item key={i} label={`${t('admin.land.quote')} ${i + 1}`} onRemove={() => rmFrom('testimonials', i)}>
-            <textarea rows={2} className="input resize-none" maxLength={300} placeholder={t('admin.land.quoteText')} value={q.text || ''} onChange={(e) => setIn('testimonials', i, 'text', e.target.value)} />
+            <Bi rows={2} max={300} placeholder={t('admin.land.quoteText')} value={q.text} valueEn={q.textEn}
+              onChange={(v) => setIn('testimonials', i, 'text', v)} onChangeEn={(v) => setIn('testimonials', i, 'textEn', v)} />
             <div className="grid gap-2 sm:grid-cols-2">
               <input className="input" maxLength={60} placeholder={t('admin.land.quoteName')} value={q.name || ''} onChange={(e) => setIn('testimonials', i, 'name', e.target.value)} />
               <input className="input" maxLength={60} placeholder={t('admin.land.quoteStore')} value={q.store || ''} onChange={(e) => setIn('testimonials', i, 'store', e.target.value)} />
@@ -283,21 +327,10 @@ export default function LandingEditor() {
         <SectionHead icon={<NoteIcon className="h-5 w-5" />} title={t('admin.land.faqTitle')} desc={t('admin.land.faqHint')} />
         {L.faq.map((f, i) => (
           <Item key={i} label={`${t('admin.land.question')} ${i + 1}`} onRemove={() => rmFrom('faq', i)}>
-            <input
-              className="input"
-              maxLength={120}
-              placeholder={t('admin.land.faqQ')}
-              value={f.q || ''}
-              onChange={(e) => setIn('faq', i, 'q', e.target.value)}
-            />
-            <textarea
-              rows={2}
-              className="input resize-none"
-              maxLength={400}
-              placeholder={t('admin.land.faqA')}
-              value={f.a || ''}
-              onChange={(e) => setIn('faq', i, 'a', e.target.value)}
-            />
+            <Bi max={120} placeholder={t('admin.land.faqQ')} value={f.q} valueEn={f.qEn}
+              onChange={(v) => setIn('faq', i, 'q', v)} onChangeEn={(v) => setIn('faq', i, 'qEn', v)} />
+            <Bi rows={2} max={400} placeholder={t('admin.land.faqA')} value={f.a} valueEn={f.aEn}
+              onChange={(v) => setIn('faq', i, 'a', v)} onChangeEn={(v) => setIn('faq', i, 'aEn', v)} />
           </Item>
         ))}
         {L.faq.length < 8 && (
@@ -311,10 +344,12 @@ export default function LandingEditor() {
       <div className={CARD}>
         <SectionHead icon={<CheckIcon className="h-5 w-5" />} title={t('admin.land.ctaTitle')} desc={t('admin.land.ctaHint')} />
         <Field label={t('admin.land.headline')} max={120} value={L.cta.title}>
-          <input className="input" maxLength={120} value={L.cta.title} onChange={(e) => setCta('title', e.target.value)} placeholder={t('landing.ctaTitle')} />
+          <Bi max={120} placeholder={t('landing.ctaTitle')} value={L.cta.title} valueEn={L.cta.titleEn}
+            onChange={(v) => setCta('title', v)} onChangeEn={(v) => setCta('titleEn', v)} />
         </Field>
         <Field label={t('admin.land.sub')} max={300} value={L.cta.subtitle}>
-          <textarea rows={2} className="input resize-none" maxLength={300} value={L.cta.subtitle} onChange={(e) => setCta('subtitle', e.target.value)} placeholder={t('landing.ctaDesc')} />
+          <Bi rows={2} max={300} placeholder={t('landing.ctaDesc')} value={L.cta.subtitle} valueEn={L.cta.subtitleEn}
+            onChange={(v) => setCta('subtitle', v)} onChangeEn={(v) => setCta('subtitleEn', v)} />
         </Field>
       </div>
 
@@ -322,10 +357,12 @@ export default function LandingEditor() {
       <div className={CARD}>
         <SectionHead icon={<UsersIcon className="h-5 w-5" />} title={t('admin.land.aboutTitle')} desc={t('admin.land.aboutHint')} />
         <Field label={t('admin.land.headline')} max={80} value={L.about.title}>
-          <input className="input" maxLength={80} value={L.about.title} onChange={(e) => setAbout('title', e.target.value)} placeholder={t('landing.aboutTitle')} />
+          <Bi max={80} placeholder={t('landing.aboutTitle')} value={L.about.title} valueEn={L.about.titleEn}
+            onChange={(v) => setAbout('title', v)} onChangeEn={(v) => setAbout('titleEn', v)} />
         </Field>
         <Field label={t('admin.land.sub')} max={700} value={L.about.text}>
-          <textarea rows={6} className="input resize-none" maxLength={700} value={L.about.text} onChange={(e) => setAbout('text', e.target.value)} placeholder={t('landing.aboutText')} />
+          <Bi rows={6} max={700} placeholder={t('landing.aboutText')} value={L.about.text} valueEn={L.about.textEn}
+            onChange={(v) => setAbout('text', v)} onChangeEn={(v) => setAbout('textEn', v)} />
         </Field>
       </div>
 
