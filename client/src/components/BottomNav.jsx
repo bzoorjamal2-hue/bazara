@@ -12,8 +12,12 @@ const mq = () => (typeof window === 'undefined' ? null : window.matchMedia(DESKT
 const subDesktop = (cb) => {
   const m = mq();
   if (!m) return () => {};
+  // resize مع change: الأوّل حزامُ أمان. رأيتُ الشريطَ يبقى ببنودِ الجوّال بعد
+  // توسيعِ النافذة لأنّ حدثَ change لم يصل، فبقي البندُ المكرّر ظاهراً على
+  // شاشةٍ عريضة. resize يصل دائماً، وقراءةُ matches رخيصة.
   m.addEventListener('change', cb);
-  return () => m.removeEventListener('change', cb);
+  window.addEventListener('resize', cb);
+  return () => { m.removeEventListener('change', cb); window.removeEventListener('resize', cb); };
 };
 const useDesktop = () => useSyncExternalStore(
   subDesktop,
