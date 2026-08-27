@@ -3746,3 +3746,60 @@ html.dark .theme-pub .bz-oldprice { color: #a2957f; }
    فاتحٌ دائماً بإيقاع الصفحة لا ينقلب مع الثيم. كتبتُ أوّلاً قواعدَ ليليّة
    بلونٍ عاجيّ فصار النصُّ عاجيّاً على عاجيّ — تباين ١٫٠٢، أي غيرُ مرئيّ.
    قِستُه فظهر، وهذا فخُّ هذا الملفّ: theme-pub ينقلب، وbz-sec-light لا. */
+
+/* قائمةُ الميزات الباقية: اسمٌ وأيقونة، بلا شرح.
+   القسمُ كان ٢٩٪ من الصفحة بسبع بطاقاتٍ كاملة — والشرحُ السابع لا يُقرأ بعد
+   السادس. الثلاثُ الأولى تُقنع، وهذه تُطمئن أنّ الباقي موجود. */
+.bz-featlist {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.9rem;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 560px) { .bz-featlist { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1024px) { .bz-featlist { grid-template-columns: repeat(3, 1fr); } }
+
+.bz-featlist-i {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border-radius: 0.85rem;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #4a3628;
+  background: rgba(94, 70, 54, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(94, 70, 54, 0.09);
+}
+.bz-featlist-i svg { color: #7d6350; }
+
+/* ═══════ بقيّة الميزات: صفٌّ مضغوط ═══════
+   الثلاثُ الأولى بطاقاتٌ كاملة تُقنع، والباقياتُ أسماءٌ تُطمئن أنّ ما تحتاجه
+   موجود. سبعُ بطاقاتٍ كاملة كانت ٢٩٪ من الصفحة — وشرحُ الميزة السابعة لا
+   يُقرأ بعد الشرح السادس. */
+.bz-featlist {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.55rem;
+  margin-top: 0.9rem;
+  list-style: none;
+  padding: 0;
+}
+@media (min-width: 560px) { .bz-featlist { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1024px) { .bz-featlist { grid-template-columns: repeat(3, 1fr); } }
+
+.bz-featlist-i {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border-radius: 0.85rem;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #4a3628;
+  background: rgba(94, 70, 54, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(94, 70, 54, 0.09);
+}
+.bz-featlist-i svg { color: #7d6350; }
+/* لا قواعدَ ليليّة: القسم bz-sec-light فاتحٌ دائماً لا ينقلب مع الثيم */

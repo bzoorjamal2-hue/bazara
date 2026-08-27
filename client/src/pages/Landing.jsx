@@ -388,7 +388,7 @@ export default function Landing() {
           <div className="bz-bento mt-10">
             {/* سبع لا ثمان: الأولى تشغل خانتين، فيمتلئ الصفّان تماماً بلا بطاقةٍ
                 يتيمة بسطرٍ وحدها. */}
-            {features.slice(0, 7).map((f, i) => {
+            {features.slice(0, 3).map((f, i) => {
               const Icon = FEATURE_ICONS[i % FEATURE_ICONS.length];
               return (
                 <Reveal key={pick(f, 'title', i)} delay={i * 55} className={i === 0 ? 'bz-bento-lg' : ''}>
@@ -401,6 +401,26 @@ export default function Landing() {
               );
             })}
           </div>
+
+          {/* الباقيات صفٌّ مضغوط: اسمٌ وأيقونة بلا شرح.
+              سبعُ بطاقاتٍ كاملة كانت تصنع ٢٩٪ من الصفحة — ضِعفَ أيّ قسمٍ آخر،
+              وشرحُ الميزة السابعة لا يُقرأ بعد الشرح السادس. الثلاثُ الأولى
+              تُقنع، والباقياتُ تُطمئن أنّ ما تحتاجه موجود. */}
+          {features.length > 3 && (
+            <Reveal delay={220}>
+              <ul className="bz-featlist">
+                {features.slice(3, 8).map((f, i) => {
+                  const Icon = FEATURE_ICONS[(i + 3) % FEATURE_ICONS.length];
+                  return (
+                    <li key={pick(f, 'title', i)} className="bz-featlist-i">
+                      <Icon className="h-[18px] w-[18px] shrink-0" />
+                      <span>{pick(f, 'title', '')}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </Reveal>
+          )}
         </section>
       )}
 
