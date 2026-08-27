@@ -46,9 +46,20 @@ export default defineConfig({
     // فصل المكتبات الكبيرة لملفّات مستقلة → تخزين مؤقت أفضل وتحميل أوّلي أخف
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          motion: ['framer-motion'],
+        // الصيغة الدالّية لا النصّية: القائمة النصّية تطابق المُعرِّف كما يُكتب،
+        // و react/jsx-runtime يصله Vite بمسارٍ مُعالَجٍ مسبقاً فلا تطالبه القاعدة —
+        // فيسقط بأوّل قطعةٍ تصله، وكانت قطعة الحركة. وكلُّ مكوّنٍ بالمشروع يستورد
+        // jsx-runtime، فصارت الحركة (١٢٧ كيلو) تُحمَّل مسبقاً مع كلّ صفحة مهما
+        // أُجّل استعمالُها. (اكتشفتُها بقراءة القطعة المبنيّة: import{j} — والـj
+        // هو jsx لا motion.) المطابقة بالمسار تُمسك كلّ صيغ المُعرِّف.
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+          const p = id.replace(/\\/g, '/');
+          if (/\/node_modules\/(react|react-dom|react-router|react-router-dom|scheduler)\//.test(p)) return 'react-vendor';
+          // مشتركةٌ بين أدراجٍ ونوافذَ وصفحاتٍ مؤجّلة. وبلا تسميتها هنا يرفعها
+          // Rollup إلى القطعة الرئيسية بوصفها أقرب سلفٍ مشترك (قِستُ: ٤٥٢ ← ٥٥١).
+          if (p.includes('/framer-motion/')) return 'motion';
+          return undefined;
         },
       },
     },

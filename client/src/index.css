@@ -3657,3 +3657,9 @@ html[lang='ar'] .font-display { font-family: var(--bz-display); }
 /* سعرُ البطاقة بوجه العرض: الرقمُ هو ما تبحث عنه العين أوّلاً على الرفّ */
 .bz-pprice { font-family: var(--bz-display); color: #5e4636; }
 html.dark .theme-pub .bz-pprice { color: #f6efe0; }
+
+/* أثرُ ضغطة زرّ الثيم — كان whileTap من framer-motion، وهي مكتبةٌ بـ١٢٦ كيلو
+   كانت تدخل المسار الحرج لكلّ صفحة لأنّ الزرّ بالشريط الدائم. */
+.bz-themetoggle { transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease; }
+.bz-themetoggle:active { transform: scale(0.85) rotate(-20deg); }
+@media (prefers-reduced-motion: reduce) { .bz-themetoggle:active { transform: none; } }

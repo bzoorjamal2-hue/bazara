@@ -1,16 +1,19 @@
-import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext.jsx';
 
-// زر تبديل الوضع الليلي/النهاري — شمس/قمر مع انتقال ناعم.
+// زر تبديل الوضع الليلي/النهاري — شمس/قمر مع أثر ضغطة.
+//
+// كان يستورد framer-motion لأجل whileTap وحدها. والزرّ يعيش بالشريط العلويّ،
+// أي بالهيكل الدائم — فكانت المكتبة (١٢٦ كيلو) تدخل المسار الحرج لكلّ صفحة
+// من أجل تصغيرةٍ ودورانٍ عند الضغط. CSS تفعلهما بسطرين.
 export default function ThemeToggle({ className = '', size = 'h-9 w-9' }) {
   const { dark, toggle } = useTheme();
   return (
-    <motion.button
+    <button
+      type="button"
       onClick={toggle}
-      whileTap={{ scale: 0.85, rotate: -20 }}
       aria-label={dark ? 'الوضع النهاري' : 'الوضع الليلي'}
       title={dark ? 'الوضع النهاري' : 'الوضع الليلي'}
-      className={`flex ${size} items-center justify-center rounded-full transition ${className}`}
+      className={`bz-themetoggle app-tap flex ${size} items-center justify-center rounded-full transition ${className}`}
     >
       {dark ? (
         // شمس
@@ -24,6 +27,6 @@ export default function ThemeToggle({ className = '', size = 'h-9 w-9' }) {
           <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
         </svg>
       )}
-    </motion.button>
+    </button>
   );
 }

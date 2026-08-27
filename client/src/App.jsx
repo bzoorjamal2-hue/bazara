@@ -6,8 +6,7 @@ import { retryImport, installChunkGuard } from './utils/chunkReload.js';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import RequireSubscription from './components/RequireSubscription.jsx';
 import Spinner from './components/Spinner.jsx';
-import Home from './pages/Home.jsx'; // الصفحة الرئيسية تبقى فورية (أول ما يفتح الزائر)
-import Search from './pages/Search.jsx'; // البحث يفتح من الهيدر مباشرة — ضمن الحزمة الأساسية ليفتح فورياً بلا وميض تحميل
+
 import Landing from './pages/Landing.jsx'; // صفحة المنصّة — أول ما يراه الزائر بالويب
 import Splash from './components/Splash.jsx';
 import { isStandalone, hasStoredToken } from './utils/pwa.js';
@@ -41,6 +40,14 @@ function Root() {
 }
 
 // باقي الصفحات تُحمّل عند الحاجة فقط (code-splitting) — يقلّل حجم التحميل الأولي كثيراً
+// كانت مستوردةً فوراً بحجّة أنّها «أوّل ما يفتح الزائر» — ولم تعد: صارت
+// الواجهة هي الجذر وانتقلت هذه إلى /shop. وثمنُ بقائها فورية أنّها تجرّ
+// ProductCard ومعه framer-motion إلى القطعة الرئيسية لكلّ زائرة، حتى من لم
+// تفتح المتجر قطّ. وتبقى فوريّةَ الإحساس بالتسخين المسبق أدناه.
+const Home = lazy(() => retryImport(() => import('./pages/Home.jsx')));
+// البحث يُفتح من الهيدر، فيبقى فوريَّ الإحساس بالتسخين لا بالاستيراد
+// الفوريّ — كان يجرّ ProductCard ومعه framer-motion للقطعة الرئيسية.
+const Search = lazy(() => retryImport(() => import('./pages/Search.jsx')));
 const Login = lazy(() => retryImport(() => import('./pages/Login.jsx')));
 const Register = lazy(() => retryImport(() => import('./pages/Register.jsx')));
 const ForgotPassword = lazy(() => retryImport(() => import('./pages/ForgotPassword.jsx')));
@@ -190,6 +197,8 @@ function AnimatedRoutes() {
   // تحميل مُسبق للصفحات الشائعة بعد الإقلاع — يلغي وميض/فصل التحميل عند الانتقال
   useEffect(() => {
     const warm = () => {
+      import('./pages/Home.jsx');
+      import('./pages/Search.jsx');
       import('./pages/Login.jsx');
       import('./pages/Register.jsx');
       import('./pages/StorePage.jsx');

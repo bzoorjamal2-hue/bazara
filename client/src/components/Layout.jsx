@@ -4,8 +4,20 @@ import { openSocial, socialWebUrl } from '../utils/social.js';
 import { Link, useLocation } from 'react-router-dom';
 import api from '../api/client.js';
 import Navbar from './Navbar.jsx';
-import CartDrawer from './CartDrawer.jsx';
-import WishlistDrawer from './WishlistDrawer.jsx';
+import { lazy, Suspense } from 'react';
+import { useCart } from '../context/CartContext.jsx';
+import { useWishlist } from '../context/WishlistContext.jsx';
+import { retryImport } from '../utils/chunkReload.js';
+
+// الدرجان يُحمَّلان عند فتحهما لا قبله.
+//
+// كانا مستوردَين بالهيكل الدائم، وكلاهما يستعمل framer-motion — فكانت المكتبة
+// تدخل المسار الحرج لكلّ زائرة، ومن لم تفتح درجاً قطّ تدفع ثمنها كاملاً.
+// وكلُّ آثارهما محروسةٌ أصلاً بحالة الفتح (فحصتُها أثراً أثراً: ما ليس محروساً
+// بـopen محروسٌ بـview أو بقائمةٍ لا تمتلئ إلا بعد الفتح)، فتأجيلُ التركيب
+// مكافئٌ سلوكياً.
+const CartDrawer = lazy(() => retryImport(() => import('./CartDrawer.jsx')));
+const WishlistDrawer = lazy(() => retryImport(() => import('./WishlistDrawer.jsx')));
 import CartReminder from './CartReminder.jsx';
 import OfflineBanner from './OfflineBanner.jsx';
 import BottomNav from './BottomNav.jsx';
@@ -23,6 +35,9 @@ import { isImpersonating } from '../utils/impersonation.js';
 // الهوية الخمرية/العاجية الفاخرة مطبّقة على كل الموقع (متجر عام + لوحة تحكم لكل المشتركين).
 export default function Layout({ children }) {
   const { pathname, search } = useLocation();
+  // حالةُ فتح الدرجين تُقرأ هنا كي نؤجّل تركيبهما حتى تُفتح فعلاً
+  const { open: cartOpen } = useCart();
+  const { open: wishOpen } = useWishlist();
   // صفحات المتجر العامة لها هيدر وفوتر خاص بالمتجر بدل شريط/فوتر Bazara العام
   const isStorePage = /^\/store\//.test(pathname);
   // صفحة المنتج تلبس هوية متجرها (StoreHeader/StoreFooter داخلها) — فنخفي شريط بازارا.
@@ -99,8 +114,8 @@ export default function Layout({ children }) {
         <main className={`mx-auto w-full max-w-6xl flex-1 px-4 pt-5 sm:px-6 xl:max-w-[1320px] 2xl:max-w-[1600px] ${isStoreTrack ? 'flex flex-col' : ''} ${showBottomNav && !showFooter ? 'pb-bottomnav' : 'pb-8'}`}>{children}</main>
       )}
       {showFooter && <PublicFooter bottomNav={showBottomNav} />}
-      <CartDrawer />
-      <WishlistDrawer />
+      {cartOpen && <Suspense fallback={null}><CartDrawer /></Suspense>}
+      {wishOpen && <Suspense fallback={null}><WishlistDrawer /></Suspense>}
       {/* لا نُظهر تذكير السلة على صفحات الحساب/الترحيب (يغطّي النموذج) */}
       {!isAuthFull && !isLanding && <CartReminder />}
       <OfflineBanner />
