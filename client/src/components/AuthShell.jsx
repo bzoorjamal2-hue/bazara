@@ -2,6 +2,7 @@ import { forwardRef, useEffect, useId, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client.js';
+import { heroSrc, heroSrcSet } from '../utils/heroImage.js';
 import Logo from './Logo.jsx';
 import LanguageSwitcher from './LanguageSwitcher.jsx';
 
@@ -126,15 +127,27 @@ export default function AuthShell({ title, subtitle, children, back = '/', compa
 
   // خلفية لوح الهوية: نفس صورة الهيرو التي يضعها المدير — فتتّسق الصفحتان
   // مع الواجهة بلا إعدادٍ ثانٍ.
+  // localStorage قبل sessionStorage: الثاني يُمسح بإغلاق التبويب، فكانت كلُّ
+  // زيارةٍ تبدأ بلا صورة — يُرى التدرّجُ البنّيّ وحده حتى يردّ الخادم. وهو
+  // البنّيّ نفسه الذي عالجتُه بصفحة الواجهة: المشكلة ليست اللون بل غيابُ
+  // الصورة التي تعلوه.
   const [bg, setBg] = useState(() => {
-    try { return JSON.parse(sessionStorage.getItem('bz_landing') || 'null')?.landing?.hero || null; } catch { return null; }
+    try {
+      const raw = localStorage.getItem('bz_landing') || sessionStorage.getItem('bz_landing');
+      return JSON.parse(raw || 'null')?.landing?.hero || null;
+    } catch { return null; }
   });
   useEffect(() => {
-    if (bg) return;
+    // نجلب دائماً لا حين الغياب فقط: المحفوظُ يُرسم فوراً، والجلبُ يحدّثه إن
+    // بدّل المديرُ الصورة — وإلا بقيت القديمة ظاهرةً إلى الأبد.
     api.get('/public/site-info')
-      .then((r) => setBg(r.data?.landing?.hero || {}))
-      .catch(() => { /* التدرّج وحده يكفي */ });
-  }, [bg]);
+      .then((r) => {
+        const s = { landing: r.data?.landing || {}, stats: r.data?.stats || null };
+        setBg(s.landing?.hero || {});
+        try { localStorage.setItem('bz_landing', JSON.stringify(s)); } catch { /* ممتلئ */ }
+      })
+      .catch(() => { /* المحفوظ أو التدرّج — كلاهما يكفي */ });
+  }, []);
 
   const ticks = [t('landing.chip1'), t('landing.chip2'), t('landing.chip3')];
 
@@ -142,7 +155,21 @@ export default function AuthShell({ title, subtitle, children, back = '/', compa
     <div className="bz-auth" style={{ '--bz-dim': (bg?.dim ?? 62) / 100 }}>
       {/* ── لوح الهوية ── */}
       <aside className="bz-auth-brand">
-        {bg?.image && <span className="bz-auth-img" style={{ backgroundImage: `url(${bg.image})` }} aria-hidden="true" />}
+        {/* <img> لا خلفيةَ CSS: الخلفيةُ لا يراها ماسحُ التحميل المسبق ولا
+            تبدأ إلا بعد رسم العقدة وحساب نمطها، ولا تقبل srcset فتنزل بمقاسٍ
+            واحدٍ لكلّ الشاشات. */}
+        {bg?.image && (
+          <img
+            className="bz-auth-img"
+            src={heroSrc(bg.image)}
+            srcSet={heroSrcSet(bg.image)}
+            sizes="(min-width: 900px) 60vw, 100vw"
+            alt=""
+            aria-hidden="true"
+            fetchpriority="high"
+            decoding="async"
+          />
+        )}
         <span className="bz-hero-veil" aria-hidden="true" />
 
         <div className="bz-auth-brand-in">

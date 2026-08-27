@@ -2756,7 +2756,15 @@ html[dir='rtl'] .bz-menu-arrow { transform: scaleX(-1); }
     radial-gradient(120% 90% at 50% -20%, rgba(176, 154, 126, 0.16), transparent 58%),
     linear-gradient(165deg, #4a3521 0%, #33241a 45%, var(--espresso) 100%);
 }
-.bz-auth-img { position: absolute; inset: 0; background-size: cover; background-position: center; }
+/* صارت <img> لا <span> بخلفية — فتملأ اللوح قصّاً كالفيديو */
+.bz-auth-img {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: center;
+}
 .bz-auth-brand-in {
   position: relative;
   display: flex;
@@ -2764,7 +2772,19 @@ html[dir='rtl'] .bz-menu-arrow { transform: scaleX(-1); }
   flex-direction: column;
   padding: max(env(safe-area-inset-top), 0.9rem) 1.25rem 1.5rem;
 }
-@media (min-width: 900px) { .bz-auth-brand-in { padding: 2rem 2.5rem 2.5rem; } }
+@media (min-width: 900px) {
+  .bz-auth-brand-in { padding: 2rem 2.5rem 2.5rem; }
+  /* اللوحُ يلتصق بالشاشة لا بطول عمود النموذج.
+     نموذجُ التسجيل أطولُ من الشاشة (٨٩٧px على شاشة ٧٠٠)، وكان اللوحُ يتمدّد
+     معه فيتوسّط محتواه في ٩٣٧ لا في المرئيّ — فينزل الشعارُ والنصّ ١٥٤px
+     تحت منتصف الشاشة. الالتصاقُ يُبقيهما بمنتصف ما يُرى بينما يُمرَّر النموذج. */
+  .bz-auth-brand {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: 100svh;
+  }
+}
 
 .bz-auth-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 
@@ -2833,7 +2853,13 @@ html[dir='rtl'] .bz-menu-arrow { transform: scaleX(-1); }
   /* بلا حشوةٍ جانبية على الجوّال: كانت تترك إطاراً بنّياً حول البطاقة يبدو
      خطأً لا تصميماً. البطاقة تمتدّ من حافةٍ لحافة كورقةٍ تطلع من تحت. */
   padding: 0;
-  background: linear-gradient(180deg, var(--espresso) 0%, #1c1309 100%);
+  /* أرضٌ مقصودة لا بنّيٌّ مسطّح: هالةٌ دافئة خلف البطاقة تجعلها تبدو
+     موضوعةً على سطحٍ لا عائمةً على فراغ، وتردّ شيئاً من ضوء لوح الصورة
+     المجاور فلا ينقطع النصفان. */
+  background:
+    radial-gradient(85% 55% at 50% 42%, rgba(176, 154, 126, 0.13), transparent 70%),
+    radial-gradient(120% 60% at 50% 108%, rgba(94, 70, 54, 0.28), transparent 62%),
+    linear-gradient(180deg, #241a10 0%, var(--espresso) 55%, #100a05 100%);
 }
 @media (min-width: 900px) { .bz-auth-form { align-items: center; padding: 2.5rem; } }
 
