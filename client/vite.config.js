@@ -2,7 +2,12 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
+// بصمةُ الإصدارة: تدخل ببادئة مفاتيح الكاش، فتُهمَل نسخُ الإصدارة السابقة
+// تلقائياً بدل أن تُعرض بشكلٍ قديمٍ للبيانات فتُسقط الصفحة.
+const BUILD_ID = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 8) || String(Date.now().toString(36));
+
 export default defineConfig({
+  define: { __BUILD_ID__: JSON.stringify(BUILD_ID) },
   plugins: [
     react(),
     // تطبيق ويب تقدّمي (PWA): قابل للتثبيت على الجوال، يفتح بملء الشاشة، ويعمل جزئياً بلا إنترنت.

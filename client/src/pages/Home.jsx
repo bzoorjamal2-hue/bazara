@@ -184,7 +184,7 @@ export default function Home() {
               <section className="mt-16 sm:mt-20">
                 <SectionTitle>{t('home.featuredProducts')}</SectionTitle>
                 <div className="bz-cards">
-                  {data.featured.map((p, i) => (
+                  {(data.featured || []).map((p, i) => (
                     <ProductCard key={p.id} product={p} index={i} />
                   ))}
                 </div>
@@ -195,7 +195,7 @@ export default function Home() {
           {/* متاجر مميزة */}
           <Reveal><section id="stores" className="mt-16 sm:mt-20">
             <SectionTitle>{t('home.featuredStores')}</SectionTitle>
-            {data.stores.length === 0 ? (
+            {(data.stores || []).length === 0 ? (
               <EmptyState
                 icon={<SparkleIcon className="h-8 w-8" />}
                 text={t('home.emptyStores')}
@@ -207,7 +207,7 @@ export default function Home() {
               // تدرّج سفلي ليُقرأ أي نص فوق أي صورة، والشعار يجلس على حدّ الغلاف بحلقة كريمية.
               // بلا غلاف نستخدم تدرّجاً خمرياً فاخراً — لا تظهر بطاقة فارغة أبداً.
               <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 2xl:grid-cols-5">
-                {data.stores.map((s, i) => <StoreCard key={s.id} s={s} index={i} rtl={rtl} />)}
+                {(data.stores || []).map((s, i) => <StoreCard key={s.id} s={s} index={i} rtl={rtl} />)}
               </div>
             )}
           </section></Reveal>
@@ -216,7 +216,7 @@ export default function Home() {
           <Reveal>
             <section className="mt-16 sm:mt-20">
               <SectionTitle>{t('home.latestProducts')}</SectionTitle>
-              {data.products.length === 0 ? (
+              {(data.products || []).length === 0 ? (
                 <EmptyState
                   icon={<BoltIcon className="h-8 w-8" />}
                   text={t('home.emptyProducts')}
@@ -225,7 +225,7 @@ export default function Home() {
                 />
               ) : (
                 <div className="bz-cards">
-                  {data.products.map((p, i) => (
+                  {(data.products || []).map((p, i) => (
                     <ProductCard key={p.id} product={p} index={i} />
                   ))}
                 </div>

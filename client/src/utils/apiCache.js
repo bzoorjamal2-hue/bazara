@@ -1,12 +1,32 @@
 // مخزّن صفحات (منتج/متجر/فئة/رئيسية) — يجعل الفتح/الرجوع فورياً وثابتاً بلا وميض،
 // ويثبّت استعادة موضع التمرير لأن المحتوى يجهز لحظياً. (stale-while-revalidate)
 // نحفظ في الذاكرة + localStorage فيبقى المحتوى فورياً حتى بعد إعادة تحميل التطبيق.
+import { isServerDown } from './serverState.js';
+
 const mem = new Map();
 const TTL = 5 * 60 * 1000; // 5 دقائق
-const LS_PREFIX = 'bzc_';
+// بادئةٌ تحمل بصمةَ النسخة: صارت النسخةُ المحفوظة تُعرض بعد انتهاء مهلتها
+// (شبكةَ أمانٍ حين يقف الخادم)، وهذا يفتح باباً لم يكن مفتوحاً — نسخةٌ كتبتها
+// إصدارةٌ قديمة بشكلٍ مختلفٍ للبيانات. رأيتُها تُسقط الصفحةَ فعلاً: جسمٌ ناقصُ
+// حقلٍ واحد جعل data.products.length ينهار، فصار الفراغُ انهياراً — أسوأ.
+// البصمةُ تتغيّر مع كلّ إصدارة، فتُهمَل نسخُ الإصدارةِ السابقة من تلقائها.
+// بادئةٌ تحمل بصمةَ الإصدارة: صارت النسخةُ المحفوظة تُعرض بعد انتهاء مهلتها
+// (شبكةَ أمانٍ حين يقف الخادم)، وهذا يفتح باباً لم يكن مفتوحاً — نسخةٌ كتبتها
+// إصدارةٌ قديمة بشكلٍ مختلفٍ للبيانات. رأيتُها تُسقط الصفحةَ فعلاً: جسمٌ ناقصُ
+// حقلٍ واحد جعل data.products.length ينهار، فصار الفراغُ انهياراً — أسوأ من
+// الفراغ. البصمةُ تتغيّر مع كلّ إصدارة فتُهمَل نسخُ ما قبلها من تلقائها.
+const LS_PREFIX = `bzc${__BUILD_ID__}_`;
 const LS_MAX = 350000; // حد حجم العنصر الواحد بالـ localStorage (~350KB) لتفادي امتلاء التخزين
+// عمرٌ أقصى للنسخة البائتة: بعد خمس دقائق تُعدّ قديمةً فنجدّدها، لكنّها تبقى
+// محفوظةً سبعةَ أيّام كشبكةِ أمان. حين يقف الخادمُ ساعاتٍ كانت الصفحاتُ تفرغ
+// تماماً — «كلشي مختفي» — لأنّ getCache كان يحذف العنصرَ فورَ انتهاء مهلته،
+// فلا يبقى شيءٌ يُعرض. الآن نحتفظ به ونعرضه مع تنبيهٍ صريحٍ أنّه محفوظ.
+const STALE_MAX = 7 * 24 * 60 * 60 * 1000;
 
 export function getCache(key) {
+  // والخادمُ واقف؟ البائتُ خيرٌ من الفراغ. لا نمسّ سلوكَ الحالة الطبيعية:
+  // ما دام الخادمُ حيّاً تبقى المهلةُ خمسَ دقائق كما كانت.
+  if (isServerDown()) { const st = getStale(key); if (st !== null) return st; }
   const e = mem.get(key);
   if (e) {
     if (Date.now() - e.t <= TTL) return e.v;
@@ -18,7 +38,8 @@ export function getCache(key) {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Date.now() - parsed.t <= TTL) { mem.set(key, parsed); return parsed.v; }
-      localStorage.removeItem(LS_PREFIX + key);
+      // منتهيةُ الصلاحية لكنّها ليست قمامة: نبقيها لـgetStale حتى STALE_MAX
+      if (Date.now() - parsed.t > STALE_MAX) localStorage.removeItem(LS_PREFIX + key);
     }
   } catch { /* تجاهل */ }
   return null;
@@ -53,4 +74,19 @@ export function setCache(key, value) {
       }
     } catch { /* تجاهل */ }
   }
+}
+
+// النسخةُ البائتة: تُستدعى حين يفشل الجلب. أفضلُ من صفحةٍ فارغة بكثير — الزبونة
+// ترى المنتجاتِ وتتصفّح، ويظهر شريطٌ يقول إنّ ما تراه محفوظٌ لا حيّ.
+export function getStale(key) {
+  const e = mem.get(key);
+  if (e) return e.v;
+  try {
+    const raw = localStorage.getItem(LS_PREFIX + key);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Date.now() - parsed.t <= STALE_MAX) return parsed.v;
+    }
+  } catch { /* تجاهل */ }
+  return null;
 }

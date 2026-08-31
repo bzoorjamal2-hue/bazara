@@ -881,5 +881,10 @@
     "seeTitle": "A store ready in your name",
     "seeDesc": "A screenshot of a real Bazara store — not a mockup. Slider, categories, cart, WhatsApp, order tracking and reels.",
     "seeCta": "Visit a real store"
+  },
+  "serverDown": {
+    "message": "Our service is briefly unavailable. Your connection is fine — showing your last saved copy.",
+    "retry": "Try again",
+    "trying": "Trying…"
   }
 }

@@ -4147,3 +4147,56 @@ html.dark .theme-pub .bz-tabbar button.is-on > span:first-child { background: #e
      الشريط لا تحته — فتراكب مع حقل البحث.) */
   .app-navbar { top: var(--bz-tabbar-h) !important; }
 }
+
+/* ═══════ شريط «الخادم واقف» ═══════
+   لونُه ليس أحمرَ إنذار: الزبونة لم تُخطئ، والموقعُ ما زال يعمل بنسخته
+   المحفوظة. تنبيهٌ هادئ بلوحة الموقع نفسِها، ونقطةٌ نابضة تقول إنّ الحالة حيّة
+   لا رسالةً قديمة عالقة. */
+.bz-srv {
+  /* ساكنٌ لا لاصق: الشريطُ العلويّ وهيدرُ المتجر كلاهما لاصقٌ عند top:0،
+     وثالثٌ مثلُهما يتراكب معهما — وهو العطبُ الذي خرجتُ منه للتوّ. يُقرأ
+     مرّةً بأعلى الصفحة ثمّ ينزاح، والنسخةُ المحفوظة تحته تشرح نفسَها. */
+  position: relative;
+  z-index: 90;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 0.75rem;
+  border-bottom: 1px solid rgba(94, 70, 54, 0.14);
+  background: #f0e4cf;
+  padding: 0.55rem var(--bz-gut);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #4a3628;
+}
+.bz-srv-t { max-width: 62ch; }
+.bz-srv-dot {
+  height: 0.5rem;
+  width: 0.5rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: #b45309;
+  animation: bz-srv-pulse 1.8s ease-in-out infinite;
+}
+@keyframes bz-srv-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+@media (prefers-reduced-motion: reduce) { .bz-srv-dot { animation: none; } }
+.bz-srv-btn {
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: #5e4636;
+  padding: 0.25rem 0.8rem;
+  font-weight: 600;
+  color: #F4EDE2;
+  transition: opacity 0.2s ease;
+}
+.bz-srv-btn:disabled { opacity: 0.6; }
+@media (hover: hover) { .bz-srv-btn:not(:disabled):hover { opacity: 0.85; } }
+
+html.dark .theme-pub .bz-srv {
+  border-bottom-color: rgba(228, 216, 197, 0.16);
+  background: #241c11;
+  color: #e4d8c5;
+}
+html.dark .theme-pub .bz-srv-dot { background: #f0a04b; }
+html.dark .theme-pub .bz-srv-btn { background: #e4d8c5; color: #2b1d12; }

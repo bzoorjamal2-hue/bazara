@@ -30,6 +30,7 @@ import { WhatsAppIcon, InstagramIcon, FacebookIcon } from './icons.jsx';
 import { BAZARA_WHATSAPP, BAZARA_INSTAGRAM, BAZARA_FACEBOOK } from '../config/site.js';
 import { setPlatformCategories } from '../utils/platformCategories.js';
 import ImpersonationBar from './ImpersonationBar.jsx';
+import ServerDownBanner from './ServerDownBanner.jsx';
 import { isImpersonating } from '../utils/impersonation.js';
 
 // الهوية الخمرية/العاجية الفاخرة مطبّقة على كل الموقع (متجر عام + لوحة تحكم لكل المشتركين).
@@ -93,6 +94,8 @@ export default function Layout({ children }) {
   return (
     <div className="app-bg theme-pub flex min-h-screen flex-col">
       <ImpersonationBar />
+      {/* قبل كلّ شيء: إن كان الخادمُ صامتاً فلتعرف الزبونةُ أنّ العطبَ ليس عندها */}
+      <ServerDownBanner />
       <PullToRefresh />
       {/* سحب من الحافة للرجوع (التطبيق المثبّت فقط) — إحساس أصلي كإنستغرام/iOS */}
       <SwipeBack />
