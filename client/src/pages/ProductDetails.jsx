@@ -560,7 +560,7 @@ export default function ProductDetails() {
 
           {product.description && (
             <div className="mt-5">
-              <p className={`whitespace-pre-line leading-relaxed text-stone-300 ${!descExp && product.description.length > 240 ? 'line-clamp-4' : ''}`}>{product.description}</p>
+              <p className={`max-w-[75ch] whitespace-pre-line leading-relaxed text-stone-300 ${!descExp && product.description.length > 240 ? 'line-clamp-4' : ''}`}>{product.description}</p>
               {product.description.length > 240 && (
                 <button type="button" onClick={() => setDescExp((v) => !v)} className="mt-1.5 text-sm font-semibold text-wine transition hover:text-wine/70">
                   {descExp ? t('common.showLess') : t('common.showMore')}

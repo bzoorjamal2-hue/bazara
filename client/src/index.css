@@ -4052,7 +4052,11 @@ html.dark .theme-pub .bz-tabbar button { color: #b9ab91; }
 html.dark .theme-pub .bz-tabbar button.is-on { color: #f6efe0; }
 html.dark .theme-pub .bz-tabbar button.is-on > span:first-child { background: #e4d8c5; color: #2b1d12; }
 
-/* ═══════ شريط التنقّل: أسفلَ الجوّال، وأعلى الكمبيوتر ═══════
+/* ═══════ شريط التنقّل: أسفلَ اللمس، وأعلى الفأرة ═══════
+   العتبةُ ليست عرضاً وحده: آيباد برو أفقيّاً 1366px — أعرضُ من كثيرٍ من
+   اللابتوبات — لكنّه يدٌ لا فأرة، ومكانُ إبهامها الأسفل. فأضفتُ
+   hover:hover و pointer:fine: الفأرةُ وحدها تُصعِد الشريط، وكلُّ لمسٍ
+   يُبقيه أسفل مهما اتّسعت الشاشة.
    ترتيبُ هذه الكتلة بعد كتلة الشكل مقصود: media query لا يرفع الأولويّة،
    فحين كانت أوّلاً كان `.bz-tabbar button.is-on { color }` العامُّ يهزم لونَ
    الحبّة هنا — فظهر ليلاً نصٌّ عاجيّ على حبّةٍ عاجيّة، تبايُنُه ١٫٠٥.
@@ -4062,7 +4066,7 @@ html.dark .theme-pub .bz-tabbar button.is-on > span:first-child { background: #e
    الصفحة بلا سبب.
    على الشاشة الواسعة يصعد شريطاً أفقياً بالأعلى: البنودُ نفسُها لا يُحذف
    منها شيء — فالزائرة تجد الريلزَ والعروضَ وتتبّعَ الطلب حيث تبدأ عينُها. */
-@media (min-width: 900px) {
+@media (min-width: 900px) and (hover: hover) and (pointer: fine) {
   /* الثلاثةُ تلتصق متراصّةً لا متراكبة: الشريطُ أوّلاً بأعلى الشاشة،
      ثمّ يلتصق تحته هيدرُ الموقع أو هيدرُ المتجر بمقدار ارتفاعه. وكلاهما
      كان top:0 فينزلق أحدهما تحت الآخر عند النزول. */
@@ -4102,17 +4106,41 @@ html.dark .theme-pub .bz-tabbar button.is-on > span:first-child { background: #e
   html.dark .theme-pub .bz-tabbar button.is-on { background: #e4d8c5; color: #2b1d12; }
 }
 
+/* ═══════ عرضُ الصفحة: من حافةٍ لحافة ═══════
+   كان المحتوى محبوساً بسقفٍ ثابت (1152 ثمّ 1320 ثمّ 1600) فبقي على شاشة 1920
+   ثلاثمئةٍ وعشرون بكسلاً فارغةً من كلّ جهة، وعلى 2560 أربعُ مئةٍ وثمانون —
+   شريطان من الخلفية يحفّان الصفحة ويقطعان الأقسامَ التي يُفترض أن تمسّ الحافة.
+   صار السقفُ حشوةً تكبر مع الشاشة بدل أن تحبسها: 1rem على 320px و3rem فوق
+   1400px. الحدُّ الأدنى يحمي النصَّ من ملامسة الحافة، والأعلى يمنع الحشوةَ
+   من التهام الشاشات الضخمة. */
+:root { --bz-gut: clamp(1rem, 2.2vw, 3rem); }
+.bz-page { width: 100%; padding-inline: var(--bz-gut); }
+/* عنصرٌ يمسّ الحافّتين داخل صفحةٍ محشوّة (هيرو، شريطٌ ملوّن) */
+.bz-bleed { margin-inline: calc(var(--bz-gut) * -1); }
+
+/* ── شبكةُ البطاقات ──
+   كانت تقف عند خمسة أعمدة، فحين اتّسعت الصفحة صارت البطاقةُ 355px عرضاً
+   وصورةُ المنتج تتمدّد بلا داعٍ. تكسب الشبكةُ عموداً كلّما اتّسعت الشاشة
+   فيبقى حجمُ البطاقة ثابتاً تقريباً من الجوّال إلى الشاشة الضخمة. */
+.bz-cards { display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 640px)  { .bz-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .bz-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 1280px) { .bz-cards { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+@media (min-width: 1600px) { .bz-cards { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+@media (min-width: 2000px) { .bz-cards { grid-template-columns: repeat(7, minmax(0, 1fr)); } }
+@media (min-width: 2400px) { .bz-cards { grid-template-columns: repeat(8, minmax(0, 1fr)); } }
+
 /* ── ارتفاعُ الأزرار العائمة (واتساب · مساعد الأناقة · العودة للأعلى) ──
    كان 96px مكتوباً بالشيفرة بثلاثة مواضع — وهو ارتفاعُ الشريط السفليّ.
    وحين صعد الشريطُ للأعلى على الكمبيوتر بقيت الأزرار مرتفعةً تتجنّب شريطاً
    لم يعد هناك، فبدت معلّقةً بمنتصف الشاشة. صار المقدارُ متغيّراً واحداً
    يتبع الشاشة، فلا يفترق موضعُ الزرّ عن موضع الشريط أبداً. */
 :root { --bz-fab-bottom: 96px; }
-@media (min-width: 900px) { :root { --bz-fab-bottom: 24px; } }
+@media (min-width: 900px) and (hover: hover) and (pointer: fine) { :root { --bz-fab-bottom: 24px; } }
 
 /* الهيدران يلتصقان تحت الشريط بمقدار ارتفاعه (39px) بدل أن يتراكبا معه.
    الرقم واحدٌ هنا: لو تغيّر ارتفاعُ الشريط غُيِّر بمكانٍ واحد. */
-@media (min-width: 900px) {
+@media (min-width: 900px) and (hover: hover) and (pointer: fine) {
   :root { --bz-tabbar-h: 39px; }
   /* هيدرُ المتجر وحده يُزاح: هو الذي يزاحم الشريطَ بصفحات المتاجر.
      (جرّبتُ header.sticky فأصابت شريطَ الموقع العلويّ أيضاً — وهو فوق

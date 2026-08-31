@@ -101,9 +101,10 @@ export default function Layout({ children }) {
           يخرج من التدفّق فلا يفرق موضعُه بالشيفرة. */}
       {showBottomNav && <BottomNav />}
       {!hideChrome && <Navbar />}
-      {/* عرض المحتوى ينمو مع الشاشة: كان محبوساً عند 1152px دائماً، فعلى شاشة 1920
-          يبقى 384px فارغاً من كل جهة (٤٠٪ من العرض) وعلى آيباد أفقي 107px. نوسّعه
-          تدريجياً مع الحفاظ على سطر قراءة معقول (لا نمدّه لكامل العرض). */}
+      {/* الصفحةُ تمسّ الحافّتين: السقفُ الثابت (1152 ثمّ 1320 ثمّ 1600) كان يترك
+          على شاشة 1920 شريطين فارغين بعرض 160px، وعلى 2560 بعرض 480px. صار
+          العرضُ كاملاً وحشوةٌ جانبيّة تكبر مع الشاشة (--bz-gut). النصُّ الطويل
+          يحمي نفسَه بسقفٍ داخليّ (max-w-2xl/3xl) — الشبكاتُ وحدها تتمدّد. */}
       {/* فوتر المنصّة يظهر على كل صفحات المتجر العام (زي فوتر المتاجر) — مع الشريط
           السفلي أيضاً. عند ظهوره يحمل هو مسافة الشريط السفلي، فلا يبقى فراغ كبير
           داخل main قبله ولا يغطّيه الشريط. */}
@@ -115,7 +116,7 @@ export default function Layout({ children }) {
       {isLanding || isAuthFull || isDoc ? (
         <main className="w-full flex-1">{children}</main>
       ) : (
-        <main className={`mx-auto w-full max-w-6xl flex-1 px-4 pt-5 sm:px-6 xl:max-w-[1320px] 2xl:max-w-[1600px] ${isStoreTrack ? 'flex flex-col' : ''} ${showBottomNav && !showFooter ? 'pb-bottomnav' : 'pb-8'}`}>{children}</main>
+        <main className={`bz-page flex-1 pt-5 ${isStoreTrack ? 'flex flex-col' : ''} ${showBottomNav && !showFooter ? 'pb-bottomnav' : 'pb-8'}`}>{children}</main>
       )}
       {showFooter && <PublicFooter bottomNav={showBottomNav} />}
       {cartOpen && <Suspense fallback={null}><CartDrawer /></Suspense>}
@@ -153,7 +154,7 @@ function PublicFooter({ bottomNav = false }) {
   const fb = social.facebook || BAZARA_FACEBOOK;
   return (
     <footer className={`pub-footer mt-16 sm:mt-20 ${bottomNav ? 'pb-bottomnav' : ''}`}>
-      <div className="mx-auto w-full max-w-6xl px-4 py-10 text-center sm:px-6">
+      <div className="bz-page py-10 text-center">
         <Link to="/" className="font-display text-2xl font-bold tracking-wide text-cream">
           {t('app.name')}
         </Link>

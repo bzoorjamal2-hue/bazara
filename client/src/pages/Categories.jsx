@@ -32,7 +32,7 @@ export default function Categories() {
       <PageTitle icon={<GridIcon className="h-6 w-6" />} title={t('nav.categories')} />
 
       {/* بطاقةٌ واحدة هادئة كبطاقات المتاجر بالرئيسية — بلا خيطٍ علويّ ولا هالة */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
+      <div className="bz-cards">
         {items.map((it, i) => (
           <Link
             key={it.key}

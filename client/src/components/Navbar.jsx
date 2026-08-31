@@ -243,10 +243,10 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50">
       <nav
-        className={`app-navbar relative flex w-full justify-center px-3 py-2.5 sm:px-6 ${noAnim ? 'transition-none' : 'transition-shadow duration-300'} ${scrolled ? 'shadow-md' : ''}`}
+        className={`app-navbar bz-page relative flex justify-center py-2.5 ${noAnim ? 'transition-none' : 'transition-shadow duration-300'} ${scrolled ? 'shadow-md' : ''}`}
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.625rem)' }}
       >
-        <div className="w-full max-w-6xl">
+        <div className="w-full">
         <div className="relative flex h-12 w-full items-center justify-between">
           {/* القائمة + الوضع الليلي — جهة البداية (اليمين في العربية، اليسار في الإنجليزية) */}
           <div className="flex items-center gap-1 sm:gap-1.5">

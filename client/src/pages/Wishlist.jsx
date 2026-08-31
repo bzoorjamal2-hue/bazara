@@ -10,7 +10,7 @@ import { HeartIcon, LinkIcon, SparkleIcon } from '../components/icons.jsx';
 import { goBack } from '../utils/nav.js';
 import { StateCard, Act, Act2 } from '../components/PageUI.jsx';
 
-const GRID = 'grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5';
+const GRID = 'bz-cards';
 const MAX_SHARE = 20; // سقف معقول لطول الرابط
 
 // المفضّلة بنفس ستايل الموقع: بطاقات ProductCard الموحّدة (شارات/ألوان/نظرة سريعة/

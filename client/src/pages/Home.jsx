@@ -183,7 +183,7 @@ export default function Home() {
             <Reveal>
               <section className="mt-16 sm:mt-20">
                 <SectionTitle>{t('home.featuredProducts')}</SectionTitle>
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
+                <div className="bz-cards">
                   {data.featured.map((p, i) => (
                     <ProductCard key={p.id} product={p} index={i} />
                   ))}
@@ -224,7 +224,7 @@ export default function Home() {
                   ctaTo="/categories"
                 />
               ) : (
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
+                <div className="bz-cards">
                   {data.products.map((p, i) => (
                     <ProductCard key={p.id} product={p} index={i} />
                   ))}

@@ -91,10 +91,11 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
 
   return (
     <header
-      className="app-navbar sticky top-0 z-50 -mx-4 -mt-5 mb-5 shadow-sm sm:-mx-6"
+      /* bz-bleed: يخرج من حشوة main ليمسّ الحافّتين — كان -mx-4 مربوطاً بحشوةٍ ثابتة صارت متغيّرة */
+      className="app-navbar bz-bleed sticky top-0 z-50 -mt-5 mb-5 shadow-sm"
       style={{ transform: 'translateZ(0)' }}
     >
-      <div className="mx-auto max-w-6xl px-4 py-2.5 sm:px-6">
+      <div className="bz-page py-2.5">
         {/* الصف الأول: اسم/شعار المتجر + زر القائمة (☰) — يتقلّص بانتقال CSS سلس */}
         <div
           className={`grid overflow-hidden motion-reduce:transition-none ${noAnim ? 'transition-none' : 'transition-[grid-template-rows,opacity,margin] duration-300 ease-out'}`}

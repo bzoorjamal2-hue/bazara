@@ -373,7 +373,7 @@ export default function StorePage() {
           )}
           {/* بطاقات فاخرة (صورة + اسم + "تسوّقي الآن") — نفس تصميم بطاقات التصنيفات
               الموحّد بكل الحسابات، لكن الضغط يفتح فئة هذا المتجر (لا يخرج للعام) */}
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
+          <div className="bz-cards">
             {visibleCats.map((c, i) => {
               const src = c.image ? cldThumb(c.image, 400) : c.builtin ? `/categories/${c.key}.png` : '';
               const cnt = catCounts[c.key] || { total: 0, sale: 0 };
@@ -512,7 +512,7 @@ export default function StorePage() {
             </StateCard>
           ) : (
             <>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
+              <div className="bz-cards">
                 {pageItems.map((p, i) => <ProductCard key={p.id} product={p} index={i} whatsapp={wa} />)}
               </div>
               {/* «عرض المزيد» يراكم القطع بمكانها بدل ترقيم صفحات يقفز للأعلى — تصفّح
@@ -784,7 +784,7 @@ function ProductSection({ title, products, wa, ranked = false }) {
     <Reveal>
       <section className="mb-16 sm:mb-20">
         <SectionTitle>{title}</SectionTitle>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
+        <div className="bz-cards">
           {products.map((p, i) => (
             <ProductCard key={p.id} product={p} index={i} whatsapp={wa} rank={ranked && i < 3 ? i + 1 : 0} />
           ))}

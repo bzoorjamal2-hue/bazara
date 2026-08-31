@@ -5,9 +5,11 @@ import { useTranslation } from 'react-i18next';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 
-// شاشةٌ عريضة؟ نفسُ عتبة الـCSS (900px) بمكانٍ واحد — لو افترقتا لظهر الشريطُ
-// بشكلٍ ويتصرّف بآخر. useSyncExternalStore هو الصحيح لمصدرٍ خارج React.
-const DESKTOP = '(min-width: 900px)';
+// فأرةٌ على شاشةٍ عريضة؟ نفسُ شرط الـCSS حرفاً بحرف — لو افترقا لظهر الشريطُ
+// بشكلٍ ويتصرّف بآخر. والعرضُ وحده لا يكفي: آيباد برو أفقيّاً 1366px لكنّه يدٌ
+// لا فأرة، فيبقى شريطُه أسفل كالهاتف.
+// useSyncExternalStore هو الصحيح لمصدرٍ خارج React.
+const DESKTOP = '(min-width: 900px) and (hover: hover) and (pointer: fine)';
 const mq = () => (typeof window === 'undefined' ? null : window.matchMedia(DESKTOP));
 const subDesktop = (cb) => {
   const m = mq();
