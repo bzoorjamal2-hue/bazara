@@ -38,6 +38,30 @@ async function getOwnedConversation(userId, convId) {
   return r.rows[0] || null;
 }
 
+// أخطاء Meta التي تعني أنّ التوكن لم يعد صالحاً: غيّر التاجر كلمة مروره، أو سحب
+// صلاحية التطبيق، أو فُصلت الصفحة عن الحساب. بلا رصدها تتوقّف الرسائل بصمتٍ
+// يظنّه التاجر عطلاً في الموقع.
+function isAuthError(e) {
+  const err = e?.body?.error;
+  if (!err) return false;
+  return err.code === 190 || err.code === 102 || err.type === 'OAuthException';
+}
+
+// نفصل المتجر ونُعلم صاحبه ليعيد الربط. نمسح التوكن الميّت حتى لا يُستعمل ثانيةً،
+// ونُبقي اسم الحساب لأنّ الفهرس الفريد جزئيٌّ على المربوطة وحدها.
+async function markDisconnected(storeId, userId) {
+  await query(
+    "UPDATE stores SET ig_connected = false, ig_access_token = '' WHERE id = $1 AND ig_connected = true",
+    [storeId]
+  );
+  notifyUser(userId, {
+    type: 'instagram',
+    title: '⚠️ انفصل حساب إنستغرام',
+    body: 'انتهت صلاحية ربط حسابك، والرسائل متوقّفة. افتح تبويب رسائل إنستغرام واضغط «ربط» من جديد.',
+    url: '/dashboard?tab=instagram',
+  });
+}
+
 // ═════════════════════ Webhook (يأتي من خوادم Meta — بلا كوكي/CSRF) ═════════════════════
 
 // GET — تأكيد اشتراك الـ webhook: Meta ترسل verify_token فنطابقه ونعيد challenge.
@@ -202,6 +226,16 @@ export async function igConnect(req, res, next) {
       return res.json({ pages: pages.map((p) => ({ pageId: p.pageId, name: p.pageName, username: p.igUsername })) });
     }
 
+    // حسابٌ واحد لمتجرٍ واحد: لو ربطه متجرٌ آخر لَما عرف الـ webhook لأيّهما
+    // يسلّم الرسالة. نمنعه هنا برسالةٍ مفهومة بدل انتهاك قيدٍ في قاعدة البيانات.
+    const dup = await query(
+      'SELECT id FROM stores WHERE ig_user_id = $1 AND ig_connected = true AND id <> $2',
+      [chosen.igUserId, store.id]
+    );
+    if (dup.rows.length) {
+      return res.status(409).json({ error: 'حساب إنستغرام هذا مربوط بمتجرٍ آخر على بازارا. افصله من ذاك المتجر أوّلاً.' });
+    }
+
     // اشتراك الـ webhook لهذه الصفحة — أفضل جهد. لو نقصت صلاحية pages_manage_metadata
     // لا نُفشل الربط: الاشتراك بحقل «messages» على مستوى تطبيق إنستغرام (بلوحة Meta)
     // يكفي لوصول الرسائل لكل حساب مربوط، فنتجاهل فشل اشتراك الصفحة بهدوء.
@@ -303,7 +337,19 @@ export async function sendReply(req, res, next) {
     try {
       result = await sendMessage(token, conv.ig_sender_id, text);
     } catch (e) {
-      // خارج نافذة الـ 24 ساعة المسموح فيها بالرد قد ترفض Meta الإرسال
+      // ماتَ التوكن: نفصل الحساب ونُعلم التاجر بدل رسالة Meta الإنجليزيّة الغامضة
+      if (isAuthError(e)) {
+        await markDisconnected(conv.store_id, conv.user_id);
+        return res.status(400).json({
+          error: 'انفصل حساب إنستغرام (انتهت صلاحية الربط). اضغط «ربط» من جديد لتعود الرسائل.',
+        });
+      }
+      // خارج نافذة الـ 24 ساعة المسموح فيها بالردّ ترفض Meta الإرسال
+      if (e.body?.error?.code === 10) {
+        return res.status(400).json({
+          error: 'مضى أكثر من ٢٤ ساعة على آخر رسالة من الزبون، وإنستغرام يمنع الردّ بعدها. انتظري رسالةً جديدة منه.',
+        });
+      }
       return res.status(400).json({ error: e.body?.error?.message || 'تعذّر إرسال الرسالة عبر إنستغرام.' });
     }
 

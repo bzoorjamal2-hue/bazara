@@ -454,6 +454,18 @@ async function ensureColumns() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );`);
     await pool.query('CREATE INDEX IF NOT EXISTS idx_ig_msg_conv ON ig_messages(conversation_id, created_at);');
+    // حسابُ إنستغرام الواحد لمتجرٍ واحد. الـwebhook يبحث عن صاحب الرسالة بهذا
+    // العمود مع كلّ رسالة واردة لكلّ المتاجر، فبلا فهرسٍ يمسح الجدول كلّه كلّ مرّة؛
+    // وبلا تفرُّدٍ تذهب رسائل حسابٍ ربطه متجران إلى واحدٍ منهما عشوائيّاً.
+    // جزئيّ على المربوطة فقط لأنّ العمود فارغ (وليس NULL) عند غير المربوطين.
+    try {
+      await pool.query("CREATE UNIQUE INDEX IF NOT EXISTS idx_stores_ig_user ON stores(ig_user_id) WHERE ig_connected = true AND ig_user_id <> '';");
+    } catch (e) {
+      // قاعدةٌ قديمة فيها تكرار سابق: الفهرس العاديّ يكفي للسرعة، ويبقى منعُ
+      // التكرار الجديد على عاتق فحص الربط بالمتحكّم.
+      console.error('⚠️ تعذّر الفهرس الفريد لحساب إنستغرام (تكرار قائم):', e.message);
+      await pool.query("CREATE INDEX IF NOT EXISTS idx_stores_ig_user ON stores(ig_user_id) WHERE ig_connected = true;");
+    }
   } catch (err) {
     console.error('⚠️ تعذّر تطبيق الترقيات:', err.message);
   }
