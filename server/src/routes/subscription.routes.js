@@ -3,6 +3,8 @@ import rateLimit from 'express-rate-limit';
 import {
   getStatus,
   requestSubscription,
+  subscriptionCheckout,
+  subscriptionVerify,
   listRequests,
   approveRequest,
   rejectRequest,
@@ -46,6 +48,8 @@ const impersonateLimiter = rateLimit({
 // للمستخدم
 router.get('/status', requireAuth, getStatus);
 router.post('/request', requireAuth, requestSubscription);
+router.post('/checkout', requireAuth, subscriptionCheckout);
+router.get('/verify', requireAuth, subscriptionVerify);
 router.post('/redeem', requireAuth, redeemCode);
 
 // أكواد التفعيل والمشتركون (للمدير)

@@ -87,6 +87,9 @@ export default function CartDrawer() {
   const [localities, setLocalities] = useState([]); // قائمة مسطّحة: كل مدينة/قرية بندٌ مستقل بسعره
   const [freeOver, setFreeOver] = useState(0); // شحن مجاني فوق هذا المبلغ (0 = معطّل)
   const [referral, setReferral] = useState(null); // { code, percent, referrerName } خصم إحالة تلقائي
+  const [cardEnabled, setCardEnabled] = useState(false); // المتجر مفعّل الدفع بالبطاقة
+  const [cardEmail, setCardEmail] = useState(''); // بريد الزبون للدفع بالبطاقة
+  const [cardBusy, setCardBusy] = useState(false); // جارٍ التحويل لصفحة الدفع
   const nameRef = useRef(null); // للتركيز التلقائي على أول حقل عند فتح شاشة الإتمام
   const formRef = useRef(null); // حاوية الحقول — للتمرير لأول حقل ناقص عند الخطأ
   useScrollLock(open);
@@ -118,10 +121,10 @@ export default function CartDrawer() {
       .then((r) => {
         setLocalities(Array.isArray(r.data.localities) ? r.data.localities : []);
         setFreeOver(Number(r.data.freeShippingOver) || 0);
-        // عرض الفلاش الفعّال (الخادم يرجّعه فقط ما دام لم ينتهِ) — للعرض؛ الخادم هو الحكم
         setFlash(Number(r.data.flashPercent) > 0 ? { percent: Number(r.data.flashPercent), endsAt: r.data.flashEndsAt } : null);
+        setCardEnabled(Boolean(r.data.cardPaymentEnabled));
       })
-      .catch(() => { setLocalities([]); setFreeOver(0); setFlash(null); });
+      .catch(() => { setLocalities([]); setFreeOver(0); setFlash(null); setCardEnabled(false); });
   }, [open, storeSlug]);
 
   // زبونة قديمة محفوظ عندها اسم مكان بخانة "المدينة" فقط (قبل فصل المحافظة/القرية):
@@ -261,6 +264,44 @@ export default function CartDrawer() {
     }
   };
   const removeCoupon = () => { setCoupon(null); setCouponInput(''); setCouponMsg(''); };
+
+  // الدفع بالبطاقة عبر Paytabs — يحوّل الزبونة لصفحة الدفع الآمنة
+  const payWithCard = async () => {
+    const bad = {};
+    if (!cust.name.trim()) bad.name = true;
+    if (!isValidMobile(cust.phone)) bad.phone = true;
+    if (!cust.city && !cust.area) bad.city = true;
+    if (Object.keys(bad).length) {
+      setInvalid(bad);
+      setErr(bad.phone && cust.phone.trim() && !bad.name && !bad.city ? t('co.phoneInvalid') : t('co.required'));
+      const first = ['name', 'phone', 'city'].find((k) => bad[k]);
+      if (first) requestAnimationFrame(() => formRef.current?.querySelector(`[data-field="${first}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' }));
+      return;
+    }
+    setInvalid({});
+    if (cardBusy) return;
+    setErr('');
+    setCardBusy(true);
+    saveCustomer(cust);
+    try {
+      const activeCode = coupon?.code || '';
+      const r = await api.post('/orders/checkout', {
+        items: items.map((i) => ({ id: i.id, qty: i.qty, size: i.size, color: i.color })),
+        customer: { name: cust.name, phone: normalizePhone(cust.phone), email: cardEmail, city: cust.city, area: cust.area, address: cust.address, notes: cust.notes },
+        coupon: coupon ? { code: coupon.code } : undefined,
+      });
+      if (r.data?.redirectUrl) {
+        trackPixel('InitiateCheckout', { value: grand, num_items: items.reduce((s, i) => s + i.qty, 0) });
+        window.location.href = r.data.redirectUrl;
+      } else {
+        setErr(t('co.cardError'));
+      }
+    } catch (e) {
+      setErr(e?.response?.data?.error || t('co.cardError'));
+    } finally {
+      setCardBusy(false);
+    }
+  };
 
   const confirmOrder = async () => {
     // تحقّق حقلي واضح: نميّز الحقل الناقص بإطار أحمر، ونتأكّد أن الهاتف أرقام كافية
@@ -661,16 +702,43 @@ export default function CartDrawer() {
                     <p className="mt-2 text-[11px] text-stone-400">* {t('co.deliveryNote')}</p>
                   </div>
 
-                  <div className="flex items-center justify-center gap-2 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 py-2.5 text-sm font-medium text-emerald-300">
-                    <CashIcon className="h-4 w-4" /> {t('co.cod')}
-                  </div>
+                  {/* حقل البريد: يظهر فقط إن كان الدفع بالبطاقة مفعّلاً — ليربط الدفعة بزبون */}
+                  {cardEnabled && (
+                    <div>
+                      <h3 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-gold-200">💳 {t('co.cardSection')}</h3>
+                      <input
+                        type="email"
+                        dir="ltr"
+                        className="input !rounded-2xl"
+                        autoComplete="email"
+                        placeholder={t('co.emailPlaceholder')}
+                        value={cardEmail}
+                        onChange={(e) => setCardEmail(e.target.value)}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="border-t border-gold-400/15 p-4">
                   {err && <p className="mb-2 text-center text-xs text-red-300">{err}</p>}
-                  <button onClick={confirmOrder} disabled={placing} className="btn-whatsapp w-full !rounded-full !py-4 disabled:opacity-60">
-                    {placing ? t('common.loading') : <span className="inline-flex items-center gap-2"><WhatsAppIcon className="h-5 w-5" /> {t('co.confirm')}</span>}
-                  </button>
+                  <div className={`flex flex-col gap-2 ${cardEnabled ? '' : ''}`}>
+                    {/* زر الدفع بالفيزا — يظهر فقط إن كان المتجر مفعّل الدفع بالبطاقة */}
+                    {cardEnabled && (
+                      <button
+                        onClick={payWithCard}
+                        disabled={cardBusy || placing}
+                        className="flex w-full items-center justify-center gap-2 rounded-full py-4 font-bold text-white transition hover:brightness-110 disabled:opacity-60"
+                        style={{ background: 'linear-gradient(135deg, #1a1a6c 0%, #1e3a5f 50%, #1e6a4f 100%)' }}
+                      >
+                        {cardBusy ? t('common.loading') : <><span>💳</span> {t('co.payCard')}</>}
+                      </button>
+                    )}
+                    {/* زر الدفع عند الاستلام (واتساب) */}
+                    <button onClick={confirmOrder} disabled={placing || cardBusy} className="btn-whatsapp w-full !rounded-full !py-4 disabled:opacity-60">
+                      {placing ? t('common.loading') : <span className="inline-flex items-center gap-2"><WhatsAppIcon className="h-5 w-5" /> {t('co.confirm')}</span>}
+                    </button>
+                  </div>
+                  {cardEnabled && <p className="mt-2 text-center text-[10px] text-stone-500">{t('co.cardHint')}</p>}
                 </div>
               </motion.div>
             )}

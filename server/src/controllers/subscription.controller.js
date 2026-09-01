@@ -1,11 +1,15 @@
+import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { query } from '../config/db.js';
 import { isUserActive, daysRemaining, isAdminEmail, planPeriodEnd, adminEmails, activeStoreSql } from '../utils/subscription.js';
 import { sendMail, isMailConfigured } from '../utils/mail.js';
 import { clearPublicCache } from '../middleware/cache.js';
 import { logAdmin } from '../utils/adminLog.js';
+import { isPlatformPaytabsConfigured, createPlatformPayment, queryPlatformTransaction, isPaymentSuccess } from '../config/paytabs.js';
 
 const PLANS = { monthly: true, yearly: true };
+const PLAN_PRICES = { monthly: 25, yearly: 250 };
+const SITE = () => (process.env.PUBLIC_SITE_URL || process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '');
 
 // ─────────────── حالة الحساب: مصدر حقيقةٍ واحد ───────────────
 //
@@ -132,6 +136,102 @@ export async function requestSubscription(req, res, next) {
     res.status(201).json({ message: 'تم استلام طلبك، سيتم تفعيل اشتراكك بعد المراجعة.' });
   } catch (err) {
     next(err);
+  }
+}
+
+// ── دفع الاشتراك عبر Paytabs (بطاقة) ────────────────────────────────────
+export async function subscriptionCheckout(req, res, next) {
+  const { plan } = req.body;
+  if (!PLANS[plan]) return res.status(400).json({ error: 'خطة غير صالحة.' });
+  if (!isPlatformPaytabsConfigured()) return res.status(503).json({ error: 'الدفع بالبطاقة غير مُفعّل حالياً.' });
+  try {
+    const u = await query('SELECT email FROM users WHERE id = $1', [req.user.id]);
+    const email = u.rows[0]?.email || '';
+    const amount = PLAN_PRICES[plan];
+    const ref = 'SUB-' + crypto.randomBytes(5).toString('hex').toUpperCase();
+
+    const existing = await query("SELECT id FROM subscription_requests WHERE user_id = $1 AND status = 'pending' LIMIT 1", [req.user.id]);
+    let reqId;
+    if (existing.rows.length) {
+      await query("UPDATE subscription_requests SET plan=$1, method='card', reference=$2, tran_ref='', created_at=now() WHERE id=$3", [plan, ref, existing.rows[0].id]);
+      reqId = existing.rows[0].id;
+    } else {
+      const ins = await query("INSERT INTO subscription_requests (user_id, plan, method, reference) VALUES ($1, $2, 'card', $3) RETURNING id", [req.user.id, plan, ref]);
+      reqId = ins.rows[0].id;
+    }
+
+    const ptRes = await createPlatformPayment({
+      cartId: ref,
+      currency: 'USD',
+      amount,
+      description: `اشتراك بازارا — ${plan === 'yearly' ? 'سنوي' : 'شهري'}`,
+      customerName: email.split('@')[0],
+      customerEmail: email,
+      customerPhone: '',
+      customerCity: 'Ramallah',
+      customerAddress: 'N/A',
+      callbackUrl: `${SITE()}/api/subscription/paytabs-callback`,
+      returnUrl: `${SITE()}/subscribe?ref=${ref}`,
+    });
+
+    if (!ptRes.redirect_url) return res.status(502).json({ error: 'تعذّر إنشاء صفحة الدفع.' });
+    await query('UPDATE subscription_requests SET tran_ref = $1 WHERE id = $2', [ptRes.tran_ref, reqId]);
+    res.json({ redirectUrl: ptRes.redirect_url, reference: ref });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// التحقّق من دفع الاشتراك بعد عودة المستخدم من Paytabs
+export async function subscriptionVerify(req, res, next) {
+  const ref = (req.query.ref || '').trim();
+  if (!ref) return res.status(400).json({ error: 'مرجع مفقود.' });
+  try {
+    const r = await query("SELECT sr.*, u.email FROM subscription_requests sr JOIN users u ON u.id = sr.user_id WHERE sr.reference = $1 ORDER BY sr.created_at DESC LIMIT 1", [ref]);
+    const sr = r.rows[0];
+    if (!sr) return res.status(404).json({ error: 'طلب غير موجود.' });
+    if (sr.status === 'approved') return res.json({ status: 'paid' });
+    if (!sr.tran_ref || !isPlatformPaytabsConfigured()) return res.json({ status: sr.status });
+
+    const result = await queryPlatformTransaction(sr.tran_ref);
+    if (isPaymentSuccess(result)) {
+      const from = new Date();
+      const end = planPeriodEnd(sr.plan, from);
+      await query(
+        `UPDATE users SET subscription_status='active', subscription_plan=$1, subscription_started_at=$2, current_period_end=$3 WHERE id=$4`,
+        [sr.plan, from, end, sr.user_id]
+      );
+      await query("UPDATE subscription_requests SET status='approved' WHERE id=$1", [sr.id]);
+      clearPublicCache();
+      return res.json({ status: 'paid' });
+    }
+    return res.json({ status: 'pending' });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// Paytabs server-to-server callback للاشتراكات
+export async function subscriptionPaytabsCallback(req, res) {
+  const { tran_ref, cart_id, payment_result } = req.body;
+  if (!tran_ref || !cart_id) return res.status(400).json({ error: 'missing' });
+  try {
+    const paid = payment_result?.response_status === 'A';
+    if (!paid) return res.json({ ok: true });
+    const r = await query("SELECT sr.*, u.email FROM subscription_requests sr JOIN users u ON u.id = sr.user_id WHERE sr.reference = $1 AND sr.status = 'pending' LIMIT 1", [cart_id]);
+    const sr = r.rows[0];
+    if (!sr) return res.json({ ok: true });
+    const from = new Date();
+    const end = planPeriodEnd(sr.plan, from);
+    await query(
+      `UPDATE users SET subscription_status='active', subscription_plan=$1, subscription_started_at=$2, current_period_end=$3 WHERE id=$4`,
+      [sr.plan, from, end, sr.user_id]
+    );
+    await query("UPDATE subscription_requests SET status='approved', tran_ref=$1 WHERE id=$2", [tran_ref, sr.id]);
+    clearPublicCache();
+    res.json({ ok: true });
+  } catch {
+    res.status(500).json({ error: 'internal' });
   }
 }
 

@@ -31,6 +31,8 @@ import goboxRoutes from './routes/gobox.routes.js';
 import { goboxWebhook, syncAllGoboxStores } from './controllers/gobox.controller.js';
 import instagramRoutes from './routes/instagram.routes.js';
 import { verifyWebhook, receiveWebhook } from './controllers/instagram.controller.js';
+import { paytabsCallback } from './controllers/order.controller.js';
+import { subscriptionPaytabsCallback } from './controllers/subscription.controller.js';
 import { robots, sitemap, indexNowKey, shareProduct, shareStore, shareStory } from './controllers/seo.controller.js';
 import { issueCsrfToken, verifyCsrf, getCsrfToken } from './middleware/csrf.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
@@ -116,6 +118,9 @@ app.post('/api/gobox/webhook', goboxWebhook);
 // POST للأحداث. آمن: نتحقق من توقيع Meta (HMAC) داخل المعالج قبل قبول أي رسالة.
 app.get('/api/instagram/webhook', verifyWebhook);
 app.post('/api/instagram/webhook', receiveWebhook);
+// webhooks دفع Paytabs — تأتي من خوادمهم (server-to-server) فلا CSRF
+app.post('/api/orders/paytabs-callback', paytabsCallback);
+app.post('/api/subscription/paytabs-callback', subscriptionPaytabsCallback);
 app.use('/api', verifyCsrf);
 
 // فحص صحة الخادم + مسار توكن CSRF
@@ -560,6 +565,16 @@ END $;`,
     // الفهرس الوحيد المهم: قائمة مستخدمٍ مرتّبة زمنياً + عدّ غير المقروء
     'CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, created_at DESC);',
     'CREATE INDEX IF NOT EXISTS idx_notifications_unread ON notifications(user_id) WHERE read_at IS NULL;',
+    // Paytabs: دفع بالبطاقة اختياري لكل متجر — المالك يفعّله ويدخل بياناته
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS card_payment_enabled BOOLEAN NOT NULL DEFAULT false;",
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS paytabs_profile_id VARCHAR(40) DEFAULT '';",
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS paytabs_server_key VARCHAR(120) DEFAULT '';",
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS paytabs_region VARCHAR(10) DEFAULT 'PSE';",
+    // طلبات الدفع بالبطاقة: مرجع Paytabs (tran_ref) يُحفظ مع الطلب
+    "ALTER TABLE orders ADD COLUMN IF NOT EXISTS tran_ref VARCHAR(80) DEFAULT '';",
+    "ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method VARCHAR(20) DEFAULT 'cod';",
+    // اشتراكات عبر Paytabs: مرجع الدفع
+    "ALTER TABLE subscription_requests ADD COLUMN IF NOT EXISTS tran_ref VARCHAR(80) DEFAULT '';",
   ];
   // كل جملة على حدة: فشل واحدة لا يمنع البقية
   for (const sql of steps) {

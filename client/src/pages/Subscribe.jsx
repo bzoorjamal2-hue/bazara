@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
-import { CardIcon, KeyIcon, BackIcon } from '../components/icons.jsx';
+import { CardIcon, KeyIcon, BackIcon, CheckIcon } from '../components/icons.jsx';
 import Seo from '../components/Seo.jsx';
 import Spinner from '../components/Spinner.jsx';
 import { PageTitle, Act } from '../components/PageUI.jsx';
@@ -17,21 +17,46 @@ export default function Subscribe() {
   const { t } = useTranslation();
   const { refresh } = useAuth();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const [status, setStatus] = useState(null);
   const [selected, setSelected] = useState(null);
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [cardBusy, setCardBusy] = useState(false);
+  const [verifying, setVerifying] = useState(false);
 
   const load = () =>
     api
       .get('/subscription/status')
       .then((r) => {
-        if (r.data.active) navigate('/dashboard'); // المفعّل/المدير → اللوحة
+        if (r.data.active) navigate('/dashboard');
         else setStatus(r.data);
       })
       .catch(() => setStatus({}));
   useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // التحقّق من دفع الاشتراك بعد العودة من Paytabs
+  const returnRef = params.get('ref');
+  useEffect(() => {
+    if (!returnRef) return;
+    setVerifying(true);
+    const check = () =>
+      api.get(`/subscription/verify?ref=${encodeURIComponent(returnRef)}`)
+        .then(async (r) => {
+          if (r.data.status === 'paid') {
+            await refresh();
+            navigate('/dashboard');
+          } else {
+            setVerifying(false);
+            setError(t('subscription.paymentPending'));
+          }
+        })
+        .catch(() => { setVerifying(false); });
+    const id = setTimeout(check, 1500);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [returnRef]);
 
   const redeem = async (e) => {
     e.preventDefault();
@@ -49,6 +74,25 @@ export default function Subscribe() {
     }
   };
 
+  const payWithCard = async () => {
+    if (!selected) return;
+    setError('');
+    setCardBusy(true);
+    try {
+      const r = await api.post('/subscription/checkout', { plan: selected });
+      if (r.data?.redirectUrl) {
+        window.location.href = r.data.redirectUrl;
+      } else {
+        setError(t('subscription.cardError'));
+      }
+    } catch (err) {
+      setError(getErrorMessage(err, t('errors.generic')));
+    } finally {
+      setCardBusy(false);
+    }
+  };
+
+  if (verifying) return <div className="mx-auto max-w-md p-8 text-center"><Spinner /><p className="mt-4 text-gold-200">{t('subscription.verifyingPayment')}</p></div>;
   if (!status) return <Spinner full />;
 
   return (
@@ -59,7 +103,6 @@ export default function Subscribe() {
       {error && <p className="bz-err mb-5">{error}</p>}
 
       {!selected ? (
-        // بطاقات باقات فاخرة: خيط ذهبي علوي + سعر ضخم + زر حبة ناري (السنوية مميّزة بإطار ذهبي)
         <div className="grid gap-5 sm:grid-cols-2">
           {PLANS.map((p) => (
             <div key={p.key} className={`bz-panel relative flex flex-col p-7 ${p.key === 'yearly' ? 'bz-plan-top' : ''}`}>
@@ -83,8 +126,26 @@ export default function Subscribe() {
             {t('subscription.payTitle', { plan: t(`subscription.${selected}`) })}
           </h2>
 
+          {/* زر الدفع بالفيزا */}
+          <button
+            onClick={payWithCard}
+            disabled={cardBusy || busy}
+            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-bold text-white transition hover:brightness-110 disabled:opacity-60"
+            style={{ background: 'linear-gradient(135deg, #1a1a6c 0%, #1e3a5f 50%, #1e6a4f 100%)' }}
+          >
+            {cardBusy ? t('common.loading') : <><span>💳</span> {t('subscription.payWithCard')}</>}
+          </button>
+          <p className="mt-1.5 text-center text-[11px] text-stone-500">{t('subscription.cardNote')}</p>
+
+          {/* فاصل "أو" */}
+          <div className="my-5 flex items-center gap-3">
+            <div className="h-px flex-1 bg-gold-400/20" />
+            <span className="text-xs font-bold text-stone-500">{t('subscription.or')}</span>
+            <div className="h-px flex-1 bg-gold-400/20" />
+          </div>
+
           {/* تعليمات الدفع (التحويل المباشر) */}
-          <div className="bz-note mt-4 p-4">
+          <div className="bz-note p-4">
             <p className="mb-1 flex items-center gap-1.5 text-sm font-bold"><CardIcon className="h-4 w-4" /> {t('subscription.payInstructions')}</p>
             <p className="bz-state-p whitespace-pre-line !text-start">{status.paymentInfo}</p>
           </div>

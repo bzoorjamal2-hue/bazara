@@ -511,7 +511,12 @@
     "freeShipping": "Free",
     "freeShippingHint": "Add ₪{{amount}} to get free delivery!",
     "donePartialTitle": "Your order went via WhatsApp",
-    "donePartialMsg": "We could not register the order in the system — most likely the network. Its full details did reach the store owner on WhatsApp, so keep that message until she replies."
+    "donePartialMsg": "We could not register the order in the system — most likely the network. Its full details did reach the store owner on WhatsApp, so keep that message until she replies.",
+    "cardSection": "Pay with Visa",
+    "emailPlaceholder": "Email (required for card payment)",
+    "payCard": "Pay with Visa",
+    "cardError": "Could not prepare the payment page. Please try again.",
+    "cardHint": "You'll be redirected to a secure payment page to complete with your card"
   },
   "track": {
     "title": "Track your order",
@@ -622,7 +627,13 @@
     "renew": "Renew subscription",
     "subscriberCode": "Your subscriber code",
     "suspended": "Your store is administratively suspended",
-    "suspendedHint": "Contact Bazara support once the reason is resolved to lift it."
+    "suspendedHint": "Contact Bazara support once the reason is resolved to lift it.",
+    "payWithCard": "Pay with Visa",
+    "cardNote": "You'll be redirected to a secure payment page via PayTabs",
+    "or": "or",
+    "verifyingPayment": "Verifying payment...",
+    "paymentPending": "Payment not confirmed yet. If you've paid, wait a moment and reload the page.",
+    "cardError": "Could not prepare the payment page. Please try again."
   },
   "order": {
     "choose": "Choose order method",

@@ -197,6 +197,10 @@ export default function StoreSettings() {
           flashPercent: s.flashPercent ? String(s.flashPercent) : '',
           // datetime-local يحتاج "YYYY-MM-DDTHH:mm" بالتوقيت المحلي (بلا ثوانٍ/منطقة)
           flashEndsAt: s.flashEndsAt ? toLocalInput(s.flashEndsAt) : '',
+          cardPaymentEnabled: Boolean(s.cardPaymentEnabled),
+          paytabsProfileId: s.paytabsProfileId || '',
+          paytabsServerKey: '',
+          paytabsRegion: s.paytabsRegion || 'PSE',
         };
         savedRef.current = JSON.stringify(next);
         setForm(next);
@@ -1027,6 +1031,43 @@ export default function StoreSettings() {
           <Field label={t('dashboard.store.payment')} icon={<CashIcon className="h-4 w-4" />} tip={t('dashboard.store.paymentTip')} max={500} value={form.paymentInfo}>
             <textarea rows={2} maxLength={500} className="input resize-none" placeholder={t('dashboard.store.paymentPlaceholder')} value={form.paymentInfo} onChange={set('paymentInfo')} />
           </Field>
+
+          {/* الدفع الإلكتروني (Paytabs) — اختياري */}
+          <div className="mt-4 rounded-2xl border border-gold-400/20 bg-ink-800/50 p-4">
+            <label className="flex cursor-pointer items-center gap-3">
+              <input
+                type="checkbox"
+                checked={form.cardPaymentEnabled || false}
+                onChange={(e) => setVal('cardPaymentEnabled', e.target.checked)}
+                className="h-5 w-5 rounded border-gold-400/40 bg-ink-900 text-emerald-500 focus:ring-gold-400/30"
+              />
+              <div>
+                <span className="font-bold text-gold-200">💳 {t('dashboard.store.cardPayment')}</span>
+                <p className="text-xs text-stone-400">{t('dashboard.store.cardPaymentHint')}</p>
+              </div>
+            </label>
+            {form.cardPaymentEnabled && (
+              <div className="mt-4 space-y-3 animate-fade-up">
+                <Field label={t('dashboard.store.paytabsProfileId')} tip={t('dashboard.store.paytabsProfileIdTip')}>
+                  <input className="input" dir="ltr" placeholder="12345" value={form.paytabsProfileId || ''} onChange={(e) => setVal('paytabsProfileId', e.target.value.trim())} />
+                </Field>
+                <Field label={t('dashboard.store.paytabsServerKey')} tip={t('dashboard.store.paytabsServerKeyTip')}>
+                  <input className="input" dir="ltr" type="password" placeholder="SBJN••••••••" value={form.paytabsServerKey || ''} onChange={(e) => setVal('paytabsServerKey', e.target.value.trim())} />
+                </Field>
+                <Field label={t('dashboard.store.paytabsRegion')} tip={t('dashboard.store.paytabsRegionTip')}>
+                  <select className="input" value={form.paytabsRegion || 'PSE'} onChange={(e) => setVal('paytabsRegion', e.target.value)}>
+                    <option value="PSE">{t('dashboard.store.regionPSE')}</option>
+                    <option value="GLOBAL">Global</option>
+                    <option value="JOR">Jordan</option>
+                    <option value="EGY">Egypt</option>
+                    <option value="SAU">Saudi Arabia</option>
+                    <option value="ARE">UAE</option>
+                  </select>
+                </Field>
+                <p className="text-[11px] text-stone-500">{t('dashboard.store.paytabsNote')}</p>
+              </div>
+            )}
+          </div>
         </div>
 
         <button

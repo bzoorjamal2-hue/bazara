@@ -44,6 +44,10 @@ function mapStore(s) {
     loyaltyPercent: Number(s.loyalty_percent || 0),
     flashPercent: Number(s.flash_percent || 0),
     flashEndsAt: s.flash_ends_at,
+    cardPaymentEnabled: Boolean(s.card_payment_enabled),
+    paytabsProfileId: s.paytabs_profile_id || '',
+    paytabsServerKey: s.paytabs_server_key ? '••••' + s.paytabs_server_key.slice(-4) : '',
+    paytabsRegion: s.paytabs_region || 'PSE',
     createdAt: s.created_at,
   };
 }
@@ -216,6 +220,11 @@ export async function updateMyStore(req, res, next) {
   const flashPercent = Math.min(90, Math.max(0, Number(req.body.flashPercent) || 0));
   const flashEndsRaw = req.body.flashEndsAt ? new Date(req.body.flashEndsAt) : null;
   const flashEndsAt = flashEndsRaw && !Number.isNaN(flashEndsRaw.getTime()) ? flashEndsRaw : null;
+  // Paytabs: دفع بالبطاقة اختياري — المالك يفعّله ويدخل بياناته
+  const cardPaymentEnabled = req.body.cardPaymentEnabled === true || req.body.cardPaymentEnabled === 'true';
+  const paytabsProfileId = String(req.body.paytabsProfileId || '').trim().slice(0, 40);
+  const paytabsServerKey = String(req.body.paytabsServerKey || '').trim().slice(0, 120);
+  const paytabsRegion = String(req.body.paytabsRegion || 'PSE').trim().slice(0, 10);
     const current = await query('SELECT id, name, slug, old_slugs FROM stores WHERE user_id = $1', [req.user.id]);
     const store = current.rows[0];
     if (!store) return res.status(404).json({ error: 'لا يوجد متجر لهذا المستخدم.' });
@@ -256,7 +265,11 @@ export async function updateMyStore(req, res, next) {
          fb_pixel = $27, tiktok_pixel = $28, ga_id = $29,
          loyalty_every = $30, loyalty_percent = $31,
          flash_percent = $32, flash_ends_at = $33, delivery_tiers = $35::jsonb,
-         tagline = $36, tagline_en = $37, updated_at = now()
+         tagline = $36, tagline_en = $37,
+         card_payment_enabled = $38, paytabs_profile_id = $39,
+         paytabs_server_key = CASE WHEN $40 = '' OR $40 LIKE '••••%' THEN paytabs_server_key ELSE $40 END,
+         paytabs_region = $41,
+         updated_at = now()
        WHERE id = $22
        RETURNING *`,
       [
@@ -297,6 +310,10 @@ export async function updateMyStore(req, res, next) {
         JSON.stringify(deliveryTiers),
         tagline,
         taglineEn,
+        cardPaymentEnabled,
+        paytabsProfileId,
+        paytabsServerKey,
+        paytabsRegion,
       ]
     );
 

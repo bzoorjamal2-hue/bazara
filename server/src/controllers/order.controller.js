@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { query, withTransaction } from '../config/db.js';
 import { isLahzaConfigured, initializeTransaction, verifyTransaction, PAY_CURRENCY } from '../config/lahza.js';
+import { createPaymentPage, queryTransaction, isPaymentSuccess } from '../config/paytabs.js';
 import { evaluateCoupon } from './coupon.controller.js';
 import { clearAbandoned } from './abandoned.controller.js';
 import { sendMail, isMailConfigured } from '../utils/mail.js';
@@ -149,21 +150,20 @@ async function getUserStore(userId) {
   return r.rows[0] || null;
 }
 
-// إنشاء طلب دفع بالبطاقة عبر Lahza
+// إنشاء طلب دفع بالبطاقة عبر Paytabs (بيانات المتجر الخاصة)
 export async function checkout(req, res, next) {
   const { items, customer } = req.body;
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'السلة فارغة.' });
   }
-  if (!customer?.email || !/^\S+@\S+\.\S+$/.test(customer.email)) {
-    return res.status(400).json({ error: 'بريد إلكتروني غير صالح.' });
-  }
-  if (!isLahzaConfigured()) {
-    return res.status(503).json({ error: 'الدفع بالبطاقة غير مُفعّل بعد. جرّب الطلب عبر واتساب.' });
+  const name = (customer?.name || '').trim();
+  const phone = normalizeMobile(customer?.phone);
+  if (!name || !phone) return res.status(400).json({ error: 'الاسم ورقم الهاتف مطلوبان.' });
+  if (!isValidMobile(phone)) {
+    return res.status(400).json({ error: 'رقم الهاتف لازم يبدأ بـ 05 ويتكوّن من ١٠ أرقام.' });
   }
 
   try {
-    // نحسب الإجمالي من قاعدة البيانات (لا نثق بأسعار العميل) ونتأكد أن المنتجات من متجر واحد
     const ids = items.map((i) => i.id);
     const r = await query(
       'SELECT id, name, price, cost, store_id FROM products WHERE id = ANY($1::uuid[])',
@@ -172,37 +172,86 @@ export async function checkout(req, res, next) {
     if (r.rows.length === 0) return res.status(400).json({ error: 'منتجات غير صالحة.' });
 
     const storeId = r.rows[0].store_id;
-    const sameStore = r.rows.every((p) => p.store_id === storeId);
-    if (!sameStore) return res.status(400).json({ error: 'الدفع بالبطاقة يدعم منتجات متجر واحد لكل طلب.' });
+    if (!r.rows.every((p) => p.store_id === storeId)) {
+      return res.status(400).json({ error: 'الدفع بالبطاقة يدعم منتجات متجر واحد لكل طلب.' });
+    }
 
-    let total = 0;
+    // تحقّق أن المتجر مفعّل الدفع بالبطاقة ولديه بيانات Paytabs
+    const storeRow = await query(
+      'SELECT card_payment_enabled, paytabs_profile_id, paytabs_server_key, paytabs_region, name AS store_name, delivery_tiers, free_shipping_over FROM stores WHERE id = $1',
+      [storeId]
+    );
+    const store = storeRow.rows[0];
+    if (!store?.card_payment_enabled || !store.paytabs_profile_id || !store.paytabs_server_key) {
+      return res.status(503).json({ error: 'الدفع بالبطاقة غير مُفعّل في هذا المتجر.' });
+    }
+
+    let subtotal = 0;
     const orderItems = items.map((i) => {
       const p = r.rows.find((x) => x.id === i.id);
-      const qty = Math.max(1, parseInt(i.qty, 10) || 1);
       if (!p) return null;
-      total += Number(p.price) * qty;
-      return { id: p.id, name: p.name, price: Number(p.price), qty, cost: p.cost != null ? Number(p.cost) : null };
+      const qty = Math.max(1, parseInt(i.qty, 10) || 1);
+      subtotal += Number(p.price) * qty;
+      return { id: p.id, name: p.name, price: Number(p.price), qty, size: i.size || '', color: i.color || '', cost: p.cost != null ? Number(p.cost) : null };
     }).filter(Boolean);
+    if (orderItems.length === 0 || subtotal <= 0) return res.status(400).json({ error: 'طلب غير صالح.' });
 
-    if (total <= 0) return res.status(400).json({ error: 'إجمالي غير صالح.' });
+    // رسوم التوصيل + كوبون/خصم (نفس منطق COD)
+    let cityName = String(customer?.city || '').trim();
+    let areaName = String(customer?.area || '').trim();
+    const parent = cityOfVillage(cityName);
+    if (parent) { if (!areaName) areaName = cityName; cityName = parent; }
+    let deliveryFee = feeForCity(cityName, store.delivery_tiers);
 
-    const reference = 'BZ-' + crypto.randomBytes(8).toString('hex');
+    const couponCode = String(req.body?.coupon?.code || '').trim().toUpperCase();
+    let discount = 0;
+    let appliedCoupon = '';
+    if (couponCode) {
+      const cr = await query('SELECT * FROM coupons WHERE store_id = $1 AND code = $2', [storeId, couponCode]);
+      const ev = evaluateCoupon(cr.rows[0], subtotal);
+      if (ev.ok) { discount = ev.discount; appliedCoupon = cr.rows[0].code; }
+    }
+
+    const freeOver = Math.max(0, Number(store.free_shipping_over) || 0);
+    if (freeOver > 0 && Math.max(0, subtotal - discount) >= freeOver) deliveryFee = 0;
+    const total = Math.max(0, subtotal - discount) + deliveryFee;
+
+    const reference = 'BZ-' + crypto.randomBytes(5).toString('hex').toUpperCase();
     const orderRes = await query(
-      `INSERT INTO orders (store_id, customer_name, customer_email, customer_phone, items, total, currency, status, reference)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending', $8) RETURNING id`,
-      [storeId, customer.name || '', customer.email, customer.phone || '', JSON.stringify(orderItems), total, PAY_CURRENCY, reference]
+      `INSERT INTO orders (store_id, customer_name, customer_email, customer_phone, items, total, currency, status, reference, city, area, address, notes, delivery_fee, coupon_code, discount, payment_method)
+       VALUES ($1, $2, $3, $4, $5, $6, 'ILS', 'pending', $7, $8, $9, $10, $11, $12, $13, $14, 'card') RETURNING id`,
+      [storeId, name, customer.email || '', phone, JSON.stringify(orderItems), total, reference,
+        cityName, areaName, (customer?.address || '').trim(), (customer?.notes || '').trim().slice(0, 500), deliveryFee,
+        appliedCoupon, discount]
     );
 
-    const init = await initializeTransaction({
-      email: customer.email,
+    const storeCreds = {
+      profileId: store.paytabs_profile_id,
+      serverKey: store.paytabs_server_key,
+      region: store.paytabs_region || 'PSE',
+    };
+    const ptRes = await createPaymentPage(storeCreds, {
+      cartId: reference,
+      currency: 'ILS',
       amount: total,
-      currency: PAY_CURRENCY,
-      callbackUrl: `${SITE()}/payment/callback`,
-      reference,
-      metadata: { orderId: orderRes.rows[0].id },
+      description: `طلب ${reference} — ${store.store_name}`,
+      customerName: name,
+      customerEmail: customer.email || 'customer@bazara.shop',
+      customerPhone: phone,
+      customerCity: cityName || 'Ramallah',
+      customerAddress: (customer?.address || '').trim() || 'N/A',
+      callbackUrl: `${SITE()}/api/orders/paytabs-callback`,
+      returnUrl: `${SITE()}/payment/callback`,
     });
 
-    res.json({ authorizationUrl: init.data.authorization_url, reference });
+    if (!ptRes.redirect_url) {
+      return res.status(502).json({ error: 'تعذّر إنشاء صفحة الدفع. حاول لاحقاً.' });
+    }
+
+    // نحفظ مرجع Paytabs مع الطلب
+    await query('UPDATE orders SET tran_ref = $1 WHERE id = $2', [ptRes.tran_ref, orderRes.rows[0].id]);
+
+    res.json({ redirectUrl: ptRes.redirect_url, reference });
   } catch (err) {
     next(err);
   }
@@ -694,28 +743,68 @@ export async function getStats(req, res, next) {
   }
 }
 
-// التحقق من حالة الدفع بعد العودة من Lahza
+// التحقق من حالة الدفع بعد العودة من Paytabs (أو Lahza كاحتياط)
 export async function verify(req, res, next) {
   const { reference } = req.params;
   try {
-    const orderRes = await query('SELECT * FROM orders WHERE reference = $1', [reference]);
+    const orderRes = await query('SELECT o.*, s.paytabs_profile_id, s.paytabs_server_key, s.paytabs_region FROM orders o JOIN stores s ON s.id = o.store_id WHERE o.reference = $1', [reference]);
     const order = orderRes.rows[0];
     if (!order) return res.status(404).json({ error: 'الطلب غير موجود.' });
 
-    if (order.status === 'paid') {
-      return res.json({ status: 'paid', total: Number(order.total) });
+    if (order.status === 'paid' || order.status === 'new') {
+      return res.json({ status: order.status === 'new' ? 'paid' : order.status, total: Number(order.total) });
     }
 
-    if (!isLahzaConfigured()) return res.status(503).json({ error: 'الدفع غير مُفعّل.' });
+    // Paytabs: نتحقّق عبر tran_ref
+    if (order.tran_ref && order.paytabs_profile_id && order.paytabs_server_key) {
+      const creds = { profileId: order.paytabs_profile_id, serverKey: order.paytabs_server_key, region: order.paytabs_region || 'PSE' };
+      const result = await queryTransaction(creds, order.tran_ref);
+      const paid = isPaymentSuccess(result);
+      if (paid) {
+        await query("UPDATE orders SET status = 'new' WHERE reference = $1 AND status = 'pending'", [reference]);
+        notifyOwnerNewOrder(order.store_id, { name: order.customer_name, phone: order.customer_phone, city: order.city, items: order.items, total: Number(order.total) }).catch(() => {});
+        clearAbandoned(order.store_id, order.customer_phone);
+        return res.json({ status: 'paid', total: Number(order.total) });
+      }
+      await query("UPDATE orders SET status = 'failed' WHERE reference = $1 AND status = 'pending'", [reference]);
+      return res.json({ status: 'failed', total: Number(order.total) });
+    }
 
-    const result = await verifyTransaction(reference);
-    const paid = result?.data?.status === 'success';
-    const newStatus = paid ? 'paid' : 'failed';
-    await query('UPDATE orders SET status = $1 WHERE reference = $2', [newStatus, reference]);
+    // Lahza (احتياط للطلبات القديمة)
+    if (isLahzaConfigured()) {
+      const result = await verifyTransaction(reference);
+      const paid = result?.data?.status === 'success';
+      const newStatus = paid ? 'new' : 'failed';
+      await query('UPDATE orders SET status = $1 WHERE reference = $2', [newStatus, reference]);
+      return res.json({ status: paid ? 'paid' : 'failed', total: Number(order.total) });
+    }
 
-    res.json({ status: newStatus, total: Number(order.total) });
+    res.status(503).json({ error: 'الدفع غير مُفعّل.' });
   } catch (err) {
     next(err);
+  }
+}
+
+// Paytabs server-to-server callback — يُستدعى من Paytabs بعد إتمام الدفع
+export async function paytabsCallback(req, res) {
+  const { tran_ref, cart_id, payment_result } = req.body;
+  if (!tran_ref || !cart_id) return res.status(400).json({ error: 'missing data' });
+  try {
+    const paid = payment_result?.response_status === 'A';
+    const orderRes = await query('SELECT id, store_id, customer_name, customer_phone, city, items, total, status FROM orders WHERE reference = $1', [cart_id]);
+    const order = orderRes.rows[0];
+    if (!order) return res.status(404).json({ error: 'order not found' });
+
+    if (paid && order.status === 'pending') {
+      await query("UPDATE orders SET status = 'new', tran_ref = $1 WHERE id = $2", [tran_ref, order.id]);
+      notifyOwnerNewOrder(order.store_id, { name: order.customer_name, phone: order.customer_phone, city: order.city, items: order.items, total: Number(order.total) }).catch(() => {});
+      clearAbandoned(order.store_id, order.customer_phone);
+    } else if (!paid && order.status === 'pending') {
+      await query("UPDATE orders SET status = 'failed' WHERE id = $1", [order.id]);
+    }
+    res.json({ ok: true });
+  } catch {
+    res.status(500).json({ error: 'internal' });
   }
 }
 

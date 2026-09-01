@@ -11,18 +11,23 @@ export default function PaymentCallback() {
   const { t } = useTranslation();
   const { clear } = useCart();
   const [params] = useSearchParams();
-  const reference = params.get('reference') || params.get('trxref') || '';
+  // Paytabs يرجّع tranRef، Lahza يرجّع reference/trxref
+  const reference = params.get('cartId') || params.get('reference') || params.get('trxref') || '';
   const [state, setState] = useState('verifying'); // verifying | paid | failed
 
   useEffect(() => {
     if (!reference) { setState('failed'); return; }
-    api
-      .get(`/orders/verify/${reference}`)
-      .then((r) => {
-        if (r.data.status === 'paid') { setState('paid'); clear(); }
-        else setState('failed');
-      })
-      .catch(() => setState('failed'));
+    // ننتظر ثانية ونصف — Paytabs callback بالخلفية ياخد لحظة ليسجّل الدفع
+    const id = setTimeout(() => {
+      api
+        .get(`/orders/verify/${reference}`)
+        .then((r) => {
+          if (r.data.status === 'paid') { setState('paid'); clear(); }
+          else setState('failed');
+        })
+        .catch(() => setState('failed'));
+    }, 1500);
+    return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reference]);
 
