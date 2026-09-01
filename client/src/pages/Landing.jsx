@@ -16,7 +16,7 @@ import {
   UsersIcon, CrownIcon, WhatsAppIcon, MenuIcon, XIcon, ArrowDownIcon, ArrowUpIcon,
   MailIcon, PhoneIcon, PinIcon, ClockIcon,
 } from '../components/icons.jsx';
-import { BAZARA_WHATSAPP } from '../config/site.js';
+import { BAZARA_WHATSAPP, BAZARA_REGISTRY_NO, BAZARA_PHONE } from '../config/site.js';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
 
 // ═══════════════ واجهة بازارا ═══════════════
@@ -682,6 +682,15 @@ export default function Landing() {
         </div>
 
         <div className="bz-foot-bar">
+          {/* الصفحةُ الأولى التي يفتحها مراجعُ Meta، فهنا يجب أن يجدَ الاسمَ
+              والعنوانَ والهاتفَ التي في شهادة السجل التجاري ونموذج التحقّق. */}
+          <div className="bz-foot-legal">
+            {t('footer.legal', { reg: BAZARA_REGISTRY_NO })}
+            <span aria-hidden className="mx-2">·</span>
+            {t('footer.address')}
+            <span aria-hidden className="mx-2">·</span>
+            <a href={`tel:${BAZARA_PHONE.replace(/ /g, '')}`} dir="ltr">{BAZARA_PHONE}</a>
+          </div>
           <span>© {new Date().getFullYear()} {t('app.name')} — {t('footer.rights')}</span>
           {/* العودة للأعلى هنا لا كزرٍّ عائم يطبق على النصّ */}
           <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="bz-foot-top">

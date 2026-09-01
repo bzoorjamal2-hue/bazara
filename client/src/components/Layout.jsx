@@ -27,7 +27,7 @@ import SwipeBack from './SwipeBack.jsx';
 import { isStandalone } from '../utils/pwa.js';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
 import { WhatsAppIcon, InstagramIcon, FacebookIcon } from './icons.jsx';
-import { BAZARA_WHATSAPP, BAZARA_INSTAGRAM, BAZARA_FACEBOOK } from '../config/site.js';
+import { BAZARA_WHATSAPP, BAZARA_INSTAGRAM, BAZARA_FACEBOOK, BAZARA_REGISTRY_NO, BAZARA_PHONE } from '../config/site.js';
 import { setPlatformCategories } from '../utils/platformCategories.js';
 import ImpersonationBar from './ImpersonationBar.jsx';
 import ServerDownBanner from './ServerDownBanner.jsx';
@@ -194,7 +194,23 @@ function PublicFooter({ bottomNav = false }) {
         </div>
 
         <div className="mx-auto mt-7 h-px max-w-md bg-cream/15" />
-        <p className="mt-5 text-xs text-cream/60">
+
+        {/* بيانات النشاط الرسميّة. مراجعُ Meta يفتح الموقع ويطلبُ أن يجدَ هنا نفسَ
+            الاسم والعنوان والهاتف التي في شهادة السجل التجاري ونموذج التحقّق،
+            وغيابُها سببُ رفضٍ شائع. الهاتفُ بـdir=ltr وإلا قفزت علامةُ + إلى
+            آخره في الواجهة العربيّة. */}
+        <div className="mt-5 space-y-1 text-xs text-cream/60">
+          <p>{t('footer.legal', { reg: BAZARA_REGISTRY_NO })}</p>
+          <p>
+            {t('footer.address')}
+            <span aria-hidden className="mx-2">·</span>
+            <a href={`tel:${BAZARA_PHONE.replace(/ /g, '')}`} dir="ltr" className="hover:text-cream">
+              {BAZARA_PHONE}
+            </a>
+          </p>
+        </div>
+
+        <p className="mt-3 text-xs text-cream/60">
           © {new Date().getFullYear()} {t('app.name')} — {t('footer.rights')}
         </p>
       </div>

@@ -2698,6 +2698,13 @@ html[dir='rtl'] .bz-menu-arrow { transform: scaleX(-1); }
 .bz-foot-list svg { flex-shrink: 0; color: rgba(176, 154, 126, 0.7); }
 @media (hover: hover) { .bz-foot-list a:hover { color: var(--cream); } }
 
+/* بيانات النشاط الرسميّة: سطرٌ كاملُ العرض فوق سطر الحقوق داخل الشريط نفسه،
+   يرث خفوته وقياسه فلا يزاحم شيئاً ولا يختفي. */
+.bz-foot-legal {
+  flex-basis: 100%;
+  line-height: 1.7;
+}
+
 .bz-foot-bar {
   margin-inline: auto;
   margin-top: clamp(2.2rem, 5vw, 3.2rem);

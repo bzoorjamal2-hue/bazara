@@ -26,7 +26,9 @@
     }
   },
   "footer": {
-    "rights": "All rights reserved"
+    "rights": "All rights reserved",
+    "legal": "Bazara — Commercial Register No. {{reg}}, registered to Jamal Firas Jamal Omar",
+    "address": "Raba — Jenin, Palestine"
   },
   "loyalty": {
     "banner": "Congrats! 🎁 You reached the loyal-customer reward — {{percent}}% off applied automatically to this order",
