@@ -92,7 +92,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
   return (
     <header
       /* bz-bleed: يخرج من حشوة main ليمسّ الحافّتين — كان -mx-4 مربوطاً بحشوةٍ ثابتة صارت متغيّرة */
-      className="app-navbar bz-bleed sticky top-0 z-50 -mt-5 mb-5 shadow-sm"
+      className="app-navbar bz-stickyhead bz-bleed sticky top-0 z-50 -mt-5 mb-5 shadow-sm"
       style={{ transform: 'translateZ(0)' }}
     >
       <div className="bz-page py-2.5">

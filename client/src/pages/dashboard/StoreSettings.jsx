@@ -444,7 +444,9 @@ export default function StoreSettings() {
           لاصق تحت الهيدر العلوي تماماً: top = ارتفاع الهيدر (safe-area + 4.25rem)
           و z-30 أقل من الهيدر (z-50) فلا يتراكبان. خلفية glass معتمة (أبيض/داكن)
           تغطّي المحتوى المتمرّر خلفه. يبقى الشريط في المتناول أثناء النزول. */}
-      <div className="glass sticky top-[calc(env(safe-area-inset-top,0px)+4.25rem)] z-30 flex items-center gap-2 overflow-hidden p-2">
+      {/* --bz-tabbar-h: على الكمبيوتر ينزل الهيدرُ تحت الشريط العلويّ، فينزل
+          هذا الشريطُ معه — وإلا لصق أعلى مما ينبغي واختفى خلف الهيدر. */}
+      <div className="glass sticky top-[calc(env(safe-area-inset-top,0px)+4.25rem+var(--bz-tabbar-h,0px))] z-30 flex items-center gap-2 overflow-hidden p-2">
         {/* خيط تقدّم رفيع بأسفل الشريط — نسبة الاكتمال حاضرة دوماً أثناء النزول */}
         <span
           // start-0 منطقي: ينمو من بداية السطر بالعربية والإنجليزية على السواء

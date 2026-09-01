@@ -241,7 +241,11 @@ export default function Navbar() {
 
 
   return (
-    <header className="sticky top-0 z-50">
+    // bz-stickyhead: هذا هو العنصرُ اللاصق، فعليه وحدَه تقع إزاحةُ «تحت
+    // الشريط العلويّ» على الكمبيوتر. كانت الإزاحة على .app-navbar الداخليّ
+    // وهو relative — وtop على عنصرٍ نسبيّ يُنزله بصرياً بلا أن يحجز مكانَه:
+    // فيبقى فوقه شريطٌ عاجيّ فارغ، ويغطّي هو بمقدارِه المحتوى الذي تحته.
+    <header className="bz-stickyhead sticky top-0 z-50">
       <nav
         className={`app-navbar bz-page relative flex justify-center py-2.5 ${noAnim ? 'transition-none' : 'transition-shadow duration-300'} ${scrolled ? 'shadow-md' : ''}`}
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.625rem)' }}

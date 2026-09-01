@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getStoreScope, subscribeStoreScope } from '../utils/storeScope.js';
 import { useTranslation } from 'react-i18next';
@@ -237,12 +237,37 @@ export default function BottomNav() {
     { key: 'home', label: t('nav.home'), Icon: HomeIcon, active: !cartOpen && !wishOpen && homeActive, onClick: () => goto(homeTo) },
   ];
 
-  if (locked || kbOpen || buyBar) return null; // نافذة/درج/كيبورد مفتوح أو شريط شراء ظاهر → نخفي الشريط (يرجع تلقائياً)
+  const hidden = locked || kbOpen || buyBar;
+
+  // ارتفاعُ الشريط يُقاس ولا يُخمَّن.
+  //
+  // على الشاشة العريضة يصعد هذا الشريطُ للأعلى، ويلتصق الهيدرُ تحته بمقدار
+  // ارتفاعه (‎--bz-tabbar-h‎ بـindex.css، وهو يقرأ قياسَنا هذا). كان المقدارُ
+  // رقماً مكتوباً باليد، وهو يفترق عن الواقع بتغيّر اللغة أو حجم الخطّ أو عدد
+  // البنود — فيبقى بينهما
+  // خيطٌ فارغ أو يزحف أحدُهما تحت الآخر. ResizeObserver يبقيهما متراصَّين مهما
+  // تغيّر الشريط. وحين يختفي الشريط (درجٌ مفتوح · شريطُ شراء · شاشةُ لمس)
+  // نصفّر المقدار فيرجع الهيدرُ إلى الحافّة بدل فراغٍ تحت شريطٍ غير موجود.
+  const barRef = useRef(null);
+  useEffect(() => {
+    const root = document.documentElement;
+    const el = barRef.current;
+    const clear = () => root.style.setProperty('--bz-tabbar-measured', '0px');
+    if (!el || !dt || hidden) { clear(); return undefined; }
+    const set = () => root.style.setProperty('--bz-tabbar-measured', `${Math.round(el.getBoundingClientRect().height)}px`);
+    set();
+    const ro = new ResizeObserver(set);
+    ro.observe(el);
+    return () => { ro.disconnect(); clear(); };
+  }, [dt, hidden]);
+
+  if (hidden) return null; // نافذة/درج/كيبورد مفتوح أو شريط شراء ظاهر → نخفي الشريط (يرجع تلقائياً)
 
   // بلا backdrop-blur: ضبابية دائمة فوق المحتوى تُرهق معالج الرسم مع كل فريم تمرير،
   // والخلفية 95% معتمة أصلاً فالفرق البصري صفر والفرق بالأداء محسوس
   return (
     <nav
+      ref={barRef}
       className="bz-tabbar fixed inset-x-0 bottom-0 z-[78] border-t border-wine/10 bg-white/95 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 shadow-[0_-6px_20px_rgba(94,70,54,0.08)]"
       style={vvInset ? { transform: `translateY(-${vvInset}px)` } : undefined}
     >
