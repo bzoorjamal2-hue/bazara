@@ -721,7 +721,7 @@ export default function CartDrawer() {
 
                 <div className="border-t border-gold-400/15 p-4">
                   {err && <p className="mb-2 text-center text-xs text-red-300">{err}</p>}
-                  <div className={`flex flex-col gap-2 ${cardEnabled ? '' : ''}`}>
+                  <div className="flex flex-col gap-2">
                     {/* زر الدفع بالفيزا — يظهر فقط إن كان المتجر مفعّل الدفع بالبطاقة */}
                     {cardEnabled && (
                       <button

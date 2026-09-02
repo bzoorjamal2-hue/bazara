@@ -230,22 +230,30 @@ export async function checkout(req, res, next) {
       serverKey: store.paytabs_server_key,
       region: store.paytabs_region || 'PSE',
     };
-    const ptRes = await createPaymentPage(storeCreds, {
-      cartId: reference,
-      currency: 'ILS',
-      amount: total,
-      description: `طلب ${reference} — ${store.store_name}`,
-      customerName: name,
-      customerEmail: customer.email || 'customer@bazara.shop',
-      customerPhone: phone,
-      customerCity: cityName || 'Ramallah',
-      customerAddress: (customer?.address || '').trim() || 'N/A',
-      callbackUrl: `${SITE()}/api/orders/paytabs-callback`,
-      returnUrl: `${SITE()}/payment/callback`,
-    });
+    let ptRes;
+    try {
+      ptRes = await createPaymentPage(storeCreds, {
+        cartId: reference,
+        currency: 'ILS',
+        amount: total,
+        description: `طلب ${reference} — ${store.store_name}`,
+        customerName: name,
+        customerEmail: customer.email || 'customer@bazara.shop',
+        customerPhone: phone,
+        customerCity: cityName || 'Ramallah',
+        customerAddress: (customer?.address || '').trim() || 'N/A',
+        callbackUrl: `${SITE()}/api/orders/paytabs-callback`,
+        returnUrl: `${SITE()}/payment/callback`,
+      });
+    } catch (ptErr) {
+      console.error(`فشل إنشاء صفحة دفع للمتجر ${storeId}:`, ptErr.message);
+      ptRes = null;
+    }
 
-    if (!ptRes.redirect_url) {
-      return res.status(502).json({ error: 'تعذّر إنشاء صفحة الدفع. حاول لاحقاً.' });
+    // صفحةُ الدفع لم تُولد: نحذف الطلبَ المعلّق كي لا يبقى شبحاً بلوحة التاجرة
+    if (!ptRes?.redirect_url) {
+      await query('DELETE FROM orders WHERE id = $1', [orderRes.rows[0].id]);
+      return res.status(502).json({ error: 'تعذّر إنشاء صفحة الدفع. جرّبي الدفع عند الاستلام أو حاولي لاحقاً.' });
     }
 
     // نحفظ مرجع Paytabs مع الطلب
