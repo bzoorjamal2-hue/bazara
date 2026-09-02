@@ -160,21 +160,32 @@ export async function subscriptionCheckout(req, res, next) {
       reqId = ins.rows[0].id;
     }
 
-    const ptRes = await createPlatformPayment({
-      cartId: ref,
-      currency: 'USD',
-      amount,
-      description: `اشتراك بازارا — ${plan === 'yearly' ? 'سنوي' : 'شهري'}`,
-      customerName: email.split('@')[0],
-      customerEmail: email,
-      customerPhone: '',
-      customerCity: 'Ramallah',
-      customerAddress: 'N/A',
-      callbackUrl: `${SITE()}/api/subscription/paytabs-callback`,
-      returnUrl: `${SITE()}/subscribe?ref=${ref}`,
-    });
+    let ptRes;
+    try {
+      ptRes = await createPlatformPayment({
+        cartId: ref,
+        currency: 'USD',
+        amount,
+        description: `اشتراك بازارا — ${plan === 'yearly' ? 'سنوي' : 'شهري'}`,
+        customerName: email.split('@')[0],
+        customerEmail: email,
+        customerPhone: '',
+        customerCity: 'Ramallah',
+        customerAddress: 'N/A',
+        callbackUrl: `${SITE()}/api/subscription/paytabs-callback`,
+        returnUrl: `${SITE()}/subscribe?ref=${ref}`,
+      });
+    } catch (ptErr) {
+      console.error('فشل إنشاء صفحة دفع اشتراك:', ptErr.message);
+      ptRes = null;
+    }
 
-    if (!ptRes.redirect_url) return res.status(502).json({ error: 'تعذّر إنشاء صفحة الدفع.' });
+    // صفحةُ الدفع لم تُولد: نمسحُ مرجعَ الدفعِ عن الطلبِ كي لا يُحسَبَ محاولةَ بطاقةٍ معلّقة،
+    // ويبقى الطلبُ نفسُه ليُفعَّلَ يدوياً بكودٍ إن أرادت
+    if (!ptRes?.redirect_url) {
+      await query("UPDATE subscription_requests SET tran_ref = '' WHERE id = $1", [reqId]);
+      return res.status(502).json({ error: 'تعذّر إنشاء صفحة الدفع. جرّبي التفعيل بالكود أو حاولي لاحقاً.' });
+    }
     await query('UPDATE subscription_requests SET tran_ref = $1 WHERE id = $2', [ptRes.tran_ref, reqId]);
     res.json({ redirectUrl: ptRes.redirect_url, reference: ref });
   } catch (err) {
