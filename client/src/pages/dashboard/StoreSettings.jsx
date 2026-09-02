@@ -151,6 +151,25 @@ function AnnouncementPreview({ items }) {
   );
 }
 
+/**
+ * حالةُ تفعيلِ استلامِ المدفوعات. التاجرةُ تُدخلُ حسابَها ثمّ تنتظرُ تسجيلَها
+ * مستفيدةً عند البوّابة — فنقولُ لها أين وصلت بدلَ أن تحدّقَ بنموذجٍ صامت.
+ */
+function PayoutStatus({ status, t }) {
+  const map = {
+    none: { cls: 'border-gold-400/25 bg-ink-900/60 text-stone-300', icon: '📝' },
+    pending: { cls: 'border-amber-400/30 bg-amber-500/10 text-amber-200', icon: '⏳' },
+    active: { cls: 'border-emerald-400/30 bg-emerald-500/10 text-emerald-200', icon: '✅' },
+  };
+  const s = map[status] || map.none;
+  return (
+    <div className={`rounded-xl border px-3 py-2.5 text-xs font-semibold ${s.cls}`}>
+      <span className="me-1.5">{s.icon}</span>
+      {t(`dashboard.store.payout_${status || 'none'}`)}
+    </div>
+  );
+}
+
 export default function StoreSettings() {
   const { t } = useTranslation();
   const platformKeys = usePlatformCatKeys();
@@ -198,9 +217,12 @@ export default function StoreSettings() {
           // datetime-local يحتاج "YYYY-MM-DDTHH:mm" بالتوقيت المحلي (بلا ثوانٍ/منطقة)
           flashEndsAt: s.flashEndsAt ? toLocalInput(s.flashEndsAt) : '',
           cardPaymentEnabled: Boolean(s.cardPaymentEnabled),
-          paytabsProfileId: s.paytabsProfileId || '',
-          paytabsServerKey: '',
-          paytabsRegion: s.paytabsRegion || 'PSE',
+          bankAccountName: s.bankAccountName || '',
+          bankName: s.bankName || '',
+          // الآيبانُ يعودُ مقنّعاً: نتركُه فارغاً كي لا تُعيدَ التاجرةُ حفظَ النجوم
+          bankIban: '',
+          bankSwift: s.bankSwift || '',
+          payoutStatus: s.payoutStatus || 'none',
         };
         savedRef.current = JSON.stringify(next);
         setForm(next);
@@ -1048,23 +1070,22 @@ export default function StoreSettings() {
             </label>
             {form.cardPaymentEnabled && (
               <div className="mt-4 space-y-3 animate-fade-up">
-                <Field label={t('dashboard.store.paytabsProfileId')} tip={t('dashboard.store.paytabsProfileIdTip')}>
-                  <input className="input" dir="ltr" placeholder="12345" value={form.paytabsProfileId || ''} onChange={(e) => setVal('paytabsProfileId', e.target.value.trim())} />
+                {/* حالةُ التفعيل: تُطمئنُ التاجرةَ أين وصل طلبُها بلا أن تسأل */}
+                <PayoutStatus status={form.payoutStatus} t={t} />
+
+                <Field label={t('dashboard.store.bankAccountName')} tip={t('dashboard.store.bankAccountNameTip')}>
+                  <input className="input" dir="ltr" placeholder="Fatima Ahmad Saleh" value={form.bankAccountName || ''} onChange={(e) => setVal('bankAccountName', e.target.value)} />
                 </Field>
-                <Field label={t('dashboard.store.paytabsServerKey')} tip={t('dashboard.store.paytabsServerKeyTip')}>
-                  <input className="input" dir="ltr" type="password" placeholder="SBJN••••••••" value={form.paytabsServerKey || ''} onChange={(e) => setVal('paytabsServerKey', e.target.value.trim())} />
+                <Field label={t('dashboard.store.bankName')} tip={t('dashboard.store.bankNameTip')}>
+                  <input className="input" dir="ltr" placeholder="Bank of Palestine" value={form.bankName || ''} onChange={(e) => setVal('bankName', e.target.value)} />
                 </Field>
-                <Field label={t('dashboard.store.paytabsRegion')} tip={t('dashboard.store.paytabsRegionTip')}>
-                  <select className="input" value={form.paytabsRegion || 'PSE'} onChange={(e) => setVal('paytabsRegion', e.target.value)}>
-                    <option value="PSE">{t('dashboard.store.regionPSE')}</option>
-                    <option value="GLOBAL">Global</option>
-                    <option value="JOR">Jordan</option>
-                    <option value="EGY">Egypt</option>
-                    <option value="SAU">Saudi Arabia</option>
-                    <option value="ARE">UAE</option>
-                  </select>
+                <Field label={t('dashboard.store.bankIban')} tip={t('dashboard.store.bankIbanTip')}>
+                  <input className="input" dir="ltr" placeholder="PS00 0000 0000 0000 0000 0000 000" value={form.bankIban || ''} onChange={(e) => setVal('bankIban', e.target.value)} />
                 </Field>
-                <p className="text-[11px] text-stone-500">{t('dashboard.store.paytabsNote')}</p>
+                <Field label={t('dashboard.store.bankSwift')} tip={t('dashboard.store.bankSwiftTip')} optional>
+                  <input className="input" dir="ltr" placeholder="ARABPS22" value={form.bankSwift || ''} onChange={(e) => setVal('bankSwift', e.target.value)} />
+                </Field>
+                <p className="text-[11px] text-stone-500">{t('dashboard.store.bankNote')}</p>
               </div>
             )}
           </div>

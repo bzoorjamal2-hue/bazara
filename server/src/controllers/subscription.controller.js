@@ -5,6 +5,7 @@ import { isUserActive, daysRemaining, isAdminEmail, planPeriodEnd, adminEmails, 
 import { sendMail, isMailConfigured } from '../utils/mail.js';
 import { clearPublicCache } from '../middleware/cache.js';
 import { logAdmin } from '../utils/adminLog.js';
+import { notifyStoreOwner } from '../utils/notify.js';
 import { isPlatformPaytabsConfigured, createPlatformPayment, queryPlatformTransaction, isPaymentSuccess } from '../config/paytabs.js';
 
 const PLANS = { monthly: true, yearly: true };
@@ -1126,6 +1127,77 @@ export async function impersonate(req, res, next) {
       minutes: IMPERSONATE_MINUTES,
       user: { name: u.name, email: u.email, storeName: u.store_name || '', slug: u.slug || '' },
     });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ─────────────── تسجيلُ التاجراتِ مستفيداتٍ لاستلامِ المدفوعات ───────────────
+// التاجرةُ تُدخلُ حسابَها البنكيَّ من إعداداتِها، ثمّ نسجّلُها نحن عند PayTabs
+// ونضعُ رقمَ المستفيدِ الذي يعطونَنا إيّاه. عندها يظهرُ زرُّ الفيزا بمتجرِها.
+
+// قائمةُ المتاجرِ التي أدخلت حساباً بنكيّاً — للإدارة
+export async function listPayoutRequests(req, res, next) {
+  try {
+    const r = await query(
+      `SELECT s.id, s.name, s.slug, s.bank_account_name, s.bank_name, s.bank_iban, s.bank_swift,
+              s.paytabs_entity_id, s.payout_status, s.platform_fee_percent, s.updated_at, u.email
+         FROM stores s JOIN users u ON u.id = s.user_id
+        WHERE s.bank_iban <> ''
+        ORDER BY (s.payout_status = 'pending') DESC, s.updated_at DESC`
+    );
+    res.json({ requests: r.rows.map((s) => ({
+      id: s.id,
+      name: s.name,
+      slug: s.slug,
+      email: s.email,
+      bankAccountName: s.bank_account_name || '',
+      bankName: s.bank_name || '',
+      bankIban: s.bank_iban || '',
+      bankSwift: s.bank_swift || '',
+      entityId: s.paytabs_entity_id || '',
+      status: s.payout_status || 'none',
+      feePercent: Number(s.platform_fee_percent || 0),
+      updatedAt: s.updated_at,
+    })) });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ربطُ متجرٍ برقمِ المستفيدِ بعدَ تسجيلِه عند PayTabs — ويُشعَرُ صاحبُه أنّه صار جاهزاً
+export async function setPayoutEntity(req, res, next) {
+  const storeId = String(req.params.id || '');
+  const entityId = String(req.body?.entityId || '').trim().slice(0, 20);
+  const feePercent = Math.min(100, Math.max(0, Number(req.body?.feePercent) || 0));
+  try {
+    if (entityId && !/^\d+$/.test(entityId)) {
+      return res.status(400).json({ error: 'رقم المستفيد أرقام فقط.' });
+    }
+    const r = await query(
+      `UPDATE stores
+          SET paytabs_entity_id = $1,
+              platform_fee_percent = $2,
+              payout_status = CASE WHEN $1 <> '' THEN 'active' ELSE 'pending' END,
+              updated_at = now()
+        WHERE id = $3
+        RETURNING name, payout_status`,
+      [entityId, feePercent, storeId]
+    );
+    const s = r.rows[0];
+    if (!s) return res.status(404).json({ error: 'المتجر غير موجود.' });
+
+    clearPublicCache();
+    if (s.payout_status === 'active') {
+      notifyStoreOwner(storeId, {
+        type: 'payout_active',
+        title: 'الدفع بالبطاقة صار جاهزاً 💳',
+        body: 'زرُّ الدفع بالفيزا صار يظهر لزبوناتك، وثمنُ الطلبات يصل حسابك البنكي.',
+        url: '/dashboard/store',
+      }).catch(() => {});
+    }
+    await logAdmin(req.user, 'payout_entity', `${s.name}: entity=${entityId || 'مسح'} fee=${feePercent}%`);
+    res.json({ ok: true, status: s.payout_status });
   } catch (err) {
     next(err);
   }

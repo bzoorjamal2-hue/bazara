@@ -575,6 +575,18 @@ END $;`,
     "ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method VARCHAR(20) DEFAULT 'cod';",
     // اشتراكات عبر Paytabs: مرجع الدفع
     "ALTER TABLE subscription_requests ADD COLUMN IF NOT EXISTS tran_ref VARCHAR(80) DEFAULT '';",
+    // Split Payout: التاجرةُ تُدخلُ حسابَها البنكيَّ فقط، ونحن نسجّلُها مستفيدةً عند PayTabs.
+    // فيصلُها ثمنُ طلبِها مباشرةً بلا أن تفتحَ حساباً ولا تلمسَ مفتاحاً.
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS bank_account_name VARCHAR(120) DEFAULT '';",
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS bank_name VARCHAR(80) DEFAULT '';",
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS bank_iban VARCHAR(40) DEFAULT '';",
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS bank_swift VARCHAR(20) DEFAULT '';",
+    // رقمُ المستفيدِ الذي تُعطينا إيّاه PayTabs بعدَ تسجيلِ التاجرة — تملؤه الإدارة
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS paytabs_entity_id VARCHAR(20) DEFAULT '';",
+    // حالةُ التسجيل: none (لم تُدخل بياناتها) · pending (بانتظارِ PayTabs) · active
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS payout_status VARCHAR(12) NOT NULL DEFAULT 'none';",
+    // عمولةُ المنصّةِ على الطلبِ بالنسبةِ المئويّة — صفرٌ افتراضاً (الدخلُ من الاشتراكِ لا العمولة)
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS platform_fee_percent NUMERIC(5,2) NOT NULL DEFAULT 0;",
   ];
   // كل جملة على حدة: فشل واحدة لا يمنع البقية
   for (const sql of steps) {

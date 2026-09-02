@@ -8,6 +8,8 @@ import {
   listRequests,
   approveRequest,
   rejectRequest,
+  listPayoutRequests,
+  setPayoutEntity,
   getSettings,
   updateSettings,
   redeemCode,
@@ -83,5 +85,8 @@ router.put('/settings', requireAuth, requireAdmin, updateSettings);
 router.get('/requests', requireAuth, requireAdmin, listRequests);
 router.post('/requests/:id/approve', requireAuth, requireAdmin, idParamRule, handleValidation, approveRequest);
 router.post('/requests/:id/reject', requireAuth, requireAdmin, idParamRule, handleValidation, rejectRequest);
+// تسجيلُ التاجراتِ مستفيداتٍ لاستلامِ مدفوعاتِ البطاقة
+router.get('/payouts', requireAuth, requireAdmin, listPayoutRequests);
+router.post('/payouts/:id/entity', requireAuth, requireAdmin, idParamRule, handleValidation, setPayoutEntity);
 
 export default router;

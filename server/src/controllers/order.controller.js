@@ -1,7 +1,10 @@
 import crypto from 'crypto';
 import { query, withTransaction } from '../config/db.js';
 import { isLahzaConfigured, initializeTransaction, verifyTransaction, PAY_CURRENCY } from '../config/lahza.js';
-import { createPaymentPage, queryTransaction, isPaymentSuccess } from '../config/paytabs.js';
+import {
+  createPlatformPayment, queryPlatformTransaction, isPlatformPaytabsConfigured,
+  buildSplitPayout, isPaymentSuccess,
+} from '../config/paytabs.js';
 import { evaluateCoupon } from './coupon.controller.js';
 import { clearAbandoned } from './abandoned.controller.js';
 import { sendMail, isMailConfigured } from '../utils/mail.js';
@@ -176,14 +179,20 @@ export async function checkout(req, res, next) {
       return res.status(400).json({ error: 'الدفع بالبطاقة يدعم منتجات متجر واحد لكل طلب.' });
     }
 
-    // تحقّق أن المتجر مفعّل الدفع بالبطاقة ولديه بيانات Paytabs
+    // الدفعُ يمرُّ بحسابِ المنصّة، ويُقسَّمُ فيصلَ ثمنُ الطلبِ لحسابِ التاجرةِ البنكيّ.
+    // فشرطُنا: أن تكونَ فعّلت البطاقةَ وأن تكونَ مسجّلةً مستفيدةً عند PayTabs.
     const storeRow = await query(
-      'SELECT card_payment_enabled, paytabs_profile_id, paytabs_server_key, paytabs_region, name AS store_name, delivery_tiers, free_shipping_over FROM stores WHERE id = $1',
+      `SELECT card_payment_enabled, paytabs_entity_id, payout_status, platform_fee_percent,
+              name, name AS store_name, delivery_tiers, free_shipping_over
+         FROM stores WHERE id = $1`,
       [storeId]
     );
     const store = storeRow.rows[0];
-    if (!store?.card_payment_enabled || !store.paytabs_profile_id || !store.paytabs_server_key) {
+    if (!store?.card_payment_enabled || !store.paytabs_entity_id) {
       return res.status(503).json({ error: 'الدفع بالبطاقة غير مُفعّل في هذا المتجر.' });
+    }
+    if (!isPlatformPaytabsConfigured()) {
+      return res.status(503).json({ error: 'الدفع بالبطاقة غير مُفعّل حالياً.' });
     }
 
     let subtotal = 0;
@@ -225,14 +234,10 @@ export async function checkout(req, res, next) {
         appliedCoupon, discount]
     );
 
-    const storeCreds = {
-      profileId: store.paytabs_profile_id,
-      serverKey: store.paytabs_server_key,
-      region: store.paytabs_region || 'PSE',
-    };
     let ptRes;
     try {
-      ptRes = await createPaymentPage(storeCreds, {
+      ptRes = await createPlatformPayment({
+        splitPayout: buildSplitPayout(store, total),
         cartId: reference,
         currency: 'ILS',
         amount: total,
@@ -755,7 +760,7 @@ export async function getStats(req, res, next) {
 export async function verify(req, res, next) {
   const { reference } = req.params;
   try {
-    const orderRes = await query('SELECT o.*, s.paytabs_profile_id, s.paytabs_server_key, s.paytabs_region FROM orders o JOIN stores s ON s.id = o.store_id WHERE o.reference = $1', [reference]);
+    const orderRes = await query('SELECT * FROM orders WHERE reference = $1', [reference]);
     const order = orderRes.rows[0];
     if (!order) return res.status(404).json({ error: 'الطلب غير موجود.' });
 
@@ -763,10 +768,9 @@ export async function verify(req, res, next) {
       return res.json({ status: order.status === 'new' ? 'paid' : order.status, total: Number(order.total) });
     }
 
-    // Paytabs: نتحقّق عبر tran_ref
-    if (order.tran_ref && order.paytabs_profile_id && order.paytabs_server_key) {
-      const creds = { profileId: order.paytabs_profile_id, serverKey: order.paytabs_server_key, region: order.paytabs_region || 'PSE' };
-      const result = await queryTransaction(creds, order.tran_ref);
+    // Paytabs: نتحقّقُ عبر tran_ref بأوراقِ المنصّة — الدفعُ مرَّ بحسابِها لا بحسابِ المتجر
+    if (order.tran_ref && isPlatformPaytabsConfigured()) {
+      const result = await queryPlatformTransaction(order.tran_ref);
       const paid = isPaymentSuccess(result);
       if (paid) {
         await query("UPDATE orders SET status = 'new' WHERE reference = $1 AND status = 'pending'", [reference]);

@@ -45,9 +45,12 @@ function mapStore(s) {
     flashPercent: Number(s.flash_percent || 0),
     flashEndsAt: s.flash_ends_at,
     cardPaymentEnabled: Boolean(s.card_payment_enabled),
-    paytabsProfileId: s.paytabs_profile_id || '',
-    paytabsServerKey: s.paytabs_server_key ? '••••' + s.paytabs_server_key.slice(-4) : '',
-    paytabsRegion: s.paytabs_region || 'PSE',
+    // حسابُ التاجرةِ البنكيّ — إليه يصلُ ثمنُ طلباتِها. الآيبانُ مقنّعٌ إلّا آخرَ أربعة
+    bankAccountName: s.bank_account_name || '',
+    bankName: s.bank_name || '',
+    bankIban: s.bank_iban ? '••••' + s.bank_iban.slice(-4) : '',
+    bankSwift: s.bank_swift || '',
+    payoutStatus: s.payout_status || 'none',
     createdAt: s.created_at,
   };
 }
@@ -222,9 +225,11 @@ export async function updateMyStore(req, res, next) {
   const flashEndsAt = flashEndsRaw && !Number.isNaN(flashEndsRaw.getTime()) ? flashEndsRaw : null;
   // Paytabs: دفع بالبطاقة اختياري — المالك يفعّله ويدخل بياناته
   const cardPaymentEnabled = req.body.cardPaymentEnabled === true || req.body.cardPaymentEnabled === 'true';
-  const paytabsProfileId = String(req.body.paytabsProfileId || '').trim().slice(0, 40);
-  const paytabsServerKey = String(req.body.paytabsServerKey || '').trim().slice(0, 120);
-  const paytabsRegion = String(req.body.paytabsRegion || 'PSE').trim().slice(0, 10);
+  // الحسابُ البنكيُّ للتاجرة — الآيبانُ بلا مسافاتٍ وبأحرفٍ كبيرة كما تطلبُه أنظمةُ التحويل
+  const bankAccountName = String(req.body.bankAccountName || '').trim().slice(0, 120);
+  const bankName = String(req.body.bankName || '').trim().slice(0, 80);
+  const bankIban = String(req.body.bankIban || '').replace(/\s+/g, '').toUpperCase().slice(0, 40);
+  const bankSwift = String(req.body.bankSwift || '').replace(/\s+/g, '').toUpperCase().slice(0, 20);
     const current = await query('SELECT id, name, slug, old_slugs FROM stores WHERE user_id = $1', [req.user.id]);
     const store = current.rows[0];
     if (!store) return res.status(404).json({ error: 'لا يوجد متجر لهذا المستخدم.' });
@@ -266,9 +271,16 @@ export async function updateMyStore(req, res, next) {
          loyalty_every = $30, loyalty_percent = $31,
          flash_percent = $32, flash_ends_at = $33, delivery_tiers = $35::jsonb,
          tagline = $36, tagline_en = $37,
-         card_payment_enabled = $38, paytabs_profile_id = $39,
-         paytabs_server_key = CASE WHEN $40 = '' OR $40 LIKE '••••%' THEN paytabs_server_key ELSE $40 END,
-         paytabs_region = $41,
+         card_payment_enabled = $38,
+         bank_account_name = $39, bank_name = $40,
+         bank_iban = CASE WHEN $41 = '' OR $41 LIKE '••••%' THEN bank_iban ELSE $41 END,
+         bank_swift = $42,
+         -- تغييرُ الآيبانِ يُبطلُ تسجيلَ المستفيدِ السابقَ عند PayTabs: نُعيدُها للانتظار
+         paytabs_entity_id = CASE WHEN $41 = '' OR $41 LIKE '••••%' THEN paytabs_entity_id ELSE '' END,
+         payout_status = CASE
+           WHEN $41 <> '' AND $41 NOT LIKE '••••%' THEN 'pending'
+           WHEN payout_status = 'none' AND bank_iban <> '' THEN 'pending'
+           ELSE payout_status END,
          updated_at = now()
        WHERE id = $22
        RETURNING *`,
@@ -311,9 +323,10 @@ export async function updateMyStore(req, res, next) {
         tagline,
         taglineEn,
         cardPaymentEnabled,
-        paytabsProfileId,
-        paytabsServerKey,
-        paytabsRegion,
+        bankAccountName,
+        bankName,
+        bankIban,
+        bankSwift,
       ]
     );
 

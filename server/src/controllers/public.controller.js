@@ -369,7 +369,7 @@ export async function getStoreCheckout(req, res, next) {
     const r = await query(
       `SELECT id, whatsapp, delivery_tiers, free_shipping_over, flash_percent, flash_ends_at,
               opost_connected, opost_access_token, opost_refresh_token, opost_token_expires,
-              card_payment_enabled
+              card_payment_enabled, paytabs_entity_id
        FROM stores WHERE slug = $1`,
       [slug]
     );
@@ -385,7 +385,9 @@ export async function getStoreCheckout(req, res, next) {
       freeShippingOver: Number(s.free_shipping_over || 0),
       flashPercent: flashActive ? Number(s.flash_percent) : 0,
       flashEndsAt: flashActive ? s.flash_ends_at : null,
-      cardPaymentEnabled: Boolean(s.card_payment_enabled),
+      // زرُّ الفيزا لا يظهرُ إلّا إذا صارت التاجرةُ مستفيدةً مسجّلةً فعلاً —
+      // وإلّا لضغطته الزبونةُ فارتدَّ عليها خطأٌ لا ذنبَ لها فيه
+      cardPaymentEnabled: Boolean(s.card_payment_enabled && s.paytabs_entity_id),
     });
   } catch (err) {
     next(err);
