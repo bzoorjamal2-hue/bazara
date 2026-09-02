@@ -8,7 +8,9 @@ import { logAdmin } from '../utils/adminLog.js';
 import { isPlatformPaytabsConfigured, createPlatformPayment, queryPlatformTransaction, isPaymentSuccess } from '../config/paytabs.js';
 
 const PLANS = { monthly: true, yearly: true };
-const PLAN_PRICES = { monthly: 25, yearly: 250 };
+// أسعارُ الاشتراكِ بالشيكل — حسابُ PayTabs يقبضُ ILS لا USD.
+// أصلُها ٢٥ و٢٥٠ دولاراً على صرفِ ٣.٠١ (أيلول ٢٠٢٦)، ثمّ قُرّبت لأرقامٍ مستقرّة
+const PLAN_PRICES = { monthly: 80, yearly: 760 };
 const SITE = () => (process.env.PUBLIC_SITE_URL || process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '');
 
 // ─────────────── حالة الحساب: مصدر حقيقةٍ واحد ───────────────
@@ -164,7 +166,7 @@ export async function subscriptionCheckout(req, res, next) {
     try {
       ptRes = await createPlatformPayment({
         cartId: ref,
-        currency: 'USD',
+        currency: 'ILS',
         amount,
         description: `اشتراك بازارا — ${plan === 'yearly' ? 'سنوي' : 'شهري'}`,
         customerName: email.split('@')[0],
