@@ -157,9 +157,9 @@ function AnnouncementPreview({ items }) {
  */
 function PayoutStatus({ status, t }) {
   const map = {
-    none: { cls: 'border-gold-400/25 bg-ink-900/60 text-stone-300', icon: '📝' },
-    pending: { cls: 'border-amber-400/30 bg-amber-500/10 text-amber-200', icon: '⏳' },
-    active: { cls: 'border-emerald-400/30 bg-emerald-500/10 text-emerald-200', icon: '✅' },
+    none:    { cls: 'border-stone-300 bg-stone-100 text-stone-600 dark:border-gold-400/25 dark:bg-ink-900/60 dark:text-stone-300', icon: '📝' },
+    pending: { cls: 'border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-400/30 dark:bg-amber-500/10 dark:text-amber-200', icon: '⏳' },
+    active:  { cls: 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-400/30 dark:bg-emerald-500/10 dark:text-emerald-200', icon: '✅' },
   };
   const s = map[status] || map.none;
   return (
@@ -1054,23 +1054,23 @@ export default function StoreSettings() {
             <textarea rows={2} maxLength={500} className="input resize-none" placeholder={t('dashboard.store.paymentPlaceholder')} value={form.paymentInfo} onChange={set('paymentInfo')} />
           </Field>
 
-          {/* الدفع الإلكتروني (Paytabs) — اختياري */}
-          <div className="mt-4 rounded-2xl border border-gold-400/20 bg-ink-800/50 p-4">
+          {/* الدفع الإلكتروني — اختياري */}
+          <div className="mt-4 rounded-2xl border border-gold-400/15 bg-black/20 p-4">
             <label className="flex cursor-pointer items-center gap-3">
               <input
                 type="checkbox"
                 checked={form.cardPaymentEnabled || false}
                 onChange={(e) => setVal('cardPaymentEnabled', e.target.checked)}
-                className="h-5 w-5 rounded border-gold-400/40 bg-ink-900 text-emerald-500 focus:ring-gold-400/30"
+                className="h-5 w-5 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500/30 dark:border-gold-400/40 dark:bg-ink-900 dark:text-emerald-500 dark:focus:ring-gold-400/30"
               />
               <div>
-                <span className="font-bold text-gold-200">💳 {t('dashboard.store.cardPayment')}</span>
-                <p className="text-xs text-stone-400">{t('dashboard.store.cardPaymentHint')}</p>
+                <CardIcon className="inline h-4 w-4 me-1 text-wine dark:text-gold-300" />
+                <span className="font-bold text-stone-800 dark:text-gold-200">{t('dashboard.store.cardPayment')}</span>
+                <p className="text-xs text-stone-500 dark:text-stone-400">{t('dashboard.store.cardPaymentHint')}</p>
               </div>
             </label>
             {form.cardPaymentEnabled && (
               <div className="mt-4 space-y-3 animate-fade-up">
-                {/* حالةُ التفعيل: تُطمئنُ التاجرةَ أين وصل طلبُها بلا أن تسأل */}
                 <PayoutStatus status={form.payoutStatus} t={t} />
 
                 <Field label={t('dashboard.store.bankAccountName')} tip={t('dashboard.store.bankAccountNameTip')}>
