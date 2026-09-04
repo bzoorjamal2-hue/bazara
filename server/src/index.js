@@ -583,6 +583,8 @@ END $;`,
     "ALTER TABLE stores ADD COLUMN IF NOT EXISTS bank_swift VARCHAR(20) DEFAULT '';",
     // رقمُ المستفيدِ الذي تُعطينا إيّاه PayTabs بعدَ تسجيلِ التاجرة — تملؤه الإدارة
     "ALTER TABLE stores ADD COLUMN IF NOT EXISTS paytabs_entity_id VARCHAR(20) DEFAULT '';",
+    // رمزُ الحسابِ الفرعيِّ عند Lahza (ACCT_…) — الطريقُ الفلسطينيُّ لنفسِ الغاية
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS lahza_subaccount VARCHAR(40) DEFAULT '';",
     // حالةُ التسجيل: none (لم تُدخل بياناتها) · pending (بانتظارِ PayTabs) · active
     "ALTER TABLE stores ADD COLUMN IF NOT EXISTS payout_status VARCHAR(12) NOT NULL DEFAULT 'none';",
     // عمولةُ المنصّةِ على الطلبِ بالنسبةِ المئويّة — صفرٌ افتراضاً (الدخلُ من الاشتراكِ لا العمولة)

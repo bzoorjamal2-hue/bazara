@@ -25,8 +25,20 @@ async function lahzaFetch(path, options = {}) {
   return data;
 }
 
-// تهيئة معاملة دفع: تُعيد رابط الدفع المستضاف
-export function initializeTransaction({ email, amount, currency, callbackUrl, reference, metadata }) {
+/**
+ * تهيئة معاملة دفع: تُعيد رابط الدفع المستضاف.
+ *
+ * `subaccount` هو مربطُ السوقِ متعدّدِ البائعات: التاجرةُ لا تفتحُ حساباً ولا
+ * تنسخُ مفتاحاً — تُدخلُ حسابَها البنكيَّ عندنا، فيُنشأُ لها حسابٌ فرعيٌّ عند
+ * Lahza برمز `ACCT_…`. فيمرُّ الدفعُ بحسابِنا ويُساقُ نصيبُها إلى مصرفِها.
+ *
+ * `transactionCharge` عمولتُنا بالأغورة/السنت (مبلغٌ مقطوع)، و`bearer` يحدّدُ
+ * مَن يتحمّلُ رسومَ البوّابة: 'account' نحن، أو 'subaccount' التاجرة.
+ */
+export function initializeTransaction({
+  email, amount, currency, callbackUrl, reference, metadata,
+  subaccount, transactionCharge, bearer,
+}) {
   return lahzaFetch('/transaction/initialize', {
     method: 'POST',
     body: JSON.stringify({
@@ -36,6 +48,9 @@ export function initializeTransaction({ email, amount, currency, callbackUrl, re
       callback_url: callbackUrl,
       reference,
       metadata,
+      ...(subaccount ? { subaccount } : {}),
+      ...(transactionCharge > 0 ? { transaction_charge: String(Math.round(transactionCharge * 100)) } : {}),
+      ...(subaccount && bearer ? { bearer } : {}),
     }),
   });
 }

@@ -179,20 +179,23 @@ export async function checkout(req, res, next) {
       return res.status(400).json({ error: 'الدفع بالبطاقة يدعم منتجات متجر واحد لكل طلب.' });
     }
 
-    // الدفعُ يمرُّ بحسابِ المنصّة، ويُقسَّمُ فيصلَ ثمنُ الطلبِ لحسابِ التاجرةِ البنكيّ.
-    // فشرطُنا: أن تكونَ فعّلت البطاقةَ وأن تكونَ مسجّلةً مستفيدةً عند PayTabs.
+    // الدفعُ يمرُّ بحسابِ المنصّة، ويُساقُ نصيبُ المتجرِ إلى مصرفِه — فالتاجرةُ لا
+    // تفتحُ حساباً ولا تنسخُ مفتاحاً. طريقان لنفسِ الغاية: حسابٌ فرعيٌّ عند Lahza
+    // (الفلسطينيّة) أو مستفيدٌ عند PayTabs. نُقدّمُ Lahza إن كانت مهيّأة.
     const storeRow = await query(
-      `SELECT card_payment_enabled, paytabs_entity_id, payout_status, platform_fee_percent,
-              name, name AS store_name, delivery_tiers, free_shipping_over
+      `SELECT card_payment_enabled, lahza_subaccount, paytabs_entity_id, payout_status,
+              platform_fee_percent, name, name AS store_name, delivery_tiers, free_shipping_over
          FROM stores WHERE id = $1`,
       [storeId]
     );
     const store = storeRow.rows[0];
-    if (!store?.card_payment_enabled || !store.paytabs_entity_id) {
+    if (!store?.card_payment_enabled) {
       return res.status(503).json({ error: 'الدفع بالبطاقة غير مُفعّل في هذا المتجر.' });
     }
-    if (!isPlatformPaytabsConfigured()) {
-      return res.status(503).json({ error: 'الدفع بالبطاقة غير مُفعّل حالياً.' });
+    const useLahza = Boolean(store.lahza_subaccount && isLahzaConfigured());
+    const usePaytabs = Boolean(store.paytabs_entity_id && isPlatformPaytabsConfigured());
+    if (!useLahza && !usePaytabs) {
+      return res.status(503).json({ error: 'الدفع بالبطاقة غير مُفعّل في هذا المتجر.' });
     }
 
     let subtotal = 0;
@@ -234,37 +237,59 @@ export async function checkout(req, res, next) {
         appliedCoupon, discount]
     );
 
-    let ptRes;
+    // عمولةُ المنصّةِ على الطلب — صفرٌ افتراضاً، فدخلُنا من الاشتراكِ لا منها
+    const feePercent = Math.min(100, Math.max(0, Number(store.platform_fee_percent) || 0));
+    const platformCut = Math.round(total * feePercent) / 100;
+
+    let payUrl = '';
+    let tranRef = '';
     try {
-      ptRes = await createPlatformPayment({
-        splitPayout: buildSplitPayout(store, total),
-        cartId: reference,
-        currency: 'ILS',
-        amount: total,
-        description: `طلب ${reference} — ${store.store_name}`,
-        customerName: name,
-        customerEmail: customer.email || 'customer@bazara.shop',
-        customerPhone: phone,
-        customerCity: cityName || 'Ramallah',
-        customerAddress: (customer?.address || '').trim() || 'N/A',
-        callbackUrl: `${SITE()}/api/orders/paytabs-callback`,
-        returnUrl: `${SITE()}/payment/callback`,
-      });
-    } catch (ptErr) {
-      console.error(`فشل إنشاء صفحة دفع للمتجر ${storeId}:`, ptErr.message);
-      ptRes = null;
+      if (useLahza) {
+        const r = await initializeTransaction({
+          email: customer.email || 'customer@bazara.shop',
+          amount: total,
+          currency: PAY_CURRENCY,
+          reference,
+          callbackUrl: `${SITE()}/payment/callback`,
+          subaccount: store.lahza_subaccount,
+          transactionCharge: platformCut,
+          // رسومُ البوّابةِ على المنصّةِ لا على التاجرة: تقبضُ نصيبَها كاملاً كما اتّفقنا
+          bearer: 'account',
+          metadata: { store: store.store_name, orderRef: reference },
+        });
+        payUrl = r?.data?.authorization_url || '';
+        tranRef = r?.data?.reference || reference;
+      } else {
+        const r = await createPlatformPayment({
+          splitPayout: buildSplitPayout(store, total),
+          cartId: reference,
+          currency: 'ILS',
+          amount: total,
+          description: `طلب ${reference} — ${store.store_name}`,
+          customerName: name,
+          customerEmail: customer.email || 'customer@bazara.shop',
+          customerPhone: phone,
+          customerCity: cityName || 'Ramallah',
+          customerAddress: (customer?.address || '').trim() || 'N/A',
+          callbackUrl: `${SITE()}/api/orders/paytabs-callback`,
+          returnUrl: `${SITE()}/payment/callback`,
+        });
+        payUrl = r?.redirect_url || '';
+        tranRef = r?.tran_ref || '';
+      }
+    } catch (payErr) {
+      console.error(`فشل إنشاء صفحة دفع للمتجر ${storeId}:`, payErr.message);
     }
 
     // صفحةُ الدفع لم تُولد: نحذف الطلبَ المعلّق كي لا يبقى شبحاً بلوحة التاجرة
-    if (!ptRes?.redirect_url) {
+    if (!payUrl) {
       await query('DELETE FROM orders WHERE id = $1', [orderRes.rows[0].id]);
       return res.status(502).json({ error: 'تعذّر إنشاء صفحة الدفع. جرّبي الدفع عند الاستلام أو حاولي لاحقاً.' });
     }
 
-    // نحفظ مرجع Paytabs مع الطلب
-    await query('UPDATE orders SET tran_ref = $1 WHERE id = $2', [ptRes.tran_ref, orderRes.rows[0].id]);
+    await query('UPDATE orders SET tran_ref = $1 WHERE id = $2', [tranRef, orderRes.rows[0].id]);
 
-    res.json({ redirectUrl: ptRes.redirect_url, reference });
+    res.json({ redirectUrl: payUrl, reference });
   } catch (err) {
     next(err);
   }
@@ -760,7 +785,11 @@ export async function getStats(req, res, next) {
 export async function verify(req, res, next) {
   const { reference } = req.params;
   try {
-    const orderRes = await query('SELECT * FROM orders WHERE reference = $1', [reference]);
+    const orderRes = await query(
+      `SELECT o.*, s.lahza_subaccount FROM orders o
+         JOIN stores s ON s.id = o.store_id WHERE o.reference = $1`,
+      [reference]
+    );
     const order = orderRes.rows[0];
     if (!order) return res.status(404).json({ error: 'الطلب غير موجود.' });
 
@@ -768,8 +797,12 @@ export async function verify(req, res, next) {
       return res.json({ status: order.status === 'new' ? 'paid' : order.status, total: Number(order.total) });
     }
 
-    // Paytabs: نتحقّقُ عبر tran_ref بأوراقِ المنصّة — الدفعُ مرَّ بحسابِها لا بحسابِ المتجر
-    if (order.tran_ref && isPlatformPaytabsConfigured()) {
+    // البوّابةُ تُعرَفُ من تسجيلِ المتجرِ لا من شكلِ المرجع: متجرٌ له حسابٌ فرعيٌّ
+    // عند Lahza مرَّ دفعُه بها، وإلّا فبـ PayTabs. ولولا هذا لسألنا PayTabs عن
+    // مرجعٍ ليس لها فردَّت بالنفي، فحُسِبَ الطلبُ فاشلاً وهو مدفوع.
+    const viaLahza = Boolean(order.lahza_subaccount && isLahzaConfigured());
+
+    if (!viaLahza && order.tran_ref && isPlatformPaytabsConfigured()) {
       const result = await queryPlatformTransaction(order.tran_ref);
       const paid = isPaymentSuccess(result);
       if (paid) {
@@ -782,13 +815,18 @@ export async function verify(req, res, next) {
       return res.json({ status: 'failed', total: Number(order.total) });
     }
 
-    // Lahza (احتياط للطلبات القديمة)
+    // Lahza — المسارُ الأساسيُّ للمتاجرِ ذاتِ الحسابِ الفرعيّ، والاحتياطُ للطلباتِ القديمة
     if (isLahzaConfigured()) {
-      const result = await verifyTransaction(reference);
+      const result = await verifyTransaction(order.tran_ref || reference);
       const paid = result?.data?.status === 'success';
-      const newStatus = paid ? 'new' : 'failed';
-      await query('UPDATE orders SET status = $1 WHERE reference = $2', [newStatus, reference]);
-      return res.json({ status: paid ? 'paid' : 'failed', total: Number(order.total) });
+      if (paid) {
+        await query("UPDATE orders SET status = 'new' WHERE reference = $1 AND status = 'pending'", [reference]);
+        notifyOwnerNewOrder(order.store_id, { name: order.customer_name, phone: order.customer_phone, city: order.city, items: order.items, total: Number(order.total) }).catch(() => {});
+        clearAbandoned(order.store_id, order.customer_phone);
+        return res.json({ status: 'paid', total: Number(order.total) });
+      }
+      await query("UPDATE orders SET status = 'failed' WHERE reference = $1 AND status = 'pending'", [reference]);
+      return res.json({ status: 'failed', total: Number(order.total) });
     }
 
     res.status(503).json({ error: 'الدفع غير مُفعّل.' });

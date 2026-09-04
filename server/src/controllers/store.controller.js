@@ -275,8 +275,10 @@ export async function updateMyStore(req, res, next) {
          bank_account_name = $39, bank_name = $40,
          bank_iban = CASE WHEN $41 = '' OR $41 LIKE '••••%' THEN bank_iban ELSE $41 END,
          bank_swift = $42,
-         -- تغييرُ الآيبانِ يُبطلُ تسجيلَ المستفيدِ السابقَ عند PayTabs: نُعيدُها للانتظار
+         -- تغييرُ الآيبانِ يُبطلُ التسجيلَ السابقَ عند البوّابتَين: نُعيدُها للانتظار،
+         -- إذ لا يصحُّ أن يبقى حسابٌ فرعيٌّ يسوقُ المالَ إلى مصرفٍ هُجِر
          paytabs_entity_id = CASE WHEN $41 = '' OR $41 LIKE '••••%' THEN paytabs_entity_id ELSE '' END,
+         lahza_subaccount = CASE WHEN $41 = '' OR $41 LIKE '••••%' THEN lahza_subaccount ELSE '' END,
          payout_status = CASE
            WHEN $41 <> '' AND $41 NOT LIKE '••••%' THEN 'pending'
            WHEN payout_status = 'none' AND bank_iban <> '' THEN 'pending'

@@ -1141,7 +1141,8 @@ export async function listPayoutRequests(req, res, next) {
   try {
     const r = await query(
       `SELECT s.id, s.name, s.slug, s.bank_account_name, s.bank_name, s.bank_iban, s.bank_swift,
-              s.paytabs_entity_id, s.payout_status, s.platform_fee_percent, s.updated_at, u.email
+              s.paytabs_entity_id, s.lahza_subaccount, s.payout_status, s.platform_fee_percent,
+              s.updated_at, u.email
          FROM stores s JOIN users u ON u.id = s.user_id
         WHERE s.bank_iban <> ''
         ORDER BY (s.payout_status = 'pending') DESC, s.updated_at DESC`
@@ -1156,6 +1157,7 @@ export async function listPayoutRequests(req, res, next) {
       bankIban: s.bank_iban || '',
       bankSwift: s.bank_swift || '',
       entityId: s.paytabs_entity_id || '',
+      subaccount: s.lahza_subaccount || '',
       status: s.payout_status || 'none',
       feePercent: Number(s.platform_fee_percent || 0),
       updatedAt: s.updated_at,
@@ -1169,20 +1171,25 @@ export async function listPayoutRequests(req, res, next) {
 export async function setPayoutEntity(req, res, next) {
   const storeId = String(req.params.id || '');
   const entityId = String(req.body?.entityId || '').trim().slice(0, 20);
+  const subaccount = String(req.body?.subaccount || '').trim().slice(0, 40);
   const feePercent = Math.min(100, Math.max(0, Number(req.body?.feePercent) || 0));
   try {
     if (entityId && !/^\d+$/.test(entityId)) {
       return res.status(400).json({ error: 'رقم المستفيد أرقام فقط.' });
     }
+    if (subaccount && !/^ACCT_[A-Za-z0-9]+$/.test(subaccount)) {
+      return res.status(400).json({ error: 'رمز الحساب الفرعي يبدأ بـ ACCT_ ثم أحرف وأرقام.' });
+    }
     const r = await query(
       `UPDATE stores
           SET paytabs_entity_id = $1,
-              platform_fee_percent = $2,
-              payout_status = CASE WHEN $1 <> '' THEN 'active' ELSE 'pending' END,
+              lahza_subaccount = $2,
+              platform_fee_percent = $3,
+              payout_status = CASE WHEN $1 <> '' OR $2 <> '' THEN 'active' ELSE 'pending' END,
               updated_at = now()
-        WHERE id = $3
+        WHERE id = $4
         RETURNING name, payout_status`,
-      [entityId, feePercent, storeId]
+      [entityId, subaccount, feePercent, storeId]
     );
     const s = r.rows[0];
     if (!s) return res.status(404).json({ error: 'المتجر غير موجود.' });
@@ -1196,7 +1203,7 @@ export async function setPayoutEntity(req, res, next) {
         url: '/dashboard/store',
       }).catch(() => {});
     }
-    await logAdmin(req.user, 'payout_entity', `${s.name}: entity=${entityId || 'مسح'} fee=${feePercent}%`);
+    await logAdmin(req.user, 'payout_entity', `${s.name}: lahza=${subaccount || '—'} paytabs=${entityId || '—'} fee=${feePercent}%`);
     res.json({ ok: true, status: s.payout_status });
   } catch (err) {
     next(err);
