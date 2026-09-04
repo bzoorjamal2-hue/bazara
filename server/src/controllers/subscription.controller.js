@@ -1148,7 +1148,7 @@ export async function listPayoutRequests(req, res, next) {
         WHERE s.bank_iban <> ''
         ORDER BY (s.payout_status = 'pending') DESC, s.updated_at DESC`
     );
-    res.json({ requests: r.rows.map((s) => ({
+    res.json({ payouts: r.rows.map((s) => ({
       id: s.id,
       name: s.name,
       slug: s.slug,

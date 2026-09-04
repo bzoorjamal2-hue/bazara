@@ -304,7 +304,7 @@ export default function StoreSettings() {
       await refresh();
       clearCachePrefixes(['home', 'storepage:']); // الإعدادات الجديدة (شعار/بانر/فلاش) تظهر فوراً
       savedRef.current = JSON.stringify(form);
-      clearDraft('store-settings'); // حُفظ فعلاً — لا داعي لمسودّة بعده
+      clearDraft(`store-settings:${authStore?.id || ''}`); // حُفظ فعلاً — لا داعي لمسودّة بعده
       setMsg(t('dashboard.store.saved'));
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
