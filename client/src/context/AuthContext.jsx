@@ -71,6 +71,14 @@ export function AuthProvider({ children }) {
     loggedOut.current = true;
     setLoggingOut(true);
     clearAuthToken();
+    // مسح مسودّات النماذج كي لا تُسكب بيانات هذا الحساب على حسابٍ آخر يدخل بعده
+    try {
+      const pre = 'bz_draft:';
+      for (let i = sessionStorage.length - 1; i >= 0; i--) {
+        const k = sessionStorage.key(i);
+        if (k && k.startsWith(pre)) sessionStorage.removeItem(k);
+      }
+    } catch { /* تصفّح خاص */ }
     setUser(null);
     setStore(null);
     setSubscription(null);

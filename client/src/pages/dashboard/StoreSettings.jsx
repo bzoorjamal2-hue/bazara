@@ -175,7 +175,7 @@ function PayoutStatus({ status, t }) {
 export default function StoreSettings() {
   const { t } = useTranslation();
   const platformKeys = usePlatformCatKeys();
-  const { refresh } = useAuth();
+  const { refresh, store: authStore } = useAuth();
   const [form, setForm] = useState(null);
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
@@ -237,7 +237,7 @@ export default function StoreSettings() {
   const loaded = form !== null;
 
   // مسودّة الإعدادات: ما يُكتب هنا يبقى لو تنقّل صاحب المتجر بين الأقسام ورجع
-  useDraft('store-settings', form, (draft) => setForm((cur) => ({ ...cur, ...draft })), { ready: loaded });
+  useDraft(`store-settings:${authStore?.id || ''}`, form, (draft) => setForm((cur) => ({ ...cur, ...draft })), { ready: loaded });
   useEffect(() => {
     if (!loaded) return undefined;
     const obs = new IntersectionObserver(
