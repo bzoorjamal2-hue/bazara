@@ -8,10 +8,9 @@ import Seo from '../components/Seo.jsx';
 import Spinner from '../components/Spinner.jsx';
 import { PageTitle, Act } from '../components/PageUI.jsx';
 
-// بالشيكل — حسابُ PayTabs يقبضُ ILS. تُطابقُ PLAN_PRICES بالخادم
 const PLANS = [
-  { key: 'monthly', price: 80, per: 'perMonth' },
-  { key: 'yearly', price: 760, per: 'perYear' },
+  { key: 'monthly', price: 25, per: 'perMonth' },
+  { key: 'yearly', price: 250, per: 'perYear' },
 ];
 
 export default function Subscribe() {
@@ -110,7 +109,7 @@ export default function Subscribe() {
               {p.badge && <span className="bz-pb absolute end-5 top-5">{t(`subscription.${p.badge}`)}</span>}
               <h2 className="bz-state-t">{t(`subscription.${p.key}`)}</h2>
               <div className="mt-4 flex items-baseline gap-1">
-                <span className="bz-price">{t('common.currency')}{p.price}</span>
+                <span className="bz-price">${p.price}</span>
                 <span className="bz-state-p">{t(`subscription.${p.per}`)}</span>
               </div>
               <p className="bz-state-p mt-4">{t('subscription.features')}</p>

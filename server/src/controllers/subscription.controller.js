@@ -7,12 +7,10 @@ import { clearPublicCache } from '../middleware/cache.js';
 import { logAdmin } from '../utils/adminLog.js';
 import { notifyStoreOwner } from '../utils/notify.js';
 import { isPlatformPaytabsConfigured, createPlatformPayment, queryPlatformTransaction, isPaymentSuccess } from '../config/paytabs.js';
-import { createSubaccount, isLahzaConfigured, listBanks } from '../config/lahza.js';
+import { createSubaccount, isLahzaConfigured, listBanks, initializeTransaction, verifyTransaction } from '../config/lahza.js';
 
 const PLANS = { monthly: true, yearly: true };
-// أسعارُ الاشتراكِ بالشيكل — حسابُ PayTabs يقبضُ ILS لا USD.
-// أصلُها ٢٥ و٢٥٠ دولاراً على صرفِ ٣.٠١ (أيلول ٢٠٢٦)، ثمّ قُرّبت لأرقامٍ مستقرّة
-const PLAN_PRICES = { monthly: 80, yearly: 760 };
+const PLAN_PRICES = { monthly: 25, yearly: 250 };
 const SITE = () => (process.env.PUBLIC_SITE_URL || process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '');
 
 // ─────────────── حالة الحساب: مصدر حقيقةٍ واحد ───────────────
@@ -147,7 +145,7 @@ export async function requestSubscription(req, res, next) {
 export async function subscriptionCheckout(req, res, next) {
   const { plan } = req.body;
   if (!PLANS[plan]) return res.status(400).json({ error: 'خطة غير صالحة.' });
-  if (!isPlatformPaytabsConfigured()) return res.status(503).json({ error: 'الدفع بالبطاقة غير مُفعّل حالياً.' });
+  if (!isLahzaConfigured()) return res.status(503).json({ error: 'الدفع بالبطاقة غير مُفعّل حالياً.' });
   try {
     const u = await query('SELECT email FROM users WHERE id = $1', [req.user.id]);
     const email = u.rows[0]?.email || '';
@@ -164,52 +162,45 @@ export async function subscriptionCheckout(req, res, next) {
       reqId = ins.rows[0].id;
     }
 
-    let ptRes;
+    let lahzaRes;
     try {
-      ptRes = await createPlatformPayment({
-        cartId: ref,
-        currency: 'ILS',
+      lahzaRes = await initializeTransaction({
+        email,
         amount,
-        description: `اشتراك بازارا — ${plan === 'yearly' ? 'سنوي' : 'شهري'}`,
-        customerName: email.split('@')[0],
-        customerEmail: email,
-        customerPhone: '',
-        customerCity: 'Ramallah',
-        customerAddress: 'N/A',
-        callbackUrl: `${SITE()}/api/subscription/paytabs-callback`,
-        returnUrl: `${SITE()}/subscribe?ref=${ref}`,
+        currency: 'USD',
+        reference: ref,
+        callbackUrl: `${SITE()}/subscribe?ref=${ref}`,
+        metadata: { type: 'subscription', plan },
       });
-    } catch (ptErr) {
-      console.error('فشل إنشاء صفحة دفع اشتراك:', ptErr.message);
-      ptRes = null;
+    } catch (payErr) {
+      console.error('فشل إنشاء صفحة دفع اشتراك:', payErr.message);
+      lahzaRes = null;
     }
 
-    // صفحةُ الدفع لم تُولد: نمسحُ مرجعَ الدفعِ عن الطلبِ كي لا يُحسَبَ محاولةَ بطاقةٍ معلّقة،
-    // ويبقى الطلبُ نفسُه ليُفعَّلَ يدوياً بكودٍ إن أرادت
-    if (!ptRes?.redirect_url) {
+    const payUrl = lahzaRes?.data?.authorization_url || '';
+    if (!payUrl) {
       await query("UPDATE subscription_requests SET tran_ref = '' WHERE id = $1", [reqId]);
       return res.status(502).json({ error: 'تعذّر إنشاء صفحة الدفع. جرّبي التفعيل بالكود أو حاولي لاحقاً.' });
     }
-    await query('UPDATE subscription_requests SET tran_ref = $1 WHERE id = $2', [ptRes.tran_ref, reqId]);
-    res.json({ redirectUrl: ptRes.redirect_url, reference: ref });
+    await query('UPDATE subscription_requests SET tran_ref = $1 WHERE id = $2', [ref, reqId]);
+    res.json({ redirectUrl: payUrl, reference: ref });
   } catch (err) {
     next(err);
   }
 }
 
-// التحقّق من دفع الاشتراك بعد عودة المستخدم من Paytabs
 export async function subscriptionVerify(req, res, next) {
   const ref = (req.query.ref || '').trim();
   if (!ref) return res.status(400).json({ error: 'مرجع مفقود.' });
   try {
-    const r = await query("SELECT sr.*, u.email FROM subscription_requests sr JOIN users u ON u.id = sr.user_id WHERE sr.reference = $1 ORDER BY sr.created_at DESC LIMIT 1", [ref]);
+    const r = await query("SELECT sr.*, u.email, u.name as user_name FROM subscription_requests sr JOIN users u ON u.id = sr.user_id WHERE sr.reference = $1 ORDER BY sr.created_at DESC LIMIT 1", [ref]);
     const sr = r.rows[0];
     if (!sr) return res.status(404).json({ error: 'طلب غير موجود.' });
     if (sr.status === 'approved') return res.json({ status: 'paid' });
-    if (!sr.tran_ref || !isPlatformPaytabsConfigured()) return res.json({ status: sr.status });
+    if (!isLahzaConfigured()) return res.json({ status: sr.status });
 
-    const result = await queryPlatformTransaction(sr.tran_ref);
-    if (isPaymentSuccess(result)) {
+    const result = await verifyTransaction(ref);
+    if (result.data?.status === 'success') {
       const from = new Date();
       const end = planPeriodEnd(sr.plan, from);
       await query(
@@ -218,6 +209,24 @@ export async function subscriptionVerify(req, res, next) {
       );
       await query("UPDATE subscription_requests SET status='approved' WHERE id=$1", [sr.id]);
       clearPublicCache();
+
+      if (isMailConfigured()) {
+        try {
+          await sendMail({
+            to: sr.email,
+            subject: 'تم تفعيل اشتراكك — Bazara',
+            html: `<div style="font-family:Tahoma,Arial;direction:rtl;text-align:right">
+              <h2>مرحباً ${sr.user_name || ''}!</h2>
+              <p>تم الدفع بنجاح وتفعيل اشتراكك في Bazara (حزمة ${planLabel(sr.plan)}).</p>
+              <p>اشتراكك فعّال حتى: <strong>${end.toLocaleDateString('ar')}</strong></p>
+              <p>يمكنك الآن إنشاء متجرك والبدء بالبيع.</p>
+            </div>`,
+          });
+        } catch (mailErr) {
+          console.error('subscription confirmation mail failed:', mailErr.message);
+        }
+      }
+
       return res.json({ status: 'paid' });
     }
     return res.json({ status: 'pending' });
