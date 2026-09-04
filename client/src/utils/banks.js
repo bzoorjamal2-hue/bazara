@@ -3,6 +3,7 @@
 // swift: رمز SWIFT/BIC الرسمي للبنك.
 const BANKS = [
   { code: 'AB',   name: 'Arab Bank',                            nameAr: 'البنك العربي',                   swift: 'ARABPS22' },
+  { code: 'RFLK', name: 'Reflekt Wallet (Arab Bank)',            nameAr: 'محفظة ريفليكت (البنك العربي)',    swift: 'ARABPS22090' },
   { code: 'BOP',  name: 'Bank of Palestine',                    nameAr: 'بنك فلسطين',                     swift: 'PABORPS1' },
   { code: 'QUDS', name: 'Quds Bank',                            nameAr: 'بنك القدس',                      swift: 'QUDSPS22' },
   { code: 'ISBK', name: 'Palestine Islamic Bank',               nameAr: 'البنك الإسلامي الفلسطيني',       swift: 'PISBPS22' },
