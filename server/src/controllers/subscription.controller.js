@@ -1219,7 +1219,7 @@ export async function autoCreateSubaccount(req, res, next) {
     if (!isLahzaConfigured()) return res.status(503).json({ error: 'Lahza غير مهيّأة على الخادم.' });
 
     const r = await query(
-      'SELECT id, name, bank_code, bank_iban, bank_swift, lahza_subaccount FROM stores WHERE id = $1',
+      'SELECT id, name, bank_code, bank_name, bank_iban, bank_swift, lahza_subaccount FROM stores WHERE id = $1',
       [storeId]
     );
     const store = r.rows[0];
@@ -1237,9 +1237,9 @@ export async function autoCreateSubaccount(req, res, next) {
       const match = list.find((b) => {
         const bn = (b.name || '').toLowerCase();
         const bs = (b.slug || '').toLowerCase();
-        if (swift && (bn.includes(swift) || bs.includes(swift))) return true;
+        const blc = (b.longcode || '').toLowerCase();
+        if (swift && (bn.includes(swift) || bs.includes(swift) || blc.includes(swift))) return true;
         if (name && (bn.includes(name) || name.includes(bn))) return true;
-        // Arab Bank → arab
         const words = name.split(/[\s()]+/).filter(Boolean);
         return words.some((w) => w.length > 3 && bn.includes(w));
       });
