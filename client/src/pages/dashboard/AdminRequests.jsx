@@ -164,8 +164,8 @@ export default function AdminRequests() {
               value={genPlan}
               onChange={setGenPlan}
               options={[
-                { value: 'monthly', label: `${t('subscription.monthly')} (${t('common.currency')}80)` },
-                { value: 'yearly', label: `${t('subscription.yearly')} (${t('common.currency')}760)` },
+                { value: 'monthly', label: `${t('subscription.monthly')} ($25)` },
+                { value: 'yearly', label: `${t('subscription.yearly')} ($250)` },
               ]}
             />
           </div>

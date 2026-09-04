@@ -394,8 +394,8 @@ function SubRow({ s, onDeleted, onUpdated, onOpen }) {
               onChange={setPlan}
               className="!w-auto !py-1.5 text-sm"
               options={[
-                { value: 'monthly', label: `${t('subscription.monthly')} (${t('common.currency')}80)` },
-                { value: 'yearly', label: `${t('subscription.yearly')} (${t('common.currency')}760)` },
+                { value: 'monthly', label: `${t('subscription.monthly')} ($25)` },
+                { value: 'yearly', label: `${t('subscription.yearly')} ($250)` },
               ]}
             />
             <button onClick={save} disabled={saveBusy} className={`!py-1.5 text-sm flex-1 sm:flex-none ${dirty ? 'btn-primary' : 'btn-ghost'}`}>
