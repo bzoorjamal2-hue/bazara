@@ -579,6 +579,7 @@ END $;`,
     // فيصلُها ثمنُ طلبِها مباشرةً بلا أن تفتحَ حساباً ولا تلمسَ مفتاحاً.
     "ALTER TABLE stores ADD COLUMN IF NOT EXISTS bank_account_name VARCHAR(120) DEFAULT '';",
     "ALTER TABLE stores ADD COLUMN IF NOT EXISTS bank_name VARCHAR(80) DEFAULT '';",
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS bank_code VARCHAR(10) DEFAULT '';",
     "ALTER TABLE stores ADD COLUMN IF NOT EXISTS bank_iban VARCHAR(40) DEFAULT '';",
     "ALTER TABLE stores ADD COLUMN IF NOT EXISTS bank_swift VARCHAR(20) DEFAULT '';",
     // رقمُ المستفيدِ الذي تُعطينا إيّاه PayTabs بعدَ تسجيلِ التاجرة — تملؤه الإدارة

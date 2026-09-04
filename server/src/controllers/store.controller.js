@@ -48,6 +48,7 @@ function mapStore(s) {
     // حسابُ التاجرةِ البنكيّ — إليه يصلُ ثمنُ طلباتِها. الآيبانُ مقنّعٌ إلّا آخرَ أربعة
     bankAccountName: s.bank_account_name || '',
     bankName: s.bank_name || '',
+    bankCode: s.bank_code || '',
     bankIban: s.bank_iban ? '••••' + s.bank_iban.slice(-4) : '',
     bankSwift: s.bank_swift || '',
     payoutStatus: s.payout_status || 'none',
@@ -228,6 +229,7 @@ export async function updateMyStore(req, res, next) {
   // الحسابُ البنكيُّ للتاجرة — الآيبانُ بلا مسافاتٍ وبأحرفٍ كبيرة كما تطلبُه أنظمةُ التحويل
   const bankAccountName = String(req.body.bankAccountName || '').trim().slice(0, 120);
   const bankName = String(req.body.bankName || '').trim().slice(0, 80);
+  const bankCode = String(req.body.bankCode || '').trim().toUpperCase().slice(0, 10);
   const bankIban = String(req.body.bankIban || '').replace(/\s+/g, '').toUpperCase().slice(0, 40);
   const bankSwift = String(req.body.bankSwift || '').replace(/\s+/g, '').toUpperCase().slice(0, 20);
     const current = await query('SELECT id, name, slug, old_slugs FROM stores WHERE user_id = $1', [req.user.id]);
@@ -274,7 +276,7 @@ export async function updateMyStore(req, res, next) {
          card_payment_enabled = $38,
          bank_account_name = $39, bank_name = $40,
          bank_iban = CASE WHEN $41 = '' OR $41 LIKE '••••%' THEN bank_iban ELSE $41 END,
-         bank_swift = $42,
+         bank_swift = $42, bank_code = $43,
          -- تغييرُ الآيبانِ يُبطلُ التسجيلَ السابقَ عند البوّابتَين: نُعيدُها للانتظار،
          -- إذ لا يصحُّ أن يبقى حسابٌ فرعيٌّ يسوقُ المالَ إلى مصرفٍ هُجِر
          paytabs_entity_id = CASE WHEN $41 = '' OR $41 LIKE '••••%' THEN paytabs_entity_id ELSE '' END,
@@ -329,6 +331,7 @@ export async function updateMyStore(req, res, next) {
         bankName,
         bankIban,
         bankSwift,
+        bankCode,
       ]
     );
 

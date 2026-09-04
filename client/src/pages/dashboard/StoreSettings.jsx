@@ -18,6 +18,8 @@ import {
 } from '../../components/icons.jsx';
 import { cldThumb } from '../../utils/cloudinary.js';
 import { SIZE_CHART } from '../../utils/sizes.js';
+import BankSelect from '../../components/BankSelect.jsx';
+import BANKS from '../../utils/banks.js';
 import { usePlatformCatKeys } from '../../utils/platformCategories.js';
 
 // أيقونتا إخفاء/إظهار (عين مشطوبة / عين) — للتحكم بظهور الفئة بالمتجر
@@ -219,6 +221,7 @@ export default function StoreSettings() {
           cardPaymentEnabled: Boolean(s.cardPaymentEnabled),
           bankAccountName: s.bankAccountName || '',
           bankName: s.bankName || '',
+          bankCode: s.bankCode || '',
           // الآيبانُ يعودُ مقنّعاً: نتركُه فارغاً كي لا تُعيدَ التاجرةُ حفظَ النجوم
           bankIban: '',
           bankSwift: s.bankSwift || '',
@@ -1077,13 +1080,16 @@ export default function StoreSettings() {
                   <input className="input" dir="ltr" placeholder="Fatima Ahmad Saleh" value={form.bankAccountName || ''} onChange={(e) => setVal('bankAccountName', e.target.value)} />
                 </Field>
                 <Field label={t('dashboard.store.bankName')} tip={t('dashboard.store.bankNameTip')}>
-                  <input className="input" dir="ltr" placeholder="Bank of Palestine" value={form.bankName || ''} onChange={(e) => setVal('bankName', e.target.value)} />
+                  <BankSelect
+                    value={form.bankCode || ''}
+                    onChange={(bank) => setForm((f) => ({ ...f, bankCode: bank.code, bankName: bank.name, bankSwift: bank.swift }))}
+                  />
                 </Field>
                 <Field label={t('dashboard.store.bankIban')} tip={t('dashboard.store.bankIbanTip')}>
                   <input className="input" dir="ltr" placeholder="PS00 0000 0000 0000 0000 0000 000" value={form.bankIban || ''} onChange={(e) => setVal('bankIban', e.target.value)} />
                 </Field>
-                <Field label={t('dashboard.store.bankSwift')} tip={t('dashboard.store.bankSwiftTip')} optional>
-                  <input className="input" dir="ltr" placeholder="ARABPS22" value={form.bankSwift || ''} onChange={(e) => setVal('bankSwift', e.target.value)} />
+                <Field label={t('dashboard.store.bankSwift')} tip={t('dashboard.store.bankSwiftTip')}>
+                  <input className="input" dir="ltr" readOnly value={form.bankSwift || ''} placeholder="ARABPS22" />
                 </Field>
                 <p className="text-[11px] text-stone-500">{t('dashboard.store.bankNote')}</p>
               </div>
