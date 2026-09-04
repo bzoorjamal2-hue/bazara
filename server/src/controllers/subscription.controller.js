@@ -1227,15 +1227,20 @@ export async function autoCreateSubaccount(req, res, next) {
     if (!store.bank_code || !store.bank_iban) return res.status(400).json({ error: 'التاجرة لم تُدخل بياناتها البنكية بعد.' });
     if (store.lahza_subaccount) return res.status(409).json({ error: `الحساب الفرعي موجود مسبقاً: ${store.lahza_subaccount}` });
 
-    const data = await createSubaccount({
-      businessName: store.name,
-      bankCode: store.bank_code,
-      accountNumber: store.bank_iban.replace(/\s/g, ''),
-      percentageCharge: 100 - feePercent,
-    });
+    let data;
+    try {
+      data = await createSubaccount({
+        businessName: store.name,
+        bankCode: store.bank_code,
+        accountNumber: store.bank_iban.replace(/\s/g, ''),
+        percentageCharge: 100 - feePercent,
+      });
+    } catch (lahzaErr) {
+      return res.status(422).json({ error: `Lahza رفضت الطلب: ${lahzaErr.message}` });
+    }
 
     const code = data.data?.subaccount_code || '';
-    if (!code) return res.status(502).json({ error: 'Lahza لم تُعِد رمز حساب فرعي.' });
+    if (!code) return res.status(422).json({ error: 'Lahza لم تُعِد رمز حساب فرعي.' });
 
     await query(
       `UPDATE stores SET lahza_subaccount = $1, platform_fee_percent = $2, payout_status = 'active', updated_at = now() WHERE id = $3`,

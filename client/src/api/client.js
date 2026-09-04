@@ -109,7 +109,7 @@ export function getErrorMessage(err, fallback = 'حدث خطأ، حاول مجد
       (typeof navigator !== 'undefined' && navigator.onLine === false));
   // الخادمُ واقفٌ (تحقّقنا بجلب ملفٍّ من أصل الموقع نفسه) → لا نتّهم شبكتَها
   if (isServerDown()) return 'خدمة الموقع متوقّفة مؤقّتاً. اتّصالُكِ سليم — أعيدي المحاولة بعد قليل.';
-  if (err?.response?.status >= 500) return 'الخادم لا يستجيب مؤقّتاً. أعيدي المحاولة بعد لحظات.';
+  if (err?.response?.status >= 500) return err?.response?.data?.error || 'الخادم لا يستجيب مؤقّتاً. أعيدي المحاولة بعد لحظات.';
   if (noNetwork) return 'فقدت الاتصال بالشبكة. تحقّق من اتصالك بالإنترنت وحاول مجدداً.';
   if (err?.code === 'ECONNABORTED') return 'الخادم يستغرق وقتاً أطول من المعتاد. حاول مجدداً بعد لحظات.';
   return err?.response?.data?.error || fallback;

@@ -1156,6 +1156,16 @@
       },
       "previewImg": "Preview image",
       "previewImgTip": "Screenshot your store on your phone and upload it. Leave empty to keep the built-in one."
+    },
+    "payouts": {
+      "title": "Payouts",
+      "hint": "Activate the sub-account so the Visa button shows for customers.",
+      "pending": "Pending activation ({{count}})",
+      "pendingDesc": "Bank details entered — waiting for sub-account creation.",
+      "active": "Active ({{count}})",
+      "activeDesc": "Visa button is live and payments reach their bank.",
+      "noBank": "No bank details yet ({{count}})",
+      "empty": "No stores yet."
     }
   },
   "finance": {
