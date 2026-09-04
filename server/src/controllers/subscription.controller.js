@@ -1243,7 +1243,7 @@ export async function autoCreateSubaccount(req, res, next) {
         const words = name.split(/[\s()]+/).filter(Boolean);
         return words.some((w) => w.length > 3 && bn.includes(w));
       });
-      if (match) lahzaBankCode = match.code || match.id || '';
+      if (match) lahzaBankCode = String(match.code || match.bank_code || match.id || '');
     } catch { /* نتابع بكود المتجر لو فشل الجلب */ }
 
     if (!lahzaBankCode) {
@@ -1261,7 +1261,7 @@ export async function autoCreateSubaccount(req, res, next) {
         percentageCharge: 100 - feePercent,
       });
     } catch (lahzaErr) {
-      return res.status(422).json({ error: `Lahza رفضت الطلب: ${lahzaErr.message}` });
+      return res.status(422).json({ error: `Lahza رفضت الطلب (كود البنك: ${lahzaBankCode}): ${lahzaErr.message}` });
     }
 
     const code = data.data?.subaccount_code || '';

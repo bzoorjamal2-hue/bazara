@@ -64,6 +64,7 @@ export function createSubaccount({ businessName, bankCode, accountNumber, percen
     method: 'POST',
     body: JSON.stringify({
       business_name: businessName,
+      settlement_bank: bankCode,
       bank_code: bankCode,
       account_number: accountNumber,
       percentage_charge: percentageCharge ?? 95,
