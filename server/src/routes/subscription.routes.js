@@ -11,6 +11,7 @@ import {
   listPayoutRequests,
   setPayoutEntity,
   autoCreateSubaccount,
+  getLahzaBanks,
   getSettings,
   updateSettings,
   redeemCode,
@@ -90,5 +91,6 @@ router.post('/requests/:id/reject', requireAuth, requireAdmin, idParamRule, hand
 router.get('/payouts', requireAuth, requireAdmin, listPayoutRequests);
 router.post('/payouts/:id/entity', requireAuth, requireAdmin, idParamRule, handleValidation, setPayoutEntity);
 router.post('/payouts/:id/auto-create', requireAuth, requireAdmin, idParamRule, handleValidation, autoCreateSubaccount);
+router.get('/payouts/lahza-banks', requireAuth, requireAdmin, getLahzaBanks);
 
 export default router;

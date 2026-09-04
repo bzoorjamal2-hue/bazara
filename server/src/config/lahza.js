@@ -71,6 +71,11 @@ export function createSubaccount({ businessName, bankCode, accountNumber, percen
   });
 }
 
+// قائمة بنوك Lahza — لربط كود البنك الداخلي بكود Lahza تلقائياً
+export function listBanks() {
+  return lahzaFetch('/bank', { method: 'GET' });
+}
+
 // التحقق من معاملة عبر المرجع
 export function verifyTransaction(reference) {
   return lahzaFetch(`/transaction/verify/${encodeURIComponent(reference)}`, { method: 'GET' });

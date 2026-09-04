@@ -7,7 +7,7 @@ import { clearPublicCache } from '../middleware/cache.js';
 import { logAdmin } from '../utils/adminLog.js';
 import { notifyStoreOwner } from '../utils/notify.js';
 import { isPlatformPaytabsConfigured, createPlatformPayment, queryPlatformTransaction, isPaymentSuccess } from '../config/paytabs.js';
-import { createSubaccount, isLahzaConfigured } from '../config/lahza.js';
+import { createSubaccount, isLahzaConfigured, listBanks } from '../config/lahza.js';
 
 const PLANS = { monthly: true, yearly: true };
 // أسعارُ الاشتراكِ بالشيكل — حسابُ PayTabs يقبضُ ILS لا USD.
@@ -1224,14 +1224,39 @@ export async function autoCreateSubaccount(req, res, next) {
     );
     const store = r.rows[0];
     if (!store) return res.status(404).json({ error: 'المتجر غير موجود.' });
-    if (!store.bank_code || !store.bank_iban) return res.status(400).json({ error: 'التاجرة لم تُدخل بياناتها البنكية بعد.' });
+    if (!store.bank_iban) return res.status(400).json({ error: 'التاجرة لم تُدخل بياناتها البنكية بعد.' });
     if (store.lahza_subaccount) return res.status(409).json({ error: `الحساب الفرعي موجود مسبقاً: ${store.lahza_subaccount}` });
+
+    // نجلب قائمة بنوك Lahza ونبحث عن البنك بالسويفت أو الاسم
+    let lahzaBankCode = '';
+    try {
+      const banks = await listBanks();
+      const list = banks.data || [];
+      const swift = (store.bank_swift || '').toLowerCase();
+      const name = (store.bank_name || '').toLowerCase();
+      const match = list.find((b) => {
+        const bn = (b.name || '').toLowerCase();
+        const bs = (b.slug || '').toLowerCase();
+        if (swift && (bn.includes(swift) || bs.includes(swift))) return true;
+        if (name && (bn.includes(name) || name.includes(bn))) return true;
+        // Arab Bank → arab
+        const words = name.split(/[\s()]+/).filter(Boolean);
+        return words.some((w) => w.length > 3 && bn.includes(w));
+      });
+      if (match) lahzaBankCode = match.code || match.id || '';
+    } catch { /* نتابع بكود المتجر لو فشل الجلب */ }
+
+    if (!lahzaBankCode) {
+      return res.status(422).json({
+        error: `بنك "${store.bank_name || store.bank_code}" غير موجود بقائمة Lahza. استخدم «إدخال يدوي» بعد إنشائه من لوحة Lahza.`,
+      });
+    }
 
     let data;
     try {
       data = await createSubaccount({
         businessName: store.name,
-        bankCode: store.bank_code,
+        bankCode: lahzaBankCode,
         accountNumber: store.bank_iban.replace(/\s/g, ''),
         percentageCharge: 100 - feePercent,
       });
@@ -1257,6 +1282,17 @@ export async function autoCreateSubaccount(req, res, next) {
 
     await logAdmin(req.user, 'payout_auto_create', `${store.name}: ${code} fee=${feePercent}%`);
     res.json({ ok: true, subaccount: code, status: 'active' });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// قائمة البنوك المدعومة عند Lahza — يعرضها المدير ليعرف أي بنك يدعمه الإنشاء التلقائي
+export async function getLahzaBanks(_req, res, next) {
+  try {
+    if (!isLahzaConfigured()) return res.status(503).json({ error: 'Lahza غير مهيّأة.' });
+    const data = await listBanks();
+    res.json({ banks: data.data || [] });
   } catch (err) {
     next(err);
   }
