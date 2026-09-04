@@ -10,6 +10,7 @@ import {
   rejectRequest,
   listPayoutRequests,
   setPayoutEntity,
+  autoCreateSubaccount,
   getSettings,
   updateSettings,
   redeemCode,
@@ -88,5 +89,6 @@ router.post('/requests/:id/reject', requireAuth, requireAdmin, idParamRule, hand
 // تسجيلُ التاجراتِ مستفيداتٍ لاستلامِ مدفوعاتِ البطاقة
 router.get('/payouts', requireAuth, requireAdmin, listPayoutRequests);
 router.post('/payouts/:id/entity', requireAuth, requireAdmin, idParamRule, handleValidation, setPayoutEntity);
+router.post('/payouts/:id/auto-create', requireAuth, requireAdmin, idParamRule, handleValidation, autoCreateSubaccount);
 
 export default router;

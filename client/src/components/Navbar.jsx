@@ -206,6 +206,7 @@ export default function Navbar() {
           { key: 'subscribers', label: t('admin.subscribersNav'), Icon: UsersIcon },
           { key: 'admin', label: t('admin.nav'), Icon: ShieldCheckIcon },
           { key: 'adminLog', label: t('admin.logTitle'), Icon: ShieldCheckIcon },
+          { key: 'payouts', label: 'المدفوعات', Icon: CashIcon },
         ] },
         { id: 'content', title: t('dashboard.menu.content'), items: [
           { key: 'landing', label: t('admin.land.title'), Icon: HomeIcon },

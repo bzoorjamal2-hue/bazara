@@ -55,6 +55,22 @@ export function initializeTransaction({
   });
 }
 
+/**
+ * إنشاء حساب فرعي (sub-account) لتاجرة — يُنشئه المدير بضغطة بدل تسجيله يدوياً.
+ * API متوافق مع Paystack: POST /subaccount
+ */
+export function createSubaccount({ businessName, bankCode, accountNumber, percentageCharge }) {
+  return lahzaFetch('/subaccount', {
+    method: 'POST',
+    body: JSON.stringify({
+      business_name: businessName,
+      bank_code: bankCode,
+      account_number: accountNumber,
+      percentage_charge: percentageCharge ?? 95,
+    }),
+  });
+}
+
 // التحقق من معاملة عبر المرجع
 export function verifyTransaction(reference) {
   return lahzaFetch(`/transaction/verify/${encodeURIComponent(reference)}`, { method: 'GET' });

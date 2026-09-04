@@ -33,6 +33,7 @@ import NewsletterManager from './dashboard/NewsletterManager.jsx';
 import InstagramInbox from './dashboard/InstagramInbox.jsx';
 import CampaignManager from './dashboard/CampaignManager.jsx';
 import FinanceManager from './dashboard/FinanceManager.jsx';
+import PayoutsManager from './dashboard/PayoutsManager.jsx';
 
 // أقسام البائع (المشترك العادي) — الاستخدام اليومي أولاً (الطلبات/المنتجات)
 const SECTIONS = [
@@ -56,6 +57,7 @@ const ADMIN_SECTIONS = [
   { key: 'subscribers', Icon: UsersIcon },
   { key: 'admin', Icon: ShieldIcon },
   { key: 'adminLog', Icon: ShieldIcon },
+  { key: 'payouts', Icon: CashIcon },
   { key: 'adminSettings', Icon: GearIcon },
   { key: 'landing', Icon: HomeIcon },
   { key: 'siteSliders', Icon: ImageIcon },
@@ -206,6 +208,7 @@ export default function Dashboard() {
         {section === 'subscribers' && isAdmin && <SubscribersManager />}
         {section === 'admin' && isAdmin && <AdminRequests />}
         {section === 'adminLog' && isAdmin && <AdminLog />}
+        {section === 'payouts' && isAdmin && <PayoutsManager />}
         {section === 'adminSettings' && isAdmin && <AdminSettings />}
         {section === 'landing' && isAdmin && <LandingEditor />}
         {section === 'siteSliders' && isAdmin && <SiteSliders />}
