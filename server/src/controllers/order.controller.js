@@ -189,11 +189,8 @@ export async function checkout(req, res, next) {
       [storeId]
     );
     const store = storeRow.rows[0];
-    if (!store?.card_payment_enabled) {
-      return res.status(503).json({ error: 'الدفع بالبطاقة غير مُفعّل في هذا المتجر.' });
-    }
-    const useLahza = Boolean(store.lahza_subaccount && isLahzaConfigured());
-    const usePaytabs = Boolean(store.paytabs_entity_id && isPlatformPaytabsConfigured());
+    const useLahza = Boolean(store?.lahza_subaccount && isLahzaConfigured());
+    const usePaytabs = Boolean(store?.paytabs_entity_id && isPlatformPaytabsConfigured());
     if (!useLahza && !usePaytabs) {
       return res.status(503).json({ error: 'الدفع بالبطاقة غير مُفعّل في هذا المتجر.' });
     }

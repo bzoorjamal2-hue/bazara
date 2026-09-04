@@ -387,7 +387,7 @@ export async function getStoreCheckout(req, res, next) {
       flashEndsAt: flashActive ? s.flash_ends_at : null,
       // زرُّ الفيزا لا يظهرُ إلّا إذا صارت التاجرةُ مسجّلةً فعلاً عند إحدى البوّابتين —
       // وإلّا لضغطته الزبونةُ فارتدَّ عليها خطأٌ لا ذنبَ لها فيه
-      cardPaymentEnabled: Boolean(s.card_payment_enabled && (s.lahza_subaccount || s.paytabs_entity_id)),
+      cardPaymentEnabled: Boolean(s.lahza_subaccount || s.paytabs_entity_id),
     });
   } catch (err) {
     next(err);
