@@ -17,6 +17,7 @@ import {
   sendMessage,
   sendAttachment,
   getSenderProfile,
+  mirrorRemote,
 } from '../config/instagram.js';
 
 // سطرُ «آخر رسالة» في قائمة المحادثات يخلو من النصّ حين تكون الرسالةُ صورةً أو
@@ -130,8 +131,10 @@ async function processWebhook(body) {
       // النوعُ يقرّرُ كيف يُعرَض المرفق: صورةٌ تُعرَضُ صورةً وفيديو يُشغَّل. بلا حفظِه
       // يصيرُ كلُّ شيءٍ رابطاً مكتوباً عليه «مرفق».
       const att = msg.attachments?.[0] || null;
-      const attachment = att?.payload?.url || '';
       const attType = att?.type || '';
+      // ننسخُ المرفقَ عندنا فوراً: رابطُ Meta ينتهي بعد أيّام فتصيرُ محادثاتُ التاجرةِ
+      // القديمةُ مربّعاتٍ مكسورة. النسخُ مرّةً واحدةً هنا يجعلُها تبقى.
+      const attachment = att?.payload?.url ? await mirrorRemote(att.payload.url, 'ig/messages') : '';
       const preview = text || (attachment ? ATTACHMENT_LABEL[attType] || '📎 مرفق' : '');
 
       // upsert المحادثة (صف واحد لكل زبون بهذا المتجر) — نرفع غير المقروء للوارد فقط
@@ -162,10 +165,11 @@ async function processWebhook(body) {
         if (token) {
           const prof = await getSenderProfile(token, customerId);
           if (prof.name || prof.username || prof.avatar) {
+            const avatar = prof.avatar ? await mirrorRemote(prof.avatar, 'ig/avatars') : '';
             await query(
               `UPDATE ig_conversations SET customer_name = $2, customer_username = $3,
                  customer_avatar = $4 WHERE id = $1`,
-              [convId, prof.name, prof.username, prof.avatar]
+              [convId, prof.name, prof.username, avatar]
             );
           }
         }

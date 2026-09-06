@@ -243,7 +243,11 @@ function guessKind(url = '') {
 function Attachment({ url, type }) {
   const { t } = useTranslation();
   const [broken, setBroken] = useState(false);
-  const kind = type === 'ig_reel' ? 'video' : (type || guessKind(url));
+  // الصفوفُ القديمةُ بلا نوع، وروابطُ Meta بلا امتدادٍ يُستدَلُّ به — فالمجهولُ يُجرَّبُ
+  // صورةً أوّلاً، وإن سقط عُرِض رابطاً. أسوأُ ما يحدثُ محاولةُ تحميلٍ فاشلة.
+  const kind = type === 'ig_reel' ? 'video'
+    : (type === 'share' || type === 'story_mention') ? 'image'
+    : (type || guessKind(url) || 'image');
 
   if (!broken && kind === 'image') {
     return (

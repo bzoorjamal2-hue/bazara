@@ -146,14 +146,43 @@ export async function sendAttachment(pageToken, recipientId, url, type = 'image'
 }
 
 // اسم/معرّف الزبون من IGSID — لعرضه بصندوق الرسائل بدل رقم مجرّد.
+// حقلٌ واحدٌ غيرُ مدعومٍ يُسقطُ الطلبَ كلَّه عند Meta، وحقولُ الملفّ تختلفُ باختلافِ
+// الصلاحيّات الممنوحة — فلو سقط الطلبُ بالصورة أعدناه بالاسمِ وحدَه بدل أن نخسرَ
+// الاسمَ أيضاً ويبقى الزبونُ رقماً مجرّداً.
 export async function getSenderProfile(pageToken, igsid) {
+  const ask = (fields) => graph(`/${igsid}`, { token: pageToken, params: { fields } });
+  let data = null;
   try {
-    const data = await graph(`/${igsid}`, {
-      token: pageToken,
-      params: { fields: 'name,username,profile_pic' },
-    });
-    return { name: data.name || '', username: data.username || '', avatar: data.profile_pic || '' };
+    data = await ask('name,username,profile_pic');
   } catch {
-    return { name: '', username: '', avatar: '' };
+    try {
+      data = await ask('name,username');
+    } catch {
+      return { name: '', username: '', avatar: '' };
+    }
+  }
+  return { name: data.name || '', username: data.username || '', avatar: data.profile_pic || '' };
+}
+
+// روابطُ Meta للمرفقاتِ وصورِ البروفايل موقّعةٌ وتنتهي صلاحيّتُها بعد أيّام، فما يُحفَظُ
+// منها في قاعدتنا يصيرُ مربّعاً مكسوراً بعد حين. Cloudinary تقبلُ رابطاً بدل ملفّ
+// وتجلبُه بنفسها، فننسخُ الصورةَ عندنا مرّةً واحدةً ونحفظُ رابطَنا الدائم.
+// المفتاحُ عامٌّ (رفعٌ بلا توقيع) وهو نفسُه الذي في واجهةِ المتجر.
+const CLD_CLOUD = process.env.CLOUDINARY_CLOUD || 'dkzrnu4cs';
+const CLD_PRESET = process.env.CLOUDINARY_PRESET || 'bazara_unsigned';
+
+export async function mirrorRemote(url, folder = 'ig') {
+  if (!url || !CLD_CLOUD || !CLD_PRESET) return url;
+  try {
+    const form = new URLSearchParams({ file: url, upload_preset: CLD_PRESET, folder });
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLD_CLOUD}/auto/upload`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: form,
+    });
+    const data = await res.json().catch(() => ({}));
+    return data.secure_url || url; // فشلُ النسخِ لا يُضيّعُ الرسالة: نُبقي رابطَ Meta
+  } catch {
+    return url;
   }
 }
