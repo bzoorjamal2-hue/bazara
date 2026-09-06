@@ -66,6 +66,9 @@ const Track = lazy(() => retryImport(() => import('./pages/Track.jsx')));
 const PaymentCallback = lazy(() => retryImport(() => import('./pages/PaymentCallback.jsx')));
 const PrivacyPolicy = lazy(() => retryImport(() => import('./pages/PrivacyPolicy.jsx')));
 const NotFound = lazy(() => retryImport(() => import('./pages/NotFound.jsx')));
+// شاشةُ محادثةِ إنستغرام: صفحةٌ قائمةٌ بذاتها تغطّي الشاشةَ كما في تطبيقاتِ المحادثة،
+// لا لوحٌ ينفتحُ داخلَ تبويبِ اللوحة.
+const InstagramChat = lazy(() => retryImport(() => import('./pages/dashboard/InstagramChat.jsx')));
 // معاينة تطويرية لنموذج المنتج (DEV فقط — يزيلها البناء نهائياً)
 const DevProductForm = lazy(() => retryImport(() => import('./pages/dashboard/ProductForm.jsx')).then((m) => ({
     default: () => <m.default initial={null} onClose={() => {}} onSaved={() => {}} />,
@@ -240,6 +243,14 @@ function AnimatedRoutes() {
             element={
               <RequireSubscription>
                 <Dashboard />
+              </RequireSubscription>
+            }
+          />
+          <Route
+            path="/dashboard/instagram/:id"
+            element={
+              <RequireSubscription>
+                <InstagramChat />
               </RequireSubscription>
             }
           />
