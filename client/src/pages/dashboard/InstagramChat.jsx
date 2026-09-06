@@ -193,7 +193,32 @@ export default function InstagramChat() {
     if (data?.messages) firstScroll.current = false;
   }, [data?.messages?.length]);
 
-  const items = useMemo(() => buildItems(data?.messages || []), [data?.messages]);
+  // لا نرسمُ المحادثةَ كلَّها: مئتا رسالةٍ تعني مئتَي عنصرٍ في الصفحة، وهاتفٌ متوسّطٌ
+  // يتقطّعُ سحبُه تحتها. نرسمُ الأحدثَ فقط ونُنزلُ الأقدمَ بطلبٍ صريح — كما تفعلُ
+  // تطبيقاتُ المحادثة. والزرُّ صريحٌ لا تحميلٌ عند بلوغِ الأعلى، لأنّ الإدراجَ في
+  // الأعلى أثناءَ السحبِ يقفزُ بالمكانِ تحت الإصبع.
+  const [limit, setLimit] = useState(40);
+  const all = data?.messages || [];
+  const shown = limit >= all.length ? all : all.slice(all.length - limit);
+  const hasOlder = all.length > shown.length;
+  const items = useMemo(() => buildItems(shown), [shown]);
+
+  // إنزالُ الأقدمِ يُبقي ما تقرؤه في مكانِه: نقيسُ الطولَ قبلَ الزيادةِ وبعدَها ونعوّضُ
+  // الفرق، وإلّا قفزت الشاشةُ إلى أوّلِ المحادثةِ فجأة.
+  const loadOlder = () => {
+    const el = scrollRef.current;
+    const before = el ? el.scrollHeight - el.scrollTop : 0;
+    setLimit((n) => n + 60);
+    requestAnimationFrame(() => {
+      if (el) el.scrollTop = el.scrollHeight - before;
+    });
+  };
+
+  // الحركةُ للرسالةِ الجديدةِ وحدَها: تشغيلُ مئةِ حركةٍ دفعةً واحدةً عند الفتحِ ثقيلٌ
+  // بلا فائدة — فلا أحدَ ينتظرُ ظهورَ رسالةٍ عمرُها يومان.
+  const mounted = useRef(null);
+  if (mounted.current === null && all.length) mounted.current = new Set(all.map((m) => m.id));
+  const isNew = (mid) => Boolean(mounted.current && !mounted.current.has(mid));
 
   const pick = (file) => {
     if (!file) return;
@@ -299,7 +324,13 @@ export default function InstagramChat() {
         ) : items.length === 0 ? (
           <p className="bz-chat-muted my-auto text-center text-sm">{t('dashboard.instagram.noMessages')}</p>
         ) : (
-          items.map((it) => {
+          <>
+          {hasOlder && (
+            <button onClick={loadOlder} className="bz-chat-day mx-auto mb-3 rounded-full px-4 py-1.5 text-[11px] font-semibold">
+              {t('dashboard.instagram.older')}
+            </button>
+          )}
+          {items.map((it) => {
             if (it.type === 'day') {
               return (
                 <div key={it.key} className="my-3 flex justify-center">
@@ -312,7 +343,7 @@ export default function InstagramChat() {
             const media = Boolean(m.attachment_url);
             return (
               <div key={it.key} className={`flex items-end gap-1.5 ${out ? 'justify-start' : 'justify-end'} ${it.last ? 'mb-2.5' : 'mb-[3px]'}`}>
-                <div className={`bz-bubble max-w-[76%] ${out ? 'bz-chat-out' : 'bz-chat-in'} ${media ? 'overflow-hidden p-1' : 'px-3 py-1.5'} rounded-[18px]`}>
+                <div className={`max-w-[76%] ${isNew(m.id) ? 'bz-bubble' : ''} ${out ? 'bz-chat-out' : 'bz-chat-in'} ${media ? 'overflow-hidden p-1' : 'px-3 py-1.5'} rounded-[18px]`}>
                   {media && <Attachment url={m.attachment_url} type={m.attachment_type} onOpen={setViewing} />}
                   {m.text && <p className={`whitespace-pre-wrap break-words text-[14px] leading-[1.45] ${media ? 'px-2 pb-1 pt-1.5' : ''}`}>{m.text}</p>}
                   {it.last && (
@@ -328,7 +359,8 @@ export default function InstagramChat() {
                   : <span className="h-6 w-6 shrink-0" />)}
               </div>
             );
-          })
+          })}
+          </>
         )}
       </div>
 

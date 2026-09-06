@@ -123,7 +123,8 @@
       "manualTitle": "Log an order from a chat",
       "manualNote": "Automatic Instagram message sync is under Meta review. Until it's approved, log your chat orders (Instagram/WhatsApp) manually here — they go straight into your Orders and ship like any order.",
       "newOrder": "New order",
-      "orderCreated": "Order created and added to your Orders"
+      "orderCreated": "Order created and added to your Orders",
+      "older": "Show older messages"
     },
     "opost": {
       "title": "Optimus courier",
