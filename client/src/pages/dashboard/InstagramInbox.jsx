@@ -208,7 +208,7 @@ export function Avatar({ url, name, className = 'h-11 w-11' }) {
   const [broken, setBroken] = useState(false);
   const letter = (name || '؟').trim().slice(0, 1).toUpperCase();
   return (
-    <span className={`relative flex ${className} shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/5 text-gold-200 ring-1 ring-white/10`}>
+    <span className={`bz-avatar relative flex ${className} shrink-0 items-center justify-center overflow-hidden rounded-full font-semibold`}>
       {letter}
       {url && !broken && (
         <img src={url} alt="" loading="lazy" onError={() => setBroken(true)} className="absolute inset-0 h-full w-full object-cover" />

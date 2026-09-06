@@ -4227,3 +4227,48 @@ html.dark .theme-pub .bz-srv-btn { background: #e4d8c5; color: #2b1d12; }
    شاشةُ الرسائل تأخذُ الشاشةَ وحدَها. الصنفُ يوضَع على body لأنّ الشريطَ يسكنُ في
    Layout بعيداً عن المحادثة، فلا يصلُه تمريرُ خاصّية. */
 body.bz-chat-open .bz-tabbar { display: none; }
+
+/* ═════════ ألوانُ شاشةِ محادثةِ إنستغرام — بالوضعين ═════════
+   الشاشةُ تغطّي كلَّ شيءٍ فلا يصلُها لونُ الصفحةِ من تحتها، ولو تُركت بألوانٍ داكنةٍ
+   ثابتةٍ بقيت ليليّةً في وضعِ النهار. ولأنّها قد تُرسَمُ خارجَ `.theme-pub` يُكتَفى
+   بـhtml.dark وحدَه شرطاً لليل. */
+.bz-chat { background: #F4EDE2; color: #3f2e22; }
+html.dark .bz-chat { background: #131009; color: #f0e6d6; }
+
+/* الرأسُ وصندوقُ الكتابة: سطحٌ يعلو الأرضيّةَ قليلاً ليُقرأَ حدُّهما */
+.bz-chat-bar { background: #ffffff; border-color: rgba(94, 70, 54, 0.14); }
+html.dark .bz-chat-bar { background: #1b130e; border-color: rgba(255, 255, 255, 0.10); }
+
+/* الفقاعتان: رسالةُ الزبون سطحٌ محايد، وردُّ المتجرِ مملوءٌ بلونِ الهويّة — والفرقُ
+   بينهما يجبُ أن يُرى من نظرة، فقد كانتا بنّيّتين متقاربتين لا تكادان تفترقان. */
+.bz-chat-in { background: #ffffff; color: #3f2e22; border: 1px solid rgba(94, 70, 54, 0.10); }
+html.dark .bz-chat-in { background: rgba(255, 255, 255, 0.07); color: #f0e6d6; border-color: rgba(255, 255, 255, 0.09); }
+.bz-chat-out { background: #5e4636; color: #F4EDE2; border: 1px solid transparent; }
+html.dark .bz-chat-out { background: #e4d8c5; color: #2b1d12; }
+
+/* الوقتُ تحت الرسالة: باهتٌ بقدرِ ما يُقرأُ على أرضيّةِ فقاعتِه هو لا على الصفحة */
+.bz-chat-time { color: rgba(63, 46, 34, 0.5); }
+html.dark .bz-chat-time { color: rgba(240, 230, 214, 0.45); }
+.bz-chat-out .bz-chat-time { color: rgba(244, 237, 226, 0.65); }
+html.dark .bz-chat-out .bz-chat-time { color: rgba(43, 29, 18, 0.55); }
+
+.bz-chat-muted { color: rgba(63, 46, 34, 0.6); }
+html.dark .bz-chat-muted { color: rgba(240, 230, 214, 0.5); }
+
+/* أزرارُ الرأسِ وصندوقِ الكتابة (رجوع · معرض · كاميرا · حذف) */
+.bz-chat-icon { color: #5e4636; background: transparent; }
+.bz-chat-icon:hover { background: rgba(94, 70, 54, 0.10); }
+html.dark .bz-chat-icon { color: #e4d8c5; }
+html.dark .bz-chat-icon:hover { background: rgba(255, 255, 255, 0.08); }
+
+/* دائرةُ صورةِ الزبون — تُرى في قائمةِ المحادثات (بطاقةٌ بيضاءُ نهاراً) وفي رأسِ
+   المحادثة، فلا تصلحُ لها ألوانُ الخلفيّةِ الداكنةِ وحدَها. */
+.bz-avatar { background: rgba(94, 70, 54, 0.10); color: #5e4636; border: 1px solid rgba(94, 70, 54, 0.14); }
+html.dark .bz-avatar { background: rgba(255, 255, 255, 0.06); color: #e4d8c5; border-color: rgba(255, 255, 255, 0.10); }
+
+/* شارةُ «تحوّلت لطلب» وصندوقُ الخطأ داخلَ المحادثة — Tailwind هنا على media لا class،
+   فلا تنفعُ بادئةُ dark: ويجبُ أن يكون اللونان صريحين. */
+.bz-chat-ok { background: rgba(4, 120, 87, 0.12); color: #047857; border: 1px solid rgba(4, 120, 87, 0.28); }
+html.dark .bz-chat-ok { background: rgba(4, 120, 87, 0.22); color: #6ee7b7; border-color: rgba(110, 231, 183, 0.3); }
+.bz-chat-err { background: rgba(185, 28, 28, 0.10); color: #b91c1c; border: 1px solid rgba(185, 28, 28, 0.28); }
+html.dark .bz-chat-err { background: rgba(239, 68, 68, 0.12); color: #fca5a5; border-color: rgba(239, 68, 68, 0.3); }

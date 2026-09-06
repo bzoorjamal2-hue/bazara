@@ -123,28 +123,28 @@ export default function InstagramChat() {
   const converted = Boolean(c.order_id);
 
   return (
-    <div ref={rootRef} className="dash-drawer fixed inset-0 z-[95] flex flex-col text-cream">
+    <div ref={rootRef} className="bz-chat fixed inset-0 z-[95] flex flex-col">
       {/* رأسُ المحادثة */}
-      <header className="flex shrink-0 items-center gap-2 border-b border-white/10 px-2 pb-2.5 pt-[max(env(safe-area-inset-top),10px)]">
-        <button onClick={() => navigate('/dashboard?tab=instagram')} className="rounded-lg p-2 text-cream/80 transition hover:bg-white/10" aria-label={t('common.back')}>
+      <header className="bz-chat-bar flex shrink-0 items-center gap-2 border-b px-2 pb-2.5 pt-[max(env(safe-area-inset-top),10px)]">
+        <button onClick={() => navigate('/dashboard?tab=instagram')} className="bz-chat-icon rounded-lg p-2 transition" aria-label={t('common.back')}>
           <BackIcon className="h-5 w-5" />
         </button>
         <Avatar url={c.customer_avatar} name={name} className="h-9 w-9 text-xs" />
         <span className="min-w-0 flex-1">
           <span className="block truncate font-semibold">{name}</span>
-          {c.customer_username && <span dir="ltr" className="block truncate text-[11px] text-cream/50">@{c.customer_username}</span>}
+          {c.customer_username && <span dir="ltr" className="bz-chat-muted block truncate text-[11px]">@{c.customer_username}</span>}
         </span>
         {converted ? (
-          <span className="shrink-0 rounded-full bg-emerald-500/20 px-2.5 py-1 text-[11px] font-bold text-emerald-200">{t('dashboard.instagram.hasOrder')}</span>
+          <span className="bz-chat-ok shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold">{t('dashboard.instagram.hasOrder')}</span>
         ) : (
-          <button onClick={() => setShowConvert((v) => !v)} className="inline-flex shrink-0 items-center gap-1 rounded-xl bg-gold-400 px-3 py-1.5 text-xs font-bold text-wine-dark transition hover:bg-gold-300">
+          <button onClick={() => setShowConvert((v) => !v)} className="btn-primary shrink-0 !gap-1 !px-3 !py-1.5 text-xs">
             <BagIcon className="h-4 w-4" /> {showConvert ? t('common.cancel') : t('dashboard.instagram.toOrder')}
           </button>
         )}
       </header>
 
       {showConvert && !converted && (
-        <div className="max-h-[60%] shrink-0 overflow-y-auto border-b border-white/10">
+        <div className="bz-chat-bar max-h-[60%] shrink-0 overflow-y-auto border-b">
           <ConvertForm
             convId={id}
             defaultName={c.customer_name || ''}
@@ -158,49 +158,47 @@ export default function InstagramChat() {
         {!data ? (
           <Spinner />
         ) : data.messages.length === 0 ? (
-          <p className="my-auto text-center text-sm text-cream/50">{t('dashboard.instagram.noMessages')}</p>
+          <p className="bz-chat-muted my-auto text-center text-sm">{t('dashboard.instagram.noMessages')}</p>
         ) : (
           data.messages.map((m) => (
             <div key={m.id} className={`flex ${m.direction === 'out' ? 'justify-start' : 'justify-end'}`}>
-              <div className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm ${
-                m.direction === 'out' ? 'bg-gold-400/20 text-gold-50 ring-1 ring-gold-400/25' : 'bg-white/10 text-cream ring-1 ring-white/10'
-              }`}>
+              <div className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm shadow-sm ${m.direction === 'out' ? 'bz-chat-out' : 'bz-chat-in'}`}>
                 {m.attachment_url ? <Attachment url={m.attachment_url} type={m.attachment_type} /> : null}
                 {m.text && <p className="whitespace-pre-wrap break-words">{m.text}</p>}
-                <span className="mt-0.5 block text-[10px] text-cream/40">{new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                <span className="bz-chat-time mt-0.5 block text-[10px]">{new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
               </div>
             </div>
           ))
         )}
       </div>
 
-      {error && <div className="mx-3 mb-2 shrink-0 rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs text-red-200">{error}</div>}
+      {error && <div className="bz-chat-err mx-3 mb-2 shrink-0 rounded-xl px-3 py-2 text-xs">{error}</div>}
 
       {/* معاينةُ الصورةِ قبل الإرسال — لا تُرسَلُ صورةٌ لم يرَها المُرسِل */}
       {photo && (
-        <div className="mx-3 mb-2 flex shrink-0 items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-2">
+        <div className="bz-chat-in mx-3 mb-2 flex shrink-0 items-center gap-3 rounded-xl p-2">
           <img src={photo.preview} alt="" className="h-14 w-14 rounded-lg object-cover" />
-          <span className="min-w-0 flex-1 text-xs text-cream/60">
+          <span className="bz-chat-muted min-w-0 flex-1 text-xs">
             {sending && progress > 0 ? `${t('dashboard.instagram.uploading')} ${progress}%` : t('dashboard.instagram.photoReady')}
           </span>
-          <button onClick={dropPhoto} disabled={sending} className="rounded-lg p-1.5 text-cream/60 transition hover:bg-white/10 hover:text-red-300 disabled:opacity-40" aria-label={t('common.delete')}>
+          <button onClick={dropPhoto} disabled={sending} className="bz-chat-icon rounded-lg p-1.5 transition hover:text-red-400 disabled:opacity-40" aria-label={t('common.delete')}>
             <TrashIcon className="h-4 w-4" />
           </button>
         </div>
       )}
 
       {/* صندوقُ الكتابة */}
-      <div className="flex shrink-0 items-end gap-2 border-t border-white/10 px-3 pb-[max(env(safe-area-inset-bottom),12px)] pt-3">
+      <div className="bz-chat-bar flex shrink-0 items-end gap-2 border-t px-3 pb-[max(env(safe-area-inset-bottom),12px)] pt-3">
         {cloudinaryEnabled && (
           <>
             {/* زرّان لا واحد: المعرضُ يفتحُ الصورَ المحفوظة، والكاميرا تفتحُ العدسةَ
                 مباشرةً على الجوّال (capture) — وهو ما يتوقّعه من اعتاد إنستغرام. */}
-            <label className="btn-ghost !px-2.5 !py-2.5 shrink-0 cursor-pointer" title={t('dashboard.instagram.attachPhoto')}>
+            <label className="bz-chat-icon shrink-0 cursor-pointer rounded-xl p-2.5 transition" title={t('dashboard.instagram.attachPhoto')}>
               <ImageIcon className="h-5 w-5" />
               <input type="file" accept="image/*" className="hidden" disabled={sending}
                 onChange={(e) => { pick(e.target.files?.[0]); e.target.value = ''; }} />
             </label>
-            <label className="btn-ghost !px-2.5 !py-2.5 shrink-0 cursor-pointer sm:hidden" title={t('dashboard.instagram.takePhoto')}>
+            <label className="bz-chat-icon shrink-0 cursor-pointer rounded-xl p-2.5 transition sm:hidden" title={t('dashboard.instagram.takePhoto')}>
               <CameraIcon className="h-5 w-5" />
               <input type="file" accept="image/*" capture="environment" className="hidden" disabled={sending}
                 onChange={(e) => { pick(e.target.files?.[0]); e.target.value = ''; }} />
