@@ -13,6 +13,9 @@ export function igRedirectUri() {
 const SCOPES = [
   'instagram_basic',
   'instagram_manage_messages',
+  // اشتراكُ الصفحة بحقلَي messages وmessaging_postbacks يرفضُه Meta بـ(#200) بدونها،
+  // فيمضي الربطُ ناجحاً ولا يصلُ حدثٌ واحد — وهو عطلٌ صامتٌ لا يظهرُ إلّا في السجلّ.
+  'pages_messaging',
   'pages_show_list',
   'pages_read_engagement',
   'business_management',
