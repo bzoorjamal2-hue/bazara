@@ -23,9 +23,21 @@ export default function PullToRefresh() {
 
   useEffect(() => {
     if (!isStandalone()) return undefined;
-    // قفل التمرير (نافذة/درج مفتوح) يجعل body ثابتاً position:fixed — عندها نعطّل
-    // سحب-التحديث كي لا ينطلق أثناء التمرير داخل المنبثقة فيغلقها بإعادة التحميل.
-    const isLocked = () => document.body.style.position === 'fixed';
+    // قفل التمرير (نافذة/درج/شاشة محادثة مفتوحة) — عندها نعطّل سحب-التحديث كي لا
+    // ينطلق أثناء التمرير داخل المنبثقة فيغلقها بإعادة التحميل.
+    //
+    // والأهمُّ أنّ الشاشةَ المقفولةَ لا تتمرّرُ أبداً، فـ`scrollY` صفرٌ دائماً — فكانت
+    // كلُّ لمسةٍ فيها تُركّبُ مستمعَ `touchmove` غيرَ السلبيّ. ووجودُه يمنعُ سفاري من
+    // تمريرِ الحاوياتِ على وحدةِ الرسم: عليه انتظارُ جافاسكربت مع كلِّ حركةِ إصبعٍ
+    // ليرى هل تُلغى. ولذلك كان السحبُ بإصبعٍ يتقطّعُ داخلَ المحادثةِ وحدَها، ويمضي
+    // بإصبعين أملسَ — لأنّ السحبَ بإصبعين لا يمرّ بهذا المسار.
+    //
+    // فلا نكتفي بـ`position: fixed` علامةً على القفل: `overflow: hidden` على body
+    // قفلٌ أيضاً، وهو ما تستعملُه شاشةُ المحادثة.
+    const isLocked = () => {
+      if (document.body.style.position === 'fixed') return true;
+      try { return getComputedStyle(document.body).overflowY === 'hidden'; } catch { return false; }
+    };
 
     const setPullBoth = (v) => { pullRef.current = v; setPull(v); };
 
@@ -53,8 +65,21 @@ export default function PullToRefresh() {
       window.removeEventListener('touchmove', onMove);
     };
 
+    // لمسةٌ بدأت داخلَ حاويةٍ تتمرّرُ بنفسها ليست سحبَ تحديثٍ أبداً — وتركيبُ المستمعِ
+    // غيرِ السلبيّ لها يُبطئُ تمريرَها بلا سبب. نصعدُ من موضعِ اللمسةِ نبحثُ عن حاويةٍ
+    // قابلةٍ للتمرير، مرّةً واحدةً عند بدايةِ الإيماءةِ لا مع كلِّ حركة.
+    const inScroller = (node) => {
+      for (let el = node; el && el !== document.body; el = el.parentElement) {
+        if (el.nodeType !== 1) continue;
+        const s = getComputedStyle(el);
+        if ((s.overflowY === 'auto' || s.overflowY === 'scroll') && el.scrollHeight > el.clientHeight) return true;
+      }
+      return false;
+    };
+
     const onStart = (e) => {
       if (window.scrollY > 0 || refreshingRef.current || isLocked()) { startY.current = null; return; }
+      if (inScroller(e.target)) { startY.current = null; return; }
       startY.current = e.touches[0].clientY;
       attachMove(); // فقط الآن (لمسة تبدأ من القمة) نراقب الحركة
     };
