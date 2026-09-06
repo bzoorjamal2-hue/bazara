@@ -6,9 +6,9 @@ import Select from '../../components/Select.jsx';
 import CitySearch from '../../components/CitySearch.jsx';
 import { sizeLabel } from '../../utils/sizes.js';
 import { isValidMobile, sanitizeMobileInput } from '../../utils/phone.js';
-import { InstagramIcon, BagIcon, BackIcon, CheckIcon, TrashIcon, PlusIcon } from '../../components/icons.jsx';
+import { InstagramIcon, BagIcon, BackIcon, CheckIcon, TrashIcon, PlusIcon, CameraIcon, ImageIcon } from '../../components/icons.jsx';
 import { startFbLogin, igRedirectUri } from '../../utils/fbSdk.js';
-import { cldThumb, cldVideoPoster } from '../../utils/cloudinary.js';
+import { cldThumb, cldVideoPoster, uploadToCloudinary, cloudinaryEnabled } from '../../utils/cloudinary.js';
 import { PageHead } from '../../components/FormField.jsx';
 
 // ننظّف رابط الصفحة من بارامترات العودة (code/state) بعد معالجتها
@@ -191,9 +191,7 @@ function Inbox({ username, onDisconnected }) {
               onClick={() => setOpenId(c.id)}
               className="glass flex w-full items-center gap-3 p-3 text-start transition hover:bg-white/5"
             >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/5 text-gold-200 ring-1 ring-white/10">
-                {(c.customer_name || c.customer_username || '؟').slice(0, 1).toUpperCase()}
-              </span>
+              <Avatar url={c.customer_avatar} name={c.customer_name || c.customer_username} />
               <span className="min-w-0 flex-1">
                 <span className="flex items-center gap-2">
                   <span className="truncate font-semibold text-stone-100">{c.customer_name || (c.customer_username ? `@${c.customer_username}` : t('dashboard.instagram.customer'))}</span>
@@ -213,6 +211,66 @@ function Inbox({ username, onDisconnected }) {
   );
 }
 
+// صورةُ الزبون كما هي عند إنستغرام. روابطُ Meta موقّعةٌ وتنتهي صلاحيّتُها، فالسقوطُ
+// إلى الحرفِ الأوّل ليس حالةً نادرةً بل الحالةُ المتوقّعةُ بعد أيّام — ولذلك لا تُعرَض
+// الصورةُ إلّا وخلفَها الحرفُ جاهز.
+function Avatar({ url, name, className = 'h-11 w-11' }) {
+  const [broken, setBroken] = useState(false);
+  const letter = (name || '؟').trim().slice(0, 1).toUpperCase();
+  return (
+    <span className={`relative flex ${className} shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/5 text-gold-200 ring-1 ring-white/10`}>
+      {letter}
+      {url && !broken && (
+        <img src={url} alt="" loading="lazy" onError={() => setBroken(true)} className="absolute inset-0 h-full w-full object-cover" />
+      )}
+    </span>
+  );
+}
+
+// الصفوفُ القديمةُ سبقت عمودَ النوع، وبعضُ مرفقاتِ Meta تصلُ بلا نوعٍ أصلاً — فنستنتجُه
+// من امتدادِ الرابط بدل أن نعرضَها كلَّها روابطَ مكتوباً عليها «مرفق».
+function guessKind(url = '') {
+  const clean = url.split('?')[0].toLowerCase();
+  if (/\.(jpe?g|png|gif|webp|heic|bmp)$/.test(clean)) return 'image';
+  if (/\.(mp4|mov|webm|m4v)$/.test(clean)) return 'video';
+  if (/\.(mp3|m4a|ogg|wav|aac)$/.test(clean)) return 'audio';
+  return '';
+}
+
+// المرفقُ يظهرُ بصورتِه: صورةٌ تُرى وتُفتَحُ بالضغط، وفيديو يُشغَّل، وصوتٌ يُسمَع في
+// مكانه. الروابطُ التي تنتهي صلاحيّتُها عند Meta (وهي تنتهي) تُظهر بديلاً مكتوباً
+// بدل مربّعٍ مكسور.
+function Attachment({ url, type }) {
+  const { t } = useTranslation();
+  const [broken, setBroken] = useState(false);
+  const kind = type === 'ig_reel' ? 'video' : (type || guessKind(url));
+
+  if (!broken && kind === 'image') {
+    return (
+      <a href={url} target="_blank" rel="noreferrer" className="block">
+        <img
+          src={url}
+          alt=""
+          loading="lazy"
+          onError={() => setBroken(true)}
+          className="max-h-72 w-auto max-w-full rounded-xl object-cover"
+        />
+      </a>
+    );
+  }
+  if (!broken && kind === 'video') {
+    return <video src={url} controls playsInline onError={() => setBroken(true)} className="max-h-72 w-full max-w-[240px] rounded-xl" />;
+  }
+  if (!broken && kind === 'audio') {
+    return <audio src={url} controls onError={() => setBroken(true)} className="w-[220px] max-w-full" />;
+  }
+  return (
+    <a href={url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 underline">
+      📎 {t('dashboard.instagram.attachment')}
+    </a>
+  );
+}
+
 // ───────── محادثة واحدة: رسائل + ردّ + تحويل لطلب ─────────
 function Conversation({ conv, onBack, onRead, onConverted }) {
   const { t } = useTranslation();
@@ -221,6 +279,30 @@ function Conversation({ conv, onBack, onRead, onConverted }) {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const [showConvert, setShowConvert] = useState(false);
+  const [photo, setPhoto] = useState(null); // { file, preview }
+  const [progress, setProgress] = useState(0);
+
+  // شريطُ التبويبات السفليُّ مثبَّتٌ بـfixed، ولوحةُ المفاتيح تُقلّصُ النافذةَ فيقفزُ
+  // إلى وسطِ الشاشة فوقَ صندوقِ الكتابة. إخفاؤه ما دامت المحادثةُ مفتوحةً يمنعُ
+  // القفزةَ من أصلِها — وهو ما تفعله تطبيقاتُ المحادثة كلُّها.
+  useEffect(() => {
+    document.body.classList.add('bz-chat-open');
+    return () => document.body.classList.remove('bz-chat-open');
+  }, []);
+
+  // معاينةُ الصورةِ المختارةِ من الجهاز قبل إرسالها، وتحريرُ الرابطِ بعدها.
+  const pick = (file) => {
+    if (!file) return;
+    setError('');
+    setPhoto((old) => {
+      if (old?.preview) URL.revokeObjectURL(old.preview);
+      return { file, preview: URL.createObjectURL(file) };
+    });
+  };
+  const dropPhoto = () => setPhoto((old) => {
+    if (old?.preview) URL.revokeObjectURL(old.preview);
+    return null;
+  });
 
   const load = () =>
     api.get(`/instagram/conversations/${conv.id}/messages`)
@@ -230,18 +312,40 @@ function Conversation({ conv, onBack, onRead, onConverted }) {
 
   const send = async () => {
     const body = text.trim();
-    if (!body) return;
+    if (!body && !photo) return;
     setSending(true); setError('');
-    // تفاؤلي — نضيف الرسالة فوراً
-    const optimistic = { id: 'tmp-' + Date.now(), direction: 'out', text: body, created_at: new Date().toISOString() };
-    setData((d) => ({ ...d, messages: [...(d?.messages || []), optimistic] }));
-    setText('');
+
+    // الصورةُ تُرفَعُ أوّلاً لأنّ إنستغرام تطلبُ رابطاً عامّاً تجلبُه بنفسها، لا ملفّاً
+    // نرسلُه إليها. وفشلُ الرفعِ يوقفُ كلَّ شيءٍ قبل أن نُظهرَ رسالةً لم تُرسَل.
+    let uploaded = '';
+    if (photo) {
+      try {
+        setProgress(1);
+        uploaded = await uploadToCloudinary(photo.file, 'image', setProgress);
+      } catch (e) {
+        setError(getErrorMessage(e));
+        setSending(false); setProgress(0);
+        return;
+      }
+    }
+
+    // تفاؤليّاً — نُظهرُ ما أُرسل فوراً بنفس ترتيبِ الخادم: الصورةُ ثمّ النصّ.
+    const stamp = Date.now();
+    const optimistic = [];
+    if (uploaded) optimistic.push({ id: 'tmp-img-' + stamp, direction: 'out', text: '', attachment_url: uploaded, attachment_type: 'image', created_at: new Date().toISOString() });
+    if (body) optimistic.push({ id: 'tmp-txt-' + stamp, direction: 'out', text: body, created_at: new Date().toISOString() });
+    setData((d) => ({ ...d, messages: [...(d?.messages || []), ...optimistic] }));
+    const keptPhoto = photo;
+    setText(''); dropPhoto(); setProgress(0);
+
     try {
-      await api.post(`/instagram/conversations/${conv.id}/reply`, { text: body });
+      await api.post(`/instagram/conversations/${conv.id}/reply`, { text: body, attachmentUrl: uploaded });
     } catch (e) {
       setError(getErrorMessage(e));
-      setData((d) => ({ ...d, messages: (d?.messages || []).filter((m) => m.id !== optimistic.id) }));
+      const ids = new Set(optimistic.map((m) => m.id));
+      setData((d) => ({ ...d, messages: (d?.messages || []).filter((m) => !ids.has(m.id)) }));
       setText(body);
+      if (keptPhoto) setPhoto(keptPhoto);
     } finally {
       setSending(false);
     }
@@ -258,6 +362,7 @@ function Conversation({ conv, onBack, onRead, onConverted }) {
         <button onClick={onBack} className="rounded-lg p-1.5 text-stone-300 transition hover:bg-white/10" aria-label={t('common.back')}>
           <BackIcon className="h-5 w-5" />
         </button>
+        <Avatar url={c.customer_avatar} name={name} className="h-8 w-8 text-xs" />
         <span className="min-w-0 flex-1 truncate font-semibold text-stone-100">{name}</span>
         {converted ? (
           <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-[11px] font-bold text-emerald-300 ring-1 ring-emerald-500/25">{t('dashboard.instagram.hasOrder')}</span>
@@ -288,9 +393,7 @@ function Conversation({ conv, onBack, onRead, onConverted }) {
               <div className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm ${
                 m.direction === 'out' ? 'bg-gold-400/15 text-gold-100 ring-1 ring-gold-400/20' : 'bg-white/5 text-stone-100 ring-1 ring-white/10'
               }`}>
-                {m.attachment_url ? (
-                  <a href={m.attachment_url} target="_blank" rel="noreferrer" className="underline">📎 {t('dashboard.instagram.attachment')}</a>
-                ) : null}
+                {m.attachment_url ? <Attachment url={m.attachment_url} type={m.attachment_type} /> : null}
                 {m.text && <p className="whitespace-pre-wrap break-words">{m.text}</p>}
                 <span className="mt-0.5 block text-[10px] text-stone-500">{new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
               </div>
@@ -301,8 +404,37 @@ function Conversation({ conv, onBack, onRead, onConverted }) {
 
       {error && <div className="mx-3 mb-2 rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs text-red-200">{error}</div>}
 
+      {/* معاينةُ الصورةِ قبل الإرسال — لا تُرسَلُ صورةٌ لم يرَها المُرسِل */}
+      {photo && (
+        <div className="mx-3 mb-2 flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-2">
+          <img src={photo.preview} alt="" className="h-14 w-14 rounded-lg object-cover" />
+          <span className="min-w-0 flex-1 text-xs text-stone-400">
+            {sending && progress > 0 ? `${t('dashboard.instagram.uploading')} ${progress}%` : t('dashboard.instagram.photoReady')}
+          </span>
+          <button onClick={dropPhoto} disabled={sending} className="rounded-lg p-1.5 text-stone-400 transition hover:bg-white/10 hover:text-red-300 disabled:opacity-40" aria-label={t('common.delete')}>
+            <TrashIcon className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {/* صندوق الردّ */}
       <div className="flex items-end gap-2 border-t border-white/5 p-3">
+        {cloudinaryEnabled && (
+          <>
+            {/* زرّان لا واحد: المعرضُ يفتحُ الصورَ المحفوظة، والكاميرا تفتحُ العدسةَ
+                مباشرةً على الجوّال (capture) — وهو ما يتوقّعه من اعتاد إنستغرام. */}
+            <label className="btn-ghost !px-2.5 !py-2.5 shrink-0 cursor-pointer" title={t('dashboard.instagram.attachPhoto')}>
+              <ImageIcon className="h-5 w-5" />
+              <input type="file" accept="image/*" className="hidden" disabled={sending}
+                onChange={(e) => { pick(e.target.files?.[0]); e.target.value = ''; }} />
+            </label>
+            <label className="btn-ghost !px-2.5 !py-2.5 shrink-0 cursor-pointer sm:hidden" title={t('dashboard.instagram.takePhoto')}>
+              <CameraIcon className="h-5 w-5" />
+              <input type="file" accept="image/*" capture="environment" className="hidden" disabled={sending}
+                onChange={(e) => { pick(e.target.files?.[0]); e.target.value = ''; }} />
+            </label>
+          </>
+        )}
         <textarea
           className="input min-h-[42px] flex-1 resize-none"
           rows={1}
@@ -311,7 +443,7 @@ function Conversation({ conv, onBack, onRead, onConverted }) {
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
         />
-        <button onClick={send} disabled={sending || !text.trim()} className="btn-primary shrink-0 !px-4 !py-2.5 text-sm disabled:opacity-50">
+        <button onClick={send} disabled={sending || (!text.trim() && !photo)} className="btn-primary shrink-0 !px-4 !py-2.5 text-sm disabled:opacity-50">
           {sending ? t('common.loading') : t('dashboard.instagram.send')}
         </button>
       </div>

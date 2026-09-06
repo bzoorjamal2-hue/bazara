@@ -588,6 +588,12 @@ END $$;`,
     "ALTER TABLE stores ADD COLUMN IF NOT EXISTS lahza_subaccount VARCHAR(40) DEFAULT '';",
     // حالةُ التسجيل: none (لم تُدخل بياناتها) · pending (بانتظارِ PayTabs) · active
     "ALTER TABLE stores ADD COLUMN IF NOT EXISTS payout_status VARCHAR(12) NOT NULL DEFAULT 'none';",
+    // صورةُ بروفايلِ الزبون كما تعطيها Meta — روابطُها موقّعةٌ وتنتهي، فالواجهةُ
+    // ترجعُ إلى الحرفِ الأوّل إن سقطت الصورة.
+    "ALTER TABLE ig_conversations ADD COLUMN IF NOT EXISTS customer_avatar TEXT DEFAULT '';",
+    // نوعُ مرفقِ رسالةِ إنستغرام (image/video/audio/share…) — بدونه لا تعرفُ الواجهةُ
+    // كيف تعرضُه فتكتبُ «مرفق» ورابطاً مكانَ الصورةِ نفسِها.
+    "ALTER TABLE ig_messages ADD COLUMN IF NOT EXISTS attachment_type VARCHAR(20) DEFAULT '';",
     // عمولةُ المنصّةِ على الطلبِ بالنسبةِ المئويّة — صفرٌ افتراضاً (الدخلُ من الاشتراكِ لا العمولة)
     "ALTER TABLE stores ADD COLUMN IF NOT EXISTS platform_fee_percent NUMERIC(5,2) NOT NULL DEFAULT 0;",
   ];

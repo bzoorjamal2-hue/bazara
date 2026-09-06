@@ -131,12 +131,29 @@ export async function sendMessage(pageToken, recipientId, text) {
   });
 }
 
+// إرسال صورة. إنستغرام لا تقبل أن نرفع إليها الملفّ، بل تطلب رابطاً عامّاً تجلبه هي
+// بنفسها — فترفع الواجهةُ الصورةَ إلى Cloudinary أوّلاً ويصل الرابطُ هنا. ورسالةٌ
+// واحدةٌ لا تحمل نصّاً ومرفقاً معاً، فمن أراد الاثنين أرسل رسالتين.
+export async function sendAttachment(pageToken, recipientId, url, type = 'image') {
+  return graph('/me/messages', {
+    method: 'POST',
+    token: pageToken,
+    body: {
+      recipient: { id: recipientId },
+      message: { attachment: { type, payload: { url, is_reusable: true } } },
+    },
+  });
+}
+
 // اسم/معرّف الزبون من IGSID — لعرضه بصندوق الرسائل بدل رقم مجرّد.
 export async function getSenderProfile(pageToken, igsid) {
   try {
-    const data = await graph(`/${igsid}`, { token: pageToken, params: { fields: 'name,username' } });
-    return { name: data.name || '', username: data.username || '' };
+    const data = await graph(`/${igsid}`, {
+      token: pageToken,
+      params: { fields: 'name,username,profile_pic' },
+    });
+    return { name: data.name || '', username: data.username || '', avatar: data.profile_pic || '' };
   } catch {
-    return { name: '', username: '' };
+    return { name: '', username: '', avatar: '' };
   }
 }

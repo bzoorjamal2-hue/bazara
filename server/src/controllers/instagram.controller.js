@@ -15,8 +15,21 @@ import {
   subscribePageMessages,
   unsubscribePageMessages,
   sendMessage,
+  sendAttachment,
   getSenderProfile,
 } from '../config/instagram.js';
+
+// سطرُ «آخر رسالة» في قائمة المحادثات يخلو من النصّ حين تكون الرسالةُ صورةً أو
+// صوتاً، فيقولُ نوعَها بدل «مرفق» مبهمة.
+const ATTACHMENT_LABEL = {
+  image: '📷 صورة',
+  video: '🎬 فيديو',
+  audio: '🎤 رسالة صوتية',
+  file: '📎 ملف',
+  share: '🔗 منشور مُشارَك',
+  story_mention: '📖 ذكرٌ في ستوري',
+  ig_reel: '🎬 ريلز',
+};
 
 async function getUserStore(userId) {
   const r = await query(
@@ -114,8 +127,12 @@ async function processWebhook(body) {
       if (!store) continue;
 
       const text = msg.text || '';
-      const attachment = msg.attachments?.[0]?.payload?.url || '';
-      const preview = text || (attachment ? '📎 مرفق' : '');
+      // النوعُ يقرّرُ كيف يُعرَض المرفق: صورةٌ تُعرَضُ صورةً وفيديو يُشغَّل. بلا حفظِه
+      // يصيرُ كلُّ شيءٍ رابطاً مكتوباً عليه «مرفق».
+      const att = msg.attachments?.[0] || null;
+      const attachment = att?.payload?.url || '';
+      const attType = att?.type || '';
+      const preview = text || (attachment ? ATTACHMENT_LABEL[attType] || '📎 مرفق' : '');
 
       // upsert المحادثة (صف واحد لكل زبون بهذا المتجر) — نرفع غير المقروء للوارد فقط
       const conv = await query(
@@ -125,29 +142,30 @@ async function processWebhook(body) {
            SET last_message = EXCLUDED.last_message,
                last_at = now(),
                unread = ig_conversations.unread + $4
-         RETURNING id, (xmax = 0) AS is_new`,
+         RETURNING id, customer_avatar, (xmax = 0) AS is_new`,
         [store.id, customerId, preview, isEcho ? 0 : 1]
       );
       const convId = conv.rows[0].id;
 
       // نخزّن الرسالة (mid فريد → لا يتكرّر نفس الحدث ولا ردّنا الذي عاد كـ echo)
       await query(
-        `INSERT INTO ig_messages (conversation_id, mid, direction, text, attachment_url)
-         VALUES ($1, $2, $3, $4, $5) ON CONFLICT (mid) DO NOTHING`,
-        [convId, msg.mid || null, isEcho ? 'out' : 'in', text, attachment]
+        `INSERT INTO ig_messages (conversation_id, mid, direction, text, attachment_url, attachment_type)
+         VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (mid) DO NOTHING`,
+        [convId, msg.mid || null, isEcho ? 'out' : 'in', text, attachment, attType]
       );
 
       if (isEcho) continue; // ردّنا/ردّ المتجر — لا إشعار
 
       // اسم الزبون (مرّة واحدة عند أول رسالة) لعرضه بالصندوق بدل معرّف مجرّد
-      if (conv.rows[0].is_new) {
+      if (conv.rows[0].is_new || !conv.rows[0].customer_avatar) {
         const token = decrypt(store.ig_access_token);
         if (token) {
           const prof = await getSenderProfile(token, customerId);
-          if (prof.name || prof.username) {
+          if (prof.name || prof.username || prof.avatar) {
             await query(
-              'UPDATE ig_conversations SET customer_name = $2, customer_username = $3 WHERE id = $1',
-              [convId, prof.name, prof.username]
+              `UPDATE ig_conversations SET customer_name = $2, customer_username = $3,
+                 customer_avatar = $4 WHERE id = $1`,
+              [convId, prof.name, prof.username, prof.avatar]
             );
           }
         }
@@ -293,8 +311,8 @@ export async function listConversations(req, res, next) {
     const store = await getUserStore(req.user.id);
     if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
     const r = await query(
-      `SELECT id, ig_sender_id, customer_name, customer_username, last_message,
-              last_at, unread, order_id
+      `SELECT id, ig_sender_id, customer_name, customer_username, customer_avatar,
+              last_message, last_at, unread, order_id
        FROM ig_conversations WHERE store_id = $1 ORDER BY last_at DESC LIMIT 100`,
       [store.id]
     );
@@ -310,7 +328,7 @@ export async function listMessages(req, res, next) {
     const conv = await getOwnedConversation(req.user.id, req.params.id);
     if (!conv) return res.status(404).json({ error: 'المحادثة غير موجودة.' });
     const r = await query(
-      `SELECT id, direction, text, attachment_url, created_at
+      `SELECT id, direction, text, attachment_url, attachment_type, created_at
        FROM ig_messages WHERE conversation_id = $1 ORDER BY created_at ASC LIMIT 200`,
       [conv.id]
     );
@@ -320,6 +338,7 @@ export async function listMessages(req, res, next) {
         id: conv.id,
         customer_name: conv.customer_name,
         customer_username: conv.customer_username,
+        customer_avatar: conv.customer_avatar,
         order_id: conv.order_id,
       },
       messages: r.rows,
@@ -332,41 +351,59 @@ export async function listMessages(req, res, next) {
 // POST /api/instagram/conversations/:id/reply — { text }
 export async function sendReply(req, res, next) {
   const text = String(req.body.text || '').trim();
-  if (!text) return res.status(400).json({ error: 'الرسالة فارغة.' });
+  const attachmentUrl = String(req.body.attachmentUrl || '').trim();
+  if (!text && !attachmentUrl) return res.status(400).json({ error: 'الرسالة فارغة.' });
+  // الرابطَ تجلبُه خوادمُ Meta بنفسها، فقبولُ أيِّ عنوانٍ يجعلُ حقلَ الردِّ باباً
+  // نُملي منه على خادمِهم ما يطلب. نقصرُه على مستضيفِ صورِنا وحدَه.
+  if (attachmentUrl && !attachmentUrl.startsWith('https://res.cloudinary.com/')) {
+    return res.status(400).json({ error: 'رابط المرفق غير مقبول.' });
+  }
   try {
     const conv = await getOwnedConversation(req.user.id, req.params.id);
     if (!conv) return res.status(404).json({ error: 'المحادثة غير موجودة.' });
     const token = decrypt(conv.ig_access_token);
     if (!token) return res.status(400).json({ error: 'حساب إنستغرام غير مربوط.' });
 
-    let result;
-    try {
-      result = await sendMessage(token, conv.ig_sender_id, text);
-    } catch (e) {
-      // ماتَ التوكن: نفصل الحساب ونُعلم التاجر بدل رسالة Meta الإنجليزيّة الغامضة
-      if (isAuthError(e)) {
-        await markDisconnected(conv.store_id, conv.user_id);
-        return res.status(400).json({
-          error: 'انفصل حساب إنستغرام (انتهت صلاحية الربط). اضغط «ربط» من جديد لتعود الرسائل.',
-        });
+    // رسالةٌ واحدةٌ عند إنستغرام لا تحمل صورةً ونصّاً معاً، فالصورةُ أوّلاً ثمّ النصّ
+    // تحتها — وهو ترتيبُ ما يراه الزبون في محادثته.
+    const parts = [];
+    if (attachmentUrl) parts.push({ image: attachmentUrl });
+    if (text) parts.push({ text });
+
+    for (const part of parts) {
+      let result;
+      try {
+        result = part.image
+          ? await sendAttachment(token, conv.ig_sender_id, part.image)
+          : await sendMessage(token, conv.ig_sender_id, part.text);
+      } catch (e) {
+        // ماتَ التوكن: نفصل الحساب ونُعلم التاجر بدل رسالة Meta الإنجليزيّة الغامضة
+        if (isAuthError(e)) {
+          await markDisconnected(conv.store_id, conv.user_id);
+          return res.status(400).json({
+            error: 'انفصل حساب إنستغرام (انتهت صلاحية الربط). اضغط «ربط» من جديد لتعود الرسائل.',
+          });
+        }
+        // خارج نافذة الـ 24 ساعة المسموح فيها بالردّ ترفض Meta الإرسال
+        if (e.body?.error?.code === 10) {
+          return res.status(400).json({
+            error: 'مضى أكثر من ٢٤ ساعة على آخر رسالة من الزبون، وإنستغرام يمنع الردّ بعدها. انتظري رسالةً جديدة منه.',
+          });
+        }
+        return res.status(400).json({ error: e.body?.error?.message || 'تعذّر إرسال الرسالة عبر إنستغرام.' });
       }
-      // خارج نافذة الـ 24 ساعة المسموح فيها بالردّ ترفض Meta الإرسال
-      if (e.body?.error?.code === 10) {
-        return res.status(400).json({
-          error: 'مضى أكثر من ٢٤ ساعة على آخر رسالة من الزبون، وإنستغرام يمنع الردّ بعدها. انتظري رسالةً جديدة منه.',
-        });
-      }
-      return res.status(400).json({ error: e.body?.error?.message || 'تعذّر إرسال الرسالة عبر إنستغرام.' });
+
+      await query(
+        `INSERT INTO ig_messages (conversation_id, mid, direction, text, attachment_url, attachment_type)
+         VALUES ($1, $2, 'out', $3, $4, $5) ON CONFLICT (mid) DO NOTHING`,
+        [conv.id, result?.message_id || null, part.text || '', part.image || '', part.image ? 'image' : '']
+      );
     }
 
-    await query(
-      `INSERT INTO ig_messages (conversation_id, mid, direction, text)
-       VALUES ($1, $2, 'out', $3) ON CONFLICT (mid) DO NOTHING`,
-      [conv.id, result?.message_id || null, text]
-    );
+    const preview = text || ATTACHMENT_LABEL.image;
     await query(
       'UPDATE ig_conversations SET last_message = $2, last_at = now(), unread = 0 WHERE id = $1',
-      [conv.id, text]
+      [conv.id, preview]
     );
     res.json({ sent: true });
   } catch (err) {
