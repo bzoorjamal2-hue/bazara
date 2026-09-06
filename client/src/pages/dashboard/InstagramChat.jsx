@@ -81,8 +81,10 @@ function Attachment({ url, type, onOpen }) {
 
   if (!broken && kind === 'image') {
     const blur = cldBlur(url);
-    // إطارٌ ثابتُ المقاس: الصورةُ تُحمَّلُ كسولةً، ولو تُركَ ارتفاعُها للصورةِ لقفزت
-    // القائمةُ تحت الإصبعِ كلّما جهزت واحدة — وهو أكثرُ ما يجعلُ السحبَ متقطّعاً.
+    // إطارٌ ثابتُ المقاس: لو تُرك الارتفاعُ للصورةِ لقفزت القائمةُ تحت الإصبعِ كلّما
+    // جهزت واحدة. وبلا `loading="lazy"` عمداً — الشاشةُ ترسمُ أربعين رسالةً لا مئتين،
+    // والتحميلُ الكسولُ يعني فكَّ ترميزِ الصورةِ أثناءَ السحبِ نفسِه، وهي هزّةٌ تُحَسُّ
+    // في الإصبع. تُحمَّلُ مع الفتحِ فيمضي السحبُ بلا عمل.
     return (
       <button
         type="button"
@@ -93,7 +95,6 @@ function Attachment({ url, type, onOpen }) {
         <img
           src={cldThumb(url, 480)}
           alt=""
-          loading="lazy"
           decoding="async"
           onError={() => setBroken(true)}
           className="block h-full w-full object-cover"
@@ -168,29 +169,20 @@ export default function InstagramChat() {
     };
     const schedule = () => { if (!raf) raf = requestAnimationFrame(apply); };
     apply();
+    // resize وحدَه: هو ما يقعُ عند فتحِ لوحةِ المفاتيحِ وإغلاقِها. أمّا scroll فينهمرُ
+    // مع كلِّ إطارٍ ولا يعنينا، وكانت الاستجابةُ له تكتبُ الارتفاعَ أثناءَ السحب.
     vv.addEventListener('resize', schedule);
-    vv.addEventListener('scroll', schedule);
     return () => {
       if (raf) cancelAnimationFrame(raf);
       vv.removeEventListener('resize', schedule);
-      vv.removeEventListener('scroll', schedule);
     };
   }, []);
 
   // الصنفُ يُخفي شريطَ التبويباتِ السفليَّ ويمنعُ الصفحةَ تحتَنا من التمرير — وبلا
   // المنعِ كان هيدرُ الموقعِ يظهرُ من فوقِ المحادثةِ كلّما تحرّكت الصفحةُ خلفَها.
   useEffect(() => {
-    // على iOS لا يكفي overflow:hidden لمنعِ تمريرِ الصفحة: تبقى ترتدُّ ويظهرُ شريطُ
-    // العنوانِ ويختفي، فتتغيّرُ النافذةُ المرئيّةُ أثناءَ السحبِ ويتقطّعُ كلُّ شيء.
-    // التثبيتُ بـposition:fixed هو ما يوقفُها فعلاً — ونعيدُها إلى موضعِها عند الخروج.
-    const y = window.scrollY;
     document.body.classList.add('bz-chat-open');
-    document.body.style.top = `-${y}px`;
-    return () => {
-      document.body.classList.remove('bz-chat-open');
-      document.body.style.top = '';
-      window.scrollTo(0, y);
-    };
+    return () => document.body.classList.remove('bz-chat-open');
   }, []);
 
   // آخرُ رسالةٍ هي المقصودةُ دائماً: نزولٌ فوريٌّ عند الفتح، وسلسٌ بعد كلِّ إرسال.
@@ -327,7 +319,7 @@ export default function InstagramChat() {
       )}
 
       {/* الرسائل */}
-      <div ref={scrollRef} className="bz-chat-scroll flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden overscroll-contain px-3 py-3">
+      <div ref={scrollRef} className="bz-chat-scroll flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-3 py-3">
         {!data ? (
           <Spinner />
         ) : items.length === 0 ? (

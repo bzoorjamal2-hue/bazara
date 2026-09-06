@@ -4316,11 +4316,12 @@ html.dark .bz-chat-input:focus { border-color: rgba(228, 216, 197, 0.35); }
 /* قفلُ الصفحةِ خلفَ المحادثة. على iOS لا يكفي overflow:hidden — تبقى الصفحةُ ترتدُّ
    ويظهرُ شريطُ عنوانِ المتصفّحِ ويختفي، فتتغيّرُ النافذةُ المرئيّةُ أثناءَ السحبِ
    ويتقطّعُ التمرير. التثبيتُ هو ما يوقفُها، والموضعُ يُحفَظُ ويُستعادُ من الجافاسكربت. */
-body.bz-chat-open { position: fixed; inset-inline: 0; width: 100%; overflow: hidden; }
+body.bz-chat-open { overflow: hidden; }
 
 /* حاويةُ الرسائل: طبقةٌ خاصّةٌ بها كي لا يُعادَ رسمُ الشاشةِ كلِّها مع كلِّ إطارِ سحب */
 .bz-chat-scroll {
-  -webkit-overflow-scrolling: touch;
-  transform: translateZ(0);
+  /* لا ترقيةَ طبقةٍ قسريّة هنا: translateZ(0) حيلةٌ من iOS قديم، وعلى الحديثِ منه
+     تجمعُ المحتوى كلَّه في طبقةٍ واحدةٍ فيثقلُ التمريرُ بدل أن يخفّ. المتصفّحُ
+     يتولّى تمريرَ الحاوياتِ أصلاً بأفضلَ ممّا نُمليه. */
   overscroll-behavior: contain;
 }
