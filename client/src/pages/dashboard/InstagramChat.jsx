@@ -180,8 +180,17 @@ export default function InstagramChat() {
   // الصنفُ يُخفي شريطَ التبويباتِ السفليَّ ويمنعُ الصفحةَ تحتَنا من التمرير — وبلا
   // المنعِ كان هيدرُ الموقعِ يظهرُ من فوقِ المحادثةِ كلّما تحرّكت الصفحةُ خلفَها.
   useEffect(() => {
+    // على iOS لا يكفي overflow:hidden لمنعِ تمريرِ الصفحة: تبقى ترتدُّ ويظهرُ شريطُ
+    // العنوانِ ويختفي، فتتغيّرُ النافذةُ المرئيّةُ أثناءَ السحبِ ويتقطّعُ كلُّ شيء.
+    // التثبيتُ بـposition:fixed هو ما يوقفُها فعلاً — ونعيدُها إلى موضعِها عند الخروج.
+    const y = window.scrollY;
     document.body.classList.add('bz-chat-open');
-    return () => document.body.classList.remove('bz-chat-open');
+    document.body.style.top = `-${y}px`;
+    return () => {
+      document.body.classList.remove('bz-chat-open');
+      document.body.style.top = '';
+      window.scrollTo(0, y);
+    };
   }, []);
 
   // آخرُ رسالةٍ هي المقصودةُ دائماً: نزولٌ فوريٌّ عند الفتح، وسلسٌ بعد كلِّ إرسال.
@@ -318,7 +327,7 @@ export default function InstagramChat() {
       )}
 
       {/* الرسائل */}
-      <div ref={scrollRef} className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden overscroll-contain px-3 py-3">
+      <div ref={scrollRef} className="bz-chat-scroll flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden overscroll-contain px-3 py-3">
         {!data ? (
           <Spinner />
         ) : items.length === 0 ? (
