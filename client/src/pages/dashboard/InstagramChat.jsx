@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
@@ -52,7 +53,9 @@ export default function InstagramChat() {
     };
   }, []);
 
-  // شريطُ التبويبات السفليُّ مثبَّتٌ بـfixed فيطفو فوقَ كلِّ شيءٍ ما لم يُخفَ.
+  // الصنفُ يفعلُ شيئين: يُخفي شريطَ التبويباتِ السفليَّ (مثبَّتٌ بـfixed فيطفو فوقَ
+  // كلِّ شيء)، ويمنعُ الصفحةَ تحتَنا من التمرير — وبلا المنعِ كان هيدرُ الموقعِ يظهرُ
+  // من فوقِ المحادثةِ كلّما تحرّكت الصفحةُ خلفَها.
   useEffect(() => {
     document.body.classList.add('bz-chat-open');
     return () => document.body.classList.remove('bz-chat-open');
@@ -122,7 +125,11 @@ export default function InstagramChat() {
   const name = c.customer_name || (c.customer_username ? `@${c.customer_username}` : t('dashboard.instagram.customer'));
   const converted = Boolean(c.order_id);
 
-  return (
+  // تُرسَمُ الشاشةُ على body مباشرةً لا داخلَ شجرةِ اللوحة: هناك يحكمُها ترتيبُ الطبقاتِ
+  // في الصفحةِ وقصُّ `overflow` في غلافِها، فيبقى هيدرُ الموقعِ ظاهراً فوقَها. وعلى body
+  // لا يعلوها شيء. وألوانُها معرَّفةٌ بـhtml.dark لا بـ`.theme-pub`، فلا يضيرُها الخروجُ
+  // من غلافِ الثيم.
+  return createPortal(
     <div ref={rootRef} className="bz-chat fixed inset-0 z-[95] flex flex-col">
       {/* رأسُ المحادثة */}
       <header className="bz-chat-bar flex shrink-0 items-center gap-2 border-b px-2 pb-2.5 pt-[max(env(safe-area-inset-top),10px)]">
@@ -217,6 +224,7 @@ export default function InstagramChat() {
           {sending ? t('common.loading') : t('dashboard.instagram.send')}
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
