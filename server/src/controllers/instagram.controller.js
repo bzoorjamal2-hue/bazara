@@ -78,7 +78,13 @@ export function verifyWebhook(req, res) {
 // POST — استقبال الأحداث (رسائل واردة). نتحقق من التوقيع أولاً، نردّ 200 فوراً،
 // ثم نعالج بالخلفية (Meta تعيد الإرسال لو تأخّر الردّ أو فشل).
 export function receiveWebhook(req, res) {
+  // سطرٌ واحدٌ لكلِّ نداء: morgan لا يعمل على الإنتاج، فبدونه لا يُعرف أوصلَ نداءُ Meta
+  // أصلاً أم لا — وهو أوّلُ سؤالٍ يُسأل حين لا تظهر رسالة، وأغلى ساعةٍ تضيع بلا جوابه.
+  console.log('ig webhook ←', req.body?.object || '?', 'entries:', req.body?.entry?.length ?? 0);
   if (!verifySignature(req.rawBody, req.headers['x-hub-signature-256'])) {
+    // التوقيعُ يُحسبُ بسرِّ التطبيق. فشلُه يعني أنّ IG_APP_SECRET على الخادمِ ليس سرَّ
+    // التطبيقِ الذي أرسل — والخلطُ الشائع أن يُنسخ سرُّ «Instagram login» بدلَه.
+    console.error('ig webhook: توقيعٌ غيرُ مطابق — راجع IG_APP_SECRET');
     return res.sendStatus(403);
   }
   res.sendStatus(200);
