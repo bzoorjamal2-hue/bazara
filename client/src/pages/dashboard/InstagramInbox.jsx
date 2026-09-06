@@ -217,54 +217,6 @@ export function Avatar({ url, name, className = 'h-11 w-11' }) {
   );
 }
 
-// الصفوفُ القديمةُ سبقت عمودَ النوع، وبعضُ مرفقاتِ Meta تصلُ بلا نوعٍ أصلاً — فنستنتجُه
-// من امتدادِ الرابط بدل أن نعرضَها كلَّها روابطَ مكتوباً عليها «مرفق».
-function guessKind(url = '') {
-  const clean = url.split('?')[0].toLowerCase();
-  if (/\.(jpe?g|png|gif|webp|heic|bmp)$/.test(clean)) return 'image';
-  if (/\.(mp4|mov|webm|m4v)$/.test(clean)) return 'video';
-  if (/\.(mp3|m4a|ogg|wav|aac)$/.test(clean)) return 'audio';
-  return '';
-}
-
-// المرفقُ يظهرُ بصورتِه: صورةٌ تُرى وتُفتَحُ بالضغط، وفيديو يُشغَّل، وصوتٌ يُسمَع في
-// مكانه. الروابطُ التي تنتهي صلاحيّتُها عند Meta (وهي تنتهي) تُظهر بديلاً مكتوباً
-// بدل مربّعٍ مكسور.
-export function Attachment({ url, type }) {
-  const { t } = useTranslation();
-  const [broken, setBroken] = useState(false);
-  // الصفوفُ القديمةُ بلا نوع، وروابطُ Meta بلا امتدادٍ يُستدَلُّ به — فالمجهولُ يُجرَّبُ
-  // صورةً أوّلاً، وإن سقط عُرِض رابطاً. أسوأُ ما يحدثُ محاولةُ تحميلٍ فاشلة.
-  const kind = type === 'ig_reel' ? 'video'
-    : (type === 'share' || type === 'story_mention') ? 'image'
-    : (type || guessKind(url) || 'image');
-
-  if (!broken && kind === 'image') {
-    return (
-      <a href={url} target="_blank" rel="noreferrer" className="block">
-        <img
-          src={url}
-          alt=""
-          loading="lazy"
-          onError={() => setBroken(true)}
-          className="max-h-72 w-auto max-w-full rounded-xl object-cover"
-        />
-      </a>
-    );
-  }
-  if (!broken && kind === 'video') {
-    return <video src={url} controls playsInline onError={() => setBroken(true)} className="max-h-72 w-full max-w-[240px] rounded-xl" />;
-  }
-  if (!broken && kind === 'audio') {
-    return <audio src={url} controls onError={() => setBroken(true)} className="w-[220px] max-w-full" />;
-  }
-  return (
-    <a href={url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 underline">
-      📎 {t('dashboard.instagram.attachment')}
-    </a>
-  );
-}
-
 function productOptions(p) {
   const colorStock = p?.colorStock && typeof p.colorStock === 'object' ? p.colorStock : {};
   const hasColorStock = Object.keys(colorStock).length > 0;

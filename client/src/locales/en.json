@@ -158,7 +158,9 @@
     "less": "Less",
     "clearDate": "Clear date",
     "clear": "Clear",
-    "close": "Close"
+    "close": "Close",
+    "today": "Today",
+    "yesterday": "Yesterday"
   },
   "searchPage": {
     "title": "Search",
