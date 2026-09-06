@@ -505,7 +505,7 @@ async function ensureAccounting() {
     // صار نصّاً حرّاً بفئات أزياء. التحويل وإعادة التعيين كانا في schema.sql
     // وحدها ولا تُنفَّذ عند الإقلاع، فبقيت منتجات بقيمٍ قديمة لا تطابق أي زرّ
     // فئة — وهو سبب اختفاء العبايات تحت زرّها.
-    `DO $
+    `DO $$
 BEGIN
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
@@ -513,7 +513,7 @@ BEGIN
   ) THEN
     ALTER TABLE products ALTER COLUMN category TYPE TEXT USING category::text;
   END IF;
-END $;`,
+END $$;`,
     "ALTER TABLE products ALTER COLUMN category SET DEFAULT 'dress';",
     `UPDATE products SET category = CASE category
        WHEN 'women' THEN 'dress'
