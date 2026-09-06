@@ -78,9 +78,15 @@ export default function Layout({ children }) {
         el.blur();
       }
     };
-    window.addEventListener('touchmove', dismiss, { passive: true });
+    // على التمرير لا على حركة الإصبع: touchmove ينادي جافاسكربت مع كل حركةٍ صغيرة
+    // ولو لم يتمرّر شيء، والتمرير هو المقصود أصلاً. وبالالتقاط (capture) يصلنا تمرير
+    // الحاويات الداخلية أيضاً — كقائمة رسائل إنستغرام — وهو ما كان يفوت المستمع الأول.
+    document.addEventListener('scroll', dismiss, { capture: true, passive: true });
     window.addEventListener('wheel', dismiss, { passive: true });
-    return () => { window.removeEventListener('touchmove', dismiss); window.removeEventListener('wheel', dismiss); };
+    return () => {
+      document.removeEventListener('scroll', dismiss, { capture: true });
+      window.removeEventListener('wheel', dismiss);
+    };
   }, []);
 
   // صنف على body يدفع كل الصفحة تحت شريط الجلسة النيابية — لو تركناه ثابتاً

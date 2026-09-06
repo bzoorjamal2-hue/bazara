@@ -27,8 +27,25 @@ export default function SwipeBack() {
     let startX = 0, startY = 0, dx = 0;
     let active = false;   // بدأنا سحباً أفقياً فعلياً من الحافة
     let candidate = false; // لمسة بدأت من الحافة، ننتظر لنعرف اتجاهها
+    let moving = false;    // هل مستمعُ الحركةِ مربوطٌ الآن؟
 
     const setX = (v) => { if (main) main.style.transform = v ? `translate3d(${v}px,0,0)` : ''; };
+
+    // مستمعُ touchmove هنا غيرُ سلبيّ (يستدعي preventDefault)، ووجودُه على المستند
+    // يمنعُ سفاري من تمرير الشاشةِ على وحدةِ الرسم: عليه أن ينتظرَ جافاسكربت مع كلِّ
+    // حركةِ إصبعٍ ليرى هل ستُلغى. وأثرُه يظهرُ باللمسةِ الواحدةِ دون الاثنتين — لأنّ
+    // السحبَ بإصبعين لا يمرّ بهذا المسار أصلاً. فلا نربطُه إلّا حين تبدأُ لمسةٌ من
+    // الحافة، وهي وحدَها ما يمكن أن يصيرَ سحبَ رجوع.
+    const attachMove = () => {
+      if (moving) return;
+      moving = true;
+      document.addEventListener('touchmove', onMove, { passive: false });
+    };
+    const detachMove = () => {
+      if (!moving) return;
+      moving = false;
+      document.removeEventListener('touchmove', onMove);
+    };
 
     const onStart = (e) => {
       // لا نتدخّل أثناء قفل التمرير (درج/نافذة مفتوحة تثبّت body)
@@ -41,29 +58,31 @@ export default function SwipeBack() {
       candidate = true; active = false; dx = 0;
       startX = t.clientX; startY = t.clientY;
       main = document.querySelector('main');
+      attachMove();
     };
 
-    const onMove = (e) => {
-      if (!candidate) return;
+    function onMove(e) {
+      if (!candidate) { detachMove(); return; }
       const t = e.touches[0];
       const ddx = t.clientX - startX;
       const ddy = t.clientY - startY;
       if (!active) {
         // نحسم الاتجاه: أفقي غالب وباتجاه الرجوع الصحيح → نفعّل
-        if (Math.abs(ddy) > Math.abs(ddx)) { candidate = false; return; } // تمرير عمودي
+        if (Math.abs(ddy) > Math.abs(ddx)) { candidate = false; detachMove(); return; } // تمرير عمودي
         const backward = rtl ? ddx < -6 : ddx > 6;
         if (backward) { active = true; if (main) main.style.transition = 'none'; }
-        else if (Math.abs(ddx) > 6) { candidate = false; return; }
+        else if (Math.abs(ddx) > 6) { candidate = false; detachMove(); return; }
         else return;
       }
       // إزاحة باتجاه الرجوع فقط (بمقاومة عند العكس)
       dx = rtl ? Math.min(0, ddx) : Math.max(0, ddx);
       e.preventDefault();
       setX(dx);
-    };
+    }
 
     const finish = () => {
       candidate = false;
+      detachMove();
       if (!active) return;
       active = false;
       const w = window.innerWidth;
@@ -82,12 +101,11 @@ export default function SwipeBack() {
     };
 
     document.addEventListener('touchstart', onStart, { passive: true });
-    document.addEventListener('touchmove', onMove, { passive: false });
     document.addEventListener('touchend', finish, { passive: true });
     document.addEventListener('touchcancel', finish, { passive: true });
     return () => {
+      detachMove();
       document.removeEventListener('touchstart', onStart);
-      document.removeEventListener('touchmove', onMove);
       document.removeEventListener('touchend', finish);
       document.removeEventListener('touchcancel', finish);
     };
