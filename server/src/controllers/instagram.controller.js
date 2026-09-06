@@ -145,7 +145,7 @@ async function processWebhook(body) {
            SET last_message = EXCLUDED.last_message,
                last_at = now(),
                unread = ig_conversations.unread + $4
-         RETURNING id, customer_avatar, (xmax = 0) AS is_new`,
+         RETURNING id, customer_name, customer_username, customer_avatar, (xmax = 0) AS is_new`,
         [store.id, customerId, preview, isEcho ? 0 : 1]
       );
       const convId = conv.rows[0].id;
@@ -159,13 +159,17 @@ async function processWebhook(body) {
 
       if (isEcho) continue; // ردّنا/ردّ المتجر — لا إشعار
 
-      // اسم الزبون (مرّة واحدة عند أول رسالة) لعرضه بالصندوق بدل معرّف مجرّد
-      if (conv.rows[0].is_new || !conv.rows[0].customer_avatar) {
+      // اسم الزبون وصورتُه: يُجلبان عند أوّل رسالةٍ ومتى غابت الصورة. ويُحتاجان قبل
+      // الإشعارِ لا بعدَه، لأنّ الإشعارَ يحملُ اسمَه وصورتَه لا عنواناً عامّاً.
+      let who = conv.rows[0].customer_name || conv.rows[0].customer_username || '';
+      let avatar = conv.rows[0].customer_avatar || '';
+      if (conv.rows[0].is_new || !avatar) {
         const token = decrypt(store.ig_access_token);
         if (token) {
           const prof = await getSenderProfile(token, customerId);
           if (prof.name || prof.username || prof.avatar) {
-            const avatar = prof.avatar ? await mirrorRemote(prof.avatar, 'ig/avatars') : '';
+            avatar = prof.avatar ? await mirrorRemote(prof.avatar, 'ig/avatars') : avatar;
+            who = prof.name || prof.username || who;
             await query(
               `UPDATE ig_conversations SET customer_name = $2, customer_username = $3,
                  customer_avatar = $4 WHERE id = $1`,
@@ -175,14 +179,18 @@ async function processWebhook(body) {
         }
       }
 
-      // إشعار المتجر برسالة إنستغرام جديدة (دفع على الجوال — ويب وأصلي)
-      const payload = {
+      // الإشعارُ كما في تطبيقات المحادثة: اسمُ المُرسِلِ عنواناً ونصُّ رسالتِه تحته
+      // وصورتُه أيقونةً — لا «رسالة إنستغرام جديدة» التي لا تقولُ ممّن ولا فيمَ.
+      // وtag باسم المحادثة يجعلُ رسائلَ الشخصِ الواحدِ تستبدلُ بعضَها في شريطِ الهاتف
+      // بدل أن تتكدّس، والرابطُ يفتحُ محادثتَه هو لا قائمةَ المحادثات.
+      notifyUser(store.user_id, {
         type: 'instagram',
-        title: '💬 رسالة إنستغرام جديدة',
+        title: who || 'رسالة إنستغرام',
         body: preview.slice(0, 120),
-        url: '/dashboard?tab=instagram',
-      };
-      notifyUser(store.user_id, payload);
+        url: `/dashboard/instagram/${convId}`,
+        tag: `ig-${convId}`,
+        icon: avatar || undefined,
+      });
     }
   }
 }

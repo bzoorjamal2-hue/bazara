@@ -15,15 +15,16 @@ self.addEventListener('push', (event) => {
   const title = data.title || 'Bazara';
   const options = {
     body: data.body || '',
-    icon: '/icon-192.png',
+    // أيقونةُ الإشعارِ صورةُ المُرسِلِ إن وُجدت — كما في تطبيقاتِ المحادثة
+    icon: data.icon || '/icon-192.png',
     badge: '/icon-192.png',
     dir: 'rtl',
     lang: 'ar',
     vibrate: [60, 30, 60],
     // tag حسب النوع: إشعارات الطلبات المتتالية تستبدل بعضها بشريط الهاتف
     // بدل أن تتكدّس عشرين سطراً — renotify يُبقي التنبيه محسوساً مع ذلك.
-    tag: data.type ? `bz-${data.type}` : undefined,
-    renotify: Boolean(data.type),
+    tag: data.tag || (data.type ? `bz-${data.type}` : undefined),
+    renotify: Boolean(data.tag || data.type),
     data: { url: data.url || '/dashboard?tab=myOrders' },
   };
   event.waitUntil(

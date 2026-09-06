@@ -46,6 +46,7 @@ function buildItems(messages) {
 // عارضُ الصورة: الضغطُ على صورةٍ في المحادثة كان يفتحُ تبويباً جديداً — وفي تطبيقٍ
 // مثبَّتٍ (PWA) لا تبويبَ يُفتَح، فبدت الصورُ وكأنّها لا تفتح. صارت تكبرُ في مكانها.
 function ImageViewer({ url, onClose }) {
+  const { t } = useTranslation();
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKey);
@@ -54,7 +55,13 @@ function ImageViewer({ url, onClose }) {
   return createPortal(
     <div className="bz-chat-viewer fixed inset-0 z-[110] flex items-center justify-center p-4" onClick={onClose}>
       <img src={cldOptimized(url)} alt="" className="max-h-full max-w-full rounded-xl object-contain" />
-      <button onClick={onClose} className="absolute end-4 top-[max(env(safe-area-inset-top),16px)] rounded-full bg-white/15 p-2 text-white backdrop-blur transition hover:bg-white/25" aria-label="close">
+      {/* زرُّ الإغلاقِ كان شفّافاً فوقَ صورةٍ فاتحةٍ فلا يكادُ يُرى: صار قرصاً داكناً
+          بحلقةٍ بيضاءَ فوقَ الصورةِ لا تحتَها، ويُقرأُ على أيِّ صورةٍ كانت. */}
+      <button
+        onClick={onClose}
+        className="absolute end-3 top-[max(env(safe-area-inset-top),14px)] z-10 rounded-full bg-black/55 p-2.5 text-white ring-1 ring-white/30 backdrop-blur transition hover:bg-black/75"
+        aria-label={t('common.close', { defaultValue: 'إغلاق' })}
+      >
         <XIcon className="h-5 w-5" />
       </button>
     </div>,
@@ -74,22 +81,28 @@ function Attachment({ url, type, onOpen }) {
 
   if (!broken && kind === 'image') {
     const blur = cldBlur(url);
+    // إطارٌ ثابتُ المقاس: الصورةُ تُحمَّلُ كسولةً، ولو تُركَ ارتفاعُها للصورةِ لقفزت
+    // القائمةُ تحت الإصبعِ كلّما جهزت واحدة — وهو أكثرُ ما يجعلُ السحبَ متقطّعاً.
     return (
-      <button type="button" onClick={() => onOpen(url)} className="block w-full overflow-hidden rounded-[14px]">
+      <button
+        type="button"
+        onClick={() => onOpen(url)}
+        style={blur ? { backgroundImage: `url(${blur})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+        className="block h-[210px] w-[210px] max-w-full overflow-hidden rounded-[14px]"
+      >
         <img
-          src={cldThumb(url, 640)}
+          src={cldThumb(url, 480)}
           alt=""
           loading="lazy"
           decoding="async"
           onError={() => setBroken(true)}
-          style={blur ? { backgroundImage: `url(${blur})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
-          className="block max-h-[300px] w-full object-cover"
+          className="block h-full w-full object-cover"
         />
       </button>
     );
   }
   if (!broken && kind === 'video') {
-    return <video src={cldOptimized(url, 'video')} controls playsInline onError={() => setBroken(true)} className="block max-h-[300px] w-full rounded-[14px]" />;
+    return <video src={cldOptimized(url, 'video')} controls playsInline onError={() => setBroken(true)} className="block h-[210px] w-[210px] max-w-full rounded-[14px] object-cover" />;
   }
   if (!broken && kind === 'audio') {
     return <audio src={url} controls onError={() => setBroken(true)} className="w-[210px] max-w-full" />;
@@ -138,16 +151,29 @@ export default function InstagramChat() {
     const vv = window.visualViewport;
     const el = rootRef.current;
     if (!vv || !el) return undefined;
+    // حدثُ scroll للنافذةِ المرئيّةِ ينهمرُ مع كلِّ إطارٍ أثناءَ السحب، وكلُّ كتابةِ
+    // ارتفاعٍ تُجبرُ المتصفّحَ على إعادةِ التخطيط — فكان السحبُ يتقطّع. نؤجّلُ إلى
+    // إطارٍ واحدٍ ولا نكتبُ إلّا إذا تغيّر الرقمُ فعلاً.
+    let raf = 0;
+    let lastH = 0;
+    let lastTop = 0;
     const apply = () => {
-      el.style.height = `${vv.height}px`;
-      el.style.transform = `translateY(${vv.offsetTop}px)`;
+      raf = 0;
+      const h = Math.round(vv.height);
+      const top = Math.round(vv.offsetTop);
+      if (h === lastH && top === lastTop) return;
+      lastH = h; lastTop = top;
+      el.style.height = `${h}px`;
+      el.style.transform = top ? `translateY(${top}px)` : '';
     };
+    const schedule = () => { if (!raf) raf = requestAnimationFrame(apply); };
     apply();
-    vv.addEventListener('resize', apply);
-    vv.addEventListener('scroll', apply);
+    vv.addEventListener('resize', schedule);
+    vv.addEventListener('scroll', schedule);
     return () => {
-      vv.removeEventListener('resize', apply);
-      vv.removeEventListener('scroll', apply);
+      if (raf) cancelAnimationFrame(raf);
+      vv.removeEventListener('resize', schedule);
+      vv.removeEventListener('scroll', schedule);
     };
   }, []);
 
@@ -267,7 +293,7 @@ export default function InstagramChat() {
       )}
 
       {/* الرسائل */}
-      <div ref={scrollRef} className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden px-3 py-3">
+      <div ref={scrollRef} className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden overscroll-contain px-3 py-3">
         {!data ? (
           <Spinner />
         ) : items.length === 0 ? (
