@@ -291,30 +291,73 @@ export async function igCallback(req, res) {
       ));
     }
 
-    // أكثرُ من صفحة: نحفظُ التوكنَ مؤقّتاً ويختارُ صاحبُ المتجرِ من داخلِ التطبيق
+    // أكثرُ من صفحة: الاختيارُ هنا في النافذةِ نفسِها. كان يُحفَظُ التوكنُ ويُقالُ له
+    // «ارجع للتطبيق واختر» — خطوةٌ تضيعُ في الطريق: يغلقُ النافذةَ فيظنُّ أنّه ربط،
+    // ولا رسالةَ تصل، ولا شيءَ يقولُ لماذا. والصفحاتُ بين يديه الآن، فليختر الآن.
     if (pages.length > 1) {
       await query('UPDATE stores SET ig_access_token = $1, ig_connected = false WHERE id = $2', [encrypt(longLived), store.id]);
-      return res.send(closingPage('بقيت خطوة', 'ارجع للتطبيق واختر الصفحة التي تريد ربطها.'));
+      return res.send(choicePage(String(req.query.state), pages));
     }
 
-    const chosen = pages[0];
-    const dup = await query(
-      'SELECT id FROM stores WHERE ig_user_id = $1 AND ig_connected = true AND id <> $2',
-      [chosen.igUserId, store.id]
-    );
-    if (dup.rows.length) {
-      return res.status(409).send(closingPage('الحساب مربوط بمتجر آخر', 'افصله من ذاك المتجر أوّلاً ثم أعد الربط.'));
-    }
-    try { await subscribePageMessages(chosen.pageId, chosen.pageToken); }
-    catch (e) { console.error('ig subscribe page (تم تجاهله):', e.message); }
-    await query(
-      `UPDATE stores SET ig_user_id = $1, ig_username = $2, ig_page_id = $3,
-         ig_access_token = $4, ig_connected = true WHERE id = $5`,
-      [chosen.igUserId, chosen.igUsername, chosen.pageId, encrypt(chosen.pageToken), store.id]
-    );
-    return res.send(closingPage('تمّ الربط', 'أغلق هذه النافذة وارجع للتطبيق — رسائلك ستصلك هنا.'));
+    return res.send(await finishConnect(store, pages[0]));
   } catch (e) {
     console.error('ig callback:', e.message, JSON.stringify(e.body || {}).slice(0, 300));
+    return res.status(500).send(closingPage('تعذّر الربط', e.message || 'حاول مرّة أخرى.'));
+  }
+}
+
+// إتمامُ الربطِ بصفحةٍ بعينِها: يُستعمَلُ حين تكون صفحةً واحدةً وحين يختارُ من نافذةِ
+// الاختيار — فلا يُكتَبُ المنطقُ نفسُه مرّتين ويفترقان بعد شهر.
+async function finishConnect(store, chosen) {
+  const dup = await query(
+    'SELECT id FROM stores WHERE ig_user_id = $1 AND ig_connected = true AND id <> $2',
+    [chosen.igUserId, store.id]
+  );
+  if (dup.rows.length) {
+    return closingPage('الحساب مربوط بمتجر آخر', 'افصله من ذاك المتجر أوّلاً ثم أعد الربط.');
+  }
+  try { await subscribePageMessages(chosen.pageId, chosen.pageToken); }
+  catch (e) { console.error('ig subscribe page (تم تجاهله):', e.message); }
+  await query(
+    `UPDATE stores SET ig_user_id = $1, ig_username = $2, ig_page_id = $3,
+       ig_access_token = $4, ig_connected = true WHERE id = $5`,
+    [chosen.igUserId, chosen.igUsername, chosen.pageId, encrypt(chosen.pageToken), store.id]
+  );
+  return closingPage('تمّ الربط', 'أغلق هذه النافذة وارجع للتطبيق — رسائلك ستصلك هنا.');
+}
+
+// صفحةُ اختيارِ الصفحةِ داخلَ النافذةِ نفسِها
+function choicePage(ticket, pages) {
+  const items = pages.map((p) => {
+    const label = `${p.pageName || p.pageId}${p.igUsername ? ` · @${p.igUsername}` : ''}`;
+    const href = `/api/instagram/choose?lt=${encodeURIComponent(ticket)}&page=${encodeURIComponent(p.pageId)}`;
+    return `<a href="${href}" style="display:block;margin:.5rem 0;padding:.9rem 1rem;border-radius:1rem;background:#fff;border:1px solid rgba(94,70,54,.18);color:#3f2e22;text-decoration:none;font-weight:700">${label}</a>`;
+  }).join('');
+  return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>اختر الصفحة</title></head>
+<body style="margin:0;min-height:100vh;background:#F4EDE2;font-family:system-ui,-apple-system,'Tajawal',sans-serif;color:#3f2e22">
+<div style="max-width:26rem;margin:0 auto;padding:2.5rem 1.25rem">
+<h1 style="font-size:1.15rem;margin:0 0 .35rem">اختر الصفحة</h1>
+<p style="font-size:.85rem;color:#6b6560;margin:0 0 1.25rem">حسابك يدير أكثر من صفحة — أيّها تريد ربطها بهذا المتجر؟</p>
+${items}
+</div></body></html>`;
+}
+
+// GET /api/instagram/choose — إتمامُ الربطِ بالصفحةِ المختارةِ من نافذةِ الاختيار
+export async function igChoose(req, res) {
+  const uid = ticketUser(req.query.lt);
+  if (!uid) return res.status(400).send(closingPage('انتهت جلسة الربط', 'ارجع للتطبيق واضغط «ربط» من جديد.'));
+  try {
+    const store = await getUserStore(uid);
+    if (!store || !store.ig_access_token) {
+      return res.status(400).send(closingPage('انتهت جلسة الربط', 'ارجع للتطبيق واضغط «ربط» من جديد.'));
+    }
+    const pages = await getManagedPages(decrypt(store.ig_access_token));
+    const chosen = pages.find((p) => p.pageId === String(req.query.page || ''));
+    if (!chosen) return res.status(400).send(closingPage('لم نجد الصفحة', 'ارجع للتطبيق واضغط «ربط» من جديد.'));
+    return res.send(await finishConnect(store, chosen));
+  } catch (e) {
+    console.error('ig choose:', e.message);
     return res.status(500).send(closingPage('تعذّر الربط', e.message || 'حاول مرّة أخرى.'));
   }
 }

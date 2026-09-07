@@ -30,7 +30,7 @@ import { epsWebhook, syncAllEpsStores } from './controllers/eps.controller.js';
 import goboxRoutes from './routes/gobox.routes.js';
 import { goboxWebhook, syncAllGoboxStores } from './controllers/gobox.controller.js';
 import instagramRoutes from './routes/instagram.routes.js';
-import { verifyWebhook, receiveWebhook, igLoginRedirect, igCallback } from './controllers/instagram.controller.js';
+import { verifyWebhook, receiveWebhook, igLoginRedirect, igCallback, igChoose } from './controllers/instagram.controller.js';
 import { paytabsCallback } from './controllers/order.controller.js';
 import { subscriptionPaytabsCallback } from './controllers/subscription.controller.js';
 import { robots, sitemap, indexNowKey, shareProduct, shareStore, shareStory } from './controllers/seo.controller.js';
@@ -118,6 +118,7 @@ app.post('/api/gobox/webhook', goboxWebhook);
 // POST للأحداث. آمن: نتحقق من توقيع Meta (HMAC) داخل المعالج قبل قبول أي رسالة.
 app.get('/api/instagram/login', igLoginRedirect);
 app.get('/api/instagram/callback', igCallback);
+app.get('/api/instagram/choose', igChoose);
 app.get('/api/instagram/webhook', verifyWebhook);
 app.post('/api/instagram/webhook', receiveWebhook);
 // webhooks دفع Paytabs — تأتي من خوادمهم (server-to-server) فلا CSRF
