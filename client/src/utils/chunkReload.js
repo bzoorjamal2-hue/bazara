@@ -25,7 +25,7 @@ function isChunkError(err) {
   );
 }
 
-function reloadOnce() {
+export function reloadOnce() {
   let already = false;
   try { already = sessionStorage.getItem(FLAG) === '1'; } catch { /* تصفّح خاص */ }
   if (already) return false;

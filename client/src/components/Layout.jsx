@@ -78,15 +78,14 @@ export default function Layout({ children }) {
         el.blur();
       }
     };
-    // على التمرير لا على حركة الإصبع: touchmove ينادي جافاسكربت مع كل حركةٍ صغيرة
-    // ولو لم يتمرّر شيء، والتمرير هو المقصود أصلاً. وبالالتقاط (capture) يصلنا تمرير
-    // الحاويات الداخلية أيضاً — كقائمة رسائل إنستغرام — وهو ما كان يفوت المستمع الأول.
-    document.addEventListener('scroll', dismiss, { capture: true, passive: true });
+    // على حركة الإصبع لا على التمرير. جرّبتُ `scroll` بالالتقاط فكان أسوأ بكثير:
+    // فتحُ لوحةِ المفاتيح نفسُه يُطلق تمريراً (يُظهر النظام الحقلَ فوقها)، فيصلنا
+    // الحدث فنُغلق اللوحةَ التي فُتحت للتوّ — فلا تُفتح أبداً. أمّا touchmove فلا يقع
+    // إلّا بإصبعٍ يتحرّك فعلاً، وهو المقصود: «بدأ يسحب الشاشة؟ أغلق اللوحة».
+    // والمستمع سلبيّ، فلا يعترض طريق التمرير على وحدة الرسم.
+    window.addEventListener('touchmove', dismiss, { passive: true });
     window.addEventListener('wheel', dismiss, { passive: true });
-    return () => {
-      document.removeEventListener('scroll', dismiss, { capture: true });
-      window.removeEventListener('wheel', dismiss);
-    };
+    return () => { window.removeEventListener('touchmove', dismiss); window.removeEventListener('wheel', dismiss); };
   }, []);
 
   // صنف على body يدفع كل الصفحة تحت شريط الجلسة النيابية — لو تركناه ثابتاً
