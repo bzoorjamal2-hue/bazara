@@ -1,0 +1,311 @@
+// ───────── إنشاءُ طلبٍ من محادثة، ومكوّناتُه المشتركة ─────────
+//
+// كان هذا كلُّه داخلَ ملفِّ شاشةِ الصندوق (InstagramInbox)، وشاشةُ المحادثةِ تستوردُ
+// منه `Avatar` و`ConvertForm`. وشاشةُ المحادثةِ تُحمَّلُ كسولاً في قطعةٍ مستقلّة،
+// فصارت قطعتُها تعتمدُ على قطعةِ شاشةٍ أخرى: تكفي قطعةٌ واحدةٌ قديمةٌ أو مفقودةٌ بعد
+// نشرةٍ جديدةٍ حتّى تنهارَ المحادثةُ كلُّها («Element type is invalid» لأنّ الاستيرادَ
+// عاد بصفحةِ HTML لا بوحدةِ جافاسكربت). وهذا ما حدث فعلاً.
+//
+// المشتركُ صار هنا: كلتا الشاشتين تستوردُ من هذا الملفّ، ولا تستوردُ إحداهما الأخرى.
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import api, { getErrorMessage } from '../api/client.js';
+import Select from './Select.jsx';
+import CitySearch from './CitySearch.jsx';
+import { BagIcon, TrashIcon, PlusIcon } from './icons.jsx';
+import { sizeLabel } from '../utils/sizes.js';
+import { isValidMobile, sanitizeMobileInput } from '../utils/phone.js';
+import { cldThumb, cldVideoPoster } from '../utils/cloudinary.js';
+import { normalizeAr } from '../utils/chat.js';
+
+// صورةُ الزبون كما هي عند إنستغرام. روابطُ Meta موقّعةٌ وتنتهي صلاحيّتُها، فالسقوطُ
+// إلى الحرفِ الأوّل ليس حالةً نادرةً بل الحالةُ المتوقّعةُ بعد أيّام — ولذلك لا تُعرَض
+// الصورةُ إلّا وخلفَها الحرفُ جاهز.
+export function Avatar({ url, name, className = 'h-11 w-11' }) {
+  const [broken, setBroken] = useState(false);
+  const letter = (name || '؟').trim().slice(0, 1).toUpperCase();
+  return (
+    <span className={`bz-avatar relative flex ${className} shrink-0 items-center justify-center rounded-full font-semibold`}>
+      {letter}
+      {url && !broken && (
+        <img src={url} alt="" loading="lazy" onError={() => setBroken(true)} className="absolute inset-0 h-full w-full rounded-full object-cover" />
+      )}
+    </span>
+  );
+}
+
+function productOptions(p) {
+  const colorStock = p?.colorStock && typeof p.colorStock === 'object' ? p.colorStock : {};
+  const hasColorStock = Object.keys(colorStock).length > 0;
+  const colors = hasColorStock
+    ? Object.keys(colorStock)
+    : (p?.color || '').split(',').map((s) => s.trim()).filter(Boolean);
+  const sizes = (p?.size || '').split(',').map((s) => s.trim()).filter(Boolean);
+  return { colorStock, hasColorStock, colors, sizes };
+}
+function sizesFor(p, color) {
+  const { colorStock, hasColorStock, sizes } = productOptions(p);
+  if (hasColorStock) return color ? Object.keys(colorStock[color] || {}) : [];
+  return sizes;
+}
+// صورة المنتج — نفس ترتيب صفحة المنتج (imageUrl ثم أول صورة ثم بوستر الفيديو)
+function productImg(p, w = 96) {
+  const raw = p?.imageUrl || p?.images?.[0] || (p?.videoUrl ? cldVideoPoster(p.videoUrl) : '');
+  return raw ? cldThumb(raw, w) : '';
+}
+
+// صف منتج مختار — يظهر زي بند طلب حقيقي: صورة + لون + نمرة + كمية + إجمالي السطر
+function PickedRow({ item, onChange, onRemove }) {
+  const { t } = useTranslation();
+  const { colors, hasColorStock } = productOptions(item.product);
+  const sizes = sizesFor(item.product, item.color);
+  const img = productImg(item.product);
+  const line = Number(item.price) * Math.max(1, item.qty);
+  return (
+    <div className="flex gap-2.5 rounded-xl bg-black/20 p-2.5 ring-1 ring-white/5">
+      {img ? (
+        <img src={img} alt="" className="h-16 w-14 shrink-0 rounded-lg object-cover ring-1 ring-white/10" />
+      ) : (
+        <span className="flex h-16 w-14 shrink-0 items-center justify-center rounded-lg bg-white/5 text-stone-500"><BagIcon className="h-5 w-5" /></span>
+      )}
+      <div className="min-w-0 flex-1 space-y-1.5">
+        <div className="flex items-start gap-2">
+          <span className="min-w-0 flex-1 truncate text-sm font-semibold text-stone-100">{item.name}</span>
+          <button onClick={onRemove} className="-me-1 rounded-lg p-1 text-stone-400 hover:text-red-300"><TrashIcon className="h-4 w-4" /></button>
+        </div>
+        {(colors.length > 0 || sizes.length > 0) && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {colors.length > 0 && (
+              <div className="min-w-[6rem] flex-1">
+                <Select value={item.color} placeholder={t('dashboard.instagram.color')}
+                  options={colors.map((c) => ({ value: c, label: c }))}
+                  onChange={(c) => onChange({ color: c, size: hasColorStock ? '' : item.size })} />
+              </div>
+            )}
+            {sizes.length > 0 && (
+              <div className="min-w-[5rem] flex-1">
+                <Select value={item.size} placeholder={t('dashboard.instagram.size')}
+                  options={sizes.map((s) => ({ value: s, label: sizeLabel(s, t) }))}
+                  onChange={(s) => onChange({ size: s })} />
+              </div>
+            )}
+            <input className="input !w-14 !py-1.5 text-center" type="number" min="1" inputMode="numeric" value={item.qty}
+              onChange={(e) => onChange({ qty: Math.max(1, parseInt(e.target.value, 10) || 1) })} />
+          </div>
+        )}
+        <div className="text-xs text-stone-400">
+          {t('common.currency')}{Number(item.price).toFixed(0)}{item.qty > 1 ? ` × ${item.qty}` : ''}
+          {' = '}<span className="font-display text-sm font-bold text-gold-300">{t('common.currency')}{line.toFixed(2)}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// المكوّن الموحّد لإنشاء طلب: منتجات (بألوان/نمَر) + منطقة توصيل بسعر تلقائي + بيانات الزبون.
+// onSubmit يستقبل { items, customer } ويرمي خطأً عند الفشل (نعرضه هنا)؛ النجاح يتكفّل به الأب.
+export function OrderComposer({ defaultName = '', defaultPhone = '', hintText = '', onSubmit }) {
+  const { t } = useTranslation();
+  const [products, setProducts] = useState(null);
+  const [localities, setLocalities] = useState([]); // قائمة مسطّحة: كل مدينة/قرية بندٌ مستقل
+  const [picked, setPicked] = useState([]);
+  const [q, setQ] = useState('');
+  const [f, setF] = useState({ name: defaultName, phone: defaultPhone, city: '', area: '', address: '', deliveryFee: '', notes: '' });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    api.get('/products').then((r) => setProducts(r.data.products || [])).catch(() => setProducts([]));
+    api.get('/stores/me').then((r) => {
+      setLocalities(Array.isArray(r.data.localities) ? r.data.localities : []);
+    }).catch(() => {});
+  }, []);
+
+  const set = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }));
+  const add = (p) => {
+    if (picked.some((x) => x.id === p.id)) return;
+    const { colors } = productOptions(p);
+    setPicked((prev) => [...prev, { id: p.id, name: p.name, price: Number(p.price) || 0, qty: 1, size: '', color: colors.length === 1 ? colors[0] : '', product: p }]);
+    setQ('');
+  };
+  const patchItem = (id, patch) => setPicked((prev) => prev.map((x) => (x.id === id ? { ...x, ...patch } : x)));
+  const removeItem = (id) => setPicked((prev) => prev.filter((x) => x.id !== id));
+
+  // اختيار مكان من القائمة المسطّحة: المحافظة (parent) لحقل city والقرية لحقل area،
+  // والأجرة تُملأ تلقائياً (نفس حساب السلة). الكتابة الحرّة تُعامل كمدينة.
+  const pickCity = (name, fee, opt) => {
+    const parent = opt?.parent || name;
+    setF((p) => ({
+      ...p,
+      city: parent,
+      area: parent === name ? '' : name,
+      deliveryFee: fee != null && fee !== '' ? String(fee) : p.deliveryFee,
+    }));
+  };
+  // قائمة مسطّحة: كل مدينة/قرية بندٌ مستقل بسعره
+  const cityChoices = useMemo(
+    () => localities.map((z) => ({ name: z.name, parent: z.parent || z.name, region: z.region || '', fee: Number(z.fee) || 0 })),
+    [localities],
+  );
+
+  const results = useMemo(() => {
+    const term = q.trim().toLowerCase();
+    if (!term) return [];
+    return (products || []).filter((p) => (p.name || '').toLowerCase().includes(term)).slice(0, 6);
+  }, [q, products]);
+
+  // منتجاتٌ سمّاها الزبونُ في محادثته: التاجرةُ قرأت الاسمَ للتوّ في الرسالة، فلا
+  // معنى لأن تكتبَه ثانيةً في البحث. نطابقُ اسمَ المنتجِ على نصِّ المحادثةِ بعد
+  // تطبيعِ العربيّة، ولا نعرضُ إلّا الأسماءَ الطويلةَ بما يكفي (كلمةٌ من حرفين
+  // تُطابقُ كلَّ شيءٍ فتصيرُ الاقتراحاتُ ضوضاء).
+  const hints = useMemo(() => {
+    const txt = normalizeAr(hintText);
+    if (!txt || !products) return [];
+    return products
+      .filter((p) => {
+        const n = normalizeAr(p.name);
+        return n.length >= 4 && txt.includes(n) && !picked.some((x) => x.id === p.id);
+      })
+      .slice(0, 4);
+  }, [hintText, products, picked]);
+
+  // المكانُ أيضاً يُذكَرُ في المحادثة: نطابقُه على قائمةِ مناطقِ المتجرِ فتُملأُ
+  // الأجرةُ معه. مرّةً واحدةً فقط، ولا نلمسُ ما كتبته التاجرةُ بنفسِها.
+  const cityGuessed = useRef(false);
+  useEffect(() => {
+    if (cityGuessed.current || f.city || !hintText || !cityChoices.length) return;
+    const txt = normalizeAr(hintText);
+    const hit = cityChoices.find((z) => {
+      const n = normalizeAr(z.name);
+      return n.length >= 3 && txt.includes(n);
+    });
+    if (hit) { cityGuessed.current = true; pickCity(hit.name, hit.fee, hit); }
+  }, [hintText, cityChoices, f.city]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const subtotal = picked.reduce((s, x) => s + x.price * Math.max(1, x.qty), 0);
+  const total = subtotal + (Number(f.deliveryFee) || 0);
+
+  const submit = async () => {
+    if (!picked.length) { setError(t('dashboard.instagram.needProduct')); return; }
+    if (!f.name.trim() || !f.phone.trim()) { setError(t('dashboard.instagram.needCustomer')); return; }
+    // نفس قاعدة المتجر: ١٠ أرقام تبدأ بـ 05 — أوبتيموس يرفض غيرها
+    if (!isValidMobile(f.phone)) { setError(t('co.phoneInvalid')); return; }
+    setBusy(true); setError('');
+    try {
+      await onSubmit({
+        items: picked.map((x) => ({ id: x.id, qty: x.qty, size: x.size, color: x.color })),
+        customer: { name: f.name, phone: f.phone, city: f.city, area: f.area, address: f.address, deliveryFee: f.deliveryFee, notes: f.notes },
+      });
+    } catch (e) {
+      setError(getErrorMessage(e));
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* منتجاتٌ ذُكرت في المحادثة — ضغطةٌ واحدةٌ بدل بحثٍ عن اسمٍ قرأته للتوّ */}
+      {hints.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[11px] font-semibold text-gold-200">{t('dashboard.instagram.mentioned')}</span>
+          {hints.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => add(p)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-gold-400/30 bg-gold-400/10 px-2.5 py-1 text-xs font-semibold text-gold-100 transition hover:bg-gold-400/20"
+            >
+              <PlusIcon className="h-3.5 w-3.5" /> {p.name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* بحث المنتجات — قائمة نهارية بيضاء متناسقة مع باقي الدشبورد */}
+      <div className="relative">
+        <input className="input" placeholder={t('dashboard.instagram.searchProduct')} value={q} onChange={(e) => setQ(e.target.value)} />
+        {results.length > 0 && (
+          <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-2xl border border-wine/15 bg-white p-1.5 shadow-2xl">
+            {results.map((p) => {
+              const img = productImg(p);
+              return (
+                <button key={p.id} onClick={() => add(p)} className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-start text-sm text-[#2b2b2b] transition hover:bg-wine/5">
+                  {img ? <img src={img} alt="" className="h-9 w-9 rounded-lg object-cover ring-1 ring-black/5" /> : <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-wine/5 text-wine/50"><BagIcon className="h-4 w-4" /></span>}
+                  <span className="min-w-0 flex-1 truncate font-medium">{p.name}</span>
+                  <span className="shrink-0 font-semibold text-wine">{t('common.currency')}{Number(p.price).toFixed(0)}</span>
+                  <PlusIcon className="h-4 w-4 shrink-0 text-wine" />
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {picked.map((x) => (
+        <PickedRow key={x.id} item={x} onChange={(patch) => patchItem(x.id, patch)} onRemove={() => removeItem(x.id)} />
+      ))}
+
+      {/* بيانات الزبون */}
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <input className="input" placeholder={t('dashboard.instagram.custName')} value={f.name} onChange={set('name')} />
+        <input
+          className="input" placeholder={t('co.phonePlaceholder')} value={f.phone} dir="ltr"
+          inputMode="numeric" maxLength={10}
+          onChange={(e) => setF((prev) => ({ ...prev, phone: sanitizeMobileInput(e.target.value) }))}
+        />
+        {/* التوصيل: بحث مسطّح عن المكان (كل مدينة/قرية بندٌ مستقل بسعره) + السعر بجنبه */}
+        <div className="flex gap-2 sm:col-span-2">
+          <div className="flex-1">
+            {cityChoices.length > 0 ? (
+              <CitySearch
+                value={f.area || f.city}
+                options={cityChoices}
+                onPick={pickCity}
+                onText={(txt) => setF((p) => ({ ...p, city: txt, area: '' }))}
+                onClear={() => setF((p) => ({ ...p, city: '', area: '' }))}
+              />
+            ) : (
+              <input className="input w-full" placeholder={t('dashboard.ordersSection.deliveryTo')} value={f.city} onChange={set('city')} />
+            )}
+          </div>
+          <div className="relative w-28 shrink-0">
+            <input className="input w-full pe-6 text-center" type="number" min="0" step="0.5" inputMode="decimal" placeholder={t('dashboard.ordersSection.delivery')} value={f.deliveryFee} onChange={set('deliveryFee')} />
+            <span className="pointer-events-none absolute inset-y-0 end-2 flex items-center text-xs text-stone-400">{t('common.currency')}</span>
+          </div>
+        </div>
+        <input className="input sm:col-span-2" placeholder={t('dashboard.ordersSection.address')} value={f.address} onChange={set('address')} />
+        <input className="input sm:col-span-2" placeholder={t('dashboard.ordersSection.notes')} value={f.notes} onChange={set('notes')} />
+      </div>
+
+      {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs text-red-200">{error}</div>}
+
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={submit} disabled={busy} className="btn-primary gap-1.5 !px-3 !py-1.5 text-xs disabled:opacity-50">
+          {busy ? t('common.loading') : <><BagIcon className="h-4 w-4" /> {t('dashboard.instagram.createOrder')}</>}
+        </button>
+        <span className="text-xs text-stone-400">
+          {t('dashboard.ordersSection.total')}: <span className="font-display text-sm font-bold text-gold-300">{t('common.currency')}{total.toFixed(2)}</span>
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ───────── نموذج تحويل المحادثة لطلب (يستعمل المكوّن الموحّد) ─────────
+export function ConvertForm({ convId, defaultName, defaultPhone = '', hintText = '', onDone }) {
+  const { t } = useTranslation();
+  return (
+    <div className="space-y-3 border-b border-white/5 bg-gold-400/5 p-3">
+      <p className="text-xs font-semibold text-gold-200">{t('dashboard.instagram.convertTitle')}</p>
+      <OrderComposer
+        defaultName={defaultName}
+        defaultPhone={defaultPhone}
+        hintText={hintText}
+        onSubmit={async (payload) => {
+          const res = await api.post(`/instagram/conversations/${convId}/convert`, payload);
+          try { window.dispatchEvent(new Event('bz:orders-changed')); } catch { /* تجاهل */ }
+          onDone(res.data.orderId);
+        }}
+      />
+    </div>
+  );
+}

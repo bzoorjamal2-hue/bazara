@@ -77,25 +77,9 @@ document.addEventListener('dragstart', (e) => {
 // نتحكّم باستعادة موضع التمرير يدوياً (عبر الراوتر) بدل سلوك المتصفّح
 if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 
-// فشل تحميل جزء = كاش قديم بعد نشر جديد. مجرّد reload لا يكفي لو ظلّ الـ Service Worker
-// يخدم index.html قديماً يشير لملفات مفقودة — فتظلّ الصفحة تنهار (وعليها يفشل حتى تسجيل
-// الدخول). نكسر الجمود: نُلغي الـ SW ونمسح كل مخابئه ثم نعيد التحميل مرّة واحدة لجلب نسخة
-// نظيفة فعلاً. الحارس (sessionStorage) يمنع حلقة إعادة لا نهائية.
-window.addEventListener('vite:preloadError', async () => {
-  if (sessionStorage.getItem('bz_chunk_reload')) return;
-  sessionStorage.setItem('bz_chunk_reload', '1');
-  try {
-    if ('serviceWorker' in navigator) {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(regs.map((r) => r.unregister()));
-    }
-    if (typeof caches !== 'undefined') {
-      const keys = await caches.keys();
-      await Promise.all(keys.map((k) => caches.delete(k)));
-    }
-  } catch { /* نُعيد التحميل على أي حال */ }
-  window.location.reload();
-});
+// فشلُ تحميلِ قطعةٍ (كاشٌ قديمٌ بعدَ نشرة) يعالجُه حارسٌ واحدٌ في utils/chunkReload.js
+// يُنصَّبُ من App.jsx. كانت هنا نسخةٌ ثانيةٌ منه بعلمٍ مختلف، فكانت كلُّ حادثةٍ تُنتجُ
+// تحميلتَين لا واحدة — وهو أحدُ أسبابِ الوميضِ بينَ شاشةِ الانتظارِ والصفحةِ الفارغة.
 
 // ننتظر نصوص اللغة المختارة قبل أول رسمة (العربية مُضمّنة فتُحلّ فوراً)
 i18nReady.finally(() => ReactDOM.createRoot(document.getElementById('root')).render(
