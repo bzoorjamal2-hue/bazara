@@ -53,7 +53,12 @@ export default function InstagramInbox() {
       <ManualOrderPanel />
 
       {status && !status.connected ? (
-        <ConnectCard status={status} pendingPages={pendingPages} onConnected={() => { setPendingPages(null); loadStatus(); }} />
+        <ConnectCard
+          status={status}
+          pendingPages={pendingPages}
+          onPages={setPendingPages}
+          onConnected={() => { setPendingPages(null); loadStatus(); }}
+        />
       ) : status ? (
         <Inbox username={status.username} onDisconnected={loadStatus} />
       ) : null}
@@ -62,16 +67,39 @@ export default function InstagramInbox() {
 }
 
 // ───────── بطاقة الربط (تسجيل دخول فيسبوك بإعادة توجيه) ─────────
-function ConnectCard({ status, pendingPages, onConnected }) {
+function ConnectCard({ status, pendingPages, onConnected, onPages }) {
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const pages = pendingPages; // تظهر بعد العودة من فيسبوك لو عنده عدّة صفحات
 
-  // الزر الأساسي: يوجّه لفيسبوك (الصفحة تروح وترجع بـ ?code=) — بلا نوافذ منبثقة.
-  const start = () => {
+  // الزرّ الأساسيّ: يفتحُ الربطَ في نافذةٍ مستقلّةٍ ومعه تذكرةٌ يعرفُ بها الخادمُ صاحبَ
+  // الرحلة. وحين يعودُ صاحبُ المتجرِ إلى التطبيقِ نسألُ الخادمَ: هل تمّ؟
+  const start = async (fresh = false) => {
     setError('');
-    startFbLogin();
+    try {
+      await startFbLogin({
+        fresh,
+        requestTicket: () => api.post('/instagram/link-token').then((r) => r.data.token).catch(() => ''),
+      });
+      watchReturn();
+    } catch (e) { setError(getErrorMessage(e)); }
+  };
+
+  // النافذةُ المستقلّةُ لا تُخبرُنا بشيء، فنسألُ نحن عند عودةِ التطبيقِ إلى الواجهة:
+  // إمّا صار مربوطاً فنُحدّث، وإمّا بقيت خطوةُ اختيارِ الصفحةِ فنعرضُها.
+  const watchReturn = () => {
+    const onVisible = async () => {
+      if (document.hidden) return;
+      try {
+        const st = await api.get('/instagram/status');
+        if (st.data?.connected) { document.removeEventListener('visibilitychange', onVisible); onConnected(); return; }
+        const pg = await api.get('/instagram/pending-pages');
+        if (pg.data?.pages?.length) { document.removeEventListener('visibilitychange', onVisible); onPages(pg.data.pages); }
+      } catch { /* نُعيد المحاولة عند العودة القادمة */ }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    setTimeout(() => document.removeEventListener('visibilitychange', onVisible), 10 * 60 * 1000);
   };
 
   // اختيار صفحة معيّنة (خطوة ثانية): يكمّل الربط بالتوكن المخزّن مؤقّتاً بالخادم.
@@ -126,12 +154,12 @@ function ConnectCard({ status, pendingPages, onConnected }) {
         </div>
       ) : (
         <div className="space-y-2">
-          <button onClick={start} disabled={busy} className="btn-primary gap-2">
+          <button onClick={() => start(false)} disabled={busy} className="btn-primary gap-2">
             <InstagramIcon className="h-5 w-5" /> {t('dashboard.instagram.connectBtn')}
           </button>
           {/* فيسبوك يتذكّر آخر من دخل في هذا الجهاز فيعرض «تريد المتابعة كـفلان؟» بلا
               بابٍ لاختيار حسابٍ آخر — ومن لا يعرف السبب يربط حساب غيره وهو لا يدري. */}
-          <button onClick={() => startFbLogin({ fresh: true })} className="text-[11px] text-gold-200 underline underline-offset-2">
+          <button onClick={() => start(true)} className="text-[11px] text-gold-200 underline underline-offset-2">
             {t('dashboard.instagram.otherAccount')}
           </button>
           <p className="text-[11px] leading-relaxed text-stone-400">{t('dashboard.instagram.wrongAccount')}</p>

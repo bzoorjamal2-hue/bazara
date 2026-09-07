@@ -17,14 +17,19 @@ export function igRedirectUri() {
 // في سفاري لا في تطبيقِنا المثبَّت — فتنقطعُ الرحلةُ ويبدو الزرُّ معطّلاً. والروابطُ
 // الشاملةُ لا تُلتقَطُ حين يصلُ المتصفّحُ بتحويلةٍ من نطاقٍ آخر، فتبقى الرحلةُ داخلَنا.
 // وبذلك أمكن أيضاً `fresh` — دخولٌ جديدٌ في كلِّ مرّةٍ فيربطُ كلٌّ حسابَه هو.
-// fresh: طلبُ دخولٍ جديدٍ من فيسبوك. مطفأٌ افتراضاً لأنّ تجربتَنا أظهرت أنّه قد
-// يدفعُ iOS لتسليمِ الرحلةِ إلى تطبيقِ فيسبوك فتنقطع. يُفتَحُ بزرِّ «حسابٌ آخر».
-export function startFbLogin({ fresh = false } = {}) {
-  const state = Math.random().toString(36).slice(2) + Date.now().toString(36);
-  try { sessionStorage.setItem('ig_oauth_state', state); } catch { /* تجاهل */ }
-
+// يُفتَحُ الربطُ في نافذةٍ مستقلّة، لا بتحويلِ الصفحةِ نفسِها. على الآيفون يلتقطُ
+// النظامُ روابطَ facebook.com من التصفّحِ العاديِّ ويفتحُ تطبيقَ فيسبوك، فيُتمُّ
+// الموافقةَ ثمّ يفتحُ رابطَ العودةِ في سفاري لا في تطبيقِنا المثبَّت — فتنقطعُ الرحلة.
+// أمّا نافذةُ المتصفّحِ المستقلّةُ فلا تُسلّمُ روابطَها للتطبيقات.
+// والتذكرةُ (lt) هي كيف يعرفُ الخادمُ صاحبَ الرحلة: تلك النافذةُ لا تحملُ جلسةَ
+// المستخدمِ في التطبيقِ المثبَّت، فلا تكفيها الكوكيز.
+export async function startFbLogin({ fresh = false, requestTicket } = {}) {
   const base = import.meta.env.VITE_API_URL || '/api';
-  const p = new URLSearchParams({ redirect_uri: igRedirectUri(), state });
+  const ticket = requestTicket ? await requestTicket() : '';
+  const p = new URLSearchParams(ticket ? { lt: ticket } : { redirect_uri: igRedirectUri() });
   if (fresh) p.set('fresh', '1');
-  window.location.href = `${base}/instagram/login?${p.toString()}`;
+  const url = `${base}/instagram/login?${p.toString()}`;
+  // النافذةُ المستقلّةُ قد تُمنَع (حاجبُ النوافذ)، فنعودُ حينَها إلى تحويلِ الصفحة.
+  const win = window.open(url, '_blank');
+  if (!win) window.location.href = url;
 }

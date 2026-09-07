@@ -3,6 +3,8 @@ import rateLimit from 'express-rate-limit';
 import {
   igStatus,
   igConnect,
+  igLinkToken,
+  igPendingPages,
   igDisconnect,
   listConversations,
   listMessages,
@@ -26,6 +28,8 @@ router.use(requireAuth); // كل هذه المسارات تخصّ صاحب ال�
 
 router.get('/status', igStatus);
 router.post('/connect', connectLimiter, igConnect);
+router.post('/link-token', connectLimiter, igLinkToken);
+router.get('/pending-pages', igPendingPages);
 router.post('/disconnect', igDisconnect);
 router.get('/conversations', listConversations);
 router.get('/conversations/:id/messages', listMessages);

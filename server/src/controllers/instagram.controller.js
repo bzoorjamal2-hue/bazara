@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
 import { query } from '../config/db.js';
 import { encrypt, decrypt } from '../config/opost.js';
 import { notifyUser } from '../utils/notify.js';
@@ -215,6 +216,100 @@ export async function igStatus(req, res, next) {
   }
 }
 
+// ═════════ ربطٌ يبقى داخلَ التطبيق (iOS) ═════════
+// على الآيفون يلتقطُ النظامُ روابطَ facebook.com ويفتحُ تطبيقَ فيسبوك، فيُتمُّ الموافقةَ
+// ثمّ يفتحُ رابطَ العودةِ في سفاري لا في تطبيقِنا المثبَّت — فتنقطعُ الرحلةُ ولا يعودُ
+// إلينا شيء. وتحويلةُ الخادمِ لم تمنعه.
+//
+// فصار الربطُ يُفتَحُ في نافذةٍ مستقلّةٍ (لا يلتقطُ النظامُ روابطَها للتطبيقات)، وتعودُ
+// موافقةُ فيسبوك إلى **خادمِنا** لا إلى الواجهة — لأنّ تلك النافذةَ لا تحملُ جلسةَ
+// المستخدمِ في التطبيق. ولنعرفَ صاحبَها نمرّرُ تذكرةً موقّعةً (عشرُ دقائق) تحملُ رقمَه،
+// فيُتمُّ الخادمُ الربطَ وحدَه ويقولُ للنافذة: أُغلقيني وارجعي.
+
+// POST /api/instagram/link-token — تذكرةُ ربطٍ قصيرةُ العمر (تُطلَبُ من داخل التطبيق)
+export function igLinkToken(req, res) {
+  const token = jwt.sign({ sub: req.user.id, ig: 1 }, process.env.JWT_SECRET, { expiresIn: '10m' });
+  res.json({ token });
+}
+
+function ticketUser(raw) {
+  try {
+    const p = jwt.verify(String(raw || ''), process.env.JWT_SECRET);
+    return p?.ig === 1 && p.sub ? p.sub : null;
+  } catch { return null; }
+}
+
+// صفحةٌ صغيرةٌ تُعرَضُ في النافذةِ المستقلّة بعد انتهاء الرحلة
+function closingPage(title, body) {
+  return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title></head>
+<body style="margin:0;display:flex;min-height:100vh;align-items:center;justify-content:center;background:#F4EDE2;font-family:system-ui,-apple-system,'Tajawal',sans-serif;color:#3f2e22">
+<div style="max-width:22rem;padding:2rem;text-align:center">
+<div style="font-size:2.5rem">${title.startsWith('تم') ? '✅' : '⚠️'}</div>
+<h1 style="font-size:1.1rem;margin:.75rem 0 .5rem">${title}</h1>
+<p style="font-size:.9rem;line-height:1.7;color:#6b6560;margin:0">${body}</p>
+</div></body></html>`;
+}
+
+// GET /api/instagram/callback — رجعةُ فيسبوك إلى الخادمِ لا إلى الواجهة
+export async function igCallback(req, res) {
+  const uid = ticketUser(req.query.state);
+  if (!uid) return res.status(400).send(closingPage('انتهت جلسة الربط', 'ارجع للتطبيق واضغط «ربط» من جديد.'));
+  const code = String(req.query.code || '');
+  if (!code) return res.status(400).send(closingPage('أُلغي الربط', 'ارجع للتطبيق وحاول مرّة أخرى إن أردت.'));
+  try {
+    const store = await getUserStore(uid);
+    if (!store) return res.status(404).send(closingPage('لا يوجد متجر', 'أنشئ متجرك أوّلاً ثم أعد الربط.'));
+
+    const redirectUri = `${req.protocol}://${req.get('host')}/api/instagram/callback`;
+    const userToken = await exchangeCodeForToken(code, redirectUri);
+    const longLived = await exchangeLongLivedToken(userToken);
+    const pages = await getManagedPages(longLived);
+    if (!pages.length) {
+      return res.status(400).send(closingPage(
+        'ما لقينا حساب إنستغرام',
+        'تأكّد أنّ حسابك على إنستغرام من نوع Business ومربوط بصفحة فيسبوك تديرها، ثم أعد المحاولة.'
+      ));
+    }
+
+    // أكثرُ من صفحة: نحفظُ التوكنَ مؤقّتاً ويختارُ صاحبُ المتجرِ من داخلِ التطبيق
+    if (pages.length > 1) {
+      await query('UPDATE stores SET ig_access_token = $1, ig_connected = false WHERE id = $2', [encrypt(longLived), store.id]);
+      return res.send(closingPage('بقيت خطوة', 'ارجع للتطبيق واختر الصفحة التي تريد ربطها.'));
+    }
+
+    const chosen = pages[0];
+    const dup = await query(
+      'SELECT id FROM stores WHERE ig_user_id = $1 AND ig_connected = true AND id <> $2',
+      [chosen.igUserId, store.id]
+    );
+    if (dup.rows.length) {
+      return res.status(409).send(closingPage('الحساب مربوط بمتجر آخر', 'افصله من ذاك المتجر أوّلاً ثم أعد الربط.'));
+    }
+    try { await subscribePageMessages(chosen.pageId, chosen.pageToken); }
+    catch (e) { console.error('ig subscribe page (تم تجاهله):', e.message); }
+    await query(
+      `UPDATE stores SET ig_user_id = $1, ig_username = $2, ig_page_id = $3,
+         ig_access_token = $4, ig_connected = true WHERE id = $5`,
+      [chosen.igUserId, chosen.igUsername, chosen.pageId, encrypt(chosen.pageToken), store.id]
+    );
+    return res.send(closingPage('تمّ الربط', 'أغلق هذه النافذة وارجع للتطبيق — رسائلك ستصلك هنا.'));
+  } catch (e) {
+    console.error('ig callback:', e.message);
+    return res.status(500).send(closingPage('تعذّر الربط', e.message || 'حاول مرّة أخرى.'));
+  }
+}
+
+// GET /api/instagram/pending-pages — صفحاتُ التوكنِ المؤقّتِ (حين كان عنده أكثر من صفحة)
+export async function igPendingPages(req, res, next) {
+  try {
+    const store = await getUserStore(req.user.id);
+    if (!store || store.ig_connected || !store.ig_access_token) return res.json({ pages: [] });
+    const pages = await getManagedPages(decrypt(store.ig_access_token));
+    res.json({ pages: pages.map((p) => ({ pageId: p.pageId, name: p.pageName, username: p.igUsername })) });
+  } catch { res.json({ pages: [] }); }
+}
+
 // GET /api/instagram/login — بابُ الربط.
 // كانت الواجهةُ تذهبُ إلى facebook.com مباشرةً، فيلتقطُ iOS الرابطَ ويفتحُ تطبيقَ
 // فيسبوك (رابطٌ شامل)؛ والتطبيقُ يُتمُّ الموافقةَ ثمّ يفتحُ رابطَ العودةِ في سفاري لا
@@ -224,6 +319,17 @@ export async function igStatus(req, res, next) {
 // تربطُ حسابَها هي لا حسابَ من سبقها على الجهاز نفسِه.
 export function igLoginRedirect(req, res) {
   if (!isInstagramConfigured()) return res.status(503).send('ربط إنستغرام غير مُفعّل بعد.');
+  // المسارُ الجديد: تذكرةٌ موقّعةٌ ورجعةٌ إلى الخادم. والقديمُ (رجعةٌ إلى الواجهة) يبقى
+  // للمتصفّحاتِ التي لا يلتقطُ نظامُها الروابط.
+  const ticket = String(req.query.lt || '');
+  if (ticket) {
+    if (!ticketUser(ticket)) return res.status(400).send('انتهت جلسة الربط.');
+    const cb = `${req.protocol}://${req.get('host')}/api/instagram/callback`;
+    const q = new URLSearchParams({ client_id: APP_ID, redirect_uri: cb, response_type: 'code', state: ticket });
+    if (LOGIN_CONFIG_ID) { q.set('config_id', LOGIN_CONFIG_ID); q.set('override_default_response_type', 'true'); }
+    if (req.query.fresh) q.set('auth_type', 'reauthenticate');
+    return res.redirect(302, `https://www.facebook.com/${GRAPH_VERSION}/dialog/oauth?${q.toString()}`);
+  }
   const redirectUri = String(req.query.redirect_uri || '');
   // لا نحوّلُ إلّا إلى موقعِنا: الحقلُ يأتي من المتصفّحِ، وقبولُه كما هو يجعلُ الرابطَ
   // بابَ تحويلٍ مفتوحاً يُرسَلُ للناسِ فيظنّونه منّا.
