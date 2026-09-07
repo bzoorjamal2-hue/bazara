@@ -135,7 +135,10 @@
       "reply": "Reply",
       "unreact": "Remove ❤️",
       "replyingTo": "Replying to:",
-      "seen": "Seen"
+      "seen": "Opened",
+      "justNow": "just now",
+      "minsAgo": "{{count}} min ago",
+      "hoursAgo": "{{count}} h ago"
     },
     "opost": {
       "title": "Optimus courier",

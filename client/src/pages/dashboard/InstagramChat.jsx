@@ -290,7 +290,8 @@ export default function InstagramChat() {
   // تطبيقاتُ المحادثة. والزرُّ صريحٌ لا تحميلٌ عند بلوغِ الأعلى، لأنّ الإدراجَ في
   // الأعلى أثناءَ السحبِ يقفزُ بالمكانِ تحت الإصبع.
   const [limit, setLimit] = useState(40);
-  const all = data?.messages || [];
+  // صفوفٌ قديمةٌ حُفظت بلا نصٍّ ولا مرفقٍ (قبل أن نمنعَ ذلك) تظهرُ فقاعاتٍ فارغة
+  const all = (data?.messages || []).filter((m) => (m.text || '').trim() || m.attachment_url);
   const shown = limit >= all.length ? all : all.slice(all.length - limit);
   const hasOlder = all.length > shown.length;
   const items = useMemo(() => buildItems(shown), [shown]);
@@ -324,6 +325,40 @@ export default function InstagramChat() {
         messages: (d?.messages || []).map((x) => (x.id === m.id ? { ...x, reaction: m.reaction || '' } : x)),
       }));
     }
+  };
+
+  // الضغطةُ المطوّلةُ تفتحُ لوحةَ الرسالة، والنقرتانِ تضعان ❤️ مباشرةً — كما في
+  // إنستغرام. والضغطةُ العابرةُ لا تفعلُ شيئاً: كانت تفتحُ اللوحةَ بالخطأ كلّما لمستَ
+  // الشاشةَ وأنت تقرأ. ونُلغي قائمةَ النظامِ التي تظهرُ مع الضغطِ المطوّلِ على iOS.
+  const pressTimer = useRef(0);
+  const pressProps = (m) => {
+    const start = (e) => {
+      if (e.target.closest('button, a, video, audio')) return;
+      clearTimeout(pressTimer.current);
+      pressTimer.current = setTimeout(() => setActiveId(m.id), 450);
+    };
+    const cancel = () => clearTimeout(pressTimer.current);
+    return {
+      onTouchStart: start,
+      onTouchEnd: cancel,
+      onTouchMove: cancel,
+      onMouseDown: start,
+      onMouseUp: cancel,
+      onMouseLeave: cancel,
+      onContextMenu: (e) => e.preventDefault(),
+      onDoubleClick: (e) => { if (!e.target.closest('button, a, video, audio')) react(m); },
+    };
+  };
+
+  // «منذ كم» بالعربيّة: الساعةُ وحدَها لا تقولُ كم مضى، والفارقُ هو المقصود.
+  const relTime = (iso) => {
+    const diff = Math.max(0, Date.now() - new Date(iso).getTime());
+    const min = Math.floor(diff / 60000);
+    if (min < 1) return t('dashboard.instagram.justNow');
+    if (min < 60) return t('dashboard.instagram.minsAgo', { count: min });
+    const hrs = Math.floor(min / 60);
+    if (hrs < 24) return t('dashboard.instagram.hoursAgo', { count: hrs });
+    return new Date(iso).toLocaleDateString(locale, { day: 'numeric', month: 'short' });
   };
 
   // نصٌّ مختصرٌ للمقتبَس: الصورةُ بلا نصٍّ تُوصَفُ بكلمةٍ بدل أن تظهرَ فارغة
@@ -492,15 +527,11 @@ export default function InstagramChat() {
             const out = m.direction === 'out';
             const media = Boolean(m.attachment_url);
             return (
-              <div key={it.key} className={`flex items-end gap-1.5 ${out ? 'justify-start' : 'justify-end'} ${it.last ? 'mb-2.5' : 'mb-[3px]'}`}>
+              <div key={it.key} className={`flex items-end gap-1.5 ${out ? 'justify-start' : 'justify-end'} ${m.reaction ? 'mb-4' : it.last ? 'mb-2.5' : 'mb-[3px]'}`}>
                 <div className="min-w-0 max-w-[76%]">
                   <div
-                    onClick={(e) => {
-                      // الصورةُ والفيديو والروابطُ لها فعلُها، فلا نخطفُ ضغطتَها
-                      if (e.target.closest('button, a, video, audio')) return;
-                      setActiveId((v) => (v === m.id ? '' : m.id));
-                    }}
-                    className={`relative ${isNew(m.id) ? 'bz-bubble' : ''} ${out ? 'bz-chat-out' : 'bz-chat-in'} ${media ? 'p-1' : 'px-3 py-1.5'} rounded-[18px]`}
+                    {...pressProps(m)}
+                    className={`relative select-none ${isNew(m.id) ? 'bz-bubble' : ''} ${out ? 'bz-chat-out' : 'bz-chat-in'} ${media ? 'p-1' : 'px-3 py-1.5'} rounded-[18px]`}
                   >
                     {/* المقتبَس: ردٌّ بلا ما رُدَّ عليه نصفُ كلام */}
                     {m.reply_to_mid && byMid.get(m.reply_to_mid) && (
@@ -515,35 +546,40 @@ export default function InstagramChat() {
                         {timeOf(m)}
                       </span>
                     )}
-                    {/* التفاعلُ يجلسُ على حافّةِ الفقاعةِ كما في تطبيقاتِ المحادثة */}
+                    {/* التفاعلُ يجلسُ على حافّةِ الفقاعةِ كما في تطبيقاتِ المحادثة.
+                        وللصفِّ حشوةٌ سفليّةٌ حين يوجد، وإلّا ركبَ على الرسالةِ التالية. */}
                     {m.reaction && (
-                      <span className="bz-chat-react absolute -bottom-2 end-2 rounded-full px-1 text-[11px] leading-none">❤️</span>
+                      <span className="bz-chat-react absolute -bottom-2.5 end-2.5 rounded-full px-1 py-0.5 text-[11px] leading-none">❤️</span>
                     )}
                   </div>
 
-                  {/* أزرارُ الرسالةِ تحتَها عند اختيارِها — لا صفٌّ دائمٌ يأكلُ العرض */}
+                  {/* لوحةُ الرسالة: تُفتَحُ بالضغطةِ المطوّلةِ كما في إنستغرام، لا بضغطةٍ
+                      عابرةٍ تُفتَحُ بالخطأ كلّما لمستَ الشاشةَ وأنت تقرأ. */}
                   {activeId === m.id && (
-                    <div className={`mt-1 flex gap-1.5 ${out ? 'justify-start' : 'justify-end'}`}>
+                    <div className={`mt-1.5 flex gap-1.5 ${out ? 'justify-start' : 'justify-end'}`}>
                       <button
                         onClick={() => { setReplyTo({ mid: m.mid, text: quoteText(m) }); setActiveId(''); }}
                         disabled={!m.mid}
-                        className="bz-chat-day rounded-full px-2.5 py-1 text-[11px] font-semibold disabled:opacity-40"
+                        className="bz-chat-day rounded-full px-3 py-1.5 text-[11px] font-semibold disabled:opacity-40"
                       >
                         {t('dashboard.instagram.reply')}
                       </button>
                       <button
                         onClick={() => react(m)}
                         disabled={!m.mid}
-                        className="bz-chat-day rounded-full px-2.5 py-1 text-[11px] font-semibold disabled:opacity-40"
+                        className="bz-chat-day rounded-full px-3 py-1.5 text-[13px] leading-none disabled:opacity-40"
                       >
-                        {m.reaction ? t('dashboard.instagram.unreact') : '❤️'}
+                        {m.reaction ? '💔' : '❤️'}
                       </button>
                     </div>
                   )}
 
-                  {/* «شوهدت» تحت آخرِ ما أرسلناه فقط — تكرارُها تحت كلِّ رسالةٍ ضجيج */}
+                  {/* «تم فتح الرسالة · منذ …» تحت آخرِ ما أرسلناه فقط — تكرارُها تحت كلِّ
+                      رسالةٍ ضجيج. والوقتُ نسبيٌّ لأنّ «١٧:٤٤» لا تقولُ كم مضى. */}
                   {out && it.last && isLastOut(m) && seenAt && new Date(seenAt) >= new Date(m.created_at) && (
-                    <span className="bz-chat-muted mt-0.5 block text-start text-[10px]">{t('dashboard.instagram.seen')}</span>
+                    <span className="bz-chat-muted mt-1 block text-start text-[10px]">
+                      {t('dashboard.instagram.seen')} · {relTime(seenAt)}
+                    </span>
                   )}
                 </div>
                 {/* صورةُ الزبونِ في طرفِ الشاشةِ الخارجيِّ ومرّةً واحدةً في آخرِ دفقتِه —

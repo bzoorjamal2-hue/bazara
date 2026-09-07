@@ -138,7 +138,10 @@
       "reply": "ردّ",
       "unreact": "إزالة ❤️",
       "replyingTo": "ردّ على:",
-      "seen": "شوهدت"
+      "seen": "تم فتح الرسالة",
+      "justNow": "الآن",
+      "minsAgo": "منذ {{count}} دقيقة",
+      "hoursAgo": "منذ {{count}} ساعة"
     },
     "opost": {
       "title": "شركة التوصيل أوبتيموس",
