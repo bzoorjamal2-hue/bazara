@@ -236,6 +236,8 @@ export function PartyIcon({ className = 'h-5 w-5' }) { return svg(className, <><
 export function ShareIcon({ className = 'h-5 w-5' }) { return svg(className, <><circle {...L} cx="6" cy="12" r="2.4" /><circle {...L} cx="18" cy="6" r="2.4" /><circle {...L} cx="18" cy="18" r="2.4" /><path {...L} d="M8 11 L16 7 M8 13 L16 17" /></>); }
 export function UploadIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M12 16 V5 M7 10 L12 5 L17 10 M5 19 H19" />); }
 export function DownloadIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M12 4 V15 M7 10 L12 15 L17 10 M5 19 H19" />); }
+// ميكروفون — للرسائل الصوتيّة في صندوق رسائل إنستغرام
+export function MicIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="9" y="3" width="6" height="11" rx="3" /><path {...L} d="M5 11 a7 7 0 0 0 14 0 M12 18 V21 M9 21 H15" /></>); }
 export function CameraIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M4 8 H7 L9 5 H15 L17 8 H20 V19 H4 Z" /><circle {...L} cx="12" cy="13" r="3.4" /></>); }
 // قفل مغلق — الإيقاف الإداريّ (نظيره المفتوح أدناه لرفعه)
 export function LockIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="5" y="11" width="14" height="9" rx="2" /><path {...L} d="M8 11 V8 a4 4 0 0 1 8 0 V11" /></>); }

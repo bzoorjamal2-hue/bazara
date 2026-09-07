@@ -11,6 +11,8 @@ import {
   sendReply,
   convertToOrder,
   igReact,
+  igQuickReplies,
+  igSaveQuickReplies,
 } from '../controllers/instagram.controller.js';
 import { requireAuth } from '../middleware/auth.js';
 
@@ -36,6 +38,8 @@ router.get('/conversations', listConversations);
 router.get('/conversations/:id/messages', listMessages);
 router.post('/conversations/:id/reply', sendReply);
 router.post('/conversations/:id/react', igReact);
+router.get('/quick-replies', igQuickReplies);
+router.put('/quick-replies', igSaveQuickReplies);
 router.post('/conversations/:id/convert', convertToOrder);
 
 export default router;

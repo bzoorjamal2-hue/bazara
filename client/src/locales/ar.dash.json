@@ -141,7 +141,11 @@
       "seen": "تم فتح الرسالة",
       "justNow": "الآن",
       "minsAgo": "منذ {{count}} دقيقة",
-      "hoursAgo": "منذ {{count}} ساعة"
+      "hoursAgo": "منذ {{count}} ساعة",
+      "storyReply": "ردّ على ستوريك",
+      "voice": "رسالة صوتية",
+      "editQuick": "تعديل الردود الجاهزة",
+      "quickPlaceholder": "ردّ جاهز جديد…"
     },
     "opost": {
       "title": "شركة التوصيل أوبتيموس",

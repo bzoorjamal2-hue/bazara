@@ -176,15 +176,21 @@ async function processWebhook(body) {
       );
       const convId = conv.rows[0].id;
 
+      // ردُّ الزبونِ على ستوري: صورتُها تُنسَخُ عندنا لتبقى، فرابطُ Meta ينتهي.
+      const storyUrl = msg.reply_to?.story?.url
+        ? await mirrorRemote(msg.reply_to.story.url, 'ig/stories')
+        : '';
+
       // فقاعةٌ فارغةٌ ليست رسالة: بعضُ ما يصلُ بلا نصٍّ ولا مرفقٍ (مشاركةُ رقمٍ مثلاً،
       // أو حدثٌ لا نعرضُه) — لا يُخزَّنُ فلا يظهرُ مربّعاً أبيضَ فارغاً في المحادثة.
       if (!text && !attachment) continue;
 
       // نخزّن الرسالة (mid فريد → لا يتكرّر نفس الحدث ولا ردّنا الذي عاد كـ echo)
       await query(
-        `INSERT INTO ig_messages (conversation_id, mid, direction, text, attachment_url, attachment_type, reply_to_mid)
-         VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (mid) DO NOTHING`,
-        [convId, msg.mid || null, isEcho ? 'out' : 'in', text, attachment, attType, msg.reply_to?.mid || '']
+        `INSERT INTO ig_messages (conversation_id, mid, direction, text, attachment_url, attachment_type, reply_to_mid, story_url)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (mid) DO NOTHING`,
+        [convId, msg.mid || null, isEcho ? 'out' : 'in', text, attachment, attType,
+          msg.reply_to?.mid || '', storyUrl]
       );
 
       if (isEcho) continue; // ردّنا/ردّ المتجر — لا إشعار
@@ -575,13 +581,13 @@ export async function listMessages(req, res, next) {
     const after = String(req.query.after || '').trim();
     const r = after
       ? await query(
-          `SELECT id, mid, direction, text, attachment_url, attachment_type, reply_to_mid, reaction, created_at
+          `SELECT id, mid, direction, text, attachment_url, attachment_type, reply_to_mid, reaction, story_url, created_at
            FROM ig_messages WHERE conversation_id = $1 AND created_at > $2
            ORDER BY created_at ASC LIMIT 200`,
           [conv.id, after]
         )
       : await query(
-          `SELECT id, mid, direction, text, attachment_url, attachment_type, reply_to_mid, reaction, created_at
+          `SELECT id, mid, direction, text, attachment_url, attachment_type, reply_to_mid, reaction, story_url, created_at
            FROM ig_messages WHERE conversation_id = $1 ORDER BY created_at ASC LIMIT 200`,
           [conv.id]
         );
@@ -606,6 +612,8 @@ export async function listMessages(req, res, next) {
 export async function sendReply(req, res, next) {
   const text = String(req.body.text || '').trim();
   const attachmentUrl = String(req.body.attachmentUrl || '').trim();
+  // صورةٌ أو صوت: إنستغرام تتعاملُ معهما بنوعين مختلفين، ولو أُرسل الصوتُ صورةً رُفض
+  const attachmentKind = req.body.attachmentType === 'audio' ? 'audio' : 'image';
   const replyToMid = String(req.body.replyToMid || '').trim();
   if (!text && !attachmentUrl) return res.status(400).json({ error: 'الرسالة فارغة.' });
   // الرابطَ تجلبُه خوادمُ Meta بنفسها، فقبولُ أيِّ عنوانٍ يجعلُ حقلَ الردِّ باباً
@@ -622,14 +630,14 @@ export async function sendReply(req, res, next) {
     // رسالةٌ واحدةٌ عند إنستغرام لا تحمل صورةً ونصّاً معاً، فالصورةُ أوّلاً ثمّ النصّ
     // تحتها — وهو ترتيبُ ما يراه الزبون في محادثته.
     const parts = [];
-    if (attachmentUrl) parts.push({ image: attachmentUrl });
+    if (attachmentUrl) parts.push({ media: attachmentUrl, kind: attachmentKind });
     if (text) parts.push({ text });
 
     for (const part of parts) {
       let result;
       try {
-        result = part.image
-          ? await sendAttachment(token, conv.ig_sender_id, part.image)
+        result = part.media
+          ? await sendAttachment(token, conv.ig_sender_id, part.media, part.kind)
           : (replyToMid
             ? await sendReplyTo(token, conv.ig_sender_id, part.text, replyToMid)
             : await sendMessage(token, conv.ig_sender_id, part.text));
@@ -653,12 +661,12 @@ export async function sendReply(req, res, next) {
       await query(
         `INSERT INTO ig_messages (conversation_id, mid, direction, text, attachment_url, attachment_type, reply_to_mid)
          VALUES ($1, $2, 'out', $3, $4, $5, $6) ON CONFLICT (mid) DO NOTHING`,
-        [conv.id, result?.message_id || null, part.text || '', part.image || '',
-          part.image ? 'image' : '', part.image ? '' : replyToMid]
+        [conv.id, result?.message_id || null, part.text || '', part.media || '',
+          part.media ? part.kind : '', part.media ? '' : replyToMid]
       );
     }
 
-    const preview = text || ATTACHMENT_LABEL.image;
+    const preview = text || ATTACHMENT_LABEL[attachmentKind] || ATTACHMENT_LABEL.image;
     await query(
       'UPDATE ig_conversations SET last_message = $2, last_at = now(), unread = 0 WHERE id = $1',
       [conv.id, preview]
@@ -667,6 +675,30 @@ export async function sendReply(req, res, next) {
   } catch (err) {
     next(err);
   }
+}
+
+// ردودٌ جاهزةٌ لكلِّ متجر: نصوصٌ تُرسَلُ بضغطةٍ بدل كتابةِ «متوفّر» عشرين مرّةً في اليوم.
+export async function igQuickReplies(req, res, next) {
+  try {
+    const store = await getUserStore(req.user.id);
+    if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
+    const r = await query('SELECT ig_quick_replies FROM stores WHERE id = $1', [store.id]);
+    res.json({ replies: r.rows[0]?.ig_quick_replies || [] });
+  } catch (err) { next(err); }
+}
+
+export async function igSaveQuickReplies(req, res, next) {
+  try {
+    const store = await getUserStore(req.user.id);
+    if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
+    // حدٌّ للعددِ والطول: القائمةُ شريطٌ فوقَ صندوقِ الكتابةِ لا مستودعُ نصوص
+    const replies = (Array.isArray(req.body.replies) ? req.body.replies : [])
+      .map((x) => String(x || '').trim().slice(0, 300))
+      .filter(Boolean)
+      .slice(0, 20);
+    await query('UPDATE stores SET ig_quick_replies = $2 WHERE id = $1', [store.id, JSON.stringify(replies)]);
+    res.json({ replies });
+  } catch (err) { next(err); }
 }
 
 // POST /api/instagram/conversations/:id/react — تفاعلٌ على رسالة (❤️ أو إزالته)

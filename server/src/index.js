@@ -594,6 +594,11 @@ END $$;`,
     // صورةُ بروفايلِ الزبون كما تعطيها Meta — روابطُها موقّعةٌ وتنتهي، فالواجهةُ
     // ترجعُ إلى الحرفِ الأوّل إن سقطت الصورة.
     "ALTER TABLE ig_conversations ADD COLUMN IF NOT EXISTS customer_avatar TEXT DEFAULT '';",
+    // ردُّ الزبونِ على ستوري: نحفظُ صورةَ الستوري لتظهرَ فوقَ ردِّه — بدونها يصلُ
+    // «حلوة» بلا ما يقولُ على أيِّ شيءٍ قالها
+    "ALTER TABLE ig_messages ADD COLUMN IF NOT EXISTS story_url TEXT DEFAULT '';",
+    // ردودُ التاجرةِ الجاهزة (نصوصٌ قصيرةٌ تُرسَلُ بضغطة)
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS ig_quick_replies JSONB NOT NULL DEFAULT '[]'::jsonb;",
     // الردُّ على رسالةٍ بعينِها: نحفظُ معرّفَ المقتبَسةِ لنعرضَها فوقَ الردّ
     "ALTER TABLE ig_messages ADD COLUMN IF NOT EXISTS reply_to_mid VARCHAR(255) DEFAULT '';",
     // تفاعلُ الزبونِ أو التاجرةِ على رسالةٍ (love) — فارغٌ يعني لا تفاعل

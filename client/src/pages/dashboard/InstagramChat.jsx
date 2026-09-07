@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
-import { BackIcon, BagIcon, CameraIcon, ImageIcon, TrashIcon, XIcon } from '../../components/icons.jsx';
+import { BackIcon, BagIcon, CameraIcon, ImageIcon, TrashIcon, XIcon, MicIcon } from '../../components/icons.jsx';
 import { uploadToCloudinary, cloudinaryEnabled, cldThumb, cldBlur, cldOptimized } from '../../utils/cloudinary.js';
 import { Avatar, ConvertForm, findMobile } from './InstagramInbox.jsx';
 
@@ -181,6 +181,12 @@ export default function InstagramChat() {
   const [viewing, setViewing] = useState('');
   const dataRef = useRef(null);
   dataRef.current = data;
+  const [quick, setQuick] = useState([]);
+  const [editQuick, setEditQuick] = useState(false);
+  const [newQuick, setNewQuick] = useState('');
+  const [recording, setRecording] = useState(false);
+  const [recSecs, setRecSecs] = useState(0);
+  const recRef = useRef(null);
   const [hud, setHud] = useState(false);
   const taps = useRef([]);
   // ثلاثُ نقراتٍ على الصورةِ خلالَ ثانيةٍ تفتحُ المقياسَ وتغلقُه — بابٌ خفيٌّ لأنّه
@@ -196,6 +202,25 @@ export default function InstagramChat() {
       .then((r) => setData(r.data))
       .catch((e) => setError(getErrorMessage(e)));
   useEffect(() => { load(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // الردودُ الجاهزةُ تخصُّ المتجرَ لا الجهاز، فتُحفَظُ عند الخادمِ وتتبعُ صاحبتَها
+  // إلى أيِّ هاتفٍ فتحت منه.
+  useEffect(() => {
+    api.get('/instagram/quick-replies')
+      .then((r) => setQuick(Array.isArray(r.data?.replies) ? r.data.replies : []))
+      .catch(() => {});
+  }, []);
+  const saveQuick = async (list) => {
+    setQuick(list);
+    try { await api.put('/instagram/quick-replies', { replies: list }); }
+    catch (e) { setError(getErrorMessage(e)); }
+  };
+  const addQuick = () => {
+    const v = newQuick.trim();
+    if (!v) return;
+    setNewQuick('');
+    saveQuick([...quick, v].slice(0, 20));
+  };
 
   // ═════════ التحديثُ اللحظيّ ═════════
   // كانت التاجرةُ تُحدّثُ الصفحةَ لترى ردَّ الزبون — وهي تنتظرُه. نسألُ الخادمَ كلَّ
@@ -416,6 +441,53 @@ export default function InstagramChat() {
     return null;
   });
 
+  // ═════════ رسالةٌ صوتيّة ═════════
+  // تُسجَّلُ في المتصفّح، تُرفَعُ إلى Cloudinary (إنستغرام تطلبُ رابطاً عامّاً تجلبُه
+  // بنفسِها، لا ملفّاً نرسلُه)، ثمّ تُرسَلُ مرفقاً من نوع audio — ولو أُرسلت صورةً رُفضت.
+  const startRec = async () => {
+    setError('');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mr = new MediaRecorder(stream);
+      const chunks = [];
+      mr.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+      mr.onstop = async () => {
+        stream.getTracks().forEach((tr) => tr.stop());
+        clearInterval(recRef.current?.timer);
+        setRecording(false);
+        setRecSecs(0);
+        if (!recRef.current?.keep || !chunks.length) return;
+        const type = mr.mimeType || 'audio/mp4';
+        const ext = type.includes('webm') ? 'webm' : 'm4a';
+        const file = new File([new Blob(chunks, { type })], `voice.${ext}`, { type });
+        setSending(true);
+        try {
+          // Cloudinary يضعُ الصوتَ تحت نوعِ video — وهو مسارُه لكلِّ ما ليس صورة
+          const url = await uploadToCloudinary(file, 'video', setProgress);
+          const stamp = Date.now();
+          const optimistic = { id: 'tmp-aud-' + stamp, direction: 'out', text: '', attachment_url: url, attachment_type: 'audio', created_at: new Date().toISOString() };
+          setData((d) => ({ ...d, messages: [...(d?.messages || []), optimistic] }));
+          await api.post(`/instagram/conversations/${id}/reply`, { attachmentUrl: url, attachmentType: 'audio' });
+        } catch (e) {
+          setError(getErrorMessage(e));
+        } finally {
+          setSending(false); setProgress(0);
+        }
+      };
+      recRef.current = { mr, keep: false, timer: setInterval(() => setRecSecs((v) => v + 1), 1000) };
+      mr.start();
+      setRecSecs(0);
+      setRecording(true);
+    } catch (e) {
+      setError(getErrorMessage(e));
+    }
+  };
+  const stopRec = (keep) => {
+    if (!recRef.current?.mr) return;
+    recRef.current.keep = keep;
+    try { recRef.current.mr.stop(); } catch { /* أُوقف مسبقاً */ }
+  };
+
   const send = async () => {
     const body = text.trim();
     if (!body && !photo) return;
@@ -547,6 +619,15 @@ export default function InstagramChat() {
                     {...pressProps(m)}
                     className={`relative select-none ${isNew(m.id) ? 'bz-bubble' : ''} ${out ? 'bz-chat-out' : 'bz-chat-in'} ${media ? 'p-1' : 'px-3 py-1.5'} rounded-[18px]`}
                   >
+                    {/* ردٌّ على ستوري: صورتُها فوقَ الردّ. بدونها يصلُ «حلوة» بلا ما
+                        يقولُ على أيِّ شيءٍ قالها — وهو أكثرُ ما يصلُ من الستوريات. */}
+                    {m.story_url && (
+                      <div className="mb-1 flex items-center gap-2">
+                        <img src={cldThumb(m.story_url, 120)} alt="" className="h-12 w-9 rounded-md object-cover" />
+                        <span className="bz-chat-time text-[11px]">{t('dashboard.instagram.storyReply')}</span>
+                      </div>
+                    )}
+
                     {/* المقتبَس: ردٌّ بلا ما رُدَّ عليه نصفُ كلام */}
                     {m.reply_to_mid && byMid.get(m.reply_to_mid) && (
                       <div className="bz-chat-quote mb-1 truncate rounded-lg px-2 py-1 text-[11px]">
@@ -634,7 +715,78 @@ export default function InstagramChat() {
         </div>
       )}
 
+      {/* الردودُ الجاهزة: «متوفّر» و«السعر» تُكتَبان عشرين مرّةً في اليوم. شريطٌ يمرّرُ
+          أفقيّاً فوقَ صندوقِ الكتابة، والضغطةُ تضعُ النصَّ في الصندوقِ لا تُرسلُه —
+          فيبقى للتاجرةِ أن تُضيفَ كلمةً قبل الإرسال. */}
+      {!recording && (quick.length > 0 || editQuick) && (
+        <div className="shrink-0 px-2 pb-1">
+          <div className="flex gap-1.5 overflow-x-auto pb-1">
+            {quick.map((qr, i) => (
+              <button
+                key={`${qr}-${i}`}
+                onClick={() => { setText((v) => (v ? `${v} ${qr}` : qr)); setEditQuick(false); }}
+                className="bz-chat-day shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-[11px] font-semibold"
+              >
+                {qr}
+              </button>
+            ))}
+            <button
+              onClick={() => setEditQuick((v) => !v)}
+              className="bz-chat-icon shrink-0 rounded-full px-2.5 py-1.5 text-[11px] font-bold"
+              title={t('dashboard.instagram.editQuick')}
+            >
+              ✎
+            </button>
+          </div>
+
+          {editQuick && (
+            <div className="bz-chat-in mt-1 space-y-2 rounded-2xl p-2.5">
+              <div className="flex gap-1.5">
+                <input
+                  className="bz-chat-input min-h-[36px] flex-1"
+                  value={newQuick}
+                  onChange={(e) => setNewQuick(e.target.value)}
+                  placeholder={t('dashboard.instagram.quickPlaceholder')}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addQuick(); } }}
+                />
+                <button onClick={addQuick} disabled={!newQuick.trim()} className="btn-primary shrink-0 !rounded-full !px-3 !py-1.5 text-xs disabled:opacity-40">
+                  {t('common.add', { defaultValue: 'إضافة' })}
+                </button>
+              </div>
+              {quick.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {quick.map((qr, i) => (
+                    <button
+                      key={`del-${qr}-${i}`}
+                      onClick={() => saveQuick(quick.filter((_, j) => j !== i))}
+                      className="bz-chat-day inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px]"
+                    >
+                      {qr} <XIcon className="h-3 w-3" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* شريطُ التسجيل: يحلُّ محلَّ صندوقِ الكتابةِ ما دام الصوتُ يُسجَّل */}
+      {recording && (
+        <div className="bz-chat-bar flex shrink-0 items-center gap-3 border-t px-3 pb-[max(env(safe-area-inset-bottom),10px)] pt-3">
+          <span className="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-red-500" />
+          <span className="flex-1 font-mono text-sm" dir="ltr">{String(Math.floor(recSecs / 60)).padStart(2, '0')}:{String(recSecs % 60).padStart(2, '0')}</span>
+          <button onClick={() => stopRec(false)} className="bz-chat-icon rounded-full px-3 py-1.5 text-xs font-semibold">
+            {t('common.cancel')}
+          </button>
+          <button onClick={() => stopRec(true)} className="btn-primary !rounded-full !px-4 !py-2 text-sm">
+            {t('dashboard.instagram.send')}
+          </button>
+        </div>
+      )}
+
       {/* صندوقُ الكتابة */}
+      {!recording && (
       <div className="bz-chat-bar flex shrink-0 items-center gap-1 border-t px-2 pb-[max(env(safe-area-inset-bottom),10px)] pt-2">
         {cloudinaryEnabled && (
           <>
@@ -660,10 +812,17 @@ export default function InstagramChat() {
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
         />
+        {/* الميكروفون يظهرُ ما دام الصندوقُ فارغاً — كما في إنستغرام: إمّا تكتبُ أو تُسجّل */}
+        {!text.trim() && !photo && (
+          <button onClick={startRec} className="bz-chat-icon shrink-0 rounded-full p-2 transition" title={t('dashboard.instagram.voice')}>
+            <MicIcon className="h-[22px] w-[22px]" />
+          </button>
+        )}
         <button onClick={send} disabled={sending || (!text.trim() && !photo)} className="btn-primary shrink-0 !rounded-full !px-4 !py-2 text-sm disabled:opacity-40">
           {sending ? t('common.loading') : t('dashboard.instagram.send')}
         </button>
       </div>
+      )}
 
       {hud && <PerfHud />}
       {viewing && <ImageViewer url={viewing} onClose={() => setViewing('')} />}

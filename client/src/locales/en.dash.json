@@ -138,7 +138,11 @@
       "seen": "Opened",
       "justNow": "just now",
       "minsAgo": "{{count}} min ago",
-      "hoursAgo": "{{count}} h ago"
+      "hoursAgo": "{{count}} h ago",
+      "storyReply": "Replied to your story",
+      "voice": "Voice message",
+      "editQuick": "Edit quick replies",
+      "quickPlaceholder": "New quick reply…"
     },
     "opost": {
       "title": "Optimus courier",
