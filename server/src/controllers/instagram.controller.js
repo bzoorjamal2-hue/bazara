@@ -215,6 +215,36 @@ export async function igStatus(req, res, next) {
   }
 }
 
+// GET /api/instagram/login — بابُ الربط.
+// كانت الواجهةُ تذهبُ إلى facebook.com مباشرةً، فيلتقطُ iOS الرابطَ ويفتحُ تطبيقَ
+// فيسبوك (رابطٌ شامل)؛ والتطبيقُ يُتمُّ الموافقةَ ثمّ يفتحُ رابطَ العودةِ في سفاري لا
+// في تطبيقِنا المثبَّت — فتنقطعُ الرحلة. والروابطُ الشاملةُ لا تُلتقَطُ حين يصلُ
+// المتصفّحُ إلى العنوانِ بتحويلةٍ من نطاقٍ آخر، فنمرُّ من هنا.
+// وبذلك أمكن أيضاً طلبُ دخولٍ جديدٍ في كلِّ مرّة (fresh)، وهو ما يجعلُ كلَّ تاجرةٍ
+// تربطُ حسابَها هي لا حسابَ من سبقها على الجهاز نفسِه.
+export function igLoginRedirect(req, res) {
+  if (!isInstagramConfigured()) return res.status(503).send('ربط إنستغرام غير مُفعّل بعد.');
+  const redirectUri = String(req.query.redirect_uri || '');
+  // لا نحوّلُ إلّا إلى موقعِنا: الحقلُ يأتي من المتصفّحِ، وقبولُه كما هو يجعلُ الرابطَ
+  // بابَ تحويلٍ مفتوحاً يُرسَلُ للناسِ فيظنّونه منّا.
+  const allowed = [process.env.PUBLIC_SITE_URL, process.env.CLIENT_URL].filter(Boolean);
+  if (!allowed.some((base) => redirectUri.startsWith(base))) {
+    return res.status(400).send('رابط عودة غير مقبول.');
+  }
+  const p = new URLSearchParams({
+    client_id: APP_ID,
+    redirect_uri: redirectUri,
+    response_type: 'code',
+    state: String(req.query.state || '').slice(0, 120),
+  });
+  if (LOGIN_CONFIG_ID) {
+    p.set('config_id', LOGIN_CONFIG_ID);
+    p.set('override_default_response_type', 'true');
+  }
+  if (req.query.fresh) p.set('auth_type', 'reauthenticate');
+  res.redirect(302, `https://www.facebook.com/${GRAPH_VERSION}/dialog/oauth?${p.toString()}`);
+}
+
 // POST /api/instagram/connect — تدفّق إعادة التوجيه (Facebook Login for Business):
 //   • الخطوة 1: { code, redirectUri } → نبدّل الرمز بتوكن، نجلب الصفحات.
 //       - صفحة واحدة → نربطها فوراً.

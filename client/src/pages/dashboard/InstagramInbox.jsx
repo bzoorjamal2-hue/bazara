@@ -71,7 +71,7 @@ function ConnectCard({ status, pendingPages, onConnected }) {
   // الزر الأساسي: يوجّه لفيسبوك (الصفحة تروح وترجع بـ ?code=) — بلا نوافذ منبثقة.
   const start = () => {
     setError('');
-    startFbLogin({ appId: status.appId, configId: status.configId, graphVersion: status.graphVersion });
+    startFbLogin();
   };
 
   // اختيار صفحة معيّنة (خطوة ثانية): يكمّل الربط بالتوكن المخزّن مؤقّتاً بالخادم.

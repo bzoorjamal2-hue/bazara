@@ -9,41 +9,20 @@ export function igRedirectUri() {
   return `${window.location.origin}${IG_REDIRECT_PATH}`;
 }
 
-// صلاحيات احتياطية للمسار القديم فقط — التطبيق التجاري يعتمد config_id.
-const SCOPES = [
-  'instagram_basic',
-  'instagram_manage_messages',
-  // اشتراكُ الصفحة بحقلَي messages وmessaging_postbacks يرفضُه Meta بـ(#200) بدونها،
-  // فيمضي الربطُ ناجحاً ولا يصلُ حدثٌ واحد — وهو عطلٌ صامتٌ لا يظهرُ إلّا في السجلّ.
-  'pages_messaging',
-  'pages_show_list',
-  'pages_read_engagement',
-  'business_management',
-].join(',');
 
 // يبدأ الدخول: يوجّه الصفحة كاملةً لنافذة فيسبوك. بعد الموافقة يرجّع فيسبوك المستخدم
 // إلى IG_REDIRECT_PATH مع ?code=… فنكمّل الربط من هناك.
-export function startFbLogin({ appId, configId, graphVersion = 'v21.0' }) {
+// نمرُّ بخادمِنا لا بفيسبوك مباشرةً. الذهابُ المباشرُ إلى facebook.com يلتقطُه iOS
+// فيفتحُ تطبيقَ فيسبوك (رابطٌ شامل)، والتطبيقُ يُتمُّ الموافقةَ ثمّ يفتحُ رابطَ العودةِ
+// في سفاري لا في تطبيقِنا المثبَّت — فتنقطعُ الرحلةُ ويبدو الزرُّ معطّلاً. والروابطُ
+// الشاملةُ لا تُلتقَطُ حين يصلُ المتصفّحُ بتحويلةٍ من نطاقٍ آخر، فتبقى الرحلةُ داخلَنا.
+// وبذلك أمكن أيضاً `fresh` — دخولٌ جديدٌ في كلِّ مرّةٍ فيربطُ كلٌّ حسابَه هو.
+export function startFbLogin({ fresh = true } = {}) {
   const state = Math.random().toString(36).slice(2) + Date.now().toString(36);
   try { sessionStorage.setItem('ig_oauth_state', state); } catch { /* تجاهل */ }
 
-  const p = new URLSearchParams({
-    client_id: appId,
-    redirect_uri: igRedirectUri(),
-    response_type: 'code',
-    state,
-    // جرّبتُ هنا `auth_type=reauthenticate` ليطلبَ الدخولَ من جديدٍ في كلِّ مرّة —
-    // فحوّلَ فيسبوكُ الرابطَ إلى تطبيقِه على iOS (رابطٌ شامل)، والتطبيقُ يُكمل الموافقةَ
-    // ثمّ يفتحُ رابطَ العودةِ في سفاري لا في تطبيقِنا المثبَّت — فتنقطعُ الرحلةُ ولا
-    // يحدثُ شيء. فلا يُعاد. وتبديلُ الحسابِ يكون بتسجيلِ الخروجِ من فيسبوك (مكتوبٌ
-    // في بطاقةِ الربط).
-  });
-  if (configId) {
-    // تسجيل الدخول للأعمال: config_id بدل scope + تجاوز نوع الردّ الافتراضي
-    p.set('config_id', configId);
-    p.set('override_default_response_type', 'true');
-  } else {
-    p.set('scope', SCOPES); // احتياطي (تطبيق دخول عادي)
-  }
-  window.location.href = `https://www.facebook.com/${graphVersion}/dialog/oauth?${p.toString()}`;
+  const base = import.meta.env.VITE_API_URL || '/api';
+  const p = new URLSearchParams({ redirect_uri: igRedirectUri(), state });
+  if (fresh) p.set('fresh', '1');
+  window.location.href = `${base}/instagram/login?${p.toString()}`;
 }
