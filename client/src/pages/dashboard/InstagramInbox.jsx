@@ -223,7 +223,9 @@ function Inbox({ username, onDisconnected }) {
   // وأنت تنظرُ إلى القائمةِ يجبُ أن تُرى، لا أن تنتظرَ ضغطةَ «تحديث».
   useEffect(() => {
     const tick = () => { if (!document.hidden) load(); };
-    const timer = setInterval(tick, 10000);
+    // عشرون ثانيةً لا عشر: القائمةُ تُقرَأُ لا تُراقَب، والرسالةُ الجديدةُ يصلُ معها
+    // إشعارٌ على كلِّ حال. والطلباتُ لها حدٌّ لا يُنفَقُ على ما لا يُنظَرُ إليه.
+    const timer = setInterval(tick, 20000);
     document.addEventListener('visibilitychange', tick);
     return () => { clearInterval(timer); document.removeEventListener('visibilitychange', tick); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps

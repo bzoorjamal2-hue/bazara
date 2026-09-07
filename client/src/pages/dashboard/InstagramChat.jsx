@@ -200,6 +200,7 @@ export default function InstagramChat() {
   // أربعِ ثوانٍ عمّا **بعدَ** آخرِ رسالةٍ عندنا فقط (لا المحادثةَ كلَّها)، ونتوقّفُ حين
   // يغيبُ التطبيقُ عن الشاشة — فلا سؤالَ ولا بطاريّةَ تُستهلَكُ وهو في الجيب.
   // ولا نسألُ أثناءَ الإرسال: الرسالةُ التفاؤليّةُ ما زالت بلا رقمٍ من الخادم.
+  const pace = useRef(null);
   const sendingRef = useRef(false);
   sendingRef.current = sending;
   useEffect(() => {
@@ -214,7 +215,9 @@ export default function InstagramChat() {
         const r = await api.get(`/instagram/conversations/${id}/messages`,
           last ? { params: { after: last.created_at } } : undefined);
         const fresh = r.data?.messages || [];
-        if (!fresh.length || stop) return;
+        if (!fresh.length) { pace.current?.slacken(); return; }
+        if (stop) return;
+        pace.current?.quicken();
         setData((d) => {
           const have = new Set((d?.messages || []).map((m) => m.id));
           const add = fresh.filter((m) => !have.has(m.id));
@@ -228,10 +231,20 @@ export default function InstagramChat() {
         });
       } catch { /* شبكةٌ متقطّعة — نُعيد بعد أربعِ ثوانٍ */ }
     };
-    const timer = setInterval(tick, 4000);
-    const onVisible = () => { if (!document.hidden) tick(); };
+    // نبضةٌ تتراجع: ستُّ ثوانٍ ما دام هناك جديد، وتتباعدُ حتّى نصفِ دقيقةٍ حين
+    // يهدأُ الحديث. أربعُ ثوانٍ ثابتةً كانت ٢٢٥ طلباً في ربعِ ساعةٍ من المحادثةِ
+    // وحدَها — تبلغُ حدَّ الطلباتِ فيردُّ الخادمُ ٤٢٩ على كلِّ شيء.
+    let gap = 6000;
+    let timer = setTimeout(function run() {
+      tick();
+      timer = setTimeout(run, gap);
+    }, gap);
+    const quicken = () => { gap = 6000; };
+    const slacken = () => { gap = Math.min(30000, Math.round(gap * 1.5)); };
+    pace.current = { quicken, slacken };
+    const onVisible = () => { if (!document.hidden) { quicken(); tick(); } };
     document.addEventListener('visibilitychange', onVisible);
-    return () => { stop = true; clearInterval(timer); document.removeEventListener('visibilitychange', onVisible); };
+    return () => { stop = true; clearTimeout(timer); document.removeEventListener('visibilitychange', onVisible); };
   }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // لوحةُ المفاتيح تُقلّصُ النافذةَ المرئيّةَ ولا تُقلّصُ inset-0، فيغرقُ صندوقُ الكتابةِ
