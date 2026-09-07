@@ -195,35 +195,38 @@ export default function InstagramChat() {
       .catch((e) => setError(getErrorMessage(e)));
   useEffect(() => { load(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // لوحةُ المفاتيح تُقلّصُ النافذةَ المرئيّةَ ولا تُقلّصُ inset-0، فيغرقُ صندوقُ الكتابة
-  // تحتها. نقيسُ النافذةَ المرئيّةَ نفسَها فتبقى الكتابةُ فوقَ اللوحةِ دائماً.
+  // لوحةُ المفاتيح تُقلّصُ النافذةَ المرئيّةَ ولا تُقلّصُ inset-0، فيغرقُ صندوقُ الكتابةِ
+  // تحتها. كنّا نضبطُ **ارتفاعَ** الشاشةِ على ارتفاعِ النافذةِ المرئيّة، وهو خطر: أيُّ
+  // قياسٍ خاطئٍ أو حدثٍ ضائعٍ (كالعودةِ من الخلفيّة) يتركُ الشاشةَ منكمشةً في أعلى
+  // الجهازِ وتحتَها فراغ — وهو ما وقع. صار الحسابُ حشوةً سفليّةً بقدرِ ما تحجبُه
+  // اللوحة: الشاشةُ تبقى كاملةً دائماً، وأسوأُ ما يقعُ عند خطأِ القياسِ حشوةٌ زائدةٌ
+  // لا انهيارُ تخطيط.
   useEffect(() => {
     const vv = window.visualViewport;
     const el = rootRef.current;
     if (!vv || !el) return undefined;
-    // حدثُ scroll للنافذةِ المرئيّةِ ينهمرُ مع كلِّ إطارٍ أثناءَ السحب، وكلُّ كتابةِ
-    // ارتفاعٍ تُجبرُ المتصفّحَ على إعادةِ التخطيط — فكان السحبُ يتقطّع. نؤجّلُ إلى
-    // إطارٍ واحدٍ ولا نكتبُ إلّا إذا تغيّر الرقمُ فعلاً.
     let raf = 0;
-    let lastH = 0;
-    let lastTop = 0;
+    let last = -1;
     const apply = () => {
       raf = 0;
-      const h = Math.round(vv.height);
-      const top = Math.round(vv.offsetTop);
-      if (h === lastH && top === lastTop) return;
-      lastH = h; lastTop = top;
-      el.style.height = `${h}px`;
-      el.style.transform = top ? `translateY(${top}px)` : '';
+      const kb = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+      if (kb === last) return;
+      last = kb;
+      el.style.paddingBottom = kb ? `${kb}px` : '';
     };
     const schedule = () => { if (!raf) raf = requestAnimationFrame(apply); };
     apply();
-    // resize وحدَه: هو ما يقعُ عند فتحِ لوحةِ المفاتيحِ وإغلاقِها. أمّا scroll فينهمرُ
-    // مع كلِّ إطارٍ ولا يعنينا، وكانت الاستجابةُ له تكتبُ الارتفاعَ أثناءَ السحب.
+    // resize يقعُ عند فتحِ اللوحةِ وإغلاقِها، وvisibilitychange عند العودةِ من الخلفيّة
+    // — وهناك تكونُ القياساتُ قديمةً فتلزمُ إعادةُ الحساب.
     vv.addEventListener('resize', schedule);
+    window.addEventListener('focus', schedule);
+    document.addEventListener('visibilitychange', schedule);
     return () => {
       if (raf) cancelAnimationFrame(raf);
       vv.removeEventListener('resize', schedule);
+      window.removeEventListener('focus', schedule);
+      document.removeEventListener('visibilitychange', schedule);
+      el.style.paddingBottom = '';
     };
   }, []);
 
