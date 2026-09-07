@@ -126,7 +126,8 @@
       "orderCreated": "Order created and added to your Orders",
       "older": "Show older messages",
       "mentioned": "Mentioned in chat:",
-      "wrongAccount": "If the wrong Facebook account appears, log out of it first and try again:"
+      "wrongAccount": "If the wrong account appears, tap “Connect with a different Facebook account” — or log out of Facebook and try again.",
+      "otherAccount": "Connect with a different Facebook account"
     },
     "opost": {
       "title": "Optimus courier",

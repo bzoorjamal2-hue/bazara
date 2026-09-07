@@ -131,12 +131,10 @@ function ConnectCard({ status, pendingPages, onConnected }) {
           </button>
           {/* فيسبوك يتذكّر آخر من دخل في هذا الجهاز فيعرض «تريد المتابعة كـفلان؟» بلا
               بابٍ لاختيار حسابٍ آخر — ومن لا يعرف السبب يربط حساب غيره وهو لا يدري. */}
-          <p className="text-[11px] leading-relaxed text-stone-400">
-            {t('dashboard.instagram.wrongAccount')}{' '}
-            <a href="https://www.facebook.com/" target="_blank" rel="noreferrer" className="text-gold-200 underline underline-offset-2">
-              facebook.com
-            </a>
-          </p>
+          <button onClick={() => startFbLogin({ fresh: true })} className="text-[11px] text-gold-200 underline underline-offset-2">
+            {t('dashboard.instagram.otherAccount')}
+          </button>
+          <p className="text-[11px] leading-relaxed text-stone-400">{t('dashboard.instagram.wrongAccount')}</p>
         </div>
       )}
 

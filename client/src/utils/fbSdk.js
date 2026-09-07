@@ -17,7 +17,9 @@ export function igRedirectUri() {
 // في سفاري لا في تطبيقِنا المثبَّت — فتنقطعُ الرحلةُ ويبدو الزرُّ معطّلاً. والروابطُ
 // الشاملةُ لا تُلتقَطُ حين يصلُ المتصفّحُ بتحويلةٍ من نطاقٍ آخر، فتبقى الرحلةُ داخلَنا.
 // وبذلك أمكن أيضاً `fresh` — دخولٌ جديدٌ في كلِّ مرّةٍ فيربطُ كلٌّ حسابَه هو.
-export function startFbLogin({ fresh = true } = {}) {
+// fresh: طلبُ دخولٍ جديدٍ من فيسبوك. مطفأٌ افتراضاً لأنّ تجربتَنا أظهرت أنّه قد
+// يدفعُ iOS لتسليمِ الرحلةِ إلى تطبيقِ فيسبوك فتنقطع. يُفتَحُ بزرِّ «حسابٌ آخر».
+export function startFbLogin({ fresh = false } = {}) {
   const state = Math.random().toString(36).slice(2) + Date.now().toString(36);
   try { sessionStorage.setItem('ig_oauth_state', state); } catch { /* تجاهل */ }
 
