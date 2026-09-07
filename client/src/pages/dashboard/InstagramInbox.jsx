@@ -125,9 +125,19 @@ function ConnectCard({ status, pendingPages, onConnected }) {
           ))}
         </div>
       ) : (
-        <button onClick={start} disabled={busy} className="btn-primary gap-2">
-          <InstagramIcon className="h-5 w-5" /> {t('dashboard.instagram.connectBtn')}
-        </button>
+        <div className="space-y-2">
+          <button onClick={start} disabled={busy} className="btn-primary gap-2">
+            <InstagramIcon className="h-5 w-5" /> {t('dashboard.instagram.connectBtn')}
+          </button>
+          {/* فيسبوك يتذكّر آخر من دخل في هذا الجهاز فيعرض «تريد المتابعة كـفلان؟» بلا
+              بابٍ لاختيار حسابٍ آخر — ومن لا يعرف السبب يربط حساب غيره وهو لا يدري. */}
+          <p className="text-[11px] leading-relaxed text-stone-400">
+            {t('dashboard.instagram.wrongAccount')}{' '}
+            <a href="https://www.facebook.com/" target="_blank" rel="noreferrer" className="text-gold-200 underline underline-offset-2">
+              facebook.com
+            </a>
+          </p>
+        </div>
       )}
 
       <ul className="space-y-1.5 border-t border-white/5 pt-3 text-xs text-stone-400">

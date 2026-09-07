@@ -125,7 +125,8 @@
       "newOrder": "New order",
       "orderCreated": "Order created and added to your Orders",
       "older": "Show older messages",
-      "mentioned": "Mentioned in chat:"
+      "mentioned": "Mentioned in chat:",
+      "wrongAccount": "If the wrong Facebook account appears, log out of it first and try again:"
     },
     "opost": {
       "title": "Optimus courier",
