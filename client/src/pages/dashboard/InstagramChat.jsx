@@ -6,42 +6,12 @@ import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import { BackIcon, BagIcon, CameraIcon, ImageIcon, TrashIcon, XIcon, MicIcon } from '../../components/icons.jsx';
 import { uploadToCloudinary, cloudinaryEnabled, cldThumb, cldBlur, cldOptimized } from '../../utils/cloudinary.js';
-import { Avatar, ConvertForm, findMobile } from './InstagramInbox.jsx';
+import { Avatar, ConvertForm } from './InstagramInbox.jsx';
+import { buildItems, guessKind, findMobile, cldAudioMp3 } from '../../utils/chat.js';
 
 // ═════════ شاشةُ محادثةٍ واحدة ═════════
 // المحادثةُ صفحةٌ قائمةٌ بذاتها تُرسَمُ على body: رأسٌ في الأعلى، ورسائلٌ تملأُ ما
 // بينهما، وصندوقُ كتابةٍ ملتصقٌ بالأسفل — كما في كلِّ تطبيقِ محادثة.
-
-// رسالتان متتاليتان من الطرفِ نفسِه خلال هذه المدّة تُعدّان «دفقةً» واحدة: تتقاربان
-// وتُختَمُ الدفقةُ بوقتٍ واحدٍ وصورةٍ واحدة. بلا هذا يصيرُ لكلِّ كلمةٍ صندوقٌ ووقتٌ
-// وصورة، فتطولُ الشاشةُ بلا معنى — وهو ما كان.
-const GROUP_MS = 4 * 60 * 1000;
-
-function sameDay(a, b) {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-}
-
-// نبني قائمةَ العرض مرّةً واحدة: فواصلُ الأيّام، وعلاماتُ أوّلِ الدفقةِ وآخرِها.
-function buildItems(messages) {
-  const out = [];
-  let prev = null;
-  messages.forEach((m, i) => {
-    const at = new Date(m.created_at);
-    if (!prev || !sameDay(new Date(prev.created_at), at)) {
-      out.push({ type: 'day', key: 'd' + m.id, at });
-    }
-    const next = messages[i + 1];
-    const contWithPrev = prev && prev.direction === m.direction
-      && sameDay(new Date(prev.created_at), at)
-      && at - new Date(prev.created_at) < GROUP_MS;
-    const contWithNext = next && next.direction === m.direction
-      && sameDay(new Date(next.created_at), at)
-      && new Date(next.created_at) - at < GROUP_MS;
-    out.push({ type: 'msg', key: m.id, m, first: !contWithPrev, last: !contWithNext });
-    prev = m;
-  });
-  return out;
-}
 
 // عارضُ الصورة: الضغطُ على صورةٍ في المحادثة كان يفتحُ تبويباً جديداً — وفي تطبيقٍ
 // مثبَّتٍ (PWA) لا تبويبَ يُفتَح، فبدت الصورُ وكأنّها لا تفتح. صارت تكبرُ في مكانها.
@@ -155,15 +125,6 @@ function PerfHud() {
   );
 }
 
-// الصفوفُ القديمةُ سبقت عمودَ النوع، وروابطُ Meta بلا امتدادٍ يُستدَلُّ به.
-function guessKind(url = '') {
-  const clean = url.split('?')[0].toLowerCase();
-  if (/\.(jpe?g|png|gif|webp|heic|bmp)$/.test(clean)) return 'image';
-  if (/\.(mp4|mov|webm|m4v)$/.test(clean)) return 'video';
-  if (/\.(mp3|m4a|ogg|wav|aac)$/.test(clean)) return 'audio';
-  return '';
-}
-
 export default function InstagramChat() {
   const { t, i18n } = useTranslation();
   const { id } = useParams();
@@ -235,9 +196,11 @@ export default function InstagramChat() {
       if (stop || document.hidden || sendingRef.current) return;
       const msgs = dataRef.current?.messages || [];
       const last = msgs.filter((m) => !String(m.id).startsWith('tmp-')).slice(-1)[0];
-      if (!last) return;
       try {
-        const r = await api.get(`/instagram/conversations/${id}/messages`, { params: { after: last.created_at } });
+        // بلا رسالةٍ سابقةٍ لا معنى لـ`after`: نجلبُ المحادثةَ كاملةً — وإلّا بقيت
+        // المحادثةُ الفارغةُ فارغةً أبداً ولو وصلتها رسالة.
+        const r = await api.get(`/instagram/conversations/${id}/messages`,
+          last ? { params: { after: last.created_at } } : undefined);
         const fresh = r.data?.messages || [];
         if (!fresh.length || stop) return;
         setData((d) => {
@@ -358,6 +321,7 @@ export default function InstagramChat() {
   const pressTimer = useRef(0);
   const lastTap = useRef({ id: '', at: 0 });
   const touched = useRef(false);
+  const touchReset = useRef(0);
   const pressProps = (m) => {
     const skip = (e) => Boolean(e.target.closest('button, a, video, audio'));
     const start = (e) => {
@@ -379,7 +343,14 @@ export default function InstagramChat() {
       }
     };
     return {
-      onTouchStart: (e) => { touched.current = true; start(e); },
+      onTouchStart: (e) => {
+        touched.current = true;
+        clearTimeout(touchReset.current);
+        // نُعيدُ السماحَ للفأرةِ بعد ثانية: جهازٌ يحملُ لمساً وفأرةً معاً كان يفقدُ
+        // الفأرةَ إلى الأبدِ بعد أوّلِ لمسة.
+        touchReset.current = setTimeout(() => { touched.current = false; }, 1000);
+        start(e);
+      },
       onTouchEnd: tapEnd,
       onTouchMove: () => clearTimeout(pressTimer.current),
       onMouseDown: (e) => { if (!touched.current) start(e); },
@@ -388,6 +359,13 @@ export default function InstagramChat() {
       onContextMenu: (e) => e.preventDefault(),
     };
   };
+
+  // «منذ كم» تتجمّدُ على رقمِها ما لم يُعَد الرسم: نبضةٌ كلَّ دقيقةٍ تُحدّثُها وحدَها.
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setTick((v) => v + 1), 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   // «منذ كم» بالعربيّة: الساعةُ وحدَها لا تقولُ كم مضى، والفارقُ هو المقصود.
   const relTime = (iso) => {
@@ -413,14 +391,19 @@ export default function InstagramChat() {
 
   // إنزالُ الأقدمِ يُبقي ما تقرؤه في مكانِه: نقيسُ الطولَ قبلَ الزيادةِ وبعدَها ونعوّضُ
   // الفرق، وإلّا قفزت الشاشةُ إلى أوّلِ المحادثةِ فجأة.
+  const keepScroll = useRef(0);
   const loadOlder = () => {
     const el = scrollRef.current;
-    const before = el ? el.scrollHeight - el.scrollTop : 0;
+    keepScroll.current = el ? el.scrollHeight - el.scrollTop : 0;
     setLimit((n) => n + 60);
-    requestAnimationFrame(() => {
-      if (el) el.scrollTop = el.scrollHeight - before;
-    });
   };
+  // بعد أن يرسمَ React الزيادةَ فعلاً — لا في الإطارِ التالي رجماً بالغيب
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !keepScroll.current) return;
+    el.scrollTop = el.scrollHeight - keepScroll.current;
+    keepScroll.current = 0;
+  }, [limit]);
 
   // الحركةُ للرسالةِ الجديدةِ وحدَها: تشغيلُ مئةِ حركةٍ دفعةً واحدةً عند الفتحِ ثقيلٌ
   // بلا فائدة — فلا أحدَ ينتظرُ ظهورَ رسالةٍ عمرُها يومان.
@@ -463,7 +446,8 @@ export default function InstagramChat() {
         setSending(true);
         try {
           // Cloudinary يضعُ الصوتَ تحت نوعِ video — وهو مسارُه لكلِّ ما ليس صورة
-          const url = await uploadToCloudinary(file, 'video', setProgress);
+          const raw = await uploadToCloudinary(file, 'video', setProgress);
+          const url = cldAudioMp3(raw);
           const stamp = Date.now();
           const optimistic = { id: 'tmp-aud-' + stamp, direction: 'out', text: '', attachment_url: url, attachment_type: 'audio', created_at: new Date().toISOString() };
           setData((d) => ({ ...d, messages: [...(d?.messages || []), optimistic] }));

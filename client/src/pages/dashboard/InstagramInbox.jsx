@@ -10,6 +10,7 @@ import { isValidMobile, sanitizeMobileInput } from '../../utils/phone.js';
 import { InstagramIcon, BagIcon, BackIcon, CheckIcon, TrashIcon, PlusIcon } from '../../components/icons.jsx';
 import { startFbLogin, igRedirectUri } from '../../utils/fbSdk.js';
 import { cldThumb, cldVideoPoster } from '../../utils/cloudinary.js';
+import { normalizeAr, findMobile } from '../../utils/chat.js';
 import { PageHead } from '../../components/FormField.jsx';
 
 // ننظّف رابط الصفحة من بارامترات العودة (code/state) بعد معالجتها
@@ -313,29 +314,6 @@ export function Avatar({ url, name, className = 'h-11 w-11' }) {
       )}
     </span>
   );
-}
-
-// تطبيعُ العربيّة للمقارنة: الهمزاتُ والتاءُ المربوطةُ والياءُ المقصورةُ تُكتَبُ
-// بأشكالٍ مختلفةٍ لنفسِ الكلمة، والتشكيلُ والتطويلُ يزيدان الاختلاف. بلا هذا لا
-// تُطابَقُ «عباية» بـ«عبايه» ولا «فستان» بـ«فُستان».
-export function normalizeAr(s = '') {
-  return String(s)
-    .replace(/[\u064B-\u0652\u0640]/g, '')
-    .replace(/[أإآ]/g, 'ا')
-    .replace(/ى/g, 'ي')
-    .replace(/ة/g, 'ه')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase();
-}
-
-// رقمُ الجوّالِ من كلامِ الزبون. يكتبُه الناسُ بمسافاتٍ وشرطاتٍ ومقدّماتٍ دوليّة،
-// فنُجرّدُه ثمّ نلتقطُ ما يبدأُ بـ05 وعشرةُ أرقام — وهي قاعدةُ المتجرِ نفسُها.
-export function findMobile(text = '') {
-  const clean = String(text).replace(/[\s()\-.\u200e\u200f]/g, '');
-  const m = clean.match(/(?:\+?970|00970)?(05\d{8}|5\d{8})/);
-  if (!m) return '';
-  return m[1].startsWith('05') ? m[1] : `0${m[1]}`;
 }
 
 function productOptions(p) {

@@ -9,7 +9,8 @@
     "prebuild": "node scripts/gen-sitemap.mjs && node scripts/gen-hero-preload.mjs",
     "build": "vite build",
     "preview": "vite preview",
-    "preview:shot": "node scripts/store-preview.mjs"
+    "preview:shot": "node scripts/store-preview.mjs",
+    "test": "node src/utils/chat.test.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.0",
