@@ -120,7 +120,7 @@ async function processWebhook(body) {
       // ثلاثةُ أحداثٍ غيرِ الرسالة تصلُ بنفسِ المجرى، وكلٌّ منها يغيّرُ ما تراه
       // التاجرةُ على الشاشة: رأى الزبونُ ما أرسلناه، أو تفاعلَ على رسالة.
       if (!msg) {
-        if (ev.read && businessId) {
+        if (ev.read && businessId && senderId) {
           // watermark: كلُّ ما أُرسِلَ قبلَ هذا الوقتِ صارَ مرئيّاً
           const seenAt = ev.read.watermark ? new Date(Number(ev.read.watermark)) : new Date();
           await query(
@@ -163,6 +163,11 @@ async function processWebhook(body) {
       const attachment = att?.payload?.url ? await mirrorRemote(att.payload.url, 'ig/messages') : '';
       const preview = text || (attachment ? ATTACHMENT_LABEL[attType] || '📎 مرفق' : '');
 
+      // حدثٌ بلا نصٍّ ولا مرفقٍ ليس رسالة (مشاركةُ رقمٍ مثلاً): لا يُخزَّنُ فقاعةً
+      // فارغة، ولا — وهو الأهمُّ — يرفعُ عدّادَ غيرِ المقروءِ ويمسحُ سطرَ آخرِ رسالةٍ
+      // بسطرٍ فارغ. كان الفحصُ بعد الحفظِ فوقعَ الضرران قبلَه.
+      if (!text && !attachment) continue;
+
       // upsert المحادثة (صف واحد لكل زبون بهذا المتجر) — نرفع غير المقروء للوارد فقط
       const conv = await query(
         `INSERT INTO ig_conversations (store_id, ig_sender_id, last_message, last_at, unread)
@@ -180,10 +185,6 @@ async function processWebhook(body) {
       const storyUrl = msg.reply_to?.story?.url
         ? await mirrorRemote(msg.reply_to.story.url, 'ig/stories')
         : '';
-
-      // فقاعةٌ فارغةٌ ليست رسالة: بعضُ ما يصلُ بلا نصٍّ ولا مرفقٍ (مشاركةُ رقمٍ مثلاً،
-      // أو حدثٌ لا نعرضُه) — لا يُخزَّنُ فلا يظهرُ مربّعاً أبيضَ فارغاً في المحادثة.
-      if (!text && !attachment) continue;
 
       // نخزّن الرسالة (mid فريد → لا يتكرّر نفس الحدث ولا ردّنا الذي عاد كـ echo)
       await query(
@@ -722,7 +723,10 @@ export async function igReact(req, res, next) {
       }
       return res.status(400).json({ error: e.body?.error?.message || 'تعذّر إرسال التفاعل.' });
     }
-    await query('UPDATE ig_messages SET reaction = $2 WHERE mid = $1', [mid, reaction]);
+    await query(
+      'UPDATE ig_messages SET reaction = $2 WHERE mid = $1 AND conversation_id = $3',
+      [mid, reaction, conv.id]
+    );
     res.json({ ok: true, reaction });
   } catch (err) {
     next(err);

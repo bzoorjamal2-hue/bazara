@@ -78,4 +78,54 @@ test('sameDay يفرّقُ بين يومين متتاليين', () => {
   assert.equal(sameDay(new Date('2026-09-06T00:01:00'), new Date('2026-09-06T23:59:00')), true);
 });
 
+
+// ───────── حالاتٌ حدّيّةٌ أضيفت بعد المراجعةِ الثانية ─────────
+
+test('منتصفُ الليلِ يكسرُ الدفقةَ ولو كان الفارقُ دقيقتين', () => {
+  const items = buildItems([
+    { id: '1', direction: 'in', created_at: at('2026-09-06T20:59:00Z') },
+    { id: '2', direction: 'in', created_at: at('2026-09-06T21:01:00Z') },
+  ]).filter((x) => x.type === 'msg');
+  // بتوقيتٍ محلّيٍّ +٣ هذان يومان مختلفان (23:59 ثمّ 00:01)
+  const days = buildItems([
+    { id: '1', direction: 'in', created_at: at('2026-09-06T20:59:00Z') },
+    { id: '2', direction: 'in', created_at: at('2026-09-06T21:01:00Z') },
+  ]).filter((x) => x.type === 'day');
+  if (days.length === 2) {
+    assert.equal(items[0].last, true, 'اليومُ الجديدُ يبدأُ دفقةً جديدة');
+    assert.equal(items[1].first, true);
+  } else {
+    assert.equal(days.length, 1, 'أو هما في يومٍ واحدٍ بحسب المنطقة الزمنيّة');
+  }
+});
+
+test('رسالةٌ واحدةٌ هي أوّلُ دفقتِها وآخرُها', () => {
+  const [, msg] = buildItems([{ id: '1', direction: 'in', created_at: at('2026-09-06T10:00:00Z') }]);
+  assert.equal(msg.first, true);
+  assert.equal(msg.last, true);
+});
+
+test('رقمٌ من تسعِ خاناتٍ لا يبدأُ بـ05 لا يُلتقَط', () => {
+  assert.equal(findMobile('الطلب رقم 123456789'), '');
+  assert.equal(findMobile('السعر 40 شيكل'), '');
+});
+
+test('رقمٌ داخلَ نصٍّ طويلٍ يُلتقَطُ أوّلُه', () => {
+  assert.equal(findMobile('اتصل 0592124988 أو 0599111222'), '0592124988');
+});
+
+test('الصوتُ يبقى mp3 ولو حملَ الرابطُ معاملات', () => {
+  const u = 'https://res.cloudinary.com/c/video/upload/v9/ig/voice.webm?x=1';
+  assert.equal(cldAudioMp3(u), 'https://res.cloudinary.com/c/video/upload/f_mp3/v9/ig/voice.mp3');
+});
+
+test('نوعُ المرفقِ لا يُخدَعُ بامتدادٍ داخلَ المسار', () => {
+  assert.equal(guessKind('https://x/a.png/b'), '');
+  assert.equal(guessKind('https://x/a.PNG'), 'image');
+});
+
+test('تطبيعُ العربيّةِ يُزيلُ التطويلَ والتشكيل', () => {
+  assert.equal(normalizeAr('فُسْـــتان'), 'فستان');
+});
+
 console.log(`\n${passed} اختباراً ناجحاً`);
