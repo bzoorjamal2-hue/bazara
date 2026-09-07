@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
@@ -217,6 +217,29 @@ export function Avatar({ url, name, className = 'h-11 w-11' }) {
   );
 }
 
+// تطبيعُ العربيّة للمقارنة: الهمزاتُ والتاءُ المربوطةُ والياءُ المقصورةُ تُكتَبُ
+// بأشكالٍ مختلفةٍ لنفسِ الكلمة، والتشكيلُ والتطويلُ يزيدان الاختلاف. بلا هذا لا
+// تُطابَقُ «عباية» بـ«عبايه» ولا «فستان» بـ«فُستان».
+export function normalizeAr(s = '') {
+  return String(s)
+    .replace(/[\u064B-\u0652\u0640]/g, '')
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/ى/g, 'ي')
+    .replace(/ة/g, 'ه')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+// رقمُ الجوّالِ من كلامِ الزبون. يكتبُه الناسُ بمسافاتٍ وشرطاتٍ ومقدّماتٍ دوليّة،
+// فنُجرّدُه ثمّ نلتقطُ ما يبدأُ بـ05 وعشرةُ أرقام — وهي قاعدةُ المتجرِ نفسُها.
+export function findMobile(text = '') {
+  const clean = String(text).replace(/[\s()\-.\u200e\u200f]/g, '');
+  const m = clean.match(/(?:\+?970|00970)?(05\d{8}|5\d{8})/);
+  if (!m) return '';
+  return m[1].startsWith('05') ? m[1] : `0${m[1]}`;
+}
+
 function productOptions(p) {
   const colorStock = p?.colorStock && typeof p.colorStock === 'object' ? p.colorStock : {};
   const hasColorStock = Object.keys(colorStock).length > 0;
@@ -287,13 +310,13 @@ function PickedRow({ item, onChange, onRemove }) {
 
 // المكوّن الموحّد لإنشاء طلب: منتجات (بألوان/نمَر) + منطقة توصيل بسعر تلقائي + بيانات الزبون.
 // onSubmit يستقبل { items, customer } ويرمي خطأً عند الفشل (نعرضه هنا)؛ النجاح يتكفّل به الأب.
-function OrderComposer({ defaultName = '', onSubmit }) {
+function OrderComposer({ defaultName = '', defaultPhone = '', hintText = '', onSubmit }) {
   const { t } = useTranslation();
   const [products, setProducts] = useState(null);
   const [localities, setLocalities] = useState([]); // قائمة مسطّحة: كل مدينة/قرية بندٌ مستقل
   const [picked, setPicked] = useState([]);
   const [q, setQ] = useState('');
-  const [f, setF] = useState({ name: defaultName, phone: '', city: '', area: '', address: '', deliveryFee: '', notes: '' });
+  const [f, setF] = useState({ name: defaultName, phone: defaultPhone, city: '', area: '', address: '', deliveryFee: '', notes: '' });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -337,6 +360,34 @@ function OrderComposer({ defaultName = '', onSubmit }) {
     return (products || []).filter((p) => (p.name || '').toLowerCase().includes(term)).slice(0, 6);
   }, [q, products]);
 
+  // منتجاتٌ سمّاها الزبونُ في محادثته: التاجرةُ قرأت الاسمَ للتوّ في الرسالة، فلا
+  // معنى لأن تكتبَه ثانيةً في البحث. نطابقُ اسمَ المنتجِ على نصِّ المحادثةِ بعد
+  // تطبيعِ العربيّة، ولا نعرضُ إلّا الأسماءَ الطويلةَ بما يكفي (كلمةٌ من حرفين
+  // تُطابقُ كلَّ شيءٍ فتصيرُ الاقتراحاتُ ضوضاء).
+  const hints = useMemo(() => {
+    const txt = normalizeAr(hintText);
+    if (!txt || !products) return [];
+    return products
+      .filter((p) => {
+        const n = normalizeAr(p.name);
+        return n.length >= 4 && txt.includes(n) && !picked.some((x) => x.id === p.id);
+      })
+      .slice(0, 4);
+  }, [hintText, products, picked]);
+
+  // المكانُ أيضاً يُذكَرُ في المحادثة: نطابقُه على قائمةِ مناطقِ المتجرِ فتُملأُ
+  // الأجرةُ معه. مرّةً واحدةً فقط، ولا نلمسُ ما كتبته التاجرةُ بنفسِها.
+  const cityGuessed = useRef(false);
+  useEffect(() => {
+    if (cityGuessed.current || f.city || !hintText || !cityChoices.length) return;
+    const txt = normalizeAr(hintText);
+    const hit = cityChoices.find((z) => {
+      const n = normalizeAr(z.name);
+      return n.length >= 3 && txt.includes(n);
+    });
+    if (hit) { cityGuessed.current = true; pickCity(hit.name, hit.fee, hit); }
+  }, [hintText, cityChoices, f.city]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const subtotal = picked.reduce((s, x) => s + x.price * Math.max(1, x.qty), 0);
   const total = subtotal + (Number(f.deliveryFee) || 0);
 
@@ -359,6 +410,22 @@ function OrderComposer({ defaultName = '', onSubmit }) {
 
   return (
     <div className="space-y-3">
+      {/* منتجاتٌ ذُكرت في المحادثة — ضغطةٌ واحدةٌ بدل بحثٍ عن اسمٍ قرأته للتوّ */}
+      {hints.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[11px] font-semibold text-gold-200">{t('dashboard.instagram.mentioned')}</span>
+          {hints.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => add(p)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-gold-400/30 bg-gold-400/10 px-2.5 py-1 text-xs font-semibold text-gold-100 transition hover:bg-gold-400/20"
+            >
+              <PlusIcon className="h-3.5 w-3.5" /> {p.name}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* بحث المنتجات — قائمة نهارية بيضاء متناسقة مع باقي الدشبورد */}
       <div className="relative">
         <input className="input" placeholder={t('dashboard.instagram.searchProduct')} value={q} onChange={(e) => setQ(e.target.value)} />
@@ -430,13 +497,15 @@ function OrderComposer({ defaultName = '', onSubmit }) {
 }
 
 // ───────── نموذج تحويل المحادثة لطلب (يستعمل المكوّن الموحّد) ─────────
-export function ConvertForm({ convId, defaultName, onDone }) {
+export function ConvertForm({ convId, defaultName, defaultPhone = '', hintText = '', onDone }) {
   const { t } = useTranslation();
   return (
     <div className="space-y-3 border-b border-white/5 bg-gold-400/5 p-3">
       <p className="text-xs font-semibold text-gold-200">{t('dashboard.instagram.convertTitle')}</p>
       <OrderComposer
         defaultName={defaultName}
+        defaultPhone={defaultPhone}
+        hintText={hintText}
         onSubmit={async (payload) => {
           const res = await api.post(`/instagram/conversations/${convId}/convert`, payload);
           try { window.dispatchEvent(new Event('bz:orders-changed')); } catch { /* تجاهل */ }

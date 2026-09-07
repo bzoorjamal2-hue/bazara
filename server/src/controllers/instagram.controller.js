@@ -473,7 +473,31 @@ export async function convertToOrder(req, res, next) {
     // نربط المحادثة بالطلب (يظهر للتاجر أنها تحوّلت + يمنع تحويلها مرتين بالخطأ)
     await query('UPDATE ig_conversations SET order_id = $2 WHERE id = $1', [conv.id, ins.rows[0].id]);
 
-    res.status(201).json({ orderId: ins.rows[0].id, reference, total });
+    // تأكيدٌ للزبون في محادثته: كان الطلبُ يُسجَّلُ عندنا ولا يعلمُ هو شيئاً، فيعودُ
+    // يسألُ «وصلكم؟» بعد ساعة. الرسالةُ تُحفَظُ في المحادثةِ أيضاً لتراها التاجرةُ في
+    // مكانها، وفشلُها لا يُسقطُ الطلب: قد تكون نافذةُ الأربعِ والعشرين ساعةً أُغلقت.
+    const confirm = `تمّ تسجيل طلبك ✅\nرقم الطلب: ${reference}\nالإجمالي: ₪${total}\nرح نتواصل معك لتأكيد التوصيل.`;
+    let confirmed = false;
+    try {
+      const token = decrypt(conv.ig_access_token);
+      if (token) {
+        const sent = await sendMessage(token, conv.ig_sender_id, confirm);
+        confirmed = true;
+        await query(
+          `INSERT INTO ig_messages (conversation_id, mid, direction, text)
+           VALUES ($1, $2, 'out', $3) ON CONFLICT (mid) DO NOTHING`,
+          [conv.id, sent?.message_id || null, confirm]
+        );
+        await query(
+          'UPDATE ig_conversations SET last_message = $2, last_at = now() WHERE id = $1',
+          [conv.id, confirm.slice(0, 120)]
+        );
+      }
+    } catch (e) {
+      console.error('ig confirm (تم تجاهله):', e.message);
+    }
+
+    res.status(201).json({ orderId: ins.rows[0].id, reference, total, confirmed });
   } catch (err) {
     next(err);
   }

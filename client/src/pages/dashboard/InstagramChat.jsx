@@ -6,7 +6,7 @@ import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import { BackIcon, BagIcon, CameraIcon, ImageIcon, TrashIcon, XIcon } from '../../components/icons.jsx';
 import { uploadToCloudinary, cloudinaryEnabled, cldThumb, cldBlur, cldOptimized } from '../../utils/cloudinary.js';
-import { Avatar, ConvertForm } from './InstagramInbox.jsx';
+import { Avatar, ConvertForm, findMobile } from './InstagramInbox.jsx';
 
 // ═════════ شاشةُ محادثةٍ واحدة ═════════
 // المحادثةُ صفحةٌ قائمةٌ بذاتها تُرسَمُ على body: رأسٌ في الأعلى، ورسائلٌ تملأُ ما
@@ -253,6 +253,14 @@ export default function InstagramChat() {
   const hasOlder = all.length > shown.length;
   const items = useMemo(() => buildItems(shown), [shown]);
 
+  // ما قاله الزبونُ نفسُه: منه نلتقطُ رقمَه ومنتجاتِه ومكانَه لنملأَ نموذجَ الطلب.
+  // كلامُ التاجرةِ لا يدخلُ هنا — رقمُها هي ليس رقمَ الزبون.
+  const custText = useMemo(
+    () => all.filter((m) => m.direction === 'in').map((m) => m.text || '').join(' \n '),
+    [all],
+  );
+  const guessedPhone = useMemo(() => findMobile(custText), [custText]);
+
   // إنزالُ الأقدمِ يُبقي ما تقرؤه في مكانِه: نقيسُ الطولَ قبلَ الزيادةِ وبعدَها ونعوّضُ
   // الفرق، وإلّا قفزت الشاشةُ إلى أوّلِ المحادثةِ فجأة.
   const loadOlder = () => {
@@ -364,6 +372,8 @@ export default function InstagramChat() {
           <ConvertForm
             convId={id}
             defaultName={c.customer_name || ''}
+            defaultPhone={guessedPhone}
+            hintText={custText}
             onDone={(orderId) => { setShowConvert(false); setData((d) => ({ ...d, conversation: { ...d.conversation, order_id: orderId } })); }}
           />
         </div>
