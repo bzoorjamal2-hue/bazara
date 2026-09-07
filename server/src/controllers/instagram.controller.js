@@ -316,8 +316,12 @@ async function finishConnect(store, chosen) {
   if (dup.rows.length) {
     return closingPage('الحساب مربوط بمتجر آخر', 'افصله من ذاك المتجر أوّلاً ثم أعد الربط.');
   }
-  try { await subscribePageMessages(chosen.pageId, chosen.pageToken); }
+  let subscribed = false;
+  try { await subscribePageMessages(chosen.pageId, chosen.pageToken); subscribed = true; }
   catch (e) { console.error('ig subscribe page (تم تجاهله):', e.message); }
+  // النجاحُ يُسجَّلُ كما يُسجَّلُ الفشل: صمتُ السجلِّ عند النجاحِ يجعلُنا نظنُّ أنّ شيئاً
+  // لم يقع، فنبحثُ عن عطلٍ في مكانٍ سليم.
+  console.log('ig connect ✓ page', chosen.pageId, 'ig', chosen.igUserId, '@' + (chosen.igUsername || '?'), 'subscribed', subscribed);
   await query(
     `UPDATE stores SET ig_user_id = $1, ig_username = $2, ig_page_id = $3,
        ig_access_token = $4, ig_connected = true WHERE id = $5`,
