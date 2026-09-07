@@ -23,8 +23,20 @@ export default function InstagramInbox() {
   const [error, setError] = useState('');
   const [pendingPages, setPendingPages] = useState(null); // عدّة صفحات بعد العودة من فيسبوك
 
+  // الحالةُ ومعها الربطُ الناقص. من يدير أكثرَ من صفحةٍ يقفُ الخادمُ عند «اختر الصفحة»
+  // ويحفظُ التوكنَ مؤقّتاً؛ وكانت القائمةُ لا تظهرُ إلّا إن التقطنا لحظةَ رجوعِه من
+  // نافذةِ فيسبوك — فإن فاتتنا بقيَ الربطُ معلّقاً بلا أثرٍ يُرى، ولا رسالةَ تصل.
+  // صارت تُسأَلُ مع كلِّ فتحةٍ للتبويب: ما دام هناك ربطٌ ناقصٌ فالقائمةُ حاضرة.
   const loadStatus = () =>
-    api.get('/instagram/status').then((r) => setStatus(r.data)).catch((e) => setError(getErrorMessage(e)));
+    api.get('/instagram/status').then(async (r) => {
+      setStatus(r.data);
+      if (r.data && !r.data.connected) {
+        try {
+          const pg = await api.get('/instagram/pending-pages');
+          if (pg.data?.pages?.length) setPendingPages(pg.data.pages);
+        } catch { /* تجاهل — الزرُّ يبقى متاحاً */ }
+      }
+    }).catch((e) => setError(getErrorMessage(e)));
 
   // عند التحميل: لو رجعنا من فيسبوك (?code=) نكمّل الربط، وإلا نجلب الحالة عادةً.
   useEffect(() => {
