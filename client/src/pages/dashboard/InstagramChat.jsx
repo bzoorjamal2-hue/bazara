@@ -179,6 +179,8 @@ export default function InstagramChat() {
   const [photo, setPhoto] = useState(null); // { file, preview }
   const [progress, setProgress] = useState(0);
   const [viewing, setViewing] = useState('');
+  const dataRef = useRef(null);
+  dataRef.current = data;
   const [hud, setHud] = useState(false);
   const taps = useRef([]);
   // ثلاثُ نقراتٍ على الصورةِ خلالَ ثانيةٍ تفتحُ المقياسَ وتغلقُه — بابٌ خفيٌّ لأنّه
@@ -194,6 +196,43 @@ export default function InstagramChat() {
       .then((r) => setData(r.data))
       .catch((e) => setError(getErrorMessage(e)));
   useEffect(() => { load(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ═════════ التحديثُ اللحظيّ ═════════
+  // كانت التاجرةُ تُحدّثُ الصفحةَ لترى ردَّ الزبون — وهي تنتظرُه. نسألُ الخادمَ كلَّ
+  // أربعِ ثوانٍ عمّا **بعدَ** آخرِ رسالةٍ عندنا فقط (لا المحادثةَ كلَّها)، ونتوقّفُ حين
+  // يغيبُ التطبيقُ عن الشاشة — فلا سؤالَ ولا بطاريّةَ تُستهلَكُ وهو في الجيب.
+  // ولا نسألُ أثناءَ الإرسال: الرسالةُ التفاؤليّةُ ما زالت بلا رقمٍ من الخادم.
+  const sendingRef = useRef(false);
+  sendingRef.current = sending;
+  useEffect(() => {
+    let stop = false;
+    const tick = async () => {
+      if (stop || document.hidden || sendingRef.current) return;
+      const msgs = dataRef.current?.messages || [];
+      const last = msgs.filter((m) => !String(m.id).startsWith('tmp-')).slice(-1)[0];
+      if (!last) return;
+      try {
+        const r = await api.get(`/instagram/conversations/${id}/messages`, { params: { after: last.created_at } });
+        const fresh = r.data?.messages || [];
+        if (!fresh.length || stop) return;
+        setData((d) => {
+          const have = new Set((d?.messages || []).map((m) => m.id));
+          const add = fresh.filter((m) => !have.has(m.id));
+          if (!add.length) return d;
+          // نُسقطُ التفاؤليّاتِ التي عادت من الخادمِ بنصِّها نفسِه، وإلّا ظهرت مرّتين
+          const texts = new Set(add.map((m) => m.text || ''));
+          const kept = (d?.messages || []).filter(
+            (m) => !(String(m.id).startsWith('tmp-') && texts.has(m.text || ''))
+          );
+          return { ...d, conversation: r.data?.conversation || d.conversation, messages: [...kept, ...add] };
+        });
+      } catch { /* شبكةٌ متقطّعة — نُعيد بعد أربعِ ثوانٍ */ }
+    };
+    const timer = setInterval(tick, 4000);
+    const onVisible = () => { if (!document.hidden) tick(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => { stop = true; clearInterval(timer); document.removeEventListener('visibilitychange', onVisible); };
+  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // لوحةُ المفاتيح تُقلّصُ النافذةَ المرئيّةَ ولا تُقلّصُ inset-0، فيغرقُ صندوقُ الكتابةِ
   // تحتها. كنّا نضبطُ **ارتفاعَ** الشاشةِ على ارتفاعِ النافذةِ المرئيّة، وهو خطر: أيُّ

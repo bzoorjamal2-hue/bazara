@@ -546,11 +546,21 @@ export async function listMessages(req, res, next) {
   try {
     const conv = await getOwnedConversation(req.user.id, req.params.id);
     if (!conv) return res.status(404).json({ error: 'المحادثة غير موجودة.' });
-    const r = await query(
-      `SELECT id, direction, text, attachment_url, attachment_type, created_at
-       FROM ig_messages WHERE conversation_id = $1 ORDER BY created_at ASC LIMIT 200`,
-      [conv.id]
-    );
+    // ?after=<وقت>: لا نُعيدُ المحادثةَ كلَّها كلَّ أربعِ ثوانٍ لنرى رسالةً واحدةً
+    // جديدة. بلا هذا يصيرُ التحديثُ اللحظيُّ أثقلَ ممّا يُفيد.
+    const after = String(req.query.after || '').trim();
+    const r = after
+      ? await query(
+          `SELECT id, direction, text, attachment_url, attachment_type, created_at
+           FROM ig_messages WHERE conversation_id = $1 AND created_at > $2
+           ORDER BY created_at ASC LIMIT 200`,
+          [conv.id, after]
+        )
+      : await query(
+          `SELECT id, direction, text, attachment_url, attachment_type, created_at
+           FROM ig_messages WHERE conversation_id = $1 ORDER BY created_at ASC LIMIT 200`,
+          [conv.id]
+        );
     await query('UPDATE ig_conversations SET unread = 0 WHERE id = $1', [conv.id]);
     res.json({
       conversation: {

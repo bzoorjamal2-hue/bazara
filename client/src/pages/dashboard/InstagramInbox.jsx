@@ -211,11 +211,31 @@ function Inbox({ username, onDisconnected }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [convs, setConvs] = useState(null);
+  const [q, setQ] = useState('');
   const [error, setError] = useState('');
 
   const load = () =>
     api.get('/instagram/conversations').then((r) => setConvs(r.data.conversations)).catch((e) => setError(getErrorMessage(e)));
   useEffect(() => { load(); }, []);
+
+  // القائمةُ تتجدّدُ وحدَها كلَّ عشرِ ثوانٍ ما دامت الشاشةُ ظاهرة: رسالةٌ جديدةٌ تصلُ
+  // وأنت تنظرُ إلى القائمةِ يجبُ أن تُرى، لا أن تنتظرَ ضغطةَ «تحديث».
+  useEffect(() => {
+    const tick = () => { if (!document.hidden) load(); };
+    const timer = setInterval(tick, 10000);
+    document.addEventListener('visibilitychange', tick);
+    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', tick); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // بحثٌ في المحادثات: بالاسمِ أو المعرّفِ أو نصِّ آخرِ رسالة. المطابقةُ بعد تطبيعِ
+  // العربيّة، وإلّا لم تُطابَق «عبايه» بـ«عباية». والتصفيةُ هنا لا عند الخادم: المئةُ
+  // محادثةٍ في اليدِ أصلاً، وسؤالُ الخادمِ مع كلِّ حرفٍ تأخيرٌ بلا مقابل.
+  const shown = useMemo(() => {
+    const term = normalizeAr(q);
+    if (!term) return convs || [];
+    return (convs || []).filter((c) =>
+      normalizeAr(`${c.customer_name || ''} ${c.customer_username || ''} ${c.last_message || ''}`).includes(term));
+  }, [convs, q]);
 
   const disconnect = async () => {
     try { await api.post('/instagram/disconnect'); onDisconnected(); } catch (e) { setError(getErrorMessage(e)); }
@@ -239,11 +259,21 @@ function Inbox({ username, onDisconnected }) {
 
       {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
 
+      {/* البحثُ لا يظهرُ إلّا حين يكونُ له معنى: محادثتان لا تُبحَثان */}
+      {(convs || []).length > 4 && (
+        <input
+          className="input"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder={t('dashboard.instagram.searchChats')}
+        />
+      )}
+
       {(convs && convs.length === 0) ? (
         <div className="glass p-10 text-center text-stone-400">{t('dashboard.instagram.empty')}</div>
       ) : (
         <div className="space-y-2">
-          {(convs || []).map((c) => (
+          {shown.map((c) => (
             <button
               key={c.id}
               onClick={() => navigate(`/dashboard/instagram/${c.id}`)}
