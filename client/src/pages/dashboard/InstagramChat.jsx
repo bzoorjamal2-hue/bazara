@@ -331,22 +331,36 @@ export default function InstagramChat() {
   // إنستغرام. والضغطةُ العابرةُ لا تفعلُ شيئاً: كانت تفتحُ اللوحةَ بالخطأ كلّما لمستَ
   // الشاشةَ وأنت تقرأ. ونُلغي قائمةَ النظامِ التي تظهرُ مع الضغطِ المطوّلِ على iOS.
   const pressTimer = useRef(0);
+  const lastTap = useRef({ id: '', at: 0 });
+  const touched = useRef(false);
   const pressProps = (m) => {
+    const skip = (e) => Boolean(e.target.closest('button, a, video, audio'));
     const start = (e) => {
-      if (e.target.closest('button, a, video, audio')) return;
+      if (skip(e)) return;
       clearTimeout(pressTimer.current);
-      pressTimer.current = setTimeout(() => setActiveId(m.id), 450);
+      pressTimer.current = setTimeout(() => { setActiveId(m.id); lastTap.current = { id: '', at: 0 }; }, 450);
     };
-    const cancel = () => clearTimeout(pressTimer.current);
+    // النقرتانِ نحسبُهما بأنفسِنا: `dblclick` على iOS غيرُ موثوقٍ مع اللمس، فكان
+    // القلبُ لا يظهرُ أبداً. نقيسُ الفارقَ بين نقرتين على الفقاعةِ نفسِها.
+    const tapEnd = (e) => {
+      clearTimeout(pressTimer.current);
+      if (skip(e)) return;
+      const now = Date.now();
+      if (lastTap.current.id === m.id && now - lastTap.current.at < 320) {
+        lastTap.current = { id: '', at: 0 };
+        react(m);
+      } else {
+        lastTap.current = { id: m.id, at: now };
+      }
+    };
     return {
-      onTouchStart: start,
-      onTouchEnd: cancel,
-      onTouchMove: cancel,
-      onMouseDown: start,
-      onMouseUp: cancel,
-      onMouseLeave: cancel,
+      onTouchStart: (e) => { touched.current = true; start(e); },
+      onTouchEnd: tapEnd,
+      onTouchMove: () => clearTimeout(pressTimer.current),
+      onMouseDown: (e) => { if (!touched.current) start(e); },
+      onMouseUp: (e) => { if (!touched.current) tapEnd(e); },
+      onMouseLeave: () => clearTimeout(pressTimer.current),
       onContextMenu: (e) => e.preventDefault(),
-      onDoubleClick: (e) => { if (!e.target.closest('button, a, video, audio')) react(m); },
     };
   };
 
