@@ -23,7 +23,7 @@ export function igRedirectUri() {
 // أمّا نافذةُ المتصفّحِ المستقلّةُ فلا تُسلّمُ روابطَها للتطبيقات.
 // والتذكرةُ (lt) هي كيف يعرفُ الخادمُ صاحبَ الرحلة: تلك النافذةُ لا تحملُ جلسةَ
 // المستخدمِ في التطبيقِ المثبَّت، فلا تكفيها الكوكيز.
-export async function startFbLogin({ fresh = false, requestTicket } = {}) {
+export async function startFbLogin({ fresh = true, requestTicket } = {}) {
   const base = import.meta.env.VITE_API_URL || '/api';
   const ticket = requestTicket ? await requestTicket() : '';
   const p = new URLSearchParams(ticket ? { lt: ticket } : { redirect_uri: igRedirectUri() });
