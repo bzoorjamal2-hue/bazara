@@ -327,7 +327,12 @@ export function igLoginRedirect(req, res) {
     const cb = `${req.protocol}://${req.get('host')}/api/instagram/callback`;
     const q = new URLSearchParams({ client_id: APP_ID, redirect_uri: cb, response_type: 'code', state: ticket });
     if (LOGIN_CONFIG_ID) { q.set('config_id', LOGIN_CONFIG_ID); q.set('override_default_response_type', 'true'); }
-    if (req.query.fresh) q.set('auth_type', 'reauthenticate');
+    if (req.query.fresh) {
+      // reauthenticate وحدَه تتجاهلُه أحياناً نافذةُ «تسجيل الدخول للأعمال»، وnonce
+      // جديدٌ في كلِّ محاولةٍ يجعلُ الطلبَ لا يُطابَقُ بأيِّ إثباتٍ سابقٍ فيُعادُ السؤال.
+      q.set('auth_type', 'reauthenticate');
+      q.set('auth_nonce', crypto.randomBytes(8).toString('hex'));
+    }
     return res.redirect(302, `https://www.facebook.com/${GRAPH_VERSION}/dialog/oauth?${q.toString()}`);
   }
   const redirectUri = String(req.query.redirect_uri || '');

@@ -126,8 +126,9 @@
       "orderCreated": "Order created and added to your Orders",
       "older": "Show older messages",
       "mentioned": "Mentioned in chat:",
-      "wrongAccount": "If the wrong account appears, tap “Connect with a different Facebook account” — or log out of Facebook and try again.",
-      "otherAccount": "Connect with a different Facebook account"
+      "wrongAccount": "Facebook remembers the last account used on this device, and we cannot clear its cookies. If the wrong account shows: tap “Connect with a different Facebook account”, and if it persists, open Facebook, log out, then reconnect.",
+      "otherAccount": "Connect with a different Facebook account",
+      "fbLogout": "Open Facebook to log out"
     },
     "opost": {
       "title": "Optimus courier",

@@ -162,6 +162,14 @@ function ConnectCard({ status, pendingPages, onConnected, onPages }) {
           <button onClick={() => start(true)} className="text-[11px] text-gold-200 underline underline-offset-2">
             {t('dashboard.instagram.otherAccount')}
           </button>
+          {/* فيسبوك يعرضُ آخرَ من دخلَ في هذا المتصفّح، وكوكيزُه ليست لنا فلا نمسحُها.
+              فإن لم ينفع طلبُ الدخولِ الجديدِ بقيَ البابُ الأكيد: يخرجُ من فيسبوك بنفسِه. */}
+          <button
+            onClick={() => window.open('https://www.facebook.com/', '_blank')}
+            className="text-[11px] text-stone-300 underline underline-offset-2"
+          >
+            {t('dashboard.instagram.fbLogout')}
+          </button>
           <p className="text-[11px] leading-relaxed text-stone-400">{t('dashboard.instagram.wrongAccount')}</p>
         </div>
       )}
