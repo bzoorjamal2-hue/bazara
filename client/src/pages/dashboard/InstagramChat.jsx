@@ -158,11 +158,22 @@ export default function InstagramChat() {
     if (taps.current.length >= 3) { taps.current = []; setHud((v) => !v); }
   };
 
-  const load = () =>
-    api.get(`/instagram/conversations/${id}/messages`)
+  const load = () => {
+    setError('');
+    return api.get(`/instagram/conversations/${id}/messages`)
       .then((r) => setData(r.data))
       .catch((e) => setError(getErrorMessage(e)));
+  };
   useEffect(() => { load(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // خدمةُ الخادمِ تنامُ حين لا تُستعمَل، فأوّلُ طلبٍ يوقظُها ويبقى معلّقاً نحوَ نصفِ
+  // دقيقة. ودوّامةٌ صامتةٌ طوالَ ذلك تبدو عطلاً — فبعد ثمانِ ثوانٍ نقولُ ما يجري.
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    if (data) { setSlow(false); return undefined; }
+    const timer = setTimeout(() => setSlow(true), 8000);
+    return () => clearTimeout(timer);
+  }, [data, id]);
 
   // الردودُ الجاهزةُ تخصُّ المتجرَ لا الجهاز، فتُحفَظُ عند الخادمِ وتتبعُ صاحبتَها
   // إلى أيِّ هاتفٍ فتحت منه.
@@ -578,7 +589,19 @@ export default function InstagramChat() {
       {/* الرسائل */}
       <div ref={scrollRef} className="bz-chat-scroll flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-3 py-3">
         {!data ? (
-          <Spinner />
+          <div className="my-auto flex flex-col items-center gap-3">
+            <Spinner />
+            {slow && (
+              <>
+                <p className="bz-chat-muted max-w-[16rem] text-center text-xs leading-relaxed">
+                  {t('dashboard.instagram.waking')}
+                </p>
+                <button onClick={load} className="bz-chat-day rounded-full px-4 py-1.5 text-[11px] font-semibold">
+                  {t('common.retry', { defaultValue: 'إعادة المحاولة' })}
+                </button>
+              </>
+            )}
+          </div>
         ) : items.length === 0 ? (
           <p className="bz-chat-muted my-auto text-center text-sm">{t('dashboard.instagram.noMessages')}</p>
         ) : (

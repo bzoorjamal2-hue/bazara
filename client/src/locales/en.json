@@ -160,7 +160,8 @@
     "clear": "Clear",
     "close": "Close",
     "today": "Today",
-    "yesterday": "Yesterday"
+    "yesterday": "Yesterday",
+    "retry": "Retry"
   },
   "searchPage": {
     "title": "Search",

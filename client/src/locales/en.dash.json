@@ -142,7 +142,8 @@
       "storyReply": "Replied to your story",
       "voice": "Voice message",
       "editQuick": "Edit quick replies",
-      "quickPlaceholder": "New quick reply…"
+      "quickPlaceholder": "New quick reply…",
+      "waking": "The server is waking up after idling — the first open can take up to half a minute."
     },
     "opost": {
       "title": "Optimus courier",
