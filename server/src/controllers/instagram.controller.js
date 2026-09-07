@@ -253,6 +253,8 @@ function closingPage(title, body) {
 
 // GET /api/instagram/callback — رجعةُ فيسبوك إلى الخادمِ لا إلى الواجهة
 export async function igCallback(req, res) {
+  // سطرٌ لكلِّ رجعة: بلا هذا لا يُعرَفُ أوصلت الرحلةُ إلينا أصلاً أم توقّفت عند فيسبوك.
+  console.log('ig callback ←', req.query.error ? 'error=' + req.query.error : 'code ok', 'state?', Boolean(req.query.state));
   const uid = ticketUser(req.query.state);
   if (!uid) return res.status(400).send(closingPage('انتهت جلسة الربط', 'ارجع للتطبيق واضغط «ربط» من جديد.'));
   const code = String(req.query.code || '');
@@ -265,6 +267,7 @@ export async function igCallback(req, res) {
     const userToken = await exchangeCodeForToken(code, redirectUri);
     const longLived = await exchangeLongLivedToken(userToken);
     const pages = await getManagedPages(longLived);
+    console.log('ig callback: pages', pages.length);
     if (!pages.length) {
       return res.status(400).send(closingPage(
         'ما لقينا حساب إنستغرام',
@@ -295,7 +298,7 @@ export async function igCallback(req, res) {
     );
     return res.send(closingPage('تمّ الربط', 'أغلق هذه النافذة وارجع للتطبيق — رسائلك ستصلك هنا.'));
   } catch (e) {
-    console.error('ig callback:', e.message);
+    console.error('ig callback:', e.message, JSON.stringify(e.body || {}).slice(0, 300));
     return res.status(500).send(closingPage('تعذّر الربط', e.message || 'حاول مرّة أخرى.'));
   }
 }

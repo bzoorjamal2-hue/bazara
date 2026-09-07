@@ -25,11 +25,20 @@ export function igRedirectUri() {
 // المستخدمِ في التطبيقِ المثبَّت، فلا تكفيها الكوكيز.
 export async function startFbLogin({ fresh = true, requestTicket } = {}) {
   const base = import.meta.env.VITE_API_URL || '/api';
-  const ticket = requestTicket ? await requestTicket() : '';
+
+  // النافذةُ تُفتَحُ **قبل** طلبِ التذكرة، فارغةً. لأنّ المتصفّحَ لا يسمحُ بفتحِ نافذةٍ
+  // إلّا داخلَ ضغطةِ المستخدمِ نفسِها، وأيُّ `await` قبلَها يُخرجُنا من تلك اللحظةِ
+  // فتُمنَع — فنسقطُ إلى تحويلِ الصفحة، وهو ما يُسلّمُ الرحلةَ لتطبيقِ فيسبوك على iOS.
+  // فنحجزُ النافذةَ أوّلاً ثمّ نوجّهُها حين تصلُ التذكرة.
+  const win = window.open('', '_blank');
+
+  let ticket = '';
+  try { ticket = requestTicket ? await requestTicket() : ''; } catch { ticket = ''; }
+
   const p = new URLSearchParams(ticket ? { lt: ticket } : { redirect_uri: igRedirectUri() });
   if (fresh) p.set('fresh', '1');
   const url = `${base}/instagram/login?${p.toString()}`;
-  // النافذةُ المستقلّةُ قد تُمنَع (حاجبُ النوافذ)، فنعودُ حينَها إلى تحويلِ الصفحة.
-  const win = window.open(url, '_blank');
-  if (!win) window.location.href = url;
+
+  if (win && !win.closed) win.location.href = url;
+  else window.location.href = url; // مُنعت النافذة (حاجبُ نوافذ) — نُكمل في الصفحة نفسِها
 }
