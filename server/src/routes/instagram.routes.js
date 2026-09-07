@@ -10,6 +10,7 @@ import {
   listMessages,
   sendReply,
   convertToOrder,
+  igReact,
 } from '../controllers/instagram.controller.js';
 import { requireAuth } from '../middleware/auth.js';
 
@@ -34,6 +35,7 @@ router.post('/disconnect', igDisconnect);
 router.get('/conversations', listConversations);
 router.get('/conversations/:id/messages', listMessages);
 router.post('/conversations/:id/reply', sendReply);
+router.post('/conversations/:id/react', igReact);
 router.post('/conversations/:id/convert', convertToOrder);
 
 export default router;

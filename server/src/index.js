@@ -594,6 +594,12 @@ END $$;`,
     // صورةُ بروفايلِ الزبون كما تعطيها Meta — روابطُها موقّعةٌ وتنتهي، فالواجهةُ
     // ترجعُ إلى الحرفِ الأوّل إن سقطت الصورة.
     "ALTER TABLE ig_conversations ADD COLUMN IF NOT EXISTS customer_avatar TEXT DEFAULT '';",
+    // الردُّ على رسالةٍ بعينِها: نحفظُ معرّفَ المقتبَسةِ لنعرضَها فوقَ الردّ
+    "ALTER TABLE ig_messages ADD COLUMN IF NOT EXISTS reply_to_mid VARCHAR(255) DEFAULT '';",
+    // تفاعلُ الزبونِ أو التاجرةِ على رسالةٍ (love) — فارغٌ يعني لا تفاعل
+    "ALTER TABLE ig_messages ADD COLUMN IF NOT EXISTS reaction VARCHAR(20) DEFAULT '';",
+    // متى رأى الزبونُ آخرَ ما أرسلناه — منه يُحسَبُ «شوهدت» تحت الرسالة
+    "ALTER TABLE ig_conversations ADD COLUMN IF NOT EXISTS seen_at TIMESTAMPTZ;",
     // نوعُ مرفقِ رسالةِ إنستغرام (image/video/audio/share…) — بدونه لا تعرفُ الواجهةُ
     // كيف تعرضُه فتكتبُ «مرفق» ورابطاً مكانَ الصورةِ نفسِها.
     "ALTER TABLE ig_messages ADD COLUMN IF NOT EXISTS attachment_type VARCHAR(20) DEFAULT '';",

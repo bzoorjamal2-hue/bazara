@@ -131,6 +131,27 @@ export async function sendMessage(pageToken, recipientId, text) {
   });
 }
 
+// الردُّ على رسالةٍ بعينِها: نفسُ نداءِ الإرسالِ ومعه معرّفُ المقتبَسة، فيظهرُ عند
+// الزبونِ ردّاً على كلامِه لا رسالةً معلّقةً في الهواء.
+export async function sendReplyTo(pageToken, recipientId, text, mid) {
+  return graph('/me/messages', {
+    method: 'POST',
+    token: pageToken,
+    body: { recipient: { id: recipientId }, message: { text }, reply_to: { mid } },
+  });
+}
+
+// تفاعلٌ على رسالة (❤️). reaction فارغاً يعني إزالةَ التفاعل.
+export async function sendReaction(pageToken, recipientId, mid, reaction) {
+  return graph('/me/messages', {
+    method: 'POST',
+    token: pageToken,
+    body: reaction
+      ? { recipient: { id: recipientId }, sender_action: 'react', payload: { message_id: mid, reaction } }
+      : { recipient: { id: recipientId }, sender_action: 'unreact', payload: { message_id: mid } },
+  });
+}
+
 // إرسال صورة. إنستغرام لا تقبل أن نرفع إليها الملفّ، بل تطلب رابطاً عامّاً تجلبه هي
 // بنفسها — فترفع الواجهةُ الصورةَ إلى Cloudinary أوّلاً ويصل الرابطُ هنا. ورسالةٌ
 // واحدةٌ لا تحمل نصّاً ومرفقاً معاً، فمن أراد الاثنين أرسل رسالتين.

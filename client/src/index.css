@@ -4325,3 +4325,11 @@ body.bz-chat-open { overflow: hidden; }
      يتولّى تمريرَ الحاوياتِ أصلاً بأفضلَ ممّا نُمليه. */
   overscroll-behavior: contain;
 }
+
+/* المقتبَسُ داخلَ الفقاعة (الردُّ على رسالة) وشارةُ التفاعل */
+.bz-chat-quote { background: rgba(94, 70, 54, 0.10); border-inline-start: 2px solid rgba(94, 70, 54, 0.45); }
+html.dark .bz-chat-quote { background: rgba(255, 255, 255, 0.10); border-inline-start-color: rgba(228, 216, 197, 0.6); }
+.bz-chat-out .bz-chat-quote { background: rgba(244, 237, 226, 0.16); border-inline-start-color: rgba(244, 237, 226, 0.6); }
+html.dark .bz-chat-out .bz-chat-quote { background: rgba(43, 29, 18, 0.12); border-inline-start-color: rgba(43, 29, 18, 0.45); }
+.bz-chat-react { background: #F4EDE2; box-shadow: 0 1px 4px rgba(94, 70, 54, 0.25); }
+html.dark .bz-chat-react { background: #241a13; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5); }

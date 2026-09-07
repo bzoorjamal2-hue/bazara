@@ -16,6 +16,8 @@ import {
   subscribePageMessages,
   unsubscribePageMessages,
   sendMessage,
+  sendReplyTo,
+  sendReaction,
   sendAttachment,
   getSenderProfile,
   mirrorRemote,
@@ -113,8 +115,25 @@ async function processWebhook(body) {
       // recipient.id = حساب المتجر (Business) ، sender.id = الزبون (IGSID)
       const businessId = ev.recipient?.id;
       const senderId = ev.sender?.id;
-      const msg = ev.message;
-      if (!businessId || !senderId || !msg) continue;
+
+      // ثلاثةُ أحداثٍ غيرِ الرسالة تصلُ بنفسِ المجرى، وكلٌّ منها يغيّرُ ما تراه
+      // التاجرةُ على الشاشة: رأى الزبونُ ما أرسلناه، أو تفاعلَ على رسالة.
+      if (!msg) {
+        if (ev.read && businessId) {
+          // watermark: كلُّ ما أُرسِلَ قبلَ هذا الوقتِ صارَ مرئيّاً
+          const seenAt = ev.read.watermark ? new Date(Number(ev.read.watermark)) : new Date();
+          await query(
+            `UPDATE ig_conversations c SET seen_at = $3
+             FROM stores s WHERE c.store_id = s.id AND s.ig_user_id = $1 AND c.ig_sender_id = $2`,
+            [businessId, senderId, seenAt]
+          );
+        } else if (ev.reaction?.mid) {
+          const val = ev.reaction.action === 'unreact' ? '' : (ev.reaction.reaction || 'love');
+          await query('UPDATE ig_messages SET reaction = $2 WHERE mid = $1', [ev.reaction.mid, val]);
+        }
+        continue;
+      }
+      if (!businessId || !senderId) continue;
 
       // نجد المتجر صاحب هذا الحساب. لو الرسالة "echo" (صادرة) فالمُرسِل هو المتجر.
       const isEcho = Boolean(msg.is_echo);
@@ -158,9 +177,9 @@ async function processWebhook(body) {
 
       // نخزّن الرسالة (mid فريد → لا يتكرّر نفس الحدث ولا ردّنا الذي عاد كـ echo)
       await query(
-        `INSERT INTO ig_messages (conversation_id, mid, direction, text, attachment_url, attachment_type)
-         VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (mid) DO NOTHING`,
-        [convId, msg.mid || null, isEcho ? 'out' : 'in', text, attachment, attType]
+        `INSERT INTO ig_messages (conversation_id, mid, direction, text, attachment_url, attachment_type, reply_to_mid)
+         VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (mid) DO NOTHING`,
+        [convId, msg.mid || null, isEcho ? 'out' : 'in', text, attachment, attType, msg.reply_to?.mid || '']
       );
 
       if (isEcho) continue; // ردّنا/ردّ المتجر — لا إشعار
@@ -551,13 +570,13 @@ export async function listMessages(req, res, next) {
     const after = String(req.query.after || '').trim();
     const r = after
       ? await query(
-          `SELECT id, direction, text, attachment_url, attachment_type, created_at
+          `SELECT id, mid, direction, text, attachment_url, attachment_type, reply_to_mid, reaction, created_at
            FROM ig_messages WHERE conversation_id = $1 AND created_at > $2
            ORDER BY created_at ASC LIMIT 200`,
           [conv.id, after]
         )
       : await query(
-          `SELECT id, direction, text, attachment_url, attachment_type, created_at
+          `SELECT id, mid, direction, text, attachment_url, attachment_type, reply_to_mid, reaction, created_at
            FROM ig_messages WHERE conversation_id = $1 ORDER BY created_at ASC LIMIT 200`,
           [conv.id]
         );
@@ -568,6 +587,7 @@ export async function listMessages(req, res, next) {
         customer_name: conv.customer_name,
         customer_username: conv.customer_username,
         customer_avatar: conv.customer_avatar,
+        seen_at: conv.seen_at,
         order_id: conv.order_id,
       },
       messages: r.rows,
@@ -581,6 +601,7 @@ export async function listMessages(req, res, next) {
 export async function sendReply(req, res, next) {
   const text = String(req.body.text || '').trim();
   const attachmentUrl = String(req.body.attachmentUrl || '').trim();
+  const replyToMid = String(req.body.replyToMid || '').trim();
   if (!text && !attachmentUrl) return res.status(400).json({ error: 'الرسالة فارغة.' });
   // الرابطَ تجلبُه خوادمُ Meta بنفسها، فقبولُ أيِّ عنوانٍ يجعلُ حقلَ الردِّ باباً
   // نُملي منه على خادمِهم ما يطلب. نقصرُه على مستضيفِ صورِنا وحدَه.
@@ -604,7 +625,9 @@ export async function sendReply(req, res, next) {
       try {
         result = part.image
           ? await sendAttachment(token, conv.ig_sender_id, part.image)
-          : await sendMessage(token, conv.ig_sender_id, part.text);
+          : (replyToMid
+            ? await sendReplyTo(token, conv.ig_sender_id, part.text, replyToMid)
+            : await sendMessage(token, conv.ig_sender_id, part.text));
       } catch (e) {
         // ماتَ التوكن: نفصل الحساب ونُعلم التاجر بدل رسالة Meta الإنجليزيّة الغامضة
         if (isAuthError(e)) {
@@ -623,9 +646,10 @@ export async function sendReply(req, res, next) {
       }
 
       await query(
-        `INSERT INTO ig_messages (conversation_id, mid, direction, text, attachment_url, attachment_type)
-         VALUES ($1, $2, 'out', $3, $4, $5) ON CONFLICT (mid) DO NOTHING`,
-        [conv.id, result?.message_id || null, part.text || '', part.image || '', part.image ? 'image' : '']
+        `INSERT INTO ig_messages (conversation_id, mid, direction, text, attachment_url, attachment_type, reply_to_mid)
+         VALUES ($1, $2, 'out', $3, $4, $5, $6) ON CONFLICT (mid) DO NOTHING`,
+        [conv.id, result?.message_id || null, part.text || '', part.image || '',
+          part.image ? 'image' : '', part.image ? '' : replyToMid]
       );
     }
 
@@ -635,6 +659,34 @@ export async function sendReply(req, res, next) {
       [conv.id, preview]
     );
     res.json({ sent: true });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// POST /api/instagram/conversations/:id/react — تفاعلٌ على رسالة (❤️ أو إزالته)
+// إنستغرام لا تعرفُ إلّا love، فأيُّ قيمةٍ أخرى تُرفَض. والحفظُ عندنا بعد نجاحِ
+// الإرسالِ لا قبلَه: قلبٌ يظهرُ في لوحتِنا ولا يراه الزبونُ أسوأُ من لا شيء.
+export async function igReact(req, res, next) {
+  const mid = String(req.body.mid || '').trim();
+  const reaction = req.body.reaction ? 'love' : '';
+  if (!mid) return res.status(400).json({ error: 'رسالة غير محدّدة.' });
+  try {
+    const conv = await getOwnedConversation(req.user.id, req.params.id);
+    if (!conv) return res.status(404).json({ error: 'المحادثة غير موجودة.' });
+    const token = decrypt(conv.ig_access_token);
+    if (!token) return res.status(400).json({ error: 'حساب إنستغرام غير مربوط.' });
+    try {
+      await sendReaction(token, conv.ig_sender_id, mid, reaction);
+    } catch (e) {
+      if (isAuthError(e)) {
+        await markDisconnected(conv.store_id, conv.user_id);
+        return res.status(400).json({ error: 'انفصل حساب إنستغرام. اضغط «ربط» من جديد.' });
+      }
+      return res.status(400).json({ error: e.body?.error?.message || 'تعذّر إرسال التفاعل.' });
+    }
+    await query('UPDATE ig_messages SET reaction = $2 WHERE mid = $1', [mid, reaction]);
+    res.json({ ok: true, reaction });
   } catch (err) {
     next(err);
   }

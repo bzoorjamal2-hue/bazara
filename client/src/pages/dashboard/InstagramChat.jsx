@@ -295,6 +295,40 @@ export default function InstagramChat() {
   const hasOlder = all.length > shown.length;
   const items = useMemo(() => buildItems(shown), [shown]);
 
+  // خريطةُ المعرّفاتِ لعرضِ المقتبَس: الردُّ يحملُ معرّفَ المردودِ عليه لا نصَّه.
+  const byMid = useMemo(() => {
+    const map = new Map();
+    for (const m of all) if (m.mid) map.set(m.mid, m);
+    return map;
+  }, [all]);
+
+  // ردٌّ على رسالةٍ بعينِها، وتفاعلٌ عليها. تُفتَحُ أزرارُهما بضغطةٍ على الفقاعةِ
+  // نفسِها: صفٌّ دائمٌ من الأزرارِ بجانبِ كلِّ رسالةٍ يأكلُ العرضَ ويشوّشُ القراءة.
+  const [activeId, setActiveId] = useState('');
+  const [replyTo, setReplyTo] = useState(null); // { mid, text }
+
+  const react = async (m) => {
+    if (!m.mid) return;
+    const next = m.reaction ? '' : 'love';
+    setActiveId('');
+    setData((d) => ({
+      ...d,
+      messages: (d?.messages || []).map((x) => (x.id === m.id ? { ...x, reaction: next } : x)),
+    }));
+    try {
+      await api.post(`/instagram/conversations/${id}/react`, { mid: m.mid, reaction: next });
+    } catch (e) {
+      setError(getErrorMessage(e));
+      setData((d) => ({
+        ...d,
+        messages: (d?.messages || []).map((x) => (x.id === m.id ? { ...x, reaction: m.reaction || '' } : x)),
+      }));
+    }
+  };
+
+  // نصٌّ مختصرٌ للمقتبَس: الصورةُ بلا نصٍّ تُوصَفُ بكلمةٍ بدل أن تظهرَ فارغة
+  const quoteText = (m) => (m?.text || '').trim() || (m?.attachment_url ? '📷' : '…');
+
   // ما قاله الزبونُ نفسُه: منه نلتقطُ رقمَه ومنتجاتِه ومكانَه لنملأَ نموذجَ الطلب.
   // كلامُ التاجرةِ لا يدخلُ هنا — رقمُها هي ليس رقمَ الزبون.
   const custText = useMemo(
@@ -361,7 +395,12 @@ export default function InstagramChat() {
     setText(''); dropPhoto(); setProgress(0);
 
     try {
-      await api.post(`/instagram/conversations/${id}/reply`, { text: body, attachmentUrl: uploaded });
+      await api.post(`/instagram/conversations/${id}/reply`, {
+        text: body,
+        attachmentUrl: uploaded,
+        replyToMid: replyTo?.mid || '',
+      });
+      setReplyTo(null);
     } catch (e) {
       setError(getErrorMessage(e));
       const ids = new Set(optimistic.map((m) => m.id));
@@ -376,6 +415,13 @@ export default function InstagramChat() {
   const c = data?.conversation || {};
   const name = c.customer_name || (c.customer_username ? `@${c.customer_username}` : t('dashboard.instagram.customer'));
   const converted = Boolean(c.order_id);
+  const seenAt = c.seen_at;
+  // آخرُ رسالةٍ صادرةٍ في المحادثة كلِّها — تحتَها وحدَها تُكتَبُ «شوهدت»
+  const lastOutId = useMemo(() => {
+    for (let i = all.length - 1; i >= 0; i -= 1) if (all[i].direction === 'out') return all[i].id;
+    return '';
+  }, [all]);
+  const isLastOut = (m) => m.id === lastOutId;
   const locale = i18n.language === 'ar' ? 'ar' : 'en';
   const dayLabel = (at) => {
     const today = new Date();
@@ -447,13 +493,57 @@ export default function InstagramChat() {
             const media = Boolean(m.attachment_url);
             return (
               <div key={it.key} className={`flex items-end gap-1.5 ${out ? 'justify-start' : 'justify-end'} ${it.last ? 'mb-2.5' : 'mb-[3px]'}`}>
-                <div className={`max-w-[76%] ${isNew(m.id) ? 'bz-bubble' : ''} ${out ? 'bz-chat-out' : 'bz-chat-in'} ${media ? 'p-1' : 'px-3 py-1.5'} rounded-[18px]`}>
-                  {media && <Attachment url={m.attachment_url} type={m.attachment_type} onOpen={setViewing} />}
-                  {m.text && <p className={`whitespace-pre-wrap break-words text-[14px] leading-[1.45] ${media ? 'px-2 pb-1 pt-1.5' : ''}`}>{m.text}</p>}
-                  {it.last && (
-                    <span className={`bz-chat-time block text-[10px] leading-none ${media ? 'px-2 pb-1.5' : 'pb-0.5'} ${out ? 'text-start' : 'text-end'}`}>
-                      {timeOf(m)}
-                    </span>
+                <div className="min-w-0 max-w-[76%]">
+                  <div
+                    onClick={(e) => {
+                      // الصورةُ والفيديو والروابطُ لها فعلُها، فلا نخطفُ ضغطتَها
+                      if (e.target.closest('button, a, video, audio')) return;
+                      setActiveId((v) => (v === m.id ? '' : m.id));
+                    }}
+                    className={`relative ${isNew(m.id) ? 'bz-bubble' : ''} ${out ? 'bz-chat-out' : 'bz-chat-in'} ${media ? 'p-1' : 'px-3 py-1.5'} rounded-[18px]`}
+                  >
+                    {/* المقتبَس: ردٌّ بلا ما رُدَّ عليه نصفُ كلام */}
+                    {m.reply_to_mid && byMid.get(m.reply_to_mid) && (
+                      <div className="bz-chat-quote mb-1 truncate rounded-lg px-2 py-1 text-[11px]">
+                        {quoteText(byMid.get(m.reply_to_mid))}
+                      </div>
+                    )}
+                    {media && <Attachment url={m.attachment_url} type={m.attachment_type} onOpen={setViewing} />}
+                    {m.text && <p className={`whitespace-pre-wrap break-words text-[14px] leading-[1.45] ${media ? 'px-2 pb-1 pt-1.5' : ''}`}>{m.text}</p>}
+                    {it.last && (
+                      <span className={`bz-chat-time mt-0.5 block text-[10px] leading-none ${media ? 'px-2 pb-1.5' : 'pb-0.5'} ${out ? 'text-start' : 'text-end'}`}>
+                        {timeOf(m)}
+                      </span>
+                    )}
+                    {/* التفاعلُ يجلسُ على حافّةِ الفقاعةِ كما في تطبيقاتِ المحادثة */}
+                    {m.reaction && (
+                      <span className="bz-chat-react absolute -bottom-2 end-2 rounded-full px-1 text-[11px] leading-none">❤️</span>
+                    )}
+                  </div>
+
+                  {/* أزرارُ الرسالةِ تحتَها عند اختيارِها — لا صفٌّ دائمٌ يأكلُ العرض */}
+                  {activeId === m.id && (
+                    <div className={`mt-1 flex gap-1.5 ${out ? 'justify-start' : 'justify-end'}`}>
+                      <button
+                        onClick={() => { setReplyTo({ mid: m.mid, text: quoteText(m) }); setActiveId(''); }}
+                        disabled={!m.mid}
+                        className="bz-chat-day rounded-full px-2.5 py-1 text-[11px] font-semibold disabled:opacity-40"
+                      >
+                        {t('dashboard.instagram.reply')}
+                      </button>
+                      <button
+                        onClick={() => react(m)}
+                        disabled={!m.mid}
+                        className="bz-chat-day rounded-full px-2.5 py-1 text-[11px] font-semibold disabled:opacity-40"
+                      >
+                        {m.reaction ? t('dashboard.instagram.unreact') : '❤️'}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* «شوهدت» تحت آخرِ ما أرسلناه فقط — تكرارُها تحت كلِّ رسالةٍ ضجيج */}
+                  {out && it.last && isLastOut(m) && seenAt && new Date(seenAt) >= new Date(m.created_at) && (
+                    <span className="bz-chat-muted mt-0.5 block text-start text-[10px]">{t('dashboard.instagram.seen')}</span>
                   )}
                 </div>
                 {/* صورةُ الزبونِ في طرفِ الشاشةِ الخارجيِّ ومرّةً واحدةً في آخرِ دفقتِه —
@@ -469,6 +559,17 @@ export default function InstagramChat() {
       </div>
 
       {error && <div className="bz-chat-err mx-3 mb-2 shrink-0 rounded-xl px-3 py-2 text-xs">{error}</div>}
+
+      {/* المقتبَسُ فوقَ صندوقِ الكتابة: يجبُ أن يرى المرسِلُ على ماذا يردّ */}
+      {replyTo && (
+        <div className="bz-chat-in mx-3 mb-2 flex shrink-0 items-center gap-2 rounded-2xl px-3 py-2">
+          <span className="bz-chat-muted shrink-0 text-[11px] font-semibold">{t('dashboard.instagram.replyingTo')}</span>
+          <span className="min-w-0 flex-1 truncate text-xs">{replyTo.text}</span>
+          <button onClick={() => setReplyTo(null)} className="bz-chat-icon shrink-0 rounded-full p-1" aria-label={t('common.cancel')}>
+            <XIcon className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       {/* معاينةُ الصورةِ قبل الإرسال — لا تُرسَلُ صورةٌ لم يرَها المُرسِل */}
       {photo && (

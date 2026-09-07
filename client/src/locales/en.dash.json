@@ -131,7 +131,11 @@
       "fbLogout": "Open Facebook to log out",
       "whyManual": "Why manual?",
       "whyAccount": "Wrong account showing?",
-      "searchChats": "Search chats…"
+      "searchChats": "Search chats…",
+      "reply": "Reply",
+      "unreact": "Remove ❤️",
+      "replyingTo": "Replying to:",
+      "seen": "Seen"
     },
     "opost": {
       "title": "Optimus courier",
