@@ -7,7 +7,7 @@ import Spinner from '../../components/Spinner.jsx';
 import { BackIcon, BagIcon, CameraIcon, ImageIcon, TrashIcon, XIcon, MicIcon } from '../../components/icons.jsx';
 import { uploadToCloudinary, cloudinaryEnabled, cldThumb, cldBlur, cldOptimized } from '../../utils/cloudinary.js';
 import { Avatar, ConvertForm } from '../../components/OrderComposer.jsx';
-import { buildItems, guessKind, findMobile, cldAudioMp3 } from '../../utils/chat.js';
+import { buildItems, guessKind, findMobile, cldAudioMp3, sameDay } from '../../utils/chat.js';
 
 // ═════════ شاشةُ محادثةٍ واحدة ═════════
 // المحادثةُ صفحةٌ قائمةٌ بذاتها تُرسَمُ على body: رأسٌ في الأعلى، ورسائلٌ تملأُ ما

@@ -2,7 +2,7 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import ar from './locales/ar.json';
-import { hasStoredToken } from './utils/pwa.js';
+import { hasStoredToken, isStandalone } from './utils/pwa.js';
 
 // الترجمة مقسومة عشان أول فتح يصير أخف:
 //   ar.json       — نصوص المتجر (اللي بتشوفها الزبونة) → ضمن الحزمة الأساسية
@@ -76,7 +76,10 @@ export async function switchLanguage(lng) {
 export const ready = (async () => {
   await ensureCore();
   const p = window.location.pathname;
-  if (hasStoredToken() || p.startsWith('/dashboard') || p.startsWith('/admin')) await ensureDash();
+  // والتطبيقُ المثبَّتُ هو تطبيقُ التاجرة، فنصوصُ اللوحةِ لازمةٌ له دائماً. وكانت
+  // معلّقةً على العلامةِ المحلّيّةِ وحدَها، فمن أعادَ تثبيتَ التطبيقِ ذهبت علامتُه
+  // وبقيت جلستُه — فتفتحُ اللوحةُ بمفاتيحَ خامٍ مكانَ نصوصِها لحظةً.
+  if (hasStoredToken() || isStandalone() || p.startsWith('/dashboard') || p.startsWith('/admin')) await ensureDash();
 })();
 
 // نضبط اتجاه الصفحة ولغتها عند كل تغيير

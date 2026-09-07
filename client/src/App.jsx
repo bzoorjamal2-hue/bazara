@@ -9,7 +9,7 @@ import Spinner from './components/Spinner.jsx';
 
 import Landing from './pages/Landing.jsx'; // صفحة المنصّة — أول ما يراه الزائر بالويب
 import Splash from './components/Splash.jsx';
-import { isStandalone, hasStoredToken } from './utils/pwa.js';
+import { isStandalone } from './utils/pwa.js';
 import { ensureDash } from './i18n.js';
 import { useAuth } from './context/AuthContext.jsx';
 
@@ -33,9 +33,16 @@ function Root() {
     return () => clearTimeout(id);
   }, []);
   if (user) return <Navigate to="/dashboard" replace />;
-  // داخل التطبيق المثبّت وحده ننتظر تحقّق الجلسة المخزّنة قبل عرض الصفحة،
-  // كي لا ترى المشتركة صفحةَ تعريفٍ ثم تُقذف للوحتها بعد لحظة.
-  if (isStandalone() && loading && hasStoredToken() && !waited) return <Splash />;
+  // داخل التطبيق المثبّت وحده ننتظر تحقّق الجلسة قبل عرض الصفحة، كي لا ترى
+  // المشتركة صفحةَ تعريفٍ ثم تُقذف للوحتها بعد لحظة.
+  //
+  // كان الشرطُ يتطلّبُ hasStoredToken() — وهو يقرأُ bz_auth_token من localStorage،
+  // ولا يُكتَبُ ذاك إلّا لحظةَ تسجيلِ الدخول. فمن حذفَ التطبيقَ وأعادَ تثبيتَه (أو
+  // مُسِحَ تخزينُه) تبقى جلستُه صحيحةً بكوكي httpOnly بينما العلامةُ ذهبت — فيسقطُ
+  // الشرطُ وتظهرُ صفحةُ التعريفِ ثمّ تُقذَفُ للوحة. وهي القفزةُ التي رآها المستخدم.
+  // الجلسةُ يعرفُها الخادمُ لا التخزينُ المحلّيّ، فننتظرُ جوابَه: لحظةٌ واحدةٌ عند
+  // الإقلاع، وسقفُها ستُّ ثوانٍ كما هي.
+  if (isStandalone() && loading && !waited) return <Splash />;
   return <Landing />;
 }
 
