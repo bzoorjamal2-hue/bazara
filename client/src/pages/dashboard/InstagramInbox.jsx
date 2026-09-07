@@ -153,24 +153,36 @@ function ConnectCard({ status, pendingPages, onConnected, onPages }) {
           ))}
         </div>
       ) : (
-        <div className="space-y-2">
-          <button onClick={() => start(false)} disabled={busy} className="btn-primary gap-2">
+        <div className="space-y-3">
+          {/* الزرُّ يملأُ العرضَ: كان بعرضِ نصِّه فيصطدمُ به الرابطُ الثانويُّ بجانبِه */}
+          <button onClick={() => start(false)} disabled={busy} className="btn-primary w-full justify-center gap-2 !py-3">
             <InstagramIcon className="h-5 w-5" /> {t('dashboard.instagram.connectBtn')}
           </button>
-          {/* فيسبوك يتذكّر آخر من دخل في هذا الجهاز فيعرض «تريد المتابعة كـفلان؟» بلا
-              بابٍ لاختيار حسابٍ آخر — ومن لا يعرف السبب يربط حساب غيره وهو لا يدري. */}
-          <button onClick={() => start(true)} className="text-[11px] text-gold-200 underline underline-offset-2">
-            {t('dashboard.instagram.otherAccount')}
-          </button>
-          {/* فيسبوك يعرضُ آخرَ من دخلَ في هذا المتصفّح، وكوكيزُه ليست لنا فلا نمسحُها.
-              فإن لم ينفع طلبُ الدخولِ الجديدِ بقيَ البابُ الأكيد: يخرجُ من فيسبوك بنفسِه. */}
-          <button
-            onClick={() => window.open('https://www.facebook.com/', '_blank')}
-            className="text-[11px] text-stone-300 underline underline-offset-2"
-          >
-            {t('dashboard.instagram.fbLogout')}
-          </button>
-          <p className="text-[11px] leading-relaxed text-stone-400">{t('dashboard.instagram.wrongAccount')}</p>
+
+          {/* البابانِ الثانويّانِ في سطرٍ واحدٍ يفصلُهما نقطة: كانا ثلاثةَ أسطرٍ متراكمةٍ
+              تحت الزرِّ فبدت البطاقةُ قائمةَ روابطَ لا فعلاً واحداً واضحاً. */}
+          <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[11px]">
+            <button onClick={() => start(true)} className="font-semibold text-gold-200 underline underline-offset-2">
+              {t('dashboard.instagram.otherAccount')}
+            </button>
+            <span aria-hidden className="text-stone-600">·</span>
+            <button
+              onClick={() => window.open('https://www.facebook.com/', '_blank')}
+              className="text-stone-300 underline underline-offset-2"
+            >
+              {t('dashboard.instagram.fbLogout')}
+            </button>
+          </div>
+
+          {/* الشرحُ مطويٌّ: يحتاجُه من ظهرَ له حسابُ غيرِه، ولا يحتاجُه الباقون */}
+          <details className="text-center">
+            <summary className="cursor-pointer list-none text-[11px] text-stone-400 underline underline-offset-2">
+              {t('dashboard.instagram.whyAccount')}
+            </summary>
+            <p className="mt-2 text-start text-[11px] leading-relaxed text-stone-400">
+              {t('dashboard.instagram.wrongAccount')}
+            </p>
+          </details>
         </div>
       )}
 
@@ -568,20 +580,29 @@ function ManualOrderPanel() {
 
   return (
     <div className="glass overflow-hidden">
-      <div className="flex items-start gap-3 p-4">
-        <span className="dash-ico flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl">
-          <BagIcon className="h-5 w-5" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="font-display text-base font-bold text-gold-200">{t('dashboard.instagram.manualTitle')}</p>
-          <p className="mt-1 text-xs leading-relaxed text-stone-400">{t('dashboard.instagram.manualNote')}</p>
+      {/* عنوانٌ وزرٌّ في سطرٍ واحد، والشرحُ الطويلُ تحتَهما مطويّاً. كان الشرحُ خمسةَ
+          أسطرٍ تحشو البطاقةَ فوقَ الزرِّ فيضيعُ الفعلُ بين الكلام. */}
+      <div className="p-4">
+        <div className="flex items-center gap-3">
+          <span className="dash-ico flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl">
+            <BagIcon className="h-5 w-5" />
+          </span>
+          <p className="min-w-0 flex-1 font-display text-base font-bold text-gold-200">
+            {t('dashboard.instagram.manualTitle')}
+          </p>
+          <button
+            onClick={() => { setOpen((v) => !v); setDone(null); }}
+            className="btn-primary shrink-0 gap-1 !px-3 !py-1.5 text-xs"
+          >
+            <PlusIcon className="h-4 w-4" /> {open ? t('common.cancel') : t('dashboard.instagram.newOrder')}
+          </button>
         </div>
-        <button
-          onClick={() => { setOpen((v) => !v); setDone(null); }}
-          className="btn-primary shrink-0 gap-1 !px-3 !py-1.5 text-xs"
-        >
-          <PlusIcon className="h-4 w-4" /> {open ? t('common.cancel') : t('dashboard.instagram.newOrder')}
-        </button>
+        <details className="group mt-2 ps-[3.25rem]">
+          <summary className="cursor-pointer list-none text-[11px] font-semibold text-stone-400 transition hover:text-gold-200">
+            {t('dashboard.instagram.whyManual')}
+          </summary>
+          <p className="mt-1.5 text-xs leading-relaxed text-stone-400">{t('dashboard.instagram.manualNote')}</p>
+        </details>
       </div>
 
       {done && (

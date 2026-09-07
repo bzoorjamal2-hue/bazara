@@ -144,49 +144,57 @@ export default function Dashboard() {
         {/* حالة المتجر وإجراءاته اليومية داخل الرأس. كان الرأس تحيّةً واسماً
             فقط: جميلٌ ولا يقول شيئاً ولا يقود إلى فعل. */}
         {!isAdmin && store && (
-          <div className="relative mt-4 flex flex-wrap items-center gap-2">
-            {/* حالة الاشتراك: أخطر ما قد يفاجئ المالكة هو إقفال متجرها */}
-            {subscription && (
-              <span
-                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold"
-                style={subscription.active
-                  ? (subscription.daysRemaining != null && subscription.daysRemaining <= 7
-                    ? { background: '#92400e', color: '#F4EDE2' }
-                    : { background: 'rgba(4,120,87,0.9)', color: '#F4EDE2' })
-                  : { background: '#b91c1c', color: '#F4EDE2' }}
-              >
-                <BoltIcon className="h-3.5 w-3.5" />
-                {subscription.active
-                  ? (subscription.daysRemaining != null
-                    ? t('subscription.daysLeft', { count: subscription.daysRemaining })
-                    : t('subscription.active'))
-                  : t('subscription.expired')}
-              </span>
+          <div className="relative mt-4 space-y-2.5">
+            {/* سطرُ الحال: خبرٌ يُقرأ، لا زرٌّ يُضغط — فلا يُخلَطُ بصفِّ الإجراءات تحته.
+                كانا معاً في صفٍّ واحدٍ يلتفُّ على ثلاثةِ أسطرٍ بأطوالٍ مختلفة. */}
+            {(subscription || newOrders > 0) && (
+              <div className="flex flex-wrap items-center gap-2">
+                {subscription && (
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold"
+                    style={subscription.active
+                      ? (subscription.daysRemaining != null && subscription.daysRemaining <= 7
+                        ? { background: '#92400e', color: '#F4EDE2' }
+                        : { background: 'rgba(4,120,87,0.9)', color: '#F4EDE2' })
+                      : { background: '#b91c1c', color: '#F4EDE2' }}
+                  >
+                    <BoltIcon className="h-3.5 w-3.5" />
+                    {subscription.active
+                      ? (subscription.daysRemaining != null
+                        ? t('subscription.daysLeft', { count: subscription.daysRemaining })
+                        : t('subscription.active'))
+                      : t('subscription.expired')}
+                  </span>
+                )}
+                {/* الطلبات الجديدة: الرقم يقود إلى مكانه بضغطة */}
+                {newOrders > 0 && (
+                  <Link
+                    to="/dashboard?tab=myOrders"
+                    className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition hover:brightness-110"
+                    style={{ background: '#F4EDE2', color: '#3f2e22' }}
+                  >
+                    <ReceiptIcon className="h-3.5 w-3.5" /> {t('dashboard.heroNewOrders', { count: newOrders })}
+                  </Link>
+                )}
+              </div>
             )}
 
-            {/* الطلبات الجديدة: الرقم يقود إلى مكانه بضغطة */}
-            {newOrders > 0 && (
+            {/* الإجراءاتُ شبكةٌ لا صفٌّ ملتفّ: على الجوّالِ عمودان متساويان فتصطفُّ
+                الحوافُّ وتتساوى الأحجام، وعلى الشاشةِ الواسعةِ صفٌّ كالعادة. */}
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
               <Link
-                to="/dashboard?tab=myOrders"
-                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition hover:brightness-110"
-                style={{ background: '#F4EDE2', color: '#3f2e22' }}
+                to="/dashboard?tab=myProducts"
+                className="inline-flex items-center justify-center gap-1.5 rounded-full border border-[#cdbda4]/40 px-3 py-2 text-xs font-bold text-[#F4EDE2] transition hover:bg-[#F4EDE2]/15"
               >
-                <ReceiptIcon className="h-3.5 w-3.5" /> {t('dashboard.heroNewOrders', { count: newOrders })}
+                <BagIcon className="h-3.5 w-3.5" /> {t('dashboard.addProduct')}
               </Link>
-            )}
-
-            <Link
-              to="/dashboard?tab=myProducts"
-              className="inline-flex items-center gap-1.5 rounded-full border border-[#cdbda4]/40 px-3 py-1.5 text-xs font-bold text-[#F4EDE2] transition hover:bg-[#F4EDE2]/15"
-            >
-              <BagIcon className="h-3.5 w-3.5" /> {t('dashboard.addProduct')}
-            </Link>
-            <Link
-              to="/dashboard?tab=finance"
-              className="inline-flex items-center gap-1.5 rounded-full border border-[#cdbda4]/40 px-3 py-1.5 text-xs font-bold text-[#F4EDE2] transition hover:bg-[#F4EDE2]/15"
-            >
-              <CashIcon className="h-3.5 w-3.5" /> {t('finance.title')}
-            </Link>
+              <Link
+                to="/dashboard?tab=finance"
+                className="inline-flex items-center justify-center gap-1.5 rounded-full border border-[#cdbda4]/40 px-3 py-2 text-xs font-bold text-[#F4EDE2] transition hover:bg-[#F4EDE2]/15"
+              >
+                <CashIcon className="h-3.5 w-3.5" /> {t('finance.title')}
+              </Link>
+            </div>
           </div>
         )}
       </header>

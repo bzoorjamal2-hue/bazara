@@ -128,7 +128,9 @@
       "mentioned": "Mentioned in chat:",
       "wrongAccount": "Facebook remembers the last account used on this device, and we cannot clear its cookies. If the wrong account shows: tap “Connect with a different Facebook account”, and if it persists, open Facebook, log out, then reconnect.",
       "otherAccount": "Connect with a different Facebook account",
-      "fbLogout": "Open Facebook to log out"
+      "fbLogout": "Open Facebook to log out",
+      "whyManual": "Why manual?",
+      "whyAccount": "Wrong account showing?"
     },
     "opost": {
       "title": "Optimus courier",
