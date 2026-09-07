@@ -126,7 +126,12 @@ async function processWebhook(body) {
         [storeIgId]
       );
       const store = sr.rows[0];
-      if (!store) continue;
+      if (!store) {
+        // وصلنا حدثٌ لحسابٍ لا نعرفُه: إمّا الربطُ سُجّل بمعرّفٍ آخر، أو فُصل الحساب.
+        // بلا هذا السطرِ يبدو الأمرُ كأنّ Meta لم تُرسل شيئاً، والفرقُ بينهما كلُّ التشخيص.
+        console.log('ig webhook: لا متجر لهذا الحساب', storeIgId);
+        continue;
+      }
 
       const text = msg.text || '';
       // النوعُ يقرّرُ كيف يُعرَض المرفق: صورةٌ تُعرَضُ صورةً وفيديو يُشغَّل. بلا حفظِه
