@@ -25,6 +25,12 @@ function isChunkError(err) {
   );
 }
 
+// فحصٌ نقيٌّ بلا أثر: هل بقيت لنا تحميلةٌ تلقائيّةٌ في هذه الجلسة؟ يُستعمل
+// قبل الرسمِ لنقرّرَ: أنعرضُ شاشةَ الخطأِ أم نصمتُ لأنّ الصفحةَ ستُحمَّلُ الآن.
+export function canReloadOnce() {
+  try { return sessionStorage.getItem(FLAG) !== '1'; } catch { return true; }
+}
+
 export function reloadOnce() {
   let already = false;
   try { already = sessionStorage.getItem(FLAG) === '1'; } catch { /* تصفّح خاص */ }

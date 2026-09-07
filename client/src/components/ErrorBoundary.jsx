@@ -1,5 +1,5 @@
 import { Component } from 'react';
-import { reloadOnce } from '../utils/chunkReload.js';
+import { reloadOnce, canReloadOnce } from '../utils/chunkReload.js';
 
 // حاجز أخطاء.
 //
@@ -12,14 +12,22 @@ import { reloadOnce } from '../utils/chunkReload.js';
 export default class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
-    this.state = { failed: false, msg: '' };
+    this.state = { failed: false, msg: '', reloading: false };
   }
 
   static getDerivedStateFromError(error) {
     // نحتفظ بنصّ الخطأ لنعرضه: «حدث خطأ غير متوقّع» وحدها لا تُمكّن أحداً من
     // إصلاح شيء — لا صاحبة الموقع ولا من تراسله. السطر الواحد يكفي لتحديد
     // الملف والسبب، ولا يكشف بياناتِ أحد.
-    return { failed: true, msg: String(error?.message || error || '').slice(0, 240) };
+    //
+    // لكنّنا لا نعرضُها إن كنّا سنُعيدُ التحميلَ الآن: القرارُ يُتَّخَذُ هنا لا في
+    // componentDidCatch، لأنّ بينهما رسمةً كاملة — وفيها كانت شاشةُ الخطأِ تومضُ
+    // ثمّ تختفي. ومضةٌ قبيحةٌ لا تُقرأُ ولا يُدرَكُ سببُها.
+    return {
+      failed: true,
+      reloading: canReloadOnce(),
+      msg: String(error?.message || error || '').slice(0, 240),
+    };
   }
 
   componentDidCatch(error, info) {
@@ -34,6 +42,8 @@ export default class ErrorBoundary extends Component {
 
   render() {
     if (!this.state.failed) return this.props.children;
+    // تحميلةٌ جاريةٌ الآن: أرضيّةٌ صامتةٌ بلون الموقع لا شاشةُ خطأٍ تومضُ ثمّ تذهب.
+    if (this.state.reloading) return <div style={{ minHeight: '100vh', background: '#F4EDE2' }} />;
     return (
       <div className="flex min-h-screen items-center justify-center p-6" style={{ background: '#F4EDE2' }}>
         <div
