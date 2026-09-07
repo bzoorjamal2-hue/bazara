@@ -143,7 +143,7 @@
       "voice": "Voice message",
       "editQuick": "Edit quick replies",
       "quickPlaceholder": "New quick reply…",
-      "waking": "The server is waking up after idling — the first open can take up to half a minute."
+      "waking": "The server is taking longer than usual — it may be updating. It will be back shortly."
     },
     "opost": {
       "title": "Optimus courier",
