@@ -258,7 +258,18 @@ export async function igCallback(req, res) {
   const uid = ticketUser(req.query.state);
   if (!uid) return res.status(400).send(closingPage('انتهت جلسة الربط', 'ارجع للتطبيق واضغط «ربط» من جديد.'));
   const code = String(req.query.code || '');
-  if (!code) return res.status(400).send(closingPage('أُلغي الربط', 'ارجع للتطبيق وحاول مرّة أخرى إن أردت.'));
+  if (!code) {
+    // access_denied لا يعني دائماً أنّ صاحبَ المتجرِ ضغطَ «إلغاء»: التطبيقُ ما دام في
+    // وضعِ التطويرِ ترفضُ Meta أيَّ حسابٍ لا دورَ له عليه — وهو أكثرُ ما يقعُ الآن،
+    // ورسالةُ «أُلغي الربط» تُضلّلُ من لم يُلغِ شيئاً.
+    const denied = String(req.query.error || '') === 'access_denied';
+    return res.status(400).send(closingPage(
+      denied ? 'رفض فيسبوك الإذن' : 'أُلغي الربط',
+      denied
+        ? 'التطبيق ما زال قيد المراجعة عند Meta، فلا يقبل إلّا الحسابات المضافة كمُختبِرين عليه. أضف حسابك في App roles ← Testers ثم اقبل الدعوة وأعد المحاولة.'
+        : 'ارجع للتطبيق وحاول مرّة أخرى إن أردت.'
+    ));
+  }
   try {
     const store = await getUserStore(uid);
     if (!store) return res.status(404).send(closingPage('لا يوجد متجر', 'أنشئ متجرك أوّلاً ثم أعد الربط.'));
