@@ -242,17 +242,20 @@ export default function InstagramChat() {
       el.style.paddingBottom = kb ? `${kb}px` : '';
     };
     const schedule = () => { if (!raf) raf = requestAnimationFrame(apply); };
+    // ومرّةً ثانيةً بعد ثلثِ ثانية: عند العودةِ من الخلفيّةِ تكونُ قياساتُ iOS عابرةً
+    // في اللحظةِ الأولى، فتبقى حشوةٌ لا لوحةَ تحتَها حتّى تُلمَسَ الشاشة.
+    const scheduleTwice = () => { schedule(); setTimeout(schedule, 300); };
     apply();
     // resize يقعُ عند فتحِ اللوحةِ وإغلاقِها، وvisibilitychange عند العودةِ من الخلفيّة
     // — وهناك تكونُ القياساتُ قديمةً فتلزمُ إعادةُ الحساب.
     vv.addEventListener('resize', schedule);
-    window.addEventListener('focus', schedule);
-    document.addEventListener('visibilitychange', schedule);
+    window.addEventListener('focus', scheduleTwice);
+    document.addEventListener('visibilitychange', scheduleTwice);
     return () => {
       if (raf) cancelAnimationFrame(raf);
       vv.removeEventListener('resize', schedule);
-      window.removeEventListener('focus', schedule);
-      document.removeEventListener('visibilitychange', schedule);
+      window.removeEventListener('focus', scheduleTwice);
+      document.removeEventListener('visibilitychange', scheduleTwice);
       el.style.paddingBottom = '';
     };
   }, []);
@@ -579,7 +582,7 @@ export default function InstagramChat() {
         ) : items.length === 0 ? (
           <p className="bz-chat-muted my-auto text-center text-sm">{t('dashboard.instagram.noMessages')}</p>
         ) : (
-          <>
+          <div className="mt-auto">
           {hasOlder && (
             <button onClick={loadOlder} className="bz-chat-day mx-auto mb-3 rounded-full px-4 py-1.5 text-[11px] font-semibold">
               {t('dashboard.instagram.older')}
@@ -669,7 +672,7 @@ export default function InstagramChat() {
               </div>
             );
           })}
-          </>
+          </div>
         )}
       </div>
 
