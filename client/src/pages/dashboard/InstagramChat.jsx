@@ -90,14 +90,14 @@ function Attachment({ url, type, onOpen }) {
         type="button"
         onClick={() => onOpen(url)}
         style={blur ? { backgroundImage: `url(${blur})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
-        className="block h-[210px] w-[210px] max-w-full overflow-hidden rounded-[14px]"
+        className="block h-[210px] w-[210px] max-w-full rounded-[14px]"
       >
         <img
           src={cldThumb(url, 480)}
           alt=""
           decoding="async"
           onError={() => setBroken(true)}
-          className="block h-full w-full object-cover"
+          className="block h-full w-full rounded-[14px] object-cover"
         />
       </button>
     );
@@ -112,6 +112,46 @@ function Attachment({ url, type, onOpen }) {
     <a href={url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 underline">
       📎 {t('dashboard.instagram.attachment')}
     </a>
+  );
+}
+
+// ═════════ مقياسٌ للتشخيص ═════════
+// يُفتَحُ بثلاثِ نقراتٍ على صورةِ الزبونِ في الرأس. سببُه أنّ وصفَ «يتقطّع» لا يكفي
+// لتحديدِ المكان: الأرقامُ تفصلُ بين ثلاثِ عللٍ مختلفةٍ تماماً —
+//   fps منخفضٌ مع مهامٍّ طويلة  → جافاسكربت يشغلُ الخيطَ الرئيسيّ.
+//   fps عالٍ والسحبُ يبدو ثقيلاً → المسألةُ في مسارِ اللمسِ لا في الرسم.
+//   move/s كبيرٌ باللمسةِ الواحدةِ وصفرٌ بالاثنتين → مستمعُ لمسٍ يعترضُ الطريق.
+function PerfHud() {
+  const [s, setS] = useState({ fps: 0, moves: 0, long: 0, longMax: 0 });
+  useEffect(() => {
+    let frames = 0, moves = 0, long = 0, longMax = 0, raf = 0, stopped = false;
+    const tick = () => { frames += 1; if (!stopped) raf = requestAnimationFrame(tick); };
+    raf = requestAnimationFrame(tick);
+    const onMove = () => { moves += 1; };
+    document.addEventListener('touchmove', onMove, { passive: true });
+    let po = null;
+    try {
+      po = new PerformanceObserver((list) => {
+        for (const e of list.getEntries()) { long += 1; longMax = Math.max(longMax, Math.round(e.duration)); }
+      });
+      po.observe({ entryTypes: ['longtask'] });
+    } catch { /* غير مدعوم على سفاري القديم */ }
+    const timer = setInterval(() => {
+      setS({ fps: frames, moves, long, longMax });
+      frames = 0; moves = 0;
+    }, 1000);
+    return () => {
+      stopped = true;
+      cancelAnimationFrame(raf);
+      clearInterval(timer);
+      document.removeEventListener('touchmove', onMove);
+      if (po) po.disconnect();
+    };
+  }, []);
+  return (
+    <div className="pointer-events-none fixed inset-x-0 top-[max(env(safe-area-inset-top),8px)] z-[120] mx-auto w-fit rounded-full bg-black/75 px-3 py-1 font-mono text-[11px] text-white" dir="ltr">
+      fps {s.fps} · move/s {s.moves} · long {s.long}/{s.longMax}ms
+    </div>
   );
 }
 
@@ -139,6 +179,15 @@ export default function InstagramChat() {
   const [photo, setPhoto] = useState(null); // { file, preview }
   const [progress, setProgress] = useState(0);
   const [viewing, setViewing] = useState('');
+  const [hud, setHud] = useState(false);
+  const taps = useRef([]);
+  // ثلاثُ نقراتٍ على الصورةِ خلالَ ثانيةٍ تفتحُ المقياسَ وتغلقُه — بابٌ خفيٌّ لأنّه
+  // للتشخيصِ لا للتاجرة، ولا يحتاجُ عنوانَ صفحةٍ يُكتَبُ في تطبيقٍ بلا شريطِ عنوان.
+  const tapAvatar = () => {
+    const now = Date.now();
+    taps.current = [...taps.current, now].filter((x) => now - x < 1000);
+    if (taps.current.length >= 3) { taps.current = []; setHud((v) => !v); }
+  };
 
   const load = () =>
     api.get(`/instagram/conversations/${id}/messages`)
@@ -294,7 +343,9 @@ export default function InstagramChat() {
         <button onClick={() => navigate('/dashboard?tab=instagram')} className="bz-chat-icon rounded-full p-2 transition" aria-label={t('common.back')}>
           <BackIcon className="h-5 w-5" />
         </button>
-        <Avatar url={c.customer_avatar} name={name} className="h-9 w-9 text-xs" />
+        <button type="button" onClick={tapAvatar} className="shrink-0" aria-hidden>
+          <Avatar url={c.customer_avatar} name={name} className="h-9 w-9 text-xs" />
+        </button>
         <span className="min-w-0 flex-1 leading-tight">
           <span className="block truncate text-[15px] font-semibold">{name}</span>
           {c.customer_username && <span dir="ltr" className="bz-chat-muted block truncate text-[11px]">@{c.customer_username}</span>}
@@ -344,7 +395,7 @@ export default function InstagramChat() {
             const media = Boolean(m.attachment_url);
             return (
               <div key={it.key} className={`flex items-end gap-1.5 ${out ? 'justify-start' : 'justify-end'} ${it.last ? 'mb-2.5' : 'mb-[3px]'}`}>
-                <div className={`max-w-[76%] ${isNew(m.id) ? 'bz-bubble' : ''} ${out ? 'bz-chat-out' : 'bz-chat-in'} ${media ? 'overflow-hidden p-1' : 'px-3 py-1.5'} rounded-[18px]`}>
+                <div className={`max-w-[76%] ${isNew(m.id) ? 'bz-bubble' : ''} ${out ? 'bz-chat-out' : 'bz-chat-in'} ${media ? 'p-1' : 'px-3 py-1.5'} rounded-[18px]`}>
                   {media && <Attachment url={m.attachment_url} type={m.attachment_type} onOpen={setViewing} />}
                   {m.text && <p className={`whitespace-pre-wrap break-words text-[14px] leading-[1.45] ${media ? 'px-2 pb-1 pt-1.5' : ''}`}>{m.text}</p>}
                   {it.last && (
@@ -411,6 +462,7 @@ export default function InstagramChat() {
         </button>
       </div>
 
+      {hud && <PerfHud />}
       {viewing && <ImageViewer url={viewing} onClose={() => setViewing('')} />}
     </div>,
     document.body
