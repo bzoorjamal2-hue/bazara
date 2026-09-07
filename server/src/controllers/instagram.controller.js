@@ -115,6 +115,7 @@ async function processWebhook(body) {
       // recipient.id = حساب المتجر (Business) ، sender.id = الزبون (IGSID)
       const businessId = ev.recipient?.id;
       const senderId = ev.sender?.id;
+      const msg = ev.message;
 
       // ثلاثةُ أحداثٍ غيرِ الرسالة تصلُ بنفسِ المجرى، وكلٌّ منها يغيّرُ ما تراه
       // التاجرةُ على الشاشة: رأى الزبونُ ما أرسلناه، أو تفاعلَ على رسالة.
@@ -174,6 +175,10 @@ async function processWebhook(body) {
         [store.id, customerId, preview, isEcho ? 0 : 1]
       );
       const convId = conv.rows[0].id;
+
+      // فقاعةٌ فارغةٌ ليست رسالة: بعضُ ما يصلُ بلا نصٍّ ولا مرفقٍ (مشاركةُ رقمٍ مثلاً،
+      // أو حدثٌ لا نعرضُه) — لا يُخزَّنُ فلا يظهرُ مربّعاً أبيضَ فارغاً في المحادثة.
+      if (!text && !attachment) continue;
 
       // نخزّن الرسالة (mid فريد → لا يتكرّر نفس الحدث ولا ردّنا الذي عاد كـ echo)
       await query(
