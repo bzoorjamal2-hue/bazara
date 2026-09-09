@@ -25,10 +25,19 @@ function cldVideoParts(url) {
 // رابط فيديو متوافق مع كل المتصفّحات وiOS: mp4 بترميز H.264. كثير من فيديوهات
 // الآيفون تُرفَع بصيغة MOV/HEVC لا يشغّلها المتصفّح (معاينة سوداء)، فنجبر التسليم mp4.
 // idempotent: يعمل على الروابط الأصلية والمحوّلة سابقاً على حدٍّ سواء.
-export function cldVideoMp4(url, width = 1080) {
+export function cldVideoMp4(url, width = 720) {
   const p = cldVideoParts(url);
   if (!p) return url; // رابط غير كلاوديناري — كما هو
   return `${p.base}f_mp4,vc_h264,q_auto,w_${width},c_limit/${p.rest}.mp4`;
+}
+
+// نسخة معاينة صامتة: عرض صغير وجودة اقتصاديّة. تُستعمل حيث يُشغَّل الفيديو تلقائياً
+// بلا قصدٍ صريح من الزبونة (معاينة بطاقة المنتج) — البطاقة عرضها ~300px فلا معنى
+// لتنزيل 720px عليها. الفرق البصري في مربّع صغير معدوم، والتوفير أضعاف.
+export function cldVideoPreview(url, width = 480) {
+  const p = cldVideoParts(url);
+  if (!p) return url;
+  return `${p.base}f_mp4,vc_h264,q_auto:eco,w_${width},c_limit/${p.rest}.mp4`;
 }
 
 // رابط محسّن بجودة عالية (صيغة تلقائية + أعلى جودة بصرية، بدون فقدان ملحوظ)

@@ -8,7 +8,7 @@ import { useWishlist } from '../context/WishlistContext.jsx';
 import StarRating from './StarRating.jsx';
 import Countdown from './Countdown.jsx';
 import { HeartIcon, CartIcon, XIcon, StarIcon, FireIcon } from './icons.jsx';
-import { cldVideoPoster, cldThumb, cldSrcSet, cldBlur, cldVideoMp4 } from '../utils/cloudinary.js';
+import { cldVideoPoster, cldThumb, cldSrcSet, cldBlur, cldVideoMp4, cldVideoPreview } from '../utils/cloudinary.js';
 import { sizeLabel } from '../utils/sizes.js';
 import { getMySize, setMySize } from '../utils/mySize.js';
 import { flyToCart } from '../utils/flyToCart.js';
@@ -43,6 +43,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
   const [showVideo, setShowVideo] = useState(false); // جوال: ضغطة مطوّلة → فيديو بالصوت
   const [swatchColor, setSwatchColor] = useState(''); // اللون الذي تُعرض صورته على البطاقة (تمرير/لمس نقطة لون)
   const pressTimer = useRef(null);
+  const hoverTimer = useRef(null); // مهلة تريّث قبل تحميل المعاينة
   const longPressed = useRef(false);
 
   // نظرة سريعة واحدة فقط على مستوى الصفحة كلها: فتح أي بطاقة يُغلق أي نافذة أخرى مفتوحة
@@ -161,6 +162,17 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
     }, 450);
   };
   const cancelPress = () => clearTimeout(pressTimer.current);
+
+  // معاينة الفيديو تبدأ بعد تريّث نصف ثانية فوق البطاقة، لا بمجرّد عبور المؤشّر.
+  // بلا هذه المهلة كان تمرير الماوس على الشبكة أثناء التصفّح يُنزّل فيديو كلّ بطاقة
+  // يعبرها المؤشّر — عشرات الميغابايتات تُهدر على مقاطع لم تُشاهَد أصلاً.
+  const startHover = () => {
+    if (!product.videoUrl) return;
+    clearTimeout(hoverTimer.current);
+    hoverTimer.current = setTimeout(() => setHovering(true), 500);
+  };
+  const endHover = () => { clearTimeout(hoverTimer.current); setHovering(false); };
+  useEffect(() => () => { clearTimeout(hoverTimer.current); clearTimeout(pressTimer.current); }, []);
   // إن كانت ضغطة مطوّلة، نمنع الانتقال للصفحة بعد رفع الإصبع
   const onClickCapture = (e) => {
     if (longPressed.current) { e.preventDefault(); e.stopPropagation(); longPressed.current = false; }
@@ -174,8 +186,8 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
       to={`/product/${product.id}`}
       className={`group relative block h-full transition-[opacity,transform] duration-500 ease-out ${inView ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0'} hover:!-translate-y-1.5 active:scale-[0.99]`}
       style={{ transitionDelay: inView ? `${(index % 5) * 55}ms` : '0ms' }}
-      onMouseEnter={() => product.videoUrl && setHovering(true)}
-      onMouseLeave={() => { setHovering(false); setSwatchColor(''); }}
+      onMouseEnter={startHover}
+      onMouseLeave={() => { endHover(); setSwatchColor(''); }}
       onTouchStart={startPress}
       onTouchEnd={cancelPress}
       onTouchMove={cancelPress}
@@ -281,12 +293,13 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
         {/* معاينة الفيديو عند مرور الماوس (كمبيوتر) — صامتة وناعمة */}
         {product.videoUrl && hovering && (
           <video
-            src={cldVideoMp4(product.videoUrl)}
+            src={cldVideoPreview(product.videoUrl)}
             poster={videoPoster}
             autoPlay
             muted
             loop
             playsInline
+            preload="none"
             className="absolute inset-0 z-[1] h-full w-full animate-fade-in object-cover"
           />
         )}

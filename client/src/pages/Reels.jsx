@@ -44,9 +44,10 @@ const IN_APP_BROWSER = typeof navigator !== 'undefined'
 // طلب (بطء تحميل). نعطّله ونعتمد MP4 تقدّمياً بجودة كاملة يبدأ العرض فوراً.
 // (الدالة تُبقي توقيعها لتفادي تغيير المستدعين.)
 const reelHls = () => '';
-// MP4 بجودة عالية (1080p) — الريلز قصيرة فلا وقت للبث المتكيّف كي "يرتقي" بالدقة،
-// وكانت النتيجة مشاهدة معظم الريل بدقة متدنية. q_auto:good عند 1080 حادّ وواضح.
-const reelMp4 = (url) => { const p = cldVideoParts(url); return p ? `${p.base}f_mp4,vc_h264,q_auto:good,w_1080,c_limit/${p.rest}.mp4` : url; };
+// MP4 بترميز H.264 عند 720p — الريلز قصيرة فلا وقت للبث المتكيّف كي "يرتقي" بالدقة،
+// وكانت النتيجة مشاهدة معظمها بدقة متدنية. q_auto:good عند 720 حادّ على الجوال — وهو
+// جهاز المشاهدة الغالب — بنحو نصف بيانات 1080، والبياناتُ هنا هي ما يُوقف الحساب.
+const reelMp4 = (url) => { const p = cldVideoParts(url); return p ? `${p.base}f_mp4,vc_h264,q_auto:good,w_720,c_limit/${p.rest}.mp4` : url; };
 // سفاري/iOS يشغّل HLS أصلياً (بلا hls.js) — نكشفه مرة واحدة على مستوى الوحدة
 const NATIVE_HLS = typeof document !== 'undefined' && !!document.createElement('video').canPlayType('application/vnd.apple.mpegurl');
 
@@ -276,16 +277,17 @@ export default function Reels() {
             )}
           </div>
 
-          {/* تسخين الريلين التاليين: عناصر مخفية تحمّل مصادرها مسبقاً فيبدأ الريل فوراً
-              عند الوصول إليه بلا عجلة تحميل (لا تُشغَّل ولا تصدر صوتاً — المشغّل الوحيد
-              أعلاه هو من يعرض). هذا ما يعطي إحساس الانتقال الفوري بالتطبيقات العالمية. */}
-          {[1, 2].map((d) => items[active + d] && (
+          {/* تسخين الريل التالي: عنصر مخفيّ يفتح الاتصال ويقرأ ترويسة الملف فيبدأ
+              التشغيل سريعاً عند الوصول إليه (لا يُشغَّل ولا يصدر صوتاً). نكتفي بالترويسة
+              لا بالملف كامل: تسخين ريلين بتمامهما كان يُنزّل مقطعين عند كل انتقال،
+              وأكثرُهما لا يُشاهَد — أضعافُ ما يستهلكه الريل المعروض فعلاً. */}
+          {[1].map((d) => items[active + d] && (
             <video
               key={items[active + d].id}
               src={reelMp4(items[active + d].videoUrl)}
               muted
               playsInline
-              preload="auto"
+              preload="metadata"
               aria-hidden="true"
               tabIndex={-1}
               className="pointer-events-none absolute h-px w-px opacity-0"
