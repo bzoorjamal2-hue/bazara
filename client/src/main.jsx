@@ -19,6 +19,7 @@ import { ready as i18nReady } from './i18n.js';
 import './index.css';
 import App from './App.jsx';
 import { applyPerfTier } from './utils/perfTier.js';
+import { installImageFallback } from './utils/imageFallback.js';
 import api from './api/client.js';
 import { startOrderQueue } from './utils/orderQueue.js';
 import { registerSW } from 'virtual:pwa-register';
@@ -26,6 +27,8 @@ import { registerSW } from 'virtual:pwa-register';
 // نحدّد مستوى أداء الجهاز قبل أول رسمة — فتبدأ الحركات مضبوطة من اللحظة الأولى
 // (بلا وميض تأثيرات ثقيلة ثم تخفيفها)
 applyPerfTier();
+// أيُّ صورةٍ يسقطُ مصدرُها تُستبدَلُ ببديلٍ يشبهُ التصميم، لا بأيقونةٍ مكسورة.
+installImageFallback();
 // طلباتٌ تعثّر حفظُها تُعاد تلقائياً حين تعود الشبكة — لا يفعل شيئاً إن كان
 // الطابور فارغاً، وهو الحال دائماً تقريباً.
 startOrderQueue(api);
