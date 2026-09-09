@@ -53,7 +53,7 @@ export default function Layout({ children }) {
   const isLanding = pathname === '/';
   // صفحات المستندات (الخصوصية وما شابهها) تحمل شريط صفحة المنصّة بنفسها —
   // شريطُ التسوّق بسلّته ومفضّلته لا معنى له بصفحةٍ تُفتح من الفوتر.
-  const isDoc = pathname === '/privacy';
+  const isDoc = pathname === '/privacy' || pathname === '/terms';
   // صفحات الحساب — تصميم بملء الشاشة (هيرو + نموذج) بلا شريط/فوتر
   const isAuthFull = ['/login', '/register', '/forgot-password', '/reset'].includes(pathname);
   // الريلز = ملء الشاشة (كتيك توك) — الهيدر كان يظهر فوقها ويغطي المحتوى

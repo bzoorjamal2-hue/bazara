@@ -11,7 +11,7 @@ export default function PrivacyPolicy() {
   const { t } = useTranslation();
   return (
     <div className="bz-docpage">
-      <Seo title="سياسة الخصوصية — Bazara" />
+      <Seo title="سياسة الخصوصية" />
 
       {/* شريط صفحة المنصّة نفسه: الصفحة تُفتح من فوتر الواجهة، فشريطُ التسوّق
           (سلّة ومفضّلة وحساب) لا معنى له هنا ويقطع الإحساس بأنّها الموقع نفسه. */}

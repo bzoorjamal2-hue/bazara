@@ -72,6 +72,7 @@ const Reels = lazy(() => retryImport(() => import('./pages/Reels.jsx')));
 const Track = lazy(() => retryImport(() => import('./pages/Track.jsx')));
 const PaymentCallback = lazy(() => retryImport(() => import('./pages/PaymentCallback.jsx')));
 const PrivacyPolicy = lazy(() => retryImport(() => import('./pages/PrivacyPolicy.jsx')));
+const TermsOfService = lazy(() => retryImport(() => import('./pages/TermsOfService.jsx')));
 const NotFound = lazy(() => retryImport(() => import('./pages/NotFound.jsx')));
 // شاشةُ محادثةِ إنستغرام: صفحةٌ قائمةٌ بذاتها تغطّي الشاشةَ كما في تطبيقاتِ المحادثة،
 // لا لوحٌ ينفتحُ داخلَ تبويبِ اللوحة.
@@ -243,6 +244,7 @@ function AnimatedRoutes() {
           <Route path="/track" element={<Track />} />
           <Route path="/payment/callback" element={<PaymentCallback />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
           {/* معاينة نموذج المنتج أثناء التطوير فقط — لا يدخل بنسخة الإنتاج (يُحذف بالبناء) */}
           {import.meta.env.DEV && <Route path="/__dev/product-form" element={<DevProductForm />} />}
           <Route

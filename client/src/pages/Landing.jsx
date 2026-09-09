@@ -676,6 +676,7 @@ export default function Landing() {
                 <li><Link to="/login"><UsersIcon className="h-4 w-4" /> {t('nav.login')}</Link></li>
                 <li><Link to="/register"><StoreIcon className="h-4 w-4" /> {t('landing.openStore')}</Link></li>
                 <li><Link to="/privacy"><ShieldIcon className="h-4 w-4" /> {t('landing.privacy')}</Link></li>
+                <li><Link to="/terms"><ShieldIcon className="h-4 w-4" /> {t('landing.terms')}</Link></li>
               </ul>
             </div>
           </Reveal>
