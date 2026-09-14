@@ -89,6 +89,7 @@ const STATUS_AR = {
   DELIVERED_TO_RECIPIENT: 'تم التوصيل',
   PARTIALLY_DELIVERED: 'تسليم جزئي',
   COMPLETED: 'مغلقة',
+  CLOSED: 'منتهية', // تردُّها بعضُ حساباتِ LogesTechs بدل COMPLETED
   CANCELLED: 'ملغاة',
   RETURNED_BY_RECIPIENT: 'مرتجعة',
   DELIVERED_TO_SENDER: 'مسلّمة للمرسل',

@@ -6,11 +6,15 @@ import api, { getErrorMessage } from '../api/client.js';
 import Seo from '../components/Seo.jsx';
 import StoreHeader from '../components/StoreHeader.jsx';
 import StoreFooter from '../components/StoreFooter.jsx';
-import { PackageIcon, CheckIcon, SearchIcon, TruckIcon, CartIcon, XIcon, BackIcon } from '../components/icons.jsx';
+import { PackageIcon, CheckIcon, SearchIcon, TruckIcon, CartIcon, XIcon, BackIcon, StoreIcon, CopyIcon, PinIcon, ClockIcon, CashIcon, DownloadIcon, PrintIcon, WhatsAppIcon } from '../components/icons.jsx';
 import { PageTitle, StateCard } from '../components/PageUI.jsx';
 import { goBack } from '../utils/nav.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { useCart } from '../context/CartContext.jsx';
+import { cldThumb } from '../utils/cloudinary.js';
+import { sizeLabel } from '../utils/sizes.js';
+import { buildWhatsappLink } from '../utils/whatsapp.js';
+import { printReceipt, saveReceiptImage } from '../utils/receipt.js';
 
 const STEPS = ['new', 'confirmed', 'shipped', 'delivered'];
 const BADGE = {
@@ -46,6 +50,45 @@ export default function Track() {
   const [reordering, setReordering] = useState(''); // reference الطلب الجاري إعادته
   const [copiedRef, setCopiedRef] = useState(''); // رقم الطلب المنسوخ للتو (تأكيد بصري)
   const [copiedTrack, setCopiedTrack] = useState(''); // رقم تتبّع الشحنة المنسوخ للتو
+  const [busyReceipt, setBusyReceipt] = useState(''); // "<reference>:<image|print>" أثناء توليد الشهادة
+
+  // تاريخٌ ووقتٌ بصيغةٍ محليّةٍ مقروءة — «الأحد ٢٨ حزيران · ٩:٤٤ م».
+  // ar-PS لا ar: الأخيرةُ تُسمّي الشهورَ مصريّاً (يونيو/يوليو) وأهلُ البلادِ
+  // يقولون حزيران وتمّوز — والتاريخُ يُقرأُ بلغةِ قارئِه لا بلغةِ المعيار.
+  const fmtDate = (v) => {
+    if (!v) return '';
+    const d = new Date(v);
+    if (Number.isNaN(d.getTime())) return '';
+    const loc = i18n.language === 'en' ? 'en-GB' : 'ar-PS';
+    const day = d.toLocaleDateString(loc, { weekday: 'long', day: 'numeric', month: 'long' });
+    const time = d.toLocaleTimeString(loc, { hour: 'numeric', minute: '2-digit' });
+    return `${day} · ${time}`;
+  };
+  // متى بلغَ الطلبُ مرحلةً بعينها. «جديد» لحظةُ إنشائِه، وما بعدَها من status_at —
+  // والطلباتُ التي سبقت هذا العمودَ تُرجعُ فراغاً فيُعرَضُ بدلَه شرطة.
+  const stamp = (o, step) => fmtDate(step === 'new' ? o.createdAt : o.statusAt?.[step]);
+
+  // شهادةُ الشراءِ من صفحةِ التتبّع: مَن عاد بعد أيّامٍ يجدُها هنا، لا بشاشةِ
+  // النجاحِ التي مرّت مرّةً وانتهت.
+  const takeReceipt = async (o, kind) => {
+    if (busyReceipt) return;
+    setBusyReceipt(`${o.reference}:${kind}`);
+    setError('');
+    const order = {
+      ...o,
+      subtotal: Math.max(0, o.total - (o.deliveryFee || 0)) + (o.discount || 0),
+      items: (o.items || []).map((it) => ({ ...it, size: it.size ? sizeLabel(it.size, t) : '' })),
+      eta: o.etaTier ? t(`co.eta.${o.etaTier}`, { defaultValue: '' }) : '',
+    };
+    try {
+      if (kind === 'print') printReceipt(order, t, rtl ? 'rtl' : 'ltr');
+      else await saveReceiptImage(order, t, rtl ? 'rtl' : 'ltr');
+    } catch {
+      setError(t('receipt.failed'));
+    } finally {
+      setBusyReceipt('');
+    }
+  };
 
   // إعادة الطلب بضغطة: نجلب كل منتج بحالته الحالية (سعر/مخزون) ونضيفه للسلة بنفس
   // الكمية والمقاس واللون — المنتجات المحذوفة/الناقصة تُتجاهل بهدوء.
@@ -120,19 +163,19 @@ export default function Track() {
         />
       )}
       <div className={`mx-auto w-full max-w-2xl${storeObj ? ' flex-1' : ''}`}>
-        {/* رجوع + عنوان مزخرف مركزي (بنفس روح عناوين المتجر). زر الرجوع للموقع العام
-            فقط — داخل المتجر يتكفّل هيدر المتجر/الشريط السفلي بالتنقّل. */}
-        {!storeObj && (
-          <div className="mb-2 flex items-center">
-            <button
-              onClick={() => goBack(navigate, '/shop')}
-              aria-label={t('common.back')}
-              className="bz-iconbtn app-tap"
-            >
-              <BackIcon className="h-5 w-5" />
-            </button>
-          </div>
-        )}
+        {/* الرجوعُ ظاهرٌ دائماً.
+            كان مشروطاً بـ‏!storeObj‎، فمن يفتحُ التتبّعَ من متجرٍ لا يجدُ مخرجاً
+            إلّا زرَّ المتصفّح. والوجهةُ تختلف: داخلَ المتجرِ نعودُ إليه، وخارجَه
+            للصفحةِ السابقةِ أو للتسوّق. */}
+        <div className="mb-2 flex items-center">
+          <button
+            onClick={() => (storeScope ? navigate(`/store/${storeScope}`) : goBack(navigate, '/shop'))}
+            aria-label={t('common.back')}
+            className="bz-iconbtn app-tap"
+          >
+            <BackIcon className="h-5 w-5" />
+          </button>
+        </div>
         <PageTitle icon={<PackageIcon className="h-6 w-6" />} title={t('track.title')} sub={t('track.hint')} />
 
         {/* نموذج البحث — بطاقة فاخرة بحقل حبّي وزر خمري ناري */}
@@ -185,20 +228,31 @@ export default function Track() {
             <div className="mt-6 space-y-4">
               {orders.map((o) => {
                 const cancelled = o.status === 'cancelled';
+                // طلبُ بطاقةٍ لم تكتملْ دفعتُه — ليس بمسارِ التجهيزِ بعد
+                const unpaid = o.status === 'pending' || o.status === 'failed';
                 const stepIdx = STEPS.indexOf(o.status);
+                const goods = Math.max(0, o.total - (o.deliveryFee || 0));
+                const subtotal = goods + (o.discount || 0);
+                const prepaid = o.paymentMethod === 'card';
+                const eta = o.etaTier ? t(`co.eta.${o.etaTier}`, { defaultValue: '' }) : '';
                 return (
-                  <div key={o.reference} className="bz-panel p-5">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="min-w-0">
-                        <span className="text-base font-bold text-[#3f2e22] dark:text-inherit">{o.storeName}</span>
+                  <div key={o.reference} className="bz-panel overflow-hidden">
+                    {/* ── الترويسة: هويّةُ المتجرِ ورقمُ الطلبِ وحالتُه ── */}
+                    <div className="bz-tr-head flex flex-wrap items-center gap-3 p-5">
+                      {o.storeLogo
+                        ? <img src={cldThumb(o.storeLogo, 96)} alt={o.storeName} loading="lazy" className="h-11 w-11 shrink-0 rounded-full object-cover ring-1 ring-[#5e4636]/20" />
+                        : <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#5e4636]/10 text-[#5e4636]"><StoreIcon className="h-5 w-5" /></span>}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-base font-bold text-[#3f2e22] dark:text-inherit">{o.storeName}</p>
                         {/* رقم الطلب ينُسخ بضغطة (لإرساله للمتجر عند الاستفسار) */}
                         <button
                           type="button"
                           onClick={() => { try { navigator.clipboard.writeText(o.reference); setCopiedRef(o.reference); setTimeout(() => setCopiedRef(''), 1500); } catch { /* تجاهل */ } }}
-                          className="bz-ref ms-2 rounded-full px-2 py-0.5 font-mono text-[11px]"
+                          className="bz-ref mt-0.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[11px]"
                           dir="ltr"
                           title={t('co.doneCopy')}
                         >
+                          {copiedRef === o.reference ? <CheckIcon className="h-3 w-3" /> : <CopyIcon className="h-3 w-3" />}
                           {copiedRef === o.reference ? t('common.copied') : o.reference}
                         </button>
                       </div>
@@ -207,84 +261,195 @@ export default function Track() {
                       </span>
                     </div>
 
-                    {/* الخط الزمني الفاخر: منجز = خمري بعلامة ✓، الحالي ينبض بهالة ذهبية، القادم باهت */}
-                    {!cancelled && (
-                      <div className="mt-5 flex items-center" dir={rtl ? 'rtl' : 'ltr'}>
-                        {STEPS.map((s, i) => {
-                          const done = i <= stepIdx;
-                          const current = i === stepIdx;
-                          return (
-                            <div key={s} className="flex flex-1 items-center last:flex-none">
-                              <div className="flex flex-col items-center">
-                                <span className="relative flex h-9 w-9 items-center justify-center">
-                                  <span
-                                    className={`bz-tl-dot ${done ? 'bz-tl-done' : ''} ${current ? 'bz-tl-now' : ''}`}
-                                  >
+                    <div className="p-5 pt-4">
+                      {/* ── المسارُ الزمنيّ: رأسيٌّ بتاريخِ كلِّ مرحلةٍ ووقتِها ──
+                          كان أفقيّاً بأربعِ نقاطٍ وتسمياتٍ صغيرةٍ بلا تاريخٍ واحد،
+                          فيعرفُ الزبونُ أين طلبُه ولا يعرفُ متى بلغَ هناك. */}
+                      {cancelled ? (
+                        <div className="bz-tr-cancel flex items-start gap-2.5 rounded-2xl px-4 py-3">
+                          <XIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                          <div className="min-w-0 text-sm">
+                            <p className="font-bold">{t('track.cancelledTitle')}</p>
+                            {stamp(o, 'cancelled') && <p className="mt-0.5 text-xs opacity-80">{stamp(o, 'cancelled')}</p>}
+                          </div>
+                        </div>
+                      ) : unpaid ? (
+                        /* طلبٌ بدأ بالبطاقةِ ولم تكتملْ دفعتُه: مسارُ التجهيزِ لم
+                           يبدأْ أصلاً، فعرضُه بأربعِ مراحلَ فارغةٍ يُوهِمُ أنّ
+                           الطلبَ قائمٌ ينتظرُ المتجر — وهو ينتظرُ الدفعَ وحدَه. */
+                        <div className="bz-note flex items-start gap-2.5 rounded-2xl px-4 py-3">
+                          <ClockIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                          <div className="min-w-0 text-sm">
+                            <p className="font-bold">{t('track.unpaidTitle')}</p>
+                            <p className="mt-0.5 text-xs leading-relaxed text-stone-500">{t('track.unpaidHint')}</p>
+                          </div>
+                        </div>
+                      ) : (
+                        <ol className="space-y-0">
+                          {STEPS.map((s, i) => {
+                            const done = i <= stepIdx;
+                            const current = i === stepIdx;
+                            const when = stamp(o, s);
+                            const last = i === STEPS.length - 1;
+                            return (
+                              <li key={s} className="flex gap-3">
+                                {/* العمودُ الرأسيّ: قرصٌ ثمّ خيطٌ يصلُه بما بعدَه */}
+                                <div className="flex flex-col items-center">
+                                  <span className={`bz-tl-dot ${done ? 'bz-tl-done' : ''} ${current ? 'bz-tl-now' : ''}`}>
                                     {done ? <CheckIcon className="h-4 w-4" /> : i + 1}
                                   </span>
-                                </span>
-                                <span className={`bz-tl-lbl ${done ? 'bz-tl-lbl-on' : ''}`}>{t(`dashboard.ordersSection.${s}`)}</span>
-                              </div>
-                              {i < STEPS.length - 1 && (
-                                <span className={`bz-tl-bar ${i < stepIdx ? 'bz-tl-bar-on' : ''}`} />
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
+                                  {!last && <span className={`bz-tl-vbar ${i < stepIdx ? 'bz-tl-bar-on' : ''}`} />}
+                                </div>
+                                <div className={`min-w-0 flex-1 ${last ? 'pb-0' : 'pb-4'}`}>
+                                  <p className={`text-sm leading-6 ${done ? 'font-bold text-[#3f2e22] dark:text-inherit' : 'text-stone-400'}`}>
+                                    {t(`dashboard.ordersSection.${s}`)}
+                                  </p>
+                                  {/* المنجَزُ تاريخُه، والمرحلةُ التاليةُ «قيد التنفيذ»،
+                                      والتسليمُ المنتظَرُ مدّتُه المتوقّعة. وكانت
+                                      «قيد التنفيذ» تُكتَبُ تحتَ المرحلةِ الحاليّةِ
+                                      نفسِها، فيقرأُ صاحبُ طلبٍ مُسلَّمٍ «تم التسليم —
+                                      قيد التنفيذ الآن». */}
+                                  <p className="text-[11px] leading-5 text-stone-400">
+                                    {done
+                                      ? (when || '—')
+                                      : (s === 'delivered' && eta) ? eta
+                                      : (i === stepIdx + 1) ? t('track.inProgress') : '—'}
+                                  </p>
+                                </div>
+                              </li>
+                            );
+                          })}
+                        </ol>
+                      )}
 
-                    {/* شركة التوصيل: الحالة الحيّة عند الشركة + رقم التتبّع (يظهر بعد إرسال الشحنة) */}
-                    {o.courier && (
-                      <div className="bz-note mt-4 flex flex-wrap items-center gap-x-3 gap-y-1.5 px-3.5 py-2.5 text-xs">
-                        <span className="flex items-center gap-1.5 font-bold">
-                          <TruckIcon className="h-4 w-4" /> {t('track.courier')}: {o.courier}
-                        </span>
-                        {o.courierStatus && (
-                          <span className="bz-ref rounded-full px-2.5 py-0.5 font-semibold">{o.courierStatus}</span>
+                      {/* ── شركةُ التوصيل: الحالةُ الحيّةُ ورقمُ الشحنةِ وتاريخُ التسليمِ لها ── */}
+                      {o.courier && (
+                        <div className="bz-note mt-4 space-y-1.5 px-3.5 py-3 text-xs">
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                            <span className="flex items-center gap-1.5 font-bold">
+                              <TruckIcon className="h-4 w-4 shrink-0" /> {o.courier}
+                            </span>
+                            {o.courierStatus && <span className="bz-ref rounded-full px-2.5 py-0.5 font-semibold">{o.courierStatus}</span>}
+                            {o.tracking && (
+                              <span className="text-stone-500">
+                                {t('track.trackingNo')}:{' '}
+                                <button
+                                  type="button"
+                                  onClick={() => { try { navigator.clipboard.writeText(o.tracking); setCopiedTrack(o.tracking); setTimeout(() => setCopiedTrack(''), 1500); } catch { /* تجاهل */ } }}
+                                  dir="ltr" title={t('co.doneCopy')}
+                                  className="bz-ref rounded-full px-1.5 font-mono font-semibold"
+                                >
+                                  {copiedTrack === o.tracking ? t('common.copied') : o.tracking}
+                                </button>
+                              </span>
+                            )}
+                          </div>
+                          {o.sentAt && <p className="text-stone-500">{t('track.handedToCourier')}: {fmtDate(o.sentAt)}</p>}
+                        </div>
+                      )}
+
+                      {/* ── القطع ── */}
+                      <ul className="bz-hr-t mt-4 space-y-1.5 pt-3 text-sm">
+                        {(o.items || []).map((it, i) => (
+                          <li key={i} className="flex items-baseline justify-between gap-2">
+                            <span className="min-w-0 flex-1 text-stone-600">
+                              <span aria-hidden className="bz-bullet me-1.5 text-[8px]">◆</span>
+                              {it.name}{it.color ? ` - ${it.color}` : ''}{it.size ? ` (${sizeLabel(it.size, t)})` : ''} ×{it.qty}
+                            </span>
+                            <span className="shrink-0 text-stone-500">{t('common.currency')}{((Number(it.price) || 0) * (Number(it.qty) || 0)).toFixed(2)}</span>
+                          </li>
+                        ))}
+                      </ul>
+
+                      {/* ── الحساب: تفصيلٌ لا رقمٌ واحد ── */}
+                      <div className="bz-hr-t mt-3 space-y-1 pt-3 text-sm">
+                        <div className="flex justify-between text-stone-500"><span>{t('receipt.subtotal')}</span><span>{t('common.currency')}{subtotal.toFixed(2)}</span></div>
+                        {o.discount > 0 && (
+                          <div className="flex justify-between text-emerald-600 dark:text-emerald-300">
+                            <span>{t('receipt.discount')}{o.couponCode ? ` (${o.couponCode})` : ''}</span>
+                            <span>−{t('common.currency')}{Number(o.discount).toFixed(2)}</span>
+                          </div>
                         )}
-                        {o.tracking && (
-                          <span className="text-stone-500">
-                            {t('track.trackingNo')}:{' '}
-                            <button
-                              type="button"
-                              onClick={() => { try { navigator.clipboard.writeText(o.tracking); setCopiedTrack(o.tracking); setTimeout(() => setCopiedTrack(''), 1500); } catch { /* تجاهل */ } }}
-                              dir="ltr"
-                              title={t('co.doneCopy')}
-                              className="bz-ref rounded-full px-1.5 font-mono font-semibold"
-                            >
-                              {copiedTrack === o.tracking ? t('common.copied') : o.tracking}
-                            </button>
-                          </span>
+                        <div className="flex justify-between text-stone-500">
+                          <span>{t('receipt.delivery')}</span>
+                          <span>{o.deliveryFee > 0 ? `${t('common.currency')}${Number(o.deliveryFee).toFixed(2)}` : t('receipt.freeDelivery')}</span>
+                        </div>
+                        <div className="bz-hr-t flex items-center justify-between pt-2 font-bold">
+                          <span className="text-[#3f2e22] dark:text-inherit">{t('receipt.total')}</span>
+                          <span className="bz-total text-lg">{t('common.currency')}{o.total.toFixed(2)}</span>
+                        </div>
+                      </div>
+
+                      {/* ── ماذا دُفِعَ وماذا بقي: طلبُ البطاقةِ سُدِّدت بضاعتُه
+                             والتوصيلُ يُدفَعُ للمندوب، فلا يُفاجَأُ أحدٌ عند الباب ── */}
+                      <div className={`mt-3 rounded-2xl px-3.5 py-3 text-xs ${prepaid ? 'bz-tr-paid' : 'bz-note'}`}>
+                        {prepaid ? (
+                          <>
+                            <p className="flex items-center gap-1.5 font-bold">
+                              <CheckIcon className="h-4 w-4 shrink-0" /> {t('receipt.paidLine')} · {t('common.currency')}{Number(o.paidOnline).toFixed(2)}
+                            </p>
+                            {o.codDue > 0 && (
+                              <p className="mt-1 flex items-start gap-1.5 leading-relaxed">
+                                <TruckIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                                {t('checkout.dueCourier', { amount: `${t('common.currency')}${Number(o.codDue).toFixed(2)}` })}
+                              </p>
+                            )}
+                          </>
+                        ) : (
+                          <p className="flex items-start gap-1.5 leading-relaxed font-semibold">
+                            <CashIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                            {t('track.dueOnDelivery', { amount: `${t('common.currency')}${Number(o.codDue).toFixed(2)}` })}
+                          </p>
                         )}
                       </div>
-                    )}
 
-                    {/* المنتجات */}
-                    <ul className="bz-hr-t mt-4 space-y-1 pt-3 text-sm text-stone-600">
-                      {(o.items || []).map((it, i) => (
-                        <li key={i} className="flex items-baseline gap-1.5">
-                          <span aria-hidden className="bz-bullet text-[8px]">◆</span>
-                          <span className="min-w-0 flex-1">{it.name}{it.color ? ` - ${it.color}` : ''}{it.size ? ` (${it.size})` : ''} ×{it.qty}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="mt-3 flex items-center justify-between">
-                      <span className="text-xs text-stone-400">
-                        {new Date(o.createdAt).toLocaleDateString()}
-                        {' · '}
-                        {(o.items || []).reduce((s, it) => s + (Number(it.qty) || 1), 0)} {t('store.products')}
-                      </span>
-                      <span className="bz-total text-lg font-bold">{t('common.currency')}{o.total.toFixed(2)}</span>
+                      {/* ── العنوانُ وتاريخُ الطلب ── */}
+                      <div className="mt-3 space-y-1 text-[11px] leading-5 text-stone-400">
+                        <p className="flex items-start gap-1.5">
+                          <PinIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                          {[o.city, o.area && o.area !== o.city ? o.area : '', o.address].filter(Boolean).join(' · ')}
+                        </p>
+                        <p className="flex items-center gap-1.5">
+                          <ClockIcon className="h-3.5 w-3.5 shrink-0" /> {fmtDate(o.createdAt)}
+                        </p>
+                      </div>
+
+                      {/* ── الأفعال: شهادةُ الشراءِ، ومراسلةُ المتجر، وإعادةُ الطلب ── */}
+                      <div className="mt-4 grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => takeReceipt(o, 'image')}
+                          disabled={Boolean(busyReceipt)}
+                          className="bz-act-2 w-full !px-3 !text-xs"
+                        >
+                          <DownloadIcon className="h-4 w-4 shrink-0" />
+                          {busyReceipt === `${o.reference}:image` ? t('common.loading') : t('receipt.saveImage')}
+                        </button>
+                        <button
+                          onClick={() => takeReceipt(o, 'print')}
+                          disabled={Boolean(busyReceipt)}
+                          className="bz-act-2 w-full !px-3 !text-xs"
+                        >
+                          <PrintIcon className="h-4 w-4 shrink-0" /> {t('receipt.print')}
+                        </button>
+                        {o.storeWhatsapp && (
+                          <a
+                            href={buildWhatsappLink(o.storeWhatsapp, t('track.askMsg', { ref: o.reference }))}
+                            target="_blank" rel="noopener noreferrer"
+                            className="btn-whatsapp col-span-2 w-full !rounded-full !py-2.5 !text-xs"
+                          >
+                            <WhatsAppIcon className="h-4 w-4 shrink-0" /> {t('track.askStore')}
+                          </a>
+                        )}
+                        {/* إعادة الطلب بضغطة — نفس القطع بالمقاسات والألوان (بأسعار اليوم) */}
+                        <button
+                          onClick={() => reorder(o)}
+                          disabled={Boolean(reordering)}
+                          className="bz-act col-span-2 w-full"
+                        >
+                          <CartIcon className="h-4 w-4 shrink-0" /> {reordering === o.reference ? t('common.loading') : t('track.reorder')}
+                        </button>
+                      </div>
                     </div>
-                    {/* إعادة الطلب بضغطة — نفس القطع بالمقاسات والألوان (بأسعار اليوم) */}
-                    <button
-                      onClick={() => reorder(o)}
-                      disabled={Boolean(reordering)}
-                      className="bz-act-2 mt-3 w-full"
-                    >
-                      <CartIcon className="h-4 w-4" /> {reordering === o.reference ? t('common.loading') : t('track.reorder')}
-                    </button>
                   </div>
                 );
               })}

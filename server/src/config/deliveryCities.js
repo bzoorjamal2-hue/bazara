@@ -225,6 +225,15 @@ export function tierForName(name) {
   return classifyTier(name) || 'wb';
 }
 
+// شريحةُ مكانٍ بعينِه — بنفسِ منطقِ feeForCity تماماً لكنّها تُرجعُ اسمَ الشريحةِ
+// لا سعرَها. تحتاجُها صفحةُ التتبّعِ لتقولَ «التوصيل خلال يوم–يومين» بدل صمت.
+export function tierOfCity(cityName) {
+  const raw = String(cityName || '').trim();
+  if (!raw) return '';
+  const parentName = NAME_TIER.has(raw) ? raw : (VILLAGE_CITY.get(raw) || raw);
+  return NAME_TIER.get(parentName) || tierForName(parentName);
+}
+
 // مدن قطاع غزة — للتسمية فقط (سعرها على شريحة الضفة، والتاجر يقدر يستثنيها)
 const GAZA = new Set([
   'غزه', 'خان يونس', 'خانيونس', 'رفح', 'دير البلح', 'جباليا', 'بيت لاهيا', 'بيت حانون',

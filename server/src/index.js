@@ -500,6 +500,12 @@ async function ensureAccounting() {
     // الفريد يجعل الثانية ترتدّ بدل أن تُسجَّل نسخةً أخرى.
     'ALTER TABLE orders ADD COLUMN IF NOT EXISTS idempotency_key VARCHAR(64);',
     'CREATE UNIQUE INDEX IF NOT EXISTS orders_idem_key ON orders (idempotency_key) WHERE idempotency_key IS NOT NULL;',
+    // متى بلغَ الطلبُ كلَّ مرحلة. كان الجدولُ يحفظُ الحالةَ الراهنةَ وحدَها، فصفحةُ
+    // التتبّعِ تعرفُ *أين* الطلبُ ولا تعرفُ *متى* وصلَ هناك — والزبونُ يسألُ عن
+    // الوقتِ لا عن الاسم. عمودٌ واحدٌ يحملُ التواريخَ كلَّها ({confirmed, shipped,
+    // delivered, cancelled}) فلا نُضيفُ عموداً لكلِّ حالةٍ كلّما زادت حالة.
+    // الطلباتُ القديمةُ تبقى فارغةً ويُعرَضُ عنها تاريخُ الإنشاءِ وحدَه.
+    "ALTER TABLE orders ADD COLUMN IF NOT EXISTS status_at JSONB NOT NULL DEFAULT '{}'::jsonb;",
     `CREATE TABLE IF NOT EXISTS expenses (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,

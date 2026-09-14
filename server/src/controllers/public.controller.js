@@ -4,10 +4,11 @@ import { activeStoreSql } from '../utils/subscription.js';
 import { notifyStoreOwner } from '../utils/notify.js';
 import { statusLabelAr as opostStatusLabelAr } from '../config/opost.js';
 import { epsStatusLabelAr } from '../config/eps.js';
-import { normalizeTiers, villagesByCity, flatInternalLocalities, mapExternalLocalities, sameName } from '../config/deliveryCities.js';
+import { normalizeTiers, villagesByCity, flatInternalLocalities, mapExternalLocalities, sameName, tierOfCity } from '../config/deliveryCities.js';
 import { fetchCities, fetchAreas, cachedLocalities, fetchAllLocalities } from '../config/opost.js';
 import { ensureToken } from './opost.controller.js';
 import { categoryAliases } from '../utils/category.js';
+import { paidOnline, codAmount } from '../utils/cod.js';
 
 // أعمدة المنتج + بيانات المتجر + تجميع التقييمات. نربط users لفلترة المشتركين الفعّالين.
 const PRODUCT_SELECT = `
@@ -214,8 +215,13 @@ export async function trackOrders(req, res, next) {
   const last9 = phone.slice(-9);
   try {
     const r = await query(
-      `SELECT o.reference, o.status, o.items, o.total, o.delivery_fee, o.discount, o.created_at, o.city, s.name AS store_name, s.slug AS store_slug,
-              o.opost_tracking, o.opost_status, o.eps_barcode, o.eps_status, o.gobox_barcode, o.gobox_status
+      `SELECT o.reference, o.status, o.items, o.total, o.delivery_fee, o.discount, o.coupon_code,
+              o.created_at, o.status_at, o.payment_method, o.city, o.area, o.address, o.notes,
+              o.customer_name, o.customer_phone,
+              s.name AS store_name, s.slug AS store_slug, s.logo_url AS store_logo, s.whatsapp AS store_whatsapp,
+              o.opost_tracking, o.opost_status, o.opost_sent_at,
+              o.eps_barcode, o.eps_status, o.eps_sent_at,
+              o.gobox_barcode, o.gobox_status, o.gobox_sent_at
        FROM orders o JOIN stores s ON s.id = o.store_id
        WHERE regexp_replace(o.customer_phone, '\\D', '', 'g') LIKE $1
        ORDER BY o.created_at DESC LIMIT 20`,
@@ -225,12 +231,15 @@ export async function trackOrders(req, res, next) {
     // '✓' يعني أُرسل بلا رقم تتبّع من الشركة — لا نعرضه كرقم.
     const courierInfo = (o) => {
       const clean = (v) => (v && v !== '✓' ? String(v) : '');
-      if (o.opost_tracking) return { courier: 'أوبتيموس', tracking: clean(o.opost_tracking), courierStatus: o.opost_status ? opostStatusLabelAr(o.opost_status) : '' };
-      if (o.eps_barcode) return { courier: 'EPS', tracking: clean(o.eps_barcode), courierStatus: o.eps_status ? epsStatusLabelAr(o.eps_status) : '' };
-      if (o.gobox_barcode) return { courier: 'gobox', tracking: clean(o.gobox_barcode), courierStatus: o.gobox_status ? epsStatusLabelAr(o.gobox_status) : '' };
-      return { courier: '', tracking: '', courierStatus: '' };
+      if (o.opost_tracking) return { courier: 'أوبتيموس', tracking: clean(o.opost_tracking), courierStatus: o.opost_status ? opostStatusLabelAr(o.opost_status) : '', sentAt: o.opost_sent_at };
+      if (o.eps_barcode) return { courier: 'EPS', tracking: clean(o.eps_barcode), courierStatus: o.eps_status ? epsStatusLabelAr(o.eps_status) : '', sentAt: o.eps_sent_at };
+      if (o.gobox_barcode) return { courier: 'gobox', tracking: clean(o.gobox_barcode), courierStatus: o.gobox_status ? epsStatusLabelAr(o.gobox_status) : '', sentAt: o.gobox_sent_at };
+      return { courier: '', tracking: '', courierStatus: '', sentAt: null };
     };
     res.json({
+      // التتبّعُ صار يحملُ الطلبَ كاملاً لا حالتَه فقط: تواريخُ المراحل، وتفصيلُ
+      // الحساب، وقسمةُ المدفوعِ والمستحقّ، والعنوانُ — فتُبنى منه صفحةٌ تُجيبُ
+      // عن «متى» و«كم» و«إلى أين»، وتُخرِجُ شهادةَ شراءٍ بلا نداءٍ ثانٍ.
       orders: r.rows.map((o) => ({
         reference: o.reference,
         status: o.status,
@@ -238,10 +247,25 @@ export async function trackOrders(req, res, next) {
         total: Number(o.total),
         deliveryFee: Number(o.delivery_fee || 0),
         discount: Number(o.discount || 0),
+        couponCode: o.coupon_code || '',
+        paymentMethod: o.payment_method || 'cod',
+        paidOnline: paidOnline(o),
+        codDue: codAmount(o),
         city: o.city || '',
+        area: o.area || '',
+        // شريحةُ المكان — منها تُشتَقُّ المدّةُ المتوقّعةُ بصفحةِ التتبّع
+        etaTier: tierOfCity(o.area || o.city),
+        address: o.address || '',
+        notes: o.notes || '',
+        customerName: o.customer_name || '',
+        customerPhone: o.customer_phone || '',
         storeName: o.store_name,
         storeSlug: o.store_slug,
+        storeLogo: o.store_logo || '',
+        storeWhatsapp: o.store_whatsapp || '',
         createdAt: o.created_at,
+        // متى بلغَ كلَّ مرحلة — فارغٌ للطلباتِ التي سبقت هذا العمود
+        statusAt: o.status_at && typeof o.status_at === 'object' ? o.status_at : {},
         ...courierInfo(o),
       })),
     });

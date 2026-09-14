@@ -233,6 +233,9 @@ const STATUS_AR = {
   returned: 'مرتجع', returned_to_business: 'مرتجع',
   cancelled: 'ملغاة', canceled: 'ملغاة',
   pending: 'عالق', postponed: 'مؤجّلة', rejected: 'مرفوض',
+  // «Closed» يردُّها أوبتيموس فعلاً بطلباتٍ منتهية، ولم تكن بالخريطةِ فتظهرُ
+  // للزبونِ كلمةً إنجليزيّةً وسطَ صفحةٍ عربيّة.
+  closed: 'منتهية',
 };
 export function statusLabelAr(raw) {
   const key = String(raw || '').trim().toLowerCase().replace(/[\s-]+/g, '_');

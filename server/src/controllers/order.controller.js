@@ -535,7 +535,19 @@ export async function applyOrderStatus(storeId, id, status) {
         await q('UPDATE referrals SET uses = GREATEST(0, uses - 1) WHERE store_id = $1 AND code = $2', [storeId, order.referral_code]);
       }
     }
-    await q('UPDATE orders SET status = $1, stock_applied = $2 WHERE id = $3 AND store_id = $4', [status, stockApplied, id, storeId]);
+    // نُثبّتُ لحظةَ بلوغِ هذه المرحلةِ مع الحالةِ نفسِها بنفسِ المعاملة: لو كُتبت
+    // الحالةُ وسقطَ الوقتُ لظهرَ بالتتبّعِ طلبٌ «تمّ شحنُه» بلا تاريخِ شحن.
+    // jsonb_set بلا حذفِ ما سبق: الرجوعُ لحالةٍ سابقةٍ لا يمحو تاريخَها الأوّل.
+    // الحالةُ تُمرَّرُ مرّتين ($1 للعمودِ و$5 لمفتاحِ الـJSON) عمداً: استعمالُ
+    // المعاملِ نفسِه بالموضعَين يجعلُ بوستغرس يستنتجُ له نوعَين متضاربَين
+    // (varchar للعمودِ وtext داخلَ ARRAY) فيرفضُ الجملةَ كلَّها.
+    await q(
+      `UPDATE orders
+          SET status = $1, stock_applied = $2,
+              status_at = jsonb_set(COALESCE(status_at, '{}'::jsonb), ARRAY[$5::text], to_jsonb(now()), true)
+        WHERE id = $3 AND store_id = $4`,
+      [status, stockApplied, id, storeId, status]
+    );
   });
   // خُصم المخزون للتو؟ نفحص بالخلفية إن نفد منتج بالكامل ونُشعر المالك
   if (shouldApply && !wasApplied) notifySoldOut(storeId, order.items).catch(() => {});

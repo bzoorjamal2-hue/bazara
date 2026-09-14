@@ -3456,6 +3456,37 @@ html.dark .theme-pub .bz-pill-x { color: #a2957f; }
 .bz-tl-bar { margin-inline: 0.25rem; height: 3px; flex: 1; border-radius: 999px; background: rgba(94, 70, 54, 0.12); }
 .bz-tl-bar-on { background: #5e4636; }
 
+/* ── مسارُ التتبّعِ الرأسيّ ──
+   صار المسارُ رأسيّاً ليتّسعَ لتاريخِ كلِّ مرحلةٍ ووقتِها بجانبِها. الخيطُ يصلُ
+   بين القرصَين بعرضٍ ثابتٍ وارتفاعٍ يملأُ ما بينهما (flex:1) فلا ينقطعُ مهما
+   طالَ نصُّ المرحلةِ أو قصُر. */
+.bz-tl-vbar {
+  width: 3px;
+  flex: 1;
+  min-height: 1.15rem;
+  margin-block: 0.2rem;
+  border-radius: 999px;
+  background: rgba(94, 70, 54, 0.12);
+}
+
+/* ترويسةُ بطاقةِ الطلب — أرضيّةٌ خفيفةٌ تفصلُها عن جسمِ البطاقة */
+.bz-tr-head {
+  background: rgba(94, 70, 54, 0.045);
+  border-bottom: 1px solid rgba(94, 70, 54, 0.1);
+}
+/* لوحةُ «مدفوعٌ مسبقاً» — خضراءُ هادئةٌ تُميّزُها عن لوحةِ التحصيل */
+.bz-tr-paid {
+  background: rgba(21, 128, 61, 0.08);
+  color: #15803d;
+  border: 1px solid rgba(21, 128, 61, 0.18);
+}
+/* لوحةُ الطلبِ الملغى */
+.bz-tr-cancel {
+  background: rgba(180, 35, 24, 0.08);
+  color: #b42318;
+  border: 1px solid rgba(180, 35, 24, 0.18);
+}
+
 /* لوحةُ تنبيهٍ محايدة (شركة التوصيل) — كانت بحدٍّ وخلفيةٍ ذهبيّين */
 .bz-note {
   border-radius: 1rem;
@@ -3477,6 +3508,13 @@ html.dark .theme-pub .bz-ob { background: rgba(228, 216, 197, 0.12); color: #ded
 html.dark .theme-pub .bz-ob-on { background: rgba(228, 216, 197, 0.2); color: #f6efe0; }
 html.dark .theme-pub .bz-ob-ok { background: rgba(74, 222, 128, 0.16); color: #86efac; }
 html.dark .theme-pub .bz-ob-no { background: rgba(248, 113, 113, 0.16); color: #fca5a5; }
+/* مسارُ التتبّعِ ولوحاتُه بالوضعِ الليليّ — الدرجاتُ الفاتحةُ تبهتُ على الأرضِ الداكنة */
+html.dark .theme-pub .bz-tl-vbar { background: rgba(228, 216, 197, 0.16); }
+html.dark .theme-pub .bz-tl-bar-on,
+html.dark .theme-pub .bz-tl-vbar.bz-tl-bar-on { background: #cdbda4; }
+html.dark .theme-pub .bz-tr-head { background: rgba(228, 216, 197, 0.05); border-bottom-color: rgba(228, 216, 197, 0.12); }
+html.dark .theme-pub .bz-tr-paid { background: rgba(74, 222, 128, 0.12); color: #86efac; border-color: rgba(74, 222, 128, 0.22); }
+html.dark .theme-pub .bz-tr-cancel { background: rgba(248, 113, 113, 0.12); color: #fca5a5; border-color: rgba(248, 113, 113, 0.22); }
 html.dark .theme-pub .bz-ref { background: rgba(228, 216, 197, 0.10); color: #b9ab91; }
 @media (hover: hover) { html.dark .theme-pub .bz-ref:hover { background: rgba(228, 216, 197, 0.2); color: #f6efe0; } }
 html.dark .theme-pub .bz-tl-dot {

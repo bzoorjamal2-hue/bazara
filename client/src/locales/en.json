@@ -559,14 +559,22 @@
   },
   "track": {
     "title": "Track your order",
-    "hint": "Enter the phone number you ordered with to see your order status.",
+    "hint": "Enter the phone number the order was placed with to see its status.",
     "phonePlaceholder": "Phone number",
     "search": "Search",
     "notFound": "No orders found for this number. Check it and try again.",
     "courier": "Courier",
     "trackingNo": "Tracking no.",
-    "reorder": "Reorder in one tap 🛒",
-    "reorderEmpty": "Sorry, the items in this order are no longer available."
+    "reorder": "Reorder",
+    "reorderEmpty": "The items in this order are no longer available.",
+    "inProgress": "In progress now",
+    "handedToCourier": "Handed to the courier",
+    "cancelledTitle": "This order was cancelled",
+    "dueOnDelivery": "{{amount}} is paid in cash to the courier on delivery",
+    "askStore": "Ask about this order",
+    "askMsg": "Hello, I have a question about order {{ref}}",
+    "unpaidTitle": "Awaiting payment",
+    "unpaidHint": "The card payment was not completed, so preparation has not started. You can place the order again from the button below."
   },
   "push": {
     "title": "Order push notifications",
