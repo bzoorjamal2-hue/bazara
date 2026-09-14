@@ -161,7 +161,9 @@
     "close": "Close",
     "today": "Today",
     "yesterday": "Yesterday",
-    "retry": "Retry"
+    "retry": "Retry",
+    "prev": "Previous",
+    "next": "Next"
   },
   "searchPage": {
     "title": "Search",
@@ -403,7 +405,9 @@
     "yourRating": "Your rating",
     "yourComment": "Your comment",
     "submitReview": "Submit review",
-    "reviewAdded": "Thanks for your review!"
+    "reviewAdded": "Thanks for your review!",
+    "zoom": "Zoom image",
+    "videoThumb": "Product video"
   },
   "store": {
     "products": "Products",

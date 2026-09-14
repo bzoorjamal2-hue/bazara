@@ -13,11 +13,11 @@ import Strike from '../components/Strike.jsx';
 import { getMySize, setMySize } from '../utils/mySize.js';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
-import { cldVideoPoster, cldThumb, cldSrcSet, cldVideoMp4 } from '../utils/cloudinary.js';
 import { pushRecent, getRecent, removeRecent } from '../utils/recentlyViewed.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { sizeLabel } from '../utils/sizes.js';
 import ColorSwatches from '../components/ColorSwatches.jsx';
+import ProductMedia, { productMedia, mediaCover } from '../components/ProductMedia.jsx';
 import Countdown from '../components/Countdown.jsx';
 import { HeartIcon, BagIcon, CartIcon, BellIcon, SparkleIcon, FireIcon, HandIcon, BackIcon } from '../components/icons.jsx';
 import { StateCard, Act } from '../components/PageUI.jsx';
@@ -26,8 +26,6 @@ import SizeGuideModal from '../components/SizeGuideModal.jsx';
 import ImageInput from '../components/ImageInput.jsx';
 import { initPixels, trackPixel } from '../utils/pixels.js';
 import { setStoreScope } from '../utils/storeScope.js';
-
-const PH = 'https://placehold.co/600x600/2b1d12/b09a7e?text=%F0%9F%91%97';
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -48,7 +46,6 @@ export default function ProductDetails() {
   const [complementary, setComplementary] = useState([]);
   const [recent, setRecent] = useState([]);
   const [error, setError] = useState('');
-  const [active, setActive] = useState(0);
   const [selSize, setSelSize] = useState('');
   const [selColor, setSelColor] = useState('');
   const [pickErr, setPickErr] = useState('');
@@ -65,32 +62,9 @@ export default function ProductDetails() {
     if (list.includes(c)) setSelColor(c);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product?.id]);
-  const [lightbox, setLightbox] = useState(false);
   const [descExp, setDescExp] = useState(false); // طيّ الوصف الطويل بـ«اقرأ المزيد»
   const [mySize] = useState(getMySize); // مقاسها المعتاد — نميّزه فقط (بلا اختيار تلقائي)
 
-  // تكبير الصورة بحركة المؤشّر (أسلوب متاجر الأزياء الفاخرة). أجهزة اللمس مستثناة —
-  // عندها التكبير بالنقر/العارض. نحدّث الأنماط على العنصر مباشرةً بلا setState كي لا
-  // نُعيد تصيير الصفحة الثقيلة مع كل حركة مؤشّر (كان يسبّب تقطيعاً).
-  const zoomRef = useRef(null);
-  const canHoverZoom = typeof window !== 'undefined'
-    && typeof window.matchMedia === 'function'
-    && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-  const onZoomMove = (e) => {
-    const el = zoomRef.current;
-    if (!el || !canHoverZoom) return;
-    const r = el.getBoundingClientRect();
-    const x = ((e.clientX - r.left) / r.width) * 100;
-    const y = ((e.clientY - r.top) / r.height) * 100;
-    el.style.transformOrigin = `${x}% ${y}%`;
-    el.style.transform = 'scale(2.2)';
-  };
-  const onZoomLeave = () => {
-    const el = zoomRef.current;
-    if (!el) return;
-    el.style.transform = '';
-    el.style.transformOrigin = '';
-  };
   const [sizeGuide, setSizeGuide] = useState(false);
   const [notifyPhone, setNotifyPhone] = useState('');
   const [notifyName, setNotifyName] = useState('');
@@ -102,7 +76,6 @@ export default function ProductDetails() {
   const ctaRef = useRef(null);
   const [showBuyBar, setShowBuyBar] = useState(false);
   const pickRef = useRef(null); // قسم اختيار اللون/المقاس — ننزلق إليه عند الضغط بلا اختيار
-  const galTouch = useRef(null); // بداية لمسة معرض الصور (للسحب بين الصور)
 
   // نُعلِم الشريط السفلي أنّنا داخل هذا المتجر — فتبقى وجهاته (رئيسية/تصنيفات/عروض/
   // ريلز/تتبّع) ضمن المتجر ولا تخرج للموقع العام (رابط صفحة المنتج لا يحمل السلاِگ)
@@ -175,7 +148,6 @@ export default function ProductDetails() {
         setViewers(Number(res.data.viewing) || 0);
         setWaiting(Number(res.data.waitingCount) || 0);
         setReviews(res.data.reviews || []);
-        setActive(0);
         pushRecent(p);
         setRecent(getRecent());
         setCache(`product:${id}`, res.data); // للرجوع الفوري لاحقاً
@@ -236,12 +208,6 @@ export default function ProductDetails() {
 
   // صور اللون المختار (Color Swatches) تطغى على المعرض العام عند اختيار لون له صور
   const colorImages = product.colorImages && typeof product.colorImages === 'object' ? product.colorImages : {};
-  const activeColorImgs = selColor && Array.isArray(colorImages[selColor]) ? colorImages[selColor].filter(Boolean) : [];
-  const gallery = activeColorImgs.length
-    ? activeColorImgs
-    : [...new Set([product.imageUrl, ...(product.images || [])].filter(Boolean))];
-  const hasImages = gallery.length > 0;
-  if (!hasImages && !product.videoUrl) gallery.push(PH); // عنصر بديل فقط لو ما في صور ولا فيديو
   const hasDiscount = product.oldPrice && product.oldPrice > product.price;
   const liked = has(product.id);
 
@@ -337,9 +303,7 @@ export default function ProductDetails() {
   // فيديوهات. أي أنّ الشرط كان مفقوداً بكلّ منتجٍ بالمنصّة، فلا بطاقةَ غنيّة
   // لأيّ واحدٍ منها. واللقطةُ الأولى من الفيديو صورةٌ حقيقية للقطعة نفسها،
   // ويولّدها كلاوديناري — وهي المستعملة أصلاً غلافاً للمشغّل أسفل الصفحة.
-  const seoImages = gallery.length
-    ? gallery
-    : (product.videoUrl ? [cldVideoPoster(product.videoUrl, 1200)] : []);
+  const seoImages = productMedia(product).map((m) => mediaCover(m, 1200)).filter((u) => u && !u.startsWith('data:'));
 
   // بيانات Schema.org للمنتج → نتائج Google الغنية (سعر/توفّر/تقييم/علامة المتجر)
   const productLd = {
@@ -385,78 +349,15 @@ export default function ProductDetails() {
       </button>
 
       <div className="bz-panel grid gap-8 overflow-hidden p-6 md:grid-cols-2">
-        {/* معرض الصور */}
-        <div>
-          {hasImages && (
-          <div
-            className="relative mx-auto w-fit"
-            style={{ touchAction: 'pan-y' }}
-            onTouchStart={(e) => { const t0 = e.touches[0]; galTouch.current = { x: t0.clientX, y: t0.clientY }; }}
-            onTouchEnd={(e) => {
-              // سحب أفقي يبدّل صورة المعرض (نفس سلوك عارض الصور) — يتبع اتجاه اللغة
-              const s = galTouch.current; galTouch.current = null;
-              if (!s || gallery.length < 2) return;
-              const dx = e.changedTouches[0].clientX - s.x;
-              const dy = e.changedTouches[0].clientY - s.y;
-              if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
-                const d = dx < 0 ? (rtl ? -1 : 1) : (rtl ? 1 : -1);
-                setActive((p) => (p + d + gallery.length) % gallery.length);
-              }
-            }}
-          >
-            {/* الصورة تظهر بحجمها الطبيعي (مثل الفيديو) بلا قص — نقر للتكبير،
-                وعلى الكمبيوتر تتبع حركة المؤشّر بتكبير عدسي. الغلاف يقصّ الزائد
-                (overflow) كي لا تتجاوز الصورة المكبّرة إطارها */}
-            <span
-              className="bz-shot block overflow-hidden rounded-2xl"
-              onMouseMove={onZoomMove}
-              onMouseLeave={onZoomLeave}
-            >
-              <img
-                key={gallery[active]}
-                ref={zoomRef}
-                src={cldThumb(gallery[active], 900)}
-                srcSet={cldSrcSet(gallery[active], [400, 600, 900, 1200])}
-                sizes="(min-width: 768px) 50vw, 100vw"
-                alt={product.name}
-                decoding="async"
-                onClick={() => setLightbox(true)}
-                className="media-cap block w-auto max-w-full cursor-zoom-in rounded-2xl bg-ink-800 object-contain animate-fade-in [animation-duration:350ms] [transition:transform_.18s_ease-out]"
-                onError={(e) => { e.currentTarget.srcset = ''; e.currentTarget.src = PH; }}
-              />
-            </span>
-            {hasDiscount && <span className="bz-pb bz-pb-sale absolute start-3 top-3">-{Math.round((1 - product.price / product.oldPrice) * 100)}%</span>}
-            {/* أيقونة تكبير */}
-            <button onClick={() => setLightbox(true)} aria-label="zoom" className="absolute end-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur transition hover:bg-black/65">
-              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3M11 8v6M8 11h6" /></svg>
-            </button>
-          </div>
-          )}
-          {gallery.length > 1 && (
-            <div className="mt-3 flex gap-2 overflow-x-auto">
-              {gallery.map((g, i) => (
-                <button
-                  key={i}
-                  onClick={() => setActive(i)}
-                  className={`bz-thumb h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl transition duration-300 ${i === active ? 'bz-thumb-on' : 'opacity-60 hover:opacity-100'}`}
-                >
-                  <img src={cldThumb(g, 160)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* فيديو المنتج — يتأقلم مع مقاسه (9:16) بلا سواد حوله */}
-          {product.videoUrl && (
-            <video
-              src={cldVideoMp4(product.videoUrl)}
-              poster={cldVideoPoster(product.videoUrl)}
-              controls
-              playsInline
-              preload="metadata"
-              className="media-cap mx-auto mt-3 block w-auto max-w-full rounded-2xl bg-ink-900"
-            />
-          )}
+        {/* وسائطُ المنتج: صورٌ وفيديو بمعرضٍ واحدٍ ثابتِ الإطار.
+            min-w-0: عمودُ الشبكةِ لا يقلُّ افتراضاً عن أصغرِ محتواه، وإطارُ الوسائطِ
+            نسبتُه ثابتةٌ فيفرضُ عرضاً أكبرَ من العمودِ فيطفحُ خارجَ اللوحةِ على الجوّال. */}
+        <div className="min-w-0">
+          <ProductMedia
+            product={product}
+            color={selColor}
+            badge={hasDiscount ? <span className="bz-pb bz-pb-sale absolute start-3 top-3 z-[2]">-{Math.round((1 - product.price / product.oldPrice) * 100)}%</span> : null}
+          />
         </div>
 
         {/* التفاصيل — بعد توسيع حاوية الموقع صار العمود يتجاوز 700px على الشاشات
@@ -577,7 +478,7 @@ export default function ProductDetails() {
                 colorImages={colorImages}
                 colorStock={colorStock}
                 value={selColor}
-                onChange={(c) => { setSelColor(c); if (hasColorStock) setSelSize(''); setPickErr(''); setActive(0); }}
+                onChange={(c) => { setSelColor(c); if (hasColorStock) setSelSize(''); setPickErr(''); }}
                 label={t('product.selectColor')}
                 tone="dark"
               />
@@ -753,7 +654,6 @@ export default function ProductDetails() {
       {/* سياسة الإرجاع والتبديل — تطمئن الزبونة قبل الشراء */}
       <ReturnPolicy policy={product.storeReturnPolicy} />
 
-      {lightbox && hasImages && <Lightbox images={gallery} index={active} onClose={() => setLightbox(false)} />}
 
       {/* دليل المقاسات — نمر هذا المنتج فقط */}
       {sizeGuide && (

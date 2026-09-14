@@ -6,21 +6,15 @@ import { motion } from 'framer-motion';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import { HeartIcon, CartIcon, BagIcon, HandIcon, ForwardIcon } from './icons.jsx';
-import { cldVideoPoster, cldThumb, cldSrcSet, cldVideoMp4 } from '../utils/cloudinary.js';
 import { flyToCart } from '../utils/flyToCart.js';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { sizeLabel } from '../utils/sizes.js';
 import Strike from './Strike.jsx';
 import { getMySize, setMySize } from '../utils/mySize.js';
 import ColorSwatches from './ColorSwatches.jsx';
+import ProductMedia from './ProductMedia.jsx';
 import SizeGuideModal from './SizeGuideModal.jsx';
 import CloseButton from './CloseButton.jsx';
-
-const PLACEHOLDER =
-  'data:image/svg+xml;utf8,' +
-  encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="100%" height="100%" fill="%23f1e9dd"/><text x="50%" y="50%" fill="%235c1a2e" font-size="48" text-anchor="middle" dy=".35em">👗</text></svg>'
-  );
 
 // نافذة "نظرة سريعة" — تفاصيل المنتج دون مغادرة الصفحة.
 export default function QuickViewModal({ product, whatsapp = '', onClose }) {
@@ -28,7 +22,6 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
   const { add, buyNow } = useCart();
   const { has, toggle } = useWishlist();
   const imgRef = useRef(null);
-  const qvTouch = useRef(null); // بداية لمسة السحب بين الصور
   useScrollLock(true);
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -36,12 +29,8 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  const gallery = [product.imageUrl, ...(product.images || [])].filter(Boolean);
-  const poster = product.videoUrl ? cldVideoPoster(product.videoUrl) : '';
-  if (gallery.length === 0 && poster) gallery.push(poster);
-  if (gallery.length === 0) gallery.push(PLACEHOLDER);
-
-  const [active, setActive] = useState(0);
+  // صورةُ الوسيطةِ المعروضةِ الآن — يحتاجُها طيرانُ المنتجِ إلى السلّة
+  const [cover, setCover] = useState('');
   const [qty, setQty] = useState(1);
   const colorStock = product.colorStock && typeof product.colorStock === 'object' ? product.colorStock : {};
   const colorImages = product.colorImages && typeof product.colorImages === 'object' ? product.colorImages : {};
@@ -69,8 +58,6 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
   const discountPct = hasDiscount ? Math.round((1 - product.price / product.oldPrice) * 100) : 0;
   const liked = has(product.id);
 
-  const hasVideo = !!product.videoUrl;
-
   // تحقّق موحّد من اختيار اللون/المقاس قبل الإضافة أو الشراء
   const validate = () => {
     if (outOfStock) return false;
@@ -86,7 +73,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
   };
   const onAdd = () => {
     if (!validate()) return;
-    flyToCart(imgRef.current, hasVideo ? (poster || gallery[active]) : gallery[active]);
+    flyToCart(imgRef.current, cover);
     add({ ...product, whatsapp, size, color }, qty);
     onClose();
   };
@@ -118,65 +105,20 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
         {/* زر الإغلاق */}
         <CloseButton onClick={onClose} variant="dark" className="absolute end-3 top-3 z-20" />
 
-        {/* الوسائط — فيديو يشتغل تلقائياً أو صورة، بحجمها الطبيعي 9:16 (بلا قصّ).
-            الخلفية كريمية مطابقة للغلاف — بلا إطار بنّي حول الفيديو */}
+        {/* الوسائط — صورٌ وفيديو بمعرضٍ واحدٍ ثابتِ الإطار (نفس صفحة المنتج).
+            كان الفيديو إن وُجد يُخفي الصورَ كلَّها ويُلغي المصغّرات، فلا ترى الزبونةُ
+            صورَ اللونِ الذي تختارُه هنا إطلاقاً. */}
         <div className="bg-[#f3ece0] p-3">
-          <div
-            ref={imgRef}
-            className="relative mx-auto aspect-[9/16] max-h-[56vh] w-full overflow-hidden rounded-2xl bg-[#f3ece0]"
-            style={{ touchAction: 'pan-y' }}
-            onTouchStart={(e) => { const t0 = e.touches[0]; qvTouch.current = { x: t0.clientX, y: t0.clientY }; }}
-            onTouchEnd={(e) => {
-              // سحب أفقي يبدّل الصور (نفس سلوك صفحة المنتج وعارض الصور) — للصور فقط لا الفيديو
-              const s = qvTouch.current; qvTouch.current = null;
-              if (!s || hasVideo || gallery.length < 2) return;
-              const dx = e.changedTouches[0].clientX - s.x;
-              const dy = e.changedTouches[0].clientY - s.y;
-              if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
-                const rtl = document.documentElement.dir !== 'ltr';
-                const d = dx < 0 ? (rtl ? -1 : 1) : (rtl ? 1 : -1);
-                setActive((p) => (p + d + gallery.length) % gallery.length);
-              }
-            }}
-          >
-            {hasVideo ? (
-              <video
-                src={cldVideoMp4(product.videoUrl)}
-                poster={poster}
-                autoPlay
-                loop
-                playsInline
-                controls
-                className="h-full w-full object-contain"
-              />
-            ) : (
-              <img
-                src={cldThumb(gallery[active], 800)}
-                srcSet={cldSrcSet(gallery[active], [400, 600, 800])}
-                sizes="(min-width: 640px) 50vw, 92vw"
-                alt={product.name}
-                decoding="async"
-                onError={(e) => { e.currentTarget.srcset = ''; e.currentTarget.src = PLACEHOLDER; }}
-                className="h-full w-full object-contain"
-              />
-            )}
-            {hasDiscount && (
+          <ProductMedia
+            product={product}
+            color={color}
+            variant="quick"
+            stageRef={imgRef}
+            onCover={setCover}
+            badge={hasDiscount ? (
               <span className="absolute start-3 top-3 z-10 rounded-full bg-[#8a2438] px-2.5 py-0.5 text-xs font-semibold text-[#F4EDE2] shadow-sm">-{discountPct}%</span>
-            )}
-          </div>
-          {!hasVideo && gallery.length > 1 && (
-            <div className="mt-3 flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {gallery.map((g, i) => (
-                <button
-                  key={i}
-                  onClick={() => setActive(i)}
-                  className={`h-14 w-14 shrink-0 overflow-hidden rounded-xl border-2 transition ${i === active ? 'border-wine' : 'border-transparent opacity-70'}`}
-                >
-                  <img src={cldThumb(g, 150)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" onError={(e) => (e.currentTarget.src = PLACEHOLDER)} />
-                </button>
-              ))}
-            </div>
-          )}
+            ) : null}
+          />
         </div>
 
         {/* التفاصيل */}

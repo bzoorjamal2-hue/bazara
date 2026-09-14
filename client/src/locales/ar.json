@@ -167,7 +167,9 @@
     "close": "إغلاق",
     "today": "اليوم",
     "yesterday": "أمس",
-    "retry": "إعادة المحاولة"
+    "retry": "إعادة المحاولة",
+    "prev": "السابق",
+    "next": "التالي"
   },
   "offline": {
     "message": "لا يوجد اتصال بالإنترنت — يمكنك تصفّح الصفحة الرئيسية فقط"
@@ -427,7 +429,9 @@
     "lastFew_two": "آخر قطعتين!",
     "lastFew_few": "آخر {{count}} قطع!",
     "lastFew_many": "آخر {{count}} قطعة!",
-    "lastFew_other": "آخر {{count}} قطعة!"
+    "lastFew_other": "آخر {{count}} قطعة!",
+    "zoom": "تكبير الصورة",
+    "videoThumb": "فيديو المنتج"
   },
   "store": {
     "products": "المنتجات",

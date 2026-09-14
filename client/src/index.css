@@ -3549,6 +3549,42 @@ html.dark .theme-pub .bz-plan-top { box-shadow: inset 0 0 0 1px rgba(228, 216, 1
 html.dark .theme-pub .bz-price { color: #f6efe0; }
 
 /* ── صفحة المنتج ── */
+/* إطارُ وسائطِ المنتج: مقاسٌ ثابتٌ لا يتغيّرُ بتغيّرِ الوسيطةِ ولا اللون، فلا تقفزُ
+   الصفحةُ تحتَ الإصبع. الحدُّ الأقصى للارتفاع يمنعُه من ابتلاعِ الشاشةِ على
+   الجوّالِ الطويل (٤:٥ من عرضِ الشاشةِ قد يتجاوزُ طولَها). */
+.bz-stage {
+  max-height: min(74vh, 640px);
+  max-height: min(74svh, 640px);
+}
+.bz-stage-sm {
+  max-height: min(52vh, 460px);
+  max-height: min(52svh, 460px);
+}
+/* سهما التنقّل داخلَ الإطار — لأجهزةِ الماوسِ فقط: على اللمسِ السحبُ والمصغّرات،
+   ولا معنى لزرٍّ يبقى شاحباً فوقَ الصورةِ بلا مؤشّرٍ يمرُّ عليه. */
+.bz-stage-nav { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .bz-stage-nav {
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    display: flex;
+    height: 2.25rem;
+    width: 2.25rem;
+    transform: translateY(-50%);
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    background: rgba(0, 0, 0, 0.42);
+    color: #fff;
+    font-size: 1.5rem;
+    line-height: 1;
+    opacity: 0;
+    transition: opacity 0.2s ease, background-color 0.2s ease;
+  }
+  .group:hover .bz-stage-nav, .bz-stage-nav:focus-visible { opacity: 1; }
+  .bz-stage-nav:hover { background: rgba(0, 0, 0, 0.62); }
+}
 .bz-shot { box-shadow: inset 0 0 0 1px rgba(94, 70, 54, 0.12); }
 .bz-thumb { box-shadow: inset 0 0 0 1px rgba(94, 70, 54, 0.10); }
 .bz-thumb-on { box-shadow: 0 0 0 2px #5e4636; opacity: 1; }
