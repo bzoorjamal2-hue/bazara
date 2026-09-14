@@ -87,7 +87,13 @@ export default function ProductMedia({
   const rtl = i18n.language !== 'en';
   const page = variant === 'page';
   const list = useMemo(() => productMedia(product, color), [product, color]);
-  const [i, setI] = useState(0);
+  // الوسيطةُ المختارةُ مربوطةٌ بالمنتجِ واللونِ معاً: تبديلُ اللونِ يعودُ بنا إلى أوّلِ
+  // صورةٍ لحظةَ الرسمِ نفسَها لا بمؤثِّرٍ بعدَ الرسم — وإلا ظهرَ إطارٌ واحدٌ بالصورةِ
+  // القديمةِ قبلَ أن يُصحّحَ المؤثِّرُ الفهرس.
+  const listKey = `${product?.id || ''}|${color}`;
+  const [sel, setSel] = useState({ key: listKey, i: 0 });
+  const i = sel.key === listKey ? sel.i : 0;
+  const setI = (v) => setSel({ key: listKey, i: typeof v === 'function' ? v(i) : v });
   const [lightbox, setLightbox] = useState(false);
   const touch = useRef(null);
   const videoRef = useRef(null);
@@ -100,8 +106,6 @@ export default function ProductMedia({
   const cur = list[idx] || list[0];
   const images = useMemo(() => list.filter((m) => m.type === 'image').map((m) => m.src), [list]);
 
-  // منتجٌ جديدٌ أو لونٌ جديد → نبدأُ من أوّلِ وسيطة (صورةُ اللونِ المختار)
-  useEffect(() => { setI(0); }, [product?.id, color]);
 
   // الانتقالُ عن الفيديو يوقفه — كان يظلُّ يعملُ بصوتِه خلفَ صورةٍ ساكنة
   useEffect(() => {
