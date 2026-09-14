@@ -190,8 +190,11 @@ export async function checkout(req, res, next) {
       [storeId]
     );
     const store = storeRow.rows[0];
-    const useLahza = Boolean(store?.lahza_subaccount && isLahzaConfigured());
-    const usePaytabs = Boolean(store?.paytabs_entity_id && isPlatformPaytabsConfigured());
+    // المفتاحُ يُحرَسُ هنا لا بالواجهةِ وحدَها: إخفاءُ الزرِّ لا يمنعُ طلباً
+    // مُلفَّقاً، فالتاجرةُ التي أطفأت الدفعَ بالبطاقةِ لا يُقبَضُ لها بالبطاقة.
+    const ownerEnabled = Boolean(store?.card_payment_enabled);
+    const useLahza = Boolean(ownerEnabled && store?.lahza_subaccount && isLahzaConfigured());
+    const usePaytabs = Boolean(ownerEnabled && store?.paytabs_entity_id && isPlatformPaytabsConfigured());
     if (!useLahza && !usePaytabs) {
       return res.status(503).json({ error: 'الدفع بالبطاقة غير مُفعّل في هذا المتجر.' });
     }

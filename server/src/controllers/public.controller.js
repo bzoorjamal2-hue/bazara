@@ -389,9 +389,10 @@ export async function getStoreCheckout(req, res, next) {
       freeShippingOver: Number(s.free_shipping_over || 0),
       flashPercent: flashActive ? Number(s.flash_percent) : 0,
       flashEndsAt: flashActive ? s.flash_ends_at : null,
-      // زرُّ الفيزا لا يظهرُ إلّا إذا صارت التاجرةُ مسجّلةً فعلاً عند إحدى البوّابتين —
-      // وإلّا لضغطته الزبونةُ فارتدَّ عليها خطأٌ لا ذنبَ لها فيه
-      cardPaymentEnabled: Boolean(s.lahza_subaccount || s.paytabs_entity_id),
+      // شرطانِ لا شرطٌ واحد: أن تكونَ التاجرةُ مسجّلةً عند إحدى البوّابتين، وأن
+      // تكونَ قد فتحت المفتاحَ بإعداداتِها. كان الشرطُ الأوّلَ وحدَه، فمَن أطفأت
+      // المفتاحَ يظلُّ زبائنُها يرون الفيزا ويدفعون بها رغماً عنها.
+      cardPaymentEnabled: Boolean(s.card_payment_enabled && (s.lahza_subaccount || s.paytabs_entity_id)),
     });
   } catch (err) {
     next(err);

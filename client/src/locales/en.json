@@ -553,7 +553,9 @@
     "trustCardSplit": "Card details are entered on the bank page directly and nobody else sees them. The delivery fee is still collected in cash by the courier on handover.",
     "cityNotListed": "Choose your location from the list so the correct delivery fee is shown",
     "prev": "Previous",
-    "backToCart": "Cart"
+    "backToCart": "Cart",
+    "payNotEnabled": "Not available",
+    "payNotEnabledHint": "This store does not accept card payments at the moment."
   },
   "track": {
     "title": "Track your order",

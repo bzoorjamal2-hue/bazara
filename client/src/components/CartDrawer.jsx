@@ -881,35 +881,49 @@ export default function CartDrawer() {
                       <div>
                         <h3 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-gold-200"><CardIcon className="h-4 w-4 shrink-0" /> {t('co.payMethod')}</h3>
                         <div className="space-y-2">
+                          {/* الطريقتانِ تظهرانِ دائماً، والفيزا تُعطَّلُ بوضوحٍ حين لا
+                              يكونُ المتجرُ قد فعّلها: شارةُ «غير مفعّلة حالياً» وزرٌّ
+                              لا يُضغَط. إخفاؤُها كان يتركُ الزبونَ يظنُّ أنّ المنصّةَ
+                              لا تعرفُ الدفعَ بالبطاقةِ أصلاً. */}
                           {[
-                            { id: 'cod', Icon: CashIcon, title: t('co.payCodTitle'), desc: t('co.payCodDesc'), show: true },
-                            { id: 'card', Icon: CardIcon, title: t('co.payCardTitle'), desc: t('co.payCardDesc'), show: cardEnabled },
-                          ].filter((o) => o.show).map(({ id, Icon, title, desc }) => {
-                            const on = payMethod === id;
+                            { id: 'cod', Icon: CashIcon, title: t('co.payCodTitle'), desc: t('co.payCodDesc'), off: false },
+                            { id: 'card', Icon: CardIcon, title: t('co.payCardTitle'), desc: t('co.payCardDesc'), off: !cardEnabled },
+                          ].map(({ id, Icon, title, desc, off }) => {
+                            const on = payMethod === id && !off;
                             return (
                               /* الحلقةُ والنقطةُ بلونٍ صريح (#b09a7e) لا بصنفِ شفافيّة:
                                  كلُّ درجاتِ border-gold-400/* تُردُّ للونٍ واحدٍ بالوضعِ
                                  النهاريّ، فالبطاقةُ المختارةُ كانت تُشبهُ غيرَ المختارة */
                               <button
-                                key={id} type="button" onClick={() => { setPayMethod(id); setErr(''); }}
+                                key={id} type="button"
+                                onClick={() => { if (off) return; setPayMethod(id); setErr(''); }}
+                                disabled={off}
                                 aria-pressed={on}
                                 style={on ? { boxShadow: '0 0 0 2px #b09a7e' } : undefined}
                                 className={`flex w-full items-center gap-3 rounded-2xl border p-3.5 text-start transition ${
-                                  on ? 'border-transparent bg-gold-400/10' : 'border-gold-400/15 bg-black/20 hover:bg-gold-400/5'}`}
+                                  off ? 'cursor-not-allowed border-gold-400/10 bg-black/10 opacity-60'
+                                    : on ? 'border-transparent bg-gold-400/10' : 'border-gold-400/15 bg-black/20 hover:bg-gold-400/5'}`}
                               >
                                 <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${on ? 'bg-gold-400/20 text-gold-200' : 'bg-black/20 text-stone-400'}`}>
                                   <Icon className="h-5 w-5" />
                                 </span>
                                 <span className="min-w-0 flex-1">
-                                  <span className={`block text-sm font-bold ${on ? 'text-gold-200' : 'text-stone-200'}`}>{title}</span>
-                                  <span className="block text-[11px] leading-snug text-stone-400">{desc}</span>
+                                  <span className={`flex flex-wrap items-center gap-x-1.5 text-sm font-bold ${on ? 'text-gold-200' : 'text-stone-200'}`}>
+                                    {title}
+                                    {off && (
+                                      <span className="rounded-full bg-black/20 px-2 py-0.5 text-[10px] font-bold text-stone-400">
+                                        {t('co.payNotEnabled')}
+                                      </span>
+                                    )}
+                                  </span>
+                                  <span className="block text-[11px] leading-snug text-stone-400">{off ? t('co.payNotEnabledHint') : desc}</span>
                                 </span>
                                 <span
                                   className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition"
                                   /* اللونُ على الحاوية: أيقوناتُنا ترسمُ بـcurrentColor ولا
                                      تقبلُ style. وصحٌّ داكنٌ على الذهب لأنّ الأبيضَ
                                      على ‎#b09a7e‎ تباينُه ٢٫٣ فقط. */
-                                  style={on ? { borderColor: '#b09a7e', background: '#b09a7e', color: '#3f2e22' } : { borderColor: 'rgba(138,127,114,0.6)' }}
+                                  style={on ? { borderColor: '#b09a7e', background: '#b09a7e', color: '#3f2e22' } : { borderColor: 'rgba(138,127,114,0.45)' }}
                                 >
                                   {on && <CheckIcon className="h-3 w-3" />}
                                 </span>
