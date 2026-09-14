@@ -11,7 +11,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import Select from './Select.jsx';
-import CitySearch from './CitySearch.jsx';
+import CitySearch, { placeLabelOf } from './CitySearch.jsx';
 import { BagIcon, TrashIcon, PlusIcon } from './icons.jsx';
 import { sizeLabel } from '../utils/sizes.js';
 import { isValidMobile, sanitizeMobileInput } from '../utils/phone.js';
@@ -257,7 +257,7 @@ export function OrderComposer({ defaultName = '', defaultPhone = '', hintText = 
           <div className="flex-1">
             {cityChoices.length > 0 ? (
               <CitySearch
-                value={f.area || f.city}
+                value={placeLabelOf(f.city, f.area)}
                 options={cityChoices}
                 onPick={pickCity}
                 onText={(txt) => setF((p) => ({ ...p, city: txt, area: '' }))}

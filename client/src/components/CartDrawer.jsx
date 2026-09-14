@@ -6,7 +6,7 @@ import { useCart } from '../context/CartContext.jsx';
 import { buildWhatsappCheckout } from '../utils/whatsapp.js';
 import useScrollLock from '../hooks/useScrollLock.js';
 import CloseButton from './CloseButton.jsx';
-import CitySearch from './CitySearch.jsx';
+import CitySearch, { placeLabelOf } from './CitySearch.jsx';
 import { CartIcon, BagIcon, XIcon, PinIcon, GiftIcon, TicketIcon, CheckIcon, ReceiptIcon, PartyIcon, TruckIcon, CashIcon, WhatsAppIcon, ForwardIcon, BackIcon, CopyIcon, CardIcon, UserIcon, ShieldIcon, DownloadIcon, PrintIcon, LockIcon } from './icons.jsx';
 import api from '../api/client.js';
 import { sizeLabel } from '../utils/sizes.js';
@@ -819,7 +819,7 @@ export default function CartDrawer() {
                           <div data-field="city">
                             <span className="mb-1 block text-[11px] font-bold text-stone-300">{t('co.city')}</span>
                             <CitySearch
-                              value={cust.area || cust.city}
+                              value={placeLabelOf(cust.city, cust.area)}
                               options={cityChoices}
                               invalid={invalid.city}
                               onClear={() => setCust((p) => ({ ...p, city: '', area: '' }))}
