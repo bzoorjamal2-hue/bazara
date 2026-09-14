@@ -1066,14 +1066,30 @@ export default function CartDrawer() {
                   )}
                 </div>
 
-                {/* شريطُ الأسفلِ الثابت: زرٌّ واحدٌ يقودُ الخطوة — «التالي» ثم «تأكيد
-                    الطلب» بالمبلغِ مكتوباً عليه، فلا تضغطُ الزبونةُ وهي لا تعرفُ كم */}
+                {/* شريطُ الأسفلِ الثابت: «السابق» و«التالي» جنباً إلى جنب.
+                    كان التالي وحدَه يملأُ العرض، والرجوعُ سهماً صغيراً بالرأسِ لا
+                    تكادُ العينُ تجدُه — فمن أراد تصحيحَ عنوانِه بحثَ عن مخرج. الآن
+                    الطريقانِ ظاهرانِ معاً: الرجوعُ خفيفٌ بإطارٍ رفيع، والتقدّمُ
+                    ممتلئٌ بلونِ العلامة، فتُعرَفُ الوجهةُ الأرجحُ بلا قراءة. */}
                 <div className="border-t border-gold-400/15 p-4">
                   {err && <p className="mb-2 text-center text-xs text-red-300">{err}</p>}
+                  <div className="flex items-center gap-2.5">
+                    <button
+                      onClick={goBack}
+                      aria-label={step > 1 ? t('co.prev') : t('co.backToCart')}
+                      className="flex shrink-0 items-center justify-center gap-1.5 rounded-full border border-gold-400/30 px-4 py-4 text-sm font-bold text-stone-300 transition hover:bg-gold-400/10 min-[360px]:px-5"
+                    >
+                      <BackIcon className="h-4 w-4 shrink-0" />
+                      {/* بالخطوةِ الأولى الرجوعُ يعودُ للسلّةِ لا لخطوةٍ سابقة.
+                          وتحتَ ٣٦٠ بكسل يبقى السهمُ وحدَه: زرُّ التأكيدِ يحملُ
+                          المبلغَ، وقياسُ الشاشةِ هناك لا يتّسعُ للنصَّين معاً —
+                          فكان المبلغُ يُقَصُّ («تأكيد الطلب · ₪2…»). */}
+                      <span className="max-[359px]:hidden">{step > 1 ? t('co.prev') : t('co.backToCart')}</span>
+                    </button>
                   {step < 3 ? (
                     <button
                       onClick={goNext}
-                      className="flex w-full items-center justify-center gap-1.5 rounded-full py-4 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-full py-4 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
                       style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)', boxShadow: '0 16px 34px -14px rgba(20, 13, 7, 0.65)' }}
                     >
                       {t('co.next')} <ForwardIcon className="h-4 w-4 shrink-0" />
@@ -1087,7 +1103,10 @@ export default function CartDrawer() {
                     <button
                       onClick={payMethod === 'card' ? payWithCard : confirmOrder}
                       disabled={placing || cardBusy}
-                      className="flex w-full items-center justify-center gap-2 rounded-full py-4 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110 disabled:opacity-60"
+                      /* حجمٌ واحدٌ (١٤) لا يكبرُ مع الشاشة: الزرُّ يحملُ مبلغاً لا
+                         يجوزُ أن يُقَصَّ، والنصُّ الإنجليزيُّ أطولُ من العربيّ —
+                         فبالحجمِ الكامل كان يخرجُ «Confirm order · …» بلا رقم. */
+                      className="flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full py-4 text-sm font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110 disabled:opacity-60"
                       style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)', boxShadow: '0 16px 34px -14px rgba(20, 13, 7, 0.65)' }}
                     >
                       {(placing || cardBusy) ? t('common.loading') : (
@@ -1095,13 +1114,14 @@ export default function CartDrawer() {
                           {payMethod === 'card' ? <LockIcon className="h-5 w-5 shrink-0" /> : <CheckIcon className="h-5 w-5 shrink-0" />}
                           {/* رقمُ الزرِّ هو المخصومُ فعلاً لا قيمةُ الطلب: بالبطاقةِ
                               ثمنُ البضاعةِ وحدَه، وبالاستلامِ الإجماليُّ كلُّه */}
-                          {payMethod === 'card'
+                          <span className="truncate">{payMethod === 'card'
                             ? t('co.payNow', { amount: `${t('common.currency')}${afterDiscount.toFixed(2)}` })
-                            : t('co.confirmPay', { amount: `${t('common.currency')}${grand.toFixed(2)}` })}
+                            : t('co.confirmPay', { amount: `${t('common.currency')}${grand.toFixed(2)}` })}</span>
                         </>
                       )}
                     </button>
                   )}
+                  </div>
                   {step === 3 && (
                     <p className="mt-2 text-center text-[10px] text-stone-500">
                       {payMethod === 'card' ? t('co.cardHint') : t('co.confirmHint')}
