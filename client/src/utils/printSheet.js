@@ -33,16 +33,18 @@ export function scopeCss(css, scope) {
  * @param {string} html جسم الورقة
  * @param {string} css أنماطها (مكتوبة كمستند مستقلّ)
  * @param {string} title عنوان المستند — يصير اسم ملف PDF عند «حفظ كـPDF»
+ * @param {string} dir اتجاه الورقة. فاتورةُ اللوحة عربيّةٌ دائماً (rtl)، أمّا
+ *        شهادةُ الزبونة فبلغةِ الموقعِ التي اختارتها — فلا تطلعُ إنجليزيّةً مقلوبة.
  */
-export function printSheet(html, css, title) {
+export function printSheet(html, css, title, dir = 'rtl') {
   let root = document.getElementById(PRINT_ROOT_ID);
   if (!root) {
     root = document.createElement('div');
     root.id = PRINT_ROOT_ID;
-    root.setAttribute('dir', 'rtl'); // الفاتورة عربية دائماً مهما كانت لغة اللوحة
     root.setAttribute('aria-hidden', 'true');
     document.body.appendChild(root);
   }
+  root.setAttribute('dir', dir);
   root.innerHTML = `<style>${scopeCss(css, `#${PRINT_ROOT_ID}`)}</style>${html}`;
 
   const prevTitle = document.title;

@@ -14,11 +14,12 @@
  * @param {string} css أنماطها
  * @param {number} width عرض التصميم بالبكسل
  * @param {number} scale مضاعف الدقّة (2 = صورة حادّة على شاشات الجوال)
+ * @param {string} dir اتجاه القصاصة — rtl للفاتورة العربية، ltr لشهادةٍ إنجليزية
  */
-export async function htmlToPngBlob(html, css, width = 820, scale = 2) {
+export async function htmlToPngBlob(html, css, width = 820, scale = 2, dir = 'rtl') {
   // ١) نرسم القصاصة خارج الشاشة لقياس ارتفاعها الحقيقي
   const holder = document.createElement('div');
-  holder.setAttribute('dir', 'rtl');
+  holder.setAttribute('dir', dir);
   holder.style.cssText = `position:fixed;inset-inline-start:-10000px;top:0;width:${width}px;background:#fff`;
   holder.innerHTML = `<style>${css}</style>${html}`;
   document.body.appendChild(holder);
@@ -35,7 +36,7 @@ export async function htmlToPngBlob(html, css, width = 820, scale = 2) {
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
 <foreignObject width="100%" height="100%">
-<div xmlns="http://www.w3.org/1999/xhtml" dir="rtl" style="width:${width}px;background:#ffffff">${inner}</div>
+<div xmlns="http://www.w3.org/1999/xhtml" dir="${dir}" style="width:${width}px;background:#ffffff">${inner}</div>
 </foreignObject></svg>`;
 
   // ٣) الرسم على canvas ثم التصدير

@@ -14,9 +14,21 @@ const checkoutLimiter = rateLimit({
   message: { error: 'محاولات كثيرة. حاول لاحقاً.' },
 });
 
+// التحقّقُ من الدفع صار يُرجعُ لقطةَ الطلبِ (اسمٌ وهاتفٌ وعنوان) لتُبنى منها شهادةُ
+// الشراء. المرجعُ سرٌّ لا يحملُه إلّا صاحبُ الطلب، لكنّ بابَ التخمينِ كان مفتوحاً بلا
+// حدّ — والآن صارت الجائزةُ أكبرَ من «حالةِ طلبٍ ومبلغِه». عددٌ سخيٌّ للزبونةِ العائدةِ
+// من البنك (وقد تُعيدُ التحميل مراراً)، وخانقٌ لمن يُجرّبُ المراجعَ واحداً واحداً.
+const verifyLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'محاولات كثيرة. حاول لاحقاً.' },
+});
+
 router.post('/checkout', checkoutLimiter, checkout);
 router.post('/cod', checkoutLimiter, createCodOrder); // طلب الدفع عند الاستلام (واتساب) — عام
-router.get('/verify/:reference', verify);
+router.get('/verify/:reference', verifyLimiter, verify);
 router.get('/mine', requireAuth, listMyOrders);
 router.get('/abandoned', requireAuth, listAbandoned); // الطلبات غير المكتملة — للمشترك
 router.delete('/abandoned/:id', requireAuth, deleteAbandoned);

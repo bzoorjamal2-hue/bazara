@@ -367,7 +367,7 @@ export async function getStoreCheckout(req, res, next) {
   const { slug } = req.params;
   try {
     const r = await query(
-      `SELECT id, whatsapp, delivery_tiers, free_shipping_over, flash_percent, flash_ends_at,
+      `SELECT id, name, phone, whatsapp, delivery_tiers, free_shipping_over, flash_percent, flash_ends_at,
               opost_connected, opost_access_token, opost_refresh_token, opost_token_expires,
               card_payment_enabled, paytabs_entity_id, lahza_subaccount
        FROM stores WHERE slug = $1`,
@@ -379,6 +379,10 @@ export async function getStoreCheckout(req, res, next) {
     const flashActive = Number(s.flash_percent || 0) > 0 && s.flash_ends_at && new Date(s.flash_ends_at).getTime() > Date.now();
     const tiers = normalizeTiers(s.delivery_tiers);
     res.json({
+      // هويّةُ المتجر: تُكتَبُ على شهادةِ الشراءِ التي تحفظُها الزبونةُ بعد الطلب،
+      // وبلا اسمٍ تخرجُ الشهادةُ باسمِ المنصّةِ لا باسمِ من باعت.
+      storeName: s.name || '',
+      storePhone: s.phone || '',
       whatsapp: s.whatsapp || '',
       deliveryTiers: tiers,
       localities: await localitiesForStore(s, tiers),

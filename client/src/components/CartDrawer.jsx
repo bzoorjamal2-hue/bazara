@@ -7,7 +7,7 @@ import { buildWhatsappCheckout } from '../utils/whatsapp.js';
 import useScrollLock from '../hooks/useScrollLock.js';
 import CloseButton from './CloseButton.jsx';
 import CitySearch from './CitySearch.jsx';
-import { CartIcon, BagIcon, XIcon, PinIcon, GiftIcon, TicketIcon, CheckIcon, ReceiptIcon, PartyIcon, TruckIcon, CashIcon, WhatsAppIcon, ForwardIcon, BackIcon, CopyIcon } from './icons.jsx';
+import { CartIcon, BagIcon, XIcon, PinIcon, GiftIcon, TicketIcon, CheckIcon, ReceiptIcon, PartyIcon, TruckIcon, CashIcon, WhatsAppIcon, ForwardIcon, BackIcon, CopyIcon, CardIcon, UserIcon, ShieldIcon, DownloadIcon, PrintIcon, LockIcon } from './icons.jsx';
 import api from '../api/client.js';
 import { sizeLabel } from '../utils/sizes.js';
 import { newKey, enqueue } from '../utils/orderQueue.js';
@@ -16,6 +16,7 @@ import { cldThumb } from '../utils/cloudinary.js';
 import { getRef, clearRef } from '../utils/referral.js';
 import { trackPixel } from '../utils/pixels.js';
 import { isValidMobile, normalizePhone, sanitizeMobileInput } from '../utils/phone.js';
+import { printReceipt, saveReceiptImage } from '../utils/receipt.js';
 
 // بيانات الزبون المحفوظة محلياً — تعبّئ شاشة الإتمام تلقائياً بالطلبات القادمة
 const CUSTOMER_KEY = 'bz_customer_v1';
@@ -71,8 +72,16 @@ export default function CartDrawer() {
   const ar = i18n.language !== 'en';
   const { items, open, setOpen, remove, setQty, total, count, clear, syncFromServer, checkoutIntent, setCheckoutIntent } = useCart();
   const [view, setView] = useState('cart'); // 'cart' | 'checkout' | 'done'
+  // شاشةُ الإتمامِ على ثلاثِ خطوات: مَنْ أنتِ ← إلى أين ← كيف تدفعين. النموذجُ
+  // الطويلُ الواحدُ كان يُخيفُ بطولِه فتُغلقُ الزبونةُ السلّةَ قبل أن تبدأ؛ وثلاثُ
+  // بطاقاتٍ قصيرةٍ بشريطِ تقدّمٍ تُنهيها بلا أن تشعرَ أنّها تملأُ استمارة.
+  const [step, setStep] = useState(1); // 1 بياناتك · 2 التوصيل · 3 الدفع
+  const [payMethod, setPayMethod] = useState('cod'); // 'cod' | 'card'
   const [doneRef, setDoneRef] = useState(''); // رقم الطلب (المرجع) بعد النجاح
   const [doneStore, setDoneStore] = useState(''); // متجر الطلب — لإبقاء التتبّع بهويته
+  const [doneOrder, setDoneOrder] = useState(null); // لقطةُ الطلب — منها تُبنى شهادةُ الشراء
+  const [doneWa, setDoneWa] = useState(''); // رابطُ واتساب — احتياطٌ إن حجب المتصفّحُ النافذة
+  const [receiptBusy, setReceiptBusy] = useState(''); // 'image' | 'print' — أثناء توليد الشهادة
   const [refCopied, setRefCopied] = useState(false); // نُسخ رقم الطلب؟
   const [cust, setCust] = useState(loadCustomer); // مسبقة التعبئة من آخر طلب (إن وُجد)
   const [loyalty, setLoyalty] = useState(null); // { percent } خصم ولاء مستحق لهذا الطلب
@@ -90,21 +99,27 @@ export default function CartDrawer() {
   const [cardEnabled, setCardEnabled] = useState(false); // المتجر مفعّل الدفع بالبطاقة
   const [cardEmail, setCardEmail] = useState(''); // بريد الزبون للدفع بالبطاقة
   const [cardBusy, setCardBusy] = useState(false); // جارٍ التحويل لصفحة الدفع
+  const [storeInfo, setStoreInfo] = useState({ name: '', whatsapp: '' }); // هويّةُ المتجر — لشهادةِ الشراء
   const nameRef = useRef(null); // للتركيز التلقائي على أول حقل عند فتح شاشة الإتمام
   const formRef = useRef(null); // حاوية الحقول — للتمرير لأول حقل ناقص عند الخطأ
   useScrollLock(open);
-  // #9: تركيز تلقائي على أول حقل (الاسم) عند دخول شاشة الإتمام — تعبئة أسرع
+  // #9: تركيز تلقائي على أول حقل (الاسم) عند دخول شاشة الإتمام — تعبئة أسرع.
+  // بالخطوةِ الأولى وحدَها: تركيزُ حقلٍ بخطوةٍ لاحقةٍ يفتحُ لوحةَ المفاتيحِ فجأةً
+  // ويقفزُ التمريرُ فوقَ ما كتبته الزبونةُ لتوّها.
   useEffect(() => {
-    if (open && view === 'checkout') {
+    if (open && view === 'checkout' && step === 1) {
       const id = setTimeout(() => nameRef.current?.focus(), 150);
       return () => clearTimeout(id);
     }
     return undefined;
-  }, [open, view]);
+  }, [open, view, step]);
+  // بدايةُ كلِّ خطوةٍ من أعلاها — بلا هذا تبقى الخطوةُ الجديدةُ ممرَّرةً لمكانِ
+  // التمريرِ السابقِ فتظهرُ مقطوعةَ الرأس.
+  useEffect(() => { formRef.current?.scrollTo?.({ top: 0, behavior: 'smooth' }); }, [step]);
   // إغلاق بمفتاح Escape (سلوك قياسي للنوافذ) — يعيد العرض لقائمة السلة
   useEffect(() => {
     if (!open) return undefined;
-    const onKey = (e) => { if (e.key === 'Escape') { setOpen(false); setView('cart'); } };
+    const onKey = (e) => { if (e.key === 'Escape') { setOpen(false); setView('cart'); setStep(1); } };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [open, setOpen]);
@@ -112,8 +127,11 @@ export default function CartDrawer() {
   const storeSlug = items[0]?.storeSlug || '';
   // الشراء الفوري: افتح السلة مباشرة على شاشة إتمام الطلب
   useEffect(() => {
-    if (open && checkoutIntent) { setView('checkout'); setCheckoutIntent(false); }
+    if (open && checkoutIntent) { setView('checkout'); setStep(1); setCheckoutIntent(false); }
   }, [open, checkoutIntent, setCheckoutIntent]);
+  // متجرٌ أغلق الدفعَ بالبطاقةِ بعد أن اختارته الزبونة: نرجعُها للدفعِ عند الاستلامِ
+  // بدل أن يبقى اختيارٌ لا زرَّ له فتضغطَ «تأكيد» ولا يحدث شيء.
+  useEffect(() => { if (!cardEnabled) setPayMethod('cod'); }, [cardEnabled]);
   // نجلب إعدادات التوصيل الخاصة بالمتجر عند فتح السلة
   useEffect(() => {
     if (!open || !storeSlug) return;
@@ -123,6 +141,7 @@ export default function CartDrawer() {
         setFreeOver(Number(r.data.freeShippingOver) || 0);
         setFlash(Number(r.data.flashPercent) > 0 ? { percent: Number(r.data.flashPercent), endsAt: r.data.flashEndsAt } : null);
         setCardEnabled(Boolean(r.data.cardPaymentEnabled));
+        setStoreInfo({ name: r.data.storeName || '', whatsapp: r.data.whatsapp || '' });
       })
       .catch(() => { setLocalities([]); setFreeOver(0); setFlash(null); setCardEnabled(false); });
   }, [open, storeSlug]);
@@ -205,7 +224,10 @@ export default function CartDrawer() {
 
   if (!open) return null;
 
-  const close = () => { setOpen(false); setView('cart'); setErr(''); setDoneRef(''); setDoneStore(''); };
+  const close = () => {
+    setOpen(false); setView('cart'); setStep(1); setErr('');
+    setDoneRef(''); setDoneStore(''); setDoneOrder(null); setDoneWa(''); setReceiptBusy('');
+  };
   // قائمة الأماكن المسطّحة (كل مدينة/قرية بندٌ مستقل بسعره) من الخادم، وإلا القائمة
   // الافتراضية. كل عنصر: { name, parent, region, fee }.
   const cityChoices = (localities && localities.length)
@@ -265,26 +287,80 @@ export default function CartDrawer() {
   };
   const removeCoupon = () => { setCoupon(null); setCouponInput(''); setCouponMsg(''); };
 
+  // ── خطواتُ الإتمام ───────────────────────────────────────────────────────────
+  // كلُّ خطوةٍ تحرسُ حقولَها: لا تُفتحُ التاليةُ وفي الحاليةِ نقص. الحقلُ الناقصُ
+  // يُعلَّمُ بإطارٍ أحمرَ ويُمرَّرُ إليه — فتعرفُ الزبونةُ *ما* ينقصُ لا أنّ شيئاً نقص.
+  const STEP_FIELDS = { 1: ['name', 'phone'], 2: ['city'], 3: ['email'] };
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cardEmail.trim());
+  const badFieldsFor = (s) => {
+    const bad = {};
+    if (s >= 1) {
+      if (!cust.name.trim()) bad.name = true;
+      if (!isValidMobile(cust.phone)) bad.phone = true;
+    }
+    if (s >= 2 && !cust.city && !cust.area) bad.city = true;
+    // البوّابةُ تربطُ الدفعةَ ببريدٍ وترسلُ إليه الإيصال. بلا بريدٍ صالحٍ كان
+    // الخادمُ يضعُ عنواناً وهميّاً، فتدفعُ الزبونةُ ولا يصلُها إثباتُ دفعها.
+    if (s >= 3 && payMethod === 'card' && !emailOk) bad.email = true;
+    return bad;
+  };
+  // تُظهرُ الخطأَ وتُمرّرُ لأوّلِ حقلٍ ناقص. تُرجعُ true إن كان كلُّ شيءٍ سليماً.
+  const guard = (s) => {
+    const bad = badFieldsFor(s);
+    const keys = Object.keys(bad);
+    if (!keys.length) { setInvalid({}); setErr(''); return true; }
+    setInvalid(bad);
+    // الرسالةُ تصفُ الناقصَ بهذه الخطوةِ وحدَها — «تعبئة الاسم والهاتف واختيار
+    // المدينة» على شاشةٍ لا مدينةَ فيها كانت تُربكُ أكثرَ ممّا تُرشد
+    setErr(
+      bad.email ? t('co.emailInvalid')
+        : (bad.name || bad.phone)
+          ? (bad.phone && !bad.name && cust.phone.trim() ? t('co.phoneInvalid') : t('co.requiredContact'))
+          : t('co.requiredCity')
+    );
+    const order = [...STEP_FIELDS[1], ...STEP_FIELDS[2], ...STEP_FIELDS[3]];
+    const first = order.find((k) => bad[k]);
+    // الحقلُ الناقصُ قد يكونُ بخطوةٍ سابقةٍ (رجعت وحذفت اسمَها) — نعودُ لخطوتِه أوّلاً
+    const owner = Number(Object.keys(STEP_FIELDS).find((k) => STEP_FIELDS[k].includes(first))) || 1;
+    if (owner < step) setStep(owner);
+    if (first) requestAnimationFrame(() => formRef.current?.querySelector(`[data-field="${first}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' }));
+    return false;
+  };
+  const goNext = () => { if (guard(step)) setStep((s) => Math.min(3, s + 1)); };
+  const goBack = () => { setErr(''); if (step > 1) setStep((s) => s - 1); else setView('cart'); };
+
+  // لقطةُ الطلبِ كما رأتها الزبونةُ لحظةَ التأكيد — منها تُبنى شهادةُ الشراءِ بعد
+  // تفريغِ السلّة، ومنها رسالةُ واتساب. تُؤخذُ قبل clear() لأنّ العناصرَ تزولُ بعده.
+  const orderSnapshot = (reference, method) => ({
+    reference,
+    createdAt: new Date().toISOString(),
+    storeName: storeInfo.name || items[0]?.storeName || '',
+    storeSlug: storeSlug,
+    storeWhatsapp: storeInfo.whatsapp || items[0]?.whatsapp || '',
+    customerName: cust.name,
+    customerPhone: normalizePhone(cust.phone),
+    city: cust.city,
+    area: cust.area,
+    address: cust.address,
+    notes: cust.notes,
+    eta,
+    items: items.map((i) => ({ name: i.name, size: i.size ? sizeLabel(i.size, t) : '', color: i.color || '', price: i.price, oldPrice: i.oldPrice, qty: i.qty })),
+    subtotal: total,
+    discount,
+    couponCode: coupon?.code || (refDiscount > 0 ? referral?.code : '') || '',
+    deliveryFee: delivery,
+    total: grand,
+    paymentMethod: method,
+  });
+
   // الدفع بالبطاقة عبر Paytabs — يحوّل الزبونة لصفحة الدفع الآمنة
   const payWithCard = async () => {
-    const bad = {};
-    if (!cust.name.trim()) bad.name = true;
-    if (!isValidMobile(cust.phone)) bad.phone = true;
-    if (!cust.city && !cust.area) bad.city = true;
-    if (Object.keys(bad).length) {
-      setInvalid(bad);
-      setErr(bad.phone && cust.phone.trim() && !bad.name && !bad.city ? t('co.phoneInvalid') : t('co.required'));
-      const first = ['name', 'phone', 'city'].find((k) => bad[k]);
-      if (first) requestAnimationFrame(() => formRef.current?.querySelector(`[data-field="${first}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' }));
-      return;
-    }
-    setInvalid({});
+    if (!guard(3)) return;
     if (cardBusy) return;
     setErr('');
     setCardBusy(true);
     saveCustomer(cust);
     try {
-      const activeCode = coupon?.code || '';
       const r = await api.post('/orders/checkout', {
         items: items.map((i) => ({ id: i.id, qty: i.qty, size: i.size, color: i.color })),
         customer: { name: cust.name, phone: normalizePhone(cust.phone), email: cardEmail, city: cust.city, area: cust.area, address: cust.address, notes: cust.notes },
@@ -304,26 +380,13 @@ export default function CartDrawer() {
   };
 
   const confirmOrder = async () => {
-    // تحقّق حقلي واضح: نميّز الحقل الناقص بإطار أحمر، ونتأكّد أن الهاتف أرقام كافية
-    const bad = {};
-    if (!cust.name.trim()) bad.name = true;
-    if (!isValidMobile(cust.phone)) bad.phone = true; // #3: لازم موبايل صحيح 05XXXXXXXX
-    if (!cust.city && !cust.area) bad.city = true; // المكان (مدينة أو قرية) مطلوب
-    if (Object.keys(bad).length) {
-      setInvalid(bad);
-      setErr(bad.phone && cust.phone.trim() && !bad.name && !bad.city ? t('co.phoneInvalid') : t('co.required'));
-      // #9: تمرير سلس لأول حقل ناقص كي تراه الزبونة فوراً
-      const first = ['name', 'phone', 'city'].find((k) => bad[k]);
-      if (first) requestAnimationFrame(() => formRef.current?.querySelector(`[data-field="${first}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' }));
-      return;
-    }
-    setInvalid({});
+    if (!guard(3)) return;
     if (placing) return;
     setErr('');
-    const wa = items[0]?.whatsapp || '';
-    const activeCode = coupon?.code || (refDiscount > 0 ? referral?.code : '') || '';
-    const waLink = buildWhatsappCheckout(wa, items, { ...cust, delivery, discount, couponCode: activeCode }, i18n.language);
-    // نفتح نافذة فارغة فوراً (ضمن لمسة المستخدم) كي لا تُحجب بعد الانتظار
+    const wa = storeInfo.whatsapp || items[0]?.whatsapp || '';
+    // نفتح نافذة فارغة فوراً (ضمن لمسة المستخدم) كي لا تُحجب بعد الانتظار.
+    // نوجّهها لواتساب *بعد* حفظِ الطلب كي تحملَ الرسالةُ رقمَه — فتقرأُ صاحبةُ
+    // المتجرِ الرقمَ نفسَه الذي تراه بلوحتِها بدل أن تبحثَ عن الطلبِ بالاسم.
     let waWin = null;
     try { waWin = window.open('', '_blank'); } catch { waWin = null; }
     setPlacing(true);
@@ -353,19 +416,48 @@ export default function CartDrawer() {
       }
       // ونكمل لواتساب على أيّ حال: الرسالةُ تحمل الطلب كاملاً.
     }
+    const snap = orderSnapshot(reference, 'cod');
+    const trackUrl = reference ? `${window.location.origin}/track${storeSlug ? `?store=${storeSlug}` : ''}` : '';
+    const waLink = buildWhatsappCheckout(wa, items, {
+      ...cust,
+      delivery,
+      discount,
+      couponCode: snap.couponCode,
+      reference,
+      storeName: snap.storeName,
+      eta,
+      payment: 'cod',
+      trackUrl,
+    }, i18n.language);
     setPlacing(false);
     setDoneStore(storeSlug); // نلتقط سلاِگ المتجر قبل تفريغ السلة كي يبقى التتبّع بهويته
+    setDoneOrder(snap);      // لقطةُ الشهادة — قبل أن تُفرَّغ السلّة
+    setDoneWa(waLink);       // احتياطُ الرسالةِ إن حجب المتصفّحُ النافذة
     clear();
+    // شاشة تأكيد النجاح: رقم الطلب + الشهادة + تتبّع — تُرسم قبل الانتقال لواتساب
+    // كي تجدَها الزبونةُ جاهزةً حين ترجعُ للتبويب.
+    setDoneRef(reference);
+    setView('done');
     // ثم نفتح واتساب (نوجّه النافذة المفتوحة، أو ننتقل إن تعذّر فتحها)
     if (waWin && !waWin.closed) {
       try { waWin.location.href = waLink; } catch { window.location.href = waLink; }
     } else {
       window.location.href = waLink;
     }
-    // شاشة تأكيد النجاح: رقم الطلب + تتبّع — بدل ما كانت السلة تختفي بصمت
-    // والزبونة لا تعرف رقم طلبها ولا أن الطلب انحفظ فعلاً
-    setDoneRef(reference);
-    setView('done');
+  };
+
+  // حفظُ شهادةِ الشراء — صورةً أو طباعةً (ومنها PDF بحوارِ الطباعة)
+  const takeReceipt = async (kind) => {
+    if (!doneOrder || receiptBusy) return;
+    setReceiptBusy(kind);
+    try {
+      if (kind === 'print') printReceipt(doneOrder, t, ar ? 'rtl' : 'ltr');
+      else await saveReceiptImage(doneOrder, t, ar ? 'rtl' : 'ltr');
+    } catch {
+      setErr(t('receipt.failed'));
+    } finally {
+      setReceiptBusy('');
+    }
   };
 
   return (
@@ -380,7 +472,9 @@ export default function CartDrawer() {
         <div className="flex items-center justify-between border-b border-gold-400/15 p-4">
           <h2 className="flex items-center gap-2 font-display text-xl font-bold gradient-text">
             {view === 'checkout' && (
-              <button onClick={() => setView('cart')} aria-label={t('co.back')} className="flex h-8 w-8 items-center justify-center rounded-full bg-cream/10 text-cream/80 transition hover:bg-cream/20 hover:text-cream">
+              /* السهمُ يرجعُ خطوةً واحدةً لا للسلّةِ دفعةً — الرجوعُ الكاملُ كان
+                 يُضيّعُ ما مُلئ ويجبرُ الزبونةَ على المرورِ بالخطواتِ من جديد */
+              <button onClick={goBack} aria-label={step > 1 ? t('co.stepBack') : t('co.back')} className="flex h-8 w-8 items-center justify-center rounded-full bg-gold-400/10 text-gold-200 transition hover:bg-gold-400/20">
                 <BackIcon className="h-4 w-4" />
               </button>
             )}
@@ -401,47 +495,94 @@ export default function CartDrawer() {
              وتعرض زرَّ تتبّعٍ لن يجد شيئاً — والسلّة فُرِّغت فلا سبيل للإعادة.
              فتظنّ الزبونة أنّ طلبها مسجّل، ولا تراه صاحبةُ المتجر بلوحتها.
              الآن: نجاحٌ حين يُسجَّل، وصدقٌ حين لا يُسجَّل. */
-          <div className="animate-fade-up flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
-            {doneRef ? (
-              <span className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/15 ring-2 ring-emerald-400/40">
-                <CheckIcon className="h-10 w-10 text-emerald-300" />
-              </span>
-            ) : (
-              <span className="bz-tone-amber flex h-20 w-20 items-center justify-center rounded-full">
-                <WhatsAppIcon className="h-10 w-10" />
-              </span>
-            )}
-            <p className="text-sm leading-relaxed text-stone-300">{doneRef ? t('co.doneMsg') : t('co.donePartialMsg')}</p>
-            {doneRef && (
-              <button
-                type="button"
-                onClick={() => { try { navigator.clipboard.writeText(doneRef); setRefCopied(true); setTimeout(() => setRefCopied(false), 1600); } catch { /* تجاهل */ } }}
-                className="group rounded-2xl bg-gold-400/10 px-6 py-2.5 ring-1 ring-gold-400/30 transition hover:bg-gold-400/15"
-                title={t('co.doneCopy')}
-              >
-                <span className="text-xs text-stone-400">{t('co.doneRef')}</span>
-                <p dir="ltr" className="flex items-center justify-center gap-1.5 font-mono text-lg font-bold tracking-wide text-gold-200">
-                  {doneRef}
-                  {refCopied
-                    ? <CheckIcon className="h-4 w-4 text-emerald-300" />
-                    : <CopyIcon className="h-4 w-4 text-gold-200/60 transition group-hover:text-gold-200" />}
-                </p>
-                <span className="text-[10px] text-stone-500">{refCopied ? t('co.doneCopied') : t('co.doneCopy')}</span>
-              </button>
-            )}
-            <div className="mt-2 flex w-full flex-col gap-2">
+          <div className="animate-fade-up flex min-h-0 flex-1 flex-col overflow-y-auto p-6 text-center">
+            <div className="flex flex-1 flex-col items-center justify-center gap-4">
+              {doneRef ? (
+                /* خَتْمٌ لا علامةُ صحٍّ عارية: هالتان ذهبيّتان حول دائرةٍ خضراء —
+                   لحظةُ الشراءِ تستحقُّ أن تبدوَ لحظةً لا إشعاراً */
+                <span className="relative flex h-24 w-24 items-center justify-center">
+                  <span className="absolute inset-0 rounded-full bg-emerald-500/10" />
+                  <span className="absolute inset-2 rounded-full bg-emerald-500/15 ring-1 ring-gold-400/30" />
+                  <span className="relative flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/20 ring-2 ring-emerald-400/50">
+                    <CheckIcon className="h-8 w-8 text-emerald-300" />
+                  </span>
+                </span>
+              ) : (
+                <span className="bz-tone-amber flex h-20 w-20 items-center justify-center rounded-full">
+                  <WhatsAppIcon className="h-10 w-10" />
+                </span>
+              )}
+              <p className="max-w-xs text-sm leading-relaxed text-stone-300">{doneRef ? t('co.doneMsg') : t('co.donePartialMsg')}</p>
+
+              {doneRef && (
+                <button
+                  type="button"
+                  onClick={() => { try { navigator.clipboard.writeText(doneRef); setRefCopied(true); setTimeout(() => setRefCopied(false), 1600); } catch { /* تجاهل */ } }}
+                  className="group w-full rounded-2xl bg-gold-400/10 px-6 py-3 ring-1 ring-gold-400/30 transition hover:bg-gold-400/15"
+                  title={t('co.doneCopy')}
+                >
+                  <span className="text-xs text-stone-400">{t('co.doneRef')}</span>
+                  <p dir="ltr" className="flex items-center justify-center gap-1.5 font-mono text-lg font-bold tracking-wide text-gold-200">
+                    {doneRef}
+                    {refCopied
+                      ? <CheckIcon className="h-4 w-4 text-emerald-300" />
+                      : <CopyIcon className="h-4 w-4 text-gold-200/60 transition group-hover:text-gold-200" />}
+                  </p>
+                  <span className="text-[10px] text-stone-500">{refCopied ? t('co.doneCopied') : t('co.doneCopy')}</span>
+                </button>
+              )}
+
+              {/* شهادةُ الشراء: ورقةُ الزبونةِ التي تُثبتُ ما طلبته وما دفعت —
+                  صورةً تُرسَلُ بواتساب، أو طباعةً يخرجُ منها PDF */}
+              {doneOrder && doneRef && (
+                <div className="w-full rounded-2xl border border-gold-400/20 bg-gold-400/[0.06] p-3.5 text-start">
+                  <p className="mb-1 flex items-center gap-1.5 text-sm font-bold text-gold-200">
+                    <ReceiptIcon className="h-4 w-4 shrink-0" /> {t('receipt.title')}
+                  </p>
+                  <p className="mb-2.5 text-[11px] leading-relaxed text-stone-400">{t('receipt.hint')}</p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button" onClick={() => takeReceipt('image')} disabled={Boolean(receiptBusy)}
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-gold-400/15 py-2.5 text-xs font-bold text-gold-200 ring-1 ring-gold-400/30 transition hover:bg-gold-400/25 disabled:opacity-50"
+                    >
+                      <DownloadIcon className="h-4 w-4 shrink-0" />
+                      {receiptBusy === 'image' ? t('common.loading') : t('receipt.saveImage')}
+                    </button>
+                    <button
+                      type="button" onClick={() => takeReceipt('print')} disabled={Boolean(receiptBusy)}
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-gold-400/25 py-2.5 text-xs font-bold text-stone-300 transition hover:bg-gold-400/10 disabled:opacity-50"
+                    >
+                      <PrintIcon className="h-4 w-4 shrink-0" /> {t('receipt.print')}
+                    </button>
+                  </div>
+                </div>
+              )}
+              {err && <p className="text-xs text-red-300">{err}</p>}
+            </div>
+
+            <div className="mt-4 flex w-full flex-col gap-2">
               {/* بلا رقمٍ لا تتبّع: الصفحة تبحث بالمرجع فلا تجد شيئاً */}
               {doneRef && (
               <Link
                 to={doneStore ? `/track?store=${doneStore}` : '/track'}
                 onClick={close}
-                className="w-full rounded-full py-3.5 text-center font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
+                className="flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-center font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
                 style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
               >
-                {t('co.doneTrack')}
+                <TruckIcon className="h-5 w-5 shrink-0" /> {t('co.doneTrack')}
               </Link>
               )}
-              <button onClick={close} className="w-full rounded-full border border-cream/20 py-3 font-semibold text-cream/80 transition hover:bg-cream/10">
+              {/* نافذةُ واتساب قد يحجبُها المتصفّحُ (مانعُ النوافذ) فتظنُّ الزبونةُ
+                  أنّ الرسالةَ ذهبت وهي لم تُفتَح — الرابطُ هنا يُعيدُ فتحَها بضغطة */}
+              {doneWa && (
+                <a
+                  href={doneWa} target="_blank" rel="noopener noreferrer"
+                  className="btn-whatsapp w-full !rounded-full !py-3"
+                >
+                  <WhatsAppIcon className="h-5 w-5 shrink-0" /> {t('co.doneWhatsapp')}
+                </a>
+              )}
+              <button onClick={close} className="w-full rounded-full border border-gold-400/25 py-3 font-semibold text-stone-300 transition hover:bg-gold-400/10">
                 {t('co.doneKeepShopping')}
               </button>
             </div>
@@ -553,192 +694,353 @@ export default function CartDrawer() {
               </motion.div>
             ) : (
               <motion.div key="checkout" initial={{ opacity: 0, x: ar ? -16 : 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: ar ? 16 : -16 }} transition={{ duration: 0.2 }} className="flex min-h-0 flex-1 flex-col">
-                <div ref={formRef} className="flex-1 space-y-4 overflow-y-auto p-4">
-                  {/* بيانات التوصيل */}
-                  <div>
-                    <h3 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-gold-200"><PinIcon className="h-4 w-4" /> {t('co.customer')}</h3>
-                    <div className="space-y-2.5">
-                      {/* autocomplete: الجوال يقترح الاسم/الهاتف/العنوان المحفوظين — تعبئة أسرع = إتمام أكثر */}
-                      <input ref={nameRef} data-field="name" className={`input !rounded-2xl ${invalid.name ? 'ring-1 ring-red-400/70' : ''}`} autoComplete="name" placeholder={t('co.name')} value={cust.name} onChange={(e) => { setCust({ ...cust, name: e.target.value }); if (invalid.name) setInvalid((v) => ({ ...v, name: false })); }} />
-                      {/* #3: تحقّق فوري لرقم الموبايل — علامة صح خضراء لمّا يصحّ، وتلميح لمّا يكون ناقصاً */}
-                      <div data-field="phone">
-                        {/* dir="ltr" على الحاوية نفسها (مش الحقل لحاله) — الرقم بيتّجه يسار-يمين
-                            دايماً، فلازم "end-3" تتحسب بنفس الاتجاه حتى ما تتراكب علامة الصح فوق
-                            أول رقم (الصفر) لما تنعكس start/end بصفحة عربية RTL */}
-                        <div className="relative" dir="ltr">
-                          {/* sanitizeMobileInput + maxLength: أرقام فقط، يقصّ المقدّمات الدوليّة
-                              (00970/00972/+972) ويقف عند ١٠ خانات — أوبتيموس يرفض غير هيك */}
-                          <input
-                            className={`input !rounded-2xl pe-9 ${invalid.phone ? 'ring-1 ring-red-400/70' : phoneOk ? 'ring-1 ring-emerald-400/60' : ''}`}
-                            inputMode="numeric" autoComplete="tel" maxLength={10} required
-                            aria-invalid={cust.phone.trim() && !phoneOk ? 'true' : 'false'}
-                            placeholder={t('co.phonePlaceholder')} value={cust.phone}
-                            onChange={(e) => { setCust({ ...cust, phone: sanitizeMobileInput(e.target.value) }); if (invalid.phone) setInvalid((v) => ({ ...v, phone: false })); }}
-                          />
-                          {phoneOk && <CheckIcon className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-400" />}
-                        </div>
-                        {/* التلميح ظاهر دايماً قبل ما يصحّ الرقم: مطلوب، يبدأ بـ 05، و١٠ أرقام */}
-                        {!phoneOk && (
-                          <p className={`mt-1 text-xs ${invalid.phone || cust.phone.trim() ? 'text-red-300' : 'text-white/50'}`}>
-                            {t('co.phoneExample')}
-                          </p>
-                        )}
-                      </div>
-                      {/* المكان: قائمة مسطّحة — كل مدينة وقرية بندٌ مستقل بسعره (بلا تجميع).
-                          اختيار قرية يضبط محافظتها (parent) داخلياً لإرسال دقيق لشركة التوصيل */}
-                      <div data-field="city">
-                        <CitySearch
-                          value={cust.area || cust.city}
-                          options={cityChoices}
-                          invalid={invalid.city}
-                          onClear={() => setCust((p) => ({ ...p, city: '', area: '' }))}
-                          onText={(txt) => { setCust((p) => ({ ...p, city: txt, area: '' })); if (invalid.city) setInvalid((p) => ({ ...p, city: false })); }}
-                          onPick={(name, fee, opt) => {
-                            const parent = opt?.parent || name;
-                            // القرية تروح لحقل area والمحافظة لحقل city (يطابق city/area بأوبتيموس)
-                            setCust((p) => ({ ...p, city: parent, area: parent === name ? '' : name }));
-                            setInvalid((p) => ({ ...p, city: false }));
-                          }}
-                        />
-                        {/* #1: مدة التوصيل المتوقعة تحت المكان المختار — يقلّل التردّد */}
-                        {eta && (
-                          <p className="mt-1 flex items-center gap-1 text-xs font-medium text-emerald-300">
-                            <TruckIcon className="h-3.5 w-3.5 shrink-0" /> {eta}
-                          </p>
-                        )}
-                      </div>
-                      <input className="input !rounded-2xl" autoComplete="street-address" placeholder={t('co.address')} value={cust.address} onChange={(e) => setCust({ ...cust, address: e.target.value })} />
-                      <textarea className="input !rounded-2xl" rows={2} placeholder={t('co.notes')} value={cust.notes} onChange={(e) => setCust({ ...cust, notes: e.target.value })} />
-                    </div>
-                  </div>
-
-                  {/* خصم الإحالة التلقائي (إن وصلت عبر رابط إحالة ولم تستخدم كوبوناً) */}
-                  {!coupon && refDiscount > 0 && (
-                    <div className="flex items-center gap-1.5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 px-3.5 py-2.5 text-sm font-semibold text-emerald-300">
-                      <GiftIcon className="h-4 w-4 shrink-0" /> {referral?.referrerName
-                        ? t('referral.welcomeFrom', { name: referral.referrerName, percent: referral.percent })
-                        : t('referral.welcome', { percent: referral.percent })}
-                    </div>
-                  )}
-
-                  {/* خصم الولاء التلقائي — مكافأة الزبون الدائم (كل N طلبات) */}
-                  {loyaltyDiscount > 0 && (
-                    <div className="flex items-center gap-1.5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 px-3.5 py-2.5 text-sm font-semibold text-emerald-300">
-                      <GiftIcon className="h-4 w-4 shrink-0" /> {t('loyalty.banner', { percent: loyalty.percent })}
-                    </div>
-                  )}
-
-                  {/* كوبون الخصم */}
-                  <div>
-                    <h3 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-gold-200"><TicketIcon className="h-4 w-4" /> {t('coupon.title')}</h3>
-                    {coupon ? (
-                      <div className="flex items-center justify-between rounded-2xl border border-emerald-500/30 bg-emerald-500/5 px-3.5 py-2.5">
-                        <span className="flex items-center gap-1 text-sm font-semibold text-emerald-300"><CheckIcon className="h-4 w-4" /> {coupon.code} — −{t('common.currency')}{discount.toFixed(2)}</span>
-                        <button onClick={removeCoupon} className="text-xs text-stone-400 hover:text-red-400">{t('coupon.remove')}</button>
-                      </div>
-                    ) : (
-                      <div className="flex gap-2">
-                        <input
-                          className="input !rounded-2xl flex-1 uppercase"
-                          placeholder={t('coupon.placeholder')}
-                          value={couponInput}
-                          onChange={(e) => setCouponInput(e.target.value)}
-                          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); } }}
-                        />
-                        <button onClick={applyCoupon} disabled={couponBusy || !couponInput.trim()} className="shrink-0 rounded-2xl bg-wine px-4 text-sm font-bold text-cream transition hover:bg-wine-dark disabled:opacity-40">
-                          {couponBusy ? '…' : t('coupon.apply')}
+                {/* شريطُ الخطوات: ثلاثُ محطّاتٍ بخيطٍ ذهبيٍّ يمتلئُ خلفَها. الخطوةُ
+                    المنتهيةُ تُختَمُ بعلامةِ صحٍّ ويُمكنُ الرجوعُ إليها بضغطة —
+                    فتعرفُ الزبونةُ أينَ هي وكم بقي، وتُصحّحُ بلا أن تبدأَ من جديد */}
+                <div className="border-b border-gold-400/15 px-5 pb-3 pt-3.5">
+                  <div className="relative flex items-start justify-between">
+                    <div className="absolute inset-x-0 top-3.5 h-0.5 -translate-y-1/2 bg-gold-400/15" aria-hidden="true" />
+                    <div
+                      className="absolute top-3.5 h-0.5 -translate-y-1/2 bz-progress transition-all duration-500"
+                      style={{ [ar ? 'right' : 'left']: 0, width: `${((step - 1) / 2) * 100}%` }}
+                      aria-hidden="true"
+                    />
+                    {[
+                      { n: 1, label: t('co.step1'), Icon: UserIcon },
+                      { n: 2, label: t('co.step2'), Icon: TruckIcon },
+                      { n: 3, label: t('co.step3'), Icon: CashIcon },
+                    ].map(({ n, label, Icon }) => {
+                      const done = step > n;
+                      const active = step === n;
+                      return (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => { if (n < step) { setErr(''); setStep(n); } }}
+                          disabled={n >= step}
+                          aria-current={active ? 'step' : undefined}
+                          className="relative z-10 flex w-1/3 flex-col items-center gap-1 disabled:cursor-default"
+                        >
+                          <span className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-bold ring-1 transition ${
+                            done ? 'bg-emerald-500/20 text-emerald-300 ring-emerald-400/40'
+                              : active ? 'bg-gold-400/20 text-gold-200 ring-gold-400/50'
+                              : 'bg-ink-900 text-stone-500 ring-gold-400/20'}`}
+                          >
+                            {done ? <CheckIcon className="h-3.5 w-3.5" /> : <Icon className="h-3.5 w-3.5" />}
+                          </span>
+                          <span className={`text-[10px] font-semibold leading-tight ${active ? 'text-gold-200' : done ? 'text-stone-300' : 'text-stone-500'}`}>{label}</span>
                         </button>
-                      </div>
-                    )}
-                    {couponMsg && <p className="mt-1.5 text-xs font-medium text-red-300">{couponMsg}</p>}
+                      );
+                    })}
                   </div>
+                </div>
 
-                  {/* ملخّص الطلب */}
-                  <div className="glass p-3.5">
-                    <h3 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-gold-200"><ReceiptIcon className="h-4 w-4" /> {t('co.summary')}</h3>
-                    <div className="space-y-1.5 text-sm">
-                      {items.map((i) => (
-                        <div key={i.key} className="flex items-center justify-between text-stone-300">
-                          <span className="truncate pe-2">{i.name}{i.size ? ` (${sizeLabel(i.size, t)})` : ''}{i.color ? ` - ${i.color}` : ''} ×{i.qty}</span>
-                          <span className="shrink-0">{t('common.currency')}{(i.price * i.qty).toFixed(2)}</span>
+                {/* الخطواتُ تنزلقُ ولا تذوب: حركةُ framer-motion محكومةٌ بـrAF،
+                    وهو يتوقّفُ ما دام التبويبُ مخفيّاً أو موفّراً للطاقة. لو بدأت
+                    الخطوةُ بشفافيّةِ صفرٍ ولم تعمل الحركة، بقيت الاستمارةُ بيضاءَ
+                    فارغةً. الانزلاقُ وحدَه أسوأُ ما يفعلُه أن يتركَها مزاحةً ١٠ بكسل. */}
+                <div ref={formRef} className="flex-1 space-y-4 overflow-y-auto p-4">
+                  {/* ═══ الخطوة ١: بياناتُ الزبونة ═══ */}
+                  {step === 1 && (
+                    <motion.div initial={{ y: 10 }} animate={{ y: 0 }} transition={{ duration: 0.22 }} className="space-y-4">
+                      <div className="glass p-4">
+                        <h3 className="mb-1 flex items-center gap-1.5 text-sm font-bold text-gold-200"><UserIcon className="h-4 w-4 shrink-0" /> {t('co.step1Title')}</h3>
+                        <p className="mb-3 text-[11px] leading-relaxed text-stone-400">{t('co.step1Hint')}</p>
+                        <div className="space-y-3">
+                          {/* autocomplete: الجوال يقترح الاسم/الهاتف المحفوظين — تعبئة أسرع = إتمام أكثر */}
+                          <div data-field="name">
+                            <label htmlFor="bz-co-name" className="mb-1 block text-[11px] font-bold text-stone-300">{t('co.name')}</label>
+                            <input id="bz-co-name" ref={nameRef} className={`input !rounded-2xl ${invalid.name ? 'ring-1 ring-red-400/70' : ''}`} autoComplete="name" placeholder={t('co.namePlaceholder')} value={cust.name} onChange={(e) => { setCust({ ...cust, name: e.target.value }); if (invalid.name) setInvalid((v) => ({ ...v, name: false })); }} />
+                          </div>
+                          {/* #3: تحقّق فوري لرقم الموبايل — علامة صح خضراء لمّا يصحّ، وتلميح لمّا يكون ناقصاً */}
+                          <div data-field="phone">
+                            {/* العنوانُ فوقَ الحقلِ لا داخلَه: الحقلُ مقلوبٌ لليسار (الرقمُ لاتينيّ)
+                                فنصٌّ عربيٌّ بداخلِه كان ينقلبُ ترتيبُه — «XXXXXXXX رقم الموبايل · 05» */}
+                            <label htmlFor="bz-co-phone" className="mb-1 block text-[11px] font-bold text-stone-300">{t('co.phone')}</label>
+                            {/* dir="ltr" على الحاوية نفسها (مش الحقل لحاله) — الرقم بيتّجه يسار-يمين
+                                دايماً، فلازم "end-3" تتحسب بنفس الاتجاه حتى ما تتراكب علامة الصح فوق
+                                أول رقم (الصفر) لما تنعكس start/end بصفحة عربية RTL */}
+                            <div className="relative" dir="ltr">
+                              {/* sanitizeMobileInput + maxLength: أرقام فقط، يقصّ المقدّمات الدوليّة
+                                  (00970/00972/+972) ويقف عند ١٠ خانات — أوبتيموس يرفض غير هيك */}
+                              <input
+                                id="bz-co-phone"
+                                className={`input !rounded-2xl pe-9 ${invalid.phone ? 'ring-1 ring-red-400/70' : phoneOk ? 'ring-1 ring-emerald-400/60' : ''}`}
+                                inputMode="numeric" autoComplete="tel" maxLength={10} required
+                                aria-invalid={cust.phone.trim() && !phoneOk ? 'true' : 'false'}
+                                placeholder="05XXXXXXXX" value={cust.phone}
+                                onChange={(e) => { setCust({ ...cust, phone: sanitizeMobileInput(e.target.value) }); if (invalid.phone) setInvalid((v) => ({ ...v, phone: false })); }}
+                                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); goNext(); } }}
+                              />
+                              {phoneOk && <CheckIcon className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-400" />}
+                            </div>
+                            {/* التلميح ظاهر دايماً قبل ما يصحّ الرقم: مطلوب، يبدأ بـ 05، و١٠ أرقام */}
+                            {!phoneOk && (
+                              <p className={`mt-1 text-xs ${invalid.phone || cust.phone.trim() ? 'text-red-300' : 'text-stone-400'}`}>
+                                {t('co.phoneExample')}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      ))}
-                      <div className="my-2 h-px bg-wine/10" />
-                      <div className="flex justify-between text-stone-400"><span>{t('co.subtotal')}</span><span>{t('common.currency')}{total.toFixed(2)}</span></div>
-                      {(() => {
-                        const saved = items.reduce((s, i) => s + (i.oldPrice && i.oldPrice > i.price ? (i.oldPrice - i.price) * i.qty : 0), 0);
-                        return saved > 0 ? (
-                          <div className="flex justify-between font-semibold text-emerald-300"><span>{t('cart.saved')}</span><span>{t('common.currency')}{saved.toFixed(2)}</span></div>
-                        ) : null;
-                      })()}
-                      {discount > 0 && (
-                        <div className="flex justify-between text-emerald-300">
-                          <span>{coupon ? `${t('coupon.discount')} (${coupon.code})` : flashDiscount > 0 ? t('store.flashDiscountLine') : refDiscount > 0 ? t('referral.discountLine') : t('loyalty.discountLine')}</span>
-                          <span>−{t('common.currency')}{discount.toFixed(2)}</span>
+                      </div>
+                      {/* لمحةُ السلّة بالخطوةِ الأولى: ما تشتريه وكم — فلا تُدخلُ بياناتِها
+                          وهي لا ترى ما تدفعُ ثمنَه */}
+                      <div className="flex items-center justify-between rounded-2xl border border-gold-400/15 bg-black/20 px-4 py-3">
+                        <span className="flex items-center gap-2 text-sm text-stone-300">
+                          <BagIcon className="h-4 w-4 shrink-0 text-gold-200" /> {t('receipt.pieces', { count: items.reduce((s, i) => s + i.qty, 0) })}
+                        </span>
+                        <span className="font-display font-bold text-gold-200">{t('common.currency')}{total.toFixed(2)}</span>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* ═══ الخطوة ٢: مكانُ التوصيل ═══ */}
+                  {step === 2 && (
+                    <motion.div initial={{ y: 10 }} animate={{ y: 0 }} transition={{ duration: 0.22 }} className="space-y-4">
+                      <div className="glass p-4">
+                        <h3 className="mb-1 flex items-center gap-1.5 text-sm font-bold text-gold-200"><PinIcon className="h-4 w-4 shrink-0" /> {t('co.customer')}</h3>
+                        <p className="mb-3 text-[11px] leading-relaxed text-stone-400">{t('co.step2Hint')}</p>
+                        <div className="space-y-3">
+                          {/* المكان: قائمة مسطّحة — كل مدينة وقرية بندٌ مستقل بسعره (بلا تجميع).
+                              اختيار قرية يضبط محافظتها (parent) داخلياً لإرسال دقيق لشركة التوصيل */}
+                          <div data-field="city">
+                            <span className="mb-1 block text-[11px] font-bold text-stone-300">{t('co.city')}</span>
+                            <CitySearch
+                              value={cust.area || cust.city}
+                              options={cityChoices}
+                              invalid={invalid.city}
+                              onClear={() => setCust((p) => ({ ...p, city: '', area: '' }))}
+                              onText={(txt) => { setCust((p) => ({ ...p, city: txt, area: '' })); if (invalid.city) setInvalid((p) => ({ ...p, city: false })); }}
+                              onPick={(name, fee, opt) => {
+                                const parent = opt?.parent || name;
+                                // القرية تروح لحقل area والمحافظة لحقل city (يطابق city/area بأوبتيموس)
+                                setCust((p) => ({ ...p, city: parent, area: parent === name ? '' : name }));
+                                setInvalid((p) => ({ ...p, city: false }));
+                              }}
+                            />
+                          </div>
+                          <div>
+                            <label htmlFor="bz-co-address" className="mb-1 block text-[11px] font-bold text-stone-300">{t('co.addressLabel')}</label>
+                            <input id="bz-co-address" className="input !rounded-2xl" autoComplete="street-address" placeholder={t('co.addressHint')} value={cust.address} onChange={(e) => setCust({ ...cust, address: e.target.value })} />
+                          </div>
+                          <div>
+                            <label htmlFor="bz-co-notes" className="mb-1 block text-[11px] font-bold text-stone-300">{t('co.notes')}</label>
+                            <textarea id="bz-co-notes" className="input !rounded-2xl" rows={2} placeholder={t('co.notesHint')} value={cust.notes} onChange={(e) => setCust({ ...cust, notes: e.target.value })} />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* أجرةُ المكانِ ومدّتُه فورَ اختيارِه — لا مفاجأةَ بآخرِ خطوة */}
+                      {pickedLoc && (
+                        <div className="rounded-2xl border border-gold-400/20 bg-gold-400/[0.06] p-3.5">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="flex items-center gap-1.5 font-semibold text-gold-200"><TruckIcon className="h-4 w-4 shrink-0" /> {t('co.delivery')}</span>
+                            {freeShip
+                              ? <span className="inline-flex items-center gap-1 font-bold text-emerald-300">{t('co.freeShipping')} <PartyIcon className="h-4 w-4 shrink-0" /></span>
+                              : <span className="font-bold text-stone-200">{t('common.currency')}{delivery.toFixed(2)}</span>}
+                          </div>
+                          {/* #1: مدة التوصيل المتوقعة حسب شريحة المكان — يقلّل التردّد */}
+                          {eta && <p className="mt-1.5 text-xs font-medium text-emerald-300">{eta}</p>}
                         </div>
                       )}
-                      <div className="flex justify-between text-stone-400">
-                        <span>{t('co.delivery')}</span>
-                        {freeShip
-                          ? <span className="inline-flex items-center gap-1 font-bold text-emerald-300">{t('co.freeShipping')} <PartyIcon className="h-4 w-4" /></span>
-                          : <span>{t('common.currency')}{delivery.toFixed(2)}</span>}
+
+                      {/* تحفيز الشحن المجاني: كم باقي + شريط تقدّم ذهبي */}
+                      {freeOver > 0 && !freeShip && (
+                        <div className="rounded-2xl bg-gold-400/10 px-3.5 py-3">
+                          <p className="flex items-center justify-center gap-1.5 text-center text-xs font-semibold text-gold-200">
+                            <TruckIcon className="h-4 w-4 shrink-0" /> {t('co.freeShippingHint', { amount: (freeOver - afterDiscount).toFixed(2) })}
+                          </p>
+                          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10">
+                            <div className="h-full rounded-full bz-progress transition-all duration-500" style={{ width: `${Math.min(100, Math.round((afterDiscount / freeOver) * 100))}%` }} />
+                          </div>
+                        </div>
+                      )}
+                      <p className="text-[11px] text-stone-400">* {t('co.deliveryNote')}</p>
+                    </motion.div>
+                  )}
+
+                  {/* ═══ الخطوة ٣: الدفعُ والمراجعة ═══ */}
+                  {step === 3 && (
+                    <motion.div initial={{ y: 10 }} animate={{ y: 0 }} transition={{ duration: 0.22 }} className="space-y-4">
+                      {/* اختيارُ طريقةِ الدفع — بطاقتان لا زرّان متلاصقان بالأسفل.
+                          الزرّان كانا يُنفّذان الطلبَ فورَ الضغط، فأيُّ ضغطةٍ بالخطأ
+                          طلبٌ مُرسَل. الآن: تُختارُ الطريقةُ أوّلاً، ويُؤكَّدُ بزرٍّ واحد */}
+                      <div>
+                        <h3 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-gold-200"><CardIcon className="h-4 w-4 shrink-0" /> {t('co.payMethod')}</h3>
+                        <div className="space-y-2">
+                          {[
+                            { id: 'cod', Icon: CashIcon, title: t('co.payCodTitle'), desc: t('co.payCodDesc'), show: true },
+                            { id: 'card', Icon: CardIcon, title: t('co.payCardTitle'), desc: t('co.payCardDesc'), show: cardEnabled },
+                          ].filter((o) => o.show).map(({ id, Icon, title, desc }) => {
+                            const on = payMethod === id;
+                            return (
+                              /* الحلقةُ والنقطةُ بلونٍ صريح (#b09a7e) لا بصنفِ شفافيّة:
+                                 كلُّ درجاتِ border-gold-400/* تُردُّ للونٍ واحدٍ بالوضعِ
+                                 النهاريّ، فالبطاقةُ المختارةُ كانت تُشبهُ غيرَ المختارة */
+                              <button
+                                key={id} type="button" onClick={() => { setPayMethod(id); setErr(''); }}
+                                aria-pressed={on}
+                                style={on ? { boxShadow: '0 0 0 2px #b09a7e' } : undefined}
+                                className={`flex w-full items-center gap-3 rounded-2xl border p-3.5 text-start transition ${
+                                  on ? 'border-transparent bg-gold-400/10' : 'border-gold-400/15 bg-black/20 hover:bg-gold-400/5'}`}
+                              >
+                                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${on ? 'bg-gold-400/20 text-gold-200' : 'bg-black/20 text-stone-400'}`}>
+                                  <Icon className="h-5 w-5" />
+                                </span>
+                                <span className="min-w-0 flex-1">
+                                  <span className={`block text-sm font-bold ${on ? 'text-gold-200' : 'text-stone-200'}`}>{title}</span>
+                                  <span className="block text-[11px] leading-snug text-stone-400">{desc}</span>
+                                </span>
+                                <span
+                                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition"
+                                  /* اللونُ على الحاوية: أيقوناتُنا ترسمُ بـcurrentColor ولا
+                                     تقبلُ style. وصحٌّ داكنٌ على الذهب لأنّ الأبيضَ
+                                     على ‎#b09a7e‎ تباينُه ٢٫٣ فقط. */
+                                  style={on ? { borderColor: '#b09a7e', background: '#b09a7e', color: '#3f2e22' } : { borderColor: 'rgba(138,127,114,0.6)' }}
+                                >
+                                  {on && <CheckIcon className="h-3 w-3" />}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {/* البريدُ مطلوبٌ للبطاقةِ وحدَها — يظهرُ حين تُختار، لا قبلها */}
+                        {payMethod === 'card' && (
+                          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="overflow-hidden">
+                            <input
+                              type="email" dir="ltr" data-field="email"
+                              className={`input !rounded-2xl mt-2 ${invalid.email ? 'ring-1 ring-red-400/70' : ''}`}
+                              autoComplete="email" placeholder={t('co.emailPlaceholder')}
+                              value={cardEmail}
+                              onChange={(e) => { setCardEmail(e.target.value); if (invalid.email) setInvalid((v) => ({ ...v, email: false })); }}
+                            />
+                            <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-stone-400">
+                              <LockIcon className="h-3.5 w-3.5 shrink-0" /> {t('co.cardHint')}
+                            </p>
+                          </motion.div>
+                        )}
                       </div>
-                      <div className="mt-1 flex justify-between font-bold text-gold-200"><span>{t('co.grandTotal')}</span><span className="font-display text-lg gradient-text">{t('common.currency')}{grand.toFixed(2)}</span></div>
-                    </div>
-                    {/* تحفيز للشحن المجاني: كم باقي + شريط تقدّم ذهبي */}
-                    {freeOver > 0 && !freeShip && (
-                      <div className="mt-2 rounded-xl bg-gold-400/10 px-3 py-2">
-                        <p className="flex items-center justify-center gap-1.5 text-center text-xs font-semibold text-gold-200">
-                          <TruckIcon className="h-4 w-4 shrink-0" /> {t('co.freeShippingHint', { amount: (freeOver - afterDiscount).toFixed(2) })}
-                        </p>
-                        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10">
-                          <div
-                            className="h-full rounded-full bz-progress transition-all duration-500"
-                            style={{ width: `${Math.min(100, Math.round((afterDiscount / freeOver) * 100))}%` }}
-                          />
+
+                      {/* خصم الإحالة التلقائي (إن وصلت عبر رابط إحالة ولم تستخدم كوبوناً) */}
+                      {!coupon && refDiscount > 0 && (
+                        <div className="flex items-center gap-1.5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 px-3.5 py-2.5 text-sm font-semibold text-emerald-300">
+                          <GiftIcon className="h-4 w-4 shrink-0" /> {referral?.referrerName
+                            ? t('referral.welcomeFrom', { name: referral.referrerName, percent: referral.percent })
+                            : t('referral.welcome', { percent: referral.percent })}
+                        </div>
+                      )}
+
+                      {/* خصم الولاء التلقائي — مكافأة الزبون الدائم (كل N طلبات) */}
+                      {loyaltyDiscount > 0 && (
+                        <div className="flex items-center gap-1.5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 px-3.5 py-2.5 text-sm font-semibold text-emerald-300">
+                          <GiftIcon className="h-4 w-4 shrink-0" /> {t('loyalty.banner', { percent: loyalty.percent })}
+                        </div>
+                      )}
+
+                      {/* كوبون الخصم */}
+                      <div>
+                        <h3 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-gold-200"><TicketIcon className="h-4 w-4 shrink-0" /> {t('coupon.title')}</h3>
+                        {coupon ? (
+                          <div className="flex items-center justify-between rounded-2xl border border-emerald-500/30 bg-emerald-500/5 px-3.5 py-2.5">
+                            <span className="flex items-center gap-1 text-sm font-semibold text-emerald-300"><CheckIcon className="h-4 w-4 shrink-0" /> {coupon.code} — −{t('common.currency')}{discount.toFixed(2)}</span>
+                            <button onClick={removeCoupon} className="text-xs text-stone-400 hover:text-red-300">{t('coupon.remove')}</button>
+                          </div>
+                        ) : (
+                          <div className="flex gap-2">
+                            <input
+                              className="input !rounded-2xl flex-1 uppercase"
+                              placeholder={t('coupon.placeholder')}
+                              value={couponInput}
+                              onChange={(e) => setCouponInput(e.target.value)}
+                              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); } }}
+                            />
+                            <button onClick={applyCoupon} disabled={couponBusy || !couponInput.trim()} className="shrink-0 rounded-2xl bg-wine px-4 text-sm font-bold text-cream transition hover:bg-wine-dark disabled:opacity-40">
+                              {couponBusy ? '…' : t('coupon.apply')}
+                            </button>
+                          </div>
+                        )}
+                        {couponMsg && <p className="mt-1.5 text-xs font-medium text-red-300">{couponMsg}</p>}
+                      </div>
+
+                      {/* ملخّص الطلب — المراجعةُ الأخيرةُ قبل الضغط */}
+                      <div className="glass p-3.5">
+                        <h3 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-gold-200"><ReceiptIcon className="h-4 w-4 shrink-0" /> {t('co.summary')}</h3>
+                        <div className="space-y-1.5 text-sm">
+                          {items.map((i) => (
+                            <div key={i.key} className="flex items-center justify-between text-stone-300">
+                              <span className="truncate pe-2">{i.name}{i.size ? ` (${sizeLabel(i.size, t)})` : ''}{i.color ? ` - ${i.color}` : ''} ×{i.qty}</span>
+                              <span className="shrink-0">{t('common.currency')}{(i.price * i.qty).toFixed(2)}</span>
+                            </div>
+                          ))}
+                          <div className="my-2 h-px bg-wine/10" />
+                          <div className="flex justify-between text-stone-400"><span>{t('co.subtotal')}</span><span>{t('common.currency')}{total.toFixed(2)}</span></div>
+                          {(() => {
+                            const saved = items.reduce((s, i) => s + (i.oldPrice && i.oldPrice > i.price ? (i.oldPrice - i.price) * i.qty : 0), 0);
+                            return saved > 0 ? (
+                              <div className="flex justify-between font-semibold text-emerald-300"><span>{t('cart.saved')}</span><span>{t('common.currency')}{saved.toFixed(2)}</span></div>
+                            ) : null;
+                          })()}
+                          {discount > 0 && (
+                            <div className="flex justify-between text-emerald-300">
+                              <span>{coupon ? `${t('coupon.discount')} (${coupon.code})` : flashDiscount > 0 ? t('store.flashDiscountLine') : refDiscount > 0 ? t('referral.discountLine') : t('loyalty.discountLine')}</span>
+                              <span>−{t('common.currency')}{discount.toFixed(2)}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between text-stone-400">
+                            <span>{t('co.delivery')}</span>
+                            {freeShip
+                              ? <span className="inline-flex items-center gap-1 font-bold text-emerald-300">{t('co.freeShipping')} <PartyIcon className="h-4 w-4 shrink-0" /></span>
+                              : <span>{t('common.currency')}{delivery.toFixed(2)}</span>}
+                          </div>
+                          <div className="mt-1 flex justify-between font-bold text-gold-200"><span>{t('co.grandTotal')}</span><span className="font-display text-lg gradient-text">{t('common.currency')}{grand.toFixed(2)}</span></div>
+                        </div>
+                        {/* إلى أين يذهبُ الطلبُ ولمن — مراجعةٌ سريعةٌ بلا رجوعٍ لخطوة */}
+                        <div className="mt-3 space-y-1 border-t border-gold-400/15 pt-2.5 text-[11px] leading-relaxed text-stone-400">
+                          <p className="flex items-center gap-1.5"><UserIcon className="h-3.5 w-3.5 shrink-0" /> {cust.name} · <span dir="ltr">{cust.phone}</span></p>
+                          <p className="flex items-center gap-1.5"><PinIcon className="h-3.5 w-3.5 shrink-0" /> {[cust.city, cust.area && cust.area !== cust.city ? cust.area : '', cust.address].filter(Boolean).join(' · ')}</p>
                         </div>
                       </div>
-                    )}
-                    <p className="mt-2 text-[11px] text-stone-400">* {t('co.deliveryNote')}</p>
-                  </div>
 
-                  {/* حقل البريد: يظهر فقط إن كان الدفع بالبطاقة مفعّلاً — ليربط الدفعة بزبون */}
-                  {cardEnabled && (
-                    <div>
-                      <h3 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-gold-200">💳 {t('co.cardSection')}</h3>
-                      <input
-                        type="email"
-                        dir="ltr"
-                        className="input !rounded-2xl"
-                        autoComplete="email"
-                        placeholder={t('co.emailPlaceholder')}
-                        value={cardEmail}
-                        onChange={(e) => setCardEmail(e.target.value)}
-                      />
-                    </div>
+                      {/* طمأنةٌ قبل الضغط: بياناتُها محميّة، ولا دفعَ قبل الاستلام */}
+                      <div className="flex items-start gap-2 rounded-2xl border border-gold-400/15 bg-black/20 px-3.5 py-3 text-[11px] leading-relaxed text-stone-400">
+                        <ShieldIcon className="mt-0.5 h-4 w-4 shrink-0 text-gold-200" />
+                        <span>{payMethod === 'card' ? t('co.trustCard') : t('co.trustCod')}</span>
+                      </div>
+                    </motion.div>
                   )}
                 </div>
 
+                {/* شريطُ الأسفلِ الثابت: زرٌّ واحدٌ يقودُ الخطوة — «التالي» ثم «تأكيد
+                    الطلب» بالمبلغِ مكتوباً عليه، فلا تضغطُ الزبونةُ وهي لا تعرفُ كم */}
                 <div className="border-t border-gold-400/15 p-4">
                   {err && <p className="mb-2 text-center text-xs text-red-300">{err}</p>}
-                  <div className="flex flex-col gap-2">
-                    {/* زر الدفع بالفيزا — يظهر فقط إن كان المتجر مفعّل الدفع بالبطاقة */}
-                    {cardEnabled && (
-                      <button
-                        onClick={payWithCard}
-                        disabled={cardBusy || placing}
-                        className="flex w-full items-center justify-center gap-2 rounded-full py-4 font-bold text-white transition hover:brightness-110 disabled:opacity-60"
-                        style={{ background: 'linear-gradient(135deg, #1a1a6c 0%, #1e3a5f 50%, #1e6a4f 100%)' }}
-                      >
-                        {cardBusy ? t('common.loading') : <><span>💳</span> {t('co.payCard')}</>}
-                      </button>
-                    )}
-                    {/* زر الدفع عند الاستلام (واتساب) */}
-                    <button onClick={confirmOrder} disabled={placing || cardBusy} className="btn-whatsapp w-full !rounded-full !py-4 disabled:opacity-60">
-                      {placing ? t('common.loading') : <span className="inline-flex items-center gap-2"><WhatsAppIcon className="h-5 w-5" /> {t('co.confirm')}</span>}
+                  {step < 3 ? (
+                    <button
+                      onClick={goNext}
+                      className="flex w-full items-center justify-center gap-1.5 rounded-full py-4 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
+                      style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)', boxShadow: '0 16px 34px -14px rgba(20, 13, 7, 0.65)' }}
+                    >
+                      {t('co.next')} <ForwardIcon className="h-4 w-4 shrink-0" />
                     </button>
-                  </div>
-                  {cardEnabled && <p className="mt-2 text-center text-[10px] text-stone-500">{t('co.cardHint')}</p>}
+                  ) : payMethod === 'card' ? (
+                    <button
+                      onClick={payWithCard}
+                      disabled={cardBusy || placing}
+                      className="flex w-full items-center justify-center gap-2 rounded-full py-4 font-bold text-white transition hover:brightness-110 disabled:opacity-60"
+                      style={{ background: 'linear-gradient(135deg, #1a1a6c 0%, #1e3a5f 50%, #1e6a4f 100%)' }}
+                    >
+                      {cardBusy ? t('common.loading') : <><CardIcon className="h-5 w-5 shrink-0" /> {t('co.confirmPay', { amount: `${t('common.currency')}${grand.toFixed(2)}` })}</>}
+                    </button>
+                  ) : (
+                    <button onClick={confirmOrder} disabled={placing || cardBusy} className="btn-whatsapp w-full !rounded-full !py-4 disabled:opacity-60">
+                      {placing ? t('common.loading') : <span className="inline-flex items-center gap-2"><WhatsAppIcon className="h-5 w-5 shrink-0" /> {t('co.confirmPay', { amount: `${t('common.currency')}${grand.toFixed(2)}` })}</span>}
+                    </button>
+                  )}
+                  {step === 3 && (
+                    <p className="mt-2 text-center text-[10px] text-stone-500">
+                      {payMethod === 'card' ? t('co.cardHint') : t('co.confirmHint')}
+                    </p>
+                  )}
                 </div>
               </motion.div>
             )}

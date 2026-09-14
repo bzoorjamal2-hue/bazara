@@ -783,15 +783,38 @@ export async function verify(req, res, next) {
   const { reference } = req.params;
   try {
     const orderRes = await query(
-      `SELECT o.*, s.lahza_subaccount FROM orders o
-         JOIN stores s ON s.id = o.store_id WHERE o.reference = $1`,
+      `SELECT o.*, s.lahza_subaccount, s.name AS store_name, s.slug AS store_slug, s.whatsapp AS store_whatsapp
+         FROM orders o JOIN stores s ON s.id = o.store_id WHERE o.reference = $1`,
       [reference]
     );
     const order = orderRes.rows[0];
     if (!order) return res.status(404).json({ error: 'الطلب غير موجود.' });
 
+    // لقطةُ الطلبِ ترجعُ مع نتيجةِ الدفع: صفحةُ العودةِ تبني منها شهادةَ الشراءِ
+    // فوراً، بلا سؤالٍ ثانٍ وبلا أن تعتمدَ على سلّةٍ فُرِّغت لحظةَ التحويلِ للبنك.
+    // المرجعُ عشوائيٌّ (٨٠ بت) ولا يحملُه إلّا صاحبُ الطلب، فهو مفتاحُ قراءته.
+    const snapshot = () => ({
+      reference: order.reference,
+      items: order.items,
+      total: Number(order.total),
+      deliveryFee: Number(order.delivery_fee || 0),
+      discount: Number(order.discount || 0),
+      couponCode: order.coupon_code || '',
+      customerName: order.customer_name || '',
+      customerPhone: order.customer_phone || '',
+      city: order.city || '',
+      area: order.area || '',
+      address: order.address || '',
+      notes: order.notes || '',
+      createdAt: order.created_at,
+      paymentMethod: order.payment_method || 'cod',
+      storeName: order.store_name || '',
+      storeSlug: order.store_slug || '',
+      storeWhatsapp: order.store_whatsapp || '',
+    });
+
     if (order.status === 'paid' || order.status === 'new') {
-      return res.json({ status: order.status === 'new' ? 'paid' : order.status, total: Number(order.total) });
+      return res.json({ status: order.status === 'new' ? 'paid' : order.status, total: Number(order.total), order: snapshot() });
     }
 
     // البوّابةُ تُعرَفُ من تسجيلِ المتجرِ لا من شكلِ المرجع: متجرٌ له حسابٌ فرعيٌّ
@@ -806,7 +829,7 @@ export async function verify(req, res, next) {
         await query("UPDATE orders SET status = 'new' WHERE reference = $1 AND status = 'pending'", [reference]);
         notifyOwnerNewOrder(order.store_id, { name: order.customer_name, phone: order.customer_phone, city: order.city, items: order.items, total: Number(order.total) }).catch(() => {});
         clearAbandoned(order.store_id, order.customer_phone);
-        return res.json({ status: 'paid', total: Number(order.total) });
+        return res.json({ status: 'paid', total: Number(order.total), order: snapshot() });
       }
       await query("UPDATE orders SET status = 'failed' WHERE reference = $1 AND status = 'pending'", [reference]);
       return res.json({ status: 'failed', total: Number(order.total) });
@@ -820,7 +843,7 @@ export async function verify(req, res, next) {
         await query("UPDATE orders SET status = 'new' WHERE reference = $1 AND status = 'pending'", [reference]);
         notifyOwnerNewOrder(order.store_id, { name: order.customer_name, phone: order.customer_phone, city: order.city, items: order.items, total: Number(order.total) }).catch(() => {});
         clearAbandoned(order.store_id, order.customer_phone);
-        return res.json({ status: 'paid', total: Number(order.total) });
+        return res.json({ status: 'paid', total: Number(order.total), order: snapshot() });
       }
       await query("UPDATE orders SET status = 'failed' WHERE reference = $1 AND status = 'pending'", [reference]);
       return res.json({ status: 'failed', total: Number(order.total) });
