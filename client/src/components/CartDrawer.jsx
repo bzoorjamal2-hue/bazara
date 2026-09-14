@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -384,11 +384,6 @@ export default function CartDrawer() {
     if (placing) return;
     setErr('');
     const wa = storeInfo.whatsapp || items[0]?.whatsapp || '';
-    // نفتح نافذة فارغة فوراً (ضمن لمسة المستخدم) كي لا تُحجب بعد الانتظار.
-    // نوجّهها لواتساب *بعد* حفظِ الطلب كي تحملَ الرسالةُ رقمَه — فتقرأُ صاحبةُ
-    // المتجرِ الرقمَ نفسَه الذي تراه بلوحتِها بدل أن تبحثَ عن الطلبِ بالاسم.
-    let waWin = null;
-    try { waWin = window.open('', '_blank'); } catch { waWin = null; }
     setPlacing(true);
     // نتذكّر بيانات الزبون محلياً — الطلب القادم يتعبّأ تلقائياً
     saveCustomer(cust);
@@ -414,7 +409,8 @@ export default function CartDrawer() {
       if (!(status >= 400 && status < 500)) {
         try { enqueue(payload); } catch { /* التخزين ممتلئ */ }
       }
-      // ونكمل لواتساب على أيّ حال: الرسالةُ تحمل الطلب كاملاً.
+      // ونُكمل لشاشة النجاح على أيّ حال: رسالةُ واتساب هناك تحملُ الطلبَ كاملاً
+      // فتصلُ صاحبةَ المتجرِ ولو لم يُسجَّل عندنا.
     }
     const snap = orderSnapshot(reference, 'cod');
     const trackUrl = reference ? `${window.location.origin}/track${storeSlug ? `?store=${storeSlug}` : ''}` : '';
@@ -432,18 +428,16 @@ export default function CartDrawer() {
     setPlacing(false);
     setDoneStore(storeSlug); // نلتقط سلاِگ المتجر قبل تفريغ السلة كي يبقى التتبّع بهويته
     setDoneOrder(snap);      // لقطةُ الشهادة — قبل أن تُفرَّغ السلّة
-    setDoneWa(waLink);       // احتياطُ الرسالةِ إن حجب المتصفّحُ النافذة
+    setDoneWa(waLink);       // رسالةُ المتابعة — تُفتَحُ بضغطةٍ من شاشة النجاح
     clear();
-    // شاشة تأكيد النجاح: رقم الطلب + الشهادة + تتبّع — تُرسم قبل الانتقال لواتساب
-    // كي تجدَها الزبونةُ جاهزةً حين ترجعُ للتبويب.
+    // نقفُ عند شاشة النجاح ولا نقفزُ لواتساب.
+    //
+    // كان الضغطُ على «تأكيد» يرمي الزبونةَ خارجَ الموقعِ فوراً، فلا ترى رقمَ
+    // طلبِها ولا شهادةَ شرائِها ولا زرَّ التتبّع — وتظنُّ أنّ كلَّ ما حدث أنّ
+    // رسالةً فُتحت. والطلبُ محفوظٌ عندنا أصلاً، وصاحبةُ المتجر يصلُها إشعارٌ
+    // وبريد. فواتساب صارت خطوةَ متابعةٍ اختياريّةً بزرٍّ ظاهرٍ بشاشة النجاح.
     setDoneRef(reference);
     setView('done');
-    // ثم نفتح واتساب (نوجّه النافذة المفتوحة، أو ننتقل إن تعذّر فتحها)
-    if (waWin && !waWin.closed) {
-      try { waWin.location.href = waLink; } catch { window.location.href = waLink; }
-    } else {
-      window.location.href = waLink;
-    }
   };
 
   // حفظُ شهادةِ الشراء — صورةً أو طباعةً (ومنها PDF بحوارِ الطباعة)
@@ -560,26 +554,30 @@ export default function CartDrawer() {
               {err && <p className="text-xs text-red-300">{err}</p>}
             </div>
 
+            {/* ترتيبُ الأزرارِ يتبعُ حالَ الطلب.
+                سُجِّل الطلبُ: التتبّعُ أوّلاً، وواتساب متابعةٌ اختياريّة.
+                لم يُسجَّل (شبكةٌ أو خادم): واتساب هي الطريقُ الوحيدُ الذي يُوصِلُ
+                الطلبَ الآن، فتتصدّرُ الشاشةَ ولا تُدفَنُ تحتَ زرٍّ لا يجدُ شيئاً. */}
             <div className="mt-4 flex w-full flex-col gap-2">
-              {/* بلا رقمٍ لا تتبّع: الصفحة تبحث بالمرجع فلا تجد شيئاً */}
-              {doneRef && (
-              <Link
-                to={doneStore ? `/track?store=${doneStore}` : '/track'}
-                onClick={close}
-                className="flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-center font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
-                style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
-              >
-                <TruckIcon className="h-5 w-5 shrink-0" /> {t('co.doneTrack')}
-              </Link>
-              )}
-              {/* نافذةُ واتساب قد يحجبُها المتصفّحُ (مانعُ النوافذ) فتظنُّ الزبونةُ
-                  أنّ الرسالةَ ذهبت وهي لم تُفتَح — الرابطُ هنا يُعيدُ فتحَها بضغطة */}
-              {doneWa && (
-                <a
-                  href={doneWa} target="_blank" rel="noopener noreferrer"
-                  className="btn-whatsapp w-full !rounded-full !py-3"
-                >
-                  <WhatsAppIcon className="h-5 w-5 shrink-0" /> {t('co.doneWhatsapp')}
+              {doneRef ? (
+                <>
+                  <Link
+                    to={doneStore ? `/track?store=${doneStore}` : '/track'}
+                    onClick={close}
+                    className="flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-center font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
+                    style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
+                  >
+                    <TruckIcon className="h-5 w-5 shrink-0" /> {t('co.doneTrack')}
+                  </Link>
+                  {doneWa && (
+                    <a href={doneWa} target="_blank" rel="noopener noreferrer" className="btn-whatsapp w-full !rounded-full !py-3">
+                      <WhatsAppIcon className="h-5 w-5 shrink-0" /> {t('co.doneWhatsapp')}
+                    </a>
+                  )}
+                </>
+              ) : doneWa && (
+                <a href={doneWa} target="_blank" rel="noopener noreferrer" className="btn-whatsapp w-full !rounded-full !py-4">
+                  <WhatsAppIcon className="h-5 w-5 shrink-0" /> {t('co.doneSendNow')}
                 </a>
               )}
               <button onClick={close} className="w-full rounded-full border border-gold-400/25 py-3 font-semibold text-stone-300 transition hover:bg-gold-400/10">
@@ -694,42 +692,49 @@ export default function CartDrawer() {
               </motion.div>
             ) : (
               <motion.div key="checkout" initial={{ opacity: 0, x: ar ? -16 : 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: ar ? 16 : -16 }} transition={{ duration: 0.2 }} className="flex min-h-0 flex-1 flex-col">
-                {/* شريطُ الخطوات: ثلاثُ محطّاتٍ بخيطٍ ذهبيٍّ يمتلئُ خلفَها. الخطوةُ
-                    المنتهيةُ تُختَمُ بعلامةِ صحٍّ ويُمكنُ الرجوعُ إليها بضغطة —
-                    فتعرفُ الزبونةُ أينَ هي وكم بقي، وتُصحّحُ بلا أن تبدأَ من جديد */}
-                <div className="border-b border-gold-400/15 px-5 pb-3 pt-3.5">
-                  <div className="relative flex items-start justify-between">
-                    <div className="absolute inset-x-0 top-3.5 h-0.5 -translate-y-1/2 bg-gold-400/15" aria-hidden="true" />
-                    <div
-                      className="absolute top-3.5 h-0.5 -translate-y-1/2 bz-progress transition-all duration-500"
-                      style={{ [ar ? 'right' : 'left']: 0, width: `${((step - 1) / 2) * 100}%` }}
-                      aria-hidden="true"
-                    />
+                {/* شريطُ الخطوات.
+                    الخيطُ لا يمرُّ خلفَ الدوائرِ بل *بينَها*: كان خطّاً واحداً ممتدّاً
+                    تحتَ الشريطِ كلِّه، وخلفيّاتُ الدوائرِ شفّافةٌ (‎/20‎) فيظهرُ عابراً
+                    وسطَ كلِّ دائرةٍ ويقطعُها. الآن كلُّ وَصْلةٍ عنصرٌ مستقلٌّ يملأُ
+                    الفراغَ بين محطّتين (flex-1) ويتلوّنُ وحدَه حين تُجتازُ المحطّة —
+                    فلا يلامسُ الخيطُ قرصاً أبداً، ولا يحتاجُ حساباً بالنِّسَب. */}
+                <div className="border-b border-gold-400/15 px-4 pb-3 pt-3.5">
+                  <div className="flex items-start">
                     {[
                       { n: 1, label: t('co.step1'), Icon: UserIcon },
                       { n: 2, label: t('co.step2'), Icon: TruckIcon },
                       { n: 3, label: t('co.step3'), Icon: CashIcon },
-                    ].map(({ n, label, Icon }) => {
+                    ].map(({ n, label, Icon }, idx) => {
                       const done = step > n;
                       const active = step === n;
                       return (
-                        <button
-                          key={n}
-                          type="button"
-                          onClick={() => { if (n < step) { setErr(''); setStep(n); } }}
-                          disabled={n >= step}
-                          aria-current={active ? 'step' : undefined}
-                          className="relative z-10 flex w-1/3 flex-col items-center gap-1 disabled:cursor-default"
-                        >
-                          <span className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-bold ring-1 transition ${
-                            done ? 'bg-emerald-500/20 text-emerald-300 ring-emerald-400/40'
-                              : active ? 'bg-gold-400/20 text-gold-200 ring-gold-400/50'
-                              : 'bg-ink-900 text-stone-500 ring-gold-400/20'}`}
+                        <Fragment key={n}>
+                          {idx > 0 && (
+                            /* mt-[13px]: منتصفُ قرصٍ ارتفاعُه ٢٨ بكسل — تُحاذي الوصلةُ
+                               مركزَ الدوائرِ بلا تموضعٍ مطلق */
+                            <span
+                              aria-hidden="true"
+                              className="mx-1 mt-[13px] h-0.5 flex-1 rounded-full transition-colors duration-500"
+                              style={{ background: step > idx ? '#b09a7e' : 'rgba(138,127,114,0.28)' }}
+                            />
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => { if (n < step) { setErr(''); setStep(n); } }}
+                            disabled={n >= step}
+                            aria-current={active ? 'step' : undefined}
+                            className="flex w-16 shrink-0 flex-col items-center gap-1.5 disabled:cursor-default"
                           >
-                            {done ? <CheckIcon className="h-3.5 w-3.5" /> : <Icon className="h-3.5 w-3.5" />}
-                          </span>
-                          <span className={`text-[10px] font-semibold leading-tight ${active ? 'text-gold-200' : done ? 'text-stone-300' : 'text-stone-500'}`}>{label}</span>
-                        </button>
+                            <span className={`flex h-7 w-7 items-center justify-center rounded-full ring-1 transition ${
+                              done ? 'bg-emerald-500/20 text-emerald-300 ring-emerald-400/40'
+                                : active ? 'bg-gold-400/20 text-gold-200 ring-gold-400/50'
+                                : 'bg-black/20 text-stone-500 ring-gold-400/20'}`}
+                            >
+                              {done ? <CheckIcon className="h-3.5 w-3.5" /> : <Icon className="h-3.5 w-3.5" />}
+                            </span>
+                            <span className={`text-[10px] font-semibold leading-tight ${active ? 'text-gold-200' : done ? 'text-stone-300' : 'text-stone-500'}`}>{label}</span>
+                          </button>
+                        </Fragment>
                       );
                     })}
                   </div>
@@ -798,7 +803,7 @@ export default function CartDrawer() {
                   {step === 2 && (
                     <motion.div initial={{ y: 10 }} animate={{ y: 0 }} transition={{ duration: 0.22 }} className="space-y-4">
                       <div className="glass p-4">
-                        <h3 className="mb-1 flex items-center gap-1.5 text-sm font-bold text-gold-200"><PinIcon className="h-4 w-4 shrink-0" /> {t('co.customer')}</h3>
+                        <h3 className="mb-1 flex items-center gap-1.5 text-sm font-bold text-gold-200"><PinIcon className="h-4 w-4 shrink-0" /> {t('co.step2Title')}</h3>
                         <p className="mb-3 text-[11px] leading-relaxed text-stone-400">{t('co.step2Hint')}</p>
                         <div className="space-y-3">
                           {/* المكان: قائمة مسطّحة — كل مدينة وقرية بندٌ مستقل بسعره (بلا تجميع).
@@ -1022,18 +1027,26 @@ export default function CartDrawer() {
                     >
                       {t('co.next')} <ForwardIcon className="h-4 w-4 shrink-0" />
                     </button>
-                  ) : payMethod === 'card' ? (
-                    <button
-                      onClick={payWithCard}
-                      disabled={cardBusy || placing}
-                      className="flex w-full items-center justify-center gap-2 rounded-full py-4 font-bold text-white transition hover:brightness-110 disabled:opacity-60"
-                      style={{ background: 'linear-gradient(135deg, #1a1a6c 0%, #1e3a5f 50%, #1e6a4f 100%)' }}
-                    >
-                      {cardBusy ? t('common.loading') : <><CardIcon className="h-5 w-5 shrink-0" /> {t('co.confirmPay', { amount: `${t('common.currency')}${grand.toFixed(2)}` })}</>}
-                    </button>
                   ) : (
-                    <button onClick={confirmOrder} disabled={placing || cardBusy} className="btn-whatsapp w-full !rounded-full !py-4 disabled:opacity-60">
-                      {placing ? t('common.loading') : <span className="inline-flex items-center gap-2"><WhatsAppIcon className="h-5 w-5 shrink-0" /> {t('co.confirmPay', { amount: `${t('common.currency')}${grand.toFixed(2)}` })}</span>}
+                    /* زرُّ الإتمامِ بهويّةِ المتجرِ لا بهويّةِ واتساب.
+                       كان أخضرَ بشعارِ واتساب، فيبدو الطلبُ كأنّه يُرسَلُ رسالةً
+                       لا يُسجَّلُ عند المتجر — والزبونةُ تتردّدُ أمامَ زرٍّ يحملُ
+                       علامةَ تطبيقٍ آخر. الآن: قفلٌ للدفعِ الآمن، وعلامةُ صحٍّ
+                       للاستلام، وواتساب تظهرُ بعدَ التأكيدِ خياراً للمتابعة. */
+                    <button
+                      onClick={payMethod === 'card' ? payWithCard : confirmOrder}
+                      disabled={placing || cardBusy}
+                      className="flex w-full items-center justify-center gap-2 rounded-full py-4 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110 disabled:opacity-60"
+                      style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)', boxShadow: '0 16px 34px -14px rgba(20, 13, 7, 0.65)' }}
+                    >
+                      {(placing || cardBusy) ? t('common.loading') : (
+                        <>
+                          {payMethod === 'card' ? <LockIcon className="h-5 w-5 shrink-0" /> : <CheckIcon className="h-5 w-5 shrink-0" />}
+                          {payMethod === 'card'
+                            ? t('co.payNow', { amount: `${t('common.currency')}${grand.toFixed(2)}` })
+                            : t('co.confirmPay', { amount: `${t('common.currency')}${grand.toFixed(2)}` })}
+                        </>
+                      )}
                     </button>
                   )}
                   {step === 3 && (
