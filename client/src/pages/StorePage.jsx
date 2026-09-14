@@ -803,7 +803,7 @@ function FilterSheet({ title, onClose, onReset, onApply, children }) {
       <div className="absolute inset-0 bg-black/40 animate-fade-up" onClick={onClose} />
       <div className="animate-sheet relative max-h-[80vh] w-full overflow-y-auto overflow-x-hidden overscroll-contain rounded-t-3xl bg-white p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-center justify-between">
-          <button onClick={onReset} className="w-16 text-start text-sm font-medium text-wine/70 hover:text-wine">Reset</button>
+          <button onClick={onReset} className="w-16 text-start text-sm font-medium text-wine/70 hover:text-wine">{t('common.clear')}</button>
           <h3 className="flex-1 text-center font-display text-lg font-bold text-[#2b2b2b]">{title}</h3>
           <span className="flex w-16 justify-end"><CloseButton onClick={onClose} variant="wine" /></span>
         </div>
