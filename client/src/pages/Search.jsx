@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams, useParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client.js';
 import Seo from '../components/Seo.jsx';
@@ -10,6 +10,7 @@ import { SearchIcon, StoreIcon, XIcon, BackIcon } from '../components/icons.jsx'
 import { StateCard, SubHead } from '../components/PageUI.jsx';
 import { cldThumb } from '../utils/cloudinary.js';
 import { getCache, setCache } from '../utils/apiCache.js';
+import { searchPath } from '../utils/links.js';
 import { goBack } from '../utils/nav.js';
 import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys } from '../utils/platformCategories.js';
 
@@ -34,9 +35,23 @@ export default function Search() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const q = (params.get('q') || '').trim();
-  // نطاق متجر مشترِكة (?store=slug): نفس تجربة البحث الشامل لكن نتائج هذا المتجر فقط
-  const storeScope = (params.get('store') || '').trim();
-  const withScope = (obj) => (storeScope ? { ...obj, store: storeScope } : obj);
+  // نطاقُ متجرٍ مشترِكة: من المسار (/store/<المتجر>/search) أو من ?store= القديم —
+  // نفسُ تجربةِ البحثِ الشاملِ لكن نتائجُ هذا المتجرِ وحدَه.
+  const { slug: pathSlug } = useParams();
+  const storeScope = (pathSlug || params.get('store') || '').trim();
+  // حين يأتي المتجرُ من المسارِ لا نُعيدُ كتابتَه بالاستعلامِ مع كلِّ حرفٍ يُكتَب
+  const withScope = (obj) => (storeScope && !pathSlug ? { ...obj, store: storeScope } : obj);
+  // رابطٌ قديمٌ (/search?store=) → المسارُ الحاملُ اسمَ المتجر (نُبقي بقيّةَ الاستعلام)
+  const searchPathname = useLocation().pathname;
+  useEffect(() => {
+    if (!storeScope || pathSlug) return;
+    const rest = new URLSearchParams(params);
+    rest.delete('store');
+    const qs = rest.toString();
+    navigate(`${searchPath(storeScope)}${qs ? `?${qs}` : ''}`, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeScope, pathSlug, searchPathname]);
+
   // كائن المتجر — كي تلبس صفحة البحث هوية المتجر (هيدره ودرج فئاته) بدل شريط بازارا.
   // يبدأ من الكاش (المستخدمة غالباً جاية من المتجر) فيظهر فوراً، ثم يُحدَّث بالخلفية.
   const [storeObj, setStoreObj] = useState(() => (storeScope && getCache(`store:${storeScope}`)?.store) || null);

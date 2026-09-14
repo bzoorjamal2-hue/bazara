@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import useSessionState from '../hooks/useSessionState.js';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import Seo from '../components/Seo.jsx';
@@ -10,6 +10,7 @@ import { PackageIcon, CheckIcon, SearchIcon, TruckIcon, CartIcon, XIcon, BackIco
 import { PageTitle, StateCard } from '../components/PageUI.jsx';
 import { goBack } from '../utils/nav.js';
 import { getCache, setCache } from '../utils/apiCache.js';
+import { trackPath } from '../utils/links.js';
 import { useCart } from '../context/CartContext.jsx';
 import { cldThumb } from '../utils/cloudinary.js';
 import { sizeLabel } from '../utils/sizes.js';
@@ -31,7 +32,19 @@ export default function Track() {
   const navigate = useNavigate();
   // نطاق متجر (?store=slug): جاء المستخدم من متجر — فرجوعه إليه لا للموقع العام،
   // ونعرض فوتر المتجر بأسفل الصفحة (هوية المتجر حتى النهاية زي صفحة المنتج).
-  const storeScope = (new URLSearchParams(useLocation().search).get('store') || '').trim();
+  // اسمُ المتجرِ من المسار (/store/<المتجر>/track)، ومن ?store= للروابطِ القديمة
+  const { slug: pathSlug } = useParams();
+  const { pathname: trackPathname, search: trackSearch } = useLocation();
+  const storeScope = (pathSlug || new URLSearchParams(trackSearch).get('store') || '').trim();
+  // رابطٌ قديمٌ (/track?store=) → المسارُ الحاملُ اسمَ المتجر، بلا خطوةٍ بسجلِّ الرجوع
+  useEffect(() => {
+    if (!storeScope || pathSlug) return;
+    const rest = new URLSearchParams(trackSearch);
+    rest.delete('store');
+    const qs = rest.toString();
+    navigate(`${trackPath(storeScope)}${qs ? `?${qs}` : ''}`, { replace: true });
+  }, [storeScope, pathSlug, trackSearch, trackPathname, navigate]);
+
   const [storeObj, setStoreObj] = useState(() => (storeScope && getCache(`store:${storeScope}`)?.store) || null);
   useEffect(() => {
     if (!storeScope) { setStoreObj(null); return; }

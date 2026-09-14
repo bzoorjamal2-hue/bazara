@@ -114,8 +114,8 @@ function AnimatedRoutes() {
   const navType = useNavigationType(); // POP عند الرجوع/التقدّم
   // صفحة التتبّع بنطاق متجر (?store=) تعرض فوتر المتجر بأسفلها؛ نجعل غلاف المسار يملأ
   // ارتفاع الشاشة (flex عمودي) كي يُدفع الفوتر للأسفل بدل ما يطفو لأعلى مع فراغ تحته.
-  const fillStore = location.pathname === '/track'
-    && Boolean(new URLSearchParams(location.search).get('store'));
+  const fillStore = /^\/store\/[^/]+\/track$/.test(location.pathname)
+    || (location.pathname === '/track' && Boolean(new URLSearchParams(location.search).get('store')));
 
   // نحفظ موضع التمرير الحالي باستمرار لمفتاح هذه الصفحة، ونلتقطه أيضاً لحظة المغادرة
   // (في التنظيف) كي يبقى الموضع مضموناً حتى لو لم يُطلق حدث تمرير قبل الانتقال — هذا
@@ -273,6 +273,10 @@ function AnimatedRoutes() {
           />
           <Route path="/store/:slug" element={<StorePage />} />
           <Route path="/store/:slug/reels" element={<Reels />} />
+          {/* تتبّعُ الطلبِ والبحثُ داخلَ متجرٍ: باسمِ المتجرِ بالمسار. الشكلُ القديمُ
+              (?store=) يبقى عاملاً وتُحوّلُه الصفحةُ إلى المسارِ الكامل. */}
+          <Route path="/store/:slug/track" element={<Track />} />
+          <Route path="/store/:slug/search" element={<Search />} />
           <Route path="/category/:cat" element={<CategoryPage />} />
           <Route path="/categories" element={<Categories />} />
           {/* رابطُ المنتجِ يحملُ اسمَ متجرِه. المسارُ القديمُ (/product/:id) يبقى

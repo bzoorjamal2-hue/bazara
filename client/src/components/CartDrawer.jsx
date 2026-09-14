@@ -2,6 +2,7 @@ import { Fragment, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { productPath } from '../utils/links.js';
+import { trackPath } from '../utils/links.js';
 import { siteOrigin } from '../utils/links.js';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext.jsx';
@@ -572,7 +573,7 @@ export default function CartDrawer() {
               {doneRef ? (
                 <>
                   <Link
-                    to={doneStore ? `/track?store=${doneStore}` : '/track'}
+                    to={trackPath(doneStore)}
                     onClick={close}
                     className="flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-center font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
                     style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}

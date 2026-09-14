@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { searchPath } from '../utils/links.js';
 import { cldThumb, cldSrcSet } from '../utils/cloudinary.js';
 
 // مجموعات تحريرية بالرئيسية («تسوّقي حسب المناسبة») — يحرّرها المدير.
@@ -12,7 +13,7 @@ export default function CollectionsRow({ collections, storeSlug = '' }) {
   const isEn = i18n.language === 'en';
   const list = (collections || []).filter((c) => c && c.title && c.q);
   if (list.length === 0) return null;
-  const linkFor = (q) => `/search?q=${encodeURIComponent(q)}${storeSlug ? `&store=${encodeURIComponent(storeSlug)}` : ''}`;
+  const linkFor = (q) => searchPath(storeSlug, q);
 
   return (
     <section className="mt-14 mb-16 sm:mb-20">

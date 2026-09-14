@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getStoreScope, subscribeStoreScope } from '../utils/storeScope.js';
 import { useTranslation } from 'react-i18next';
+import { trackPath } from '../utils/links.js';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 
@@ -204,7 +205,7 @@ export default function BottomNav() {
   // العروض/التتبّع/التصنيفات تبقى ضمن متجري (بدل صفحات بازارا العامة) طالما لي متجر
   const offersTo = inDest ? `/store/${destSlug}?offers=1` : '/offers';
   const offersActive = inStore ? /[?&]offers=1/.test(search) : pathname === '/offers';
-  const trackTo = inDest ? `/track?store=${destSlug}` : '/track';
+  const trackTo = trackPath(destSlug);
   // ريلز: متجر التصفّح الحالي، أو متجر المشترك نفسه، أو العام (كل متجر له ريلز خاص)
   const reelsTo = destSlug ? `/store/${destSlug}/reels` : '/reels';
   const reelsActive = pathname.endsWith('/reels');
@@ -230,7 +231,7 @@ export default function BottomNav() {
     // الصورة الشخصية، فوجودُه هنا تكرارٌ يزحم صفّاً محدود العرض.
     // (dt = شاشةٌ عريضة)
     ...(dt ? [] : [{ key: 'account', label: t('nav.account') || 'حسابي', Icon: UserIcon, active: !cartOpen && !wishOpen && pathname.startsWith('/dashboard'), badge: newOrders, onClick: () => goto(accountTo) }]),
-    { key: 'track', label: t('nav.track'), Icon: TrackIcon, active: !cartOpen && !wishOpen && pathname === '/track', onClick: () => goto(trackTo) },
+    { key: 'track', label: t('nav.track'), Icon: TrackIcon, active: !cartOpen && !wishOpen && (pathname === '/track' || pathname.endsWith('/track')), onClick: () => goto(trackTo) },
     { key: 'offers', label: t('nav.offers'), Icon: OffersIcon, active: !cartOpen && !wishOpen && offersActive, onClick: () => goto(offersTo) },
     { key: 'reels', label: t('reels.title'), Icon: ReelsIcon, active: !cartOpen && !wishOpen && reelsActive, onClick: () => goto(reelsTo) },
     { key: 'categories', label: t('nav.categories'), Icon: CategoriesIcon, active: !cartOpen && !wishOpen && categoriesActive, onClick: () => goto(categoriesTo) },

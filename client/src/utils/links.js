@@ -35,6 +35,14 @@ export function productUrl(product, opts) {
   return `${siteOrigin()}${productPath(product, opts)}`;
 }
 
+// صفحاتُ المتجرِ الداخليّة: تحملُ اسمَه بالمسارِ لا بالاستعلام، فيبقى ظاهراً
+// بشريطِ العنوانِ وفي كلِّ رابطٍ تنسخُه الزبونةُ من داخلِ المتجر.
+export const trackPath = (slug) => (slug ? `/store/${slug}/track` : '/track');
+export function searchPath(slug, q = '') {
+  const base = slug ? `/store/${slug}/search` : '/search';
+  return q ? `${base}?q=${encodeURIComponent(q)}` : base;
+}
+
 // مسارُ المتجرِ ورابطُه الكامل (ref = كودُ الإحالةِ إن وُجد)
 export const storePath = (slug) => (slug ? `/store/${slug}` : '/shop');
 export function storeUrl(slug, { ref = '' } = {}) {

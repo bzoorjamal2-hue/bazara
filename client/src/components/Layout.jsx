@@ -45,8 +45,8 @@ export default function Layout({ children }) {
   const isProduct = /^\/product\//.test(pathname);
   // البحث/التتبّع بنطاق متجر (?store=slug): نخفي شريط بازارا كي لا يظهر اسمه/درج التحكم داخل المتجر
   const storeParam = Boolean(new URLSearchParams(search).get('store'));
-  const isStoreSearch = pathname === '/search' && storeParam;
-  const isStoreTrack = pathname === '/track' && storeParam;
+  const isStoreSearch = /^\/store\/[^/]+\/search$/.test(pathname) || (pathname === '/search' && storeParam);
+  const isStoreTrack = /^\/store\/[^/]+\/track$/.test(pathname) || (pathname === '/track' && storeParam);
   // شاشة افتتاح التطبيق المثبّت (الجذر) — بلا شريط/فوتر ليبدو كتطبيق كامل
   // صفحة المنصّة (الجذر بالمتصفّح): شريطها وفوترها من داخلها، فتُخفى قشرة
   // الموقع كاملةً — كانت تُخفى للتطبيق المثبّت وحده.

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { productPath } from '../utils/links.js';
+import { trackPath, searchPath } from '../utils/links.js';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -151,7 +152,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
             <input
               value={q}
               readOnly
-              onFocus={(e) => { e.currentTarget.blur(); navigate(`/search?store=${encodeURIComponent(store.slug)}`); }}
+              onFocus={(e) => { e.currentTarget.blur(); navigate(searchPath(store.slug)); }}
               placeholder={t('store.searchPlaceholder')}
               className="w-full cursor-pointer rounded-full border-0 bg-white py-2 pe-4 ps-10 text-[#2b2b2b] placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-cream/50"
             />
@@ -287,7 +288,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
               <div className="my-2 h-px bg-cream/15" />
               {/* تتبّع الطلب — بنطاق المتجر كي تبقى صفحته بهوية المتجر لا الموقع العام */}
               <Link
-                to={`/track?store=${store.slug}`}
+                to={trackPath(store.slug)}
                 onClick={() => setDrawer(false)}
                 className="flex w-full items-center gap-3 rounded-xl border border-cream/25 bg-cream/10 px-3 py-3 text-start text-base font-bold text-cream transition hover:bg-cream/20"
               >
