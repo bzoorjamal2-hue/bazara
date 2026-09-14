@@ -146,8 +146,8 @@ export default function PaymentCallback() {
             <div className="mt-4 flex flex-col gap-2">
               <Link
                 to={order?.storeSlug ? `/track?store=${order.storeSlug}` : '/track'}
-                className="flex w-full items-center justify-center gap-2 rounded-full py-3.5 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
-                style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
+                className="flex w-full items-center justify-center gap-2 rounded-full py-3.5 bz-cta font-bold ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
+               
               >
                 <TruckIcon className="h-5 w-5 shrink-0" /> {t('co.doneTrack')}
               </Link>

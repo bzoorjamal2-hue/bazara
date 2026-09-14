@@ -501,7 +501,7 @@ function HomeHero({ banners = [] }) {
                 <div key={idx} className="w-full shrink-0" dir="rtl">
                   <div
                     className={`relative isolate flex h-[340px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[420px] lg:h-[500px] 2xl:h-[580px] ${idx === i ? 'bz-hero-active' : ''} ${onMedia ? 'bg-[#241712]' : 'bg-gradient-to-br from-[#f6ecd9] via-[#efe1c6] to-[#f6ecd9]'}`}
-                    style={isColor ? { background: s.bgValue } : isVideo ? { background: `linear-gradient(rgba(15,10,7,0.5), rgba(15,10,7,0.5)), url("${vPoster}") center/cover` } : undefined}
+                    style={isColor ? { background: s.bgValue } : isVideo ? { background: `linear-gradient(rgba(10,10,10,0.5), rgba(10,10,10,0.5)), url("${vPoster}") center/cover` } : undefined}
                   >
                     {/* التعتيم مخبوز في الوسيط (filter) لا كطبقة منفصلة — يمنع اختراق فيديو
                         iOS المُسرّع للطبقات، ومع خلفية الحاوية المخبوزة = خلفية واحدة معتّمة بلا وميض */}

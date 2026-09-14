@@ -55,8 +55,8 @@ export default function NewsletterBox() {
           <button
             type="submit"
             disabled={busy || !contact.trim()}
-            className="shrink-0 rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110 disabled:opacity-50"
-            style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
+            className="shrink-0 rounded-full px-7 py-3 bz-cta font-bold ring-1 ring-[#cdbda4]/35 transition hover:brightness-110 disabled:opacity-50"
+           
           >
             {busy ? t('common.loading') : t('newsletter.cta')}
           </button>

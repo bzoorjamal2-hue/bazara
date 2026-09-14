@@ -575,8 +575,8 @@ export default function CartDrawer() {
                   <Link
                     to={trackPath(doneStore)}
                     onClick={close}
-                    className="flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-center font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
-                    style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
+                    className="flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-center bz-cta font-bold ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
+                   
                   >
                     <TruckIcon className="h-5 w-5 shrink-0" /> {t('co.doneTrack')}
                   </Link>
@@ -604,8 +604,8 @@ export default function CartDrawer() {
             <p>{t('cart.empty')}</p>
             <button
               onClick={close}
-              className="rounded-full px-7 py-3 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
-              style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)' }}
+              className="rounded-full px-7 py-3 bz-cta font-bold ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
+             
             >
               {t('co.doneKeepShopping')}
             </button>
@@ -693,8 +693,8 @@ export default function CartDrawer() {
                   {/* حبة إتمام فاخرة بتدرج خمري وهالة ذهبية — والسهم يتبع اتجاه اللغة */}
                   <button
                     onClick={() => { setErr(''); setView('checkout'); }}
-                    className="flex w-full items-center justify-center gap-1.5 rounded-full py-4 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
-                    style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)', boxShadow: '0 16px 34px -14px rgba(20, 13, 7, 0.65)' }}
+                    className="flex w-full items-center justify-center gap-1.5 rounded-full py-4 bz-cta font-bold ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
+                    style={{ boxShadow: '0 16px 34px -14px rgba(20, 13, 7, 0.65)' }}
                   >
                     {t('cart.proceed')} <ForwardIcon className="h-4 w-4" />
                   </button>
@@ -1106,8 +1106,8 @@ export default function CartDrawer() {
                   {step < 3 ? (
                     <button
                       onClick={goNext}
-                      className="flex flex-1 items-center justify-center gap-1.5 rounded-full py-4 font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
-                      style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)', boxShadow: '0 16px 34px -14px rgba(20, 13, 7, 0.65)' }}
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-full py-4 bz-cta font-bold ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
+                      style={{ boxShadow: '0 16px 34px -14px rgba(20, 13, 7, 0.65)' }}
                     >
                       {t('co.next')} <ForwardIcon className="h-4 w-4 shrink-0" />
                     </button>
@@ -1123,8 +1123,8 @@ export default function CartDrawer() {
                       /* حجمٌ واحدٌ (١٤) لا يكبرُ مع الشاشة: الزرُّ يحملُ مبلغاً لا
                          يجوزُ أن يُقَصَّ، والنصُّ الإنجليزيُّ أطولُ من العربيّ —
                          فبالحجمِ الكامل كان يخرجُ «Confirm order · …» بلا رقم. */
-                      className="flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full py-4 text-sm font-bold text-cream ring-1 ring-[#cdbda4]/35 transition hover:brightness-110 disabled:opacity-60"
-                      style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #2b1d12 60%, #1c1309 100%)', boxShadow: '0 16px 34px -14px rgba(20, 13, 7, 0.65)' }}
+                      className="flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full py-4 text-sm bz-cta font-bold ring-1 ring-[#cdbda4]/35 transition hover:brightness-110 disabled:opacity-60"
+                      style={{ boxShadow: '0 16px 34px -14px rgba(20, 13, 7, 0.65)' }}
                     >
                       {(placing || cardBusy) ? t('common.loading') : (
                         <>

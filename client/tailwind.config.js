@@ -22,10 +22,13 @@ export default {
       colors: {
         // هوية دافئة: بنّي قهوة + بيج كريمي (مستوحاة من أجواء الخريف)
         // الأسماء "wine/cream" محفوظة كما هي لتفادي تغيير الأصناف عبر الموقع.
+        // القيمُ بمتغيّراتِ CSS لا بأرقامٍ ثابتة: الوضعُ الليليُّ يقلبُها فتنقلبُ
+        // معها كلُّ الأصناف (bg-wine و bg-wine/10 و border-wine/25 …) بلا استثناء.
+        // القيمُ النهاريّةُ نفسُها لم تتغيّر — انظر :root في index.css.
         wine: {
-          light: '#8a6a4f',
-          DEFAULT: '#5e4636',
-          dark: '#3f2e22',
+          light: 'rgb(var(--c-wine-light) / <alpha-value>)',
+          DEFAULT: 'rgb(var(--c-wine) / <alpha-value>)',
+          dark: 'rgb(var(--c-wine-dark) / <alpha-value>)',
         },
         cream: '#F4EDE2',
         // ذهبي معدني فاخر
@@ -34,16 +37,16 @@ export default {
         // حدٍّ وحلقةٍ وزرّ لا يعود يميّز شيئاً، ويعطي الموقع مظهراً قالبياً.
         // اللوحة الآن بنّيّة وعاجيّة فحسب: التمييز بالتباين لا باللمعان.
         gold: {
-          50: '#faf7f1',
-          100: '#f2ebdf',
-          200: '#e4d8c5',
-          300: '#cdbda4',
-          400: '#b09a7e',
-          500: '#96805f',
-          600: '#7a6749',
-          700: '#5e4f38',
-          800: '#463a29',
-          900: '#2e261a',
+          50: 'rgb(var(--c-gold-50) / <alpha-value>)',
+          100: 'rgb(var(--c-gold-100) / <alpha-value>)',
+          200: 'rgb(var(--c-gold-200) / <alpha-value>)',
+          300: 'rgb(var(--c-gold-300) / <alpha-value>)',
+          400: 'rgb(var(--c-gold-400) / <alpha-value>)',
+          500: 'rgb(var(--c-gold-500) / <alpha-value>)',
+          600: 'rgb(var(--c-gold-600) / <alpha-value>)',
+          700: 'rgb(var(--c-gold-700) / <alpha-value>)',
+          800: 'rgb(var(--c-gold-800) / <alpha-value>)',
+          900: 'rgb(var(--c-gold-900) / <alpha-value>)',
         },
         // أسود/فحمي عميق
         ink: {

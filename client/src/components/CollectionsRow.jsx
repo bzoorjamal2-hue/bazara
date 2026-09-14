@@ -56,7 +56,7 @@ export default function CollectionsRow({ collections, storeSlug = '' }) {
                 <span className="block h-full w-full" style={{ background: 'linear-gradient(135deg, #8a6a4f 0%, #5e4636 55%, #3f2e22 100%)' }} />
               )}
               {/* تدرّج أعمق من الأسفل: العنوان يُقرأ فوق أي صورة مهما كانت فاتحة */}
-              <span aria-hidden className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(30,18,12,0.88) 0%, rgba(30,18,12,0.45) 34%, rgba(30,18,12,0.05) 62%, transparent 100%)' }} />
+              <span aria-hidden className="bz-scrim absolute inset-0" />
               {/* خيط ذهبي داخليّ — نفس لغة بطاقات الموقع الفاخرة */}
               <span aria-hidden className="pointer-events-none absolute inset-0 rounded-[1.25rem] ring-1 ring-inset ring-white/10" />
 

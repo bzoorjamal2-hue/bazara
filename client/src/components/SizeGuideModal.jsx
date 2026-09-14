@@ -6,6 +6,9 @@ import CloseButton from './CloseButton.jsx';
 import { CheckIcon, SparkleIcon, RulerIcon } from './icons.jsx';
 import { SIZE_CHART, sizeLabel } from '../utils/sizes.js';
 
+// جذرُ الثيم: النوافذُ المرسومةُ على body لا تصلُها قواعدُ الوضعِ الليليّ
+const bzPortalRoot = () => (typeof document !== 'undefined' && (document.querySelector('.theme-pub') || document.body)) || null;
+
 // نافذة دليل المقاسات — جدول قياسات (صدر/خصر/أرداف) + مرشد "اعرفي مقاسك".
 // chart: دليل المتجر المخصّص (إن وُجد) يطغى على الجدول القياسي. تعرض نمر المنتج فقط.
 export default function SizeGuideModal({ sizes = [], chart = null, onClose }) {
@@ -132,7 +135,7 @@ export default function SizeGuideModal({ sizes = [], chart = null, onClose }) {
         )}
       </div>
     </div>,
-    document.body
+    bzPortalRoot()
   );
 }
 

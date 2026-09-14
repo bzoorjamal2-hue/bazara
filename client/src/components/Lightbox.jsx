@@ -5,6 +5,9 @@ import { useTranslation } from 'react-i18next';
 import useScrollLock from '../hooks/useScrollLock.js';
 import CloseButton from './CloseButton.jsx';
 
+// جذرُ الثيم: النوافذُ المرسومةُ على body لا تصلُها قواعدُ الوضعِ الليليّ
+const bzPortalRoot = () => (typeof document !== 'undefined' && (document.querySelector('.theme-pub') || document.body)) || null;
+
 // عارض صور بملء الشاشة مع تكبير (Zoom) — نقر للتكبير، سحب للتنقّل بين الصور.
 export default function Lightbox({ images, index = 0, onClose }) {
   const { i18n } = useTranslation();
@@ -93,6 +96,6 @@ export default function Lightbox({ images, index = 0, onClose }) {
         </div>
       )}
     </motion.div>,
-    document.body
+    bzPortalRoot()
   );
 }

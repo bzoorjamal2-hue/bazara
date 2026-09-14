@@ -12,6 +12,9 @@ import CloseButton from './CloseButton.jsx';
 import { StoreIcon, BagIcon } from './icons.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 
+// جذرُ الثيم: النوافذُ المرسومةُ على body لا تصلُها قواعدُ الوضعِ الليليّ
+const bzPortalRoot = () => (typeof document !== 'undefined' && (document.querySelector('.theme-pub') || document.body)) || null;
+
 const IMG_MS = 3500; // مدة عرض الصورة (أسرع)
 
 // عارض ستوري بأسلوب إنستغرام: أشرطة تقدّم، انتقال تلقائي، نقر يمين/يسار،
@@ -260,6 +263,6 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
           onPointerDown={onDownZone} onPointerUp={() => onUpZone('next')} onPointerCancel={() => onUpZone('next')} />
       </div>
     </div>,
-    document.body
+    bzPortalRoot()
   );
 }

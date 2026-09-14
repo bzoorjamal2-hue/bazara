@@ -30,7 +30,7 @@ function SlidePreview({ banner, storeName }) {
   const style = isColor
     ? { background: bgValue }
     : media
-      ? { background: `linear-gradient(rgba(15,10,7,0.45), rgba(15,10,7,0.45)), url("${media}") center/cover` }
+      ? { background: `linear-gradient(rgba(10,10,10,0.45), rgba(10,10,10,0.45)), url("${media}") center/cover` }
       : { background: 'linear-gradient(135deg, #4a1322 0%, #3f2e22 55%, #241712 100%)' };
 
   return (

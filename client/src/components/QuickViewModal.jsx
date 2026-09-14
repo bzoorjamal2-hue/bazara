@@ -17,6 +17,9 @@ import { productPath } from '../utils/links.js';
 import SizeGuideModal from './SizeGuideModal.jsx';
 import CloseButton from './CloseButton.jsx';
 
+// جذرُ الثيم: النوافذُ المرسومةُ على body لا تصلُها قواعدُ الوضعِ الليليّ
+const bzPortalRoot = () => (typeof document !== 'undefined' && (document.querySelector('.theme-pub') || document.body)) || null;
+
 // نافذة "نظرة سريعة" — تفاصيل المنتج دون مغادرة الصفحة.
 export default function QuickViewModal({ product, whatsapp = '', onClose }) {
   const { t } = useTranslation();
@@ -255,6 +258,6 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
         </div>
       </motion.div>
     </motion.div>,
-    document.body
+    bzPortalRoot()
   );
 }

@@ -1072,7 +1072,7 @@ function HeroSlider({ store }) {
             const style = isColor
               ? { background: s.bgValue }
               : posterImg
-                ? { background: `linear-gradient(rgba(15,10,7,0.5), rgba(15,10,7,0.5)), url("${posterImg}") center/cover` }
+                ? { background: `linear-gradient(rgba(10,10,10,0.5), rgba(10,10,10,0.5)), url("${posterImg}") center/cover` }
                 : undefined;
             return (
               <div key={idx} className="w-full shrink-0" dir="rtl">
