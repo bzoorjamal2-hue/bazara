@@ -1,5 +1,6 @@
 import { query } from '../config/db.js';
 import { activeStoreSql } from '../utils/subscription.js';
+import { videoPoster, productPath } from '../utils/media.js';
 
 const site = () => (process.env.PUBLIC_SITE_URL || '').replace(/\/$/, '');
 
@@ -26,7 +27,7 @@ export async function sitemap(_req, res, next) {
       `SELECT s.slug, s.updated_at FROM stores s JOIN users u ON u.id = s.user_id WHERE ${active} ORDER BY s.updated_at DESC`
     );
     const products = await query(
-      `SELECT p.id, p.updated_at FROM products p JOIN stores s ON s.id = p.store_id JOIN users u ON u.id = s.user_id WHERE ${active} ORDER BY p.updated_at DESC`
+      `SELECT p.id, p.updated_at, s.slug FROM products p JOIN stores s ON s.id = p.store_id JOIN users u ON u.id = s.user_id WHERE ${active} ORDER BY p.updated_at DESC`
     );
 
     const urls = [];
@@ -36,7 +37,7 @@ export async function sitemap(_req, res, next) {
       urls.push({ loc: `${base}/store/${s.slug}`, lastmod: s.updated_at, priority: '0.8' });
     });
     products.rows.forEach((p) => {
-      urls.push({ loc: `${base}/product/${p.id}`, lastmod: p.updated_at, priority: '0.6' });
+      urls.push({ loc: `${base}${productPath(p.slug, p.id)}`, lastmod: p.updated_at, priority: '0.6' });
     });
 
     const body =
@@ -98,21 +99,20 @@ ${img ? `<meta name="twitter:image" content="${img}">` : ''}
 
 export async function shareProduct(req, res, next) {
   const { id } = req.params;
-  const url = `${site()}/product/${id}`;
+  let url = `${site()}/product/${id}`;
   try {
     const active = activeStoreSql('u');
     const r = await query(
-      `SELECT p.name, p.description, p.price, p.image_url, p.images, p.video_url, s.name AS store_name
+      `SELECT p.name, p.description, p.price, p.image_url, p.images, p.video_url, s.name AS store_name, s.slug
        FROM products p JOIN stores s ON s.id = p.store_id JOIN users u ON u.id = s.user_id
        WHERE p.id = $1 AND ${active}`,
       [id]
     );
     const p = r.rows[0];
     if (!p) return res.redirect(302, url);
+    url = `${site()}${productPath(p.slug, id)}`; // الرابطُ المعياريُّ: باسمِ المتجر
     let img = p.image_url || (Array.isArray(p.images) && p.images[0]) || '';
-    if (!img && p.video_url && p.video_url.includes('/video/upload/')) {
-      img = p.video_url.replace('/video/upload/', '/video/upload/so_0/').replace(/\.[a-z0-9]+($|\?.*$)/i, '.jpg');
-    }
+    if (!img && p.video_url) img = videoPoster(p.video_url);
     res.set('Cache-Control', 'public, max-age=300').type('html').send(shareHtml({
       title: `${p.name} — ${p.store_name}`,
       desc: (p.description || '').replace(/\s+/g, ' ').trim().slice(0, 160) || `₪${Number(p.price)} — ${p.store_name}`,
@@ -160,11 +160,9 @@ export async function shareStory(req, res, next) {
     );
     const st = r.rows[0];
     if (!st) return res.redirect(302, site() || '/');
-    const url = st.product_id ? `${site()}/product/${st.product_id}` : `${site()}/store/${st.slug}`;
+    const url = st.product_id ? `${site()}${productPath(st.slug, st.product_id)}` : `${site()}/store/${st.slug}`;
     let img = st.media_url || '';
-    if (st.media_type === 'video' && img.includes('/video/upload/')) {
-      img = img.replace('/video/upload/', '/video/upload/so_0/').replace(/\.[a-z0-9]+($|\?.*$)/i, '.jpg');
-    }
+    if (st.media_type === 'video') img = videoPoster(img);
     res.set('Cache-Control', 'public, max-age=300').type('html').send(shareHtml({
       title: `${st.store_name} — ستوري`,
       desc: (st.caption || '').replace(/\s+/g, ' ').trim().slice(0, 160) || st.store_name,

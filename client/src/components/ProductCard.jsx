@@ -14,6 +14,7 @@ import { getMySize, setMySize } from '../utils/mySize.js';
 import { flyToCart } from '../utils/flyToCart.js';
 import { productColorDots } from '../utils/colorDot.js';
 import QuickViewModal from './QuickViewModal.jsx';
+import { productPath } from '../utils/links.js';
 import Strike from './Strike.jsx';
 import useInViewOnce from '../hooks/useInViewOnce.js';
 
@@ -183,7 +184,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
     <>
     <Link
       ref={inViewRef}
-      to={`/product/${product.id}`}
+      to={productPath(product)}
       className={`group relative block h-full transition-[opacity,transform] duration-500 ease-out ${inView ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0'} hover:!-translate-y-1.5 active:scale-[0.99]`}
       style={{ transitionDelay: inView ? `${(index % 5) * 55}ms` : '0ms' }}
       onMouseEnter={startHover}
@@ -405,7 +406,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
                   onClick={(e) => {
                     // نقرة النقطة تفتح المنتج وهذا اللون محدّد مسبقاً (?color=) — أسرع من فتحه ثم الاختيار
                     e.preventDefault(); e.stopPropagation();
-                    navigate(`/product/${product.id}?color=${encodeURIComponent(d.name)}`);
+                    navigate(productPath(product, { color: d.name }));
                   }}
                   className={`h-3.5 w-3.5 shrink-0 cursor-pointer rounded-full transition hover:scale-110 ${on ? 'outline outline-2 outline-wine outline-offset-1' : ''} ${cSoldOut ? 'opacity-30' : ''}`}
                   style={{ background: d.css, boxShadow: '0 0 0 1px rgba(255,255,255,0.5), inset 0 0 0 1px rgba(0,0,0,0.12)' }}

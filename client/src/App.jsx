@@ -275,6 +275,10 @@ function AnimatedRoutes() {
           <Route path="/store/:slug/reels" element={<Reels />} />
           <Route path="/category/:cat" element={<CategoryPage />} />
           <Route path="/categories" element={<Categories />} />
+          {/* رابطُ المنتجِ يحملُ اسمَ متجرِه. المسارُ القديمُ (/product/:id) يبقى
+              للروابطِ المنشورةِ سلفاً، وصفحةُ المنتجِ تُحوّلُه إلى المسارِ الكاملِ
+              بمجرّدِ معرفةِ المتجر. */}
+          <Route path="/store/:slug/product/:id" element={<ProductDetails />} />
           <Route path="/product/:id" element={<ProductDetails />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

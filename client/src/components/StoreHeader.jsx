@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { productPath } from '../utils/links.js';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -163,7 +164,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
                   return (
                     <Link
                       key={p.id}
-                      to={`/product/${p.id}`}
+                      to={productPath(p)}
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => setFocus(false)}
                       className="flex items-center gap-3 px-3 py-2.5 transition hover:bg-wine/5"

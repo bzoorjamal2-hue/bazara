@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { siteOrigin } from '../utils/links.js';
 import api from '../api/client.js';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import Seo from '../components/Seo.jsx';
@@ -59,7 +60,7 @@ export default function Wishlist() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ids, isShared]);
 
-  const shareUrl = `${window.location.origin}/wishlist?ids=${items.slice(0, MAX_SHARE).map((p) => p.id).join(',')}`;
+  const shareUrl = `${siteOrigin()}/wishlist?ids=${items.slice(0, MAX_SHARE).map((p) => p.id).join(',')}`;
   const shareMine = async () => {
     try {
       if (navigator.share) await navigator.share({ title: t('wishlist.title'), text: t('wishlist.shareMsg'), url: shareUrl });

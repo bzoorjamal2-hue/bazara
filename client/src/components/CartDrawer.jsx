@@ -1,6 +1,8 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { productPath } from '../utils/links.js';
+import { siteOrigin } from '../utils/links.js';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext.jsx';
 import { buildWhatsappCheckout } from '../utils/whatsapp.js';
@@ -421,7 +423,7 @@ export default function CartDrawer() {
       // فتصلُ صاحبةَ المتجرِ ولو لم يُسجَّل عندنا.
     }
     const snap = orderSnapshot(reference, 'cod');
-    const trackUrl = reference ? `${window.location.origin}/track${storeSlug ? `?store=${storeSlug}` : ''}` : '';
+    const trackUrl = reference ? `${siteOrigin()}/track${storeSlug ? `?store=${storeSlug}` : ''}` : '';
     const waLink = buildWhatsappCheckout(wa, items, {
       ...cust,
       delivery,
@@ -615,11 +617,11 @@ export default function CartDrawer() {
                   {items.map((i) => (
                     <div key={i.key} className="glass flex gap-3 p-3">
                       {/* الصورة والاسم روابط لصفحة المنتج (تغلق الدرج) — مراجعة القطعة قبل الإتمام */}
-                      <Link to={`/product/${i.id}`} onClick={close} className="shrink-0">
+                      <Link to={productPath(i)} onClick={close} className="shrink-0">
                         <img src={i.imageUrl ? cldThumb(i.imageUrl, 200) : 'https://placehold.co/120x160/f1e9dd/5c1a2e?text=%F0%9F%91%97'} alt={i.name} loading="lazy" decoding="async" className="h-20 w-16 rounded-xl object-cover shadow-sm transition hover:opacity-85" />
                       </Link>
                       <div className="min-w-0 flex-1">
-                        <Link to={`/product/${i.id}`} onClick={close} className="block truncate font-display text-sm font-semibold text-stone-100 hover:text-gold-200">{i.name}</Link>
+                        <Link to={productPath(i)} onClick={close} className="block truncate font-display text-sm font-semibold text-stone-100 hover:text-gold-200">{i.name}</Link>
                         {(i.size || i.color) && (
                           <p className="mt-0.5 flex flex-wrap gap-1.5 text-[11px] text-stone-400">
                             {i.size && <span className="rounded-full bg-gold-400/10 px-2 py-0.5 text-gold-200">{t('store.sizeLabel')}: {sizeLabel(i.size, t)}</span>}

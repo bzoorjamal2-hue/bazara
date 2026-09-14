@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { SITE_URL } from '../config/site.js';
 
 // وسومُ الصفحة لمحرّكات البحث والمشاركة: العنوان والوصف وOpen Graph والبيانات
 // المنظّمة.
@@ -12,7 +13,7 @@ import { useEffect } from 'react';
 // وبدل تشخيص مكتبةٍ لم تعد تُصان: الوسومُ تُضبط هنا مباشرةً. المهمّة صغيرة
 // ومحدّدة (اضبط وسماً، وأعِده كما كان عند الخروج)، ولا تستحقّ اعتماداً خارجياً.
 
-const CANON_HOST = 'https://bazarastore.site';
+const CANON_HOST = SITE_URL; // مصدرٌ واحدٌ للدومينِ الرسميّ (يُستعمل أيضاً ببناءِ الروابطِ المنسوخة)
 
 // يضبط وسماً موجوداً أو ينشئه، ويعيد دالّةً تُرجع ما كان
 function setMeta(selector, attrs) {

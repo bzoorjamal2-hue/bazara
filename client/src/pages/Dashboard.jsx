@@ -3,6 +3,7 @@ import NotificationsBell from '../components/NotificationsBell.jsx';
 import { Link, useSearchParams } from 'react-router-dom';
 import api from '../api/client.js';
 import { useTranslation } from 'react-i18next';
+import { storeUrl } from '../utils/links.js';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useAuth } from '../context/AuthContext.jsx';
 import Seo from '../components/Seo.jsx';
@@ -234,7 +235,7 @@ function Overview({ productsCount }) {
   const [copied, setCopied] = useState(false);
   const [stats, setStats] = useState(null);
   const qrRef = useRef(null);
-  const publicUrl = store ? `${window.location.origin}/store/${store.slug}` : '';
+  const publicUrl = store ? storeUrl(store.slug) : '';
 
   // نجلب العدّادات (منتجات/زوّار) مباشرةً كي تظهر بالنظرة العامة بلا فتح تبويب آخر
   useEffect(() => {

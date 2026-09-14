@@ -1,4 +1,5 @@
 import { query } from '../config/db.js';
+import { productPath } from '../utils/media.js';
 import { pingIndexNow } from '../utils/indexnow.js';
 import { alertOwnerOnRestock } from './stockRequest.controller.js';
 import { normalizeCategory } from '../utils/category.js';
@@ -40,7 +41,7 @@ export async function createProduct(req, res, next) {
     const product = result.rows[0];
     pingIndexNow([
       `${process.env.PUBLIC_SITE_URL}/store/${store.slug}`,
-      `${process.env.PUBLIC_SITE_URL}/product/${product.id}`,
+      `${process.env.PUBLIC_SITE_URL}${productPath(store.slug, product.id)}`,
     ]);
     res.status(201).json({ product: mapOwnerProduct(product) });
   } catch (err) {

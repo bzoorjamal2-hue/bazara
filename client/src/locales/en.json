@@ -407,7 +407,8 @@
     "submitReview": "Submit review",
     "reviewAdded": "Thanks for your review!",
     "zoom": "Zoom image",
-    "videoThumb": "Product video"
+    "videoThumb": "Product video",
+    "copyManually": "Copy the link:"
   },
   "store": {
     "products": "Products",

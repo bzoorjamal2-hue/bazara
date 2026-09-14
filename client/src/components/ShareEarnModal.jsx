@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
+import { siteOrigin } from '../utils/links.js';
 import api, { getErrorMessage } from '../api/client.js';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { useTheme } from '../context/ThemeContext.jsx';
@@ -22,7 +23,7 @@ export default function ShareEarnModal({ store, onClose }) {
   const [copied, setCopied] = useState(false);
   useScrollLock(true);
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const origin = siteOrigin();
 
   const submit = async (e) => {
     e.preventDefault();

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
+import { storeUrl } from '../../utils/links.js';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import useScrollLock from '../../hooks/useScrollLock.js';
@@ -280,7 +281,7 @@ export default function AdminStoreDetail({ slug, onClose }) {
               {/* روابط سريعة */}
               <div className="flex flex-wrap gap-2">
                 <a
-                  href={`${window.location.origin}/store/${data.store.slug}`}
+                  href={storeUrl(data.store.slug)}
                   target="_blank" rel="noreferrer"
                   className="inline-flex items-center gap-1.5 rounded-xl border border-gold-400/30 px-3 py-2 text-sm font-semibold text-gold-200 transition hover:bg-gold-400/10"
                 >

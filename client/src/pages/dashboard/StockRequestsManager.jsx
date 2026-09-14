@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import useSessionState from '../../hooks/useSessionState.js';
 import { useTranslation } from 'react-i18next';
+import { productUrl } from '../../utils/links.js';
 import api, { getErrorMessage } from '../../api/client.js';
+import { useAuth } from '../../context/AuthContext.jsx';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
 import { buildWhatsappLink, waCandidates } from '../../utils/whatsapp.js';
@@ -228,8 +230,9 @@ export default function StockRequestsManager() {
 
 function RequestCard({ r, zones, couriers, busy, formOpen, onToggleForm, onConvert, onStatus, onSent, onRemove }) {
   const { t } = useTranslation();
+  const { store } = useAuth();
   const variant = [r.color, r.size ? sizeLabel(r.size, t) : ''].filter(Boolean).join(' · ');
-  const link = `${window.location.origin}/share/product/${r.productId}`;
+  const link = productUrl({ id: r.productId, storeSlug: r.storeSlug || store?.slug });
   const waMsg = t('dashboard.stockRequests.waMsg', { name: r.productName, variant: variant ? ` (${variant})` : '', link });
   const nums = waCandidates(r.phone);
   const o = r.order;

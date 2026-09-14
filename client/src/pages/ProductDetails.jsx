@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import Seo from '../components/Seo.jsx';
@@ -26,6 +26,7 @@ import SizeGuideModal from '../components/SizeGuideModal.jsx';
 import ImageInput from '../components/ImageInput.jsx';
 import { initPixels, trackPixel } from '../utils/pixels.js';
 import { setStoreScope } from '../utils/storeScope.js';
+import { productUrl, productPath, shareLink } from '../utils/links.js';
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -77,6 +78,22 @@ export default function ProductDetails() {
   const [showBuyBar, setShowBuyBar] = useState(false);
   const pickRef = useRef(null); // قسم اختيار اللون/المقاس — ننزلق إليه عند الضغط بلا اختيار
 
+  // رابطٌ قديمٌ (/product/:id) بلا اسمِ المتجر → نستبدلُه بالمسارِ الكاملِ حالَ معرفةِ
+  // المتجر (replace: بلا خطوةٍ جديدةٍ بسجلِّ الرجوع). هكذا يصيرُ ما في شريطِ العنوانِ
+  // هو نفسَه ما يُنسَخ ويُشارَك، وتبقى الروابطُ المنشورةُ سلفاً عاملةً كما هي.
+  // يشملُ هذا أيضاً رابطاً باسمِ متجرٍ قديمٍ بعد تغييرِ التاجرةِ اسمَ متجرِها:
+  // يُصحَّحُ إلى الاسمِ الحالي. نفكُّ ترميزَ المسارِ قبل المقارنةِ كي لا يقعَ تحويلٌ
+  // لا ينتهي لو حملَ السلاِگُ حرفاً مرمَّزاً.
+  const { pathname, search } = useLocation();
+  useEffect(() => {
+    if (!product?.storeSlug) return;
+    const want = productPath(product);
+    let here = pathname;
+    try { here = decodeURIComponent(pathname); } catch { /* مسارٌ بترميزٍ تالفٍ — نقارنُه كما هو */ }
+    if (here === want) return;
+    navigate(`${want}${search || ''}`, { replace: true });
+  }, [product?.storeSlug, product?.id, pathname, search]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // نُعلِم الشريط السفلي أنّنا داخل هذا المتجر — فتبقى وجهاته (رئيسية/تصنيفات/عروض/
   // ريلز/تتبّع) ضمن المتجر ولا تخرج للموقع العام (رابط صفحة المنتج لا يحمل السلاِگ)
   useEffect(() => { if (product?.storeSlug) setStoreScope(product.storeSlug); }, [product?.storeSlug]);
@@ -121,17 +138,14 @@ export default function ProductDetails() {
 
   const [shared, setShared] = useState(false);
 
-  // مشاركة المنتج: نشارك رابط /share/ الذي يعرض صورة المنتج الحقيقية بمعاينة واتساب
-  // (يحوّل تلقائياً لصفحة المنتج عند الفتح). واجهة المشاركة الأصلية إن توفّرت، وإلا نسخ الرابط.
+  // مشاركةُ المنتج: رابطُه الحاملُ اسمَ متجرِه. زواحفُ واتساب وفيسبوك تُحوَّلُ عليه
+  // تلقائياً إلى صفحةِ المعاينةِ (OG) فتظهرُ صورةُ القطعةِ واسمُها وسعرُها، وتفتحُه
+  // الزبونةُ صفحةَ المنتجِ مباشرةً — رابطٌ واحدٌ للاثنين بلا /share/ وسيطة.
   const shareProduct = async () => {
-    const url = product?.id ? `${window.location.origin}/share/product/${product.id}` : window.location.href;
-    // لا نمرّر text لواجهة المشاركة: عند اختيار "نسخ" من ورقة المشاركة يدمج النظام
-    // النص مع الرابط فيخرج الرابط ملوّثاً بكلام. ورابط /share/ يعرض أصلاً صورة المنتج
-    // واسمه وسعره كمعاينة (OG) — فالنص كان تكراراً لما تُظهره المعاينة.
-    if (navigator.share) {
-      try { await navigator.share({ title: product?.name, url }); return; } catch { /* أُلغيت */ }
-    }
-    try { await navigator.clipboard.writeText(url); setShared(true); setTimeout(() => setShared(false), 1800); } catch { /* تجاهل */ }
+    const url = product?.id ? productUrl(product) : window.location.href;
+    const res = await shareLink({ title: product?.name, url });
+    if (res === 'copied') { setShared(true); setTimeout(() => setShared(false), 1800); }
+    else if (res === 'failed') window.prompt(t('product.copyManually'), url);
   };
 
   // دليل اجتماعي حقيقي: عدد من شاهدوا المنتج خلال آخر 30 دقيقة (يحسبه الخادم

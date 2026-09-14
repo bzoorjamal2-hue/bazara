@@ -18,3 +18,8 @@ export const BAZARA_PHONE = '+970 59 212 4988';
 // Cloudinary — للرفع المباشر للفيديو/الصور من الجهاز (اتركهما فارغين لإخفاء زر الرفع)
 export const CLOUDINARY_CLOUD = 'dkzrnu4cs';
 export const CLOUDINARY_PRESET = 'bazara_unsigned';
+
+// دومين الموقع الرسميّ — تُبنى منه الروابطُ التي تُنسَخ وتُشارَك. لا يُشتقُّ من
+// window.location دائماً: التاجرةُ قد تنسخُ الرابطَ من تطبيقٍ أو من دومينِ معاينةٍ
+// مؤقّت، فيصلُ لزبونتها رابطٌ لا يفتحُ عندها.
+export const SITE_URL = 'https://bazarastore.site';

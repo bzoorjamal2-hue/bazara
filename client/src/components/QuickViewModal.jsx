@@ -13,6 +13,7 @@ import Strike from './Strike.jsx';
 import { getMySize, setMySize } from '../utils/mySize.js';
 import ColorSwatches from './ColorSwatches.jsx';
 import ProductMedia from './ProductMedia.jsx';
+import { productPath } from '../utils/links.js';
 import SizeGuideModal from './SizeGuideModal.jsx';
 import CloseButton from './CloseButton.jsx';
 
@@ -245,7 +246,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
           </div>
 
           <Link
-            to={`/product/${product.id}${color ? `?color=${encodeURIComponent(color)}` : ''}`}
+            to={productPath(product, { color })}
             onClick={onClose}
             className="mt-3 inline-flex items-center justify-center gap-1 self-center text-center text-sm font-medium text-wine/70 underline-offset-4 transition hover:text-wine hover:underline"
           >

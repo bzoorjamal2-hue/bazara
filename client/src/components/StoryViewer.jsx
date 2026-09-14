@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { productPath } from '../utils/links.js';
+import { siteOrigin } from '../utils/links.js';
 import api from '../api/client.js';
 import { cldOptimized, cldThumb } from '../utils/cloudinary.js';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
@@ -114,7 +116,7 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
     const text = reply.trim();
     const body = text || t('story.replyMsg', { name: store?.name });
     // رابط مشاركة نظيف: يعرض صورة الستوري بالمعاينة، والضغط عليه يوجّه للمنتج المربوط أو المتجر
-    const media = cur?.id ? `${window.location.origin}/share/story/${cur.id}` : '';
+    const media = cur?.id ? `${siteOrigin()}/share/story/${cur.id}` : '';
     const msg = media ? `${body}\n${media}` : body;
     window.open(buildWhatsappLink(store.whatsapp, msg), '_blank');
     setReply('');
@@ -226,7 +228,7 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
             <p className="mx-auto max-w-[92%] text-center text-[15px] font-semibold leading-snug text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.85)]">{cur.caption}</p>
           )}
           {cur.productId && (
-            <Link to={`/product/${cur.productId}`} onClick={onClose}
+            <Link to={productPath({ id: cur.productId, storeSlug: store?.slug })} onClick={onClose}
               className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#eee6d8] via-[#cdbda4] to-[#b09a7e] py-3 text-sm font-extrabold text-[#2a1c14] shadow-[0_8px_24px_-6px_rgba(176,_154,_126,_.8)] transition active:scale-[0.98]">
               <BagIcon className="h-5 w-5" /> {t('story.shopNow')}
             </Link>

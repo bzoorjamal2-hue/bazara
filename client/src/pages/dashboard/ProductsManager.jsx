@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import useSessionState from '../../hooks/useSessionState.js';
 import { useTranslation } from 'react-i18next';
+import { productUrl, shareLink } from '../../utils/links.js';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import ProductForm from './ProductForm.jsx';
@@ -83,19 +84,15 @@ export default function ProductsManager({ onCount }) {
     }
   };
 
-  // رابط مشاركة المنتج عبر /share/product → تظهر صورة المنتج بمعاينة واتساب (OG)
+  // رابطُ المنتجِ الحاملُ اسمَ المتجر — هو نفسُه رابطُ صفحتِه، وزواحفُ واتساب
+  // تُحوَّلُ عليه لصفحةِ المعاينةِ فتظهرُ الصورةُ والسعر. يُبنى على الدومينِ الرسميِّ
+  // لا على ما يصادفُ أن يكونَ بشريطِ العنوان، وإن تعذّرَ النسخُ عُرِضَ ليُنسَخَ يدوياً
+  // بدل أن تضغطَ التاجرةُ فلا يحدثَ شيءٌ ولا تعرفَ لماذا.
   const shareProduct = async (p) => {
-    const url = `${window.location.origin}/share/product/${p.id}`;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: p.name, url });
-      } else {
-        await navigator.clipboard.writeText(url);
-        flash(t('common.copied'));
-      }
-    } catch {
-      /* أُلغيت المشاركة */
-    }
+    const url = productUrl({ ...p, storeSlug: p.storeSlug || store?.slug });
+    const res = await shareLink({ title: p.name, url });
+    if (res === 'copied') flash(t('common.copied'));
+    else if (res === 'failed') window.prompt(t('product.copyManually'), url);
   };
 
   // المتبقي الكلي: مجموع كميات الألوان/النمر إن وُجدت وإلا المخزون العام —

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { productUrl, productPath, shareLink } from '../utils/links.js';
 import api from '../api/client.js';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
@@ -634,13 +635,11 @@ function ReelPlayer({ product: p, muted, t, onUnmute, onEnded, isLast, showHint,
 
   const share = async (e) => {
     e?.stopPropagation?.();
-    const url = `${window.location.origin}/share/product/${p.id}`;
-    const data = { title: p.name, url };
-    if (navigator.share) {
-      try { await navigator.share(data); return; } catch (err) { if (err && err.name === 'AbortError') return; }
-    }
-    try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 1800); }
-    catch { window.prompt(t('reels.copyPrompt'), url); }
+    // رابطُ القطعةِ الحاملُ اسمَ متجرِها (المعاينةُ تُخدَمُ للزواحفِ على الرابطِ نفسِه)
+    const url = productUrl(p);
+    const res = await shareLink({ title: p.name, url });
+    if (res === 'copied') { setCopied(true); setTimeout(() => setCopied(false), 1800); }
+    else if (res === 'failed') window.prompt(t('reels.copyPrompt'), url);
   };
 
   // المتغيّرات بوعي مخزون الألوان (النموذج الجديد)
@@ -816,7 +815,7 @@ function ReelPlayer({ product: p, muted, t, onUnmute, onEnded, isLast, showHint,
             className="flex w-12 items-center justify-center rounded-full bg-white/20 text-white ring-1 ring-white/25 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 disabled:active:scale-100">
             <CartIcon className="h-5 w-5" />
           </button>
-          <Link to={`/product/${p.id}${selColor ? `?color=${encodeURIComponent(selColor)}` : ''}`}
+          <Link to={productPath(p, { color: selColor })}
             className="flex items-center justify-center rounded-full bg-white/20 px-4 py-3 text-sm font-bold text-white ring-1 ring-white/25 transition active:scale-95">
             {t('reels.view')}
           </Link>

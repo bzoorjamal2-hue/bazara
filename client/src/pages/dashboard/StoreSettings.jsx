@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { storeUrl } from '../../utils/links.js';
 import api, { getErrorMessage } from '../../api/client.js';
 import { clearCachePrefixes } from '../../utils/apiCache.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -338,7 +339,7 @@ export default function StoreSettings() {
   // رابط الفتح: نفس أصل الصفحة الحالية. الجلسة (كوكي httpOnly + التوكن المحلي)
   // مربوطة بالأصل، فالقفز لنطاق آخر (التطبيق المثبّت أو نسخة معاينة أو محلياً)
   // يفتح المتجر على أصل بلا جلسة فيبدو الحساب «مسجّل خروج» عند الرجوع.
-  const storeOpenUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/store/${form.slug || ''}`;
+  const storeOpenUrl = storeUrl(form.slug || '');
   const copyUrl = async () => {
     try { await navigator.clipboard.writeText(storeUrl); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch { /* تجاهُل */ }
   };

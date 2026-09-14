@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { productPath } from '../utils/links.js';
 import { motion } from 'framer-motion';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
@@ -59,11 +60,11 @@ export default function WishlistDrawer() {
               {items.map((p) => (
                 <div key={p.id} className="glass flex gap-3 p-3">
                   {/* صورة أكبر بنسبة 3:4 + اسم بخط العرض — نفس روح بطاقات السلة */}
-                  <button onClick={() => { close(); navigate(`/product/${p.id}`); }} className="shrink-0">
+                  <button onClick={() => { close(); navigate(productPath(p)); }} className="shrink-0">
                     <img src={p.imageUrl ? cldThumb(p.imageUrl, 160) : PH} alt={p.name} className="h-20 w-16 rounded-xl object-cover shadow-sm" onError={(e) => (e.currentTarget.src = PH)} />
                   </button>
                   <div className="min-w-0 flex-1">
-                    <button onClick={() => { close(); navigate(`/product/${p.id}`); }} className="block truncate text-start font-display text-sm font-semibold text-stone-100">{p.name}</button>
+                    <button onClick={() => { close(); navigate(productPath(p)); }} className="block truncate text-start font-display text-sm font-semibold text-stone-100">{p.name}</button>
                     <p className="mt-1 flex items-baseline gap-2">
                       <span className="font-bold text-gold-300">{t('common.currency')}{p.price}</span>
                       {p.oldPrice > p.price && <Strike className="bz-oldprice text-sm">{t('common.currency')}{p.oldPrice}</Strike>}

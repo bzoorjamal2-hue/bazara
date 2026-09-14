@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { productPath } from '../utils/links.js';
 import api from '../api/client.js';
 import { cldThumb, cldVideoPoster } from '../utils/cloudinary.js';
 import { ForwardIcon } from '../components/icons.jsx';
@@ -67,7 +68,7 @@ export default function LandingShelf({ heading }) {
         {items.map((p) => (
           <Link
             key={p.id}
-            to={`/product/${p.id}`}
+            to={productPath(p)}
             role="listitem"
             className="bz-shelf-item"
             aria-label={p.name}

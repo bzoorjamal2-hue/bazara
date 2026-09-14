@@ -431,7 +431,8 @@
     "lastFew_many": "آخر {{count}} قطعة!",
     "lastFew_other": "آخر {{count}} قطعة!",
     "zoom": "تكبير الصورة",
-    "videoThumb": "فيديو المنتج"
+    "videoThumb": "فيديو المنتج",
+    "copyManually": "انسخي الرابط:"
   },
   "store": {
     "products": "المنتجات",
