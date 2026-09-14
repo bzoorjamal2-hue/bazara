@@ -298,7 +298,14 @@ export default function CartDrawer() {
       if (!cust.name.trim()) bad.name = true;
       if (!isValidMobile(cust.phone)) bad.phone = true;
     }
-    if (s >= 2 && !cust.city && !cust.area) bad.city = true;
+    // المكانُ يجبُ أن يكونَ مختاراً من القائمةِ لا مكتوباً بالحرف.
+    //
+    // الأجرةُ تختلفُ بالمكان: الضفّةُ شريحةٌ والقدسُ أخرى والداخلُ ثالثة. وما
+    // يُكتَبُ بالحرفِ لا يُطابقُ مكاناً معروفاً، فكانت الواجهةُ تعرضُ «التوصيل
+    // ٠٫٠٠» ثمّ يُصنّفُ الخادمُ الاسمَ ويخصمُ ٢٥ أو ٣٥ — فيرى الزبونُ رقماً
+    // ويُحاسَبُ بغيرِه. ومَن يكتبُ «رام الله» بدل «رام الله والبيرة» كان
+    // يُحاسَبُ بشريحةِ القدسِ خطأً. الاختيارُ من القائمةِ يُغلقُ البابَين.
+    if (s >= 2 && !pickedLoc) bad.city = true;
     // البوّابةُ تربطُ الدفعةَ ببريدٍ وترسلُ إليه الإيصال. بلا بريدٍ صالحٍ كان
     // الخادمُ يضعُ عنواناً وهميّاً، فتدفعُ الزبونةُ ولا يصلُها إثباتُ دفعها.
     if (s >= 3 && payMethod === 'card' && !emailOk) bad.email = true;
@@ -316,7 +323,8 @@ export default function CartDrawer() {
       bad.email ? t('co.emailInvalid')
         : (bad.name || bad.phone)
           ? (bad.phone && !bad.name && cust.phone.trim() ? t('co.phoneInvalid') : t('co.requiredContact'))
-          : t('co.requiredCity')
+          // كُتب اسمٌ لكنّه لا يطابقُ مكاناً: نقولُ السببَ لا «المكان مطلوب»
+          : ((cust.city || cust.area) ? t('co.cityNotListed') : t('co.requiredCity'))
     );
     const order = [...STEP_FIELDS[1], ...STEP_FIELDS[2], ...STEP_FIELDS[3]];
     const first = order.find((k) => bad[k]);

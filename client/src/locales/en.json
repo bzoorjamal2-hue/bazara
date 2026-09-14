@@ -550,7 +550,8 @@
     "cardSplitBody": "Only the price of the items ({{goods}}) is charged now. The delivery fee ({{delivery}}) is paid in cash to the courier when your order arrives.",
     "payNowLine": "Charged to your card now",
     "payCourierLine": "Paid to the courier on delivery",
-    "trustCardSplit": "Card details are entered on the bank page directly and nobody else sees them. The delivery fee is still collected in cash by the courier on handover."
+    "trustCardSplit": "Card details are entered on the bank page directly and nobody else sees them. The delivery fee is still collected in cash by the courier on handover.",
+    "cityNotListed": "Choose your location from the list so the correct delivery fee is shown"
   },
   "track": {
     "title": "Track your order",

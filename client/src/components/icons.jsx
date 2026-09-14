@@ -175,13 +175,13 @@ export function ForwardIcon({ className = 'h-4 w-4' }) { return svg(`${className
 export function BackIcon({ className = 'h-4 w-4' }) { return svg(`${className} rtl-flip`, <path {...L} d="M15 6 L9 12 L15 18" />); }
 export function CheckIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M5 13 L10 18 L19 6" />); }
 export function GiftIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M4 11 H20 V20 H4 Z M12 8 V20 M4 8 H20 V11 H4 Z" /><path {...L} d="M12 8 C12 8 10.5 4 8.5 5 C6.5 6 8 8 12 8 C12 8 13.5 4 15.5 5 C17.5 6 16 8 12 8 Z" /></>); }
-export function BagIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M6 8 H18 L19 20 H5 Z" /><path {...L} d="M9 10 V7 A3 3 0 0 1 15 7 V10" /></>); }
+export function BagIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M5.6 7.9 H18.4 L19.3 19.1 A1.7 1.7 0 0 1 17.6 20.9 H6.4 A1.7 1.7 0 0 1 4.7 19.1 Z" /><path {...L} d="M9 10.3 V7.2 A3 3 0 0 1 15 7.2 V10.3" /></>); }
 export function PinIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M12 21 C12 21 5 14.5 5 9.5 A7 7 0 0 1 19 9.5 C19 14.5 12 21 12 21 Z" /><circle {...L} cx="12" cy="9.5" r="2.4" /></>); }
 // تذكرة/كوبون: إطار بقصّتين نصف دائريتين على الجانبين + خط تخريم متقطّع
 export function TicketIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M4 7 H20 V10 A2 2 0 0 0 20 14 V17 H4 V14 A2 2 0 0 0 4 10 Z" /><path {...L} d="M14.5 8.4 V9.8 M14.5 11.3 V12.7 M14.5 14.2 V15.6" /></>); }
-export function ReceiptIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M6 3 H18 V21 L15 19 L12 21 L9 19 L6 21 Z" /><path {...L} d="M9 8 H15 M9 12 H15" /></>); }
-export function TruckIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M2 7 H14 V16 H2 Z M14 10 H18 L21 13 V16 H14 Z" /><circle {...L} cx="7" cy="18" r="1.6" /><circle {...L} cx="17" cy="18" r="1.6" /></>); }
-export function CashIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="3" y="6" width="18" height="12" rx="2" /><circle {...L} cx="12" cy="12" r="2.6" /></>); }
+export function ReceiptIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M5.6 4.8 A1.6 1.6 0 0 1 7.2 3.2 H16.8 A1.6 1.6 0 0 1 18.4 4.8 V20.6 L15.9 19 L13.4 20.6 L10.9 19 L8.4 20.6 L5.6 19 Z" /><path {...L} d="M8.8 8.4 H15.2 M8.8 11.8 H15.2 M8.8 15.2 H12.6" /></>); }
+export function TruckIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M2.6 7.6 A1.6 1.6 0 0 1 4.2 6 H12.4 A1.6 1.6 0 0 1 14 7.6 V16.4 H2.6 Z" /><path {...L} d="M14 10.3 H17.2 A1.6 1.6 0 0 1 18.5 10.9 L20.9 14.1 A1.6 1.6 0 0 1 21.2 15 V16.4 H14 Z" /><circle {...L} cx="7" cy="18" r="1.85" /><circle {...L} cx="17.4" cy="18" r="1.85" /></>); }
+export function CashIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="2.6" y="6.2" width="18.8" height="11.6" rx="2.4" /><circle {...L} cx="12" cy="12" r="2.5" /><circle cx="6.1" cy="12" r="0.95" fill="currentColor" /><circle cx="17.9" cy="12" r="0.95" fill="currentColor" /></>); }
 export function PhoneIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M6 3 H9 L10.5 8 L8.5 9.5 C9.5 11.8 12.2 14.5 14.5 15.5 L16 13.5 L21 15 V18 C21 19.5 19.5 21 18 21 C10 20.5 3.5 14 3 6 C3 4.5 4.5 3 6 3 Z" />); }
 export function InstagramIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="3.5" y="3.5" width="17" height="17" rx="5" /><circle {...L} cx="12" cy="12" r="4" /><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" /></>); }
 export function FacebookIcon({ className = 'h-5 w-5' }) {
@@ -192,47 +192,47 @@ export function FacebookIcon({ className = 'h-5 w-5' }) {
   );
 }
 export function PackageIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M12 3 L20 7 V17 L12 21 L4 17 V7 Z" /><path {...L} d="M4 7 L12 11 L20 7 M12 11 V21" /></>); }
-export function StoreIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M4 9 L5 4 H19 L20 9 A3 3 0 0 1 14.5 9 A3 3 0 0 1 9.5 9 A3 3 0 0 1 4 9 Z" /><path {...L} d="M5 9 V20 H19 V9 M10 20 V14 H14 V20" /></>); }
+export function StoreIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M4.3 9.5 L5.3 4.8 A1.1 1.1 0 0 1 6.4 3.9 H17.6 A1.1 1.1 0 0 1 18.7 4.8 L19.7 9.5 A2.9 2.9 0 0 1 14.1 9.5 A2.9 2.9 0 0 1 9.9 9.5 A2.9 2.9 0 0 1 4.3 9.5 Z" /><path {...L} d="M5.9 11.4 V18.7 A1.4 1.4 0 0 0 7.3 20.1 H16.7 A1.4 1.4 0 0 0 18.1 18.7 V11.4" /><path {...L} d="M10 20.1 V15.1 A1 1 0 0 1 11 14.1 H13 A1 1 0 0 1 14 15.1 V20.1" /></>); }
 export function BellIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M6 16 V10 A6 6 0 0 1 18 10 V16 L20 18 H4 Z" /><path {...L} d="M10 18 A2 2 0 0 0 14 18" /></>); }
 export function SparkleIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M12 3 C12.5 8 14 9.5 19 10 C14 10.5 12.5 12 12 17 C11.5 12 10 10.5 5 10 C10 9.5 11.5 8 12 3 Z" />); }
 export function FireIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M12 21 C8 21 5.5 18.5 5.5 15 C5.5 11 9 9 9 5 C12 7 13 9 13 11 C14.5 10 15 8.5 15 7 C17 9 18.5 12 18.5 15 C18.5 18.5 16 21 12 21 Z" />); }
-export function VideoIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="3" y="6" width="13" height="12" rx="2" /><path {...L} d="M16 10 L21 7 V17 L16 14 Z" /></>); }
+export function VideoIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="2.8" y="5.8" width="13.2" height="12.4" rx="3" /><path {...L} d="M16 10.3 L19.9 7.9 A1 1 0 0 1 21.4 8.8 V15.2 A1 1 0 0 1 19.9 16.1 L16 13.7 Z" /></>); }
 export function SpeakerIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M4 9 H7 L12 5 V19 L7 15 H4 Z" /><path {...L} d="M16 9 A4 4 0 0 1 16 15" /></>); }
 export function UserIcon({ className = 'h-5 w-5' }) { return svg(className, <><circle {...L} cx="12" cy="8" r="4" /><path {...L} d="M5 20 A7 7 0 0 1 19 20" /></>); }
 export function UsersIcon({ className = 'h-5 w-5' }) { return svg(className, <><circle {...L} cx="9" cy="8" r="3.2" /><path {...L} d="M3.5 19 A6 6 0 0 1 14.5 19" /><path {...L} d="M16 6 A3 3 0 0 1 16 12 M17 19 A6 6 0 0 0 20.5 16" /></>); }
-export function HomeIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M4 11 L12 4 L20 11 M6 9.5 V20 H18 V9.5" />); }
+export function HomeIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M3.4 10.9 L10.8 4.3 A1.8 1.8 0 0 1 13.2 4.3 L20.6 10.9" /><path {...L} d="M5.8 9.2 V18.6 A1.6 1.6 0 0 0 7.4 20.2 H16.6 A1.6 1.6 0 0 0 18.2 18.6 V9.2" /><path {...L} d="M9.9 20.2 V14.9 A1.5 1.5 0 0 1 11.4 13.4 H12.6 A1.5 1.5 0 0 1 14.1 14.9 V20.2" /></>); }
 export function ChartIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M4 4 V20 H20" /><path {...L} d="M8 16 V12 M12 16 V8 M16 16 V10" /></>); }
 // مسنن إعدادات حقيقي: ٨ أسنان مربّعة حول محور مركزي (بديل شكل «الشمس» السابق)
 export function GearIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M19.49 10.20 L22.10 10.58 L22.10 13.42 L19.49 13.80 L18.57 16.02 L20.15 18.14 L18.14 20.15 L16.02 18.57 L13.80 19.49 L13.42 22.10 L10.58 22.10 L10.20 19.49 L7.98 18.57 L5.86 20.15 L3.85 18.14 L5.43 16.02 L4.51 13.80 L1.90 13.42 L1.90 10.58 L4.51 10.20 L5.43 7.98 L3.85 5.86 L5.86 3.85 L7.98 5.43 L10.20 4.51 L10.58 1.90 L13.42 1.90 L13.80 4.51 L16.02 5.43 L18.14 3.85 L20.15 5.86 L18.57 7.98 Z" /><circle {...L} cx="12" cy="12" r="3" /></>); }
 export function ImageIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="3" y="5" width="18" height="14" rx="2" /><circle {...L} cx="8.5" cy="10" r="1.6" /><path {...L} d="M5 17 L10 12 L14 16 L17 13 L21 17" /></>); }
-export function TrashIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M5 7 H19 M9 7 V5 H15 V7 M7 7 L8 20 H16 L17 7 M10 10 V17 M14 10 V17" />); }
+export function TrashIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M4.6 6.9 H19.4" /><path {...L} d="M9.4 6.9 V5.5 A1.3 1.3 0 0 1 10.7 4.2 H13.3 A1.3 1.3 0 0 1 14.6 5.5 V6.9" /><path {...L} d="M6.7 6.9 L7.6 19.1 A1.7 1.7 0 0 0 9.3 20.7 H14.7 A1.7 1.7 0 0 0 16.4 19.1 L17.3 6.9" /><path {...L} d="M10.3 10.4 V17 M13.7 10.4 V17" /></>); }
 export function PlusIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M12 5 V19 M5 12 H19" />); }
 export function MailIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="3" y="5" width="18" height="14" rx="2" /><path {...L} d="M3.5 7 L12 13 L20.5 7" /></>); }
 export function SaveIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M5 4 H16 L20 8 V20 H5 Z" /><path {...L} d="M8 4 V9 H15 V4 M8 20 V14 H16 V20" /></>); }
 export function KeyIcon({ className = 'h-5 w-5' }) { return svg(className, <><circle {...L} cx="8" cy="8" r="4" /><path {...L} d="M11 11 L20 20 M17 17 L19 15 M15 15 L17 13" /></>); }
 // تاج: مسار مقفل (كان مفتوحاً فتظهر القاعدة ناقصة) + شريط قاعدة منفصل
-export function CrownIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M4 17 L5 7.5 L9 11.5 L12 5.5 L15 11.5 L19 7.5 L20 17 Z" /><path {...L} d="M5 20 H19" /></>); }
+export function CrownIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M4.2 18.3 L5.2 7.9 A0.65 0.65 0 0 1 6.3 7.5 L9.4 10.9 L11.4 5.7 A0.65 0.65 0 0 1 12.6 5.7 L14.6 10.9 L17.7 7.5 A0.65 0.65 0 0 1 18.8 7.9 L19.8 18.3 A1.5 1.5 0 0 1 18.3 19.9 H5.7 A1.5 1.5 0 0 1 4.2 18.3 Z" /><path {...L} d="M8.3 16 H15.7" /></>); }
 // رابط: حلقتا سلسلة متناظرتان (كانت شخطة مائلة بأقواس غير متناظرة)
 export function LinkIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M10.5 13.5 A3.6 3.6 0 0 0 15.6 13.5 L18.4 10.7 A3.6 3.6 0 0 0 13.3 5.6 L12.2 6.7" /><path {...L} d="M13.5 10.5 A3.6 3.6 0 0 0 8.4 10.5 L5.6 13.3 A3.6 3.6 0 0 0 10.7 18.4 L11.8 17.3" /></>); }
 export function CopyIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="9" y="9" width="11" height="11" rx="2" /><path {...L} d="M5 15 H4 A1 1 0 0 1 3 14 V4 A1 1 0 0 1 4 3 H14 A1 1 0 0 1 15 4 V5" /></>); }
 export function EditIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M4 20 H8 L18 10 L14 6 L4 16 Z M13 7 L17 11" />); }
-export function CardIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="3" y="5" width="18" height="14" rx="2" /><path {...L} d="M3 9 H21 M6 15 H10" /></>); }
-export function RulerIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M4 8 L16 20 L20 16 L8 4 Z M8 8 L10 10 M11 7 L13 9 M14 10 L16 12" />); }
+export function CardIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="2.7" y="4.9" width="18.6" height="14.2" rx="2.8" /><path {...L} d="M2.7 9.4 H21.3" /><path {...L} d="M6.2 14.8 H10.4" /></>); }
+export function RulerIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M3.7 16.7 L16.7 3.7 L20.3 7.3 L7.3 20.3 Z" /><path {...L} d="M6.9 13.4 L9 15.5 M10.2 10.2 L12.3 12.3 M13.4 6.9 L15.5 9" /></>); }
 export function PaletteIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M12 3 A9 9 0 1 0 12 21 C13.5 21 13 19 14 18.5 C15 18 18 19 19.5 16 A9 9 0 0 0 12 3 Z" /><circle cx="8" cy="11" r="1.1" fill="currentColor" /><circle cx="12" cy="8" r="1.1" fill="currentColor" /><circle cx="16" cy="11" r="1.1" fill="currentColor" /></>); }
 export function StarIcon({ className = 'h-5 w-5', filled = true }) { return svg(className, <path d="M12 3 L14.6 9 L21 9.6 L16 14 L17.5 20.5 L12 17 L6.5 20.5 L8 14 L3 9.6 L9.4 9 Z" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />); }
 export function MegaphoneIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M4 10 V14 H7 L16 19 V5 L7 10 Z" /><path {...L} d="M18 9 A4 4 0 0 1 18 15" /></>); }
-export function FolderIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M3 6 H9 L11 9 H21 V19 H3 Z" />); }
-export function NoteIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M6 3 H15 L19 7 V21 H6 Z" /><path {...L} d="M9 9 H15 M9 13 H15 M9 17 H13" /></>); }
-export function TrophyIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M7 4 H17 V9 A5 5 0 0 1 7 9 Z" /><path {...L} d="M7 5 H4 V7 A3 3 0 0 0 7 10 M17 5 H20 V7 A3 3 0 0 1 17 10 M10 14 H14 L13 18 H11 Z M9 20 H15" /></>); }
+export function FolderIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M3.2 7.2 A1.8 1.8 0 0 1 5 5.4 H9.1 A1.8 1.8 0 0 1 10.6 6.2 L11.8 8.1 H19 A1.8 1.8 0 0 1 20.8 9.9 V17.8 A1.8 1.8 0 0 1 19 19.6 H5 A1.8 1.8 0 0 1 3.2 17.8 Z" />); }
+export function NoteIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M6.4 3.3 H13.9 L19 8.4 V19.3 A1.5 1.5 0 0 1 17.5 20.8 H6.4 A1.5 1.5 0 0 1 4.9 19.3 V4.8 A1.5 1.5 0 0 1 6.4 3.3 Z" /><path {...L} d="M13.9 3.3 V7.3 A1.1 1.1 0 0 0 15 8.4 H19" /><path {...L} d="M8.2 12.4 H15.4 M8.2 16 H12.9" /></>); }
+export function TrophyIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M7.6 3.8 H16.4 V9.3 A4.4 4.4 0 0 1 7.6 9.3 Z" /><path {...L} d="M7.6 5.6 H4.7 A0.8 0.8 0 0 0 3.9 6.4 V7.3 A3.3 3.3 0 0 0 7.2 10.6" /><path {...L} d="M16.4 5.6 H19.3 A0.8 0.8 0 0 1 20.1 6.4 V7.3 A3.3 3.3 0 0 1 16.8 10.6" /><path {...L} d="M12 13.6 V16.5" /><path {...L} d="M8.8 20.3 L9.8 16.5 H14.2 L15.2 20.3 Z" /></>); }
 export function ClockIcon({ className = 'h-5 w-5' }) { return svg(className, <><circle {...L} cx="12" cy="12" r="8" /><path {...L} d="M12 8 V12 L15 14" /></>); }
 // ساعة رملية: الجانبان يلتقيان فعلياً عند الخصر (كان بينهما فجوة)
 export function HourglassIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M6 3.5 H18 M6 20.5 H18" /><path {...L} d="M7.6 3.5 V6.2 C7.6 9.2 12 10.9 12 12 C12 13.1 7.6 14.8 7.6 17.8 V20.5" /><path {...L} d="M16.4 3.5 V6.2 C16.4 9.2 12 10.9 12 12 C12 13.1 16.4 14.8 16.4 17.8 V20.5" /></>); }
-export function WarnIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M12 4 L21 19 H3 Z" /><path {...L} d="M12 10 V14 M12 16.5 V16.6" /></>); }
+export function WarnIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M10.3 4.5 A2 2 0 0 1 13.7 4.5 L20.8 17.4 A2 2 0 0 1 19.1 20.4 H4.9 A2 2 0 0 1 3.2 17.4 Z" /><path {...L} d="M12 9.9 V14.1" /><circle cx="12" cy="17" r="0.95" fill="currentColor" /></>); }
 export function ArrowUpIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M12 5 V19 M6 11 L12 5 L18 11" />); }
 export function ArrowDownIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M12 5 V19 M6 13 L12 19 L18 13" />); }
 export function PhoneShareIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="6" y="3" width="12" height="18" rx="2" /><path {...L} d="M10 18 H14" /></>); }
 export function HandIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M9 11 V5.5 A1.5 1.5 0 0 1 12 5.5 V10 M12 9 A1.5 1.5 0 0 1 15 9 V11 M15 10 A1.5 1.5 0 0 1 18 10 V15 A6 6 0 0 1 6 15 V12 A1.5 1.5 0 0 1 9 12" />); }
-export function PartyIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M4 20 L9 8 L16 15 Z" /><path {...L} d="M14 4 V6 M18 8 H16 M19 12 L17.5 11 M15 5.5 L14 7" /></>); }
+export function PartyIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M4.1 19.9 L8.7 9.5 Q12.4 12 14.5 15.3 Z" /><path {...L} d="M13.6 8.6 C15.4 7.4 16.4 5.5 16.3 3.4" /><circle cx="19.4" cy="6.3" r="1.05" fill="currentColor" /><circle cx="20.8" cy="11.4" r="0.9" fill="currentColor" /><circle cx="14.9" cy="4.4" r="0.85" fill="currentColor" /></>); }
 export function ShareIcon({ className = 'h-5 w-5' }) { return svg(className, <><circle {...L} cx="6" cy="12" r="2.4" /><circle {...L} cx="18" cy="6" r="2.4" /><circle {...L} cx="18" cy="18" r="2.4" /><path {...L} d="M8 11 L16 7 M8 13 L16 17" /></>); }
 export function UploadIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M12 16 V5 M7 10 L12 5 L17 10 M5 19 H19" />); }
 export function DownloadIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M12 4 V15 M7 10 L12 15 L17 10 M5 19 H19" />); }
@@ -242,9 +242,9 @@ export function CameraIcon({ className = 'h-5 w-5' }) { return svg(className, <>
 // قفل مغلق — الإيقاف الإداريّ (نظيره المفتوح أدناه لرفعه)
 export function LockIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="5" y="11" width="14" height="9" rx="2" /><path {...L} d="M8 11 V8 a4 4 0 0 1 8 0 V11" /></>); }
 export function LockOpenIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="5" y="11" width="14" height="9" rx="2" /><path {...L} d="M8 11 V8 A4 4 0 0 1 15.5 6.5" /></>); }
-export function GridIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M4 4 H10 V10 H4 Z M14 4 H20 V10 H14 Z M4 14 H10 V20 H4 Z M14 14 H20 V20 H14 Z" />); }
+export function GridIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="3.7" y="3.7" width="6.6" height="6.6" rx="1.9" /><rect {...L} x="13.7" y="3.7" width="6.6" height="6.6" rx="1.9" /><rect {...L} x="3.7" y="13.7" width="6.6" height="6.6" rx="1.9" /><rect {...L} x="13.7" y="13.7" width="6.6" height="6.6" rx="1.9" /></>); }
 export function InstallIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="6" y="3" width="12" height="18" rx="2" /><path {...L} d="M12 8 V14 M9.5 11.5 L12 14 L14.5 11.5" /></>); }
-export function TagIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M4 4 H11 L20 13 L13 20 L4 11 Z" /><circle cx="8" cy="8" r="1.3" fill="currentColor" /></>); }
+export function TagIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M11.1 3.5 H5.5 A2 2 0 0 0 3.5 5.5 V11.1 A2 2 0 0 0 4.1 12.5 L11.5 19.9 A2 2 0 0 0 14.3 19.9 L19.9 14.3 A2 2 0 0 0 19.9 11.5 L12.5 4.1 A2 2 0 0 0 11.1 3.5 Z" /><circle cx="8.1" cy="8.1" r="1.35" fill="currentColor" /></>); }
 export function WaveIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M7 13 V6.5 A1.4 1.4 0 0 1 9.8 6.5 V11 M9.8 5.5 A1.4 1.4 0 0 1 12.6 5.5 V11 M12.6 6.5 A1.4 1.4 0 0 1 15.4 6.5 V12 M15.4 9 A1.4 1.4 0 0 1 18 9 V14 A6 6 0 0 1 6.5 16.5 L4.5 13 A1.5 1.5 0 0 1 7 11.5" />); }
 // علامة استفهام داخل دائرة — زر التلميح «؟» بكل النماذج. رُسمت كأيقونة SVG بدل
 // حرف «؟» النصّي: الحرف يختلف شكله ووزنه بين الخطوط والأجهزة ولا يتمركز داخل
@@ -261,5 +261,5 @@ export function EyeOffIcon({ className = 'h-5 w-5' }) {
 }
 // طابعة — طباعة فاتورة الطلب
 export function PrintIcon({ className = 'h-5 w-5' }) {
-  return svg(className, <><path {...L} d="M7 9V4h10v5" /><rect {...L} x="4" y="9" width="16" height="7" rx="2" /><path {...L} d="M7 14h10v6H7z" /></>);
+  return svg(className, <><path {...L} d="M7.2 9 V4.9 A1.3 1.3 0 0 1 8.5 3.6 H15.5 A1.3 1.3 0 0 1 16.8 4.9 V9" /><path {...L} d="M7.2 16.4 H5.4 A2 2 0 0 1 3.4 14.4 V11 A2 2 0 0 1 5.4 9 H18.6 A2 2 0 0 1 20.6 11 V14.4 A2 2 0 0 1 18.6 16.4 H16.8" /><path {...L} d="M8.5 13.6 H15.5 A1.3 1.3 0 0 1 16.8 14.9 V19.1 A1.3 1.3 0 0 1 15.5 20.4 H8.5 A1.3 1.3 0 0 1 7.2 19.1 V14.9 A1.3 1.3 0 0 1 8.5 13.6 Z" /><circle cx="17.6" cy="11.7" r="0.85" fill="currentColor" /></>);
 }
