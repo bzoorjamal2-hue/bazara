@@ -408,7 +408,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
                     e.preventDefault(); e.stopPropagation();
                     navigate(productPath(product, { color: d.name }));
                   }}
-                  className={`h-3.5 w-3.5 shrink-0 cursor-pointer rounded-full transition hover:scale-110 ${on ? 'outline outline-2 outline-wine outline-offset-1' : ''} ${cSoldOut ? 'opacity-30' : ''}`}
+                  className={`h-3.5 w-3.5 shrink-0 cursor-pointer rounded-full transition hover:scale-110 ${on ? 'bz-pick-ring-sm' : ''} ${cSoldOut ? 'opacity-30' : ''}`}
                   style={{ background: d.css, boxShadow: '0 0 0 1px rgba(255,255,255,0.5), inset 0 0 0 1px rgba(0,0,0,0.12)' }}
                 />
               );

@@ -753,6 +753,38 @@ html.dark .bz-story-ring-seen { box-shadow: inset 0 0 0 2px rgba(205, 189, 164, 
 .bz-story-gap { background: #F4EDE2; }
 html.dark .bz-story-gap { background: #1c1610; }
 
+/* اختيارُ اللونِ والنمرة: حبرٌ لا بنّيّ.
+   كانت الحلقةُ حولَ اللونِ المختارِ بنّيّةً (wine) والنمرةُ المختارةُ كتلةً بنّيّةً —
+   فوقَ صفحةٍ بنّيّةٍ كريميّةٍ أصلاً. النتيجة: بنّيٌّ على بنّيّ، لا العينُ تلتقطُ
+   المختارَ بسرعةٍ ولا الشكلُ مريح (وحلقةٌ بنّيّةٌ حولَ مربّعٍ بنّيٍّ تكادُ تختفي).
+   الحبرُ هنا هو لونُ نصِّ الصفحةِ نفسِه لا لونٌ جديد، فيفصلُ فوراً فوقَ أيِّ لونِ
+   قطعةٍ ويبقى من اللوحة. ألوانٌ صريحةٌ للوضعين: أصنافُ الثيم تُعيدُ تعيينَ
+   ink/cream فكانت تنقلبُ ليلاً. */
+.bz-pick-ring {
+  outline: 2px solid #2b2b2b;
+  outline-offset: 2px;
+}
+.bz-pick-ring-sm {
+  outline: 2px solid #2b2b2b;
+  outline-offset: 1px;
+}
+html.dark .theme-pub .bz-pick-ring,
+html.dark .theme-pub .bz-pick-ring-sm { outline-color: #f4ecdc; }
+
+/* النمرةُ المختارة: تعبئةٌ حبريّةٌ بنصٍّ كريميّ (والعكسُ ليلاً) */
+.bz-pick-on {
+  background-color: #2b2b2b;
+  border-color: #2b2b2b;
+  color: #F4EDE2;
+}
+.bz-pick-on-sub { color: rgba(244, 237, 226, 0.78); }
+html.dark .theme-pub .bz-pick-on {
+  background-color: #f4ecdc;
+  border-color: #f4ecdc;
+  color: #241b12;
+}
+html.dark .theme-pub .bz-pick-on-sub { color: rgba(36, 27, 18, 0.72); }
+
 /* حركاتُ الدخول (تلاشٍ/صعودٌ/انزلاقُ شيت) تبدأ من حالةٍ غيرِ مرئيّةٍ بـfill: both —
    وهذا يعني أنّ العنصرَ لا يُرى أصلاً ما لم تعملِ الحركة. من يُطفئُ الحركةَ بجهازه
    لا يحتاجُها، ولا يصحُّ أن يدفعَ ثمنَها زرَّ شراءٍ أو شيتَ إتمامِ طلبٍ لا يظهر.

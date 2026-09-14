@@ -534,13 +534,13 @@ export default function ProductDetails() {
                           title={usual ? t('product.mySize') : undefined}
                           onClick={() => { setSelSize(s); setMySize(s); setPickErr(''); }}
                           className={`relative flex min-w-[3.75rem] flex-col items-center rounded-xl border px-3 py-1.5 text-center transition ${
-                            on ? 'border-wine bg-wine text-cream' : 'border-wine/30 text-wine hover:bg-wine/10'
+                            on ? 'bz-pick-on' : 'border-wine/30 text-wine hover:bg-wine/10'
                           } ${soldOut ? 'cursor-not-allowed border-stone-300/50 bg-transparent text-stone-400 opacity-60' : ''} ${usual ? 'bz-usual' : ''}`}
                         >
                           <span className={`text-sm font-bold leading-none ${soldOut ? 'strike' : ''}`}>{sizeLabel(s, t)}</span>
                           {/* المتبقّي بنفس التنسيق لكل النمر: رمادي = متوفّر، أحمر = نفد */}
                           {qty != null && (
-                            <span className={`mt-1 text-[10px] font-medium leading-none ${on ? 'text-cream/80' : soldOut ? 'text-red-500' : 'text-wine/55'}`}>
+                            <span className={`mt-1 text-[10px] font-medium leading-none ${on ? 'bz-pick-on-sub' : soldOut ? 'text-red-500' : 'text-wine/55'}`}>
                               {soldOut ? t('product.soldOutShort') : t('product.leftShort', { count: qty })}
                             </span>
                           )}

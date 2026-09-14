@@ -181,7 +181,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
                         disabled={soldOut}
                         onClick={() => { setSize(s); setMySize(s); setErr(''); }}
                         title={!on && !soldOut && mySize === s ? t('product.mySize') : undefined}
-                        className={`flex min-w-[3.5rem] flex-col items-center rounded-xl border px-3 py-1.5 text-center transition ${on ? 'border-wine bg-wine text-cream' : 'border-wine/25 text-wine hover:bg-wine/5'} ${soldOut ? 'cursor-not-allowed border-stone-300/50 text-stone-400 opacity-60' : ''} ${!on && !soldOut && mySize === s ? 'ring-2 ring-gold-400/70 ring-offset-1' : ''}`}
+                        className={`flex min-w-[3.5rem] flex-col items-center rounded-xl border px-3 py-1.5 text-center transition ${on ? 'bz-pick-on' : 'border-wine/25 text-wine hover:bg-wine/5'} ${soldOut ? 'cursor-not-allowed border-stone-300/50 text-stone-400 opacity-60' : ''} ${!on && !soldOut && mySize === s ? 'ring-2 ring-gold-400/70 ring-offset-1' : ''}`}
                       >
                         <span className={`text-sm font-bold leading-none ${soldOut ? 'strike' : ''}`}>{sizeLabel(s, t)}</span>
                         {qty != null && (
