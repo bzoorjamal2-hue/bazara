@@ -167,9 +167,17 @@ export default function OrdersManager() {
   // كان ثابتاً على «الدفع عند الاستلام» لكلِّ طلبٍ ولو سُدِّد بالبطاقة، فيقرأُه
   // المندوبُ ويطلبُ مبلغاً مدفوعاً. والمبلغُ مكتوبٌ صراحةً بحالةِ التحصيلِ كي لا
   // يجتهدَ أحدٌ بقراءةِ جدولِ الفاتورة.
-  const payLine = (o) => (o.paymentMethod === 'card'
-    ? t('dashboard.ordersSection.payLineCard')
-    : t('dashboard.ordersSection.payLineCod', { amount: `${t('common.currency')}${Number(o.total || 0).toFixed(2)}` }));
+  // ما يُحصَّلُ عند الباب: بالبطاقةِ رسومُ التوصيلِ وحدَها (البضاعةُ مدفوعة)،
+  // وبالاستلامِ الإجماليُّ كلُّه. نفسُ قاعدةِ الخادمِ التي تُرسَلُ لشركةِ التوصيل.
+  const dueAtDoor = (o) => (o.paymentMethod === 'card' ? Number(o.deliveryFee || 0) : Number(o.total || 0));
+  const payLine = (o) => {
+    const money = `${t('common.currency')}${dueAtDoor(o).toFixed(2)}`;
+    if (o.paymentMethod !== 'card') return t('dashboard.ordersSection.payLineCod', { amount: money });
+    // توصيلٌ مجانيٌّ بطلبِ بطاقة: لا شيءَ يُحصَّلُ أصلاً
+    return dueAtDoor(o) > 0
+      ? t('dashboard.ordersSection.payLineCard', { amount: money })
+      : t('dashboard.ordersSection.payLineCardFree');
+  };
 
   // نصّ الطلب كاملاً للنسخ — يُلصق بأي مكان (دفتر، محادثة، ملاحظة)
   const orderText = (o) => {

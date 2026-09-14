@@ -545,7 +545,12 @@
     "requiredCity": "Please choose your delivery location",
     "step2Title": "Delivery details",
     "payNow": "Pay securely · {{amount}}",
-    "doneSendNow": "Send the order on WhatsApp"
+    "doneSendNow": "Send the order on WhatsApp",
+    "cardSplitTitle": "Delivery is not charged to your card",
+    "cardSplitBody": "Only the price of the items ({{goods}}) is charged now. The delivery fee ({{delivery}}) is paid in cash to the courier when your order arrives.",
+    "payNowLine": "Charged to your card now",
+    "payCourierLine": "Paid to the courier on delivery",
+    "trustCardSplit": "Card details are entered on the bank page directly and nobody else sees them. The delivery fee is still collected in cash by the courier on handover."
   },
   "track": {
     "title": "Track your order",
@@ -604,7 +609,9 @@
     "success": "Payment completed",
     "failed": "The payment did not go through. Please try again.",
     "backToStore": "Continue shopping",
-    "receiptTitle": "Your purchase certificate is ready"
+    "receiptTitle": "Your purchase certificate is ready",
+    "paidGoods": "The price of your items has been paid",
+    "dueCourier": "{{amount}} delivery fee remains, paid in cash to the courier when your order arrives."
   },
   "wishlist": {
     "title": "Wishlist",
@@ -769,9 +776,10 @@
       "pending": "Pending payment",
       "failed": "Failed",
       "payCard": "Paid by card",
-      "paidBadge": "Paid",
+      "paidBadge": "Items paid",
       "payLineCod": "Payment: cash on delivery — collect {{amount}} on handover",
-      "payLineCard": "Payment: paid by card — nothing to collect on delivery"
+      "payLineCard": "Payment: items paid by card — collect {{amount}} delivery fee on handover",
+      "payLineCardFree": "Payment: paid by card — nothing to collect on delivery"
     },
     "addProduct": "Add new product",
     "product": {
@@ -965,6 +973,10 @@
     "sealLine1": "ORDER",
     "sealLine2": "VERIFIED",
     "thanks": "Thank you for your trust, {{name}}",
-    "keepIt": "Keep this certificate — the order number on it is all you need to track it or ask the store anything."
+    "keepIt": "Keep this certificate — the order number on it is all you need to track it or ask the store anything.",
+    "paidCardGoods": "Items paid by card",
+    "paidLine": "Paid by card",
+    "dueLine": "Paid to the courier on delivery",
+    "dueNote": "The delivery fee is paid in cash to the courier when the order arrives."
   }
 }

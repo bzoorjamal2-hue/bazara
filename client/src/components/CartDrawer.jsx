@@ -922,6 +922,24 @@ export default function CartDrawer() {
                             <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-stone-400">
                               <LockIcon className="h-3.5 w-3.5 shrink-0" /> {t('co.cardHint')}
                             </p>
+                            {/* التنبيهُ الأهمُّ بالشاشة: البطاقةُ تحملُ ثمنَ البضاعةِ
+                                وحدَه، ورسومُ التوصيلِ تُدفَعُ نقداً للمندوب. بلا هذا
+                                يظنُّ الزبونُ أنّه سدّدَ كلَّ شيءٍ فيُفاجَأُ بمبلغٍ عند
+                                الباب — وهي أكثرُ لحظةٍ يُرفَضُ فيها الطلب. */}
+                            {delivery > 0 && (
+                              <div className="mt-2.5 flex items-start gap-2 rounded-2xl border border-gold-400/30 bg-gold-400/[0.08] px-3.5 py-3">
+                                <TruckIcon className="mt-0.5 h-4 w-4 shrink-0 text-gold-200" />
+                                <div className="min-w-0 text-[11px] leading-relaxed text-stone-300">
+                                  <p className="font-bold text-gold-200">{t('co.cardSplitTitle')}</p>
+                                  <p className="mt-0.5">
+                                    {t('co.cardSplitBody', {
+                                      goods: `${t('common.currency')}${afterDiscount.toFixed(2)}`,
+                                      delivery: `${t('common.currency')}${delivery.toFixed(2)}`,
+                                    })}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
                           </motion.div>
                         )}
                       </div>
@@ -1006,6 +1024,21 @@ export default function CartDrawer() {
                               {payMethod === 'card' ? t('co.payCardTitle') : t('co.payCodTitle')}
                             </span>
                           </div>
+                          {/* بالبطاقةِ ينقسمُ الإجماليُّ دفعتَين: ما يُخصَمُ الآنَ وما
+                              يُدفَعُ عند الباب. عرضُ رقمٍ واحدٍ هنا ثمّ خصمُ غيرِه من
+                              البطاقةِ هو عينُ «الخربطة» التي نتجنّبُها. */}
+                          {payMethod === 'card' && delivery > 0 && (
+                            <div className="mt-2 space-y-1.5 rounded-xl border border-gold-400/25 bg-gold-400/[0.08] p-2.5">
+                              <div className="flex items-center justify-between text-sm font-bold text-gold-200">
+                                <span className="inline-flex items-center gap-1.5"><CardIcon className="h-4 w-4 shrink-0" /> {t('co.payNowLine')}</span>
+                                <span>{t('common.currency')}{afterDiscount.toFixed(2)}</span>
+                              </div>
+                              <div className="flex items-center justify-between text-sm text-stone-300">
+                                <span className="inline-flex items-center gap-1.5"><TruckIcon className="h-4 w-4 shrink-0" /> {t('co.payCourierLine')}</span>
+                                <span className="font-semibold">{t('common.currency')}{delivery.toFixed(2)}</span>
+                              </div>
+                            </div>
+                          )}
                         </div>
                         {/* إلى أين يذهبُ الطلبُ ولمن — مراجعةٌ سريعةٌ بلا رجوعٍ لخطوة */}
                         <div className="mt-3 space-y-1 border-t border-gold-400/15 pt-2.5 text-[11px] leading-relaxed text-stone-400">
@@ -1017,7 +1050,9 @@ export default function CartDrawer() {
                       {/* طمأنةٌ قبل الضغط: بياناتُها محميّة، ولا دفعَ قبل الاستلام */}
                       <div className="flex items-start gap-2 rounded-2xl border border-gold-400/15 bg-black/20 px-3.5 py-3 text-[11px] leading-relaxed text-stone-400">
                         <ShieldIcon className="mt-0.5 h-4 w-4 shrink-0 text-gold-200" />
-                        <span>{payMethod === 'card' ? t('co.trustCard') : t('co.trustCod')}</span>
+                        <span>{payMethod === 'card'
+                          ? (delivery > 0 ? t('co.trustCardSplit') : t('co.trustCard'))
+                          : t('co.trustCod')}</span>
                       </div>
                     </motion.div>
                   )}
@@ -1050,8 +1085,10 @@ export default function CartDrawer() {
                       {(placing || cardBusy) ? t('common.loading') : (
                         <>
                           {payMethod === 'card' ? <LockIcon className="h-5 w-5 shrink-0" /> : <CheckIcon className="h-5 w-5 shrink-0" />}
+                          {/* رقمُ الزرِّ هو المخصومُ فعلاً لا قيمةُ الطلب: بالبطاقةِ
+                              ثمنُ البضاعةِ وحدَه، وبالاستلامِ الإجماليُّ كلُّه */}
                           {payMethod === 'card'
-                            ? t('co.payNow', { amount: `${t('common.currency')}${grand.toFixed(2)}` })
+                            ? t('co.payNow', { amount: `${t('common.currency')}${afterDiscount.toFixed(2)}` })
                             : t('co.confirmPay', { amount: `${t('common.currency')}${grand.toFixed(2)}` })}
                         </>
                       )}

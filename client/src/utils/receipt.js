@@ -60,6 +60,10 @@ export const RECEIPT_CSS = `
   tfoot .save td{color:#1f7a4d;font-weight:700}
   .rc-total td{font-weight:800;font-size:16px;color:#5a4416;
                border-top:2px solid #cdbda4;background:linear-gradient(180deg,#fdf7e8,#f8eed8)}
+  /* الباقي عند الباب: يُقرأُ قبل الإجماليِّ نفسِه لأنّه المبلغُ المطلوبُ الآن */
+  .rc-due td{font-weight:800;font-size:15px;color:#8a5a12;background:#fdf4e3;border-top:1px solid #e8d6ae}
+  .rc-due-note{margin-top:8px;font-size:11.5px;line-height:1.7;color:#6f6357;
+               background:#fdf7ec;border:1px dashed #e0d2b8;border-radius:10px;padding:8px 11px}
   .rc-foot{display:flex;align-items:center;gap:14px;margin-top:16px;padding-top:14px;
            border-top:1px dashed #e0d2b8}
   .rc-seal{width:64px;height:64px;flex-shrink:0;border-radius:50%;
@@ -104,6 +108,10 @@ export function receiptBody(o, t) {
   const total = num(o.total) || Math.max(0, subtotal - discount) + delivery;
   const saved = items.reduce((s, i) => s + (num(i.oldPrice) > num(i.price) ? (num(i.oldPrice) - num(i.price)) * num(i.qty) : 0), 0);
   const card = o.paymentMethod === 'card';
+  // قسمةُ المبلغِ بطلبِ البطاقة: البضاعةُ سُدِّدت إلكترونيّاً، والتوصيلُ يُدفَعُ
+  // نقداً للمندوب. الشهادةُ ورقةُ الزبونِ عند البابِ فلا يجوزُ أن تُخفيَ الباقي.
+  const paid = card ? Math.max(0, total - delivery) : 0;
+  const due = card ? delivery : total;
 
   const rows = items.map((it, i) => `<tr>
     <td class="n">${i + 1}</td>
@@ -136,7 +144,9 @@ export function receiptBody(o, t) {
           <!-- التاريخُ أرقامٌ لاتينيّةٌ بترتيبٍ ثابت: بلا dir=ltr ينقلبُ داخلَ
                ورقةٍ عربيّةٍ فيصيرُ «PM 3:24 ,9/14/2026» -->
           <div class="rc-date" dir="ltr">${esc(when.toLocaleString())}</div>
-          <div class="rc-pay${card ? ' card' : ''}">${esc(card ? t('receipt.paidCard') : t('receipt.payCod'))}</div>
+          <div class="rc-pay${card ? ' card' : ''}">${esc(
+            card ? (due > 0 ? t('receipt.paidCardGoods') : t('receipt.paidCard')) : t('receipt.payCod')
+          )}</div>
         </div>
       </div>
 
@@ -172,8 +182,15 @@ export function receiptBody(o, t) {
           ${discount > 0 ? line(`${t('receipt.discount')}${o.couponCode ? ` (${o.couponCode})` : ''}`, `−${cur}${discount.toFixed(2)}`, 'save') : ''}
           ${line(t('receipt.delivery'), delivery > 0 ? `${cur}${delivery.toFixed(2)}` : t('receipt.freeDelivery'))}
           <tr class="rc-total"><td colspan="6" class="e">${esc(t('receipt.total'))}</td><td class="e">${cur}${total.toFixed(2)}</td></tr>
+          ${/* بطلبِ البطاقة: سطرانِ يفصلانِ المدفوعَ عن الباقي — فيعرفُ حاملُ
+               الورقةِ ومَن يسلّمُه الطردَ كم بقي بالضبط */''}
+          ${card && due > 0 ? `
+            ${line(t('receipt.paidLine'), `${cur}${paid.toFixed(2)}`, 'save')}
+            <tr class="rc-due"><td colspan="6" class="e">${esc(t('receipt.dueLine'))}</td><td class="e">${cur}${due.toFixed(2)}</td></tr>
+          ` : ''}
         </tfoot>
       </table>
+      ${card && due > 0 ? `<div class="rc-due-note">${esc(t('receipt.dueNote'))}</div>` : ''}
 
       <div class="rc-foot">
         <div class="rc-seal">${esc(t('receipt.sealLine1'))}<br>${esc(t('receipt.sealLine2'))}</div>

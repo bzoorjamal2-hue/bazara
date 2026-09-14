@@ -83,6 +83,22 @@ export default function PaymentCallback() {
           <>
             <p className="mb-3 flex justify-center text-emerald-500"><PartyIcon className="h-16 w-16" /></p>
             <h1 className="bz-ph-t !text-2xl">{t('checkout.success')}</h1>
+            {/* ما سُدِّد وما بقي — أوّلَ ما تقعُ عليه العينُ بعد العودةِ من البنك.
+                البطاقةُ حملت ثمنَ المنتجاتِ وحدَه، ورسومُ التوصيلِ تُدفَعُ نقداً
+                للمندوب؛ وبلا قولِ ذلك هنا يُفاجَأُ الزبونُ بمبلغٍ عند الباب. */}
+            {order && (
+              <div className="mt-4 rounded-2xl border border-gold-400/25 bg-gold-400/[0.08] p-4 text-start">
+                <p className="flex items-center gap-1.5 text-sm font-bold text-emerald-300">
+                  <CheckIcon className="h-4 w-4 shrink-0" /> {t('checkout.paidGoods')}
+                </p>
+                {Number(order.codDue) > 0 && (
+                  <p className="mt-1.5 flex items-start gap-1.5 text-[12px] leading-relaxed text-stone-300">
+                    <TruckIcon className="mt-0.5 h-4 w-4 shrink-0 text-gold-200" />
+                    {t('checkout.dueCourier', { amount: `${t('common.currency')}${Number(order.codDue).toFixed(2)}` })}
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* رقمُ الطلب — تُنسَخُ بضغطةٍ وتُلصَقُ بأيّ استفسار */}
             {(order?.reference || reference) && (

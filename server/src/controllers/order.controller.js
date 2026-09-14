@@ -12,6 +12,7 @@ import { notifyUser } from '../utils/notify.js';
 import { feeForCity, cityOfVillage } from '../config/deliveryCities.js';
 import { variantInStock } from './stockRequest.controller.js';
 import { normalizeMobile, isValidMobile } from '../utils/phone.js';
+import { paidOnline, codAmount } from '../utils/cod.js';
 
 // إشعار صاحب المتجر (بريد + إشعار دفع على الجوال) عند وصول طلب جديد — بالخلفية
 async function notifyOwnerNewOrder(storeId, info) {
@@ -225,6 +226,15 @@ export async function checkout(req, res, next) {
     if (freeOver > 0 && Math.max(0, subtotal - discount) >= freeOver) deliveryFee = 0;
     const total = Math.max(0, subtotal - discount) + deliveryFee;
 
+    // البطاقةُ تحملُ ثمنَ البضاعةِ وحدَه — ورسومُ التوصيلِ تُدفَعُ نقداً للمندوب.
+    // الطلبُ يُخزَّنُ بقيمتِه الكاملةِ (total) كما هو، والمخصومُ من البطاقةِ هذا.
+    const charge = Math.max(0, subtotal - discount);
+    // خصمٌ يبتلعُ ثمنَ البضاعةِ كلَّه: لا شيءَ تأخذُه البوّابة، وتردُّ خطأً غامضاً
+    // لو أُرسِلَ لها صفر. الاستلامُ هو طريقُ هذا الطلب.
+    if (charge <= 0) {
+      return res.status(400).json({ error: 'قيمة المنتجات صفر بعد الخصم — أكملي الطلب بالدفع عند الاستلام.' });
+    }
+
     const reference = 'BZ-' + crypto.randomBytes(5).toString('hex').toUpperCase();
     const orderRes = await query(
       `INSERT INTO orders (store_id, customer_name, customer_email, customer_phone, items, total, currency, status, reference, city, area, address, notes, delivery_fee, coupon_code, discount, payment_method)
@@ -234,9 +244,11 @@ export async function checkout(req, res, next) {
         appliedCoupon, discount]
     );
 
-    // عمولةُ المنصّةِ على الطلب — صفرٌ افتراضاً، فدخلُنا من الاشتراكِ لا منها
+    // عمولةُ المنصّةِ على الطلب — صفرٌ افتراضاً، فدخلُنا من الاشتراكِ لا منها.
+    // تُحسَبُ على المخصومِ فعلاً لا على قيمةِ الطلب: لا يُقتطَعُ نصيبٌ من مالٍ
+    // لم يمرَّ بالبوّابةِ أصلاً (رسومُ التوصيلِ تُقبَضُ نقداً عند الباب).
     const feePercent = Math.min(100, Math.max(0, Number(store.platform_fee_percent) || 0));
-    const platformCut = Math.round(total * feePercent) / 100;
+    const platformCut = Math.round(charge * feePercent) / 100;
 
     let payUrl = '';
     let tranRef = '';
@@ -244,7 +256,7 @@ export async function checkout(req, res, next) {
       if (useLahza) {
         const r = await initializeTransaction({
           email: customer.email || 'customer@bazara.shop',
-          amount: total,
+          amount: charge,
           currency: PAY_CURRENCY,
           reference,
           callbackUrl: `${SITE()}/payment/callback`,
@@ -258,10 +270,10 @@ export async function checkout(req, res, next) {
         tranRef = r?.data?.reference || reference;
       } else {
         const r = await createPlatformPayment({
-          splitPayout: buildSplitPayout(store, total),
+          splitPayout: buildSplitPayout(store, charge),
           cartId: reference,
           currency: 'ILS',
-          amount: total,
+          amount: charge,
           description: `طلب ${reference} — ${store.store_name}`,
           customerName: name,
           customerEmail: customer.email || 'customer@bazara.shop',
@@ -808,6 +820,10 @@ export async function verify(req, res, next) {
       notes: order.notes || '',
       createdAt: order.created_at,
       paymentMethod: order.payment_method || 'cod',
+      // قسمةُ المبلغ — تأتي من الخادمِ محسوبةً كي لا تُعيدَ الواجهةُ حسابَها
+      // فيفترقَ رقمٌ عن رقم: ما سُدِّد بالبطاقة، وما يُدفَعُ للمندوبِ عند الباب.
+      paidOnline: paidOnline(order),
+      codDue: codAmount(order),
       storeName: order.store_name || '',
       storeSlug: order.store_slug || '',
       storeWhatsapp: order.store_whatsapp || '',
@@ -910,6 +926,10 @@ export async function listMyOrders(req, res, next) {
         // طريقةُ الدفع: لم تكن تصلُ اللوحةَ أصلاً، فكانت الفاتورةُ تقولُ «الدفع
         // عند الاستلام» لطلبٍ سُدِّد بالبطاقة، ولا شيءَ بالقائمةِ يُفرّقُ بينهما.
         paymentMethod: o.payment_method || 'cod',
+        // ما قُبِضَ إلكترونيّاً وما بقي يُحصَّلُ عند الباب — بنفسِ قاعدةِ الخادمِ
+        // التي تُرسَلُ لشركةِ التوصيل، فلا يختلفُ ما تراه التاجرةُ عمّا يُحصَّل.
+        paidOnline: paidOnline(o),
+        codDue: codAmount(o),
         city: o.city || '',
         area: o.area || '',
         address: o.address || '',
