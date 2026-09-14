@@ -122,33 +122,25 @@ const waValid = (v) => {
   return d.length >= 10 && d.length <= 15 && !d.startsWith('0');
 };
 
-// معاينة شريط الإعلانات — مطابقة لِما يراه الزبون بأعلى المتجر (غامق ذهبي بلمعة
-// ونصٍّ ذهبيّ متحرّك). تعرض الإعلانات بالتناوب فعلاً كي تتأكّد التاجرة من الشكل.
+// معاينة شريط الإعلانات — مطابقة لِما يراه الزبون بأعلى المتجر: سطرٌ هادئٌ بلون
+// الموقع تتبدّل رسائلُه بتلاشٍ كلَّ خمسِ ثوانٍ، لا مارْكي يمشي.
 function AnnouncementPreview({ items }) {
   const list = items.length ? items : [''];
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    if (list.length < 2) return undefined;
+    const id = setInterval(() => setI((v) => (v + 1) % list.length), 5000);
+    return () => clearInterval(id);
+  }, [list.length]);
+  const current = list[i % list.length];
   return (
-    <div dir="ltr" className="group relative overflow-hidden rounded-xl border-y border-gold-400/60 bg-gradient-to-r from-[#1f130d] via-[#3f2a19] to-[#1f130d] py-2 shadow-[inset_0_1px_0_rgba(209,_194,_170,.22),inset_0_-1px_0_rgba(0,0,0,.4)]">
-      <span className="pointer-events-none absolute inset-x-0 top-0 z-10 h-px bg-gradient-to-r from-transparent via-[#e1d5c1]/70 to-transparent" />
-      <span className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-px bg-gradient-to-r from-transparent via-[#e1d5c1]/45 to-transparent" />
-      <span className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(80%_140%_at_50%_50%,rgba(209,_194,_170,.14),transparent_70%)]" />
-      <span className="animate-ann-shine pointer-events-none absolute inset-y-0 z-20 w-1/3 bg-[linear-gradient(105deg,transparent,rgba(255,244,210,.34)_50%,transparent)]" />
-      {/* أبطأ من الشريط الحقيقي عمداً: المعاينة صغيرة والتاجرة تقرأ نصّها للتدقيق */}
-      <div className="relative z-[5] flex w-max animate-marquee" style={{ animationDuration: `${Math.min(160, Math.max(34, list.join('  ').length * 0.95))}s` }}>
-        {[0, 1].map((g) => (
-          <div key={g} className="flex shrink-0 items-center" aria-hidden={g === 1}>
-            {Array.from({ length: Math.max(6, list.length * 3) }).map((_, k) => (
-              <span key={k} className="ann-text flex items-center gap-2 whitespace-nowrap px-5 text-[12px] font-extrabold" dir="auto">
-                <svg viewBox="0 0 24 24" className="h-3 w-3 shrink-0 text-[#e7dcca] drop-shadow-[0_0_5px_rgba(209,_194,_170,.75)]" style={{ WebkitTextFillColor: 'initial' }} fill="currentColor">
-                  <path d="M12 2c.5 3.8 2.2 5.5 6 6-3.8.5-5.5 2.2-6 6-.5-3.8-2.2-5.5-6-6 3.8-.5 5.5-2.2 6-6Z" />
-                </svg>
-                {list[k % list.length]}
-              </span>
-            ))}
-          </div>
-        ))}
-      </div>
-      <span className="pointer-events-none absolute inset-y-0 left-0 z-20 w-10 bg-gradient-to-r from-[#1f130d] to-transparent" />
-      <span className="pointer-events-none absolute inset-y-0 right-0 z-20 w-10 bg-gradient-to-l from-[#1f130d] to-transparent" />
+    <div className="bz-ann overflow-hidden rounded-xl py-2.5">
+      <p className="flex items-center justify-center gap-2 px-5 text-center">
+        <svg viewBox="0 0 24 24" className="bz-ann-ico h-3 w-3 shrink-0" fill="currentColor" aria-hidden="true">
+          <path d="M12 2c.5 3.8 2.2 5.5 6 6-3.8.5-5.5 2.2-6 6-.5-3.8-2.2-5.5-6-6 3.8-.5 5.5-2.2 6-6Z" />
+        </svg>
+        <span key={current} className="bz-ann-text line-clamp-2 text-[12px] font-semibold tracking-wide" dir="auto">{current}</span>
+      </p>
     </div>
   );
 }

@@ -712,13 +712,6 @@ html.dark .theme-pub .app-navbar.shadow-md { box-shadow: 0 12px 28px -8px rgba(0
 }
 .animate-sheet { animation: sheet-up 0.28s ease-out both; }
 
-/* شريط إعلانات متحرّك (Marquee) — يكرّر النص مرتين لحركة متصلة */
-@keyframes marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
-}
-/* شريط الإعلانات يمشي دائماً — لا نوقفه مع "تقليل الحركة" بـiOS وإلا يختفي بالجوال */
-.animate-marquee { animation: marquee 20s linear infinite; }
 
 /* شيت نشر الستوري: يُرسَم عبر Portal على <body> فيخرج عن .theme-pub ولا تصله
    قواعد الثيم — كان الشيت أبيضَ ثابتاً وحقله يرث .input الأساسيّ الداكن،
@@ -760,25 +753,37 @@ html.dark .bz-story-ring-seen { box-shadow: inset 0 0 0 2px rgba(205, 189, 164, 
 .bz-story-gap { background: #F4EDE2; }
 html.dark .bz-story-gap { background: #1c1610; }
 
-/* لمعة ذهبية تمسح شريط الإعلانات الغامق — تعطيه إحساس المعدن الفاخر */
-@keyframes ann-shine {
-  0% { transform: translateX(-60%); }
-  55%, 100% { transform: translateX(160%); }
+/* شريط الإعلانات — سطرٌ هادئٌ من لوحة الموقع نفسها لا بلوكٌ أسودُ دخيل. ألوانه
+   صريحةٌ للوضعين (لا يتّكل على remaps الثيم) لأنه يُستعمل بالصفحات العامة وبمعاينة
+   لوحة التحكّم معاً. */
+.bz-ann {
+  background: #ece2d2;
+  color: #5e4636;
+  border-top: 1px solid rgba(94, 70, 54, 0.14);
+  border-bottom: 1px solid rgba(94, 70, 54, 0.14);
 }
-.animate-ann-shine { animation: ann-shine 5.5s ease-in-out infinite; }
+.bz-ann-ico { color: #a68d6d; }
+html.dark .bz-ann {
+  background: #1d160e;
+  color: #e4d8c5;
+  border-top-color: rgba(228, 216, 197, 0.14);
+  border-bottom-color: rgba(228, 216, 197, 0.14);
+}
+html.dark .bz-ann-ico { color: #b09a7e; }
 
-/* نصّ الشريط: تدرّج ذهبي مصقول يتحرّك ببطء فتبدو الحروف كالمعدن اللامع.
-   نُبقي لوناً صلباً fallback أولاً كي لا يختفي النص لو لم يُدعم background-clip. */
-.ann-text {
-  color: #f3e6c2;
-  background: linear-gradient(100deg, #dccfba 0%, #fff6da 22%, #b09a7e 45%, #fff2cf 66%, #cdbda4 100%);
-  background-size: 220% auto;
-  -webkit-background-clip: text; background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,.5));
-  animation: ann-textshine 6s linear infinite;
+/* تبدّل الرسائل: تلاشٍ قصيرٌ مع إزاحةٍ بمقدار ٣ بكسل. يبدأ من حالةٍ مرئيّةٍ (٤٥٪)
+   لا من الصفر، ويعملُ بلا fill-mode: لو جُمّدت الحركةُ أو أُسقطت — وهذا يحصل فعلاً
+   بمتصفّحاتٍ تخنقُ الحركةَ، وهو ما أوقع المارْكي القديمَ بالاختفاء على iOS — يبقى
+   النصُّ مقروءاً بدل أن يغيبَ عند opacity:0. */
+@keyframes bz-ann-in {
+  from { opacity: 0.45; transform: translateY(3px); }
+  to { opacity: 1; transform: none; }
 }
-@keyframes ann-textshine { to { background-position: 220% center; } }
+.bz-ann-text { opacity: 1; animation: bz-ann-in 0.45s ease-out; }
+/* مع «تقليل الحركة»: تبديلٌ صامتٌ بلا تلاشٍ — ولا يضيعُ إعلانٌ لأن النصَّ يتغيّر */
+@media (prefers-reduced-motion: reduce) {
+  .bz-ann-text { animation: none; }
+}
 
 /* انزلاق درج من اليسار (للوضع الإنجليزي LTR) */
 @keyframes slide-in-left {
