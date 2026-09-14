@@ -885,7 +885,7 @@ export async function listMyOrders(req, res, next) {
     if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
     const r = await query(
       `SELECT id, reference, customer_name, customer_phone, items, total, currency, status, created_at,
-              city, area, address, notes, delivery_fee, coupon_code, discount,
+              city, area, address, notes, delivery_fee, coupon_code, discount, payment_method,
               opost_tracking, opost_status, eps_barcode, eps_status, gobox_barcode, gobox_status
        FROM orders WHERE store_id = $1 ORDER BY created_at DESC LIMIT 200`,
       [store.id]
@@ -907,6 +907,9 @@ export async function listMyOrders(req, res, next) {
         discount: Number(o.discount || 0),
         currency: o.currency,
         status: o.status,
+        // طريقةُ الدفع: لم تكن تصلُ اللوحةَ أصلاً، فكانت الفاتورةُ تقولُ «الدفع
+        // عند الاستلام» لطلبٍ سُدِّد بالبطاقة، ولا شيءَ بالقائمةِ يُفرّقُ بينهما.
+        paymentMethod: o.payment_method || 'cod',
         city: o.city || '',
         area: o.area || '',
         address: o.address || '',

@@ -767,7 +767,11 @@
       "cancelled": "Cancelled",
       "paid": "Paid ✓",
       "pending": "Pending payment",
-      "failed": "Failed"
+      "failed": "Failed",
+      "payCard": "Paid by card",
+      "paidBadge": "Paid",
+      "payLineCod": "Payment: cash on delivery — collect {{amount}} on handover",
+      "payLineCard": "Payment: paid by card — nothing to collect on delivery"
     },
     "addProduct": "Add new product",
     "product": {

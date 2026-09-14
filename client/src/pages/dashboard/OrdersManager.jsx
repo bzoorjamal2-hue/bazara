@@ -163,6 +163,14 @@ export default function OrdersManager() {
   // قديمة) نعرض آخر ٦ خانات من المعرّف بدل UUID كامل يملأ السطر.
   const orderNo = (o) => o.reference || `#${String(o.id).replace(/-/g, '').slice(-6).toUpperCase()}`;
 
+  // سطرُ الدفعِ بصيغتَيه — يُكتَبُ مرّةً ويُقرأُ بالفاتورةِ وبالنصِّ المنسوخِ معاً.
+  // كان ثابتاً على «الدفع عند الاستلام» لكلِّ طلبٍ ولو سُدِّد بالبطاقة، فيقرأُه
+  // المندوبُ ويطلبُ مبلغاً مدفوعاً. والمبلغُ مكتوبٌ صراحةً بحالةِ التحصيلِ كي لا
+  // يجتهدَ أحدٌ بقراءةِ جدولِ الفاتورة.
+  const payLine = (o) => (o.paymentMethod === 'card'
+    ? t('dashboard.ordersSection.payLineCard')
+    : t('dashboard.ordersSection.payLineCod', { amount: `${t('common.currency')}${Number(o.total || 0).toFixed(2)}` }));
+
   // نصّ الطلب كاملاً للنسخ — يُلصق بأي مكان (دفتر، محادثة، ملاحظة)
   const orderText = (o) => {
     const cur = t('common.currency');
@@ -176,6 +184,8 @@ export default function OrdersManager() {
       `${t('dashboard.ordersSection.delivery')}: ${cur}${Number(o.deliveryFee || 0).toFixed(2)}`,
       o.discount > 0 ? `${o.couponCode || ''}: −${cur}${Number(o.discount).toFixed(2)}` : '',
       `${t('dashboard.ordersSection.total')}: ${cur}${Number(o.total).toFixed(2)}`,
+      // النصُّ المنسوخُ يُلصَقُ بمحادثةِ المندوبِ غالباً — فطريقةُ الدفعِ جزءٌ منه
+      payLine(o),
       o.notes ? `${t('dashboard.ordersSection.notes')}: ${o.notes}` : '',
     ].filter(Boolean).join('\n');
   };
@@ -256,7 +266,11 @@ export default function OrdersManager() {
           </tfoot>
         </table>
 
-        <div class="pay">${e(t('dashboard.ordersSection.payCod'))}</div>
+        ${/* سطرُ الدفعِ يتبعُ طريقةَ الطلبِ الحقيقيّةَ لا ثابتاً واحداً.
+             كان مكتوباً «الدفع عند الاستلام» على كلِّ فاتورةٍ ولو سُدِّدت
+             بالبطاقة، فيقرأُها المندوبُ ويطلبُ المبلغَ ممّن دفعَ مسبقاً.
+             فاتورةُ المدفوعِ الآن خضراءُ وتقولُ صراحةً: لا تُحصّل شيئاً. */''}
+        <div class="pay${o.paymentMethod === 'card' ? ' paid' : ''}">${e(payLine(o))}</div>
         <div class="thanks">${e(t('dashboard.ordersSection.invoiceThanks', { store: store?.name || '' }))}</div>
       </div>`;
   };
@@ -289,7 +303,9 @@ export default function OrdersManager() {
     .lbl{color:#6b6b6b}
     .total td{font-weight:800;font-size:15px;color:#6b5320;border-top:2px solid #b09a7e;background:linear-gradient(180deg,#fdf7e8,#f9f0dc)}
     small{color:#6b6b6b}
-    .pay{margin-top:10px;font-size:12px;color:#3f2e22;background:#f6f1e8;border-radius:8px;padding:7px 10px}
+    .pay{margin-top:10px;font-size:12px;font-weight:700;color:#3f2e22;background:#f6f1e8;border-radius:8px;padding:7px 10px}
+    /* المدفوعُ مسبقاً بلونٍ مختلفٍ كي تلمحَه العينُ قبل قراءةِ السطر */
+    .pay.paid{color:#1f7a4d;background:#eef7f0;border:1px solid #cfe8da}
     .thanks{margin-top:10px;text-align:center;color:#8a7f75;font-size:11.5px}
   `;
 
@@ -734,9 +750,16 @@ export default function OrdersManager() {
                       <span>{new Date(o.createdAt).toLocaleString()}</span>
                     </p>
                   </div>
-                  <span className="flex shrink-0 items-center gap-1.5">
+                  <span className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
                     {/* رقم الطلب القصير الذي يراه الزبون (BZ-…) لا معرّف قاعدة البيانات الطويل */}
                     <span className="rounded-full bg-gold-400/10 px-2 py-0.5 text-[10px] font-bold text-stone-400" dir="ltr">{orderNo(o)}</span>
+                    {/* شارةُ «مدفوع» تُميّزُ طلبَ البطاقةِ بنظرة: بلا هذا كان طلبُ
+                        الفيزا يبدو كطلبِ الاستلامِ تماماً بالقائمة */}
+                    {o.paymentMethod === 'card' && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-200">
+                        <CheckIcon className="h-3 w-3 shrink-0" /> {t('dashboard.ordersSection.paidBadge')}
+                      </span>
+                    )}
                     <span className={`badge ${BADGE[o.status] || ''}`}>{t(`dashboard.ordersSection.${o.status}`)}</span>
                   </span>
                 </div>

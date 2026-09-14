@@ -998,6 +998,14 @@ export default function CartDrawer() {
                               : <span>{t('common.currency')}{delivery.toFixed(2)}</span>}
                           </div>
                           <div className="mt-1 flex justify-between font-bold text-gold-200"><span>{t('co.grandTotal')}</span><span className="font-display text-lg gradient-text">{t('common.currency')}{grand.toFixed(2)}</span></div>
+                          {/* الملخّصُ يذكرُ كيف يُدفعُ المبلغُ لا كم هو فقط — ويتبدّلُ
+                              مع اختيارِ الطريقة، فما يُراجَعُ هو ما سيحدثُ فعلاً */}
+                          <div className="flex justify-between text-stone-400">
+                            <span>{t('co.payMethod')}</span>
+                            <span className="font-semibold text-stone-300">
+                              {payMethod === 'card' ? t('co.payCardTitle') : t('co.payCodTitle')}
+                            </span>
+                          </div>
                         </div>
                         {/* إلى أين يذهبُ الطلبُ ولمن — مراجعةٌ سريعةٌ بلا رجوعٍ لخطوة */}
                         <div className="mt-3 space-y-1 border-t border-gold-400/15 pt-2.5 text-[11px] leading-relaxed text-stone-400">

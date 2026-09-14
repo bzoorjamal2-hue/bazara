@@ -2,6 +2,7 @@ import { query } from '../config/db.js';
 import { applyOrderStatus } from './order.controller.js';
 import { notifyUser } from '../utils/notify.js';
 import { encrypt, decrypt } from '../config/opost.js';
+import { codAmount } from '../utils/cod.js';
 // حالات LogesTechs موحّدة مع EPS (نفس النظام) — نعيد استخدامها بلا تكرار.
 import { epsStatusLabelAr as goboxLabelAr, epsToBazaraStatus as goboxToBazara, EPS_TERMINAL as GOBOX_TERMINAL } from '../config/eps.js';
 import {
@@ -114,7 +115,7 @@ export async function goboxSendOrder(req, res, next) {
     if (!store.gobox_connected) return res.status(400).json({ error: 'اربط حساب gobox أولاً من إعدادات المتجر.' });
 
     const orderRes = await query(
-      `SELECT id, customer_name, customer_phone, items, total, city, address, notes, gobox_barcode
+      `SELECT id, customer_name, customer_phone, items, total, payment_method, city, address, notes, gobox_barcode
        FROM orders WHERE id = $1 AND store_id = $2`,
       [id, store.id]
     );
@@ -148,7 +149,8 @@ export async function goboxSendOrder(req, res, next) {
       password,
       pkgUnitType: 'METRIC',
       pkg: {
-        cod: Number(order.total || 0), // شامل التوصيل حسب توثيق LogesTechs
+        // صفرٌ إن دُفع الطلبُ بالبطاقة، وإلّا الإجماليُّ شاملَ التوصيل (توثيق LogesTechs)
+        cod: codAmount(order),
         notes: (order.notes || '').slice(0, 500),
         invoiceNumber: order.id, // ربط الشحنة برقم طلب بازارا (يرجع في الـ webhook)
         senderName: store.name || '',

@@ -2,6 +2,7 @@ import { query } from '../config/db.js';
 import { applyOrderStatus } from './order.controller.js';
 import { notifyUser } from '../utils/notify.js';
 import { normalizeMobile } from '../utils/phone.js';
+import { codFields } from '../utils/cod.js';
 import {
   isOpostConfigured,
   loginOpost,
@@ -241,7 +242,7 @@ export async function opostSendOrder(req, res, next) {
     if (!store.opost_connected) return res.status(400).json({ error: 'اربط حساب أوبتيموس أولاً من إعدادات المتجر.' });
 
     const orderRes = await query(
-      `SELECT id, customer_name, customer_phone, items, total, city, address, notes, opost_tracking
+      `SELECT id, customer_name, customer_phone, items, total, payment_method, city, address, notes, opost_tracking
        FROM orders WHERE id = $1 AND store_id = $2`,
       [id, store.id]
     );
@@ -296,8 +297,10 @@ export async function opostSendOrder(req, res, next) {
       ref_order_id: order.id, // ربط الشحنة برقم طلب بازارا
       quantity,
       items_description: itemsDescription,
-      is_cod: 1,
-      cod_amount: Number(order.total || 0),
+      // المبلغُ المطلوبُ تحصيلُه من الزبون — صفرٌ إن كان قد دفع بالبطاقة.
+      // كنّا نُرسلُ الإجماليَّ دائماً، فالمندوبُ يطلبُ المالَ ممّن دفعَ مسبقاً
+      // على صفحةِ البنك: تحصيلٌ مرّتين، وخصامٌ عند الباب، ومالٌ يُردُّ لاحقاً.
+      ...codFields(order),
       has_return: 0,
       notes: (order.notes || '').slice(0, 500),
     };
