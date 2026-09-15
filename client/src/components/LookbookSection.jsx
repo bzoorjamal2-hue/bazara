@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import api from '../api/client.js';
 import ProductCard from './ProductCard.jsx';
 import { cldThumb, cldSrcSet } from '../utils/cloudinary.js';
+import { productPath } from '../utils/links.js';
 
 // لوك بوك: صورة إطلالة كاملة + القطع المستخدمة فيها قابلة للشراء مباشرةً.
 // هذا ما يفعله المتجر العالمي: يعرض الإحساس أولاً ثم يتيح شراءه بلا بحث.
@@ -60,11 +62,15 @@ export default function LookbookSection({ lookbook }) {
           {/* نقاطٌ مرقّمةٌ على الصورةِ تربطُ القطعةَ بموضعِها من الإطلالة.
               بلا هذا الربطِ تبقى الصورةُ مُلهِمةً والقطعُ مجهولةَ المكان: أيُّ
               فستانٍ هذا وأيُّ حجابٍ ذاك؟ تمريرُ النقطةِ يُبرِزُ بطاقتَها، وضغطُها
-              يفتحُ قطعتَها. وتُعرَضُ فقط لمن وُضِعَ لها موضعٌ من اللوحة. */}
+              يفتحُ قطعتَها. وتُعرَضُ فقط لمن وُضِعَ لها موضعٌ من اللوحة.
+              وكانت مرساةً ‎(#look-id) تقفزُ إلى البطاقةِ بالجانب، فيرى الموجِّهُ
+              تغيُّرَ الموقعِ ويُعيدُ التمريرَ إلى الأعلى — فتقفزُ الشاشةُ صعوداً
+              وهبوطاً ثمّ تعلق. والأصحُّ أصلاً: من يضغطُ الفستانَ بالصورةِ يريدُ
+              الفستانَ لا بطاقتَه. */}
           {points.map((pt, n) => (
-            <a
+            <Link
               key={pt.id}
-              href={`#look-${pt.id}`}
+              to={productPath(items.find((it) => it.id === pt.id))}
               onMouseEnter={() => setHot(pt.id)}
               onMouseLeave={() => setHot('')}
               onFocus={() => setHot(pt.id)}
@@ -77,7 +83,7 @@ export default function LookbookSection({ lookbook }) {
               style={{ left: `${pt.x}%`, top: `${pt.y}%` }}
             >
               {n + 1}
-            </a>
+            </Link>
           ))}
         </div>
         {/* القطع المستخدمة — الصورة وحدها تبقى ظاهرة إن لم تصل أو حُذفت كلها */}
