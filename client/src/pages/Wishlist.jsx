@@ -9,7 +9,7 @@ import ProductCard from '../components/ProductCard.jsx';
 import { ProductGridSkeleton } from '../components/Skeleton.jsx';
 import { HeartIcon, LinkIcon, SparkleIcon } from '../components/icons.jsx';
 import { goBack } from '../utils/nav.js';
-import { StateCard, Act, Act2 } from '../components/PageUI.jsx';
+import { PageTitle, StateCard, Act, Act2 } from '../components/PageUI.jsx';
 
 const GRID = 'bz-cards';
 const MAX_SHARE = 20; // سقف معقول لطول الرابط
@@ -77,7 +77,7 @@ export default function Wishlist() {
   return (
     <>
       <Seo title={title} />
-      {/* رجوع + عنوان مزخرف مركزي (نفس روح عناوين الموقع) */}
+      {/* رجوع + ترويسةُ الصفحةِ المشتركة — نفسُ ترويسةِ التصنيفاتِ والعروضِ والتتبّع */}
       <div className="mb-2 flex items-center">
         <button
           onClick={() => goBack(navigate, '/shop')}
@@ -87,12 +87,15 @@ export default function Wishlist() {
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={rtl ? 'm9 6 6 6-6 6' : 'm15 6-6 6 6 6'} /></svg>
         </button>
       </div>
-      <div className="mb-8 flex items-center justify-center gap-2.5 sm:mb-10 sm:gap-3">
-        <h1 className="flex items-center gap-2 whitespace-nowrap font-display text-xl font-bold sm:text-2xl">
-          <HeartIcon className="h-6 w-6 text-wine" filled /> <span className="bz-title">{title}</span>
-          {list?.length > 0 && <span className="bz-count">{list.length}</span>}
-        </h1>
-      </div>
+      <PageTitle
+        icon={<HeartIcon className="h-6 w-6" filled />}
+        title={
+          <>
+            {title}
+            {list?.length > 0 && <span className="bz-count ms-2">{list.length}</span>}
+          </>
+        }
+      />
 
       {isShared ? (
         /* ───── مفضّلة مُشاركة عبر رابط ───── */
