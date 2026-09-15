@@ -151,7 +151,7 @@ table { max-width: 100%; }
 /* طبقة تعتيم الهيرو: ثابتة فوق كل الوسائط (بلا filter على الوسيط — الفلتر «متأخّر»
    يطبَّق وقت فكّ التشفير فيسبّب «يضيء ثم يعتم»). حجاب داكن دائم بتدرّج خفيف للعمق،
    لكن بحدٍّ أدنى قوي في الوسط فلا يظهر الوسيط مضيئاً أبداً. */
-.bz-hero-scrim { background: linear-gradient(to top, rgba(15,10,7,0.66) 0%, rgba(15,10,7,0.46) 48%, rgba(15,10,7,0.56) 100%); }
+.bz-hero-scrim { background: linear-gradient(to top, rgba(10,10,10,0.66) 0%, rgba(10,10,10,0.46) 48%, rgba(10,10,10,0.56) 100%); }
 /* شارة ذهبية رفيعة (kicker) للشرائح — تباعد حروف واسع بأسلوب دور الأزياء */
 .bz-kicker { letter-spacing: 0.34em; }
 /* نطّة أيقونة التبويب لحظة تفعيله (الشريط السفلي) — إحساس التطبيقات الأصلية */
@@ -222,7 +222,7 @@ html.dark .theme-pub .glass { box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5); }
 /* نجوم التقييم — ألوان صريحة خارج remaps الثيم: كانت النجمة المعبّأة (gold-400→بني)
    والفاضية (stone-600 رمادي غامق) متطابقتين بصرياً بالنهاري فتبدو كلها معبّأة */
 .star-on { color: #b09a7e; }
-.star-off { color: rgba(63, 46, 34, 0.22); }
+.star-off { color: rgba(31, 30, 29, 0.22); }
 html.dark .theme-pub .star-on { color: #D8C7AC; }
 html.dark .theme-pub .star-off { color: rgba(243, 237, 228, 0.28); }
 
@@ -645,7 +645,7 @@ html.dark .theme-pub ::-webkit-scrollbar-thumb:hover { background: rgba(243, 237
 
 /* ===== الشريط العلوي الخمري (Navbar) ===== */
 .pub-navbar {
-  background: #3f2e22;
+  background: #232120;
   border: 1px solid rgba(248, 243, 236, 0.12);
   box-shadow: 0 10px 28px rgba(20, 13, 7, 0.35);
 }
@@ -719,7 +719,7 @@ html.dark .theme-pub .app-navbar.shadow-md { box-shadow: 0 12px 28px -8px rgba(0
 
 /* ===== بطاقة الفئة الخمرية (أيقونة عاجية) ===== */
 .pub-cat {
-  background: #5e4636;
+  background: #2A2827;
   border: 1px solid rgba(20, 13, 7, 0.4);
   box-shadow: 0 8px 22px -10px rgba(94, 70, 54, 0.5);
 }
@@ -731,14 +731,14 @@ html.dark .theme-pub .app-navbar.shadow-md { box-shadow: 0 12px 28px -8px rgba(0
    (#5e4636 → #6e5340) فتبدو مغبّرةً لا فاخرة، والذهب فوقها يبهت. */
 .pub-hero {
   background:
-    radial-gradient(120% 70% at 50% -10%, rgba(176, 154, 126, 0.22), transparent 62%),
-    radial-gradient(80% 60% at 50% 115%, rgba(120, 40, 60, 0.28), transparent 65%),
-    radial-gradient(520px 280px at 84% 12%, rgba(248, 243, 236, 0.07), transparent 60%),
-    linear-gradient(158deg, #2f2016 0%, #1e140d 48%, #150e08 100%);
+    radial-gradient(120% 70% at 50% -10%, rgba(216, 199, 172, 0.14), transparent 62%),
+    radial-gradient(80% 60% at 50% 115%, rgba(243, 237, 228, 0.05), transparent 65%),
+    radial-gradient(520px 280px at 84% 12%, rgba(243, 237, 228, 0.06), transparent 60%),
+    linear-gradient(158deg, #232120 0%, #171615 48%, #100F0E 100%);
 }
 
 /* ===== الفوتر الخمري ===== */
-.pub-footer { background: #221912; color: #F4EDE2; }
+.pub-footer { background: #1F1D1C; color: #F3EDE4; }
 /* ليلاً: الشريطُ البنّيُّ يصيرُ فحماً كبقيّةِ الأسطح — كان كتلةً بنّيّةً أسفلَ كلِّ صفحة */
 html.dark .pub-footer { background: #1A1918; color: #F3EDE4; }
 
@@ -1844,16 +1844,16 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   /* اللوحة نفسها، بمدىً أوسع: بنّي الموقع لا يكفي وحده لصفحةٍ بهذا الطول —
      الغامق كلّه بدرجةٍ واحدة يبدو مسطّحاً. أضفنا طرفين من العائلة نفسها:
      إسبريسو شبه أسود للعمق، وشامبانيا أفتح من الذهب للبريق. */
-  --espresso: #140d07;
-  --w-dark: #3f2e22;
-  --w: #5e4636;
-  --w-light: #8a6a4f;
-  --cream: #F4EDE2;
-  --sand: #efe3cf;
-  --gold: #b09a7e;
-  --gold-2: #c6b499;
-  --gold-3: #e4d8c5;
-  --champagne: #f2ece1;
+  --espresso: #0E0E0D;
+  --w-dark: #1A1918;
+  --w: #232120;
+  --w-light: #3A3735;
+  --cream: #F3EDE4;
+  --sand: #EFECE6;
+  --gold: #D8C7AC;
+  --gold-2: #E3D5BB;
+  --gold-3: #EFE6D8;
+  --champagne: #F5F1EA;
   background: var(--w-dark);
   color: var(--cream);
   overflow-x: clip;
@@ -1873,7 +1873,7 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   background:
     radial-gradient(120% 80% at 50% -10%, rgba(176, 154, 126, 0.20), transparent 55%),
     radial-gradient(100% 70% at 50% 115%, rgba(138, 106, 79, 0.45), transparent 62%),
-    linear-gradient(165deg, #4a3521 0%, #33241a 42%, var(--espresso) 100%);
+    linear-gradient(165deg, #2A2827 0%, #1C1B1A 42%, var(--espresso) 100%);
 }
 /* صورة المدير: مقصوصة تغطيةً بأي مقاس، وتحتها حجابٌ خمريّ كي يبقى النصّ
    مقروءاً مهما كانت الصورة فاتحةً أو مزدحمة. */
@@ -1900,9 +1900,9 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(32, 22, 14, calc(var(--bz-dim, 0.62) * 0.72)) 0%,
-    rgba(32, 22, 14, var(--bz-dim, 0.62)) 45%,
-    rgba(32, 22, 14, calc(var(--bz-dim, 0.62) * 0.55 + 0.45)) 78%,
+    rgba(12, 12, 12, calc(var(--bz-dim, 0.62) * 0.72)) 0%,
+    rgba(12, 12, 12, var(--bz-dim, 0.62)) 45%,
+    rgba(12, 12, 12, calc(var(--bz-dim, 0.62) * 0.55 + 0.45)) 78%,
     var(--espresso) 100%
   );
 }
@@ -2168,34 +2168,34 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
 .bz-sec { position: relative; padding: clamp(3.5rem, 9vw, 6.5rem) 1.25rem; }
 @media (min-width: 768px) { .bz-sec { padding-inline: 2.5rem; } }
 /* قسمٌ بلونٍ أفتح قليلاً — إيقاعٌ بصريّ بلا لونٍ جديد */
-.bz-sec-alt { background: linear-gradient(180deg, var(--espresso) 0%, #2b1d12 50%, var(--espresso) 100%); }
+.bz-sec-alt { background: linear-gradient(180deg, var(--espresso) 0%, #171615 50%, var(--espresso) 100%); }
 
 /* القسم الفاتح: كريميّ الموقع بنصٍّ خمريّ — نفس اللوحة، بالمقلوب. يكسر
    رتابة الغامق المتواصل ويجعل الصفحة تتنفّس. */
 /* الفاتح ليس أبيض ولا كريميّ مسطّح: رمليّ بتدرّجٍ خافت نحو الكريمي. */
 .bz-sec-light { background: linear-gradient(180deg, var(--sand) 0%, var(--cream) 40%, var(--sand) 100%); }
 .bz-sec-light .bz-h2 { color: var(--w-dark); }
-.bz-sec-light .bz-lead { color: rgba(63, 46, 34, 0.66); }
-.bz-sec-light .bz-eyebrow { color: rgba(63, 46, 34, 0.5); }
+.bz-sec-light .bz-lead { color: rgba(31, 30, 29, 0.68); }
+.bz-sec-light .bz-eyebrow { color: rgba(31, 30, 29, 0.55); }
 .bz-sec-light .bz-card {
-  border-color: rgba(63, 46, 34, 0.10);
+  border-color: rgba(31, 30, 29, 0.10);
   background: #fff;
-  box-shadow: 0 10px 30px -22px rgba(63, 46, 34, 0.5);
+  box-shadow: 0 10px 30px -22px rgba(31, 30, 29, 0.55);
 }
 @media (hover: hover) { .bz-sec-light .bz-card:hover { border-color: rgba(176, 154, 126, 0.55); } }
 .bz-sec-light .bz-card-ico {
-  background: rgba(63, 46, 34, 0.07);
+  background: rgba(31, 30, 29, 0.06);
   color: #5e4636;
-  box-shadow: inset 0 0 0 1px rgba(63, 46, 34, 0.10);
+  box-shadow: inset 0 0 0 1px rgba(31, 30, 29, 0.10);
 }
 .bz-sec-light .bz-card-t { color: var(--w-dark); }
-.bz-sec-light .bz-card-d { color: rgba(63, 46, 34, 0.78); }
+.bz-sec-light .bz-card-d { color: rgba(31, 30, 29, 0.78); }
 .bz-sec-light .bz-quote {
-  border-color: rgba(63, 46, 34, 0.10);
+  border-color: rgba(31, 30, 29, 0.10);
   background: #fff;
-  box-shadow: 0 10px 30px -22px rgba(63, 46, 34, 0.5);
+  box-shadow: 0 10px 30px -22px rgba(31, 30, 29, 0.55);
 }
-.bz-sec-light .bz-quote-t { color: rgba(63, 46, 34, 0.84); }
+.bz-sec-light .bz-quote-t { color: rgba(31, 30, 29, 0.84); }
 .bz-sec-light .bz-quote-by { color: var(--w-dark); border-top-color: rgba(63, 46, 34, 0.12); }
 .bz-sec-light .bz-quote-mark { color: rgba(176, 154, 126, 0.45); }
 .bz-sec-light .bz-quote-av { background: rgba(176, 154, 126, 0.2); color: #7a6749; }
@@ -2443,8 +2443,8 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
   overflow: hidden;
   padding: clamp(4rem, 10vw, 7rem) 1.25rem calc(clamp(4rem, 10vw, 7rem) + env(safe-area-inset-bottom, 0px));
   background:
-    radial-gradient(90% 120% at 50% 0%, rgba(176, 154, 126, 0.17), transparent 62%),
-    linear-gradient(180deg, #2b1d12 0%, var(--espresso) 100%);
+    radial-gradient(90% 120% at 50% 0%, rgba(216, 199, 172, 0.12), transparent 62%),
+    linear-gradient(180deg, #1A1918 0%, var(--espresso) 100%);
 }
 .bz-cta-ico {
   display: inline-grid;
@@ -2558,9 +2558,9 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
 .bz-veil-preview {
   background: linear-gradient(
     180deg,
-    rgba(32, 22, 14, calc(var(--bz-dim, 0.62) * 0.72)) 0%,
-    rgba(32, 22, 14, var(--bz-dim, 0.62)) 45%,
-    rgba(32, 22, 14, calc(var(--bz-dim, 0.62) * 0.55 + 0.45)) 78%,
+    rgba(12, 12, 12, calc(var(--bz-dim, 0.62) * 0.72)) 0%,
+    rgba(12, 12, 12, var(--bz-dim, 0.62)) 45%,
+    rgba(12, 12, 12, calc(var(--bz-dim, 0.62) * 0.55 + 0.45)) 78%,
     #140d07 100%
   );
 }
@@ -2754,7 +2754,7 @@ html[dir='rtl'] .bz-menu-arrow { transform: scaleX(-1); }
 .bz-foot {
   position: relative;
   padding: clamp(3rem, 7vw, 5rem) 1.25rem 0;
-  background: linear-gradient(180deg, var(--espresso) 0%, #100a05 100%);
+  background: linear-gradient(180deg, var(--espresso) 0%, #0A0A0A 100%);
 }
 @media (min-width: 768px) { .bz-foot { padding-inline: 2.5rem; } }
 
@@ -3382,9 +3382,9 @@ html.dark .theme-pub .bz-docpage { background: #141313; }
   transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.12s ease;
 }
 .bz-act {
-  background: #2b1d12;
+  background: #2b2b2b;
   color: #F4EDE2;
-  box-shadow: 0 12px 26px -14px rgba(20, 13, 7, 0.7);
+  box-shadow: 0 12px 26px -14px rgba(0, 0, 0, 0.45);
 }
 .bz-act-2 {
   color: #3f2e22;
@@ -4434,7 +4434,7 @@ html.dark .bz-chat-in { background: rgba(255, 255, 255, 0.07); color: #E9E2D8; b
 html.dark .bz-chat-out { background: #D8C7AC; color: #17150F; }
 
 /* الوقتُ تحت الرسالة: باهتٌ بقدرِ ما يُقرأُ على أرضيّةِ فقاعتِه هو لا على الصفحة */
-.bz-chat-time { color: rgba(63, 46, 34, 0.5); }
+.bz-chat-time { color: rgba(31, 30, 29, 0.55); }
 html.dark .bz-chat-time { color: rgba(243, 237, 228, 0.45); }
 .bz-chat-out .bz-chat-time { color: rgba(244, 237, 226, 0.65); }
 html.dark .bz-chat-out .bz-chat-time { color: rgba(23, 21, 15, 0.55); }
