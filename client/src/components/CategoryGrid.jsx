@@ -24,7 +24,7 @@ function CategoryCard({ cat }) {
   const { t } = useTranslation();
   const label = cat.name || (cat.builtin ? t(`categories.${cat.key}`) : cat.key);
   // صورة المالكة المخصّصة تُحسَّن بحجم أصغر وصيغة تلقائية لظهور أسرع؛ والأيقونة الثابتة كما هي
-  const src = cat.image ? cldThumb(cat.image, 400) : cat.builtin ? `/categories/${cat.key}.png` : '';
+  const src = cat.image ? cldThumb(cat.image, 400) : cat.builtin ? `/categories/${cat.key}.png?v=2` : '';
   // صورةُ التاجرةِ صورةٌ حقيقيّةٌ تملأُ البلاطة، والأيقونةُ الثابتةُ رسمٌ بلا
   // خلفيّةٍ يتنفّسُ داخلَها بحشوة — لا يُعامَلانِ معاملةً واحدة.
   const isPhoto = Boolean(cat.image);
@@ -121,13 +121,22 @@ export default function CategoryGrid({ onSelect, active, images = {}, names = {}
 
   return (
     <div>
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="bz-catrow flex items-center gap-2 sm:gap-3">
         {hasNav && <Arrow dir="prev" rtl={rtl} onClick={() => go(-1)} />}
-        <div
-          className="grid flex-1 gap-3 sm:gap-4"
-          style={{ gridTemplateColumns: `repeat(${perPage}, minmax(0,1fr))` }}
-        >
-          {shown.map((cat) => <Item key={cat.key} cat={cat} />)}
+        {/* صفٌّ مرنٌ لا شبكةٌ بأعمدةٍ ثابتة: الشبكةُ كانت تحجزُ خمسةَ أعمدةٍ دائماً،
+            فآخرُ صفحةٍ تحملُ قطعتَينِ من سبعٍ تتركُ ثلاثةَ أعمدةٍ فارغةٍ على جانبٍ
+            واحدٍ — يبدو القسمُ مكسوراً لا منتهياً. المرونةُ تُبقي مقاسَ البلاطةِ
+            كما هو وتوسّطُ الصفَّ الناقص. */}
+        <div className="flex flex-1 flex-wrap justify-center gap-3 sm:gap-4">
+          {shown.map((cat) => (
+            <div
+              key={cat.key}
+              className="min-w-0"
+              style={{ flex: `0 0 calc((100% - ${perPage - 1} * var(--bz-cat-gap)) / ${perPage})` }}
+            >
+              <Item cat={cat} />
+            </div>
+          ))}
         </div>
         {hasNav && <Arrow dir="next" rtl={rtl} onClick={() => go(1)} />}
       </div>

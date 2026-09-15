@@ -4760,27 +4760,35 @@ html.dark .theme-pub .bz-pmedia::after { box-shadow: inset 0 0 0 1px rgba(239, 2
    مرسومةً لا بطاقةً تُنقَر، ويبقى قسمُ «تصفّحي حسب الفئة» فارغاً رغمَ طولِه.
    أرضيّةٌ رماديّةٌ فاتحةٌ وخطٌّ داخليٌّ يجعلانِ منها بطاقةً، وتُعمّقانِ عندَ
    المرورِ فيصيرُ للقسمِ إيقاع. */
+/* لونُ الفئاتِ خاصٌّ بها: كانت بأرضيّةِ البطاقاتِ نفسِها ‎#F2F2F1 فلا
+   يميّزُها شيء. صارت لوحاً حبريّاً — والرسومُ رماديّةٌ فاتحةٌ فتقرأُ عليه
+   كمخطّطاتِ أزياءَ على لوحِ أردواز، ويكتسبُ القسمُ هويّةً لا تتكرّرُ بالصفحة.
+   وهو لونُ الموقعِ نفسُه لا لونٌ غريب: حبرُ الشعارِ والأزرارِ والشريطِ الحبريّ. */
 .theme-pub .bz-cattile {
-  background: #F2F2F1;
-  box-shadow: inset 0 0 0 1px rgba(23, 23, 23, 0.06);
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  background: linear-gradient(165deg, #2A2827 0%, #1C1B1A 55%, #161514 100%);
+  box-shadow: inset 0 0 0 1px rgba(246, 245, 243, 0.10);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
 @media (hover: hover) and (pointer: fine) {
   .theme-pub .group:hover .bz-cattile {
-    background: #ECEBE9;
-    box-shadow: inset 0 0 0 1px rgba(23, 23, 23, 0.12);
+    box-shadow: inset 0 0 0 1px rgba(246, 245, 243, 0.26), 0 14px 30px -18px rgba(23, 23, 23, 0.4);
   }
 }
+/* الليل: اللوحُ نفسُه بحافّةٍ أوضحَ قليلاً كي يُفصَلَ عن أرضيّةِ الليلِ الداكنة */
 html.dark .theme-pub .bz-cattile {
-  background: #1C1B1A;
-  box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.08);
+  background: linear-gradient(165deg, #2A2827 0%, #1C1B1A 55%, #161514 100%);
+  box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.14);
 }
 @media (hover: hover) and (pointer: fine) {
   html.dark .theme-pub .group:hover .bz-cattile {
-    background: #232120;
-    box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.16);
+    box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.30), 0 14px 30px -18px rgba(0, 0, 0, 0.7);
   }
 }
+
+/* فجوةُ صفِّ الفئاتِ متغيّراً: الحسابُ المرنُ بالمكوّنِ يحتاجُها رقماً، والصفُّ
+   يغيّرُها عندَ ‎640px — فلو بقيت مكتوبةً بموضعَين تفارقَ الاثنان. */
+.bz-catrow { --bz-cat-gap: 0.75rem; }
+@media (min-width: 640px) { .bz-catrow { --bz-cat-gap: 1rem; } }
 
 /* ═══════ الرفُّ: الشبكةُ نفسُها تُسحَبُ جانباً ═══════
    ثلاثُ شبكاتٍ كاملةٍ بصفحةِ المتجرِ (جديدنا · الأكثرُ مبيعاً · تخفيضات) تحملُ

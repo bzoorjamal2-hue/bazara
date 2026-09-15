@@ -373,7 +373,7 @@ export default function StorePage() {
               الموحّد بكل الحسابات، لكن الضغط يفتح فئة هذا المتجر (لا يخرج للعام) */}
           <div className="bz-cards">
             {visibleCats.map((c, i) => {
-              const src = c.image ? cldThumb(c.image, 400) : c.builtin ? `/categories/${c.key}.png` : '';
+              const src = c.image ? cldThumb(c.image, 400) : c.builtin ? `/categories/${c.key}.png?v=2` : '';
               const cnt = catCounts[c.key] || { total: 0, sale: 0 };
               return (
                 <button

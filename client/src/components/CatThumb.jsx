@@ -3,7 +3,7 @@
 export default function CatThumb({ cat, className = 'h-8 w-8' }) {
   return (
     <img
-      src={`/categories/${cat}.png`}
+      src={`/categories/${cat}.png?v=2`}
       alt=""
       aria-hidden="true"
       loading="lazy"

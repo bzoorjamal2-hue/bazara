@@ -786,7 +786,7 @@ export default function StoreSettings() {
               // الاسم الظاهر: اسم المالكة إن وُجد وإلا الافتراضي — يُعرَض مرّة واحدة بالعنوان
               const displayName = (meta.name || '').trim() || t(`categories.${c}`);
               // اللوقو الحالي: صورة المالكة إن رفعتها وإلا الأيقونة الثابتة
-              const logo = meta.image ? cldThumb(meta.image, 120) : `/categories/${c}.png`;
+              const logo = meta.image ? cldThumb(meta.image, 120) : `/categories/${c}.png?v=2`;
               return (
                 <div key={c} className={`${SUBCARD} transition ${hidden ? 'opacity-60' : ''}`}>
                   {/* العنوان: لوقو + اسم واحد + زر إخفاء/إظهار — بلا تكرار للاسم */}
@@ -812,7 +812,7 @@ export default function StoreSettings() {
                     <>
                       <ImageInput
                         value={meta.image || ''} onChange={(v) => setCatMeta(c, 'image', v)}
-                        placeholderImg={`/categories/${c}.png`} contain hint={t('dashboard.store.categoryImageHint')}
+                        placeholderImg={`/categories/${c}.png?v=2`} contain hint={t('dashboard.store.categoryImageHint')}
                       />
                       <input
                         type="text"
