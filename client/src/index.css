@@ -4615,3 +4615,37 @@ html.dark .theme-pub .bz-fab {
   color: #E8E3DA;
   box-shadow: 0 10px 26px -12px rgba(0, 0, 0, 0.75), inset 0 0 0 1px rgba(243, 237, 228, 0.14);
 }
+
+/* ═══ إيقاعُ صفحاتِ التسوّقِ ورؤوسُ أقسامِها ═══
+   كانت المسافاتُ بين الأقسامِ ٤٠ و٥٦ و٦٤ و٨٠ بلا قاعدة، وعناوينُها ٢٠px —
+   فتُقرأُ الصفحةُ قائمةً متراصّةً لا فصولاً، بينما صفحةُ الواجهةِ تتنفّسُ
+   بمسافةٍ واحدةٍ وعناوينَ ٣٨px. هذه مسافةٌ واحدةٌ ورأسُ قسمٍ بهرميّةٍ مماثلة. */
+.bz-sec-gap { margin-top: 4.5rem; }
+@media (min-width: 640px) { .bz-sec-gap { margin-top: 5.5rem; } }
+
+/* رأسُ القسم: سطرٌ تعريفيٌّ صغيرٌ (اختياريّ) فوقَ عنوانٍ كبير، والنصُّ محصورٌ
+   بعرضٍ مريحٍ ومركَّزٌ — نفسُ بنيةِ رؤوسِ صفحةِ الواجهة. */
+.bz-sec-head {
+  margin-inline: auto;
+  margin-bottom: 2rem;
+  max-width: 42rem;
+  text-align: center;
+}
+@media (min-width: 640px) { .bz-sec-head { margin-bottom: 2.5rem; } }
+.bz-sec-eyebrow {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #8C8780;
+}
+html.dark .theme-pub .bz-sec-eyebrow { color: #8C857C; }
+.bz-sec-h { font-size: 1.6rem; line-height: 1.25; font-weight: 700; }
+@media (min-width: 640px) { .bz-sec-h { font-size: 1.875rem; } }
+
+/* حاويةُ المحتوى: عرضٌ أقصى مريحٌ بدل الامتدادِ حافّةً لحافّة على الشاشاتِ العريضة.
+   والشرائطُ الممتدّةُ (شريطُ الإعلاناتِ وفوترُ المتجر) تبقى ماسّةً لحافّةِ الشاشةِ
+   فعلاً لا لحافّةِ الحاوية — وإلا ظهرت مقطوعةً بفراغٍ على جانبيها. */
+main.bz-page { max-width: 1400px; margin-inline: auto; }
+.bz-ann, .pub-footer { width: 100vw; margin-inline: calc(50% - 50vw) !important; }

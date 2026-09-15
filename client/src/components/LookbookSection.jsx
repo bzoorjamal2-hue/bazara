@@ -26,7 +26,7 @@ export default function LookbookSection({ lookbook }) {
   const title = (isEn ? (lookbook.titleEn || lookbook.title) : lookbook.title) || t('home.lookbook');
 
   return (
-    <section className="mt-14">
+    <section className="bz-sec-gap">
       <div className="mb-6 flex items-center justify-center gap-2.5 text-wine sm:gap-3">
         <span className="h-px w-7 bg-gradient-to-r from-transparent to-wine/30 sm:w-12" />
         <h2 className="whitespace-nowrap font-display text-xl font-bold sm:text-2xl">{title}</h2>

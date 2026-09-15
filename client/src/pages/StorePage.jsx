@@ -557,7 +557,7 @@ export default function StorePage() {
 
           <Reveal>
             {/* مرساة زرّ «تسوّقي الآن» بالسلايدر — scroll-mt يترك مساحةً للرأس اللاصق */}
-            <section id="cats" className="mb-16 mt-10 scroll-mt-24 sm:mb-20">
+            <section id="cats" className="bz-sec-gap scroll-mt-24">
               <SectionTitle>{t('store.browseByCategory')}</SectionTitle>
               <CategoryGrid onSelect={pickCategory} active={cat} cats={gridCats} />
             </section>
@@ -572,7 +572,7 @@ export default function StorePage() {
           {/* قصة العلامة — كان وصف المتجر مدفوناً بالفوتر وحده. لمسة تحريرية تعرّف
               الزائرة بالمتجر قبل التصفّح (تظهر فقط إن كتبت المالكة وصفاً) */}
           {store.description && (
-            <Reveal><section className="bz-panel mb-16 p-8 text-center sm:mb-20">
+            <Reveal><section className="bz-panel bz-sec-gap p-8 text-center">
               {store.logoUrl && (
                 <img
                   src={cldThumb(store.logoUrl, 160)}
@@ -767,10 +767,11 @@ function ChevronGlyph({ className = 'h-5 w-5' }) {
 }
 
 // عنوان قسم مركزي بزخرفة أنيقة (طبق المرجع — مطابق للصفحة الرئيسية)
-function SectionTitle({ children }) {
+function SectionTitle({ children, eyebrow }) {
   return (
-    <div className="mb-8 flex items-center justify-center gap-2.5 sm:mb-10 sm:gap-3">
-      <h2 className="bz-title whitespace-nowrap font-display text-xl font-bold sm:text-2xl">{children}</h2>
+    <div className="bz-sec-head">
+      {eyebrow ? <span className="bz-sec-eyebrow">{eyebrow}</span> : null}
+      <h2 className="bz-title bz-sec-h font-display">{children}</h2>
     </div>
   );
 }
@@ -782,7 +783,7 @@ function ProductSection({ title, products, wa, ranked = false }) {
   if (!products || products.length === 0) return null;
   return (
     <Reveal>
-      <section className="mb-16 sm:mb-20">
+      <section className="bz-sec-gap">
         <SectionTitle>{title}</SectionTitle>
         <div className="bz-cards">
           {products.map((p, i) => (

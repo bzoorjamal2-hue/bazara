@@ -29,7 +29,7 @@ export default function NewsletterBox() {
   };
 
   return (
-    <section className="glass relative mt-16 overflow-hidden p-8 text-center sm:mt-20">
+    <section className="glass bz-sec-gap relative overflow-hidden p-8 text-center">
       <span className="dash-hairline absolute inset-x-0 top-0" />
       {/* توهّجان ذهبيان ناعمان بالخلفية يعطيان عمقاً افتتاحياً راقياً */}
       <span aria-hidden className="pointer-events-none absolute -top-16 start-1/2 h-48 w-48 -translate-x-1/2 rounded-full bg-gold-400/15 blur-3xl" />
@@ -37,7 +37,7 @@ export default function NewsletterBox() {
       <span className="relative mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-wine/12 to-gold-400/15 text-wine ring-1 ring-gold-400/40">
         <MailIcon className="h-7 w-7" />
       </span>
-      <h2 className="relative mt-4 font-display text-xl font-bold text-wine sm:text-2xl">{t('newsletter.title')}</h2>
+      <h2 className="bz-sec-h relative mt-4 font-display text-wine">{t('newsletter.title')}</h2>
       <p className="relative mx-auto mt-2 max-w-md text-sm text-stone-400">{t('newsletter.desc')}</p>
 
       {done ? (

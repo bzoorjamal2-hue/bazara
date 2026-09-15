@@ -55,7 +55,7 @@ export default function InstallApp() {
   };
 
   return (
-    <section className="mt-12">
+    <section className="bz-sec-gap">
       {/* بطاقة فخمة بتدرّج بنّي */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-wine-dark via-wine to-wine-dark p-6 text-cream shadow-xl sm:p-7">
         <div className="pointer-events-none absolute -end-10 -top-10 h-36 w-36 rounded-full bg-cream/10 blur-2xl" />

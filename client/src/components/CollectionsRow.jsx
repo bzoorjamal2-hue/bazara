@@ -16,7 +16,7 @@ export default function CollectionsRow({ collections, storeSlug = '' }) {
   const linkFor = (q) => searchPath(storeSlug, q);
 
   return (
-    <section className="mt-14 mb-16 sm:mb-20">
+    <section className="bz-sec-gap">
       <div className="mb-6 flex items-center justify-center">
         <h2 className="bz-title whitespace-nowrap font-display text-xl font-bold sm:text-2xl">{t('home.shopByOccasion')}</h2>
       </div>

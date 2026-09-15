@@ -29,8 +29,8 @@ export default function ProductRail({ title, products, currentId, icon = null, a
   };
 
   return (
-    <section className="mt-10">
-      <h2 className="mb-4 flex items-center gap-2 font-display text-xl font-bold text-wine">
+    <section className="bz-sec-gap">
+      <h2 className="mb-5 flex items-center gap-2 font-display text-2xl font-bold text-wine">
         {icon}{title}
         <span className="ms-auto flex items-center gap-2">
           {action}

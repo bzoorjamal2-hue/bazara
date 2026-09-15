@@ -125,7 +125,7 @@ export default function Home() {
 
       {/* تصفّح حسب الفئة */}
       <Reveal>
-        <section className="mt-16 sm:mt-20">
+        <section className="bz-sec-gap">
           <SectionTitle>{t('home.browseByCategory')}</SectionTitle>
           <CategoryGrid onSelect={pickCat} active={cat} cats={gridCats} />
         </section>
@@ -173,7 +173,7 @@ export default function Home() {
       {recent.length > 0 && <Reveal><ProductRail title={t('product.recentlyViewed')} products={recent} /></Reveal>}
 
       {loading ? (
-        <section className="mt-16 sm:mt-20">
+        <section className="bz-sec-gap">
           <ProductGridSkeleton count={8} />
         </section>
       ) : (
@@ -181,8 +181,8 @@ export default function Home() {
           {/* منتجات مميّزة */}
           {data.featured?.length > 0 && (
             <Reveal>
-              <section className="mt-16 sm:mt-20">
-                <SectionTitle>{t('home.featuredProducts')}</SectionTitle>
+              <section className="bz-sec-gap">
+                <SectionTitle eyebrow={t('landing.shelfEyebrow')}>{t('home.featuredProducts')}</SectionTitle>
                 <div className="bz-cards">
                   {(data.featured || []).map((p, i) => (
                     <ProductCard key={p.id} product={p} index={i} />
@@ -193,7 +193,7 @@ export default function Home() {
           )}
 
           {/* متاجر مميزة */}
-          <Reveal><section id="stores" className="mt-16 sm:mt-20">
+          <Reveal><section id="stores" className="bz-sec-gap">
             <SectionTitle>{t('home.featuredStores')}</SectionTitle>
             {(data.stores || []).length === 0 ? (
               <EmptyState
@@ -214,7 +214,7 @@ export default function Home() {
 
           {/* أحدث المنتجات */}
           <Reveal>
-            <section className="mt-16 sm:mt-20">
+            <section className="bz-sec-gap">
               <SectionTitle>{t('home.latestProducts')}</SectionTitle>
               {(data.products || []).length === 0 ? (
                 <EmptyState
@@ -589,7 +589,7 @@ function SlideButton({ href, label, onLight }) {
 function PromoBanner() {
   const { t } = useTranslation();
   return (
-    <Link to="/shop" className="bz-storecard group relative mt-10 flex items-center gap-4 overflow-hidden rounded-3xl p-4 transition hover:-translate-y-0.5 sm:p-5">
+    <Link to="/shop" className="bz-storecard bz-sec-gap group relative flex items-center gap-4 overflow-hidden rounded-3xl p-4 transition hover:-translate-y-0.5 sm:p-5">
       {/* توهّج ذهبي خفيف يمسح البطاقة عند المرور — لمسة فخامة */}
       <span aria-hidden className="pointer-events-none absolute -inset-y-8 -start-24 w-24 -skew-x-12 bg-gradient-to-r from-transparent via-gold-400/20 to-transparent transition-all duration-700 group-hover:start-[110%]" />
       <span className="bz-softico flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl"><GiftIcon className="h-7 w-7" /></span>
@@ -654,10 +654,11 @@ function EmptyState({ icon, text, ctaLabel, ctaTo }) {
 }
 
 // عنوان قسم مركزي بزخرفة أنيقة (طبق المرجع)
-function SectionTitle({ children }) {
+function SectionTitle({ children, eyebrow }) {
   return (
-    <div className="mb-8 flex items-center justify-center gap-2.5 sm:mb-10 sm:gap-3">
-      <h2 className="bz-title whitespace-nowrap font-display text-xl font-bold sm:text-2xl">{children}</h2>
+    <div className="bz-sec-head">
+      {eyebrow ? <span className="bz-sec-eyebrow">{eyebrow}</span> : null}
+      <h2 className="bz-title bz-sec-h font-display">{children}</h2>
     </div>
   );
 }
