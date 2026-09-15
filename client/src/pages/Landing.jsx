@@ -16,7 +16,7 @@ import {
   UsersIcon, CrownIcon, WhatsAppIcon, MenuIcon, XIcon, ArrowDownIcon, ArrowUpIcon,
   MailIcon, PhoneIcon, PinIcon, ClockIcon,
 } from '../components/icons.jsx';
-import { BAZARA_WHATSAPP, BAZARA_REGISTRY_NO, BAZARA_PHONE } from '../config/site.js';
+import { BAZARA_WHATSAPP, BAZARA_REGISTRY_NO, BAZARA_PHONE, BAZARA_EMAIL } from '../config/site.js';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
 
 // ═══════════════ واجهة بازارا ═══════════════
@@ -652,9 +652,15 @@ export default function Landing() {
                     <WhatsAppIcon className="h-4 w-4" /> {t('landing.whatsapp')}
                   </a></li>
                 )}
-                {contact.email && (
-                  <li><a href={`mailto:${contact.email}`} dir="ltr"><MailIcon className="h-4 w-4" /> {contact.email}</a></li>
-                )}
+                {/* بريدُ الدعمِ يظهرُ دائماً: إن لم تُكتَب قيمةٌ بمحرّرِ الواجهةِ يُعرَضُ
+                    عنوانُ المنصّةِ الرسميّ. كان الشرطُ يُخفي السطرَ كلَّه ما لم يُكتَب
+                    يدويّاً — ولم يكن مكتوباً، فكان قسمُ «تواصل معنا» بلا بريدٍ أصلاً،
+                    وهو أوّلُ ما تبحثُ عنه تاجرةٌ تتردّدُ قبلَ الاشتراك. */}
+                <li>
+                  <a href={`mailto:${contact.email || BAZARA_EMAIL}`} dir="ltr">
+                    <MailIcon className="h-4 w-4" /> {contact.email || BAZARA_EMAIL}
+                  </a>
+                </li>
                 {contact.phone && (
                   <li><a href={`tel:${contact.phone}`} dir="ltr"><PhoneIcon className="h-4 w-4" /> {contact.phone}</a></li>
                 )}
