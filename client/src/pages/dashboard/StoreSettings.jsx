@@ -69,7 +69,7 @@ const SECTIONS = [
   ['s-ads', 'adsTitle', (f) => Boolean(f.fbPixel || f.tiktokPixel || f.gaId)],
   ['s-categories', 'categories', (f) => Object.values(f.categoryMeta || {}).some((m) => m?.image || m?.name) || (f.customCategories || []).length > 0],
   ['s-collections', 'collections', (f) => (f.collections || []).some((c) => String(c?.title || '').trim())],
-  ['s-marketing', 'marketing', (f) => Boolean(String(f.announcement || '').trim() || String(f.welcomeOffer || '').trim())],
+  ['s-marketing', 'marketing', (f) => Boolean(String(f.welcomeOffer || '').trim())],
   ['s-sizechart', 'sizeChart', (f) => Object.values(f.sizeChart || {}).some((r) => r && Object.values(r).some(Boolean))],
   ['s-return', 'returnPolicy', (f) => Boolean(String(f.returnPolicy || '').trim())],
   ['s-delivery', 'deliveryPayment', (f) => Boolean(String(f.deliveryInfo || '').trim() || String(f.paymentInfo || '').trim())],
@@ -121,29 +121,6 @@ const waValid = (v) => {
   const d = String(v || '').replace(/\D/g, '').replace(/^00/, '');
   return d.length >= 10 && d.length <= 15 && !d.startsWith('0');
 };
-
-// معاينة شريط الإعلانات — مطابقة لِما يراه الزبون بأعلى المتجر: سطرٌ هادئٌ بلون
-// الموقع تتبدّل رسائلُه بتلاشٍ كلَّ خمسِ ثوانٍ، لا مارْكي يمشي.
-function AnnouncementPreview({ items }) {
-  const list = items.length ? items : [''];
-  const [i, setI] = useState(0);
-  useEffect(() => {
-    if (list.length < 2) return undefined;
-    const id = setInterval(() => setI((v) => (v + 1) % list.length), 5000);
-    return () => clearInterval(id);
-  }, [list.length]);
-  const current = list[i % list.length];
-  return (
-    <div className="bz-ann overflow-hidden rounded-xl py-2.5">
-      <p className="flex items-center justify-center gap-2 px-5 text-center">
-        <svg viewBox="0 0 24 24" className="bz-ann-ico h-3 w-3 shrink-0" fill="currentColor" aria-hidden="true">
-          <path d="M12 2c.5 3.8 2.2 5.5 6 6-3.8.5-5.5 2.2-6 6-.5-3.8-2.2-5.5-6-6 3.8-.5 5.5-2.2 6-6Z" />
-        </svg>
-        <span key={current} className="bz-ann-text line-clamp-2 text-[12px] font-semibold tracking-wide" dir="auto">{current}</span>
-      </p>
-    </div>
-  );
-}
 
 /**
  * حالةُ تفعيلِ استلامِ المدفوعات. التاجرةُ تُدخلُ حسابَها ثمّ تنتظرُ تسجيلَها
@@ -959,27 +936,9 @@ export default function StoreSettings() {
           )}
         </div>
 
-        {/* تسويق: شريط إعلانات + نافذة ترحيب */}
+        {/* تسويق: نافذة ترحيب */}
         <div id="s-marketing" className={CARD}>
           <SectionHead icon={<MegaphoneIcon className="h-5 w-5" />} title={t('dashboard.store.marketing')} desc={t('dashboard.store.marketingHint')} done={doneMap['s-marketing']} />
-
-          <Field label={t('dashboard.store.announcement')} tip={t('dashboard.store.announcementHint')} hint={t('dashboard.store.announcementHint')} max={500} value={form.announcement}>
-            <textarea rows={3} maxLength={500} className="input resize-none" placeholder={t('dashboard.store.announcementPlaceholder')} value={form.announcement} onChange={set('announcement')} />
-            {/* معاينة مطابقة للشريط الحقيقي كما يراه الزبون. التلميح تحت الحقل
-                يشرح أصلاً أن كل سطر إعلانٌ مستقلّ، فلا نكرّره هنا. */}
-            {String(form.announcement || '').trim() && (
-              <div className="mt-2">
-                <span className="mb-1 block text-[10px] font-semibold tracking-wide text-stone-400">
-                  {t('dashboard.store.announcementPreview')}
-                </span>
-                <AnnouncementPreview items={form.announcement.split('\n').map((l) => l.trim()).filter(Boolean)} />
-              </div>
-            )}
-          </Field>
-
-          <Field label={t('dashboard.store.announcementEn')} tip={t('dashboard.store.announcementEnHint')} hint={t('dashboard.store.announcementEnHint')} max={500} value={form.announcementEn}>
-            <textarea rows={3} maxLength={500} dir="ltr" className="input resize-none text-start" placeholder={t('dashboard.store.announcementEnPlaceholder')} value={form.announcementEn} onChange={set('announcementEn')} />
-          </Field>
 
           <Field label={t('dashboard.store.welcomeOffer')} tip={t('dashboard.store.welcomeHint')} hint={t('dashboard.store.welcomeHint')} max={300} value={form.welcomeOffer}>
             <input type="text" maxLength={300} className="input" placeholder={t('dashboard.store.welcomePlaceholder')} value={form.welcomeOffer} onChange={set('welcomeOffer')} />

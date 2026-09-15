@@ -21,7 +21,6 @@ import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
 import StylistChat from '../components/StylistChat.jsx';
 import InstallApp from '../components/InstallApp.jsx';
 import FeaturesBar from '../components/FeaturesBar.jsx';
-import AnnouncementBar from '../components/AnnouncementBar.jsx';
 import NewsletterBox from '../components/NewsletterBox.jsx';
 import LookbookSection from '../components/LookbookSection.jsx';
 import Reveal from '../components/Reveal.jsx';
@@ -103,11 +102,6 @@ export default function Home() {
       <Seo title={t('app.name')} description={t('home.heroDesc')} />
       <ScrollProgress />
 
-      {/* شريط إعلان المنصّة (يتحكّم به المدير) — أعلى الصفحة كالمتاجر العالمية:
-          توصيل مجاني/إرجاع/عروض. نفس مكوّن شريط المتاجر بعد استخراجه للمشترَك */}
-      {(data?.announcement || data?.announcementEn) && (
-        <AnnouncementBar ar={data.announcement} en={data.announcementEn} />
-      )}
 
       {/* ستوريات المتاجر — تحت الهيدر وفوق السلايدر كما بإنستغرام.
           كان المكوّن موجوداً بلا أي استدعاء، فلم يكن يظهر إطلاقاً. */}

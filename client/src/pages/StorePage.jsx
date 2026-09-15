@@ -14,7 +14,6 @@ import StoreHeader from '../components/StoreHeader.jsx';
 import StoreFooter from '../components/StoreFooter.jsx';
 import FeaturesBar from '../components/FeaturesBar.jsx';
 import CollectionsRow from '../components/CollectionsRow.jsx';
-import AnnouncementBar from '../components/AnnouncementBar.jsx';
 import CatThumb from '../components/CatThumb.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
 import StylistChat from '../components/StylistChat.jsx';
@@ -338,7 +337,6 @@ export default function StorePage() {
       />
 
       {/* شريط إعلانات متحرّك (إن فعّلته المالكة) */}
-      {(store.announcement || store.announcementEn) && <AnnouncementBar ar={store.announcement} en={store.announcementEn} />}
 
       {/* نافذة ترحيب لأول زيارة (إن فعّلتها المالكة) */}
       <WelcomePopup store={store} />

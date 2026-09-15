@@ -5,7 +5,7 @@ import { clearCachePrefixes } from '../../utils/apiCache.js';
 import Spinner from '../../components/Spinner.jsx';
 import BannerEditor from '../../components/BannerEditor.jsx';
 import ImageInput from '../../components/ImageInput.jsx';
-import { ImageIcon, MegaphoneIcon, GridIcon } from '../../components/icons.jsx';
+import { ImageIcon, GridIcon } from '../../components/icons.jsx';
 import { PageHead, SectionHead, Field, RowTools, Tip } from '../../components/FormField.jsx';
 import { BUILTIN_CATS } from '../../utils/platformCategories.js';
 
@@ -20,8 +20,6 @@ const DEFAULT_SITE_SLIDES = [
 export default function SiteSliders() {
   const { t } = useTranslation();
   const [banners, setBanners] = useState(null);
-  const [ann, setAnn] = useState('');
-  const [annEn, setAnnEn] = useState('');
   const [lb, setLb] = useState({ image: '', title: '', titleEn: '', productIds: [] });
   const [collections, setCollections] = useState([]);
   const [platCats, setPlatCats] = useState({ extra: [], hidden: [] });
@@ -35,14 +33,14 @@ export default function SiteSliders() {
 
   useEffect(() => {
     api.get('/site/banners')
-      .then((r) => { setBanners(r.data.banners?.length ? r.data.banners : DEFAULT_SITE_SLIDES); setAnn(r.data.announcement || ''); setAnnEn(r.data.announcementEn || ''); setLb({ image: '', title: '', titleEn: '', productIds: [], ...(r.data.lookbook || {}) }); setCollections(Array.isArray(r.data.collections) ? r.data.collections : []); setPlatCats({ extra: r.data.platformCategories?.extra || [], hidden: r.data.platformCategories?.hidden || [] }); setInstagram(r.data.instagram || ''); setFacebook(r.data.facebook || ''); })
+      .then((r) => { setBanners(r.data.banners?.length ? r.data.banners : DEFAULT_SITE_SLIDES); setLb({ image: '', title: '', titleEn: '', productIds: [], ...(r.data.lookbook || {}) }); setCollections(Array.isArray(r.data.collections) ? r.data.collections : []); setPlatCats({ extra: r.data.platformCategories?.extra || [], hidden: r.data.platformCategories?.hidden || [] }); setInstagram(r.data.instagram || ''); setFacebook(r.data.facebook || ''); })
       .catch((e) => setError(getErrorMessage(e)));
   }, []);
 
   const save = async () => {
     setMsg(''); setError(''); setBusy(true);
     try {
-      await api.put('/site/banners', { banners, announcement: ann, announcementEn: annEn, collections, lookbook: lb, instagram, facebook, platformCategories: platCats });
+      await api.put('/site/banners', { banners, collections, lookbook: lb, instagram, facebook, platformCategories: platCats });
       // بانرات الرئيسية الجديدة تظهر فوراً: نفرّغ كاش الرئيسية + النسخة المحفوظة للظهور الفوري
       clearCachePrefixes(['home']);
       try { localStorage.removeItem('bz_home_banners'); localStorage.removeItem('bz_site_socials'); } catch { /* تجاهل */ }
@@ -66,33 +64,6 @@ export default function SiteSliders() {
         <BannerEditor banners={banners} onChange={setBanners} withButtons />
       </div>
 
-      {/* شريط الإعلان أعلى الصفحة الرئيسية — سطر لكل رسالة، تُعرض بتتابع متحرّك.
-          يبقى مخفياً تماماً إن تُرك فارغاً */}
-      <div className="dash-section glass space-y-4 p-5 sm:p-6">
-        <SectionHead icon={<MegaphoneIcon className="h-5 w-5" />} title={t('admin.announcement')} desc={t('admin.announcementHint')} />
-        {/* سطر لكل رسالة، تُعرض بتتابع متحرّك. يبقى الشريط مخفياً إن تُرك فارغاً */}
-        <Field label={t('admin.annAr')} tip={t('admin.annArTip')} max={400} value={ann}>
-          <textarea
-            value={ann}
-            onChange={(e) => setAnn(e.target.value)}
-            rows={3}
-            maxLength={400}
-            placeholder={t('admin.announcementPlaceholder')}
-            className="input w-full resize-none"
-          />
-        </Field>
-        <Field label={t('admin.annEn')} tip={t('admin.annEnTip')} optional max={400} value={annEn}>
-          <textarea
-            value={annEn}
-            onChange={(e) => setAnnEn(e.target.value)}
-            rows={2}
-            maxLength={400}
-            dir="ltr"
-            placeholder={t('admin.announcementEnPlaceholder')}
-            className="input w-full resize-none"
-          />
-        </Field>
-      </div>
       {/* اللوك بوك: صورة إطلالة + أرقام المنتجات الظاهرة فيها (بفواصل) */}
       {/* فئات المنصّة: كانت السبع مكتوبةً في ستّة ملفات، فإضافة فئة للموقع كلّه
           تعني تعديل كود ونشراً. صارت تُدار من هنا. */}
