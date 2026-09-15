@@ -368,7 +368,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
                 {colorToCss(colorInput) && (
                   <span
                     className="pointer-events-none absolute end-3 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full"
-                    style={{ background: colorToCss(colorInput), boxShadow: '0 0 0 1px rgba(244,237,226,0.45), inset 0 0 0 1px rgba(0,0,0,0.2)' }}
+                    style={{ background: colorToCss(colorInput), boxShadow: '0 0 0 1px rgba(235,235,235,0.45), inset 0 0 0 1px rgba(0,0,0,0.2)' }}
                   />
                 )}
               </div>
@@ -405,7 +405,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
                       <div key={c} className="overflow-hidden rounded-xl border border-gold-400/15 bg-black/20">
                         {/* رأس اللون: الدائرة والاسم ومجموع قطعه وزرّ حذف واضح */}
                         <div className="flex items-center gap-2 border-b border-gold-400/10 bg-black/15 px-3 py-2">
-                          <span className="h-5 w-5 shrink-0 rounded-full" style={{ background: colorToCss(c) || 'transparent', boxShadow: '0 0 0 1px rgba(244,237,226,0.45), inset 0 0 0 1px rgba(0,0,0,0.2)' }} />
+                          <span className="h-5 w-5 shrink-0 rounded-full" style={{ background: colorToCss(c) || 'transparent', boxShadow: '0 0 0 1px rgba(235,235,235,0.45), inset 0 0 0 1px rgba(0,0,0,0.2)' }} />
                           <span className="min-w-0 flex-1 truncate text-sm font-bold text-gold-100">{c}</span>
                           {chosen.length > 0 && (
                             <span className="shrink-0 rounded-full bg-gold-400/12 px-2 py-0.5 text-[10px] font-bold tabular-nums text-stone-200">
@@ -438,7 +438,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
                                     className={`rounded-full border px-3 py-1 text-xs font-bold transition ${on ? 'border-transparent' : 'border-gold-400/25 text-stone-300 hover:bg-white/5'}`}
                                     // لونان صريحان للحالة النشطة: أصناف الذهب تنقلب
                                     // بنّية نهاراً فيصير النصّ بنّياً على بنّي
-                                    style={on ? { background: '#b09a7e', color: '#2a1c10' } : undefined}
+                                    style={on ? { background: '#999795', color: '#1E1D1C' } : undefined}
                                   >
                                     {sizeLabel(sz, t)}
                                   </button>

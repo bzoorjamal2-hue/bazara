@@ -432,7 +432,7 @@ export default function FinanceManager() {
                           <span className="tabular-nums text-stone-300">{money(amount)} <span className="opacity-70">· {pct}%</span></span>
                         </div>
                         <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-gold-400/10">
-                          <div className="h-full rounded-full bg-gradient-to-r from-[#cdbda4] to-[#8a7657]" style={{ width: `${Math.max(pct, 3)}%` }} />
+                          <div className="h-full rounded-full bg-gradient-to-r from-[#BAB9B7] to-[#73716E]" style={{ width: `${Math.max(pct, 3)}%` }} />
                         </div>
                       </div>
                     );

@@ -162,7 +162,7 @@ export default function AdminStoreDetail({ slug, onClose }) {
                   <div className="space-y-1.5">
                     {data.products.total === 0 && <Flag tone="#92400e" text={t('admin.flagNoProducts')} />}
                     {data.orders.pending > 0 && <Flag tone="#92400e" text={t('admin.flagPending', { count: data.orders.pending })} />}
-                    {data.products.outOfStock > 0 && <Flag tone="#57534e" text={t('admin.flagOutOfStock', { count: data.products.outOfStock })} />}
+                    {data.products.outOfStock > 0 && <Flag tone="#545351" text={t('admin.flagOutOfStock', { count: data.products.outOfStock })} />}
                   </div>
                 )}
               </div>
@@ -180,7 +180,7 @@ export default function AdminStoreDetail({ slug, onClose }) {
                         </div>
                         <span
                           className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold text-cream"
-                          style={{ background: STATUS_TONE[o.status] || '#57534e' }}
+                          style={{ background: STATUS_TONE[o.status] || '#545351' }}
                         >
                           {t(`dashboard.ordersSection.${o.status}`, o.status)}
                         </span>

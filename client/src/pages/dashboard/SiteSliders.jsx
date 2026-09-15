@@ -114,7 +114,7 @@ export default function SiteSliders() {
                   aria-pressed={!off}
                   onClick={() => setPlatCats((p2) => ({ ...p2, hidden: off ? p2.hidden.filter((x) => x !== k) : [...p2.hidden, k] }))}
                   className={`rounded-full border px-3 py-1 text-xs font-bold transition ${off ? 'border-gold-400/20 text-stone-400 line-through' : 'border-transparent'}`}
-                  style={off ? undefined : { background: '#b09a7e', color: '#2a1c10' }}
+                  style={off ? undefined : { background: '#999795', color: '#1E1D1C' }}
                 >
                   {t(`categories.${k}`, k)}
                 </button>

@@ -82,7 +82,7 @@ export default function AdminOverview() {
             <Link
               to="/dashboard?tab=subscribers"
               className="flex items-center gap-3 rounded-2xl p-4 text-cream transition hover:-translate-y-0.5"
-              style={{ background: '#57534e' }}
+              style={{ background: '#545351' }}
             >
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-black/20"><WarnIcon className="h-5 w-5" /></span>
               <div className="min-w-0 flex-1">

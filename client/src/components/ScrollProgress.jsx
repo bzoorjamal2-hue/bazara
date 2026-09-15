@@ -28,7 +28,7 @@ export default function ScrollProgress() {
     <div aria-hidden className="pointer-events-none fixed inset-x-0 top-0 z-[60] h-[3px]">
       <div
         ref={ref}
-        className="h-full origin-[left] bg-gradient-to-r from-[#8a6a4f] via-[#cdbda4] to-[#9c866a]"
+        className="h-full origin-[left] bg-gradient-to-r from-[#6F6D6A] via-[#BAB9B7] to-[#858381]"
         style={{ transform: 'scaleX(0)' }}
       />
     </div>

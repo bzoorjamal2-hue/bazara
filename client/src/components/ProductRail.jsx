@@ -65,7 +65,7 @@ export default function ProductRail({ title, products, currentId, icon = null, a
                   </span>
                 )}
                 {hasDiscount && (
-                  <span className="badge absolute start-2 top-2 bg-[#8a2438] text-[#FAF9F7] shadow-sm">-{Math.round((1 - p.price / p.oldPrice) * 100)}%</span>
+                  <span className="badge absolute start-2 top-2 bg-[#8a2438] text-[#F9F9F8] shadow-sm">-{Math.round((1 - p.price / p.oldPrice) * 100)}%</span>
                 )}
               </div>
               <div className="p-2.5 text-center">

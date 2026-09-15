@@ -198,7 +198,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
           واحدة بحدود ذهبية خفيفة وظل ناعم — glass بيضاء نهاراً وداكنة أنيقة ليلاً */}
       {/* flex عمودي بارتفاع كامل: كل بطاقات الصف تتساوى طولاً مهما اختلف محتواها
           (نقاط ألوان/تقييم موجودة أو لا) — الشبكة تظل مصفوفة ومنسّقة */}
-      <div className="glass flex h-full flex-col overflow-hidden !p-0 ring-1 ring-transparent transition duration-300 group-hover:shadow-[0_22px_44px_-18px_rgba(46,33,24,0.35)] group-hover:ring-gold-400/30">
+      <div className="glass flex h-full flex-col overflow-hidden !p-0 ring-1 ring-transparent transition duration-300 group-hover:shadow-[0_22px_44px_-18px_rgba(36,35,34,0.35)] group-hover:ring-gold-400/30">
       {/* نسخة ضبابية ضئيلة خلف الصورة حتى تجهز (blur-up) — ملامح القطعة وألوانها
           تظهر فوراً فيبدو التحميل أنعم من مربّع رمادي. نُبقي الهيكل اللامع للصور
           غير المستضافة على Cloudinary (لا نسخة ضبابية لها) */}
@@ -237,7 +237,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
         {/* رقم ترتيب تحريري بزاوية الصورة (أقسام منسّقة كـ"الأكثر مبيعاً") — رقم كبير
             بخط العرض على شريحة داكنة، لا يلتقط النقر */}
         {rank > 0 && (
-          <span className="pointer-events-none absolute bottom-0 start-0 z-[3] flex h-11 w-11 items-end justify-center rounded-se-2xl bg-gradient-to-tr from-ink-950/85 to-ink-950/40 pb-1 font-display text-2xl font-extrabold leading-none text-[#cdbda4]">
+          <span className="pointer-events-none absolute bottom-0 start-0 z-[3] flex h-11 w-11 items-end justify-center rounded-se-2xl bg-gradient-to-tr from-ink-950/85 to-ink-950/40 pb-1 font-display text-2xl font-extrabold leading-none text-[#BAB9B7]">
             {rank}
           </span>
         )}
@@ -334,7 +334,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
                   type="button"
                   onClick={(e) => addSize(e, s)}
                   title={mySize === s ? t('product.mySize') : `${t('product.addToCart')} — ${sizeLabel(s, t)}`}
-                  className={`rounded-md bg-[#FAF9F7]/95 px-2 py-1 text-[11px] font-bold leading-none text-[#3f2e22] shadow-sm transition hover:bg-[#FAF9F7] active:scale-95 ${mySize === s ? 'ring-2 ring-gold-400' : ''}`}
+                  className={`rounded-md bg-[#F9F9F8]/95 px-2 py-1 text-[11px] font-bold leading-none text-[#313130] shadow-sm transition hover:bg-[#F9F9F8] active:scale-95 ${mySize === s ? 'ring-2 ring-gold-400' : ''}`}
                 >
                   {sizeLabel(s, t)}
                 </button>
@@ -344,7 +344,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); setQuickOpen(true); }}
                   title={t('product.quickView')}
-                  className="rounded-md bg-[#FAF9F7]/70 px-2 py-1 text-[11px] font-bold leading-none text-[#3f2e22] shadow-sm transition hover:bg-[#FAF9F7] active:scale-95"
+                  className="rounded-md bg-[#F9F9F8]/70 px-2 py-1 text-[11px] font-bold leading-none text-[#313130] shadow-sm transition hover:bg-[#F9F9F8] active:scale-95"
                 >
                   +{quickSizes.length - 5}
                 </button>

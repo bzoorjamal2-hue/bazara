@@ -6,13 +6,13 @@ export default function Logo({ className = 'h-9 w-9' }) {
     <svg viewBox="0 0 100 100" className={className} aria-hidden="true">
       <defs>
         <linearGradient id="bazaraGold" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#cdbda4" />
-          <stop offset="0.5" stopColor="#b09a7e" />
-          <stop offset="1" stopColor="#8a7657" />
+          <stop offset="0" stopColor="#BAB9B7" />
+          <stop offset="0.5" stopColor="#999795" />
+          <stop offset="1" stopColor="#73716E" />
         </linearGradient>
         <radialGradient id="bazaraIvory" cx="0.38" cy="0.3" r="0.95">
           <stop offset="0" stopColor="#FFFDF7" />
-          <stop offset="1" stopColor="#F0E7D5" />
+          <stop offset="1" stopColor="#E3E3E2" />
         </radialGradient>
       </defs>
 
@@ -44,7 +44,7 @@ export default function Logo({ className = 'h-9 w-9' }) {
         fontFamily="'Playfair Display', Georgia, 'Times New Roman', serif"
         fontWeight="700"
         fontSize="46"
-        fill="#4a3628"
+        fill="#3A3938"
       >
         B
       </text>

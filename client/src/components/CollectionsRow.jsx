@@ -37,7 +37,7 @@ export default function CollectionsRow({ collections, storeSlug = '' }) {
             <Link
               key={`${c.q}-${i}`}
               to={linkFor(c.q)}
-              className="group animate-fade-up relative aspect-square w-[44%] shrink-0 overflow-hidden rounded-[1.25rem] bg-wine/10 shadow-[0_10px_28px_-12px_rgba(94,70,54,0.5)] ring-1 ring-[#cdbda4]/30 transition duration-300 active:scale-[0.98] hover:-translate-y-1 sm:w-[30%] lg:w-[21%] xl:w-[17%]"
+              className="group animate-fade-up relative aspect-square w-[44%] shrink-0 overflow-hidden rounded-[1.25rem] bg-wine/10 shadow-[0_10px_28px_-12px_rgba(75,74,73,0.5)] ring-1 ring-[#BAB9B7]/30 transition duration-300 active:scale-[0.98] hover:-translate-y-1 sm:w-[30%] lg:w-[21%] xl:w-[17%]"
               style={{ animationDelay: `${i * 60}ms` }}
             >
               {c.image ? (
@@ -53,7 +53,7 @@ export default function CollectionsRow({ collections, storeSlug = '' }) {
                 />
               ) : (
                 // بلا صورة: تدرّج خمري فاخر — لا تظهر بطاقة فارغة أبداً
-                <span className="block h-full w-full" style={{ background: 'linear-gradient(135deg, #8a6a4f 0%, #5e4636 55%, #3f2e22 100%)' }} />
+                <span className="block h-full w-full" style={{ background: 'linear-gradient(135deg, #6F6D6A 0%, #4B4A49 55%, #313130 100%)' }} />
               )}
               {/* تدرّج أعمق من الأسفل: العنوان يُقرأ فوق أي صورة مهما كانت فاتحة */}
               <span aria-hidden className="bz-scrim absolute inset-0" />

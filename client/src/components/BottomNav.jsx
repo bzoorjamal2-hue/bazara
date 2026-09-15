@@ -269,7 +269,7 @@ export default function BottomNav() {
   return (
     <nav
       ref={barRef}
-      className="bz-tabbar fixed inset-x-0 bottom-0 z-[78] border-t border-wine/10 bg-white/95 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 shadow-[0_-6px_20px_rgba(94,70,54,0.08)]"
+      className="bz-tabbar fixed inset-x-0 bottom-0 z-[78] border-t border-wine/10 bg-white/95 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 shadow-[0_-6px_20px_rgba(75,74,73,0.08)]"
       style={vvInset ? { transform: `translateY(-${vvInset}px)` } : undefined}
     >
       <div className="mx-auto flex max-w-md items-stretch justify-around px-2">
@@ -290,7 +290,7 @@ export default function BottomNav() {
                 // شارة فاخرة: هالة نابضة خلفها لجذب الانتباه + حبّة ذهبية متدرّجة بحدّ عاجي
                 <span className="absolute -end-1 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gold-400/60" style={{ animationDuration: '1.8s' }} />
-                  <span className="relative flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-extrabold leading-none text-wine-dark shadow-md ring-[1.5px] ring-cream" style={{ background: 'linear-gradient(135deg, #eae0cf 0%, #cdbda4 55%, #b09a7e 100%)' }}>
+                  <span className="relative flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-extrabold leading-none text-wine-dark shadow-md ring-[1.5px] ring-cream" style={{ background: 'linear-gradient(135deg, #DDDDDC 0%, #BAB9B7 55%, #999795 100%)' }}>
                     {badge > 99 ? '99+' : badge}
                   </span>
                 </span>

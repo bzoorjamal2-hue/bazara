@@ -81,7 +81,7 @@ export default function VideoInput({ value, onChange, label, hint = '' }) {
               autoPlay loop muted playsInline controls
               // خلفية داكنة ثابتة خلف الفيديو بالوضعين — الفيديو يغطّيها والأشرطة السوداء
               // على جوانبه تبدو مقصودة بدل مربّع فاتح غريب
-              className="max-h-52 w-full rounded-xl bg-[#1a1410]"
+              className="max-h-52 w-full rounded-xl bg-[#151515]"
             />
             {busy && (
               <span className="absolute inset-x-0 bottom-0 flex items-center gap-2 rounded-b-xl bg-black/70 px-2.5 py-1.5 text-[11px] font-bold text-gold-200">

@@ -141,7 +141,7 @@ export default function StockRequestsManager() {
                 type="button"
                 onClick={() => setFilter(filter === s.k ? 'all' : s.k)}
                 className={`rounded-2xl border bg-black/20 p-3 text-center transition ${
-                  filter === s.k ? 'border-[#b09a7e]' : 'border-gold-400/15 hover:border-gold-400/40'
+                  filter === s.k ? 'border-[#999795]' : 'border-gold-400/15 hover:border-gold-400/40'
                 }`}
               >
                 <p className={`font-display text-2xl font-extrabold tabular-nums ${s.cls}`}>{s.v}</p>
@@ -179,12 +179,12 @@ export default function StockRequestsManager() {
                       // — بنّي على بنّي لا يُقرأ
                       className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
                         on
-                          ? 'border-[#b09a7e] bg-[#b09a7e] text-[#3f2e22] shadow-sm'
+                          ? 'border-[#999795] bg-[#999795] text-[#313130] shadow-sm'
                           : 'border-gold-400/25 bg-gold-400/5 text-stone-300 hover:bg-gold-400/15 hover:text-gold-200'
                       }`}
                     >
                       {s === 'all' ? t('common.all') : t(`dashboard.stockRequests.filters.${s}`)}
-                      <span className={`rounded-full px-1.5 text-[10px] font-bold ${on ? 'bg-[#3f2e22]/15' : 'bg-gold-400/10 text-stone-400'}`}>{counts[s]}</span>
+                      <span className={`rounded-full px-1.5 text-[10px] font-bold ${on ? 'bg-[#313130]/15' : 'bg-gold-400/10 text-stone-400'}`}>{counts[s]}</span>
                     </button>
                   );
                 })}

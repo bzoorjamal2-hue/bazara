@@ -50,7 +50,7 @@ function Bi({ value, valueEn, onChange, onChangeEn, placeholder, rows, max = 120
       <div className="flex items-start gap-1.5">
         <span
           className="mt-2 shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold leading-none"
-          style={{ background: 'rgba(94,70,54,0.14)' }}
+          style={{ background: 'rgba(75,74,73,0.14)' }}
           title="English"
         >
           EN
@@ -214,15 +214,15 @@ export default function LandingEditor() {
                 backgroundImage: L.hero.image ? `url(${L.hero.image})` : undefined,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
-                backgroundColor: '#3f2e22',
+                backgroundColor: '#313130',
                 // eslint-disable-next-line
                 ['--bz-dim']: (L.hero.dim ?? 62) / 100,
               }}
             >
               <span className="bz-veil-preview absolute inset-0" aria-hidden="true" />
               <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 px-3 text-center">
-                <span className="text-[15px] font-extrabold text-[#FAF9F7]">{t('admin.land.dimSample')}</span>
-                <span className="text-[11px] text-[#FAF9F7]/80">{t('admin.land.dimSampleSub')}</span>
+                <span className="text-[15px] font-extrabold text-[#F9F9F8]">{t('admin.land.dimSample')}</span>
+                <span className="text-[11px] text-[#F9F9F8]/80">{t('admin.land.dimSampleSub')}</span>
               </span>
             </div>
             {!L.hero.image && L.hero.video && (

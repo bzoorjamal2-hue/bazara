@@ -575,7 +575,7 @@ export default function CartDrawer() {
                   <Link
                     to={trackPath(doneStore)}
                     onClick={close}
-                    className="flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-center bz-cta font-bold ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
+                    className="flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-center bz-cta font-bold ring-1 ring-[#BAB9B7]/35 transition hover:brightness-110"
                    
                   >
                     <TruckIcon className="h-5 w-5 shrink-0" /> {t('co.doneTrack')}
@@ -604,7 +604,7 @@ export default function CartDrawer() {
             <p>{t('cart.empty')}</p>
             <button
               onClick={close}
-              className="rounded-full px-7 py-3 bz-cta font-bold ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
+              className="rounded-full px-7 py-3 bz-cta font-bold ring-1 ring-[#BAB9B7]/35 transition hover:brightness-110"
              
             >
               {t('co.doneKeepShopping')}
@@ -693,8 +693,8 @@ export default function CartDrawer() {
                   {/* حبة إتمام فاخرة بتدرج خمري وهالة ذهبية — والسهم يتبع اتجاه اللغة */}
                   <button
                     onClick={() => { setErr(''); setView('checkout'); }}
-                    className="flex w-full items-center justify-center gap-1.5 rounded-full py-4 bz-cta font-bold ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
-                    style={{ boxShadow: '0 16px 34px -14px rgba(20, 13, 7, 0.65)' }}
+                    className="flex w-full items-center justify-center gap-1.5 rounded-full py-4 bz-cta font-bold ring-1 ring-[#BAB9B7]/35 transition hover:brightness-110"
+                    style={{ boxShadow: '0 16px 34px -14px rgba(14, 14, 13, 0.65)' }}
                   >
                     {t('cart.proceed')} <ForwardIcon className="h-4 w-4" />
                   </button>
@@ -726,7 +726,7 @@ export default function CartDrawer() {
                             <span
                               aria-hidden="true"
                               className="mx-1 mt-[13px] h-0.5 flex-1 rounded-full transition-colors duration-500"
-                              style={{ background: step > idx ? '#b09a7e' : 'rgba(138,127,114,0.28)' }}
+                              style={{ background: step > idx ? '#999795' : 'rgba(129,126,123,0.28)' }}
                             />
                           )}
                           <button
@@ -894,7 +894,7 @@ export default function CartDrawer() {
                           ].map(({ id, Icon, title, desc, off }) => {
                             const on = payMethod === id && !off;
                             return (
-                              /* الحلقةُ والنقطةُ بلونٍ صريح (#b09a7e) لا بصنفِ شفافيّة:
+                              /* الحلقةُ والنقطةُ بلونٍ صريح (#999795) لا بصنفِ شفافيّة:
                                  كلُّ درجاتِ border-gold-400/* تُردُّ للونٍ واحدٍ بالوضعِ
                                  النهاريّ، فالبطاقةُ المختارةُ كانت تُشبهُ غيرَ المختارة */
                               <button
@@ -902,7 +902,7 @@ export default function CartDrawer() {
                                 onClick={() => { if (off) return; setPayMethod(id); setErr(''); }}
                                 disabled={off}
                                 aria-pressed={on}
-                                style={on ? { boxShadow: '0 0 0 2px #b09a7e' } : undefined}
+                                style={on ? { boxShadow: '0 0 0 2px #999795' } : undefined}
                                 className={`flex w-full items-center gap-3 rounded-2xl border p-3.5 text-start transition ${
                                   off ? 'cursor-not-allowed border-gold-400/10 bg-black/10 opacity-60'
                                     : on ? 'border-transparent bg-gold-400/10' : 'border-gold-400/15 bg-black/20 hover:bg-gold-400/5'}`}
@@ -925,8 +925,8 @@ export default function CartDrawer() {
                                   className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition"
                                   /* اللونُ على الحاوية: أيقوناتُنا ترسمُ بـcurrentColor ولا
                                      تقبلُ style. وصحٌّ داكنٌ على الذهب لأنّ الأبيضَ
-                                     على ‎#b09a7e‎ تباينُه ٢٫٣ فقط. */
-                                  style={on ? { borderColor: '#b09a7e', background: '#b09a7e', color: '#3f2e22' } : { borderColor: 'rgba(138,127,114,0.45)' }}
+                                     على ‎#999795‎ تباينُه ٢٫٣ فقط. */
+                                  style={on ? { borderColor: '#999795', background: '#999795', color: '#313130' } : { borderColor: 'rgba(129,126,123,0.45)' }}
                                 >
                                   {on && <CheckIcon className="h-3 w-3" />}
                                 </span>
@@ -1106,8 +1106,8 @@ export default function CartDrawer() {
                   {step < 3 ? (
                     <button
                       onClick={goNext}
-                      className="flex flex-1 items-center justify-center gap-1.5 rounded-full py-4 bz-cta font-bold ring-1 ring-[#cdbda4]/35 transition hover:brightness-110"
-                      style={{ boxShadow: '0 16px 34px -14px rgba(20, 13, 7, 0.65)' }}
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-full py-4 bz-cta font-bold ring-1 ring-[#BAB9B7]/35 transition hover:brightness-110"
+                      style={{ boxShadow: '0 16px 34px -14px rgba(14, 14, 13, 0.65)' }}
                     >
                       {t('co.next')} <ForwardIcon className="h-4 w-4 shrink-0" />
                     </button>
@@ -1123,8 +1123,8 @@ export default function CartDrawer() {
                       /* حجمٌ واحدٌ (١٤) لا يكبرُ مع الشاشة: الزرُّ يحملُ مبلغاً لا
                          يجوزُ أن يُقَصَّ، والنصُّ الإنجليزيُّ أطولُ من العربيّ —
                          فبالحجمِ الكامل كان يخرجُ «Confirm order · …» بلا رقم. */
-                      className="flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full py-4 text-sm bz-cta font-bold ring-1 ring-[#cdbda4]/35 transition hover:brightness-110 disabled:opacity-60"
-                      style={{ boxShadow: '0 16px 34px -14px rgba(20, 13, 7, 0.65)' }}
+                      className="flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full py-4 text-sm bz-cta font-bold ring-1 ring-[#BAB9B7]/35 transition hover:brightness-110 disabled:opacity-60"
+                      style={{ boxShadow: '0 16px 34px -14px rgba(14, 14, 13, 0.65)' }}
                     >
                       {(placing || cardBusy) ? t('common.loading') : (
                         <>

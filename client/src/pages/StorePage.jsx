@@ -1081,7 +1081,7 @@ function HeroSlider({ store }) {
                   // (نسبة ~5:1) على الشاشات العريضة بعد توسيع الحاوية
                   // ارتفاع الجوال 300 لا 260: بعد إضافة زرّ «تسوّقي الآن» صار محتوى
                   // الشريحة الثابتة أطول من الصندوق، فانزاح الشعار لأعلى وخرج عن الإطار.
-                  className={`relative isolate flex h-[300px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[360px] lg:h-[430px] 2xl:h-[500px] ${idx === i ? 'bz-hero-active' : ''} ${custom ? 'bg-[#241712]' : 'bg-wine-dark pub-hero'}`}
+                  className={`relative isolate flex h-[300px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[360px] lg:h-[430px] 2xl:h-[500px] ${idx === i ? 'bz-hero-active' : ''} ${custom ? 'bg-[#1C1B1A]' : 'bg-wine-dark pub-hero'}`}
                   style={style}
                 >
                   {/* وسائط الشريحة (صورة أو فيديو) بنفس التعتيم تماماً — معتّمة من أول لحظة بلا وميض */}
@@ -1208,7 +1208,7 @@ function HeroSlider({ store }) {
               {idx === i && (
                 <span
                   key={i}
-                  className="bz-dot-progress absolute inset-y-0 left-0 rounded-full bg-[#FAF9F7]"
+                  className="bz-dot-progress absolute inset-y-0 left-0 rounded-full bg-[#F9F9F8]"
                   style={{ animationPlayState: paused ? 'paused' : 'running' }}
                 />
               )}

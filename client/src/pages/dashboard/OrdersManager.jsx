@@ -290,31 +290,31 @@ export default function OrdersManager() {
     body{font-family:'Tajawal','Segoe UI',Tahoma,sans-serif;color:#2b2b2b;margin:0;padding:0;background:#fff}
     .inv{padding:22px 24px;max-width:800px;margin:0 auto}
     .inv + .inv{page-break-before:always}
-    h1{font-size:19px;margin:0 0 4px;color:#7f6c4d}
+    h1{font-size:19px;margin:0 0 4px;color:#686664}
     .muted{color:#6b6b6b;font-size:11.5px;line-height:1.7}
     /* خيط ذهبي متدرّج أسفل الترويسة بدل خطّ مصمت — هوية بازارا الذهبية */
-    .head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding-bottom:12px;margin-bottom:14px;border-bottom:3px solid;border-image:linear-gradient(90deg,#cdbda4,#b09a7e,#8a7657) 1}
+    .head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding-bottom:12px;margin-bottom:14px;border-bottom:3px solid;border-image:linear-gradient(90deg,#BAB9B7,#999795,#73716E) 1}
     .inv-meta{text-align:end}
-    .tag{display:inline-block;background:#b09a7e;color:#3f2e22;font-weight:800;font-size:11px;padding:2px 10px;border-radius:99px;margin-bottom:4px}
+    .tag{display:inline-block;background:#999795;color:#313130;font-weight:800;font-size:11px;padding:2px 10px;border-radius:99px;margin-bottom:4px}
     .no{font-weight:800;font-size:14px;letter-spacing:.5px}
     .grid2{display:flex;gap:10px;margin-bottom:10px}
-    .box{flex:1;border:1px solid #e3ddd3;border-radius:10px;padding:9px 11px;font-size:12.5px;line-height:1.7}
-    .box-t{color:#8a7f75;font-size:10.5px;font-weight:700;margin-bottom:2px}
+    .box{flex:1;border:1px solid #DCDBDA;border-radius:10px;padding:9px 11px;font-size:12.5px;line-height:1.7}
+    .box-t{color:#82807D;font-size:10.5px;font-weight:700;margin-bottom:2px}
     .note{margin-bottom:10px}
     table{width:100%;border-collapse:collapse;font-size:12.5px}
-    th{background:linear-gradient(180deg,#f7efdc,#f1e6cd);color:#6b5320;text-align:start;padding:8px;border-bottom:2px solid #b09a7e;font-size:11.5px;font-weight:700}
-    td{padding:7px 8px;border-bottom:1px solid #f0ebe3;vertical-align:middle}
-    .n{width:28px;text-align:center;color:#8a7f75}
+    th{background:linear-gradient(180deg,#f7efdc,#f1e6cd);color:#474644;text-align:start;padding:8px;border-bottom:2px solid #999795;font-size:11.5px;font-weight:700}
+    td{padding:7px 8px;border-bottom:1px solid #EAEAE9;vertical-align:middle}
+    .n{width:28px;text-align:center;color:#82807D}
     .c{text-align:center;width:64px}
     .e{text-align:end;width:96px}
     .b{font-weight:700}
     .lbl{color:#6b6b6b}
-    .total td{font-weight:800;font-size:15px;color:#6b5320;border-top:2px solid #b09a7e;background:linear-gradient(180deg,#fdf7e8,#f9f0dc)}
+    .total td{font-weight:800;font-size:15px;color:#474644;border-top:2px solid #999795;background:linear-gradient(180deg,#fdf7e8,#f9f0dc)}
     small{color:#6b6b6b}
-    .pay{margin-top:10px;font-size:12px;font-weight:700;color:#3f2e22;background:#f6f1e8;border-radius:8px;padding:7px 10px}
+    .pay{margin-top:10px;font-size:12px;font-weight:700;color:#313130;background:#EFEFEF;border-radius:8px;padding:7px 10px}
     /* المدفوعُ مسبقاً بلونٍ مختلفٍ كي تلمحَه العينُ قبل قراءةِ السطر */
     .pay.paid{color:#1f7a4d;background:#eef7f0;border:1px solid #cfe8da}
-    .thanks{margin-top:10px;text-align:center;color:#8a7f75;font-size:11.5px}
+    .thanks{margin-top:10px;text-align:center;color:#82807D;font-size:11.5px}
   `;
 
   // الطباعة من الصفحة نفسها (printSheet) لا من إطار مخفيّ — سفاري على الآيفون
@@ -685,12 +685,12 @@ export default function OrdersManager() {
                   // بنّي أغمق — بنّي على بنّي لا يُقرأ. الهيكس يتجاوز قلب الثيم.
                   className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
                     on
-                      ? 'border-[#b09a7e] bg-[#b09a7e] text-[#3f2e22] shadow-sm'
+                      ? 'border-[#999795] bg-[#999795] text-[#313130] shadow-sm'
                       : 'border-gold-400/25 bg-gold-400/5 text-stone-300 hover:bg-gold-400/15 hover:text-gold-200'
                   }`}
                 >
                   {s === 'all' ? t('common.all') : t(`dashboard.ordersSection.${s}`)}
-                  <span className={`rounded-full px-1.5 text-[10px] font-bold ${on ? 'bg-[#3f2e22]/15 text-[#3f2e22]' : 'bg-gold-400/10 text-stone-400'}`}>{n}</span>
+                  <span className={`rounded-full px-1.5 text-[10px] font-bold ${on ? 'bg-[#313130]/15 text-[#313130]' : 'bg-gold-400/10 text-stone-400'}`}>{n}</span>
                 </button>
               );
             })}

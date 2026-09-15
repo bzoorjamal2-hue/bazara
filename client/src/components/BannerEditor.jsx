@@ -15,7 +15,7 @@ const BG_TYPES = [
 ];
 const MAX_BANNERS = 5;
 // ألوان جاهزة من هوية بازارا + درجات محايدة — أسرع وأجمل من انتقاء لون عشوائي
-const COLOR_PRESETS = ['#5e4636', '#3f2e22', '#6e2637', '#4a1322', '#1e1710', '#b8932c', '#d4af37', '#2f4f4f'];
+const COLOR_PRESETS = ['#4B4A49', '#313130', '#6e2637', '#4a1322', '#171717', '#b8932c', '#d4af37', '#2f4f4f'];
 
 // معاينة مصغّرة للشريحة كما تظهر بالسلايدر فعلاً: نفس الخلفية ونفس التعتيم
 // ونفس ترتيب النص — فيرى المالك أثر كل تعديل فوراً بلا فتح المتجر.
@@ -31,7 +31,7 @@ function SlidePreview({ banner, storeName }) {
     ? { background: bgValue }
     : media
       ? { background: `linear-gradient(rgba(10,10,10,0.45), rgba(10,10,10,0.45)), url("${media}") center/cover` }
-      : { background: 'linear-gradient(135deg, #4a1322 0%, #3f2e22 55%, #241712 100%)' };
+      : { background: 'linear-gradient(135deg, #4a1322 0%, #313130 55%, #1C1B1A 100%)' };
 
   return (
     <div className="relative flex h-28 flex-col items-center justify-center overflow-hidden rounded-xl px-4 text-center sm:h-32" style={style}>
@@ -183,7 +183,7 @@ export default function BannerEditor({ banners = [], onChange, withButtons = fal
                             key={key}
                             onClick={() => setBannerBg(idx, val)}
                             className={`flex flex-col items-center gap-1 rounded-xl border px-1 py-2 text-[10px] font-semibold transition ${
-                              on ? 'border-[#e4d8c5] bg-[#e4d8c5] text-[#2b1d12]' : 'border-white/15 bg-white/5 text-stone-300 hover:bg-white/10'
+                              on ? 'border-[#D5D5D4] bg-[#D5D5D4] text-[#1F1F1E]' : 'border-white/15 bg-white/5 text-stone-300 hover:bg-white/10'
                             }`}
                           >
                             <Icon className="h-4 w-4" />
@@ -202,14 +202,14 @@ export default function BannerEditor({ banners = [], onChange, withButtons = fal
                           <button
                             key={c} type="button" onClick={() => setBanner(idx, 'bgValue', c)}
                             aria-label={c} title={c}
-                            className={`h-7 w-7 rounded-full border-2 transition ${(b.bgValue || '').toLowerCase() === c ? 'border-[#e4d8c5] scale-110' : 'border-white/20 hover:scale-105'}`}
+                            className={`h-7 w-7 rounded-full border-2 transition ${(b.bgValue || '').toLowerCase() === c ? 'border-[#D5D5D4] scale-110' : 'border-white/20 hover:scale-105'}`}
                             style={{ background: c }}
                           />
                         ))}
                       </div>
                       <div className="flex items-center gap-2">
-                        <input type="color" className="h-9 w-12 cursor-pointer rounded-lg border border-gold-400/20 bg-black/30" value={b.bgValue || '#5e4636'} onChange={(e) => setBanner(idx, 'bgValue', e.target.value)} />
-                        <span className="text-xs text-stone-400" dir="ltr">{b.bgValue || '#5e4636'}</span>
+                        <input type="color" className="h-9 w-12 cursor-pointer rounded-lg border border-gold-400/20 bg-black/30" value={b.bgValue || '#4B4A49'} onChange={(e) => setBanner(idx, 'bgValue', e.target.value)} />
+                        <span className="text-xs text-stone-400" dir="ltr">{b.bgValue || '#4B4A49'}</span>
                       </div>
                     </div>
                   )}

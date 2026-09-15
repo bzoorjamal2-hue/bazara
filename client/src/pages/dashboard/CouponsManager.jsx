@@ -285,10 +285,10 @@ export default function CouponsManager() {
                     <button
                       key={k} type="button" onClick={() => setStateFilter(k)}
                       className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold transition ${
-                        stateFilter === k ? 'border-[#b09a7e] bg-[#b09a7e] text-[#3f2e22]' : 'border-gold-400/25 bg-gold-400/5 text-stone-300 hover:bg-gold-400/15 hover:text-gold-200'
+                        stateFilter === k ? 'border-[#999795] bg-[#999795] text-[#313130]' : 'border-gold-400/25 bg-gold-400/5 text-stone-300 hover:bg-gold-400/15 hover:text-gold-200'
                       }`}
                     >
-                      {label} <span className={`rounded-full px-1.5 text-[10px] ${stateFilter === k ? 'bg-[#3f2e22]/15' : 'bg-gold-400/10'}`}>{n}</span>
+                      {label} <span className={`rounded-full px-1.5 text-[10px] ${stateFilter === k ? 'bg-[#313130]/15' : 'bg-gold-400/10'}`}>{n}</span>
                     </button>
                   ))}
                 </div>
@@ -350,7 +350,7 @@ export default function CouponsManager() {
                   {c.maxUses != null && (
                     <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-gold-400/10">
                       <div
-                        className={`h-full rounded-full transition-all ${pct >= 100 ? 'bg-red-400' : 'bg-gradient-to-r from-[#cdbda4] to-[#8a7657]'}`}
+                        className={`h-full rounded-full transition-all ${pct >= 100 ? 'bg-red-400' : 'bg-gradient-to-r from-[#BAB9B7] to-[#73716E]'}`}
                         style={{ width: `${Math.max(pct, c.usedCount > 0 ? 4 : 0)}%` }}
                       />
                     </div>

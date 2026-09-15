@@ -430,7 +430,7 @@ export default function ProductDetails() {
             {hasDiscount && (
               <span className="flex items-center gap-x-2.5">
                 <Strike className="bz-oldprice text-xl">{t('common.currency')}{product.oldPrice}</Strike>
-                <span className="rounded-full bg-[#8a2438] px-2.5 py-1 text-xs font-bold leading-none text-[#FAF9F7] shadow-sm">
+                <span className="rounded-full bg-[#8a2438] px-2.5 py-1 text-xs font-bold leading-none text-[#F9F9F8] shadow-sm">
                   {t('product.savePct', { pct: Math.round((1 - product.price / product.oldPrice) * 100) })}
                 </span>
                 <span className="text-xs font-semibold text-[#8a2438]">
@@ -550,7 +550,7 @@ export default function ProductDetails() {
                   </div>
                   {/* شرح الحلقة الذهبية — يظهر فقط إن كان مقاسها المعتاد متاحاً هنا وغير مختار بعد */}
                   {mySize && !selSize && availSizes.includes(mySize) && !sizeSoldOut(mySize) && (
-                    <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-[#5e4636] dark:text-inherit">
+                    <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-[#4B4A49] dark:text-inherit">
                       <span aria-hidden className="bz-usual-dot h-2.5 w-2.5 shrink-0 rounded-full" />
                       {t('product.mySizeHint', { size: sizeLabel(mySize, t) })}
                     </p>
@@ -695,7 +695,7 @@ export default function ProductDetails() {
 
       {/* شريط الشراء الثابت — يظهر عند التمرير تحت زر الشراء ويحلّ محلّ شريط التنقّل (أسلوب المتاجر العالمية) */}
       {showBuyBar && !outOfStock && (
-        <div className="fixed inset-x-0 bottom-0 z-[78] animate-fade-up border-t border-wine/10 bg-white/95 pb-[max(env(safe-area-inset-bottom),8px)] pt-2.5 shadow-[0_-6px_20px_rgba(94,70,54,0.14)]">
+        <div className="fixed inset-x-0 bottom-0 z-[78] animate-fade-up border-t border-wine/10 bg-white/95 pb-[max(env(safe-area-inset-bottom),8px)] pt-2.5 shadow-[0_-6px_20px_rgba(75,74,73,0.14)]">
           <div className="mx-auto flex max-w-3xl items-center gap-3 px-4">
             <div className="min-w-0 flex-1">
               <p className="line-clamp-1 text-sm font-semibold text-stone-100">{product.name}</p>

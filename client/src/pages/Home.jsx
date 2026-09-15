@@ -500,7 +500,7 @@ function HomeHero({ banners = [] }) {
               return (
                 <div key={idx} className="w-full shrink-0" dir="rtl">
                   <div
-                    className={`relative isolate flex h-[340px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[420px] lg:h-[500px] 2xl:h-[580px] ${idx === i ? 'bz-hero-active' : ''} ${onMedia ? 'bg-[#241712]' : 'bg-gradient-to-br from-[#f6ecd9] via-[#efe1c6] to-[#f6ecd9]'}`}
+                    className={`relative isolate flex h-[340px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[420px] lg:h-[500px] 2xl:h-[580px] ${idx === i ? 'bz-hero-active' : ''} ${onMedia ? 'bg-[#1C1B1A]' : 'bg-gradient-to-br from-[#f6ecd9] via-[#efe1c6] to-[#f6ecd9]'}`}
                     style={isColor ? { background: s.bgValue } : isVideo ? { background: `linear-gradient(rgba(10,10,10,0.5), rgba(10,10,10,0.5)), url("${vPoster}") center/cover` } : undefined}
                   >
                     {/* التعتيم مخبوز في الوسيط (filter) لا كطبقة منفصلة — يمنع اختراق فيديو
@@ -526,9 +526,9 @@ function HomeHero({ banners = [] }) {
                       </>
                     )}
                     {/* شارة ذهبية رفيعة تعطي إحساس دور الأزياء العالمية */}
-                    <span className={`bz-hero-el bz-kicker mb-4 text-[11px] font-semibold uppercase sm:text-xs ${onMedia ? 'text-gold-200/90' : 'text-[#9a8463]'}`}>Bazara</span>
-                    {s.title && <h1 className={`bz-hero-el font-display text-3xl font-extrabold leading-tight sm:text-5xl ${onMedia ? 'text-cream drop-shadow-lg' : 'text-[#5e4636]'}`}>{s.title}</h1>}
-                    {s.subtitle && <p className={`bz-hero-el mx-auto mt-4 max-w-2xl sm:text-lg ${onMedia ? 'text-cream/85 drop-shadow' : 'text-[#6e5340]'}`}>{s.subtitle}</p>}
+                    <span className={`bz-hero-el bz-kicker mb-4 text-[11px] font-semibold uppercase sm:text-xs ${onMedia ? 'text-gold-200/90' : 'text-[#817F7C]'}`}>Bazara</span>
+                    {s.title && <h1 className={`bz-hero-el font-display text-3xl font-extrabold leading-tight sm:text-5xl ${onMedia ? 'text-cream drop-shadow-lg' : 'text-[#4B4A49]'}`}>{s.title}</h1>}
+                    {s.subtitle && <p className={`bz-hero-el mx-auto mt-4 max-w-2xl sm:text-lg ${onMedia ? 'text-cream/85 drop-shadow' : 'text-[#595755]'}`}>{s.subtitle}</p>}
                     {s.btnLabel && s.btnHref && <div className="bz-hero-el"><SlideButton href={s.btnHref} label={s.btnLabel} onLight={!onMedia} /></div>}
                   </div>
                 </div>
@@ -539,12 +539,12 @@ function HomeHero({ banners = [] }) {
               <div key={idx} className="w-full shrink-0" dir="rtl">
                 <div className={`relative flex h-[340px] flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#f6ecd9] via-[#efe1c6] to-[#f6ecd9] px-6 text-center sm:h-[420px] lg:h-[500px] 2xl:h-[580px] ${idx === i ? 'bz-hero-active' : ''}`}>
                   <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-wine/5 blur-3xl" />
-                  <p className="bz-hero-el bz-kicker mb-4 text-[11px] font-semibold uppercase text-[#9a8463] sm:text-xs">{s.eyebrow}</p>
-                  <h1 className="bz-hero-el font-display text-3xl font-extrabold leading-tight text-[#5e4636] sm:text-5xl">
+                  <p className="bz-hero-el bz-kicker mb-4 text-[11px] font-semibold uppercase text-[#817F7C] sm:text-xs">{s.eyebrow}</p>
+                  <h1 className="bz-hero-el font-display text-3xl font-extrabold leading-tight text-[#4B4A49] sm:text-5xl">
                     {s.title}
-                    {s.highlight && <> <span className="underline decoration-[#9c866a] decoration-2 underline-offset-8">{s.highlight}</span></>}
+                    {s.highlight && <> <span className="underline decoration-[#858381] decoration-2 underline-offset-8">{s.highlight}</span></>}
                   </h1>
-                  <p className="bz-hero-el mx-auto mt-4 max-w-2xl text-[#6e5340] sm:text-lg">{s.desc}</p>
+                  <p className="bz-hero-el mx-auto mt-4 max-w-2xl text-[#595755] sm:text-lg">{s.desc}</p>
                   <div className="bz-hero-el mt-7 flex flex-wrap items-center justify-center gap-3">
                     <Link to="/register" className="inline-flex items-center rounded-xl bg-wine px-6 py-2.5 text-base font-semibold text-cream shadow-lg transition hover:-translate-y-0.5 hover:bg-wine-dark">
                       {t('home.ctaStart')}

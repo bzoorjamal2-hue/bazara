@@ -253,10 +253,10 @@ export default function Track() {
                     {/* ── الترويسة: هويّةُ المتجرِ ورقمُ الطلبِ وحالتُه ── */}
                     <div className="bz-tr-head flex flex-wrap items-center gap-3 p-5">
                       {o.storeLogo
-                        ? <img src={cldThumb(o.storeLogo, 96)} alt={o.storeName} loading="lazy" className="h-11 w-11 shrink-0 rounded-full object-cover ring-1 ring-[#5e4636]/20" />
-                        : <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#5e4636]/10 text-[#5e4636]"><StoreIcon className="h-5 w-5" /></span>}
+                        ? <img src={cldThumb(o.storeLogo, 96)} alt={o.storeName} loading="lazy" className="h-11 w-11 shrink-0 rounded-full object-cover ring-1 ring-[#4B4A49]/20" />
+                        : <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#4B4A49]/10 text-[#4B4A49]"><StoreIcon className="h-5 w-5" /></span>}
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-base font-bold text-[#3f2e22] dark:text-inherit">{o.storeName}</p>
+                        <p className="truncate text-base font-bold text-[#313130] dark:text-inherit">{o.storeName}</p>
                         {/* رقم الطلب ينُسخ بضغطة (لإرساله للمتجر عند الاستفسار) */}
                         <button
                           type="button"
@@ -314,7 +314,7 @@ export default function Track() {
                                   {!last && <span className={`bz-tl-vbar ${i < stepIdx ? 'bz-tl-bar-on' : ''}`} />}
                                 </div>
                                 <div className={`min-w-0 flex-1 ${last ? 'pb-0' : 'pb-4'}`}>
-                                  <p className={`text-sm leading-6 ${done ? 'font-bold text-[#3f2e22] dark:text-inherit' : 'text-stone-400'}`}>
+                                  <p className={`text-sm leading-6 ${done ? 'font-bold text-[#313130] dark:text-inherit' : 'text-stone-400'}`}>
                                     {t(`dashboard.ordersSection.${s}`)}
                                   </p>
                                   {/* المنجَزُ تاريخُه، والمرحلةُ التاليةُ «قيد التنفيذ»،
@@ -388,7 +388,7 @@ export default function Track() {
                           <span>{o.deliveryFee > 0 ? `${t('common.currency')}${Number(o.deliveryFee).toFixed(2)}` : t('receipt.freeDelivery')}</span>
                         </div>
                         <div className="bz-hr-t flex items-center justify-between pt-2 font-bold">
-                          <span className="text-[#3f2e22] dark:text-inherit">{t('receipt.total')}</span>
+                          <span className="text-[#313130] dark:text-inherit">{t('receipt.total')}</span>
                           <span className="bz-total text-lg">{t('common.currency')}{o.total.toFixed(2)}</span>
                         </div>
                       </div>

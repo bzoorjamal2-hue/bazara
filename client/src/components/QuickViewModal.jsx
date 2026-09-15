@@ -112,7 +112,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
         {/* الوسائط — صورٌ وفيديو بمعرضٍ واحدٍ ثابتِ الإطار (نفس صفحة المنتج).
             كان الفيديو إن وُجد يُخفي الصورَ كلَّها ويُلغي المصغّرات، فلا ترى الزبونةُ
             صورَ اللونِ الذي تختارُه هنا إطلاقاً. */}
-        <div className="bg-[#f3ece0] p-3">
+        <div className="bg-[#EAEAE9] p-3">
           <ProductMedia
             product={product}
             color={color}
@@ -120,7 +120,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
             stageRef={imgRef}
             onCover={setCover}
             badge={hasDiscount ? (
-              <span className="absolute start-3 top-3 z-10 rounded-full bg-[#8a2438] px-2.5 py-0.5 text-xs font-semibold text-[#FAF9F7] shadow-sm">-{discountPct}%</span>
+              <span className="absolute start-3 top-3 z-10 rounded-full bg-[#8a2438] px-2.5 py-0.5 text-xs font-semibold text-[#F9F9F8] shadow-sm">-{discountPct}%</span>
             ) : null}
           />
         </div>

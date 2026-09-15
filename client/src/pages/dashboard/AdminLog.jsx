@@ -18,19 +18,19 @@ const ACTIONS = {
   'subscription.set': { tone: '#047857', Icon: CrownIcon },
   'subscription.addDays': { tone: '#047857', Icon: PlusIcon },
   'store.feature': { tone: '#92400e', Icon: StarIcon },
-  'store.unfeature': { tone: '#57534e', Icon: StarIcon },
+  'store.unfeature': { tone: '#545351', Icon: StarIcon },
   'user.resetPassword': { tone: '#b91c1c', Icon: ShieldIcon },
-  'user.sendReset': { tone: '#57534e', Icon: ShieldIcon },
+  'user.sendReset': { tone: '#545351', Icon: ShieldIcon },
   'account.suspend': { tone: '#b91c1c', Icon: LockIcon },
   'account.unsuspend': { tone: '#047857', Icon: LockOpenIcon },
-  'account.fix': { tone: '#57534e', Icon: EditIcon },
+  'account.fix': { tone: '#545351', Icon: EditIcon },
   // خمسة أفعالٍ كانت تُنفَّذ بلا أثر: الكود اشتراكٌ مجاني، والرسالة الجماعية
   // بريدٌ لكلّ المتاجر، وإعدادات الموقع تغيّر واجهة المنصّة لكلّ زائر.
   'codes.generate': { tone: '#92400e', Icon: TicketIcon },
   'codes.send': { tone: '#92400e', Icon: MailIcon },
-  'broadcast.send': { tone: '#57534e', Icon: MegaphoneIcon },
-  'settings.payment': { tone: '#57534e', Icon: CardIcon },
-  'site.settings': { tone: '#57534e', Icon: ImageIcon },
+  'broadcast.send': { tone: '#545351', Icon: MegaphoneIcon },
+  'settings.payment': { tone: '#545351', Icon: CardIcon },
+  'site.settings': { tone: '#545351', Icon: ImageIcon },
   'subscription.stop': { tone: '#92400e', Icon: XGlyph },
   'account.impersonate': { tone: '#0369a1', Icon: EyeGlyph },
 };
@@ -90,7 +90,7 @@ export default function AdminLog() {
       ) : (
         <div className="divide-y divide-white/5 overflow-hidden rounded-2xl border border-gold-400/15 bg-black/20">
           {shown.map((a) => {
-            const meta = ACTIONS[a.action] || { tone: '#57534e', Icon: ShieldIcon };
+            const meta = ACTIONS[a.action] || { tone: '#545351', Icon: ShieldIcon };
             const { Icon } = meta;
             return (
               <div key={a.id} className="flex items-start gap-2.5 p-3">

@@ -55,8 +55,8 @@ export function Tip({ text }) {
         // يضمن اللون الذهبي بالوضعين ولا تُبطله أي قاعدة أخرى.
         className="inline-flex shrink-0 self-center rounded-full transition"
         style={open
-          ? { color: '#cdbda4', background: 'rgba(176, 154, 126, 0.22)', boxShadow: '0 0 0 1px #b09a7e' }
-          : { color: '#b09a7e' }}
+          ? { color: '#BAB9B7', background: 'rgba(153, 151, 149, 0.22)', boxShadow: '0 0 0 1px #999795' }
+          : { color: '#999795' }}
       >
         <HelpIcon className="bz-help-glyph h-[15px] w-[15px] block" />
       </button>

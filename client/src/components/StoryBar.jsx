@@ -84,7 +84,7 @@ export default function StoryBar({ store, stories, isOwner, onAdded, onDeleted, 
           </span>
           {isOwner && (
             <span role="button" onClick={(e) => { e.stopPropagation(); pick(); }} aria-label="add"
-              className={`absolute ${plusPos} flex ${plusSize} items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-[#cdbda4] to-[#8a7657] text-[#2a1c14] shadow-md`}>
+              className={`absolute ${plusPos} flex ${plusSize} items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-[#BAB9B7] to-[#73716E] text-[#201F1E] shadow-md`}>
               <svg viewBox="0 0 24 24" className={plusIcon} fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
             </span>
           )}
@@ -129,7 +129,7 @@ export default function StoryBar({ store, stories, isOwner, onAdded, onDeleted, 
                     <span>{t('story.uploading')}</span><span>{progress}%</span>
                   </div>
                   <div className="h-1.5 overflow-hidden rounded-full bg-white/25">
-                    <div className="h-full rounded-full bg-gradient-to-r from-[#b09a7e] to-[#fff6da] transition-[width] duration-200" style={{ width: `${progress}%` }} />
+                    <div className="h-full rounded-full bg-gradient-to-r from-[#999795] to-[#fff6da] transition-[width] duration-200" style={{ width: `${progress}%` }} />
                   </div>
                 </div>
               )}
@@ -150,7 +150,7 @@ export default function StoryBar({ store, stories, isOwner, onAdded, onDeleted, 
             )}
             {err && <p className="mb-2 text-sm font-medium text-red-500">{err}</p>}
             <div className="flex gap-2">
-              <button onClick={publish} disabled={busy} className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#eee6d8] via-[#cdbda4] to-[#b09a7e] py-3 font-extrabold text-[#2a1c14] shadow-[0_8px_22px_-8px_rgba(176,_154,_126,_.9)] transition active:scale-[0.98] disabled:opacity-50">
+              <button onClick={publish} disabled={busy} className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#E4E3E2] via-[#BAB9B7] to-[#999795] py-3 font-extrabold text-[#201F1E] shadow-[0_8px_22px_-8px_rgba(176,_154,_126,_.9)] transition active:scale-[0.98] disabled:opacity-50">
                 {busy ? `${progress}%` : <span className="inline-flex items-center gap-1.5"><SparkleIcon className="h-4 w-4" /> {t('story.publish')}</span>}
               </button>
               <button onClick={closeCompose} disabled={busy} className="bz-sheet-ghost rounded-2xl px-5 font-semibold transition disabled:opacity-50">{t('common.cancel')}</button>

@@ -20,7 +20,7 @@ export default function ColorSwatches({
   if (!colors.length) return null;
   const display = hover || value;
   const headingCls = tone === 'dark' ? 'text-stone-300' : 'text-stone-700';
-  // اسم اللون كان text-cream/60 → يُحسب rgba(244,237,226,.6) وهو لون الخلفية الكريمية
+  // اسم اللون كان text-cream/60 → يُحسب rgba(235,235,235,.6) وهو لون الخلفية الكريمية
   // نفسه (تباين 1:1 = غير مرئي إطلاقاً). لا يصحّحه ثيم .theme-pub لأنه rgba صريحة،
   // بعكس أصناف stone التي يعيد الثيم تعيينها لكل وضع. لذا نستعملها: تباين 4.15 بالفاتح
   // و8.41 بالليلي — مقروء بالاثنين (مقيس فعلياً).
@@ -57,7 +57,7 @@ export default function ColorSwatches({
               {img ? (
                 <img src={img} alt={c} loading="lazy" className="h-full w-full object-cover" />
               ) : (
-                <span className="block h-full w-full" style={{ background: css || '#d6d3d1' }} />
+                <span className="block h-full w-full" style={{ background: css || '#D4D4D3' }} />
               )}
               {/* حافة داخلية رفيعة لتمييز الألوان الفاتحة عن الخلفية */}
               <span className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-black/10" />

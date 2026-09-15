@@ -7,7 +7,7 @@ import Lightbox from './Lightbox.jsx';
 export const MEDIA_PH =
   'data:image/svg+xml;utf8,' +
   encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="750"><rect width="100%" height="100%" fill="#f1e9dd"/><text x="50%" y="50%" fill="#5c1a2e" font-size="72" text-anchor="middle" dy=".35em">👗</text></svg>'
+    '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="750"><rect width="100%" height="100%" fill="#E7E7E7"/><text x="50%" y="50%" fill="#5c1a2e" font-size="72" text-anchor="middle" dy=".35em">👗</text></svg>'
   );
 
 const arr = (v) => (Array.isArray(v) ? v.filter(Boolean) : []);

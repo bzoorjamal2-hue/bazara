@@ -105,9 +105,9 @@ export default function Dashboard() {
   }, [section]);
 
   const avatar = user?.avatarUrl ? (
-    <img src={user.avatarUrl} alt={user.name} className="h-14 w-14 rounded-full object-cover ring-2 ring-[#cdbda4]/60" />
+    <img src={user.avatarUrl} alt={user.name} className="h-14 w-14 rounded-full object-cover ring-2 ring-[#BAB9B7]/60" />
   ) : (
-    <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#FAF9F7]/10 text-xl font-bold text-[#cdbda4] ring-2 ring-[#cdbda4]/60">
+    <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#F9F9F8]/10 text-xl font-bold text-[#BAB9B7] ring-2 ring-[#BAB9B7]/60">
       {user?.name?.[0] || <UserIcon className="h-6 w-6" />}
     </span>
   );
@@ -121,11 +121,11 @@ export default function Dashboard() {
         <div className="flex flex-wrap items-center gap-3 sm:gap-4">
           {avatar}
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold text-[#d9c9a8]">
+            <p className="text-xs font-semibold text-[#C2C1BF]">
               {t('dashboard.hello')} {user?.name} 👋
             </p>
             {/* dir=auto: الاسم اللاتيني يأخذ اتجاهه الصحيح فلا يظهر القص (…) بأول الاسم */}
-            <h1 dir="auto" className="mt-0.5 truncate font-display text-[1.35rem] font-extrabold leading-snug text-[#FAF9F7] sm:text-3xl">
+            <h1 dir="auto" className="mt-0.5 truncate font-display text-[1.35rem] font-extrabold leading-snug text-[#F9F9F8] sm:text-3xl">
               {isAdmin ? t('admin.nav') : (store?.name || t('dashboard.title'))}
             </h1>
           </div>
@@ -135,7 +135,7 @@ export default function Dashboard() {
           {!isAdmin && store && (
             <Link
               to={`/store/${store.slug}`}
-              className="inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-[#cdbda4]/40 bg-[#FAF9F7]/10 px-4 py-2 text-sm font-semibold text-[#FAF9F7] transition hover:bg-[#FAF9F7]/20 sm:w-auto"
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-[#BAB9B7]/40 bg-[#F9F9F8]/10 px-4 py-2 text-sm font-semibold text-[#F9F9F8] transition hover:bg-[#F9F9F8]/20 sm:w-auto"
             >
               <StoreIcon className="h-4 w-4" /> {t('dashboard.viewStore')}
             </Link>
@@ -155,9 +155,9 @@ export default function Dashboard() {
                     className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold"
                     style={subscription.active
                       ? (subscription.daysRemaining != null && subscription.daysRemaining <= 7
-                        ? { background: '#92400e', color: '#FAF9F7' }
-                        : { background: 'rgba(4,120,87,0.9)', color: '#FAF9F7' })
-                      : { background: '#b91c1c', color: '#FAF9F7' }}
+                        ? { background: '#92400e', color: '#F9F9F8' }
+                        : { background: 'rgba(4,120,87,0.9)', color: '#F9F9F8' })
+                      : { background: '#b91c1c', color: '#F9F9F8' }}
                   >
                     <BoltIcon className="h-3.5 w-3.5" />
                     {subscription.active
@@ -172,7 +172,7 @@ export default function Dashboard() {
                   <Link
                     to="/dashboard?tab=myOrders"
                     className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition hover:brightness-110"
-                    style={{ background: '#FAF9F7', color: '#3f2e22' }}
+                    style={{ background: '#F9F9F8', color: '#313130' }}
                   >
                     <ReceiptIcon className="h-3.5 w-3.5" /> {t('dashboard.heroNewOrders', { count: newOrders })}
                   </Link>
@@ -185,13 +185,13 @@ export default function Dashboard() {
             <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
               <Link
                 to="/dashboard?tab=myProducts"
-                className="inline-flex items-center justify-center gap-1.5 rounded-full border border-[#cdbda4]/40 px-3 py-2 text-xs font-bold text-[#FAF9F7] transition hover:bg-[#FAF9F7]/15"
+                className="inline-flex items-center justify-center gap-1.5 rounded-full border border-[#BAB9B7]/40 px-3 py-2 text-xs font-bold text-[#F9F9F8] transition hover:bg-[#F9F9F8]/15"
               >
                 <BagIcon className="h-3.5 w-3.5" /> {t('dashboard.addProduct')}
               </Link>
               <Link
                 to="/dashboard?tab=finance"
-                className="inline-flex items-center justify-center gap-1.5 rounded-full border border-[#cdbda4]/40 px-3 py-2 text-xs font-bold text-[#FAF9F7] transition hover:bg-[#FAF9F7]/15"
+                className="inline-flex items-center justify-center gap-1.5 rounded-full border border-[#BAB9B7]/40 px-3 py-2 text-xs font-bold text-[#F9F9F8] transition hover:bg-[#F9F9F8]/15"
               >
                 <CashIcon className="h-3.5 w-3.5" /> {t('finance.title')}
               </Link>
@@ -313,7 +313,7 @@ function Overview({ productsCount }) {
               : 'bg-white/5 ring-white/10'
           }`}
         >
-          <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white shadow-md ${stats.stockRequestsReady > 0 ? 'bg-gradient-to-br from-emerald-400 to-emerald-600' : 'bg-gradient-to-br from-[#8a6a4f] to-[#3f2e22]'}`}>
+          <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white shadow-md ${stats.stockRequestsReady > 0 ? 'bg-gradient-to-br from-emerald-400 to-emerald-600' : 'bg-gradient-to-br from-[#6F6D6A] to-[#313130]'}`}>
             <BellIcon className="h-[22px] w-[22px]" />
           </span>
           <div className="min-w-0 flex-1">
@@ -428,7 +428,7 @@ function QuickAction({ to, label, Icon }) {
     <Link to={to} className="group flex flex-col items-center gap-2.5 rounded-2xl border border-gold-400/15 bg-black/20 p-4 text-center transition duration-200 hover:-translate-y-0.5 hover:border-gold-400/40 hover:bg-gold-400/5">
       <span
         className="flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-md transition group-hover:brightness-110"
-        style={{ background: 'linear-gradient(135deg, #cdbda4 0%, #b09a7e 55%, #8a7657 100%)' }}
+        style={{ background: 'linear-gradient(135deg, #BAB9B7 0%, #999795 55%, #73716E 100%)' }}
       >
         <Icon className="h-[22px] w-[22px]" />
       </span>
@@ -472,12 +472,12 @@ function Sparkline({ points, cur }) {
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="h-12 w-full" aria-hidden="true">
         <defs>
           <linearGradient id="bz-spark" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#b09a7e" stopOpacity="0.45" />
-            <stop offset="100%" stopColor="#b09a7e" stopOpacity="0" />
+            <stop offset="0%" stopColor="#999795" stopOpacity="0.45" />
+            <stop offset="100%" stopColor="#999795" stopOpacity="0" />
           </linearGradient>
         </defs>
         <path d={area} fill="url(#bz-spark)" />
-        <path d={line} fill="none" stroke="#b09a7e" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+        <path d={line} fill="none" stroke="#999795" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
       </svg>
       <div className="mt-1 flex justify-between text-[9px] text-stone-500">
         {points.map((p) => (
