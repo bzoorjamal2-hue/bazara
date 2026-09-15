@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { cldThumb } from '../utils/cloudinary.js';
-import { usePlatformCatKeys } from '../utils/platformCategories.js';
+import { usePlatformCatKeys, platformCatImage, platformCatImageFallback } from '../utils/platformCategories.js';
 
 // لا قائمةَ مكتوبةً هنا: الاحتياطيّ يُبنى من مفاتيح المنصّة الحيّة، وإلا لم تظهر
 // الفئة التي يضيفها المدير في أي شبكةٍ لم تُمرَّر إليها cats صراحةً.
@@ -24,7 +24,10 @@ function CategoryCard({ cat }) {
   const { t } = useTranslation();
   const label = cat.name || (cat.builtin ? t(`categories.${cat.key}`) : cat.key);
   // صورة المالكة المخصّصة تُحسَّن بحجم أصغر وصيغة تلقائية لظهور أسرع؛ والأيقونة الثابتة كما هي
-  const src = cat.image ? cldThumb(cat.image, 400) : cat.builtin ? `/categories/${cat.key}.png?v=3` : '';
+  // ‏WebP لا PNG: النسختانِ بالمجلّدِ نفسِه، والـWebP عُشرُ الحجمِ بالشكلِ نفسِه.
+  // كان المسارُ مكتوباً هنا بيدٍ صريحةٍ ‎(.png) فيتجاوزُ مُنتقيَ الصيغةِ المشترَك.
+  const src = cat.image ? cldThumb(cat.image, 400) : cat.builtin ? platformCatImage(cat.key) : '';
+  const srcPng = cat.image || !cat.builtin ? '' : platformCatImageFallback(cat.key);
   return (
     <div className="transition duration-300 group-hover:-translate-y-1">
       {/* بلا أرضيّةٍ ولا إطار: شكلُ الرسمِ وحدَه يظهر. الرسومُ مقصوصةٌ على
@@ -39,6 +42,8 @@ function CategoryCard({ cat }) {
         {src ? (
           <img
             src={src}
+            // ‏PNG احتياطاً لمتصفّحٍ لا يعرفُ WebP — مربّعٌ فارغٌ مكانَ الفئةِ أسوأُ من كيلوباتٍ زائدة
+            onError={(e) => { if (srcPng && e.currentTarget.src !== srcPng) e.currentTarget.src = srcPng; }}
             alt={label}
             loading="eager"
             decoding="async"

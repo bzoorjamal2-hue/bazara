@@ -60,7 +60,9 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
 
   const hasImage = product.imageUrl || (product.images && product.images[0]);
   const videoPoster = product.videoUrl ? cldVideoPoster(product.videoUrl) : '';
-  const coverRaw = hasImage || videoPoster || PLACEHOLDER;
+  // الفيديوُ الخامُ لا لقطتُه الجاهزة: الأدواتُ تشتقُّ منه المقاساتِ والنسخةَ
+  // الضبابيّة. وتمريرُ اللقطةِ المحوّلةِ كان يُبطِلُ ذلك ويثبّتُ عرضاً واحداً لكلِّ شاشة.
+  const coverRaw = hasImage || product.videoUrl || PLACEHOLDER;
   const cover = cldThumb(coverRaw, 500); // احتياط للمتصفّحات بلا دعم srcset
   const blurUrl = cldBlur(coverRaw); // undefined للصور غير المستضافة على Cloudinary
   const hasDiscount = product.oldPrice && product.oldPrice > product.price;

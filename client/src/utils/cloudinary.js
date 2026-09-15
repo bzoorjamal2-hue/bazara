@@ -6,10 +6,24 @@ export const cloudinaryEnabled = Boolean(CLOUDINARY_CLOUD && CLOUDINARY_PRESET);
 // صورة غلاف (أول لقطة) من فيديو Cloudinary — تظهر بكل الأجهزة بما فيها iOS.
 // نبنيها من قاعدة الفيديو النظيفة حتى لا تتضارب مع تحويلات الفيديو (f_mp4/vc_h264)
 // التي كانت تُنتج رابطاً معطوباً (صورة سوداء/علامة استفهام).
-export function cldVideoPoster(url, width = 800) {
-  const p = cldVideoParts(url);
-  if (!p) return '';
-  return `${p.base}so_0,f_jpg,q_auto,w_${width},c_limit/${p.rest}.jpg`; // لقطة الثانية 0 كـ jpg مُهيّأة الحجم
+export function cldVideoPoster(url, width = 500) {
+  return cldFrom(url, `f_auto,q_auto,w_${width},c_limit`) || '';
+}
+
+// يبني تحويلاً على مصدرٍ من كلاوديناري صورةً كان أو فيديو.
+// الفيديو يحتاجُ ‎so_0 (لقطةُ الثانيةِ صفر) ومساراً نظيفاً بلا تحويلاتٍ سابقة،
+// والصورةُ يكفيها حقنُ التحويلِ بعدَ ‎/upload/. وكانت أدواتُ الصورِ الثلاثُ
+// ‏(مصغّرة · srcset · ضبابيّة) تنسحبُ أمامَ الفيديو وتردُّ الرابطَ كما هو —
+// فبطاقةُ منتجٍ بلا صورةٍ تُنزّلُ لقطةً بعرضِ ٨٠٠ مهما صَغُرَ مقاسُها بالشاشة،
+// بلا نسخةٍ ضبابيّةٍ ولا اختيارِ مقاس. ومتجرٌ كلُّ بضاعتِه فيديو = ميغابايتٌ
+// من اللقطاتِ بالصفحةِ الواحدة.
+function cldFrom(url, transform) {
+  if (typeof url !== 'string' || !url.includes('/upload/')) return '';
+  if (url.includes('/video/upload/')) {
+    const v = cldVideoParts(url);
+    return v ? `${v.base}so_0,${transform}/${v.rest}` : '';
+  }
+  return url.replace('/upload/', `/upload/${transform}/`);
 }
 
 // يفكّك رابط فيديو Cloudinary لأجزائه (القاعدة + المعرّف) متجاهلاً أي تحويلات قديمة
@@ -52,8 +66,7 @@ export function cldOptimized(url, kind = 'image') {
 // width بالبكسل (الحد الأقصى)؛ المتصفّح يصغّرها للعرض المطلوب.
 export function cldThumb(url, width = 500) {
   if (typeof url !== 'string' || !url.includes('/upload/')) return url;
-  if (url.includes('/video/upload/')) return url; // بوستر الفيديو مُهيّأ الحجم مسبقاً — لا نضاعف التحويلات
-  return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width},c_limit,dpr_auto/`);
+  return cldFrom(url, `f_auto,q_auto,w_${width},c_limit,dpr_auto`) || url;
 }
 
 // مجموعة أحجام لـ srcset: المتصفّح يختار الأنسب لعرض العنصر وكثافة الشاشة معاً،
@@ -61,18 +74,18 @@ export function cldThumb(url, width = 500) {
 // بلا dpr_auto عمداً — واصفات w تتكفّل بالكثافة، وجمعهما معاً يضاعف الحجم بلا داعٍ.
 export function cldSrcSet(url, widths = [200, 300, 400, 600, 800]) {
   if (typeof url !== 'string' || !url.includes('/upload/')) return undefined;
-  if (url.includes('/video/upload/')) return undefined; // بوستر الفيديو مُهيّأ مسبقاً
-  return widths
-    .map((w) => `${url.replace('/upload/', `/upload/f_auto,q_auto,w_${w},c_limit/`)} ${w}w`)
-    .join(', ');
+  const set = widths
+    .map((w) => [cldFrom(url, `f_auto,q_auto,w_${w},c_limit`), w])
+    .filter(([u]) => u)
+    .map(([u, w]) => `${u} ${w}w`);
+  return set.length ? set.join(', ') : undefined;
 }
 
 // نسخة ضئيلة ضبابية (LQIP) تُعرض خلف الصورة حتى تجهز — تصل خلال أجزاء من الثانية
 // (بضعة كيلوبايت) فترى الزبونة ملامح القطعة وألوانها فوراً بدل مربّع رمادي.
 export function cldBlur(url, width = 32) {
   if (typeof url !== 'string' || !url.includes('/upload/')) return undefined;
-  if (url.includes('/video/upload/')) return undefined; // بوستر الفيديو — بلا نسخة ضبابية مشتقّة
-  return url.replace('/upload/', `/upload/f_auto,q_auto:low,w_${width},e_blur:600,c_limit/`);
+  return cldFrom(url, `f_auto,q_auto:low,w_${width},e_blur:600,c_limit`) || undefined;
 }
 
 // رسالة خطأ ودّية بالعربي بدل رسائل Cloudinary التقنية (خاصة تجاوز الحجم)
