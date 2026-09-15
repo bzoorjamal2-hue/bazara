@@ -13,7 +13,7 @@ const PH =
   );
 
 // شريط أفقي من بطاقات منتجات مصغّرة (شاهدت مؤخراً / قد يعجبك أيضاً).
-export default function ProductRail({ title, products, currentId, icon = null, action = null, band = false, eyebrow = null, sub = false }) {
+export default function ProductRail({ title, products, currentId, icon = null, action = null, band = false, ink = false, eyebrow = null, sub = false }) {
   const { t, i18n } = useTranslation();
   const rtl = i18n.language !== 'en';
   const railRef = useRef(null);
@@ -28,13 +28,15 @@ export default function ProductRail({ title, products, currentId, icon = null, a
     el.scrollBy({ left: amount, behavior: 'smooth' });
   };
 
-  // band: يُلبِسُ الرفَّ شريطَ قسمٍ ممتدّاً — نُناوبُه بين الرفوفِ كي لا تتشابهَ
-  const Wrap = band ? 'div' : Fragment;
-  const wrapProps = band ? { className: 'bz-inner' } : {};
+  // band/ink: يُلبِسُ الرفَّ شريطَ قسمٍ ممتدّاً — فاتحاً أو حبريّاً. نُناوبُه بين
+  // الرفوفِ كي لا تتشابه، والحبريُّ واحدٌ بالصفحةِ لا أكثر.
+  const banded = band || ink;
+  const Wrap = banded ? 'div' : Fragment;
+  const wrapProps = banded ? { className: 'bz-inner' } : {};
   // sub: رفٌّ داخلَ كتلةٍ لها رأسُها — بلا فاصلٍ علويٍّ وبعنوانٍ أصغرَ درجةً
   const H = sub ? 'h3' : 'h2';
   return (
-    <section className={sub ? '' : band ? 'bz-band bz-sec-gap' : 'bz-sec-gap'}>
+    <section className={sub ? '' : ink ? 'bz-band-ink bz-sec-gap' : band ? 'bz-band bz-sec-gap' : 'bz-sec-gap'}>
       <Wrap {...wrapProps}>
       <div className={`flex items-end gap-3 ${sub ? 'mb-4' : 'mb-5'}`}>
         <div className="min-w-0">
@@ -63,7 +65,7 @@ export default function ProductRail({ title, products, currentId, icon = null, a
           const isVideo = Boolean(p.videoUrl);
           return (
             <Link key={p.id} to={productPath(p)} className="glass w-36 shrink-0 overflow-hidden transition hover:-translate-y-1 hover:shadow-glow sm:w-40 lg:w-44 2xl:w-48">
-              <div className="relative aspect-[3/4] overflow-hidden bg-ink-800">
+              <div className="bz-pmedia relative aspect-[3/4] overflow-hidden">
                 <img src={img} alt={p.name} loading="lazy" decoding="async" onError={(e) => (e.currentTarget.src = PH)} className="h-full w-full object-cover" />
                 {/* مؤشّر الفيديو — زر تشغيل واضح ليُعرف أنه منتج فيديو (مثل البطاقات) */}
                 {isVideo && (

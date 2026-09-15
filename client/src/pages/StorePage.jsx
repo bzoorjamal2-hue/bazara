@@ -588,9 +588,12 @@ export default function StorePage() {
             </section></Reveal>
           )}
 
+          {/* إيقاعُ الصفحة: شبكةٌ كاملةٌ واحدةٌ تُتصفَّح (جديدنا)، ثمّ رفٌّ على
+              شريطٍ حبريٍّ (الأكثرُ مبيعاً)، ثمّ رفٌّ فاتح (التخفيضات). لا قسمَ
+              يشبهُ الذي قبلَه، والقطعُ نفسُها بلا نقصان. */}
           <ProductSection eyebrow={t('store.eyebrowNew')} title={t('store.newArrivals')} products={newest} wa={wa} />
-          <ProductSection band eyebrow={t('store.eyebrowBest')} title={t('store.bestSellers')} products={bestSellers} wa={wa} ranked />
-          {onSale.length > 0 && <ProductSection eyebrow={t('store.eyebrowSale')} title={t('store.saleSection')} products={onSale} wa={wa} />}
+          <ProductSection ink rail eyebrow={t('store.eyebrowBest')} title={t('store.bestSellers')} products={bestSellers} wa={wa} ranked />
+          {onSale.length > 0 && <ProductSection rail eyebrow={t('store.eyebrowSale')} title={t('store.saleSection')} products={onSale} wa={wa} />}
 
           {data.products.length > 0 && (
             <div className="bz-sec-gap text-center">
@@ -781,24 +784,27 @@ function SectionTitle({ children, eyebrow }) {
 // قسم منتجات بعنوان مركزي (جديدنا / الأكثر مبيعاً)
 // ranked: يرقّم أول ثلاث قطع (١·٢·٣) — أسلوب الاختيارات المنسّقة بالمتاجر العالمية.
 // نقتصر على الثلاثة الأولى عمداً: الترقيم الكامل يزحم الشبكة ويفقد معناه.
-function ProductSection({ title, products, wa, ranked = false, eyebrow = null, band = false }) {
+function ProductSection({ title, products, wa, ranked = false, eyebrow = null, band = false, ink = false, rail = false }) {
   if (!products || products.length === 0) return null;
-  // band: شريطٌ ممتدٌّ بعرضِ الشاشةِ يُلبَسُ لقسمٍ واحدٍ من الثلاثة — الفاصلُ
-  // البصريُّ وحدَه يمنعُ قراءةَ الشبكاتِ الثلاثِ كشبكةٍ طويلةٍ واحدة.
+  // ثلاثُ شبكاتٍ كاملةٍ تحملُ القطعَ نفسَها موزّعةً كانت تُقرأُ شبكةً واحدةً
+  // طولُها ثلاثةُ آلافِ بكسل. الآن: شبكةٌ واحدةٌ كاملةٌ تُتصفَّح، ورفّانِ
+  // يُسحبانِ — البطاقةُ هي هي، التوزيعُ وحدَه تغيّر.
+  // band/ink: أرضيّةُ القسم — الحبريُّ واحدٌ بالصفحةِ لا أكثر، وإلّا ألغى نفسَه.
   const inner = (
     <>
       <SectionTitle eyebrow={eyebrow}>{title}</SectionTitle>
-      <div className="bz-cards">
+      <div className={rail ? 'bz-cards-rail' : 'bz-cards'}>
         {products.map((p, i) => (
           <ProductCard key={p.id} product={p} index={i} whatsapp={wa} rank={ranked && i < 3 ? i + 1 : 0} />
         ))}
       </div>
     </>
   );
+  const wrapped = band || ink;
   return (
     <Reveal>
-      <section className={band ? 'bz-band bz-sec-gap' : 'bz-sec-gap'}>
-        {band ? <div className="bz-inner">{inner}</div> : inner}
+      <section className={ink ? 'bz-band-ink bz-sec-gap' : band ? 'bz-band bz-sec-gap' : 'bz-sec-gap'}>
+        {wrapped ? <div className="bz-inner">{inner}</div> : inner}
       </section>
     </Reveal>
   );

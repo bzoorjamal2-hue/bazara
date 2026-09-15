@@ -11,7 +11,8 @@ import CatThumb from '../components/CatThumb.jsx';
 import ProductRail from '../components/ProductRail.jsx';
 import CollectionsRow from '../components/CollectionsRow.jsx';
 import OffersBar from '../components/OffersBar.jsx';
-import { getRecent } from '../utils/recentlyViewed.js';
+import { getRecent, productThumb } from '../utils/recentlyViewed.js';
+import { productPath } from '../utils/links.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { cldVideoPoster, cldThumb, cldVideoMp4 } from '../utils/cloudinary.js';
 import { GiftIcon, ForwardIcon, BoltIcon, FireIcon, SparkleIcon } from '../components/icons.jsx';
@@ -168,7 +169,7 @@ export default function Home() {
       )}
 
       {/* الأكثر مبيعاً — إثبات اجتماعي حقيقي من المبيعات المؤكّدة */}
-      {data?.bestSellers?.length > 0 && <Reveal><ProductRail band eyebrow={t('home.eyebrowBest')} title={t('home.bestSellers')} icon={<FireIcon className="h-5 w-5 shrink-0 text-[#8a2438]" />} products={data.bestSellers} /></Reveal>}
+      {data?.bestSellers?.length > 0 && <Reveal><ProductRail ink eyebrow={t('home.eyebrowBest')} title={t('home.bestSellers')} icon={<FireIcon className="h-5 w-5 shrink-0 text-[#8a2438]" />} products={data.bestSellers} /></Reveal>}
 
       {loading ? (
         <section className="bz-sec-gap">
@@ -176,12 +177,14 @@ export default function Home() {
         </section>
       ) : (
         <>
-          {/* منتجات مميّزة */}
+          {/* منتجات مميّزة — رفٌّ لا شبكة: شبكتانِ كاملتانِ متتاليتانِ (هذه
+              و«أحدثُ المنتجات») تُقرآنِ شبكةً واحدةً طويلة. تبقى الشبكةُ
+              الكاملةُ للأحدثِ وحدَها — هي قسمُ التصفّحِ الحقيقيّ. */}
           {data.featured?.length > 0 && (
             <Reveal>
               <section className="bz-sec-gap">
                 <SectionTitle eyebrow={t('landing.shelfEyebrow')}>{t('home.featuredProducts')}</SectionTitle>
-                <div className="bz-cards">
+                <div className="bz-cards-rail">
                   {(data.featured || []).map((p, i) => (
                     <ProductCard key={p.id} product={p} index={i} />
                   ))}
@@ -191,7 +194,7 @@ export default function Home() {
           )}
 
           {/* متاجر مميزة */}
-          <Reveal><section id="stores" className="bz-sec-gap">
+          <Reveal><section id="stores" className="bz-band bz-sec-gap"><div className="bz-inner">
             <SectionTitle eyebrow={t('home.eyebrowStores')}>{t('home.featuredStores')}</SectionTitle>
             {(data.stores || []).length === 0 ? (
               <EmptyState
@@ -201,24 +204,40 @@ export default function Home() {
                 ctaTo="/register"
               />
             ) : (
-              // بطاقة بوتيك بغلاف (نمط أدلّة المتاجر العالمية): غلاف المتجر من بنراته،
-              // تدرّج سفلي ليُقرأ أي نص فوق أي صورة، والشعار يجلس على حدّ الغلاف بحلقة كريمية.
-              // بلا غلاف نستخدم تدرّجاً خمرياً فاخراً — لا تظهر بطاقة فارغة أبداً.
-              // وشبكةٌ بعددِ المتاجرِ لا بعددٍ ثابت: المنصّةُ اليومَ متجران، وشبكةُ
+              // شبكةٌ بعددِ المتاجرِ لا بعددٍ ثابت: المنصّةُ اليومَ متجران، وشبكةُ
               // الأعمدةِ الخمسةِ كانت تتركُ ثلاثةَ أعمدةٍ فارغةٍ على جانبٍ واحدٍ،
               // فيبدو القسمُ ناقصاً لا مختاراً.
-              <div
-                className={`mx-auto grid gap-4 ${
-                  (data.stores || []).length === 1 ? 'max-w-xs grid-cols-1'
-                    : (data.stores || []).length === 2 ? 'max-w-2xl grid-cols-2'
-                      : (data.stores || []).length === 3 ? 'max-w-4xl grid-cols-2 lg:grid-cols-3'
-                        : 'grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5'
-                }`}
-              >
-                {(data.stores || []).map((s, i) => <StoreCard key={s.id} s={s} index={i} rtl={rtl} />)}
-              </div>
+              // متجرُ الأسبوع: بطاقةٌ عريضةٌ بشريطٍ من قطعِه، والبقيّةُ بطاقاتٌ
+              // عادية. كان القسمُ بطاقتَينِ صغيرتَينِ وسطَ بياضٍ واسع — أضعفَ
+              // قسمٍ بالصفحةِ مع أنّه جوهرُ المنصّة.
+              // الاختيارُ للمدير: الخادمُ يرتّبُ المميَّزَ أوّلاً ‎(featured DESC)
+              // فلا يحتاجُ إعداداً جديداً. لكنّ المميَّزَ قد يكونُ بلا قطعٍ بعد،
+              // والبطاقةُ العريضةُ الفارغةُ أسوأُ من الصغيرة — فنأخذُ أوّلَ متجرٍ
+              // له قطعٌ تصلُ مع الصفحة، وإن لم يوجدْ بقيَ القسمُ شبكةً كما كان.
+              (() => {
+                const all = data.stores || [];
+                const hero = all.find((s) => storeStrip(s, data).length >= 3) || null;
+                const rest = hero ? all.filter((s) => s.id !== hero.id) : all;
+                return (
+                  <div className="space-y-6">
+                    {hero && <FeaturedStoreCard s={hero} products={storeStrip(hero, data)} rtl={rtl} />}
+                    {rest.length > 0 && (
+                      <div
+                        className={`mx-auto grid gap-4 ${
+                          rest.length === 1 ? 'max-w-xs grid-cols-1'
+                            : rest.length === 2 ? 'max-w-2xl grid-cols-2'
+                              : rest.length === 3 ? 'max-w-4xl grid-cols-2 lg:grid-cols-3'
+                                : 'grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5'
+                        }`}
+                      >
+                        {rest.map((s, i) => <StoreCard key={s.id} s={s} index={i} rtl={rtl} />)}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()
             )}
-          </section></Reveal>
+          </div></section></Reveal>
 
           {/* أحدث المنتجات */}
           <Reveal>
@@ -634,6 +653,78 @@ function PromoBanner() {
 
 // بطاقة متجر — تدخل بتتابع سينمائي عند التمرير إليها (كبطاقات المنتجات)، مع هالة
 // ذهبية عند المرور وشارة «مميّز» للمتاجر التي يختارها المدير.
+// قطعُ متجرِ الأسبوعِ للشريط: تُلتقَطُ من الحُزَمِ التي وصلت أصلاً مع الصفحة
+// ‏(المميّزة · الأحدث · الصفقات) بمطابقةِ ‎storeSlug — بلا طلبٍ إضافيٍّ للخادم.
+function storeStrip(store, data) {
+  if (!store || !data) return [];
+  const pool = [...(data.featured || []), ...(data.products || []), ...(data.deals || [])];
+  const seen = new Set();
+  const out = [];
+  for (const p of pool) {
+    if (!p || p.storeSlug !== store.slug || seen.has(p.id)) continue;
+    seen.add(p.id);
+    out.push(p);
+    if (out.length === 8) break;
+  }
+  return out;
+}
+
+// بطاقةُ متجرِ الأسبوع: شعارٌ واسمٌ وسطرُ تعريفٍ وشريطُ قطعٍ وزرُّ زيارة.
+// تُظهِرُ المتجرَ متجراً لا أيقونةً — وهذا ما يعطي المشتركةَ سبباً تستحقُّ
+// الظهورَ عليه، ويعطي الزائرةَ سبباً تدخلُه.
+function FeaturedStoreCard({ s, products = [], rtl }) {
+  const { t } = useTranslation();
+  if (!s) return null;
+  return (
+    <div className="bz-storecard bz-featstore overflow-hidden rounded-2xl">
+      <div className="flex flex-wrap items-center gap-4 p-5 pb-4">
+        <img
+          src={cldThumb(s.logoUrl, 160) || phGlyph(80, 80, '👑')}
+          alt={s.name}
+          loading="lazy"
+          className="bz-storecard-logo h-16 w-16 shrink-0 rounded-full bg-white object-cover sm:h-20 sm:w-20"
+        />
+        <div className="min-w-0 flex-1">
+          <span className="bz-sec-eyebrow !mb-1">{t('home.eyebrowStores')}</span>
+          <h3 className="truncate font-display text-xl font-bold text-stone-100 sm:text-2xl">{s.name}</h3>
+          <p className="mt-0.5 truncate text-xs text-stone-400">
+            {s.productsCount} {t('store.products')}
+            {s.tagline ? <> · {s.tagline}</> : null}
+          </p>
+        </div>
+        <Link
+          to={`/store/${s.slug}`}
+          className="inline-flex shrink-0 items-center gap-1 rounded-full bg-wine px-5 py-2.5 text-xs font-bold text-cream transition hover:-translate-y-0.5 hover:bg-wine-dark"
+        >
+          {t('home.visitStore')}
+          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d={rtl ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6'} />
+          </svg>
+        </Link>
+      </div>
+      {products.length > 0 && (
+        <div className="flex gap-2.5 overflow-x-auto px-5 pb-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {products.map((p) => (
+            <Link
+              key={p.id}
+              to={productPath(p)}
+              className="bz-pmedia relative block w-[84px] shrink-0 overflow-hidden rounded-xl transition hover:-translate-y-0.5 sm:w-[100px]"
+            >
+              <img
+                src={cldThumb(productThumb(p), 300) || phGlyph(100, 133, '👗')}
+                alt={p.name}
+                loading="lazy"
+                decoding="async"
+                className="aspect-[3/4] w-full object-cover"
+              />
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function StoreCard({ s, index = 0, rtl }) {
   const { t } = useTranslation();
   const [ref, inView] = useInViewOnce();

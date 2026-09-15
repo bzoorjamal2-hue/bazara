@@ -4796,3 +4796,76 @@ html.dark .theme-pub .bz-cattile {
     box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.16);
   }
 }
+
+/* ═══════ الرفُّ: الشبكةُ نفسُها تُسحَبُ جانباً ═══════
+   ثلاثُ شبكاتٍ كاملةٍ بصفحةِ المتجرِ (جديدنا · الأكثرُ مبيعاً · تخفيضات) تحملُ
+   القطعَ نفسَها موزّعةً، فتُقرأُ كشبكةٍ واحدةٍ طولُها ثلاثةُ آلافِ بكسل. الرفُّ
+   يُبقي قسمَينِ منها بارتفاعِ صفٍّ واحدٍ فينزلُ طولُ الصفحةِ الثلثَ تقريباً.
+   وهو الشبكةُ نفسُها لا مكوّنٌ آخر: البطاقةُ تبقى بطاقةَ المنتجِ الكاملةَ بزرِّ
+   السلّةِ ونقاطِ الألوانِ والنظرةِ السريعة — تغيّرَ التوزيعُ لا العنصر. */
+.bz-cards-rail {
+  display: flex;
+  gap: 0.7rem;
+  overflow-x: auto;
+  padding-bottom: 0.6rem;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.bz-cards-rail::-webkit-scrollbar { display: none; }
+/* البلاطةُ لا تقسمُ العرضَ بالتمام، فيبقى طرفُ التاليةِ ظاهراً دائماً — وهو ما
+   يقولُ للعينِ «خلفي مزيد» بلا سهمٍ ولا نصّ. */
+.bz-cards-rail > * { flex: 0 0 46%; scroll-snap-align: start; }
+@media (min-width: 640px)  { .bz-cards-rail { gap: 1rem; } .bz-cards-rail > * { flex-basis: 30.5%; } }
+@media (min-width: 1024px) { .bz-cards-rail > * { flex-basis: 23%; } }
+@media (min-width: 1280px) { .bz-cards-rail { gap: 1.25rem; } .bz-cards-rail > * { flex-basis: 18.6%; } }
+@media (min-width: 1600px) { .bz-cards-rail > * { flex-basis: 15.4%; } }
+
+/* ═══════ الشريطُ الحبريُّ ═══════
+   الشريطُ الفاتحُ ‎(bz-band) يفصلُ قسماً عن قسمٍ، لكنّه بدرجةٍ واحدةٍ عن الأرضيّةِ
+   فلا يصنعُ محطّة. شريطٌ حبريٌّ واحدٌ بالصفحةِ يقولُ «هنا شيءٌ يستحقُّ الوقوف»،
+   وواحدٌ فقط: اثنانِ يُلغيانِ بعضَهما. */
+.bz-band-ink {
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
+  padding-inline: var(--bz-gut);
+  padding-block: 4.5rem;
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(122, 117, 110, 0.20) 0%, rgba(122, 117, 110, 0) 60%),
+    linear-gradient(170deg, #211F1E 0%, #151413 100%);
+  color: #F2F1EF;
+}
+@media (min-width: 640px) { .bz-band-ink { padding-block: 5.5rem; } }
+.bz-band-ink.bz-sec-gap { margin-top: 4.5rem; }
+@media (min-width: 640px) { .bz-band-ink.bz-sec-gap { margin-top: 5.5rem; } }
+.bz-band-ink > .bz-inner { margin-inline: auto; max-width: 1400px; }
+/* النصُّ داخلَه يقلبُ لونَه بالوضعَين — الشريطُ حبريٌّ ليلاً ونهاراً */
+.bz-band-ink .bz-title,
+html.dark .theme-pub .bz-band-ink .bz-title { color: #F6F5F3; }
+.bz-band-ink .bz-sec-eyebrow,
+html.dark .theme-pub .bz-band-ink .bz-sec-eyebrow { color: #A8A29B; }
+/* الزخرفةُ تحتَ العنوانِ موجودةٌ أصلاً بـ‎.bz-title::after — نقلبُ لونَها فقط */
+.bz-band-ink .bz-title::after { background: linear-gradient(90deg, transparent, #A8A29B, transparent); }
+/* أزرارُ تمريرِ الرفِّ داخلَ الشريطِ الحبريّ: كانت خمريّةً على خمريٍّ فتختفي.
+   والقاعدةُ محصورةٌ بـ‎button عمداً: سعرُ البلاطةِ يحملُ ‎text-wine نفسَه وهو
+   على بطاقةٍ بيضاءَ داخلَ الشريط — تعميمُها يجعلُه أبيضَ على أبيض. */
+.bz-band-ink button.border-wine\/20 { border-color: rgba(246, 245, 243, 0.32); }
+.bz-band-ink button.text-wine { color: #EFEEEC; }
+@media (hover: hover) {
+  .bz-band-ink button.hover\:bg-wine:hover { background-color: #F2F1EF; }
+  .bz-band-ink button.hover\:text-cream:hover { color: #1F1E1D; }
+}
+
+/* بطاقةُ متجرِ الأسبوع: أعرضُ وأهدأُ من بطاقاتِ المتاجرِ الصغيرة — حدٌّ أوضحُ
+   قليلاً وظلٌّ أعمقُ درجةً فتُقرأُ رأسَ القسمِ لا واحدةً من صفّ. */
+.theme-pub .bz-featstore {
+  background: #FFFFFF;
+  box-shadow: 0 1px 2px rgba(23, 23, 23, 0.05), 0 16px 36px -22px rgba(23, 23, 23, 0.28);
+  border: 1px solid rgba(23, 23, 23, 0.09);
+}
+html.dark .theme-pub .bz-featstore {
+  background: #1C1B1A;
+  border-color: rgba(243, 237, 228, 0.12);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 18px 40px -22px rgba(0, 0, 0, 0.8);
+}
