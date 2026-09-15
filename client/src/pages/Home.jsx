@@ -111,7 +111,7 @@ export default function Home() {
           السلايدر الافتراضي القديم)، ونستخدم البانرات المحفوظة محلياً لظهورٍ فوري.
           (مدخل البحث الشامل صار أيقونة داخل الهيدر — هيدر واحد بلا تكرار) */}
       {loading && !data && !(persistedBanners?.length) ? (
-        <div className="skeleton h-[360px] rounded-3xl sm:h-[460px] lg:h-[560px] 2xl:h-[640px]" />
+        <div className="bz-homehero skeleton" style={{ minHeight: "min(74svh, 620px)" }} />
       ) : (
         <HomeHero banners={data ? data.homeBanners : persistedBanners || []} />
       )}
@@ -517,7 +517,7 @@ function HomeHero({ banners = [] }) {
           فكان «يضل واقف». يبقى الإيقاف أثناء السحب باللمس فقط (منطق onStart/onEnd). */}
       <div
         ref={containerRef}
-        className="overflow-hidden rounded-3xl"
+        className="bz-homehero overflow-hidden"
         style={{ touchAction: 'pan-y' }}
       >
         <div
@@ -541,17 +541,24 @@ function HomeHero({ banners = [] }) {
               return (
                 <div key={idx} className="w-full shrink-0" dir="rtl">
                   <div
-                    className={`relative isolate flex h-[360px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[460px] lg:h-[560px] 2xl:h-[640px] ${idx === i ? 'bz-hero-active' : ''} ${onMedia ? 'bg-[#1C1B1A]' : 'bz-hero-plate'} ${isImage || isVideo ? 'bz-hero-scrim' : ''}`}
-                    style={isColor ? { background: s.bgValue } : isVideo ? { background: `linear-gradient(rgba(10,10,10,0.5), rgba(10,10,10,0.5)), url("${vPoster}") center/cover` } : undefined}
+                    className={`bz-homehero-slide ${idx === i ? 'bz-hero-active' : ''} ${onMedia ? 'bg-[#1C1B1A]' : 'bz-hero-plate'}`}
+                    style={{
+                      // نسبةُ التعتيمِ من لوحةِ المدير — رقمٌ واحدٌ لكلِّ شريحة،
+                      // كما بصفحةِ الغلافِ تماماً ‎(--bz-dim).
+                      '--bz-dim': (s.dim ?? 50) / 100,
+                      ...(isColor ? { background: s.bgValue } : null),
+                    }}
                   >
-                    {/* التعتيم مخبوز في الوسيط (filter) لا كطبقة منفصلة — يمنع اختراق فيديو
-                        iOS المُسرّع للطبقات، ومع خلفية الحاوية المخبوزة = خلفية واحدة معتّمة بلا وميض */}
+                    {/* التعتيمُ مخبوزٌ بالوسيطِ ‎(filter) لا طبقةً منفصلة: طبقةٌ فوقَ
+                        فيديو iOS المُسرَّعِ يخترقُها الفيديو أحياناً فيظهرُ بلا تعتيم.
+                        والشدّةُ تُقرأُ من المتغيّرِ نفسِه، فيبقى المقبضُ واحداً:
+                        ‏‎0٪ ← بلا تعتيم · ‎50٪ ← 0.65 · ‎100٪ ← 0.30 */}
                     {isImage && (
-                      <img src={cldThumb(s.bgValue, 1920)} alt="" loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" style={{ filter: 'brightness(0.6)' }} className="absolute inset-0 -z-10 h-full w-full object-cover" />
+                      <img src={cldThumb(s.bgValue, 1920)} alt="" loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))' }} className="absolute inset-0 -z-10 h-full w-full object-cover" />
                     )}
                     {isVideo && (
                       <>
-                        <img src={vPoster} alt="" aria-hidden loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" style={{ filter: 'brightness(0.6)', zIndex: -2 }} className="absolute inset-0 h-full w-full object-cover" />
+                        <img src={vPoster} alt="" aria-hidden loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))', zIndex: -2 }} className="absolute inset-0 h-full w-full object-cover" />
                         <video
                           ref={(el) => { vidRefs.current[idx] = el; }}
                           src={cldVideoMp4(s.bgValue)}
@@ -561,7 +568,7 @@ function HomeHero({ banners = [] }) {
                           onEnded={(e) => { e.currentTarget.currentTime = 0; e.currentTarget.play().catch(() => {}); }}
                           onPause={(e) => { if (!document.hidden && iRef.current === idx && visRef.current) e.currentTarget.play().catch(() => {}); }}
                           onCanPlay={(e) => { e.currentTarget.style.opacity = '1'; }}
-                          style={{ filter: 'brightness(0.6)', opacity: 0, transition: 'opacity .35s ease', zIndex: -1 }}
+                          style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))', opacity: 0, transition: 'opacity .35s ease', zIndex: -1 }}
                           className="absolute inset-0 h-full w-full object-cover"
                         />
                       </>
@@ -578,7 +585,7 @@ function HomeHero({ banners = [] }) {
             // الشريحةُ الافتراضيّةُ (نصّيّة) — حبرٌ عميقٌ بنصٍّ عاجيّ
             return (
               <div key={idx} className="w-full shrink-0" dir="rtl">
-                <div className={`bz-hero-plate relative flex h-[360px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[460px] lg:h-[560px] 2xl:h-[640px] ${idx === i ? 'bz-hero-active' : ''}`}>
+                <div className={`bz-homehero-slide bz-hero-plate ${idx === i ? 'bz-hero-active' : ''}`}>
                   <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-white/[0.06] blur-3xl" />
                   <p className="bz-hero-el bz-kicker mb-4 text-[11px] font-semibold uppercase text-[#BEBAB4] sm:text-xs">{s.eyebrow}</p>
                   <h1 className="bz-hero-el font-display text-3xl font-extrabold leading-tight text-[#F6F5F3] sm:text-5xl lg:text-6xl">

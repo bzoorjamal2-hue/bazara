@@ -643,7 +643,10 @@
       "taglineHint": "Leave empty to show the default line.",
       "taglinePlaceholder": "Luxury abayas · Made to order",
       "taglineEn": "Tagline (English)",
-      "taglineEnPlaceholder": "Luxury abayas · Made to order"
+      "taglineEnPlaceholder": "Luxury abayas · Made to order",
+      "bannerDim": "Darken the image behind the text",
+      "bannerDimLow": "None",
+      "bannerDimHigh": "Strong"
     },
     "product": {
       "cost": "Cost price",

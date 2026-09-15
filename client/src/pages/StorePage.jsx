@@ -1083,11 +1083,17 @@ function HeroSlider({ store }) {
             // خلفية الحاوية = البوستر مخبوز فوقه تعتيم داكن (تدرّج ثابت) — فتظهر معتّمة
             // كخلفية واحدة من أول إطار، حتى قبل رسم الوسيط/الحجاب. هذا يمنع ومضة
             // "يضيء ثم يعتم" على شرائح الفيديو نهائياً (خلفية الحاوية المضيئة كانت تظهر لحظة).
+            // شدّةُ التعتيمِ من لوحةِ التاجرة (٠–٩٠٪)، وافتراضُها ٥٠. كانت رقماً
+            // مكتوباً بالشيفرةِ بأربعةِ مواضع — فصورةٌ داكنةٌ تزدادُ عتمةً بلا داعٍ
+            // وصورةٌ فاتحةٌ تبتلعُ النصّ، ولا حيلةَ لصاحبةِ المتجر.
+            const dim = Math.min(90, Math.max(0, Number.isFinite(Number(s.dim)) ? Number(s.dim) : 50)) / 100;
+            // التدرّجُ المخبوزُ بخلفيّةِ الحاويةِ يتبعُ الرقمَ نفسَه، وإلّا بقيَ
+            // ثابتاً عندَ ٠٫٥ فيناقضُ ما تختارُه.
             const style = isColor
               ? { background: s.bgValue }
               : posterImg
-                ? { background: `linear-gradient(rgba(10,10,10,0.5), rgba(10,10,10,0.5)), url("${posterImg}") center/cover` }
-                : undefined;
+                ? { '--bz-dim': dim, background: `linear-gradient(rgba(10,10,10,${dim}), rgba(10,10,10,${dim})), url("${posterImg}") center/cover` }
+                : { '--bz-dim': dim };
             return (
               <div key={idx} className="w-full shrink-0" dir="rtl">
                 <div
@@ -1108,14 +1114,14 @@ function HeroSlider({ store }) {
                       alt=""
                       aria-hidden="true"
                       decoding="async"
-                      style={{ filter: 'brightness(0.6)' }}
+                      style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))' }}
                       className="bz-kenburns absolute inset-0 z-0 h-full w-full object-cover"
                     />
                   )}
                   {isVideo && (
                     <>
                       {/* صورة أول لقطة دائمة خلف الفيديو → لا سواد أبداً */}
-                      <img src={posterImg} alt="" aria-hidden="true" loading={idx === 0 ? 'eager' : 'lazy'} style={{ filter: 'brightness(0.6)' }} className="bz-kenburns absolute inset-0 z-0 h-full w-full object-cover" />
+                      <img src={posterImg} alt="" aria-hidden="true" loading={idx === 0 ? 'eager' : 'lazy'} style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))' }} className="bz-kenburns absolute inset-0 z-0 h-full w-full object-cover" />
                       <video
                         ref={(el) => { vidRefs.current[idx] = el; }}
                         src={cldVideoMp4(s.bgValue)}
@@ -1128,7 +1134,7 @@ function HeroSlider({ store }) {
                         onEnded={(e) => { e.currentTarget.currentTime = 0; e.currentTarget.play().catch(() => {}); }}
                         onPause={(e) => { if (!document.hidden && iRef.current === idx && visRef.current) e.currentTarget.play().catch(() => {}); }}
                         onCanPlay={(e) => { e.currentTarget.style.opacity = '1'; }}
-                        style={{ filter: 'brightness(0.6)', opacity: 0, transition: 'opacity .35s ease' }}
+                        style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))', opacity: 0, transition: 'opacity .35s ease' }}
                         className="bz-kenburns absolute inset-0 z-[1] h-full w-full object-cover"
                       />
                     </>

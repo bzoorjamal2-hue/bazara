@@ -219,6 +219,35 @@ export default function BannerEditor({ banners = [], onChange, withButtons = fal
                   {b.bgType === 'video' && (
                     <div className="mt-2.5"><VideoInput value={b.bgValue} onChange={(v) => setBanner(idx, 'bgValue', v)} hint={t('dashboard.store.bannerVideoHint')} /></div>
                   )}
+
+                  {/* شدّةُ التعتيم — لصورةٍ أو فيديو فقط (اللونُ اختارَه صاحبُه
+                      فلا نُعتّمُه). صورةٌ فاتحةٌ تبتلعُ النصَّ الأبيضَ فوقَها
+                      وصورةٌ داكنةٌ لا تحتاجُ حجاباً ثقيلاً — رقمٌ واحدٌ يضبطُ
+                      الحالتَين، كما بصفحةِ الغلافِ تماماً. */}
+                  {(b.bgType === 'image' || b.bgType === 'video') && b.bgValue && (
+                    <div className="mt-3">
+                      <label className="mb-1 block text-xs font-semibold text-stone-300" htmlFor={`bz-dim-${idx}`}>
+                        {t('dashboard.store.bannerDim')}
+                        <span className="ms-2 font-mono text-[11px] text-stone-400" dir="ltr">{b.dim ?? 50}%</span>
+                      </label>
+                      <input
+                        id={`bz-dim-${idx}`}
+                        type="range"
+                        min="0"
+                        max="90"
+                        step="5"
+                        dir="ltr"
+                        className="w-full accent-gold-400"
+                        value={b.dim ?? 50}
+                        onChange={(e) => setBanner(idx, 'dim', Number(e.target.value))}
+                        aria-label={t('dashboard.store.bannerDim')}
+                      />
+                      <div className="flex justify-between text-[10px] text-stone-400">
+                        <span>{t('dashboard.store.bannerDimLow')}</span>
+                        <span>{t('dashboard.store.bannerDimHigh')}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* زر الشريحة (للمدير) — نص + وجهة عند الضغط */}

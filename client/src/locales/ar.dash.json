@@ -661,7 +661,10 @@
       "taglineHint": "اتركيه فارغاً لتظهر الجملة العامة «أناقة · حشمة · تميّز».",
       "taglinePlaceholder": "عبايات فاخرة · تفصيل حسب الطلب",
       "taglineEn": "شعار المتجر بالإنجليزية",
-      "taglineEnPlaceholder": "Luxury abayas · Made to order"
+      "taglineEnPlaceholder": "Luxury abayas · Made to order",
+      "bannerDim": "تعتيم الصورة خلف النصّ",
+      "bannerDimLow": "بلا تعتيم",
+      "bannerDimHigh": "تعتيم قويّ"
     },
     "product": {
       "cost": "سعر التكلفة",

@@ -154,6 +154,9 @@ export function sanitizeBanners(raw) {
       // زر اختياري على الشريحة: نص + وجهة (رابط خارجي أو مسار داخلي)
       btnLabel: String(b?.btnLabel || '').trim().slice(0, 40),
       btnHref: String(b?.btnHref || '').trim().slice(0, 500),
+      // شدّةُ تعتيمِ الصورة/الفيديو خلفَ النصّ (٠–٩٠٪). العددُ يُحصَرُ بالمدى
+      // ولا نقبلُ NaN: قيمةٌ فاسدةٌ تُفقِدُ النصَّ قراءتَه فوقَ صورةٍ فاتحة.
+      dim: Math.min(90, Math.max(0, Number.isFinite(Number(b?.dim)) ? Math.round(Number(b.dim)) : 50)),
     }))
     .filter((b) => b.title || b.subtitle || b.bgValue);
 }
