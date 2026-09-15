@@ -1244,15 +1244,21 @@ function HeroSlider({ store }) {
         )}
       </div>
 
-      {/* نقاط التنقّل — النشطة شريط يمتلئ ذهبياً كمؤقّت مرئي للانتقال التالي */}
+      {/* النقاطُ داخلَ الهيرو لا تحتَه: بعدَ أن صارَ بعرضِ الجهازِ نزلت تحتَ الطيّ
+          فلم تُرَ أصلاً — والمؤشّرُ الذي لا يُرى لا يدلّ. وتتبعُ اتّجاهَ اللغة. */}
       {len > 1 && (
-        <div dir={rtl ? 'rtl' : 'ltr'} className="mt-6 flex items-center justify-center gap-2">
+        <div
+          dir={rtl ? 'rtl' : 'ltr'}
+          className="pointer-events-none absolute inset-x-0 bottom-5 z-20 flex items-center justify-center gap-2"
+        >
           {slides.map((_, idx) => (
             <button
               key={idx}
               onClick={() => go(idx)}
               aria-label={`slide ${idx + 1}`}
-              className={`relative h-1.5 overflow-hidden rounded-full transition-all duration-500 ${idx === i ? 'w-8 bg-wine/20' : 'w-1.5 bg-wine/25 hover:bg-wine/40'}`}
+              // لونٌ فاتحٌ لا خمريّ: النقاطُ صارت فوقَ الصورةِ لا تحتَ الهيرو
+              // على أرضيّةِ الصفحةِ البيضاء — والخمريُّ يختفي فوقَ صورةٍ داكنة.
+              className={`pointer-events-auto relative h-1.5 overflow-hidden rounded-full transition-all duration-500 ${idx === i ? 'w-8 bg-white/30' : 'w-1.5 bg-white/40 hover:bg-white/65'}`}
             >
               {idx === i && (
                 <span

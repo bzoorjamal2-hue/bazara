@@ -3818,12 +3818,18 @@ html.dark .theme-pub .bz-count { background: rgba(239, 238, 236, 0.14); color: #
 /* اسم الفئة داخل بطاقتها */
 .bz-card-name { color: #0F0F0E; }
 html.dark .theme-pub .bz-card-name { color: #F2F1EF; }
-/* نقاط السلايدر: التدرّج على شريطٍ ارتفاعه 6px لا يُرى — لونٌ مصمت */
-.bz-dot { background: rgba(23, 23, 23, 0.25); }
-@media (hover: hover) { .bz-dot:hover { background: rgba(23, 23, 23, 0.45); } }
-.bz-dot-on { background: #1F1E1D; }
-html.dark .theme-pub .bz-dot { background: rgba(239, 238, 236, 0.28); }
-@media (hover: hover) { html.dark .theme-pub .bz-dot:hover { background: rgba(239, 238, 236, 0.5); } }
+/* نقاط السلايدر: التدرّج على شريطٍ ارتفاعه 6px لا يُرى — لونٌ مصمت.
+   وفاتحةٌ لا حبريّة: صارت داخلَ الهيرو فوقَ الصورةِ لا تحتَه على أرضيّةِ
+   الصفحةِ البيضاء — والحبريُّ يختفي فوقَ صورةٍ داكنة. وظلٌّ رفيعٌ يُبقيها
+   ظاهرةً فوقَ صورةٍ فاتحةٍ أيضاً، فتُقرأُ على الحالتَين. */
+.bz-dot {
+  background: rgba(255, 255, 255, 0.42);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+@media (hover: hover) { .bz-dot:hover { background: rgba(255, 255, 255, 0.7); } }
+.bz-dot-on { background: #F6F5F3; }
+html.dark .theme-pub .bz-dot { background: rgba(255, 255, 255, 0.42); }
+@media (hover: hover) { html.dark .theme-pub .bz-dot:hover { background: rgba(255, 255, 255, 0.7); } }
 html.dark .theme-pub .bz-dot-on { background: #D6D2CB; }
 
 /* ═══════════════ نظامٌ طباعيّ واحد ═══════════════

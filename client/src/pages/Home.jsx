@@ -675,17 +675,21 @@ function HomeHero({ banners = [] }) {
         </div>
       </div>
 
-      {/* النقاطُ تتبعُ اتّجاهَ اللغةِ كالحركة: الأولى يميناً بالعربيّةِ ويساراً
-          بالإنجليزيّة. كانت مثبّتةً ‎ltr فتبدأُ يساراً دائماً، فتمشي عكسَ الشريحة.
-          وتُخفى بشريحةٍ واحدةٍ — نقطةٌ وحيدةٌ لا تدلُّ على شيءٍ ولا تُنقَر. */}
+      {/* النقاطُ داخلَ الهيرو لا تحتَه: بعدَ أن صارَ بعرضِ الجهازِ وبارتفاعِ
+          ‏‎72svh نزلت تحتَ الطيّ فلم تُرَ أصلاً — والمؤشّرُ الذي لا يُرى لا يدلّ.
+          وتتبعُ اتّجاهَ اللغةِ كالحركة، وتُخفى بشريحةٍ واحدةٍ لأنّ نقطةً وحيدةً
+          لا تقولُ شيئاً ولا تُنقَر. */}
       {len > 1 && (
-        <div dir={rtl ? 'rtl' : 'ltr'} className="mt-6 flex items-center justify-center gap-2">
+        <div
+          dir={rtl ? 'rtl' : 'ltr'}
+          className="pointer-events-none absolute inset-x-0 bottom-5 z-20 flex items-center justify-center gap-2"
+        >
           {slides.map((_, idx) => (
             <button
               key={idx}
               onClick={() => go(idx)}
               aria-label={`slide ${idx + 1}`}
-              className={`bz-dot h-1.5 rounded-full transition-all duration-500 ${idx === i ? 'bz-dot-on w-8' : 'w-1.5'}`}
+              className={`bz-dot pointer-events-auto h-1.5 rounded-full transition-all duration-500 ${idx === i ? 'bz-dot-on w-8' : 'w-1.5'}`}
             />
           ))}
         </div>
