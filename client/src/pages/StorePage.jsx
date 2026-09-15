@@ -1058,7 +1058,7 @@ function HeroSlider({ store }) {
         e.preventDefault(); // يمنع تمرير الصفحة عمودياً أثناء السحب الأفقي
         // مقاومة عند الحواف (أول/آخر شريحة) لإحساس طبيعي
         let d = dx;
-        const fwd = rtl ? dx < 0 : dx > 0;
+        const fwd = rtl ? dx > 0 : dx < 0;
         if ((i === 0 && !fwd) || (i === len - 1 && fwd)) d = dx / 3;
         setDrag(d);
       }
@@ -1070,8 +1070,8 @@ function HeroSlider({ store }) {
       const threshold = Math.min(70, w * 0.18); // تجاوز هذه المسافة = ننتقل شريحة واحدة
       let next = i;
       if (touch.current.horiz && Math.abs(dx) > threshold) {
-        // يتبعُ الإصبعَ باتّجاهِ اللغة: يساراً = التالي بالعربيّة، ويميناً بالإنجليزيّة
-        next = (rtl ? dx < 0 : dx > 0) ? i + 1 : i - 1;
+        // يتبعُ الإصبعَ باتّجاهِ اللغة: يميناً = التالي بالعربيّة، ويساراً بالإنجليزيّة
+        next = (rtl ? dx > 0 : dx < 0) ? i + 1 : i - 1;
         next = Math.max(0, Math.min(len - 1, next));  // شريحة واحدة فقط، بلا تجاوز للحواف
       }
       draggingRef.current = false;
@@ -1101,14 +1101,14 @@ function HeroSlider({ store }) {
         style={{ touchAction: 'pan-y' }}
       >
         {/* اتّجاهُ الحركةِ يتبعُ اللغة — كهيرو الصفحةِ الرئيسيّةِ تماماً:
-            ‏العربيّةُ ‎row والإزاحةُ سالبة، فتدخلُ الشريحةُ من اليمينِ وتخرجُ يساراً.
-            ‏والإنجليزيّةُ ‎row-reverse والإزاحةُ موجبة، فالعكس.
+            ‏العربيّةُ ‎row-reverse: الأولى يميناً والتاليةُ إلى يسارِها كصفحاتِ الكتابِ
+            العربيّ، فتدخلُ التاليةُ من اليسار. والإنجليزيّةُ ‎row والعكسُ صحيح.
             والإزاحةُ بالبكسلِ لا بالنسبة: نسبةُ ‎translateX تُحسَبُ من عرضِ العنصرِ
             نفسِه، وهذا الشريطُ عرضُه عرضُ شريحةٍ وأبناؤُه يفيضون — مرجعٌ ملتبس. */}
         <div
-          className={`flex ${rtl ? '' : 'flex-row-reverse'}`}
+          className={`flex ${rtl ? 'flex-row-reverse' : ''}`}
           style={{
-            transform: `translate3d(${(rtl ? -1 : 1) * i * frameW + drag}px, 0, 0)`,
+            transform: `translate3d(${(rtl ? 1 : -1) * i * frameW + drag}px, 0, 0)`,
             direction: 'ltr',
             transition: draggingRef.current || snap ? 'none' : 'transform 480ms cubic-bezier(0.22, 0.61, 0.36, 1)',
             willChange: 'transform',
