@@ -117,7 +117,7 @@ export default function NavBell({ variant = 'bar' }) {
   const base = 'relative flex h-10 w-10 items-center justify-center rounded-full transition-colors duration-300 disabled:opacity-60';
   const look = drawer
     ? (on
-        ? 'bg-gold-400 text-wine-dark ring-1 ring-gold-200/70'
+        ? 'bg-gold-400 bz-on-gold ring-1 ring-gold-200/70'
         : 'bg-cream/15 text-cream hover:bg-cream/25')
     : (on
         ? 'bg-gold-400/20 text-gold-500'

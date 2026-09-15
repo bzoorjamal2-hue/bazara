@@ -560,6 +560,11 @@ input[type='datetime-local']::-webkit-datetime-edit {
 .theme-pub .bg-ink-900 { background-color: #F9F9F8; }
 .theme-pub .bg-ink-700 { background-color: #DCDBDA; }
 .theme-pub .bg-gold-400 { background-color: #1F1E1D; }
+/* نصٌّ فوقَ سطحِ ‎bg-gold-400: السطحُ ينقلبُ بين الحبرِ نهاراً والرمليِّ ليلاً،
+   فالنصُّ يجبُ أن ينقلبَ معه. كانت المواضعُ تكتبُ ‎text-wine-dark ثابتاً فتصيرُ
+   حبراً على حبرٍ نهاراً وفاتحاً على فاتحٍ ليلاً — غيرَ مقروءةٍ بالوضعَين معاً. */
+.theme-pub .bz-on-gold { color: #F9F9F8; }
+html.dark .theme-pub .bz-on-gold { color: #17150F; }
 @media (hover: hover) { .theme-pub .hover\:bg-gold-400:hover { background-color: #1F1E1D; } }
 .theme-pub .bg-gold-400\/5 { background-color: rgba(23, 23, 23, 0.05); }
 .theme-pub .bg-gold-400\/10,

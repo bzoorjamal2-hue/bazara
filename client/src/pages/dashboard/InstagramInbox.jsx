@@ -289,7 +289,7 @@ function Inbox({ username, onDisconnected }) {
               </span>
               <span className="flex shrink-0 flex-col items-end gap-1">
                 <span className="text-[10px] text-stone-500">{new Date(c.last_at).toLocaleDateString()}</span>
-                {c.unread > 0 && <span className="rounded-full bg-gold-400 px-1.5 text-[10px] font-bold text-wine-dark">{c.unread}</span>}
+                {c.unread > 0 && <span className="rounded-full bg-gold-400 px-1.5 text-[10px] font-bold bz-on-gold">{c.unread}</span>}
               </span>
             </button>
           ))}

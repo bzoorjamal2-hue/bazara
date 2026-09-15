@@ -175,7 +175,7 @@ export default function StockRequestsManager() {
                     <button
                       key={s}
                       onClick={() => setFilter(s)}
-                      // ذهب صريح: bg-gold-400 تنقلب بنّية نهاراً وtext-wine-dark بنّي أغمق
+                      // ذهب صريح: bg-gold-400 تنقلب بنّية نهاراً وbz-on-gold بنّي أغمق
                       // — بنّي على بنّي لا يُقرأ
                       className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
                         on
@@ -314,7 +314,7 @@ function RequestCard({ r, zones, couriers, busy, formOpen, onToggleForm, onConve
         {!o && (
           <button
             onClick={onToggleForm}
-            className="inline-flex items-center gap-1 rounded-xl bg-gold-400 px-3 py-1.5 text-xs font-bold text-wine-dark shadow-sm transition hover:bg-gold-300"
+            className="inline-flex items-center gap-1 rounded-xl bg-gold-400 px-3 py-1.5 text-xs font-bold bz-on-gold shadow-sm transition hover:bg-gold-300"
           >
             <BagIcon className="h-4 w-4" /> {formOpen ? t('common.cancel') : t('dashboard.stockRequests.convert')}
           </button>
