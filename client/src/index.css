@@ -4598,3 +4598,20 @@ html.dark .bz-scrim { background: linear-gradient(to top, rgba(8, 8, 8, 0.9) 0%,
 /* نصُّ التوفيرِ أحمرُ عميقٌ (‎#8a2438) — على الفحمِ الليليِّ تباينُه ٢٫٠ أي غيرُ
    مقروء. الأحمرُ يبقى معنىً (خصم) لكنْ بدرجةٍ تُرى على الداكن. */
 html.dark .theme-pub .text-\[\#8a2438\] { color: #F0A0A8; }
+
+/* الأزرارُ العائمةُ الثانويّة (مساعِدةُ الأناقة والعودةُ للأعلى): دائرةٌ بيضاءُ
+   بحدٍّ رفيعٍ وأيقونةٍ حبريّة. كانت كتلةً سوداءَ تنافسُ زرَّ الشراءِ بصريّاً —
+   والأسوأُ أنّ أيقونتَها كانت حبريّةً على أسودَ فتكادُ لا تُرى. الزرُّ العائمُ
+   إجراءٌ ثانويّ: يُرى حين يُبحَثُ عنه ولا يزاحمُ الشراء. */
+.bz-fab {
+  background: #FFFFFF;
+  color: #1F1E1D;
+  box-shadow: 0 10px 26px -12px rgba(24, 23, 22, 0.45), inset 0 0 0 1px rgba(24, 23, 22, 0.10);
+}
+@media (hover: hover) { .bz-fab:hover { background: #F7F7F6; } }
+html.dark .bz-fab,
+html.dark .theme-pub .bz-fab {
+  background: #232120;
+  color: #E8E3DA;
+  box-shadow: 0 10px 26px -12px rgba(0, 0, 0, 0.75), inset 0 0 0 1px rgba(243, 237, 228, 0.14);
+}

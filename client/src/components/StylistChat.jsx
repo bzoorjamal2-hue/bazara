@@ -125,23 +125,16 @@ export default function StylistChat({ store, whatsapp = '', marketplace = false 
 
   return (
     <>
-      {/* الزر العائم — على الجهة المقابلة للواتساب كي لا يتداخلا.
-          ذهبي شمبانيا هادئ فخم بلا وميض/طفو، والأيقونة داكنة دائماً للتباين */}
+      {/* الزر العائم — على الجهة المقابلة للواتساب كي لا يتداخلا. دائرةٌ بيضاءُ
+          هادئةٌ بأيقونةٍ حبريّة (bz-fab): إجراءٌ ثانويٌّ لا ينافسُ زرَّ الشراء */}
       <button
         type="button"
         onClick={() => setOpen(true)}
         aria-label={t('assistant.fab')}
         // زر «العودة للأعلى» يقيس هذا العنصر ليجلس فوقه بلا تصادم — لا تُزل السمة
         data-fab="stylist"
-        className="group fixed start-5 z-40 flex h-14 w-14 items-center justify-center rounded-full ring-1 ring-white/30 transition-transform duration-300 hover:scale-110 active:scale-95"
-        style={{
-          bottom: 'calc(env(safe-area-inset-bottom, 0px) + var(--bz-fab-bottom))',
-          background: dark ? 'linear-gradient(150deg,#D0CFCE,#A4A3A1)' : 'linear-gradient(150deg,#2B2A29,#141413)',
-          boxShadow: dark
-            ? '0 10px 24px -10px rgba(195, 194, 193,0.45), 0 2px 6px -2px rgba(0,0,0,0.3)'
-            : '0 12px 28px -10px rgba(162, 160, 158,0.6), 0 2px 6px -2px rgba(0,0,0,0.15)',
-          color: '#313130',
-        }}
+        className="bz-fab group fixed start-5 z-40 flex h-14 w-14 items-center justify-center rounded-full transition-transform duration-300 hover:scale-110 active:scale-95"
+        style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + var(--bz-fab-bottom))' }}
       >
         <SparkleIcon className="h-7 w-7 transition-transform duration-500 group-hover:rotate-[18deg]" />
       </button>
