@@ -4755,36 +4755,11 @@ html.dark .theme-pub .bz-pmedia::after { box-shadow: inset 0 0 0 1px rgba(239, 2
 }
 
 
-/* ═══════ بلاطةُ الفئة ═══════
-   كانت الأيقونةُ تطفو على بياضِ الصفحةِ بلا أرضيّةٍ ولا حافّة — فتبدو قصاصةً
-   مرسومةً لا بطاقةً تُنقَر، ويبقى قسمُ «تصفّحي حسب الفئة» فارغاً رغمَ طولِه.
-   أرضيّةٌ رماديّةٌ فاتحةٌ وخطٌّ داخليٌّ يجعلانِ منها بطاقةً، وتُعمّقانِ عندَ
-   المرورِ فيصيرُ للقسمِ إيقاع. */
-/* لونُ الفئاتِ خاصٌّ بها: كانت بأرضيّةِ البطاقاتِ نفسِها ‎#F2F2F1 فلا
-   يميّزُها شيء. صارت لوحاً حبريّاً — والرسومُ رماديّةٌ فاتحةٌ فتقرأُ عليه
-   كمخطّطاتِ أزياءَ على لوحِ أردواز، ويكتسبُ القسمُ هويّةً لا تتكرّرُ بالصفحة.
-   وهو لونُ الموقعِ نفسُه لا لونٌ غريب: حبرُ الشعارِ والأزرارِ والشريطِ الحبريّ. */
-.theme-pub .bz-cattile {
-  background: linear-gradient(165deg, #2A2827 0%, #1C1B1A 55%, #161514 100%);
-  box-shadow: inset 0 0 0 1px rgba(246, 245, 243, 0.10);
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
-}
-@media (hover: hover) and (pointer: fine) {
-  .theme-pub .group:hover .bz-cattile {
-    box-shadow: inset 0 0 0 1px rgba(246, 245, 243, 0.26), 0 14px 30px -18px rgba(23, 23, 23, 0.4);
-  }
-}
-/* الليل: اللوحُ نفسُه بحافّةٍ أوضحَ قليلاً كي يُفصَلَ عن أرضيّةِ الليلِ الداكنة */
-html.dark .theme-pub .bz-cattile {
-  background: linear-gradient(165deg, #2A2827 0%, #1C1B1A 55%, #161514 100%);
-  box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.14);
-}
-@media (hover: hover) and (pointer: fine) {
-  html.dark .theme-pub .group:hover .bz-cattile {
-    box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.30), 0 14px 30px -18px rgba(0, 0, 0, 0.7);
-  }
-}
-
+/* الفئةُ بلا خلفيّةٍ ولا إطار: شكلُ الرسمِ وحدَه يظهرُ، كما كانت. جرّبتُ لوحاً
+   حبريّاً فرفضَه صاحبُ الموقع — وهو محقٌّ: الرسومُ مقصوصةٌ على شفافيّةٍ أصلاً
+   فالإطارُ يحبسُها ويجعلُ منها أزراراً لا رسوماً.
+   يبقى ‎aspect-square والحشوةُ بالمكوّنِ ليتساوى مقاسُ الرسومِ ببعضِها. */
+.theme-pub .bz-cattile { transition: transform 0.3s ease; }
 /* فجوةُ صفِّ الفئاتِ متغيّراً: الحسابُ المرنُ بالمكوّنِ يحتاجُها رقماً، والصفُّ
    يغيّرُها عندَ ‎640px — فلو بقيت مكتوبةً بموضعَين تفارقَ الاثنان. */
 .bz-catrow { --bz-cat-gap: 0.75rem; }
@@ -4913,4 +4888,92 @@ html.dark .theme-pub .bz-featstore {
 @media (min-width: 768px) {
   .bz-homehero-text.bz-ht-start,
   .bz-homehero-text.bz-ht-end { max-width: 42rem; }
+}
+
+/* ═══════ الشريطُ التحريريّ ═══════
+   صورةٌ واحدةٌ بعرضِ الشاشةِ بينَ قسمَين. تكسرُ صفَّ الأقسامِ المتشابهةِ وتُعطي
+   المتجرَ صوتاً بدلَ أن يكونَ رفَّ بضاعة — وهي المجموعةُ نفسُها التي تُحرَّرُ
+   أصلاً، بوزنٍ آخرَ لا بمحتوىً جديد. */
+.bz-eband {
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
+}
+.bz-eband-link {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  isolation: isolate;
+  min-height: min(52svh, 420px);
+  background: #1A1918;
+}
+@media (min-width: 768px) { .bz-eband-link { min-height: min(58svh, 520px); } }
+.bz-eband-img {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+@media (hover: hover) and (pointer: fine) {
+  .bz-eband-link:hover .bz-eband-img { transform: scale(1.03); }
+}
+@media (prefers-reduced-motion: reduce) { .bz-eband-img { transition: none; } }
+
+/* كتلةُ النصّ: إلى جهةِ البدايةِ لا بالوسط — الوسطُ يجلسُ فوقَ القطعةِ نفسِها
+   بأكثرِ الصور، والجهةُ تتركُها ظاهرةً كاملةً وتقرأُ الجملةُ إلى جانبِها. */
+.bz-eband-text {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: inherit;
+  max-width: 1400px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-inline: auto;
+  padding: 3rem var(--bz-gut);
+  text-align: start;
+}
+.bz-eband-eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  color: #BEBAB4;
+  text-transform: uppercase;
+}
+.bz-eband-h {
+  margin: 0;
+  font-size: clamp(1.6rem, 4.6vw, 2.9rem);
+  font-weight: 700;
+  line-height: 1.18;
+  color: #F6F5F3;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.32);
+  text-wrap: balance;
+}
+.bz-eband-p {
+  margin: 0;
+  max-width: 34rem;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: #CFCCC7;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.3);
+}
+.bz-eband-btn {
+  margin-top: 0.6rem;
+  display: inline-block;
+  border-radius: 0.6rem;
+  background: #F6F5F3;
+  padding: 0.62rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1F1E1D;
+  box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.7);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .bz-eband-link:hover .bz-eband-btn { transform: translateY(-2px); background: #FFFFFF; }
 }

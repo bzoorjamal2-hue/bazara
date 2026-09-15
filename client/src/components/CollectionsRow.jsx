@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { searchPath } from '../utils/links.js';
 import { cldThumb, cldSrcSet } from '../utils/cloudinary.js';
+import EditorialBand from './EditorialBand.jsx';
 
 // مجموعات تحريرية بالرئيسية («تسوّقي حسب المناسبة») — يحرّرها المدير.
 // كل بطاقة: صورة أجواء + عنوان فوقها، تفتح نتائج البحث بكلمتها.
@@ -11,8 +12,23 @@ import { cldThumb, cldSrcSet } from '../utils/cloudinary.js';
 export default function CollectionsRow({ collections, storeSlug = '' }) {
   const { t, i18n } = useTranslation();
   const isEn = i18n.language === 'en';
-  const list = (collections || []).filter((c) => c && c.title && c.q);
-  if (list.length === 0) return null;
+  const all = (collections || []).filter((c) => c && c.title && c.q);
+  // المعلَّمةُ ‎wide تُعرَضُ شريطاً تحريريّاً عريضاً، والباقي يبقى بلاطةً بالصفّ.
+  // عددُ الأشرطةِ إذن هو عددُ ما عُلِّمَ — لا حقلَ عددٍ منفصلٍ يمكنُ أن يفارقَ
+  // الواقعَ حينَ تُحذَفُ مجموعةٌ أو تُضاف. وبلا صورةٍ لا يصلحُ شريطاً فيعودُ
+  // بلاطةً بدلَ أن يظهرَ عنواناً فوقَ فراغ.
+  const wide = all.filter((c) => c.wide && c.image);
+  const list = all.filter((c) => !(c.wide && c.image));
+
+  return (
+    <>
+      {wide.map((c, i) => <EditorialBand key={`w-${c.q}-${i}`} collection={c} storeSlug={storeSlug} />)}
+      {list.length > 0 && <CollectionTiles list={list} storeSlug={storeSlug} isEn={isEn} t={t} />}
+    </>
+  );
+}
+
+function CollectionTiles({ list, storeSlug, isEn, t }) {
   const linkFor = (q) => searchPath(storeSlug, q);
 
   return (

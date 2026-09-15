@@ -94,6 +94,11 @@ function sanitizeStoreCollections(raw) {
       titleEn: String(c?.titleEn ?? '').slice(0, 60).trim(),
       image: typeof c?.image === 'string' ? c.image.trim().slice(0, 2000) : '',
       q: String(c?.q ?? '').slice(0, 60).trim(),
+      // نفسُ حقولِ مجموعاتِ المنصّة: شريطٌ عريضٌ بدل بلاطة، وسطرٌ تحتَ العنوان،
+      // وشدّةُ تعتيم. عددُ الأشرطةِ = عددُ المعلَّمات، فلا حقلَ عددٍ يفارقُ الواقع.
+      wide: Boolean(c?.wide),
+      desc: String(c?.desc ?? '').slice(0, 160).trim(),
+      dim: Math.min(90, Math.max(0, Number.isFinite(Number(c?.dim)) ? Math.round(Number(c.dim)) : 50)),
     }))
     .filter((c) => c.title && c.q); // بلا عنوان أو كلمة بحث لا معنى للبطاقة
 }

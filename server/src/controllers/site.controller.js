@@ -195,6 +195,14 @@ const sanitizeCollections = (list) => {
       titleEn: String(c?.titleEn ?? '').slice(0, 60).trim(),
       image: /^https?:\/\//i.test(String(c?.image ?? '')) ? String(c.image).slice(0, 500) : '',
       q: String(c?.q ?? '').slice(0, 60).trim(),
+      // شريطٌ تحريريٌّ عريضٌ بدل بلاطةٍ بالصفّ: المجموعةُ نفسُها بوزنٍ آخر.
+      // عددُ الأشرطةِ = عددُ المجموعاتِ المعلَّمة — فالمديرُ يتحكّمُ بالعددِ بلا
+      // حقلٍ منفصلٍ يمكنُ أن يفارقَ الواقع.
+      wide: Boolean(c?.wide),
+      // سطرٌ تحتَ العنوانِ يظهرُ بالشريطِ العريضِ وحدَه (البلاطةُ أضيقُ من أن تحملَه)
+      desc: String(c?.desc ?? '').slice(0, 160).trim(),
+      // شدّةُ التعتيمِ فوقَ الصورةِ (٠–٩٠٪) — كهيرو الصفحةِ تماماً
+      dim: Math.min(90, Math.max(0, Number.isFinite(Number(c?.dim)) ? Math.round(Number(c.dim)) : 50)),
     }))
     .filter((c) => c.title && c.q); // بلا عنوان أو كلمة بحث لا معنى للبطاقة
 };

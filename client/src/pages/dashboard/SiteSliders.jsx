@@ -4,6 +4,7 @@ import api, { getErrorMessage } from '../../api/client.js';
 import { clearCachePrefixes } from '../../utils/apiCache.js';
 import Spinner from '../../components/Spinner.jsx';
 import BannerEditor from '../../components/BannerEditor.jsx';
+import CollectionWide from '../../components/CollectionWide.jsx';
 import ImageInput from '../../components/ImageInput.jsx';
 import { ImageIcon, GridIcon } from '../../components/icons.jsx';
 import { PageHead, SectionHead, Field, RowTools, Tip } from '../../components/FormField.jsx';
@@ -188,6 +189,10 @@ export default function SiteSliders() {
                 <Field label={t('admin.collImage')} tip={t('admin.collImageTip')}>
                   <ImageInput value={c.image || ''} onChange={(v) => setCollections((p2) => p2.map((x, j) => (j === i ? { ...x, image: v } : x)))} />
                 </Field>
+                <CollectionWide
+                  c={c}
+                  onChange={(patch) => setCollections((p2) => p2.map((x, j) => (j === i ? { ...x, ...patch } : x)))}
+                />
               </div>
             ))}
           </div>

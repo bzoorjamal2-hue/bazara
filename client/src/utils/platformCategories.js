@@ -60,7 +60,7 @@ export function platformCatName(key, t, lang) {
 export function platformCatImage(key) {
   const found = custom.extra.find((c) => c.key === key);
   if (found?.image) return found.image;
-  return BUILTIN_CATS.includes(key) ? `/categories/${key}.webp?v=2` : '';
+  return BUILTIN_CATS.includes(key) ? `/categories/${key}.webp?v=3` : '';
 }
 
 // نسخةُ PNG احتياطاً: WebP مدعومٌ منذ سفاري ١٤ (٢٠٢٠)، لكنّ الاحتياط رخيص
@@ -68,7 +68,7 @@ export function platformCatImage(key) {
 export function platformCatImageFallback(key) {
   const found = custom.extra.find((c) => c.key === key);
   if (found?.image) return '';
-  return BUILTIN_CATS.includes(key) ? `/categories/${key}.png?v=2` : '';
+  return BUILTIN_CATS.includes(key) ? `/categories/${key}.png?v=3` : '';
 }
 
 export function isBuiltinCat(key) {

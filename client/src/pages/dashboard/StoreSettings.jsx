@@ -5,6 +5,7 @@ import { clearCachePrefixes } from '../../utils/apiCache.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import Spinner from '../../components/Spinner.jsx';
 import ImageInput from '../../components/ImageInput.jsx';
+import CollectionWide from '../../components/CollectionWide.jsx';
 import BannerEditor from '../../components/BannerEditor.jsx';
 import OpostConnect from '../../components/OpostConnect.jsx';
 import EpsConnect from '../../components/EpsConnect.jsx';
@@ -786,7 +787,7 @@ export default function StoreSettings() {
               // الاسم الظاهر: اسم المالكة إن وُجد وإلا الافتراضي — يُعرَض مرّة واحدة بالعنوان
               const displayName = (meta.name || '').trim() || t(`categories.${c}`);
               // اللوقو الحالي: صورة المالكة إن رفعتها وإلا الأيقونة الثابتة
-              const logo = meta.image ? cldThumb(meta.image, 120) : `/categories/${c}.png?v=2`;
+              const logo = meta.image ? cldThumb(meta.image, 120) : `/categories/${c}.png?v=3`;
               return (
                 <div key={c} className={`${SUBCARD} transition ${hidden ? 'opacity-60' : ''}`}>
                   {/* العنوان: لوقو + اسم واحد + زر إخفاء/إظهار — بلا تكرار للاسم */}
@@ -812,7 +813,7 @@ export default function StoreSettings() {
                     <>
                       <ImageInput
                         value={meta.image || ''} onChange={(v) => setCatMeta(c, 'image', v)}
-                        placeholderImg={`/categories/${c}.png?v=2`} contain hint={t('dashboard.store.categoryImageHint')}
+                        placeholderImg={`/categories/${c}.png?v=3`} contain hint={t('dashboard.store.categoryImageHint')}
                       />
                       <input
                         type="text"
@@ -930,6 +931,13 @@ export default function StoreSettings() {
                     </Field>
                   </div>
                   <ImageInput value={c.image || ''} onChange={(v) => setCollection(idx, 'image', v)} hint={t('dashboard.store.collectionImageHint')} />
+                  <CollectionWide
+                    c={c}
+                    onChange={(patch) => setForm((f) => ({
+                      ...f,
+                      collections: f.collections.map((x, j) => (j === idx ? { ...x, ...patch } : x)),
+                    }))}
+                  />
                 </div>
               ))}
             </div>
