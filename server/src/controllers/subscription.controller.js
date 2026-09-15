@@ -842,9 +842,25 @@ export async function fixAccount(req, res, next) {
 
     if (newSlug) {
       if (!/^[a-z0-9-]{3,40}$/.test(newSlug)) return res.status(400).json({ error: 'الرابط: أحرف إنجليزية وأرقام وشرطات، 3–40 حرفاً.' });
-      const taken = await query('SELECT 1 FROM stores WHERE slug = $1 AND user_id <> $2', [newSlug, user.id]);
+      // الاحتلالُ يُفحَصُ على الروابطِ القديمةِ أيضاً: رابطٌ تركَه متجرٌ آخرُ ما زال
+      // يحوّلُ إليه، فإعطاؤهُ لمتجرٍ ثانٍ يخطفُ زبائنَ الأوّل. (مسارُ التاجرةِ يفحصُها
+      // أصلاً، وكان مسارُ المديرِ يفحصُ الرابطَ الحاليَّ وحدَه.)
+      const taken = await query('SELECT 1 FROM stores WHERE (slug = $1 OR $1 = ANY(old_slugs)) AND user_id <> $2', [newSlug, user.id]);
       if (taken.rows.length) return res.status(409).json({ error: 'الرابط مستعمل بمتجر آخر.' });
-      const up = await query('UPDATE stores SET slug = $1 WHERE user_id = $2 RETURNING slug', [newSlug, user.id]);
+      // والرابطُ القديمُ يُحفَظُ فيبقى شغّالاً محوِّلاً للجديد — تماماً كما يفعلُ
+      // مسارُ التاجرةِ بإعداداتِ متجرِها. بدونِه يموتُ كلُّ رابطٍ شاركتهُ من قبل
+      // (واتساب وإنستغرام وإشاراتُ الزبائنِ وفهرسةُ جوجل) لحظةَ ضغطِ المديرِ «حفظ».
+      const up = await query(
+        `UPDATE stores
+            SET slug = $1::text,
+                old_slugs = (
+                  SELECT ARRAY(
+                    SELECT DISTINCT x FROM unnest(COALESCE(old_slugs, '{}'::text[]) || slug::text) AS x WHERE x <> $1::text
+                  )
+                )[1:10]
+          WHERE user_id = $2 RETURNING slug`,
+        [newSlug, user.id]
+      );
       if (!up.rows[0]) return res.status(404).json({ error: 'لا يوجد متجر لهذا الحساب.' });
       changed.slug = newSlug;
     }
