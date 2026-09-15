@@ -23,7 +23,15 @@ function cldFrom(url, transform) {
     const v = cldVideoParts(url);
     return v ? `${v.base}so_0,${transform}/${v.rest}` : '';
   }
-  return url.replace('/upload/', `/upload/${transform}/`);
+  const m = url.match(/^(https?:\/\/[^/]+\/[^/]+\/image\/upload\/)(.+)$/);
+  if (!m) return url.replace('/upload/', `/upload/${transform}/`);
+  // ما قبلَ جزءِ الإصدارِ ‎(v123…) تحويلاتٌ سابقةٌ نُسقِطُها: الروابطُ تُخزَّنُ
+  // محوّلةً منذ الرفع، فحقنُ تحويلٍ فوقَها يُنتِجُ سلسلةً تغلبُ فيها الجودةُ
+  // المخزَّنةُ ‎(q_auto:best) على المطلوبةِ فتعودُ الصورةُ بأضعافِ حجمِها.
+  const segs = m[2].split('/');
+  let vi = segs.findIndex((x) => /^v\d+$/.test(x));
+  if (vi === -1) vi = segs.length - 1;
+  return `${m[1]}${transform}/${segs.slice(vi).join('/')}`;
 }
 
 // يفكّك رابط فيديو Cloudinary لأجزائه (القاعدة + المعرّف) متجاهلاً أي تحويلات قديمة

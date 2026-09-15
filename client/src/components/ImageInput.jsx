@@ -34,7 +34,9 @@ export default function ImageInput({ value, onChange, round = false, label, plac
       if (cloudinaryEnabled) {
         // رفع بجودة عالية إلى Cloudinary (بدون ضغط يقلّل الدقة)
         const url = await uploadToCloudinary(file, 'image', setPct);
-        onChange(cldOptimized(url, 'image'));
+        // الرابطُ يُخزَّنُ نظيفاً: التحويلُ شأنُ موضعِ العرضِ لا شأنُ التخزين.
+        // وكان يُخزَّنُ محوّلاً فتُبنى فوقَه سلسلةٌ بكلِّ عرض.
+        onChange(url);
       } else {
         const dataUrl = await resizeImageFile(file);
         onChange(dataUrl);

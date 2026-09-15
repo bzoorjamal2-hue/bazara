@@ -14,7 +14,7 @@ import OffersBar from '../components/OffersBar.jsx';
 import { getRecent, productThumb } from '../utils/recentlyViewed.js';
 import { productPath } from '../utils/links.js';
 import { getCache, setCache } from '../utils/apiCache.js';
-import { cldVideoPoster, cldThumb, cldVideoMp4, heroCrop } from '../utils/cloudinary.js';
+import { cldVideoPoster, cldThumb, cldSrcSet, cldVideoMp4, heroCrop } from '../utils/cloudinary.js';
 import { ForwardIcon, BoltIcon, FireIcon, SparkleIcon } from '../components/icons.jsx';
 import CategoryGrid from '../components/CategoryGrid.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
@@ -626,9 +626,11 @@ function HomeHero({ banners = [] }) {
               const isImage = s.bgType === 'image' && s.bgValue;
               const isVideo = s.bgType === 'video' && s.bgValue;
               const onMedia = isColor || isImage || isVideo; // وسائط داكنة → نص عاجي
-              // الهيرو صارَ بعرضِ الجهازِ كاملاً لا بطاقةً بحاوية، وعلى شاشةٍ بكثافةٍ
-              // مضاعفةٍ يحتاجُ ضعفَ عرضِه بكسلاتٍ — ‎1600 كانت تكفي البطاقةَ لا الشاشة.
-              const vPoster = isVideo ? cldThumb(cldVideoPoster(s.bgValue, 2600), 2600) : '';
+              // لقطةُ شريحةِ الفيديو: مقاسٌ لكلِّ شاشةٍ لا ‎2600 للجميع. وكانت
+              // مبنيّةً بتحويلَينِ متتاليَينِ آخرُهما ‎dpr_auto — فجوّالٌ بكثافةٍ
+              // مضاعفةٍ يطلبُ خمسةَ آلافِ بكسلٍ عرضاً لشاشةٍ عرضُها ثلاثُ مئة.
+              const vPoster = isVideo ? cldVideoPoster(s.bgValue, 900) : '';
+              const vPosterSet = isVideo ? cldSrcSet(s.bgValue, [600, 900, 1280, 1800]) : undefined;
               return (
                 <div key={idx} className="w-full shrink-0" dir="rtl">
                   <div
@@ -659,7 +661,7 @@ function HomeHero({ banners = [] }) {
                     )}
                     {isVideo && (
                       <>
-                        <img src={vPoster} alt="" aria-hidden loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))', zIndex: -2 }} className="absolute inset-0 h-full w-full object-cover" />
+                        <img src={vPoster} srcSet={vPosterSet} sizes="100vw" alt="" aria-hidden loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))', zIndex: -2 }} className="absolute inset-0 h-full w-full object-cover" />
                         <video
                           ref={(el) => { vidRefs.current[idx] = el; }}
                           src={cldVideoMp4(s.bgValue)}
