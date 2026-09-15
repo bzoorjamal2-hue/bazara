@@ -452,14 +452,18 @@ function recordView(id) {
 const MAX_IDS = 50; // سقف يمنع استعلاماً ضخماً من رابط مُلفَّق
 export async function getProductsByIds(req, res, next) {
   try {
+    // معرّفُ المنتجِ نصُّ UUID لا رقم. كان يُحوَّلُ بـNumber فيصيرُ NaN ويسقطُ
+    // كلُّه، فتردُّ النقطةُ قائمةً فارغةً دائماً — واللوك بوكُ صورةٌ بلا قطعةٍ
+    // ولا نقطة، بلا رسالةِ خطأٍ تشرحُ لماذا.
+    // نُصفّي بصيغةِ UUID قبلَ الاستعلام: نصٌّ غيرُ صالحٍ يُفشِلُ التحويلَ بالقاعدة.
     const ids = String(req.query.ids || '')
       .split(',')
-      .map((s) => Number(s.trim()))
-      .filter((n) => Number.isInteger(n) && n > 0)
+      .map((x) => x.trim())
+      .filter((x) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(x))
       .slice(0, MAX_IDS);
     if (ids.length === 0) return res.json({ products: [] });
     const active = activeStoreSql('u');
-    const result = await query(`${PRODUCT_SELECT} WHERE p.id = ANY($1::int[]) AND ${active}`, [ids]);
+    const result = await query(`${PRODUCT_SELECT} WHERE p.id = ANY($1::uuid[]) AND ${active}`, [ids]);
     res.json({ products: result.rows.map(mapProduct) });
   } catch (err) {
     next(err);
