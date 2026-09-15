@@ -744,12 +744,12 @@ html.dark .pub-footer { background: #1A1918; color: #F3EDE4; }
 
 /* زرُّ إتمامِ الطلب (درجُ السلّة): بنّيٌّ داكنٌ نهاراً، وعاجيٌّ مضيءٌ ليلاً —
    الداكنُ على داكنٍ لا يُرى، وهو زرُّ الدفعِ نفسُه. */
-.bz-cta {
+.bz-buy {
   background: linear-gradient(150deg, #0F0F0E 0%, #0F0F0E 60%, #000000 100%);
   color: #F9F9F8;
 }
-html.dark .theme-pub .bz-cta,
-html.dark .bz-cta {
+html.dark .theme-pub .bz-buy,
+html.dark .bz-buy {
   background: linear-gradient(150deg, #F1E8D9 0%, #D8C7AC 100%);
   color: #17150F;
 }
