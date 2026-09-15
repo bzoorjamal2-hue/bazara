@@ -181,7 +181,7 @@ export default function StoryViewer({ stories, store, startIndex = 0, isOwner = 
           {stories.map((s, i) => (
             <div key={s.id} className="h-[3px] flex-1 overflow-hidden rounded-full bg-white/30 shadow-[0_1px_2px_rgba(0,0,0,.35)]">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-[#999795] via-[#E4E3E2] to-[#fff6da] shadow-[0_0_6px_rgba(205,_189,_164,_.8)]"
+                className="h-full rounded-full bg-gradient-to-r from-[#8C857C] via-[#D6D2CB] to-[#F6F5F3] shadow-[0_0_6px_rgba(214,_210,_203,_.8)]"
                 style={{ width: `${i < idx ? 100 : i === idx ? progress : 0}%` }}
               />
             </div>

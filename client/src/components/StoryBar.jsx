@@ -129,7 +129,7 @@ export default function StoryBar({ store, stories, isOwner, onAdded, onDeleted, 
                     <span>{t('story.uploading')}</span><span>{progress}%</span>
                   </div>
                   <div className="h-1.5 overflow-hidden rounded-full bg-white/25">
-                    <div className="h-full rounded-full bg-gradient-to-r from-[#999795] to-[#fff6da] transition-[width] duration-200" style={{ width: `${progress}%` }} />
+                    <div className="h-full rounded-full bg-gradient-to-r from-[#8C857C] to-[#F6F5F3] transition-[width] duration-200" style={{ width: `${progress}%` }} />
                   </div>
                 </div>
               )}

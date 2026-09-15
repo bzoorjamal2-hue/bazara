@@ -116,7 +116,7 @@ export default function Home() {
           السلايدر الافتراضي القديم)، ونستخدم البانرات المحفوظة محلياً لظهورٍ فوري.
           (مدخل البحث الشامل صار أيقونة داخل الهيدر — هيدر واحد بلا تكرار) */}
       {loading && !data && !(persistedBanners?.length) ? (
-        <div className="skeleton h-[340px] rounded-3xl sm:h-[420px] lg:h-[500px] 2xl:h-[580px]" />
+        <div className="skeleton h-[360px] rounded-3xl sm:h-[460px] lg:h-[560px] 2xl:h-[640px]" />
       ) : (
         <HomeHero banners={data ? data.homeBanners : persistedBanners || []} />
       )}
@@ -517,7 +517,8 @@ function HomeHero({ banners = [] }) {
           }}
         >
           {slides.map((s, idx) => {
-            // شريحة المدير: خلفية صورة/فيديو/لون معتّمة (نص عاجي)، أو بلا وسائط (كريمي فخم بنص خمري)
+            // شريحة المدير: خلفية صورة/فيديو/لون معتّمة، أو بلا وسائط — وكلتاهما
+            // على حبرٍ عميقٍ الآن بنصٍّ عاجيّ، فلا تتبدّلُ لوحةُ الهيرو بتبدّلِ الشريحة
             if (useAdmin) {
               const isColor = s.bgType === 'color' && s.bgValue;
               const isImage = s.bgType === 'image' && s.bgValue;
@@ -527,7 +528,7 @@ function HomeHero({ banners = [] }) {
               return (
                 <div key={idx} className="w-full shrink-0" dir="rtl">
                   <div
-                    className={`relative isolate flex h-[340px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[420px] lg:h-[500px] 2xl:h-[580px] ${idx === i ? 'bz-hero-active' : ''} ${onMedia ? 'bg-[#1C1B1A]' : 'bg-gradient-to-br from-[#f6ecd9] via-[#efe1c6] to-[#f6ecd9]'}`}
+                    className={`relative isolate flex h-[360px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[460px] lg:h-[560px] 2xl:h-[640px] ${idx === i ? 'bz-hero-active' : ''} ${onMedia ? 'bg-[#1C1B1A]' : 'bz-hero-plate'} ${isImage || isVideo ? 'bz-hero-scrim' : ''}`}
                     style={isColor ? { background: s.bgValue } : isVideo ? { background: `linear-gradient(rgba(10,10,10,0.5), rgba(10,10,10,0.5)), url("${vPoster}") center/cover` } : undefined}
                   >
                     {/* التعتيم مخبوز في الوسيط (filter) لا كطبقة منفصلة — يمنع اختراق فيديو
@@ -552,31 +553,31 @@ function HomeHero({ banners = [] }) {
                         />
                       </>
                     )}
-                    {/* شارة ذهبية رفيعة تعطي إحساس دور الأزياء العالمية */}
-                    <span className={`bz-hero-el bz-kicker mb-4 text-[11px] font-semibold uppercase sm:text-xs ${onMedia ? 'text-gold-200/90' : 'text-[#817F7C]'}`}>Bazara</span>
-                    {s.title && <h1 className={`bz-hero-el font-display text-3xl font-extrabold leading-tight sm:text-5xl ${onMedia ? 'text-cream drop-shadow-lg' : 'text-[#4B4A49]'}`}>{s.title}</h1>}
-                    {s.subtitle && <p className={`bz-hero-el mx-auto mt-4 max-w-2xl sm:text-lg ${onMedia ? 'text-cream/85 drop-shadow' : 'text-[#595755]'}`}>{s.subtitle}</p>}
-                    {s.btnLabel && s.btnHref && <div className="bz-hero-el"><SlideButton href={s.btnHref} label={s.btnLabel} onLight={!onMedia} /></div>}
+                    {/* شارةٌ رفيعةٌ تعطي إحساسَ دورِ الأزياءِ العالميّة */}
+                    <span className="bz-hero-el bz-kicker mb-4 text-[11px] font-semibold uppercase text-[#BEBAB4] sm:text-xs">Bazara</span>
+                    {s.title && <h1 className="bz-hero-el font-display text-3xl font-extrabold leading-tight text-[#F6F5F3] drop-shadow-lg sm:text-5xl lg:text-6xl">{s.title}</h1>}
+                    {s.subtitle && <p className="bz-hero-el mx-auto mt-4 max-w-2xl text-[#CFCCC7] drop-shadow sm:text-lg">{s.subtitle}</p>}
+                    {s.btnLabel && s.btnHref && <div className="bz-hero-el"><SlideButton href={s.btnHref} label={s.btnLabel} onLight={false} /></div>}
                   </div>
                 </div>
               );
             }
-            // الشريحة الافتراضية (نصّية) — كريمي فخم بنص خمري (بلا البني)
+            // الشريحةُ الافتراضيّةُ (نصّيّة) — حبرٌ عميقٌ بنصٍّ عاجيّ
             return (
               <div key={idx} className="w-full shrink-0" dir="rtl">
-                <div className={`relative flex h-[340px] flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#f6ecd9] via-[#efe1c6] to-[#f6ecd9] px-6 text-center sm:h-[420px] lg:h-[500px] 2xl:h-[580px] ${idx === i ? 'bz-hero-active' : ''}`}>
-                  <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-wine/5 blur-3xl" />
-                  <p className="bz-hero-el bz-kicker mb-4 text-[11px] font-semibold uppercase text-[#817F7C] sm:text-xs">{s.eyebrow}</p>
-                  <h1 className="bz-hero-el font-display text-3xl font-extrabold leading-tight text-[#4B4A49] sm:text-5xl">
+                <div className={`bz-hero-plate relative flex h-[360px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[460px] lg:h-[560px] 2xl:h-[640px] ${idx === i ? 'bz-hero-active' : ''}`}>
+                  <div className="pointer-events-none absolute -top-12 start-1/4 h-44 w-44 animate-float rounded-full bg-white/[0.06] blur-3xl" />
+                  <p className="bz-hero-el bz-kicker mb-4 text-[11px] font-semibold uppercase text-[#BEBAB4] sm:text-xs">{s.eyebrow}</p>
+                  <h1 className="bz-hero-el font-display text-3xl font-extrabold leading-tight text-[#F6F5F3] sm:text-5xl lg:text-6xl">
                     {s.title}
-                    {s.highlight && <> <span className="underline decoration-[#858381] decoration-2 underline-offset-8">{s.highlight}</span></>}
+                    {s.highlight && <> <span className="underline decoration-[#8C857C] decoration-2 underline-offset-8">{s.highlight}</span></>}
                   </h1>
-                  <p className="bz-hero-el mx-auto mt-4 max-w-2xl text-[#595755] sm:text-lg">{s.desc}</p>
+                  <p className="bz-hero-el mx-auto mt-4 max-w-2xl text-[#CFCCC7] sm:text-lg">{s.desc}</p>
                   <div className="bz-hero-el mt-7 flex flex-wrap items-center justify-center gap-3">
-                    <Link to="/register" className="inline-flex items-center rounded-xl bg-wine px-6 py-2.5 text-base font-semibold text-cream shadow-lg transition hover:-translate-y-0.5 hover:bg-wine-dark">
+                    <Link to="/register" className="inline-flex items-center rounded-xl bg-[#F6F5F3] px-6 py-2.5 text-base font-semibold text-[#1F1E1D] shadow-lg transition hover:-translate-y-0.5 hover:bg-white">
                       {t('home.ctaStart')}
                     </Link>
-                    <a href="#stores" className="inline-flex items-center rounded-xl border-2 border-wine/30 px-6 py-2.5 text-base font-semibold text-wine transition hover:bg-wine/5">
+                    <a href="#stores" className="inline-flex items-center rounded-xl border-2 border-[#F6F5F3]/30 px-6 py-2.5 text-base font-semibold text-[#F6F5F3] transition hover:bg-white/10">
                       {t('home.ctaExplore')}
                     </a>
                   </div>
