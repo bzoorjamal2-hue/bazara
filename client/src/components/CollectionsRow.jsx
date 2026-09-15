@@ -17,8 +17,9 @@ export default function CollectionsRow({ collections, storeSlug = '' }) {
 
   return (
     <section className="bz-sec-gap">
-      <div className="mb-6 flex items-center justify-center">
-        <h2 className="bz-title whitespace-nowrap font-display text-xl font-bold sm:text-2xl">{t('home.shopByOccasion')}</h2>
+      <div className="bz-sec-head">
+        <span className="bz-sec-eyebrow">{t('home.eyebrowOccasion')}</span>
+        <h2 className="bz-title bz-sec-h font-display">{t('home.shopByOccasion')}</h2>
       </div>
 
       {/* صفٌّ يُسحب بالإصبع. التمرير أفقيّ أصليّ لا محاكاةً بجافاسكربت، فيتبع

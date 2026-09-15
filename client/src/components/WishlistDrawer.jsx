@@ -9,8 +9,9 @@ import CloseButton from './CloseButton.jsx';
 import { HeartIcon, CartIcon, XIcon, ForwardIcon } from './icons.jsx';
 import { cldThumb } from '../utils/cloudinary.js';
 import Strike from './Strike.jsx';
+import { phGlyph } from '../utils/imageFallback.js';
 
-const PH = 'https://placehold.co/120x120/f1e9dd/5e4636?text=%F0%9F%91%97';
+const PH = phGlyph(120, 120, '👗');
 
 // درج المفضّلة الجانبي — بنفس أسلوب درج السلة وميزاته (صورة + اسم + سعر + إضافة للسلة + حذف).
 export default function WishlistDrawer() {

@@ -150,7 +150,8 @@ export async function getHomeData(_req, res, next) {
       announcement = sb.rows[0]?.announcement || '';
       announcementEn = sb.rows[0]?.announcement_en || '';
       const lb = sb.rows[0]?.lookbook;
-      lookbook = lb && typeof lb === 'object' && lb.image ? lb : null;
+      const lbImg = lb && typeof lb === 'object' && typeof lb.image === 'string' ? lb.image.trim() : '';
+      lookbook = lbImg ? lb : null;
     } catch { /* الجدول/الأعمدة غير موجودة بعد */ }
 
     // الفئات المخصّصة المجمّعة عبر المتاجر — تظهر بشبكة فئات الرئيسية كفئات بازارا الأصلية

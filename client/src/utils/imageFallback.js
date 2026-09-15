@@ -11,21 +11,35 @@
 // فمستمعٌ واحدٌ على المستندِ يرى كلَّ صورةٍ في التطبيق — وما يُضافُ لاحقاً كذلك،
 // بلا أن يتذكّرَ أحدٌ إضافةَ onError.
 
-// بديلٌ محايدٌ بألوانِ المنصّة: قرميديٌّ كريميٌّ ورسمُ جبلٍ وشمسٍ خفيفٌ بالبنّي.
+// بديلٌ محايدٌ بألوانِ المنصّة: رماديٌّ فاتحٌ ورسمُ جبلٍ وشمسٍ خفيف.
 // SVG مضمّنٌ لا ملفّ: لا طلبَ شبكةٍ إضافيّاً — وهو المطلوبُ في لحظةٍ يكونُ فيها
 // مصدرُ الصورِ نفسُه ساقطاً.
 const FALLBACK =
   'data:image/svg+xml;utf8,' +
   encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">' +
-      '<rect width="400" height="400" fill="#f1e9dd"/>' +
-      '<g fill="none" stroke="#b9a68c" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">' +
+      '<rect width="400" height="400" fill="#F1F1F0"/>' +
+      '<g fill="none" stroke="#B5B1AB" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">' +
       '<rect x="96" y="116" width="208" height="168" rx="16"/>' +
       '<path d="M116 246l52-48 40 34 36-30 40 38"/>' +
       '</g>' +
-      '<circle cx="164" cy="166" r="15" fill="#b9a68c"/>' +
+      '<circle cx="164" cy="166" r="15" fill="#B5B1AB"/>' +
     '</svg>'
   );
+
+// بديلٌ صغيرٌ برمزٍ واحد (قطعةٌ · تاجٌ …) لمواضعَ تضعُ بديلَها بنفسِها قبلَ أن
+// يعملَ الحارسُ العامّ — كان كلُّ واحدٍ منها رابطاً لخدمةٍ خارجيّةٍ بلونينِ دافئين.
+export function phGlyph(w, h, glyph) {
+  return (
+    'data:image/svg+xml;utf8,' +
+    encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '">' +
+        '<rect width="100%" height="100%" fill="#F1F1F0"/>' +
+        '<text x="50%" y="50%" font-size="' + Math.round(Math.min(w, h) * 0.42) + '" text-anchor="middle" dy=".35em">' + glyph + '</text>' +
+      '</svg>'
+    )
+  );
+}
 
 export function installImageFallback() {
   document.addEventListener(

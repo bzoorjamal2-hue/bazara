@@ -13,7 +13,9 @@ async function readSettings() {
     announcement: row?.announcement || '',
     announcementEn: row?.announcement_en || '',
     collections: Array.isArray(row?.collections) ? row.collections : [],
-    lookbook: row?.lookbook && typeof row.lookbook === 'object' ? row.lookbook : {},
+    // صورةٌ غيرُ نصّيّةٍ = لا لوكبوك (صفوفٌ قديمةٌ تحملُ image: {})
+    lookbook: row?.lookbook && typeof row.lookbook === 'object' && typeof row.lookbook.image === 'string' && row.lookbook.image
+      ? row.lookbook : {},
     instagram: row?.instagram || '',
     facebook: row?.facebook || '',
     // كائن لا مصفوفة: { extra, hidden }

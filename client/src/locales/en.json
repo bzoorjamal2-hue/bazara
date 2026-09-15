@@ -278,7 +278,9 @@
     "eyebrowStores": "Trusted Palestinian boutiques",
     "eyebrowLatest": "Just arrived",
     "eyebrowPersonal": "Based on your browsing",
-    "personalTitle": "Just for you"
+    "personalTitle": "Just for you",
+    "eyebrowLookbook": "The look and its pieces",
+    "eyebrowOccasion": "Selected occasions"
   },
   "auth": {
     "loginTitle": "Login",

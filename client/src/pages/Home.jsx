@@ -29,6 +29,7 @@ import ScrollProgress from '../components/ScrollProgress.jsx';
 import StoriesRow from '../components/StoriesRow.jsx';
 import { BAZARA_WHATSAPP } from '../config/site.js';
 import { usePlatformCatKeys, platformCatKeys, storeOnlyCats } from '../utils/platformCategories.js';
+import { phGlyph } from '../utils/imageFallback.js';
 
 export default function Home() {
   const { t, i18n } = useTranslation();
@@ -640,7 +641,7 @@ function StoreCard({ s, index = 0, rtl }) {
       )}
       {/* هالة ذهبية ناعمة تتوهّج خلف الشعار عند المرور — لمسة بوتيك راقية */}
       <img
-        src={cldThumb(s.logoUrl, 160) || 'https://placehold.co/80x80/f1e9dd/5e4636?text=%F0%9F%91%91'}
+        src={cldThumb(s.logoUrl, 160) || phGlyph(80, 80, '👑')}
         alt={s.name}
         loading="lazy"
         className="bz-storecard-logo relative h-24 w-24 rounded-full bg-white object-cover transition duration-500 group-hover:scale-105"

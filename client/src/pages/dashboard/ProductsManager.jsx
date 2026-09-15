@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { phGlyph } from '../../utils/imageFallback.js';
 import useSessionState from '../../hooks/useSessionState.js';
 import { useTranslation } from 'react-i18next';
 import { productUrl, shareLink } from '../../utils/links.js';
@@ -22,7 +23,7 @@ import { platformCatName } from '../../utils/platformCategories.js';
 // (الرئيسية، صفحة المتجر، الفئات، العروض، المقترحات، وصفحة المنتج نفسها)
 const purgePublicCaches = () => clearCachePrefixes(['home', 'storepage:', 'cat:', 'offers', 'forYou', 'product:']);
 
-const PH = 'https://placehold.co/48x48/2b1d12/b09a7e?text=%F0%9F%91%97';
+const PH = phGlyph(48, 48, '👗');
 
 export default function ProductsManager({ onCount }) {
   const { t, i18n } = useTranslation();

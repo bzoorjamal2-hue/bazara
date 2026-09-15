@@ -20,6 +20,7 @@ import { getRef, clearRef } from '../utils/referral.js';
 import { trackPixel } from '../utils/pixels.js';
 import { isValidMobile, normalizePhone, sanitizeMobileInput } from '../utils/phone.js';
 import { printReceipt, saveReceiptImage } from '../utils/receipt.js';
+import { phGlyph } from '../utils/imageFallback.js';
 
 // بيانات الزبون المحفوظة محلياً — تعبّئ شاشة الإتمام تلقائياً بالطلبات القادمة
 const CUSTOMER_KEY = 'bz_customer_v1';
@@ -619,7 +620,7 @@ export default function CartDrawer() {
                     <div key={i.key} className="glass flex gap-3 p-3">
                       {/* الصورة والاسم روابط لصفحة المنتج (تغلق الدرج) — مراجعة القطعة قبل الإتمام */}
                       <Link to={productPath(i)} onClick={close} className="shrink-0">
-                        <img src={i.imageUrl ? cldThumb(i.imageUrl, 200) : 'https://placehold.co/120x160/f1e9dd/5c1a2e?text=%F0%9F%91%97'} alt={i.name} loading="lazy" decoding="async" className="h-20 w-16 rounded-xl object-cover shadow-sm transition hover:opacity-85" />
+                        <img src={i.imageUrl ? cldThumb(i.imageUrl, 200) : phGlyph(120, 160, '👗')} alt={i.name} loading="lazy" decoding="async" className="h-20 w-16 rounded-xl object-cover shadow-sm transition hover:opacity-85" />
                       </Link>
                       <div className="min-w-0 flex-1">
                         <Link to={productPath(i)} onClick={close} className="block truncate font-display text-sm font-semibold text-stone-100 hover:text-gold-200">{i.name}</Link>

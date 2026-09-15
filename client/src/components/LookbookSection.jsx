@@ -12,6 +12,10 @@ export default function LookbookSection({ lookbook }) {
   const isEn = i18n.language === 'en';
   const ids = (lookbook?.productIds || []).join(',');
   const [items, setItems] = useState([]);
+  // صورةٌ ساقطة = قسمٌ يختفي. كانت الصورةُ حين تسقطُ تُستبدَلُ ببديلِ الحارسِ
+  // العامّ داخلَ حاويةٍ بلا ارتفاعٍ ثابت، فتبقى بالصفحةِ الرئيسيّةِ فجوةٌ بيضاءُ
+  // تحتَ عنوانِ «إطلالة الأسبوع» بلا شيءٍ فيها.
+  const [broken, setBroken] = useState(false);
 
   useEffect(() => {
     if (!ids) { setItems([]); return undefined; }
@@ -22,15 +26,16 @@ export default function LookbookSection({ lookbook }) {
     return () => { alive = false; };
   }, [ids]);
 
-  if (!lookbook?.image) return null;
+  // الصورةُ نصٌّ أو لا قسم: صفوفٌ قديمةٌ تحملُ image كائناً فارغاً، والكائنُ
+  // صادقٌ منطقيّاً فكان القسمُ يظهرُ عنواناً فوقَ فراغٍ بلا صورة.
+  if (typeof lookbook?.image !== 'string' || !lookbook.image.trim() || broken) return null;
   const title = (isEn ? (lookbook.titleEn || lookbook.title) : lookbook.title) || t('home.lookbook');
 
   return (
     <section className="bz-sec-gap">
-      <div className="mb-6 flex items-center justify-center gap-2.5 text-wine sm:gap-3">
-        <span className="h-px w-7 bg-gradient-to-r from-transparent to-wine/30 sm:w-12" />
-        <h2 className="whitespace-nowrap font-display text-xl font-bold sm:text-2xl">{title}</h2>
-        <span className="h-px w-7 bg-gradient-to-l from-transparent to-wine/30 sm:w-12" />
+      <div className="bz-sec-head">
+        <span className="bz-sec-eyebrow">{t('home.eyebrowLookbook')}</span>
+        <h2 className="bz-title bz-sec-h font-display text-wine">{title}</h2>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[1fr_1.1fr]">
@@ -42,7 +47,7 @@ export default function LookbookSection({ lookbook }) {
             alt={title}
             loading="lazy"
             decoding="async"
-            onError={(e) => { e.currentTarget.srcset = ''; e.currentTarget.style.display = 'none'; }}
+            onError={() => setBroken(true)}
             className="h-full w-full object-cover"
           />
         </div>

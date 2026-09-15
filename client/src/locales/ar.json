@@ -284,7 +284,9 @@
     "eyebrowStores": "بوتيكات فلسطينيّة موثوقة",
     "eyebrowLatest": "وصل حديثاً",
     "eyebrowPersonal": "بناءً على تصفّحكِ",
-    "personalTitle": "خاصٌّ بكِ"
+    "personalTitle": "خاصٌّ بكِ",
+    "eyebrowLookbook": "الإطلالةُ وقطعُها",
+    "eyebrowOccasion": "مناسباتٌ مختارة"
   },
   "auth": {
     "loginTitle": "تسجيل الدخول",
