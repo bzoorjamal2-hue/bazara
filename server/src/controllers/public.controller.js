@@ -144,11 +144,16 @@ export async function getHomeData(_req, res, next) {
     let announcement = '';
     let announcementEn = '';
     let lookbook = null;
+    // المجموعاتُ التحريريّةُ لم تكن تُقرأُ أصلاً: المديرُ يحرّرُها بلوحةِ «سلايدر
+    // الموقع» وتُحفَظُ بالجدول، ثمّ لا يطلبُها هذا الاستعلامُ فلا تصلُ الصفحةَ
+    // الرئيسيّةَ أبداً — قسمٌ كاملٌ يُحرَّرُ ولا يظهر.
+    let collections = [];
     try {
-      const sb = await query('SELECT home_banners, announcement, announcement_en, lookbook FROM site_settings WHERE id = 1');
+      const sb = await query('SELECT home_banners, announcement, announcement_en, lookbook, collections FROM site_settings WHERE id = 1');
       homeBanners = Array.isArray(sb.rows[0]?.home_banners) ? sb.rows[0].home_banners : [];
       announcement = sb.rows[0]?.announcement || '';
       announcementEn = sb.rows[0]?.announcement_en || '';
+      collections = Array.isArray(sb.rows[0]?.collections) ? sb.rows[0].collections : [];
       const lb = sb.rows[0]?.lookbook;
       const lbImg = lb && typeof lb === 'object' && typeof lb.image === 'string' ? lb.image.trim() : '';
       lookbook = lbImg ? lb : null;
@@ -169,6 +174,7 @@ export async function getHomeData(_req, res, next) {
       announcement,
       announcementEn,
       lookbook,
+      collections,
     });
   } catch (err) {
     next(err);
