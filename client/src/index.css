@@ -35,19 +35,23 @@
   --c-gold-800: 47 46 45;
   --c-gold-900: 31 30 29;
 }
-/* الليل: لا بنّيَّ إطلاقاً — أسطحٌ فحميّةٌ ولمسةٌ رمليّةٌ فاتحةٌ مكانَ الذهبِ البنّيّ */
+/* الليل: أسطحٌ فحميّةٌ ولمسةٌ رماديّةٌ دافئةٌ فاتحة — اللوحةُ نفسُها التي
+   بالنهارِ مقلوبةً، لا لوحةٌ ثانية. كانت هنا رمليّةٌ ‎(#D8C7AC و#BCA989
+   و#E3D5BB): ليست بنّيّةً بالمعنى الحرفيّ، لكنّها عائلةُ الذهبِ القديمِ
+   نفسُها — فيخرجُ الليلُ بهويّةٍ أدفأَ من النهارِ وكأنّهما موقعان. الإضاءةُ
+   بقيت كما هي درجةً بدرجة، والحرارةُ وحدَها نُزعت. */
 html.dark {
   --c-wine-light: 74 70 68;     /* #4A4644 */
   --c-wine: 58 55 53;           /* #3A3735 */
   --c-wine-dark: 42 40 39;      /* #2A2827 */
-  --c-gold-50: 249 246 241;
-  --c-gold-100: 243 237 228;
-  --c-gold-200: 227 213 187;
-  --c-gold-300: 216 199 172;
-  --c-gold-400: 216 199 172;
-  --c-gold-500: 188 169 137;
-  --c-gold-600: 160 143 115;
-  --c-gold-700: 122 110 92;
+  --c-gold-50: 250 250 249;     /* #FAFAF9 */
+  --c-gold-100: 241 240 238;    /* #F1F0EE */
+  --c-gold-200: 224 221 216;    /* #E0DDD8 */
+  --c-gold-300: 214 210 203;    /* #D6D2CB */
+  --c-gold-400: 214 210 203;    /* #D6D2CB — لونُ الليلِ المميّز */
+  --c-gold-500: 168 162 155;    /* #A8A29B */
+  --c-gold-600: 146 141 135;    /* #928D87 */
+  --c-gold-700: 110 105 99;     /* #6E6963 */
   --c-gold-800: 74 70 68;
   --c-gold-900: 42 40 39;
 }
@@ -223,8 +227,8 @@ html.dark .theme-pub .glass { box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5); }
    والفاضية (stone-600 رمادي غامق) متطابقتين بصرياً بالنهاري فتبدو كلها معبّأة */
 .star-on { color: #A3A2A0; }
 .star-off { color: rgba(31, 30, 29, 0.22); }
-html.dark .theme-pub .star-on { color: #D8C7AC; }
-html.dark .theme-pub .star-off { color: rgba(243, 237, 228, 0.28); }
+html.dark .theme-pub .star-on { color: #D6D2CB; }
+html.dark .theme-pub .star-off { color: rgba(239, 238, 236, 0.28); }
 
 /* لمعة ذهبية تمسح شعار شاشة الترحيب — مسحة سريعة (٤٥٪ من الدورة) ثم راحة،
    فلا يُعاد رسم النص إلا أثناء المسحة بدل كل إطار (كانت framer ترسمه باستمرار) */
@@ -318,8 +322,8 @@ button > svg { vertical-align: middle; }
 }
 @media (hover: hover) { .btn-cart:hover:not(:disabled) { background: #1F1E1D; color: #F9F9F8; } }
 /* الوضع الليلي: النبيذي الغامق يختفي على الخلفية الداكنة → ذهبي مضيء متناسق */
-html.dark .theme-pub .btn-cart { border-color: rgba(243, 237, 228, 0.45); color: #D8C7AC; }
-@media (hover: hover) { html.dark .theme-pub .btn-cart:hover:not(:disabled) { background: #D8C7AC; color: #232120; } }
+html.dark .theme-pub .btn-cart { border-color: rgba(239, 238, 236, 0.45); color: #D6D2CB; }
+@media (hover: hover) { html.dark .theme-pub .btn-cart:hover:not(:disabled) { background: #D6D2CB; color: #232120; } }
 
 /* حقول الإدخال — داخل طبقة components عمداً:
    هذا الملف يأتي بعد @tailwind utilities، فلو عُرِّف .input خارج الطبقة لتغلّبت
@@ -564,7 +568,7 @@ input[type='datetime-local']::-webkit-datetime-edit {
    فالنصُّ يجبُ أن ينقلبَ معه. كانت المواضعُ تكتبُ ‎text-wine-dark ثابتاً فتصيرُ
    حبراً على حبرٍ نهاراً وفاتحاً على فاتحٍ ليلاً — غيرَ مقروءةٍ بالوضعَين معاً. */
 .theme-pub .bz-on-gold { color: #F9F9F8; }
-html.dark .theme-pub .bz-on-gold { color: #17150F; }
+html.dark .theme-pub .bz-on-gold { color: #171615; }
 @media (hover: hover) { .theme-pub .hover\:bg-gold-400:hover { background-color: #1F1E1D; } }
 .theme-pub .bg-gold-400\/5 { background-color: rgba(23, 23, 23, 0.05); }
 .theme-pub .bg-gold-400\/10,
@@ -609,7 +613,7 @@ html.dark .theme-pub .bz-on-gold { color: #17150F; }
 .theme-pub select { color-scheme: light; }
 html.dark .theme-pub select { color-scheme: dark; }
 .theme-pub select option { background-color: #ffffff; color: #1F1E1D; }
-html.dark .theme-pub select option { background-color: #232120; color: #F3EDE4; }
+html.dark .theme-pub select option { background-color: #232120; color: #EFEEEC; }
 
 /* ===== القائمة المنسدلة (Select) =====
    تُرسَم عبر Portal على <body> خارج .theme-pub، فلا تصلها قواعد الثيم إطلاقاً
@@ -622,15 +626,15 @@ html.dark .theme-pub select option { background-color: #232120; color: #F3EDE4; 
 }
 html.dark .bz-select-menu {
   background: #232120;
-  border-color: rgba(243, 237, 228, 0.24);
-  color: #F3EDE4;
+  border-color: rgba(239, 238, 236, 0.24);
+  color: #EFEEEC;
   box-shadow: 0 20px 48px -16px rgba(0, 0, 0, 0.75);
 }
 .bz-select-opt { color: #1F1E1D; }
 html.dark .bz-select-opt { color: #CFC8BF; }
 @media (hover: hover) {
   .bz-select-opt:hover { background: rgba(23, 23, 23, 0.06); }
-  html.dark .bz-select-opt:hover { background: rgba(243, 237, 228, 0.10); }
+  html.dark .bz-select-opt:hover { background: rgba(239, 238, 236, 0.10); }
 }
 .bz-select-opt.is-active {
   background: rgba(23, 23, 23, 0.10);
@@ -638,15 +642,15 @@ html.dark .bz-select-opt { color: #CFC8BF; }
   font-weight: 600;
 }
 html.dark .bz-select-opt.is-active {
-  background: rgba(243, 237, 228, 0.16);
-  color: #D8C7AC;
+  background: rgba(239, 238, 236, 0.16);
+  color: #D6D2CB;
 }
 
 /* شريط التمرير خمري داخل الثيم العام */
 .theme-pub ::-webkit-scrollbar-thumb { background: rgba(23, 23, 23, 0.32); background-clip: content-box; }
 .theme-pub ::-webkit-scrollbar-thumb:hover { background: rgba(23, 23, 23, 0.55); background-clip: content-box; }
-html.dark .theme-pub ::-webkit-scrollbar-thumb { background: rgba(243, 237, 228, 0.34); background-clip: content-box; }
-html.dark .theme-pub ::-webkit-scrollbar-thumb:hover { background: rgba(243, 237, 228, 0.6); background-clip: content-box; }
+html.dark .theme-pub ::-webkit-scrollbar-thumb { background: rgba(239, 238, 236, 0.34); background-clip: content-box; }
+html.dark .theme-pub ::-webkit-scrollbar-thumb:hover { background: rgba(239, 238, 236, 0.6); background-clip: content-box; }
 
 /* ===== الشريط العلوي الخمري (Navbar) ===== */
 .pub-navbar {
@@ -685,11 +689,11 @@ html.dark .theme-pub ::-webkit-scrollbar-thumb:hover { background: rgba(243, 237
    بالخلفية والحدّ باهتاً فلا تبان معالمه) */
 html.dark .theme-pub .app-navbar {
   background: linear-gradient(180deg, rgba(20, 19, 19, 0.92) 0%, rgba(20, 19, 19, 0.88) 100%);
-  border-bottom: 1px solid rgba(243, 237, 228, 0.32);
+  border-bottom: 1px solid rgba(239, 238, 236, 0.32);
   box-shadow: 0 8px 22px -10px rgba(0, 0, 0, 0.8);
 }
 html.dark .theme-pub .app-navbar::after {
-  background: linear-gradient(90deg, transparent, rgba(243, 237, 228, 0.55), transparent);
+  background: linear-gradient(90deg, transparent, rgba(239, 238, 236, 0.55), transparent);
 }
 /* عناصر داخل الهيدر ليلاً: القاعدة العامة تجعل bg-white بلون #1C1B1A وهو لون
    الهيدر نفسه تقريباً، فيذوب حقل البحث وأزرار السلّة/المفضّلة فيه ولا يُرى
@@ -698,28 +702,28 @@ html.dark .theme-pub .app-navbar input.bg-white,
 html.dark .theme-pub .app-navbar a.bg-white,
 html.dark .theme-pub .app-navbar button.bg-white {
   background-color: rgba(10, 10, 10, 0.55);
-  border: 1px solid rgba(243, 237, 228, 0.28);
-  color: #EFE6D8;
+  border: 1px solid rgba(239, 238, 236, 0.28);
+  color: #EDEBE7;
 }
 html.dark .theme-pub .app-navbar input.bg-white::placeholder { color: #8C857C; }
 /* قائمة اقتراحات البحث تبقى معتمةً تماماً — الشفافية تُذيب نصّها بما تحتها */
 html.dark .theme-pub .app-navbar div.bg-white {
   background-color: #141313;
-  border-color: rgba(243, 237, 228, 0.22);
+  border-color: rgba(239, 238, 236, 0.22);
 }
 /* حلقات الأزرار: ring-wine/* غير مرئية على الداكن. هيدر بازارا يستعمل /10
    وهيدر المتاجر /15 و/20 — نغطّيها كلها فلا تبقى واحدة بلا مقابل. */
 html.dark .theme-pub .app-navbar .ring-wine\/10,
 html.dark .theme-pub .app-navbar .ring-wine\/15,
-html.dark .theme-pub .app-navbar .ring-wine\/20 { --tw-ring-color: rgba(243, 237, 228, 0.30); }
+html.dark .theme-pub .app-navbar .ring-wine\/20 { --tw-ring-color: rgba(239, 238, 236, 0.30); }
 /* أيقونات الأزرار كانت text-wine (خمريّ غامق) فتختفي على خلفية داكنة */
-html.dark .theme-pub .app-navbar .text-wine { color: #D8C7AC; }
+html.dark .theme-pub .app-navbar .text-wine { color: #D6D2CB; }
 html.dark .theme-pub .app-navbar .text-wine\/45,
 html.dark .theme-pub .app-navbar .text-wine\/50,
-html.dark .theme-pub .app-navbar .text-wine\/60 { color: rgba(243, 237, 228, 0.6); }
+html.dark .theme-pub .app-navbar .text-wine\/60 { color: rgba(239, 238, 236, 0.6); }
 /* التمرير: الأصل يقلبها لخمريّ داكن فتختفي — نُبقيها ذهبيةً واضحة */
-html.dark .theme-pub .app-navbar .hover\:bg-wine:hover { background-color: rgba(243, 237, 228, 0.18); }
-html.dark .theme-pub .app-navbar .hover\:text-cream:hover { color: #F7F2E9; }
+html.dark .theme-pub .app-navbar .hover\:bg-wine:hover { background-color: rgba(239, 238, 236, 0.18); }
+html.dark .theme-pub .app-navbar .hover\:text-cream:hover { color: #F4F3F1; }
 html.dark .theme-pub .app-navbar.shadow-md { box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.9); }
 
 /* ===== بطاقة الفئة الخمرية (أيقونة عاجية) ===== */
@@ -745,7 +749,7 @@ html.dark .theme-pub .app-navbar.shadow-md { box-shadow: 0 12px 28px -8px rgba(0
 /* ===== الفوتر الخمري ===== */
 .pub-footer { background: #1E1E1D; color: #ECECEB; }
 /* ليلاً: الشريطُ البنّيُّ يصيرُ فحماً كبقيّةِ الأسطح — كان كتلةً بنّيّةً أسفلَ كلِّ صفحة */
-html.dark .pub-footer { background: #1A1918; color: #F3EDE4; }
+html.dark .pub-footer { background: #1A1918; color: #EFEEEC; }
 
 /* زرُّ إتمامِ الطلب (درجُ السلّة): بنّيٌّ داكنٌ نهاراً، وعاجيٌّ مضيءٌ ليلاً —
    الداكنُ على داكنٍ لا يُرى، وهو زرُّ الدفعِ نفسُه. */
@@ -755,8 +759,8 @@ html.dark .pub-footer { background: #1A1918; color: #F3EDE4; }
 }
 html.dark .theme-pub .bz-buy,
 html.dark .bz-buy {
-  background: linear-gradient(150deg, #F1E8D9 0%, #D8C7AC 100%);
-  color: #17150F;
+  background: linear-gradient(150deg, #EEECE8 0%, #D6D2CB 100%);
+  color: #171615;
 }
 
 /* ===== نافذة الفلاتر السفلية (Bottom Sheet) ===== */
@@ -781,15 +785,15 @@ html.dark .bz-buy {
 /* زرّ ثانوي: تايلويند لا يطبّق شفافيةً على currentColor فلا يصحّ border-current/25 */
 .bz-sheet .bz-sheet-ghost { border: 1px solid rgba(23, 23, 23, 0.28); color: #1F1E1D; }
 .bz-sheet .bz-sheet-ghost:hover { background: rgba(23, 23, 23, 0.06); }
-html.dark .bz-sheet { background: #1A1918; color: #E9E2D8; }
+html.dark .bz-sheet { background: #1A1918; color: #E4E2DE; }
 html.dark .bz-sheet .bz-sheet-input {
-  background: rgba(0, 0, 0, 0.32); border-color: rgba(243, 237, 228, 0.22); color: #EFE6D8;
+  background: rgba(0, 0, 0, 0.32); border-color: rgba(239, 238, 236, 0.22); color: #EDEBE7;
 }
 html.dark .bz-sheet .bz-sheet-input::placeholder { color: #8C857C; }
-html.dark .bz-sheet .bz-sheet-input:focus { border-color: rgba(243, 237, 228, 0.6); box-shadow: 0 0 0 3px rgba(243, 237, 228, 0.16); }
+html.dark .bz-sheet .bz-sheet-input:focus { border-color: rgba(239, 238, 236, 0.6); box-shadow: 0 0 0 3px rgba(239, 238, 236, 0.16); }
 html.dark .bz-sheet .bz-sheet-muted { color: #A79F95; }
-html.dark .bz-sheet .bz-sheet-ghost { border-color: rgba(243, 237, 228, 0.3); color: #D8C7AC; }
-html.dark .bz-sheet .bz-sheet-ghost:hover { background: rgba(243, 237, 228, 0.1); }
+html.dark .bz-sheet .bz-sheet-ghost { border-color: rgba(239, 238, 236, 0.3); color: #D6D2CB; }
+html.dark .bz-sheet .bz-sheet-ghost:hover { background: rgba(239, 238, 236, 0.1); }
 
 /* حلقة ستوري المتجر. كان التدرّج gold→wine→gold، والخمريّ الغامق بمنتصفه
    يُوسِّخ الذهب فتبدو الحلقة إطاراً بنّياً عادياً لا ذهباً. الآن تدرّجٌ مخروطيّ
@@ -801,7 +805,7 @@ html.dark .bz-sheet .bz-sheet-ghost:hover { background: rgba(243, 237, 228, 0.1)
 }
 /* المُشاهَدة: خيطٌ رفيع هادئ بدل حلقةٍ سميكة باهتة */
 .bz-story-ring-seen { background: none; box-shadow: inset 0 0 0 2px rgba(23, 23, 23, 0.22); }
-html.dark .bz-story-ring-seen { box-shadow: inset 0 0 0 2px rgba(243, 237, 228, 0.28); }
+html.dark .bz-story-ring-seen { box-shadow: inset 0 0 0 2px rgba(239, 238, 236, 0.28); }
 /* فجوة الحلقة تأخذ لون الخلفية: الأبيض الثابت يصير طوقاً ساطعاً ليلاً.
    الألوان هي ألوان .app-bg نفسها (#F9F9F8 نهاراً و#0E0E0E ليلاً). */
 .bz-story-gap { background: #F9F9F8; }
@@ -823,7 +827,7 @@ html.dark .bz-story-gap { background: #141313; }
   outline-offset: 1px;
 }
 html.dark .theme-pub .bz-pick-ring,
-html.dark .theme-pub .bz-pick-ring-sm { outline-color: #F3EDE4; }
+html.dark .theme-pub .bz-pick-ring-sm { outline-color: #EFEEEC; }
 
 /* النمرةُ المختارة: تعبئةٌ حبريّةٌ بنصٍّ كريميّ (والعكسُ ليلاً) */
 .bz-pick-on {
@@ -833,8 +837,8 @@ html.dark .theme-pub .bz-pick-ring-sm { outline-color: #F3EDE4; }
 }
 .bz-pick-on-sub { color: rgba(235, 235, 235, 0.78); }
 html.dark .theme-pub .bz-pick-on {
-  background-color: #F3EDE4;
-  border-color: #F3EDE4;
+  background-color: #EFEEEC;
+  border-color: #EFEEEC;
   color: #232120;
 }
 html.dark .theme-pub .bz-pick-on-sub { color: rgba(36, 27, 18, 0.72); }
@@ -866,11 +870,11 @@ html.dark .theme-pub .bz-pick-on-sub { color: rgba(36, 27, 18, 0.72); }
 .bz-ann-ico { color: #8C8A87; }
 html.dark .bz-ann {
   background: #1A1918;
-  color: #D8C7AC;
-  border-top-color: rgba(243, 237, 228, 0.14);
-  border-bottom-color: rgba(243, 237, 228, 0.14);
+  color: #D6D2CB;
+  border-top-color: rgba(239, 238, 236, 0.14);
+  border-bottom-color: rgba(239, 238, 236, 0.14);
 }
-html.dark .bz-ann-ico { color: #BCA989; }
+html.dark .bz-ann-ico { color: #A8A29B; }
 
 /* تبدّل الرسائل: تلاشٍ قصيرٌ مع إزاحةٍ بمقدار ٣ بكسل. يبدأ من حالةٍ مرئيّةٍ (٤٥٪)
    لا من الصفر، ويعملُ بلا fill-mode: لو جُمّدت الحركةُ أو أُسقطت — وهذا يحصل فعلاً
@@ -990,10 +994,10 @@ html.dark .bz-ann-ico { color: #BCA989; }
 /* ليلياً: عمق أسود-بنّي غني بتوهج ذهبي أقوى — بدل التدرج البنّي الموحل */
 html.dark .theme-pub .dash-hero {
   background:
-    radial-gradient(460px 220px at 88% -30%, rgba(243, 237, 228, 0.30), transparent 60%),
-    radial-gradient(320px 180px at 0% 115%, rgba(243, 237, 228, 0.12), transparent 60%),
+    radial-gradient(460px 220px at 88% -30%, rgba(239, 238, 236, 0.30), transparent 60%),
+    radial-gradient(320px 180px at 0% 115%, rgba(239, 238, 236, 0.12), transparent 60%),
     linear-gradient(135deg, #141313 0%, #232120 55%, #2A2827 100%);
-  border-color: rgba(243, 237, 228, 0.32);
+  border-color: rgba(239, 238, 236, 0.32);
   box-shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.7);
 }
 
@@ -1021,7 +1025,7 @@ html.dark .theme-pub .dash-hero {
   background: linear-gradient(90deg, transparent, rgba(163, 162, 160, 0.45), transparent);
 }
 html.dark .theme-pub .dash-section::before {
-  background: linear-gradient(90deg, transparent, rgba(243, 237, 228, 0.55), transparent);
+  background: linear-gradient(90deg, transparent, rgba(239, 238, 236, 0.55), transparent);
 }
 
 /* بطاقات لوحة التحكم: زوايا أنعم وظل فخم متدرّج (يشمل كل الأقسام تلقائياً) */
@@ -1031,7 +1035,7 @@ html.dark .theme-pub .dash-section::before {
   box-shadow: 0 1px 2px rgba(23, 23, 23, 0.05), 0 22px 44px -24px rgba(23, 23, 23, 0.22);
 }
 html.dark .theme-pub .dash .glass {
-  border-color: rgba(216, 199, 172, 0.14);
+  border-color: rgba(214, 210, 203, 0.14);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 22px 44px -24px rgba(0, 0, 0, 0.65);
 }
 
@@ -1053,32 +1057,32 @@ body,
 
 /* خلفية "إسبريسو ليلي": عميقة شبه سوداء بدفء خفيف — تباين عالٍ مع النصوص
    العاجية والذهب، بدل البنّي الفاتح الموحل السابق */
-html.dark body { background-color: #100F0E; color: #F3EDE4; }
+html.dark body { background-color: #100F0E; color: #EFEEEC; }
 
-html.dark .theme-pub { background: #100F0E; color: #F3EDE4; }
+html.dark .theme-pub { background: #100F0E; color: #EFEEEC; }
 html.dark .theme-pub.app-bg,
 html.dark .theme-pub .app-bg {
   background:
-    radial-gradient(900px 480px at 90% -10%, rgba(216, 199, 172, 0.06), transparent 60%),
-    radial-gradient(700px 460px at 0% 0%, rgba(216, 199, 172, 0.04), transparent 55%),
+    radial-gradient(900px 480px at 90% -10%, rgba(214, 210, 203, 0.06), transparent 60%),
+    radial-gradient(700px 460px at 0% 0%, rgba(214, 210, 203, 0.04), transparent 55%),
     #100F0E;
 }
 
 /* البطاقات: سطح داكن غني بحدود ذهبية واضحة — تنفصل عن الخلفية بوضوح */
 html.dark .theme-pub .glass {
   background: #1A1918;
-  border-color: rgba(243, 237, 228, 0.10);
+  border-color: rgba(239, 238, 236, 0.10);
   box-shadow: 0 8px 26px rgba(0, 0, 0, 0.55);
 }
 html.dark .theme-pub .glass-strong {
   background: #232120;
-  border-color: rgba(243, 237, 228, 0.14);
+  border-color: rgba(239, 238, 236, 0.14);
   box-shadow: 0 12px 34px rgba(0, 0, 0, 0.6);
 }
 
 /* النصوص: عاجية مضيئة بتباين واضح (كانت بيجاً باهتاً على بنّي فاتح) */
 html.dark .theme-pub .text-stone-100,
-html.dark .theme-pub .text-stone-200 { color: #F5F0E8; }
+html.dark .theme-pub .text-stone-200 { color: #F2F1EF; }
 html.dark .theme-pub .text-stone-300 { color: #CFC8BF; }
 html.dark .theme-pub .text-stone-400 { color: #A79F95; }
 html.dark .theme-pub .text-stone-500 { color: #8C857C; }
@@ -1086,18 +1090,18 @@ html.dark .theme-pub .text-stone-600,
 html.dark .theme-pub .text-stone-700 { color: #C3BBB1; }
 
 /* البنّي (عناوين/أسعار) → ذهبي شمبانيا مضيء فخم */
-html.dark .theme-pub .text-wine { color: #D8C7AC; }
+html.dark .theme-pub .text-wine { color: #D6D2CB; }
 /* text-gold-* يُقلب نهاراً إلى بنّي (5e4636) — ليلاً يجب أن يعود ذهبياً مضيئاً وإلا اختفى على الداكن */
 html.dark .theme-pub .text-gold-100,
 html.dark .theme-pub .text-gold-200,
 html.dark .theme-pub .text-gold-300,
-html.dark .theme-pub .text-gold-400 { color: #D8C7AC; }
+html.dark .theme-pub .text-gold-400 { color: #D6D2CB; }
 @media (hover: hover) {
   html.dark .theme-pub .hover\:text-gold-100:hover,
-  html.dark .theme-pub .hover\:text-gold-200:hover { color: #EFE6D8; }
+  html.dark .theme-pub .hover\:text-gold-200:hover { color: #EDEBE7; }
 }
 html.dark .theme-pub .gradient-text {
-  background: linear-gradient(135deg, #F7F2E9 0%, #E3D5BB 40%, #BCA989 100%);
+  background: linear-gradient(135deg, #F4F3F1 0%, #DEDBD5 40%, #A8A29B 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -1114,8 +1118,8 @@ html.dark .theme-pub .bg-ink-700 { background-color: #2A2827; }
 /* الحقول */
 html.dark .theme-pub .input {
   background: #1A1918;
-  border-color: rgba(243, 237, 228, 0.28);
-  color: #F3EDE4;
+  border-color: rgba(239, 238, 236, 0.28);
+  color: #EFEEEC;
 }
 html.dark .theme-pub .input::placeholder { color: #8C857C; }
 
@@ -1123,14 +1127,14 @@ html.dark .theme-pub .input::placeholder { color: #8C857C; }
    أبيض والنص شبه مخفٍ. الآن: زر داكن بإطار ونص ذهبيَين واضحَين */
 html.dark .theme-pub .btn-ghost {
   background: #232120;
-  border-color: rgba(243, 237, 228, 0.40);
-  color: #D8C7AC;
+  border-color: rgba(239, 238, 236, 0.40);
+  color: #D6D2CB;
 }
-@media (hover: hover) { html.dark .theme-pub .btn-ghost:hover { background: rgba(243, 237, 228, 0.12); border-color: #D8C7AC; } }
+@media (hover: hover) { html.dark .theme-pub .btn-ghost:hover { background: rgba(239, 238, 236, 0.12); border-color: #D6D2CB; } }
 /* زرُّ الشراءِ ليلاً: عاجيٌّ مضيءٌ على الفحم — الداكنُ على داكنٍ لا يُرى */
 html.dark .theme-pub .btn-buy {
-  background: linear-gradient(150deg, #F1E8D9 0%, #D8C7AC 100%);
-  color: #17150F;
+  background: linear-gradient(150deg, #EEECE8 0%, #D6D2CB 100%);
+  color: #171615;
   --tw-ring-color: transparent;
   box-shadow: 0 14px 30px -14px rgba(0, 0, 0, 0.75);
 }
@@ -1138,18 +1142,18 @@ html.dark .theme-pub .btn-buy {
 
 /* الزر الأساسي ليلياً: ذهبي مشعّ بنص داكن — أفخم وأوضح من البنّي المطفي */
 html.dark .theme-pub .btn-primary {
-  background: linear-gradient(135deg, #E3D5BB 0%, #BCA989 55%, #C9B79A 100%);
+  background: linear-gradient(135deg, #DEDBD5 0%, #A8A29B 55%, #BFBBB4 100%);
   color: #1A1918;
-  box-shadow: 0 12px 28px -12px rgba(216, 199, 172, 0.45);
+  box-shadow: 0 12px 28px -12px rgba(214, 210, 203, 0.45);
 }
-@media (hover: hover) { html.dark .theme-pub .btn-primary:hover { background: linear-gradient(135deg, #F1E8D9 0%, #D8C7AC 55%, #BCA989 100%); } }
+@media (hover: hover) { html.dark .theme-pub .btn-primary:hover { background: linear-gradient(135deg, #EEECE8 0%, #D6D2CB 55%, #A8A29B 100%); } }
 
 /* الحدود البنّية → ذهبية خفيفة */
 html.dark .theme-pub .border-wine\/15,
 html.dark .theme-pub .border-wine\/20,
 html.dark .theme-pub .border-wine\/25,
 html.dark .theme-pub .border-wine\/30,
-html.dark .theme-pub .border-wine\/40 { border-color: rgba(243, 237, 228, 0.30); }
+html.dark .theme-pub .border-wine\/40 { border-color: rgba(239, 238, 236, 0.30); }
 
 /* حدود الذهب المستقلّة (حقول الصور/الفيديو، البطاقات الفرعية، زر التلميح «؟»):
    نهاراً تُقلب لبنّي خفيف، ولم يكن لها مقابل ليلي فتبقى بنّية داكنة على السطح
@@ -1160,22 +1164,22 @@ html.dark .theme-pub .border-gold-400\/20,
 html.dark .theme-pub .border-gold-400\/25,
 html.dark .theme-pub .border-gold-400\/30,
 html.dark .theme-pub .border-gold-400\/40,
-html.dark .theme-pub .border-gold-400\/60 { border-color: rgba(243, 237, 228, 0.30); }
-html.dark .theme-pub .border-gold-400 { border-color: #D8C7AC; }
+html.dark .theme-pub .border-gold-400\/60 { border-color: rgba(239, 238, 236, 0.30); }
+html.dark .theme-pub .border-gold-400 { border-color: #D6D2CB; }
 @media (hover: hover) {
   html.dark .theme-pub .hover\:border-gold-400\/45:hover,
   html.dark .theme-pub .hover\:border-gold-400\/50:hover,
-  html.dark .theme-pub .hover\:border-gold-400\/60:hover { border-color: rgba(243, 237, 228, 0.55); }
+  html.dark .theme-pub .hover\:border-gold-400\/60:hover { border-color: rgba(239, 238, 236, 0.55); }
 }
 
 /* أزرار البنّي الخفيفة (chips/أزرار ثانوية) */
 html.dark .theme-pub .bg-wine\/5,
-html.dark .theme-pub .bg-wine\/10 { background-color: rgba(243, 237, 228, 0.10); }
+html.dark .theme-pub .bg-wine\/10 { background-color: rgba(239, 238, 236, 0.10); }
 /* نقاط سلايدر المتجر تستعمل هذه الدرجات — وبلا مقابلٍ ليليّ كانت تبهت على
    الخلفية الداكنة فلا يُرى إلا الشريط الذهبي المتحرّك بلا مساره. */
-html.dark .theme-pub .bg-wine\/20 { background-color: rgba(243, 237, 228, 0.18); }
-html.dark .theme-pub .bg-wine\/25 { background-color: rgba(243, 237, 228, 0.24); }
-html.dark .theme-pub .hover\:bg-wine\/40:hover { background-color: rgba(243, 237, 228, 0.42); }
+html.dark .theme-pub .bg-wine\/20 { background-color: rgba(239, 238, 236, 0.18); }
+html.dark .theme-pub .bg-wine\/25 { background-color: rgba(239, 238, 236, 0.24); }
+html.dark .theme-pub .hover\:bg-wine\/40:hover { background-color: rgba(239, 238, 236, 0.42); }
 
 /* الفوتر يبقى داكناً (متناسق) — لا تغيير */
 
@@ -1184,7 +1188,7 @@ html.dark .theme-pub .bg-white\/95 { background-color: rgba(26, 25, 24, 0.97); }
 
 /* ===== النصوص/الأسطح المثبّتة بقيم صريحة (كانت تختفي على الداكن) ===== */
 /* نصوص داكنة صريحة → فاتحة لتُقرأ على الأسطح الداكنة */
-html.dark .theme-pub .text-\[\#2b2b2b\] { color: #E9E2D8; }
+html.dark .theme-pub .text-\[\#2b2b2b\] { color: #E4E2DE; }
 html.dark .theme-pub .text-\[\#444\] { color: #C3BBB1; }
 html.dark .theme-pub .text-\[\#6b6b6b\] { color: #A79F95; }
 /* أسطح فاتحة صريحة → بنّي داكن */
@@ -1201,12 +1205,12 @@ html.dark .theme-pub .text-red-500 { color: #fca5a5; }
 html.dark .theme-pub .text-stone-800,
 html.dark .theme-pub .text-stone-900,
 html.dark .theme-pub .text-\[\#2b2b2b\],
-html.dark .theme-pub .text-wine-dark { color: #E9E2D8; }
+html.dark .theme-pub .text-wine-dark { color: #E4E2DE; }
 html.dark .theme-pub .text-\[\#3A3836\] { color: #C3BBB1; }
 /* حدود/فواصل بنّية شفافة → ذهبية خفيفة */
 html.dark .theme-pub .bg-wine\/10,
-html.dark .theme-pub .bg-wine\/15 { background-color: rgba(243, 237, 228, 0.12); }
-html.dark .theme-pub .border-wine\/10 { border-color: rgba(243, 237, 228, 0.18); }
+html.dark .theme-pub .bg-wine\/15 { background-color: rgba(239, 238, 236, 0.12); }
+html.dark .theme-pub .border-wine\/10 { border-color: rgba(239, 238, 236, 0.18); }
 
 /* ===== هياكل التحميل (Skeleton) — لمعان متحرّك بدل دوائر التحميل ===== */
 @keyframes skeleton-sheen {
@@ -1243,16 +1247,16 @@ html.dark .theme-pub .border-wine\/10 { border-color: rgba(243, 237, 228, 0.18);
 /* متغيّرات شفافية اللون الخمري (text-wine/XX) لم تكن مغطّاة في الوضع
    الليلي فتبقى خمرية داكنة وتختفي على الخلفية الداكنة. نحوّلها لكريمي
    فاتح بنفس تدرّج الوضوح ليظهر كل النص. */
-html.dark .theme-pub .text-wine\/80 { color: rgba(243, 237, 228, 0.92); }
-html.dark .theme-pub .text-wine\/70 { color: rgba(243, 237, 228, 0.85); }
-html.dark .theme-pub .text-wine\/60 { color: rgba(243, 237, 228, 0.78); }
-html.dark .theme-pub .text-wine\/55 { color: rgba(243, 237, 228, 0.72); }
-html.dark .theme-pub .text-wine\/50 { color: rgba(243, 237, 228, 0.66); }
-html.dark .theme-pub .text-wine\/45 { color: rgba(243, 237, 228, 0.62); }
-html.dark .theme-pub .text-wine\/40 { color: rgba(243, 237, 228, 0.55); }
-html.dark .theme-pub .text-wine\/35 { color: rgba(243, 237, 228, 0.50); }
-html.dark .theme-pub .text-wine\/30 { color: rgba(243, 237, 228, 0.45); }
-@media (hover: hover) { html.dark .theme-pub .hover\:text-wine:hover { color: #D8C7AC; } }
+html.dark .theme-pub .text-wine\/80 { color: rgba(239, 238, 236, 0.92); }
+html.dark .theme-pub .text-wine\/70 { color: rgba(239, 238, 236, 0.85); }
+html.dark .theme-pub .text-wine\/60 { color: rgba(239, 238, 236, 0.78); }
+html.dark .theme-pub .text-wine\/55 { color: rgba(239, 238, 236, 0.72); }
+html.dark .theme-pub .text-wine\/50 { color: rgba(239, 238, 236, 0.66); }
+html.dark .theme-pub .text-wine\/45 { color: rgba(239, 238, 236, 0.62); }
+html.dark .theme-pub .text-wine\/40 { color: rgba(239, 238, 236, 0.55); }
+html.dark .theme-pub .text-wine\/35 { color: rgba(239, 238, 236, 0.50); }
+html.dark .theme-pub .text-wine\/30 { color: rgba(239, 238, 236, 0.45); }
+@media (hover: hover) { html.dark .theme-pub .hover\:text-wine:hover { color: #D6D2CB; } }
 
 /* رسائل التأكيد الخضراء الفاتحة كانت تختفي على الخلفية الكريمية الفاتحة →
    نجعلها خضراء واضحة في الوضع النهاري، وفاتحة في الوضع الليلي. */
@@ -1383,7 +1387,7 @@ html.dark .theme-pub .text-indigo-700 { color: #a5b4fc; }
   background: linear-gradient(90deg, transparent, #858381, transparent);
 }
 html[dir='ltr'] .bz-title::after { transform: translateX(-50%); }
-html.dark .bz-title { color: #D8C7AC; }
+html.dark .bz-title { color: #D6D2CB; }
 
 /* ===== طباعة الفواتير =====
    الفاتورة تُحقن داخل #bz-print-root بالصفحة نفسها (لا إطار مخفيّ — سفاري على
@@ -1443,7 +1447,7 @@ html.dark .bz-title { color: #D8C7AC; }
 }
 html.dark .dash-drawer {
   background:
-    radial-gradient(130% 55% at 100% 0%, rgba(216, 199, 172, 0.13), transparent 62%),
+    radial-gradient(130% 55% at 100% 0%, rgba(214, 210, 203, 0.13), transparent 62%),
     linear-gradient(180deg, #232120 0%, #232120 50%, #1A1918 100%);
 }
 
@@ -1497,7 +1501,7 @@ a, button, [role='button'], summary {
 @media (pointer: fine) {
   /* فايرفوكس: اللون يُورَّث لكل حاويات التمرير */
   html { scrollbar-width: thin; scrollbar-color: rgba(23, 23, 23, 0.38) transparent; }
-  html.dark { scrollbar-color: rgba(243, 237, 228, 0.45) transparent; }
+  html.dark { scrollbar-color: rgba(239, 238, 236, 0.45) transparent; }
 }
 
 /* الأزرار لا يُحدَّد نصّها (لا معنى لتحديد كلمة «حفظ») — والروابط تبقى قابلة
@@ -1592,8 +1596,8 @@ img, svg { -webkit-user-drag: none; }
 }
 html.dark .bz-notif-sheet {
   background: #1A1918;
-  color: #F3EDE4;
-  box-shadow: 0 28px 70px -20px rgba(0, 0, 0, 0.85), inset 0 0 0 1px rgba(243, 237, 228, 0.14);
+  color: #EFEEEC;
+  box-shadow: 0 28px 70px -20px rgba(0, 0, 0, 0.85), inset 0 0 0 1px rgba(239, 238, 236, 0.14);
 }
 
 /* مقبض السحب — إشارة «هذه ورقة تُسحب»، يختفي على الشاشات الكبيرة */
@@ -1605,7 +1609,7 @@ html.dark .bz-notif-sheet {
   border-radius: 999px;
   background: rgba(23, 23, 23, 0.22);
 }
-html.dark .bz-notif-grip { background: rgba(243, 237, 228, 0.22); }
+html.dark .bz-notif-grip { background: rgba(239, 238, 236, 0.22); }
 @media (min-width: 640px) { .bz-notif-grip { display: none; } }
 
 /* الرأس: تدرّج ذهبي خافت وخيط رفيع بدل حدٍّ رمادي — يربط اللوحة بهوية الموقع */
@@ -1614,39 +1618,39 @@ html.dark .bz-notif-grip { background: rgba(243, 237, 228, 0.22); }
   background: linear-gradient(180deg, rgba(186, 185, 183, 0.12), transparent);
 }
 html.dark .bz-notif-head {
-  border-bottom-color: rgba(243, 237, 228, 0.16);
-  background: linear-gradient(180deg, rgba(243, 237, 228, 0.09), transparent);
+  border-bottom-color: rgba(239, 238, 236, 0.16);
+  background: linear-gradient(180deg, rgba(239, 238, 236, 0.09), transparent);
 }
 .bz-notif-headico {
   background: linear-gradient(140deg, #D6D5D4, #A7A5A3);
   color: #2C2B2A;
   box-shadow: 0 4px 12px -4px rgba(125, 123, 120, 0.7);
 }
-html.dark .bz-notif-headico { box-shadow: 0 4px 14px -4px rgba(243, 237, 228, 0.55); }
+html.dark .bz-notif-headico { box-shadow: 0 4px 14px -4px rgba(239, 238, 236, 0.55); }
 
 .bz-notif-foot {
   border-top: 1px solid rgba(23, 23, 23, 0.10);
   background: rgba(23, 23, 23, 0.03);
 }
 html.dark .bz-notif-foot {
-  border-top-color: rgba(243, 237, 228, 0.14);
+  border-top-color: rgba(239, 238, 236, 0.14);
   background: rgba(255, 255, 255, 0.03);
 }
 
 /* ───── نصوص ───── */
 .bz-notif-title { color: #3A3938; }
-html.dark .bz-notif-title { color: #F3EDE4; }
+html.dark .bz-notif-title { color: #EFEEEC; }
 .bz-notif-sub { color: #747270; }
-html.dark .bz-notif-sub { color: #D8C7AC; }
+html.dark .bz-notif-sub { color: #D6D2CB; }
 .bz-notif-time { color: #A5A3A1; }
-html.dark .bz-notif-time { color: rgba(216, 199, 172, 0.65); }
+html.dark .bz-notif-time { color: rgba(214, 210, 203, 0.65); }
 
 /* عنوان اليوم/أمس/أقدم — صغير وهادئ، يفصل بلا أن يزاحم */
 .bz-notif-day {
   color: #878583;
   letter-spacing: 0.04em;
 }
-html.dark .bz-notif-day { color: rgba(243, 237, 228, 0.62); }
+html.dark .bz-notif-day { color: rgba(239, 238, 236, 0.62); }
 
 /* ───── المرشّح (الكل / غير المقروء) ───── */
 .bz-seg {
@@ -1668,16 +1672,16 @@ html.dark .bz-seg { background: rgba(255, 255, 255, 0.07); }
   color: rgba(23, 23, 23, 0.62);
   transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
-html.dark .bz-seg-btn { color: rgba(216, 199, 172, 0.72); }
+html.dark .bz-seg-btn { color: rgba(214, 210, 203, 0.72); }
 .bz-seg-on {
   background: #ffffff;
   color: #3A3938;
   box-shadow: 0 1px 4px -1px rgba(23, 23, 23, 0.28);
 }
 html.dark .bz-seg-on {
-  background: rgba(243, 237, 228, 0.20);
-  color: #E9E2D8;
-  box-shadow: inset 0 0 0 1px rgba(243, 237, 228, 0.30);
+  background: rgba(239, 238, 236, 0.20);
+  color: #E4E2DE;
+  box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.30);
 }
 .bz-seg-count {
   min-width: 16px;
@@ -1692,15 +1696,15 @@ html.dark .bz-seg-on {
 
 /* زر «تعليم الكل» */
 .bz-notif-act { color: rgba(23, 23, 23, 0.72); }
-html.dark .bz-notif-act { color: #D8C7AC; }
+html.dark .bz-notif-act { color: #D6D2CB; }
 @media (hover: hover) {
   .bz-notif-act:hover { background: rgba(23, 23, 23, 0.08); }
-  html.dark .bz-notif-act:hover { background: rgba(243, 237, 228, 0.12); }
+  html.dark .bz-notif-act:hover { background: rgba(239, 238, 236, 0.12); }
 }
 
 /* زر الإغلاق: variant="wine" مصنوعٌ للنوافذ الفاتحة، وعلى الخلفية الليلية
    يصير شبه مختفٍ. نقلبه هنا لليلي فقط. */
-html.dark .bz-notif-close { background: rgba(255, 255, 255, 0.10); color: #F3EDE4; }
+html.dark .bz-notif-close { background: rgba(255, 255, 255, 0.10); color: #EFEEEC; }
 @media (hover: hover) {
   html.dark .bz-notif-close:hover { background: rgba(255, 255, 255, 0.18); color: #fff; }
 }
@@ -1723,7 +1727,7 @@ html.dark .bz-notif-item:active { background: rgba(255, 255, 255, 0.08); }
 /* غير المقروء: شريطٌ ذهبي على الحافّة البادئة + مسحة خفيفة. الشريط يُقرأ
    بلمحة العين على طول القائمة — أوضح من نقطةٍ صغيرة وحدها. */
 .bz-notif-unread { background: rgba(186, 185, 183, 0.10); }
-html.dark .bz-notif-unread { background: rgba(243, 237, 228, 0.07); }
+html.dark .bz-notif-unread { background: rgba(239, 238, 236, 0.07); }
 .bz-notif-unread::before {
   content: '';
   position: absolute;
@@ -1733,7 +1737,7 @@ html.dark .bz-notif-unread { background: rgba(243, 237, 228, 0.07); }
   background: linear-gradient(180deg, #D6D5D4, #A7A5A3);
 }
 /* ليلاً الذهب الصريح يصرخ على الخلفية الداكنة — نخفّه قليلاً */
-html.dark .bz-notif-unread::before { background: linear-gradient(180deg, rgba(243, 237, 228, 0.75), rgba(140, 133, 124, 0.55)); }
+html.dark .bz-notif-unread::before { background: linear-gradient(180deg, rgba(239, 238, 236, 0.75), rgba(140, 133, 124, 0.55)); }
 /* دخول الصفوف بتتابعٍ خفيف عند فتح اللوحة */
 .bz-notif-in { animation: bz-notif-in 0.28s ease-out both; }
 @keyframes bz-notif-in {
@@ -1752,7 +1756,7 @@ html.dark .bz-notif-ico { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
 .bz-tone-pink   { background: rgba(219, 39, 119, 0.12);  color: #be185d; }
 .bz-tone-violet { background: rgba(124, 58, 237, 0.12);  color: #6d28d9; }
 
-html.dark .bz-tone-gold   { background: rgba(243, 237, 228, 0.16); color: #CFC8BF; }
+html.dark .bz-tone-gold   { background: rgba(239, 238, 236, 0.16); color: #CFC8BF; }
 html.dark .bz-tone-amber  { background: rgba(251, 191, 36, 0.14);  color: #fcd34d; }
 html.dark .bz-tone-red    { background: rgba(248, 113, 113, 0.14); color: #fca5a5; }
 html.dark .bz-tone-teal   { background: rgba(45, 212, 191, 0.14);  color: #5eead4; }
@@ -1765,13 +1769,13 @@ html.dark .bz-tone-violet { background: rgba(167, 139, 250, 0.15); color: #c4b5f
   color: #787674;
   box-shadow: inset 0 0 0 1px rgba(186, 185, 183, 0.30);
 }
-html.dark .bz-notif-empty { color: #D8C7AC; box-shadow: inset 0 0 0 1px rgba(243, 237, 228, 0.22); }
+html.dark .bz-notif-empty { color: #D6D2CB; box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.22); }
 
 .bz-notif-skel { background: rgba(23, 23, 23, 0.06); }
 html.dark .bz-notif-skel { background: rgba(255, 255, 255, 0.05); }
 
 .bz-notif-more { background: rgba(23, 23, 23, 0.06); color: #3A3938; transition: background-color 0.2s ease; }
-html.dark .bz-notif-more { background: rgba(255, 255, 255, 0.08); color: #F3EDE4; }
+html.dark .bz-notif-more { background: rgba(255, 255, 255, 0.08); color: #EFEEEC; }
 @media (hover: hover) {
   .bz-notif-more:hover { background: rgba(23, 23, 23, 0.11); }
   html.dark .bz-notif-more:hover { background: rgba(255, 255, 255, 0.14); }
@@ -3102,9 +3106,9 @@ html[dir='rtl'] .bz-menu-arrow { transform: scaleX(-1); }
 
 html.dark .theme-pub .bz-feat {
   background: rgba(255, 255, 255, 0.04);
-  box-shadow: inset 0 0 0 1px rgba(243, 237, 228, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.14);
 }
-html.dark .theme-pub .bz-feat-ico { background: rgba(243, 237, 228, 0.12); color: #D8C7AC; }
+html.dark .theme-pub .bz-feat-ico { background: rgba(239, 238, 236, 0.12); color: #D6D2CB; }
 
 /* ───── الوضع الخفيف يشمل صفحة المنصّة وصفحات الحساب ─────
    أُضيفت بعد bz-lite فلم تكن تحترمه: توهّجاتها الضبابية وضبابية الشريط
@@ -3215,11 +3219,11 @@ html.dark .theme-pub .bz-feat-ico { background: rgba(243, 237, 228, 0.12); color
 
 html.dark .theme-pub .bz-storecard {
   background: rgba(255, 255, 255, 0.04);
-  box-shadow: inset 0 0 0 1px rgba(243, 237, 228, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.14);
 }
-html.dark .theme-pub .bz-storecard-top { box-shadow: inset 0 0 0 1px rgba(216, 199, 172, 0.42), inset 0 3px 0 0 #BCA989; }
-html.dark .theme-pub .bz-storecard-logo { box-shadow: inset 0 0 0 1px rgba(243, 237, 228, 0.2); }
-html.dark .theme-pub .bz-softico { background: rgba(243, 237, 228, 0.12); color: #D8C7AC; }
+html.dark .theme-pub .bz-storecard-top { box-shadow: inset 0 0 0 1px rgba(214, 210, 203, 0.42), inset 0 3px 0 0 #A8A29B; }
+html.dark .theme-pub .bz-storecard-logo { box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.2); }
+html.dark .theme-pub .bz-softico { background: rgba(239, 238, 236, 0.12); color: #D6D2CB; }
 
 /* شارات بطاقة المنتج: لونان لا أربعة.
    كانت بنّياً وأخضر وذهبياً وخمرياً (#8a2438 من خارج اللوحة) على بطاقةٍ
@@ -3258,9 +3262,9 @@ html.dark .theme-pub .bz-softico { background: rgba(243, 237, 228, 0.12); color:
 .bz-doc-meta { color: #686663; }
 
 html.dark .theme-pub .bz-doc { color: #DCD5CB; }
-html.dark .theme-pub .bz-doc-h1 { color: #F3EDE4; }
-html.dark .theme-pub .bz-doc-h2 { color: #D8C7AC; }
-html.dark .theme-pub .bz-doc-meta { color: rgba(243, 237, 228, 0.62); }
+html.dark .theme-pub .bz-doc-h1 { color: #EFEEEC; }
+html.dark .theme-pub .bz-doc-h2 { color: #D6D2CB; }
+html.dark .theme-pub .bz-doc-meta { color: rgba(239, 238, 236, 0.62); }
 
 /* ═══════ الدرج الجانبي: ذهبٌ يميّز لا ذهبٌ يعمّ ═══════
    كانت تسع لمساتٍ ذهبية داخل درجٍ خلفيّته ذهبيّة أصلاً: حدود الأفاتار
@@ -3439,39 +3443,39 @@ html.dark .theme-pub .bz-docpage { background: #141313; }
 .bz-sub-h span { font-weight: 500; color: #646260; }
 
 /* ═══════ الوضع الليليّ ═══════ */
-html.dark .theme-pub .bz-ph-ico { background: rgba(243, 237, 228, 0.12); color: #D8C7AC; }
-html.dark .theme-pub .bz-ph-t { color: #F5F0E8; }
+html.dark .theme-pub .bz-ph-ico { background: rgba(239, 238, 236, 0.12); color: #D6D2CB; }
+html.dark .theme-pub .bz-ph-t { color: #F2F1EF; }
 html.dark .theme-pub .bz-ph-sub { color: #A79F95; }
 html.dark .theme-pub .bz-panel,
 html.dark .theme-pub .bz-state {
   background: #1A1918;
-  box-shadow: inset 0 0 0 1px rgba(243, 237, 228, 0.09);
+  box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.09);
 }
-html.dark .theme-pub .bz-state-ico { background: rgba(243, 237, 228, 0.12); color: #D8C7AC; }
-html.dark .theme-pub .bz-state-t { color: #F5F0E8; }
+html.dark .theme-pub .bz-state-ico { background: rgba(239, 238, 236, 0.12); color: #D6D2CB; }
+html.dark .theme-pub .bz-state-t { color: #F2F1EF; }
 html.dark .theme-pub .bz-state-p { color: #A79F95; }
 /* الزرّ الأساسيّ ينقلب: عاجيٌّ على داكن — الداكن على داكنٍ لا يُرى */
-html.dark .theme-pub .bz-act { background: #F5F0E8; color: #17150F; box-shadow: none; }
-html.dark .theme-pub .bz-act-2 { color: #D8C7AC; box-shadow: inset 0 0 0 1px rgba(243, 237, 228, 0.28); }
+html.dark .theme-pub .bz-act { background: #F2F1EF; color: #171615; box-shadow: none; }
+html.dark .theme-pub .bz-act-2 { color: #D6D2CB; box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.28); }
 @media (hover: hover) {
   html.dark .theme-pub .bz-act:hover { background: #fff; }
-  html.dark .theme-pub .bz-act-2:hover { background: rgba(243, 237, 228, 0.10); }
+  html.dark .theme-pub .bz-act-2:hover { background: rgba(239, 238, 236, 0.10); }
 }
 html.dark .theme-pub .bz-field {
   background: rgba(255, 255, 255, 0.06);
-  color: #F5F0E8;
-  box-shadow: inset 0 0 0 1px rgba(243, 237, 228, 0.18);
+  color: #F2F1EF;
+  box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.18);
 }
 html.dark .theme-pub .bz-field::placeholder { color: #8C857C; }
-html.dark .theme-pub .bz-field:focus { box-shadow: inset 0 0 0 1.5px rgba(243, 237, 228, 0.45); }
+html.dark .theme-pub .bz-field:focus { box-shadow: inset 0 0 0 1.5px rgba(239, 238, 236, 0.45); }
 html.dark .theme-pub .bz-pill {
   background: rgba(255, 255, 255, 0.05);
   color: #CFC8BF;
-  box-shadow: inset 0 0 0 1px rgba(243, 237, 228, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.16);
 }
-@media (hover: hover) { html.dark .theme-pub .bz-pill:hover { box-shadow: inset 0 0 0 1px rgba(243, 237, 228, 0.38); } }
-html.dark .theme-pub .bz-pill-on { background: #F5F0E8; color: #17150F; box-shadow: none; }
-html.dark .theme-pub .bz-sub-h { color: #F5F0E8; }
+@media (hover: hover) { html.dark .theme-pub .bz-pill:hover { box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.38); } }
+html.dark .theme-pub .bz-pill-on { background: #F2F1EF; color: #171615; box-shadow: none; }
+html.dark .theme-pub .bz-sub-h { color: #F2F1EF; }
 html.dark .theme-pub .bz-sub-h span { color: #A79F95; }
 
 /* ── قِطعٌ صغيرة تتكرّر: زرّ أيقونة، أيقونة داخل حقل، مسحُ حقل، زرّ نصّيّ ── */
@@ -3508,15 +3512,15 @@ html.dark .theme-pub .bz-sub-h span { color: #A79F95; }
 .bz-pill-x { color: #848280; transition: background-color 0.2s ease, color 0.2s ease; }
 @media (hover: hover) { .bz-pill-x:hover { background: rgba(23, 23, 23, 0.12); color: #0F0F0E; } }
 
-html.dark .theme-pub .bz-iconbtn { color: #D8C7AC; }
-@media (hover: hover) { html.dark .theme-pub .bz-iconbtn:hover { background: rgba(243, 237, 228, 0.12); } }
-html.dark .theme-pub .bz-field-ico { color: rgba(243, 237, 228, 0.6); }
-html.dark .theme-pub .bz-field-x { background: rgba(243, 237, 228, 0.14); color: #D8C7AC; }
-@media (hover: hover) { html.dark .theme-pub .bz-field-x:hover { background: rgba(243, 237, 228, 0.26); } }
+html.dark .theme-pub .bz-iconbtn { color: #D6D2CB; }
+@media (hover: hover) { html.dark .theme-pub .bz-iconbtn:hover { background: rgba(239, 238, 236, 0.12); } }
+html.dark .theme-pub .bz-field-ico { color: rgba(239, 238, 236, 0.6); }
+html.dark .theme-pub .bz-field-x { background: rgba(239, 238, 236, 0.14); color: #D6D2CB; }
+@media (hover: hover) { html.dark .theme-pub .bz-field-x:hover { background: rgba(239, 238, 236, 0.26); } }
 html.dark .theme-pub .bz-mini-btn { color: #A79F95; }
-@media (hover: hover) { html.dark .theme-pub .bz-mini-btn:hover { color: #F5F0E8; } }
+@media (hover: hover) { html.dark .theme-pub .bz-mini-btn:hover { color: #F2F1EF; } }
 html.dark .theme-pub .bz-pill-x { color: #8C857C; }
-@media (hover: hover) { html.dark .theme-pub .bz-pill-x:hover { background: rgba(243, 237, 228, 0.14); color: #F5F0E8; } }
+@media (hover: hover) { html.dark .theme-pub .bz-pill-x:hover { background: rgba(239, 238, 236, 0.14); color: #F2F1EF; } }
 
 /* نصّ ثانويّ كان تباينه 2.6 على العاجيّ و3.0 على الأبيض — والحدّ 4.5.
    الأسعار المشطوبة وعدّادات النتائج كانت تكاد لا تُقرأ. */
@@ -3619,44 +3623,44 @@ html.dark .theme-pub .bz-pill-x { color: #8C857C; }
   color: #b42318;
 }
 
-html.dark .theme-pub .bz-ob { background: rgba(243, 237, 228, 0.12); color: #CFC8BF; }
-html.dark .theme-pub .bz-ob-on { background: rgba(243, 237, 228, 0.2); color: #F5F0E8; }
+html.dark .theme-pub .bz-ob { background: rgba(239, 238, 236, 0.12); color: #CFC8BF; }
+html.dark .theme-pub .bz-ob-on { background: rgba(239, 238, 236, 0.2); color: #F2F1EF; }
 html.dark .theme-pub .bz-ob-ok { background: rgba(74, 222, 128, 0.16); color: #86efac; }
 html.dark .theme-pub .bz-ob-no { background: rgba(248, 113, 113, 0.16); color: #fca5a5; }
 /* مسارُ التتبّعِ ولوحاتُه بالوضعِ الليليّ — الدرجاتُ الفاتحةُ تبهتُ على الأرضِ الداكنة */
-html.dark .theme-pub .bz-tl-vbar { background: rgba(243, 237, 228, 0.16); }
+html.dark .theme-pub .bz-tl-vbar { background: rgba(239, 238, 236, 0.16); }
 html.dark .theme-pub .bz-tl-bar-on,
-html.dark .theme-pub .bz-tl-vbar.bz-tl-bar-on { background: #D8C7AC; }
-html.dark .theme-pub .bz-tr-head { background: rgba(243, 237, 228, 0.05); border-bottom-color: rgba(243, 237, 228, 0.12); }
+html.dark .theme-pub .bz-tl-vbar.bz-tl-bar-on { background: #D6D2CB; }
+html.dark .theme-pub .bz-tr-head { background: rgba(239, 238, 236, 0.05); border-bottom-color: rgba(239, 238, 236, 0.12); }
 html.dark .theme-pub .bz-tr-paid { background: rgba(74, 222, 128, 0.12); color: #86efac; border-color: rgba(74, 222, 128, 0.22); }
 html.dark .theme-pub .bz-tr-cancel { background: rgba(248, 113, 113, 0.12); color: #fca5a5; border-color: rgba(248, 113, 113, 0.22); }
-html.dark .theme-pub .bz-ref { background: rgba(243, 237, 228, 0.10); color: #A79F95; }
-@media (hover: hover) { html.dark .theme-pub .bz-ref:hover { background: rgba(243, 237, 228, 0.2); color: #F5F0E8; } }
+html.dark .theme-pub .bz-ref { background: rgba(239, 238, 236, 0.10); color: #A79F95; }
+@media (hover: hover) { html.dark .theme-pub .bz-ref:hover { background: rgba(239, 238, 236, 0.2); color: #F2F1EF; } }
 html.dark .theme-pub .bz-tl-dot {
-  background: rgba(243, 237, 228, 0.08);
+  background: rgba(239, 238, 236, 0.08);
   color: #A79F95;
-  box-shadow: inset 0 0 0 1px rgba(243, 237, 228, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.16);
 }
-html.dark .theme-pub .bz-tl-done { background: #D8C7AC; color: #17150F; box-shadow: none; }
-html.dark .theme-pub .bz-tl-now { box-shadow: 0 0 0 3px rgba(243, 237, 228, 0.22); }
+html.dark .theme-pub .bz-tl-done { background: #D6D2CB; color: #171615; box-shadow: none; }
+html.dark .theme-pub .bz-tl-now { box-shadow: 0 0 0 3px rgba(239, 238, 236, 0.22); }
 html.dark .theme-pub .bz-tl-lbl { color: #8C857C; }
-html.dark .theme-pub .bz-tl-lbl-on { color: #F5F0E8; }
-html.dark .theme-pub .bz-tl-bar { background: rgba(243, 237, 228, 0.14); }
-html.dark .theme-pub .bz-tl-bar-on { background: #D8C7AC; }
+html.dark .theme-pub .bz-tl-lbl-on { color: #F2F1EF; }
+html.dark .theme-pub .bz-tl-bar { background: rgba(239, 238, 236, 0.14); }
+html.dark .theme-pub .bz-tl-bar-on { background: #D6D2CB; }
 html.dark .theme-pub .bz-note {
-  background: rgba(243, 237, 228, 0.06);
+  background: rgba(239, 238, 236, 0.06);
   color: #CFC8BF;
-  box-shadow: inset 0 0 0 1px rgba(243, 237, 228, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.14);
 }
-html.dark .theme-pub .bz-hr-t { border-top-color: rgba(243, 237, 228, 0.14); }
-html.dark .theme-pub .bz-total { color: #F5F0E8; }
+html.dark .theme-pub .bz-hr-t { border-top-color: rgba(239, 238, 236, 0.14); }
+html.dark .theme-pub .bz-total { color: #F2F1EF; }
 html.dark .theme-pub .bz-err { background: rgba(248, 113, 113, 0.14); color: #fca5a5; }
 
 /* ── الاشتراك: الباقة المميّزة، والسعر ── */
 .bz-plan-top { box-shadow: 0 6px 22px -12px rgba(23, 23, 23, 0.26), inset 0 0 0 1px rgba(23, 23, 23, 0.16), inset 0 3px 0 0 #1F1E1D; }
 .bz-price { font-size: clamp(2.4rem, 9vw, 3rem); font-weight: 800; line-height: 1; color: #0F0F0E; }
-html.dark .theme-pub .bz-plan-top { box-shadow: inset 0 0 0 1px rgba(243, 237, 228, 0.22), inset 0 3px 0 0 #D8C7AC; }
-html.dark .theme-pub .bz-price { color: #F5F0E8; }
+html.dark .theme-pub .bz-plan-top { box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.22), inset 0 3px 0 0 #D6D2CB; }
+html.dark .theme-pub .bz-price { color: #F2F1EF; }
 
 /* ── صفحة المنتج ── */
 /* إطارُ وسائطِ المنتج: مقاسٌ ثابتٌ لا يتغيّرُ بتغيّرِ الوسيطةِ ولا اللون، فلا تقفزُ
@@ -3712,21 +3716,21 @@ html.dark .theme-pub .bz-price { color: #F5F0E8; }
 /* شارات الثقة: كانت بتدرّجٍ أبيض→كريميّ وحدٍّ ذهبيّ وحلقةٍ ذهبية حول الأيقونة */
 .bz-trust { background: rgba(23, 23, 23, 0.04); box-shadow: inset 0 0 0 1px rgba(23, 23, 23, 0.10); }
 
-html.dark .theme-pub .bz-shot { box-shadow: inset 0 0 0 1px rgba(243, 237, 228, 0.14); }
-html.dark .theme-pub .bz-thumb { box-shadow: inset 0 0 0 1px rgba(243, 237, 228, 0.12); }
-html.dark .theme-pub .bz-thumb-on { box-shadow: 0 0 0 2px #D8C7AC; }
-html.dark .theme-pub .bz-roundbtn { color: #D8C7AC; box-shadow: inset 0 0 0 1px rgba(243, 237, 228, 0.26); }
-@media (hover: hover) { html.dark .theme-pub .bz-roundbtn:hover { background: rgba(243, 237, 228, 0.10); } }
+html.dark .theme-pub .bz-shot { box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.14); }
+html.dark .theme-pub .bz-thumb { box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.12); }
+html.dark .theme-pub .bz-thumb-on { box-shadow: 0 0 0 2px #D6D2CB; }
+html.dark .theme-pub .bz-roundbtn { color: #D6D2CB; box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.26); }
+@media (hover: hover) { html.dark .theme-pub .bz-roundbtn:hover { background: rgba(239, 238, 236, 0.10); } }
 html.dark .theme-pub .bz-roundbtn-liked { color: #fca5a5; box-shadow: inset 0 0 0 1px rgba(252, 165, 165, 0.5); background: rgba(248, 113, 113, 0.14); }
-html.dark .theme-pub .bz-usual { box-shadow: 0 0 0 2px rgba(243, 237, 228, 0.6); }
-html.dark .theme-pub .bz-usual-dot { box-shadow: inset 0 0 0 2px rgba(243, 237, 228, 0.7); }
-html.dark .theme-pub .bz-trust { background: rgba(243, 237, 228, 0.05); box-shadow: inset 0 0 0 1px rgba(243, 237, 228, 0.12); }
+html.dark .theme-pub .bz-usual { box-shadow: 0 0 0 2px rgba(239, 238, 236, 0.6); }
+html.dark .theme-pub .bz-usual-dot { box-shadow: inset 0 0 0 2px rgba(239, 238, 236, 0.7); }
+html.dark .theme-pub .bz-trust { background: rgba(239, 238, 236, 0.05); box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.12); }
 /* الشارة العاجلة (ينتهي اليوم): الحمرة تُحجز للاستعجال وحده */
 .bz-pill-hot { background: #9a3412; color: #F9F9F8; box-shadow: none; }
 html.dark .theme-pub .bz-pill-hot { background: #c2410c; color: #fff; }
 /* نقطة تعداد المنتجات — زخرفة (aria-hidden) لا نصّ يُقرأ */
 .bz-bullet { color: rgba(23, 23, 23, 0.4); }
-html.dark .theme-pub .bz-bullet { color: rgba(243, 237, 228, 0.4); }
+html.dark .theme-pub .bz-bullet { color: rgba(239, 238, 236, 0.4); }
 
 /* ═══════════ بلاطات لوحة التاجرة ═══════════
    بلاطةُ أيقونة الترويسة كانت تدرّجاً من الرمليّ إلى amber-500 — وهو برتقاليّ
@@ -3754,25 +3758,25 @@ html.dark .theme-pub .bz-bullet { color: rgba(243, 237, 228, 0.4); }
   box-shadow: inset 0 0 0 1px rgba(23, 23, 23, 0.16);
 }
 
-html.dark .theme-pub .dash-ico { background: #D8C7AC; color: #17150F; box-shadow: none; }
+html.dark .theme-pub .dash-ico { background: #D6D2CB; color: #171615; box-shadow: none; }
 html.dark .theme-pub .dash-ico-sec {
-  background: rgba(243, 237, 228, 0.12);
-  color: #D8C7AC;
-  box-shadow: inset 0 0 0 1px rgba(243, 237, 228, 0.18);
+  background: rgba(239, 238, 236, 0.12);
+  color: #D6D2CB;
+  box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.18);
 }
 html.dark .theme-pub .dash-preview {
-  background: rgba(243, 237, 228, 0.06);
-  box-shadow: inset 0 0 0 1px rgba(243, 237, 228, 0.14);
+  background: rgba(239, 238, 236, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.14);
 }
 html.dark .theme-pub .dash-avatar {
   background: rgba(255, 255, 255, 0.06);
-  box-shadow: inset 0 0 0 1px rgba(243, 237, 228, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.18);
 }
 
 /* رقمُ الإحصاء: كان لكلّ بطاقةٍ لونُ رقمٍ مختلف (أخضر، رمليّ، كهرمانيّ،
    عاجيّ) — أربعةُ ألوانٍ لأربعة أرقامٍ متجاورة لا يفرّقها اللون بشيء. */
 .dash-stat { color: #0F0F0E; }
-html.dark .theme-pub .dash-stat { color: #F5F0E8; }
+html.dark .theme-pub .dash-stat { color: #F2F1EF; }
 
 /* مراحل القمع: التدرّج فيها يعني «كم تبقّى» لا نوعَ المرحلة — فدرجةٌ واحدة
    تخفّ مع النزول أصدق من أربعة ألوانٍ لا رابط بينها. */
@@ -3783,14 +3787,14 @@ html.dark .theme-pub .dash-stat { color: #F5F0E8; }
 .bz-fun-2 { background: #3A3938; }
 .bz-fun-3 { background: #1F1E1D; }
 .bz-fun-4 { background: #696764; }
-html.dark .theme-pub .bz-fun-1 { background: #F5F0E8; }
-html.dark .theme-pub .bz-fun-2 { background: #D8C7AC; }
-html.dark .theme-pub .bz-fun-3 { background: #D8C7AC; }
-html.dark .theme-pub .bz-fun-4 { background: #BCA989; }
+html.dark .theme-pub .bz-fun-1 { background: #F2F1EF; }
+html.dark .theme-pub .bz-fun-2 { background: #D6D2CB; }
+html.dark .theme-pub .bz-fun-3 { background: #D6D2CB; }
+html.dark .theme-pub .bz-fun-4 { background: #A8A29B; }
 /* رقمُ المرحلة داخل الشريط: الشريط داكنٌ نهاراً وفاتحٌ ليلاً، فلونُ الرقم
    ينقلب معه. كان أبيضَ ثابتاً — أي غيرَ مرئيّ ليلاً على شريطٍ عاجيّ. */
 .bz-fun-n { color: #F9F9F8; }
-html.dark .theme-pub .bz-fun-n { color: #17150F; }
+html.dark .theme-pub .bz-fun-n { color: #171615; }
 
 /* نبرةُ «تمام» — كانت emerald-400: درجةُ وضعٍ داكن على صفحةٍ فاتحة (٣٫٠٥) */
 .bz-tone-ok { background: rgba(5, 150, 105, 0.13); color: #065f46; }
@@ -3810,17 +3814,17 @@ html.dark .theme-pub .bz-ico-amber { background: #fcd34d; color: #422006; }
   background: rgba(23, 23, 23, 0.1);
   color: #3A3938;
 }
-html.dark .theme-pub .bz-count { background: rgba(243, 237, 228, 0.14); color: #F5F0E8; }
+html.dark .theme-pub .bz-count { background: rgba(239, 238, 236, 0.14); color: #F2F1EF; }
 /* اسم الفئة داخل بطاقتها */
 .bz-card-name { color: #0F0F0E; }
-html.dark .theme-pub .bz-card-name { color: #F5F0E8; }
+html.dark .theme-pub .bz-card-name { color: #F2F1EF; }
 /* نقاط السلايدر: التدرّج على شريطٍ ارتفاعه 6px لا يُرى — لونٌ مصمت */
 .bz-dot { background: rgba(23, 23, 23, 0.25); }
 @media (hover: hover) { .bz-dot:hover { background: rgba(23, 23, 23, 0.45); } }
 .bz-dot-on { background: #1F1E1D; }
-html.dark .theme-pub .bz-dot { background: rgba(243, 237, 228, 0.28); }
-@media (hover: hover) { html.dark .theme-pub .bz-dot:hover { background: rgba(243, 237, 228, 0.5); } }
-html.dark .theme-pub .bz-dot-on { background: #D8C7AC; }
+html.dark .theme-pub .bz-dot { background: rgba(239, 238, 236, 0.28); }
+@media (hover: hover) { html.dark .theme-pub .bz-dot:hover { background: rgba(239, 238, 236, 0.5); } }
+html.dark .theme-pub .bz-dot-on { background: #D6D2CB; }
 
 /* ═══════════════ نظامٌ طباعيّ واحد ═══════════════
    كان العنوان والمتن بخطٍّ واحد: الفرق بينهما الحجمُ والسماكة فحسب. والموقع
@@ -3883,7 +3887,7 @@ html[lang='ar'] .font-display { font-family: var(--bz-display); }
 .bz-lead { font-family: var(--bz-body); }
 /* سعرُ البطاقة بوجه العرض: الرقمُ هو ما تبحث عنه العين أوّلاً على الرفّ */
 .bz-pprice { font-family: var(--bz-display); color: #1F1E1D; }
-html.dark .theme-pub .bz-pprice { color: #F5F0E8; }
+html.dark .theme-pub .bz-pprice { color: #F2F1EF; }
 
 /* أثرُ ضغطة زرّ الثيم — كان whileTap من framer-motion، وهي مكتبةٌ بـ١٢٦ كيلو
    كانت تدخل المسار الحرج لكلّ صفحة لأنّ الزرّ بالشريط الدائم. */
@@ -4242,11 +4246,11 @@ html.dark .theme-pub .bz-oldprice { color: #8C857C; }
 
 html.dark .theme-pub .bz-tabbar {
   background: #100F0E !important;
-  border-color: rgba(243, 237, 228, 0.14) !important;
+  border-color: rgba(239, 238, 236, 0.14) !important;
 }
 html.dark .theme-pub .bz-tabbar button { color: #A79F95; }
-html.dark .theme-pub .bz-tabbar button.is-on { color: #F5F0E8; }
-html.dark .theme-pub .bz-tabbar button.is-on > span:first-child { background: #D8C7AC; color: #17150F; }
+html.dark .theme-pub .bz-tabbar button.is-on { color: #F2F1EF; }
+html.dark .theme-pub .bz-tabbar button.is-on > span:first-child { background: #D6D2CB; color: #171615; }
 
 /* ═══════ شريط التنقّل: أسفلَ اللمس، وأعلى الفأرة ═══════
    العتبةُ ليست عرضاً وحده: آيباد برو أفقيّاً 1366px — أعرضُ من كثيرٍ من
@@ -4297,9 +4301,9 @@ html.dark .theme-pub .bz-tabbar button.is-on > span:first-child { background: #D
   .bz-tabbar button svg { height: 1.15rem; width: 1.15rem; }
   @media (hover: hover) {
     .bz-tabbar button:not(.is-on):hover { background: rgba(23, 23, 23, 0.07); color: #0F0F0E; }
-    html.dark .theme-pub .bz-tabbar button:not(.is-on):hover { background: rgba(243, 237, 228, 0.09); color: #F5F0E8; }
+    html.dark .theme-pub .bz-tabbar button:not(.is-on):hover { background: rgba(239, 238, 236, 0.09); color: #F2F1EF; }
   }
-  html.dark .theme-pub .bz-tabbar button.is-on { background: #D8C7AC; color: #17150F; }
+  html.dark .theme-pub .bz-tabbar button.is-on { background: #D6D2CB; color: #171615; }
 }
 
 /* ═══════ عرضُ الصفحة: من حافةٍ لحافة ═══════
@@ -4402,12 +4406,12 @@ html.dark .theme-pub .bz-tabbar button.is-on > span:first-child { background: #D
 @media (hover: hover) { .bz-srv-btn:not(:disabled):hover { opacity: 0.85; } }
 
 html.dark .theme-pub .bz-srv {
-  border-bottom-color: rgba(243, 237, 228, 0.16);
+  border-bottom-color: rgba(239, 238, 236, 0.16);
   background: #232120;
-  color: #D8C7AC;
+  color: #D6D2CB;
 }
 html.dark .theme-pub .bz-srv-dot { background: #f0a04b; }
-html.dark .theme-pub .bz-srv-btn { background: #D8C7AC; color: #17150F; }
+html.dark .theme-pub .bz-srv-btn { background: #D6D2CB; color: #171615; }
 
 /* ═════════ شاشةُ محادثةِ إنستغرام ═════════
    شريطُ التبويبات السفليُّ مثبَّتٌ بـfixed، ولوحةُ المفاتيح على الجوّال تُقلّصُ النافذةَ
@@ -4425,7 +4429,7 @@ body.bz-chat-open { overflow: hidden; }
    ثابتةٍ بقيت ليليّةً في وضعِ النهار. ولأنّها قد تُرسَمُ خارجَ `.theme-pub` يُكتَفى
    بـhtml.dark وحدَه شرطاً لليل. */
 .bz-chat { background: #F9F9F8; color: #0F0F0E; }
-html.dark .bz-chat { background: #100F0E; color: #E9E2D8; }
+html.dark .bz-chat { background: #100F0E; color: #E4E2DE; }
 
 /* الرأسُ وصندوقُ الكتابة: سطحٌ يعلو الأرضيّةَ قليلاً ليُقرأَ حدُّهما */
 .bz-chat-bar { background: #ffffff; border-color: rgba(23, 23, 23, 0.14); }
@@ -4434,29 +4438,29 @@ html.dark .bz-chat-bar { background: #1A1918; border-color: rgba(255, 255, 255, 
 /* الفقاعتان: رسالةُ الزبون سطحٌ محايد، وردُّ المتجرِ مملوءٌ بلونِ الهويّة — والفرقُ
    بينهما يجبُ أن يُرى من نظرة، فقد كانتا بنّيّتين متقاربتين لا تكادان تفترقان. */
 .bz-chat-in { background: #ffffff; color: #0F0F0E; border: 1px solid rgba(23, 23, 23, 0.10); }
-html.dark .bz-chat-in { background: rgba(255, 255, 255, 0.07); color: #E9E2D8; border-color: rgba(255, 255, 255, 0.09); }
+html.dark .bz-chat-in { background: rgba(255, 255, 255, 0.07); color: #E4E2DE; border-color: rgba(255, 255, 255, 0.09); }
 .bz-chat-out { background: #1F1E1D; color: #F9F9F8; border: 1px solid transparent; }
-html.dark .bz-chat-out { background: #D8C7AC; color: #17150F; }
+html.dark .bz-chat-out { background: #D6D2CB; color: #171615; }
 
 /* الوقتُ تحت الرسالة: باهتٌ بقدرِ ما يُقرأُ على أرضيّةِ فقاعتِه هو لا على الصفحة */
 .bz-chat-time { color: rgba(31, 30, 29, 0.55); }
-html.dark .bz-chat-time { color: rgba(243, 237, 228, 0.45); }
+html.dark .bz-chat-time { color: rgba(239, 238, 236, 0.45); }
 .bz-chat-out .bz-chat-time { color: rgba(235, 235, 235, 0.65); }
 html.dark .bz-chat-out .bz-chat-time { color: rgba(23, 21, 15, 0.55); }
 
 .bz-chat-muted { color: rgba(15, 15, 14, 0.6); }
-html.dark .bz-chat-muted { color: rgba(243, 237, 228, 0.5); }
+html.dark .bz-chat-muted { color: rgba(239, 238, 236, 0.5); }
 
 /* أزرارُ الرأسِ وصندوقِ الكتابة (رجوع · معرض · كاميرا · حذف) */
 .bz-chat-icon { color: #1F1E1D; background: transparent; }
 .bz-chat-icon:hover { background: rgba(23, 23, 23, 0.10); }
-html.dark .bz-chat-icon { color: #D8C7AC; }
+html.dark .bz-chat-icon { color: #D6D2CB; }
 html.dark .bz-chat-icon:hover { background: rgba(255, 255, 255, 0.08); }
 
 /* دائرةُ صورةِ الزبون — تُرى في قائمةِ المحادثات (بطاقةٌ بيضاءُ نهاراً) وفي رأسِ
    المحادثة، فلا تصلحُ لها ألوانُ الخلفيّةِ الداكنةِ وحدَها. */
 .bz-avatar { background: rgba(23, 23, 23, 0.10); color: #1F1E1D; border: 1px solid rgba(23, 23, 23, 0.14); }
-html.dark .bz-avatar { background: rgba(255, 255, 255, 0.06); color: #D8C7AC; border-color: rgba(255, 255, 255, 0.10); }
+html.dark .bz-avatar { background: rgba(255, 255, 255, 0.06); color: #D6D2CB; border-color: rgba(255, 255, 255, 0.10); }
 
 /* شارةُ «تحوّلت لطلب» وصندوقُ الخطأ داخلَ المحادثة — Tailwind هنا على media لا class،
    فلا تنفعُ بادئةُ dark: ويجبُ أن يكون اللونان صريحين. */
@@ -4467,7 +4471,7 @@ html.dark .bz-chat-err { background: rgba(239, 68, 68, 0.12); color: #fca5a5; bo
 
 /* فاصلُ اليوم بين الرسائل */
 .bz-chat-day { background: rgba(23, 23, 23, 0.09); color: rgba(15, 15, 14, 0.62); }
-html.dark .bz-chat-day { background: rgba(255, 255, 255, 0.07); color: rgba(243, 237, 228, 0.55); }
+html.dark .bz-chat-day { background: rgba(255, 255, 255, 0.07); color: rgba(239, 238, 236, 0.55); }
 
 /* الفقاعةُ تدخلُ بحركةٍ قصيرةٍ جدّاً: تكفي لتُحسَّ ولا تكفي لتُنتظَر */
 .bz-bubble { animation: bz-bubble-in 0.16s ease-out both; }
@@ -4492,11 +4496,11 @@ html.dark .bz-chat-day { background: rgba(255, 255, 255, 0.07); color: rgba(243,
 .bz-chat-input:focus { border-color: rgba(23, 23, 23, 0.3); background: rgba(23, 23, 23, 0.05); }
 html.dark .bz-chat-input {
   background: rgba(255, 255, 255, 0.07);
-  color: #E9E2D8;
+  color: #E4E2DE;
   border-color: rgba(255, 255, 255, 0.10);
 }
-html.dark .bz-chat-input::placeholder { color: rgba(243, 237, 228, 0.4); }
-html.dark .bz-chat-input:focus { border-color: rgba(243, 237, 228, 0.35); }
+html.dark .bz-chat-input::placeholder { color: rgba(239, 238, 236, 0.4); }
+html.dark .bz-chat-input:focus { border-color: rgba(239, 238, 236, 0.35); }
 
 /* عارضُ الصورة بملءِ الشاشة — أسودُ في الوضعين لأنّه إطارُ صورةٍ لا سطحُ واجهة */
 .bz-chat-viewer { background: rgba(0, 0, 0, 0.94); animation: bz-fade-in 0.14s ease-out both; }
@@ -4517,7 +4521,7 @@ body.bz-chat-open { overflow: hidden; }
 
 /* المقتبَسُ داخلَ الفقاعة (الردُّ على رسالة) وشارةُ التفاعل */
 .bz-chat-quote { background: rgba(23, 23, 23, 0.10); border-inline-start: 2px solid rgba(23, 23, 23, 0.45); }
-html.dark .bz-chat-quote { background: rgba(255, 255, 255, 0.10); border-inline-start-color: rgba(243, 237, 228, 0.6); }
+html.dark .bz-chat-quote { background: rgba(255, 255, 255, 0.10); border-inline-start-color: rgba(239, 238, 236, 0.6); }
 .bz-chat-out .bz-chat-quote { background: rgba(235, 235, 235, 0.16); border-inline-start-color: rgba(235, 235, 235, 0.6); }
 html.dark .bz-chat-out .bz-chat-quote { background: rgba(23, 21, 15, 0.12); border-inline-start-color: rgba(23, 21, 15, 0.45); }
 .bz-chat-react { background: #F9F9F8; box-shadow: 0 1px 4px rgba(23, 23, 23, 0.25); }
@@ -4531,69 +4535,69 @@ html.dark .bz-chat-react { background: #232120; box-shadow: 0 1px 4px rgba(0, 0,
    هنا نظيرُها الليليُّ كلُّه بمكانٍ واحد: أسطحٌ فحميّةٌ ولمسةٌ رمليّةٌ فاتحة. */
 
 /* ── أصنافُ الذهبِ المحوَّلةِ نهاراً إلى بنّيّ ── */
-html.dark .theme-pub .bg-gold-400 { background-color: #D8C7AC; }
-@media (hover: hover) { html.dark .theme-pub .hover\:bg-gold-400:hover { background-color: #E3D5BB; } }
-html.dark .theme-pub .bg-gold-400\/5 { background-color: rgba(243, 237, 228, 0.05); }
-html.dark .theme-pub .bg-gold-400\/15 { background-color: rgba(243, 237, 228, 0.10); }
-@media (hover: hover) { html.dark .theme-pub .hover\:bg-gold-400\/10:hover { background-color: rgba(243, 237, 228, 0.10); } }
-html.dark .theme-pub .ring-gold-400\/60 { --tw-ring-color: rgba(243, 237, 228, 0.35); }
+html.dark .theme-pub .bg-gold-400 { background-color: #D6D2CB; }
+@media (hover: hover) { html.dark .theme-pub .hover\:bg-gold-400:hover { background-color: #DEDBD5; } }
+html.dark .theme-pub .bg-gold-400\/5 { background-color: rgba(239, 238, 236, 0.05); }
+html.dark .theme-pub .bg-gold-400\/15 { background-color: rgba(239, 238, 236, 0.10); }
+@media (hover: hover) { html.dark .theme-pub .hover\:bg-gold-400\/10:hover { background-color: rgba(239, 238, 236, 0.10); } }
+html.dark .theme-pub .ring-gold-400\/60 { --tw-ring-color: rgba(239, 238, 236, 0.35); }
 html.dark .theme-pub .shadow-gold { box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.7); }
-@media (hover: hover) { html.dark .theme-pub .hover\:shadow-glow:hover { box-shadow: 0 0 35px -8px rgba(216, 199, 172, 0.22); } }
+@media (hover: hover) { html.dark .theme-pub .hover\:shadow-glow:hover { box-shadow: 0 0 35px -8px rgba(214, 210, 203, 0.22); } }
 
 /* ── أصنافُ الأبيضِ/الأسودِ المحوَّلةِ نهاراً إلى بنّيّ ── */
-html.dark .theme-pub .border-white\/20 { border-color: rgba(243, 237, 228, 0.18); }
-html.dark .theme-pub .border-white\/10 { border-color: rgba(243, 237, 228, 0.10); }
-html.dark .theme-pub .divide-white\/5 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(243, 237, 228, 0.07); }
-html.dark .theme-pub .hover\:bg-white\/10:hover { background-color: rgba(243, 237, 228, 0.08); }
-html.dark .theme-pub .bg-white\/\[0\.05\] { background-color: rgba(243, 237, 228, 0.05); }
+html.dark .theme-pub .border-white\/20 { border-color: rgba(239, 238, 236, 0.18); }
+html.dark .theme-pub .border-white\/10 { border-color: rgba(239, 238, 236, 0.10); }
+html.dark .theme-pub .divide-white\/5 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(239, 238, 236, 0.07); }
+html.dark .theme-pub .hover\:bg-white\/10:hover { background-color: rgba(239, 238, 236, 0.08); }
+html.dark .theme-pub .bg-white\/\[0\.05\] { background-color: rgba(239, 238, 236, 0.05); }
 html.dark .theme-pub .bg-black\/30 { background-color: rgba(0, 0, 0, 0.35); }
 
 /* ── حلقاتُ التركيز ── */
-html.dark .theme-pub .btn:focus { --tw-ring-color: rgba(216, 199, 172, 0.45); }
-html.dark .theme-pub .input:focus { border-color: rgba(216, 199, 172, 0.55); --tw-ring-color: rgba(216, 199, 172, 0.18); }
+html.dark .theme-pub .btn:focus { --tw-ring-color: rgba(214, 210, 203, 0.45); }
+html.dark .theme-pub .input:focus { border-color: rgba(214, 210, 203, 0.55); --tw-ring-color: rgba(214, 210, 203, 0.18); }
 
 /* ── ألوانٌ مكتوبةٌ حرفيّاً بأصنافِ المكوّنات ── */
 html.dark .theme-pub .bg-\[\#5e4636\] { background-color: #3A3735; }
 @media (hover: hover) { html.dark .theme-pub .hover\:bg-\[\#3f2e22\]:hover { background-color: #2A2827; } }
 html.dark .theme-pub .bg-\[\#3f2e22\] { background-color: #2A2827; }
-html.dark .theme-pub .bg-\[\#b09a7e\] { background-color: #D8C7AC; }
-html.dark .theme-pub .border-\[\#b09a7e\] { border-color: rgba(216, 199, 172, 0.5); }
+html.dark .theme-pub .bg-\[\#b09a7e\] { background-color: #D6D2CB; }
+html.dark .theme-pub .border-\[\#b09a7e\] { border-color: rgba(214, 210, 203, 0.5); }
 html.dark .theme-pub .bg-\[\#8a6a4f\] { background-color: #4A4644; }
 html.dark .theme-pub .bg-\[\#221912\] { background-color: #1A1918; }
 
 /* ── مكوّناتُ الواجهةِ التي لا يراها الثيم ── */
-html.dark .pub-navbar { background: #1A1918; border-color: rgba(243, 237, 228, 0.10); box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5); }
-html.dark .pub-cat { background: #232120; border-color: rgba(243, 237, 228, 0.10); box-shadow: 0 8px 22px -10px rgba(0, 0, 0, 0.6); }
-html.dark .bz-pb { background: rgba(26, 25, 24, 0.9); box-shadow: inset 0 0 0 1px rgba(243, 237, 228, 0.14); }
-html.dark .bz-progress { background: #D8C7AC; }
-html.dark .theme-pub .bz-story-ring { box-shadow: 0 0 0 1px rgba(243, 237, 228, 0.22), 0 4px 14px -3px rgba(0, 0, 0, 0.6); }
+html.dark .pub-navbar { background: #1A1918; border-color: rgba(239, 238, 236, 0.10); box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5); }
+html.dark .pub-cat { background: #232120; border-color: rgba(239, 238, 236, 0.10); box-shadow: 0 8px 22px -10px rgba(0, 0, 0, 0.6); }
+html.dark .bz-pb { background: rgba(26, 25, 24, 0.9); box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.14); }
+html.dark .bz-progress { background: #D6D2CB; }
+html.dark .theme-pub .bz-story-ring { box-shadow: 0 0 0 1px rgba(239, 238, 236, 0.22), 0 4px 14px -3px rgba(0, 0, 0, 0.6); }
 html.dark .theme-pub .gold-divider,
-html.dark .theme-pub .bz-divider > span { background: linear-gradient(90deg, transparent, rgba(243, 237, 228, 0.28), transparent); }
-html.dark .theme-pub .bz-divider > span:last-child { background: linear-gradient(270deg, transparent, rgba(243, 237, 228, 0.28), transparent); }
-html.dark .dash-hairline { background: linear-gradient(90deg, transparent, rgba(243, 237, 228, 0.22), transparent); }
-html.dark .range-dual::-webkit-slider-thumb { background: #D8C7AC; border-color: #17150F; }
-html.dark .range-dual::-moz-range-thumb { background: #D8C7AC; }
-html.dark { scrollbar-color: rgba(243, 237, 228, 0.28) transparent; }
+html.dark .theme-pub .bz-divider > span { background: linear-gradient(90deg, transparent, rgba(239, 238, 236, 0.28), transparent); }
+html.dark .theme-pub .bz-divider > span:last-child { background: linear-gradient(270deg, transparent, rgba(239, 238, 236, 0.28), transparent); }
+html.dark .dash-hairline { background: linear-gradient(90deg, transparent, rgba(239, 238, 236, 0.22), transparent); }
+html.dark .range-dual::-webkit-slider-thumb { background: #D6D2CB; border-color: #171615; }
+html.dark .range-dual::-moz-range-thumb { background: #D6D2CB; }
+html.dark { scrollbar-color: rgba(239, 238, 236, 0.28) transparent; }
 
 /* ── مساعِدةُ الأناقة (تُرسَمُ خارجَ الثيم فلها أصنافُها الخاصّة) ── */
-html.dark .sc-dark .sc-bubble-ai { background: #232120; color: #F3EDE4; border-color: rgba(243, 237, 228, 0.12); }
-html.dark .sc-dark .sc-input { background: #232120; color: #F3EDE4; border-color: rgba(243, 237, 228, 0.16); }
-html.dark .sc-dark .sc-chip { background: #232120; color: #D8C7AC; border-color: rgba(243, 237, 228, 0.16); }
-@media (hover: hover) { html.dark .sc-dark .sc-chip:hover { background: #3A3735; color: #F3EDE4; } }
+html.dark .sc-dark .sc-bubble-ai { background: #232120; color: #EFEEEC; border-color: rgba(239, 238, 236, 0.12); }
+html.dark .sc-dark .sc-input { background: #232120; color: #EFEEEC; border-color: rgba(239, 238, 236, 0.16); }
+html.dark .sc-dark .sc-chip { background: #232120; color: #D6D2CB; border-color: rgba(239, 238, 236, 0.16); }
+@media (hover: hover) { html.dark .sc-dark .sc-chip:hover { background: #3A3735; color: #EFEEEC; } }
 
 /* هيرو المتجرِ وتوهّجُه ليلاً: فحمٌ ولمسةٌ رمليّةٌ فاتحة — كان بنّيّاً صريحاً
    (‎#232322…) فيبقى كتلةً بنّيّةً أعلى كلِّ متجرٍ مهما بدّلنا بقيّةَ اللوحة. */
 html.dark .pub-hero {
   background:
-    radial-gradient(120% 70% at 50% -10%, rgba(216, 199, 172, 0.12), transparent 62%),
-    radial-gradient(80% 60% at 50% 115%, rgba(243, 237, 228, 0.05), transparent 65%),
-    radial-gradient(520px 280px at 84% 12%, rgba(243, 237, 228, 0.05), transparent 60%),
+    radial-gradient(120% 70% at 50% -10%, rgba(214, 210, 203, 0.12), transparent 62%),
+    radial-gradient(80% 60% at 50% 115%, rgba(239, 238, 236, 0.05), transparent 65%),
+    radial-gradient(520px 280px at 84% 12%, rgba(239, 238, 236, 0.05), transparent 60%),
     linear-gradient(158deg, #232120 0%, #171615 48%, #100F0E 100%);
 }
 html.dark .bz-sh-glow {
   background:
-    radial-gradient(70% 90% at 24% -10%, rgba(243, 237, 228, 0.08), transparent 62%),
-    radial-gradient(60% 80% at 88% 112%, rgba(216, 199, 172, 0.14), transparent 60%);
+    radial-gradient(70% 90% at 24% -10%, rgba(239, 238, 236, 0.08), transparent 62%),
+    radial-gradient(60% 80% at 88% 112%, rgba(214, 210, 203, 0.14), transparent 60%);
 }
 /* حجابُ صورةِ الهيرو وسِتارُ بطاقاتِ المجموعات: أسودُ محايدٌ ليلاً لا بنّيّ */
 html.dark .bz-hero-veil { background: linear-gradient(180deg, rgba(10, 10, 10, calc(var(--bz-dim, 0.62) * 0.72)) 0%, rgba(10, 10, 10, var(--bz-dim, 0.62)) 45%, rgba(10, 10, 10, calc(var(--bz-dim, 0.62) * 0.55 + 0.45)) 78%, #100F0E 100%); }
@@ -4618,7 +4622,7 @@ html.dark .bz-fab,
 html.dark .theme-pub .bz-fab {
   background: #232120;
   color: #E8E3DA;
-  box-shadow: 0 10px 26px -12px rgba(0, 0, 0, 0.75), inset 0 0 0 1px rgba(243, 237, 228, 0.14);
+  box-shadow: 0 10px 26px -12px rgba(0, 0, 0, 0.75), inset 0 0 0 1px rgba(239, 238, 236, 0.14);
 }
 
 /* ═══ إيقاعُ صفحاتِ التسوّقِ ورؤوسُ أقسامِها ═══
@@ -4703,12 +4707,12 @@ html.dark .theme-pub .bz-band { background: #161514; }
   }
 }
 html.dark .theme-pub .bz-pcard {
-  border-color: rgba(243, 237, 228, 0.09);
+  border-color: rgba(239, 238, 236, 0.09);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 30px -18px rgba(0, 0, 0, 0.7);
 }
 @media (hover: hover) and (pointer: fine) {
   html.dark .theme-pub .group:hover .bz-pcard {
-    border-color: rgba(243, 237, 228, 0.18);
+    border-color: rgba(239, 238, 236, 0.18);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5), 0 28px 52px -24px rgba(0, 0, 0, 0.85);
   }
 }
@@ -4731,7 +4735,7 @@ html.dark .theme-pub .bz-pmedia { background: #1C1B1A; }
   pointer-events: none;
   box-shadow: inset 0 0 0 1px rgba(23, 23, 23, 0.07);
 }
-html.dark .theme-pub .bz-pmedia::after { box-shadow: inset 0 0 0 1px rgba(243, 237, 228, 0.08); }
+html.dark .theme-pub .bz-pmedia::after { box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.08); }
 
 /* أرقامُ الأسعارِ بعرضٍ ثابتٍ للرقمِ الواحد: أسعارُ صفٍّ كاملٍ تصطفُّ تحتَ
    بعضِها بدل أن تتراقصَ حوافُّها باختلافِ عرضِ ١ و٧ — تفصيلٌ لا يُلاحَظُ
@@ -4784,11 +4788,11 @@ html.dark .theme-pub .bz-pmedia::after { box-shadow: inset 0 0 0 1px rgba(243, 2
 }
 html.dark .theme-pub .bz-cattile {
   background: #1C1B1A;
-  box-shadow: inset 0 0 0 1px rgba(243, 237, 228, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.08);
 }
 @media (hover: hover) and (pointer: fine) {
   html.dark .theme-pub .group:hover .bz-cattile {
     background: #232120;
-    box-shadow: inset 0 0 0 1px rgba(243, 237, 228, 0.16);
+    box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.16);
   }
 }
