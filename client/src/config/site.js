@@ -14,6 +14,10 @@ export const BAZARA_FACEBOOK = '';
 export const BAZARA_REGISTRY_NO = '409147915';
 // بصيغةٍ دوليّة، وهي نفسها التي تُكتب في حقل Business phone number عند Meta.
 export const BAZARA_PHONE = '+970 59 212 4988';
+// بريدُ الدعمِ الرسميّ — يظهرُ بالفوترِ وبصفحتَي الخصوصيّةِ والشروط.
+// على نطاقِ الموقعِ لا على جوجل: العنوانُ الشخصيُّ لا يقولُ إنّ خلفَه شركةً،
+// ولا يُسلَّمُ لمن يتولّى الدعمَ لاحقاً. غيِّرهُ هنا فيتغيّرُ بكلِّ مكان.
+export const BAZARA_EMAIL = 'info@bazarastore.site';
 
 // Cloudinary — للرفع المباشر للفيديو/الصور من الجهاز (اتركهما فارغين لإخفاء زر الرفع)
 export const CLOUDINARY_CLOUD = 'dkzrnu4cs';

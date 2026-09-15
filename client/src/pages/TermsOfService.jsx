@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Seo from '../components/Seo.jsx';
+import { BAZARA_EMAIL } from '../config/site.js';
 import Logo from '../components/Logo.jsx';
 import LanguageSwitcher from '../components/LanguageSwitcher.jsx';
 import { ForwardIcon } from '../components/icons.jsx';
@@ -117,7 +118,7 @@ export default function TermsOfService() {
 
         <h2 className="bz-doc-h2 pt-2 text-lg font-bold">التواصل</h2>
         <p className="leading-relaxed">
-          لأي استفسار حول هذه الشروط: <span dir="ltr">bzoorjamal2@gmail.com</span>
+          لأي استفسار حول هذه الشروط: <a href={`mailto:${BAZARA_EMAIL}`} dir="ltr" className="underline">{BAZARA_EMAIL}</a>
         </p>
       </section>
 
@@ -215,7 +216,7 @@ export default function TermsOfService() {
 
         <h2 className="bz-doc-h2 pt-2 text-lg font-bold">Contact</h2>
         <p className="leading-relaxed">
-          For questions about these terms: bzoorjamal2@gmail.com
+          For questions about these terms: <a href={`mailto:${BAZARA_EMAIL}`} dir="ltr" className="underline">{BAZARA_EMAIL}</a>
         </p>
       </section>
       </div>

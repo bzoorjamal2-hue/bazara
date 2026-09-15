@@ -27,7 +27,7 @@ import SwipeBack from './SwipeBack.jsx';
 import { isStandalone } from '../utils/pwa.js';
 import { buildWhatsappLink } from '../utils/whatsapp.js';
 import { WhatsAppIcon, InstagramIcon, FacebookIcon } from './icons.jsx';
-import { BAZARA_WHATSAPP, BAZARA_INSTAGRAM, BAZARA_FACEBOOK, BAZARA_REGISTRY_NO, BAZARA_PHONE } from '../config/site.js';
+import { BAZARA_WHATSAPP, BAZARA_INSTAGRAM, BAZARA_FACEBOOK, BAZARA_REGISTRY_NO, BAZARA_PHONE, BAZARA_EMAIL } from '../config/site.js';
 import { setPlatformCategories } from '../utils/platformCategories.js';
 import ImpersonationBar from './ImpersonationBar.jsx';
 import ServerDownBanner from './ServerDownBanner.jsx';
@@ -211,6 +211,10 @@ function PublicFooter({ bottomNav = false }) {
             <span aria-hidden className="mx-2">·</span>
             <a href={`tel:${BAZARA_PHONE.replace(/ /g, '')}`} dir="ltr" className="hover:text-cream">
               {BAZARA_PHONE}
+            </a>
+            <span aria-hidden className="mx-2">·</span>
+            <a href={`mailto:${BAZARA_EMAIL}`} dir="ltr" className="hover:text-cream">
+              {BAZARA_EMAIL}
             </a>
           </p>
         </div>

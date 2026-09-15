@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Seo from '../components/Seo.jsx';
+import { BAZARA_EMAIL } from '../config/site.js';
 import Logo from '../components/Logo.jsx';
 import LanguageSwitcher from '../components/LanguageSwitcher.jsx';
 import { ForwardIcon } from '../components/icons.jsx';
@@ -71,7 +72,7 @@ export default function PrivacyPolicy() {
 
         <h2 className="bz-doc-h2 pt-2 text-lg font-bold">التواصل</h2>
         <p className="leading-relaxed">
-          لأي استفسار حول الخصوصية أو لطلب حذف البيانات: <span dir="ltr">bzoorjamal2@gmail.com</span>
+          لأي استفسار حول الخصوصية أو لطلب حذف البيانات: <a href={`mailto:${BAZARA_EMAIL}`} dir="ltr" className="underline">{BAZARA_EMAIL}</a>
         </p>
       </section>
 
@@ -121,7 +122,7 @@ export default function PrivacyPolicy() {
 
         <h2 className="bz-doc-h2 pt-2 text-lg font-bold">Contact</h2>
         <p className="leading-relaxed">
-          For privacy questions or data-deletion requests: bzoorjamal2@gmail.com
+          For privacy questions or data-deletion requests: <a href={`mailto:${BAZARA_EMAIL}`} dir="ltr" className="underline">{BAZARA_EMAIL}</a>
         </p>
       </section>
       </div>
