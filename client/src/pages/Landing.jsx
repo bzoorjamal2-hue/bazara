@@ -657,12 +657,16 @@ export default function Landing() {
                     يدويّاً — ولم يكن مكتوباً، فكان قسمُ «تواصل معنا» بلا بريدٍ أصلاً،
                     وهو أوّلُ ما تبحثُ عنه تاجرةٌ تتردّدُ قبلَ الاشتراك. */}
                 <li>
-                  <a href={`mailto:${contact.email || BAZARA_EMAIL}`} dir="ltr">
-                    <MailIcon className="h-4 w-4" /> {contact.email || BAZARA_EMAIL}
+                  {/* الاتّجاهُ يتبعُ اللغة: الأيقونةُ يمينَ النصِّ بالعربيّةِ ويسارَه
+                      بالإنجليزيّة. كان ‎dir="ltr" على السطرِ كلِّه فتقفزُ الأيقونةُ
+                      لليسارِ بالعربيّةِ وحدَها. و‎<bdi> يبقي العنوانَ نفسَه لاتينيّاً
+                      مقروءاً كما هو مهما كان اتّجاهُ الصفحة. */}
+                  <a href={`mailto:${contact.email || BAZARA_EMAIL}`}>
+                    <MailIcon className="h-4 w-4" /> <bdi dir="ltr">{contact.email || BAZARA_EMAIL}</bdi>
                   </a>
                 </li>
                 {contact.phone && (
-                  <li><a href={`tel:${contact.phone}`} dir="ltr"><PhoneIcon className="h-4 w-4" /> {contact.phone}</a></li>
+                  <li><a href={`tel:${contact.phone}`}><PhoneIcon className="h-4 w-4" /> <bdi dir="ltr">{contact.phone}</bdi></a></li>
                 )}
                 {(pick(contact, 'address', '')) && (
                   <li><span><PinIcon className="h-4 w-4" /> {pick(contact, 'address', '')}</span></li>
