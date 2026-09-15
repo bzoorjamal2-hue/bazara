@@ -230,12 +230,29 @@ const sanitizeLookbook = (v) => {
   // javascript: — ويُخزَّن كائناً فارغاً {} بعد JSON.stringify.
   const image = /^https?:\/\//i.test(String(v.image ?? '')) ? String(v.image).slice(0, 500) : '';
   if (!image) return {}; // بلا صورة لا معنى للوك بوك
+  // معرّفُ المنتجِ بهذا النظامِ نصٌّ ‎(UUID) لا رقم. كان الترشيحُ
+  // ‏‎Number.isInteger(n) && n > 0 — فكلُّ معرّفٍ يصيرُ ‎NaN ويسقط، وتُحفَظُ
+  // القائمةُ فارغةً دائماً مهما اختارَ المديرُ من قطع: يظهرُ اللوك بوكُ صورةً
+  // بلا قطعةٍ واحدةٍ ولا رسالةَ خطأٍ تشرحُ لماذا.
+  const ids = (Array.isArray(v.productIds) ? v.productIds : [])
+    .map((x) => String(x || '').trim())
+    .filter((x) => /^[A-Za-z0-9-]{8,64}$/.test(x))
+    .slice(0, 12);
   return {
     image,
     title: String(v.title ?? '').slice(0, 60).trim(),
     titleEn: String(v.titleEn ?? '').slice(0, 60).trim(),
-    productIds: (Array.isArray(v.productIds) ? v.productIds : [])
-      .map((n) => Number(n)).filter((n) => Number.isInteger(n) && n > 0).slice(0, 12),
+    productIds: ids,
+    // مواضعُ النقاطِ على الصورةِ بالنسبةِ المئويّة — تربطُ كلَّ قطعةٍ بمكانِها
+    // من الإطلالة. نقبلُ فقط ما يخصُّ قطعةً مختارةً فعلاً، وبحدودِ الصورة.
+    points: (Array.isArray(v.points) ? v.points : [])
+      .map((p) => ({
+        id: String(p?.id || '').trim(),
+        x: Math.min(98, Math.max(2, Number(p?.x))),
+        y: Math.min(98, Math.max(2, Number(p?.y))),
+      }))
+      .filter((p) => ids.includes(p.id) && Number.isFinite(p.x) && Number.isFinite(p.y))
+      .slice(0, 12),
   };
 };
 

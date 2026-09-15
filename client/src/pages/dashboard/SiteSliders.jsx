@@ -5,6 +5,7 @@ import { clearCachePrefixes } from '../../utils/apiCache.js';
 import Spinner from '../../components/Spinner.jsx';
 import BannerEditor from '../../components/BannerEditor.jsx';
 import CollectionWide from '../../components/CollectionWide.jsx';
+import LookbookPoints from '../../components/LookbookPoints.jsx';
 import ImageInput from '../../components/ImageInput.jsx';
 import { ImageIcon, GridIcon } from '../../components/icons.jsx';
 import { PageHead, SectionHead, Field, RowTools, Tip } from '../../components/FormField.jsx';
@@ -214,11 +215,17 @@ export default function SiteSliders() {
           <input value={lb.title} onChange={(e) => setLb({ ...lb, title: e.target.value })} maxLength={60} placeholder={t('admin.lookbookTitle')} className="input" />
           <input value={lb.titleEn} onChange={(e) => setLb({ ...lb, titleEn: e.target.value })} maxLength={60} dir="ltr" placeholder={t('admin.collectionTitleEn')} className="input" />
         </div>
+        {/* معرّفُ المنتجِ نصٌّ ‎(UUID) لا رقم. كان يُرشَّحُ بـ‎Number.isInteger
+            فيسقطُ كلُّ معرّفٍ ويُحفَظُ الحقلُ فارغاً مهما كُتِبَ فيه. */}
         <input
           value={(lb.productIds || []).join(', ')}
-          onChange={(e) => setLb({ ...lb, productIds: e.target.value.split(',').map((n) => Number(n.trim())).filter((n) => Number.isInteger(n) && n > 0) })}
+          onChange={(e) => setLb({
+            ...lb,
+            productIds: e.target.value.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 12),
+          })}
           dir="ltr" placeholder={t('admin.lookbookIds')} className="input w-full"
         />
+        <LookbookPoints lb={lb} onChange={setLb} />
       </div>
 
       <button onClick={save} disabled={busy} className="btn-primary">{busy ? t('common.loading') : t('common.save')}</button>

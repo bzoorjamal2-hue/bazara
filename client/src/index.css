@@ -4998,3 +4998,56 @@ html.dark .theme-pub .bz-featstore {
   background-position: center;
   background-repeat: no-repeat;
 }
+
+/* ═══════ نقاطُ «اشتري الإطلالة» ═══════
+   تربطُ القطعةَ بموضعِها من الصورة. بلا هذا الربطِ تبقى الصورةُ مُلهِمةً والقطعُ
+   مجهولةَ المكان — أيُّ فستانٍ هذا وأيُّ حجابٍ ذاك؟ والرقمُ نفسُه يظهرُ على
+   البطاقةِ بالجانب، فالعينُ تصلُ بينهما بلا شرح. */
+.bz-look-img { position: relative; }
+.bz-look-dot {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  height: 1.75rem;
+  width: 1.75rem;
+  translate: -50% -50%;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(250, 249, 247, 0.94);
+  color: #1F1E1D;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.38);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+/* الجهةُ منطقيّةٌ ‎(inset-inline-start) فينقلبُ الموضعُ مع اللغة — ولذلك
+   نعكسُ الإزاحةَ الأفقيّةَ بالإنجليزيّةِ كي تبقى النقطةُ فوقَ مركزِها. */
+html[dir='ltr'] .bz-look-dot { translate: -50% -50%; }
+html[dir='rtl'] .bz-look-dot { translate: 50% -50%; }
+@media (hover: hover) { .bz-look-dot:hover { transform: scale(1.18); background: #FFFFFF; } }
+.bz-look-dot.is-on { transform: scale(1.18); background: #FFFFFF; }
+.bz-look-dot:focus-visible { outline: 2px solid #F6F5F3; outline-offset: 2px; }
+
+/* البطاقةُ المُبرَزةُ حينَ تُلمَسُ نقطتُها */
+.bz-look-lit { transform: translateY(-3px); }
+.bz-look-num {
+  position: absolute;
+  inset-inline-start: 0.5rem;
+  top: 0.5rem;
+  z-index: 3;
+  display: grid;
+  height: 1.4rem;
+  width: 1.4rem;
+  place-items: center;
+  border-radius: 999px;
+  background: #1F1E1D;
+  color: #FAF9F7;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+@media (prefers-reduced-motion: reduce) {
+  .bz-look-dot, .bz-look-lit { transition: none; transform: none; }
+}
