@@ -412,7 +412,11 @@ function heroCrop(url, w, ar) {
   if (vi === -1) vi = segs.length - 1;
   const rest = segs.slice(vi).join('/').replace(/\.[a-z0-9]+$/i, '');
   const frame = m[2] === 'video' ? 'so_0,' : '';
-  return `${m[1]}${frame}f_auto,q_auto:best,w_${w},c_fill,g_auto,ar_${ar},e_sharpen:60/${rest}.jpg`;
+  // ‏c_lfill لا c_fill: الثانيةُ تُكبّرُ المصدرَ ليبلغَ العرضَ المطلوب، والتكبيرُ
+  // لا يُضيفُ تفصيلاً بل يُذيبُه — وهذا ما جعلَ صورةً بعرضِ ‎1242 تخرجُ مغبَّشةً
+  // حينَ طُلِبت بـ‎1440. الأولى تقصُّ للنسبةِ نفسِها ولا تتجاوزُ دقّةَ الأصلِ أبداً،
+  // فأيُّ صورةٍ يرفعُها المديرُ أو التاجرةُ تُعرَضُ بأحسنِ ما فيها لا أسوأ.
+  return `${m[1]}${frame}f_auto,q_auto:best,w_${w},c_lfill,g_auto,ar_${ar},e_sharpen:60/${rest}.jpg`;
 }
 
 // سلايدر الـ Hero للصفحة الرئيسية: شريحة ثابتة + شريحتين, تحريك تلقائي + سحب باللمس
