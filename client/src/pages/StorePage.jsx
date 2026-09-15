@@ -393,14 +393,16 @@ export default function StorePage() {
                       {t('store.catSale', { count: cnt.sale })}
                     </span>
                   )}
-                  <div className="flex aspect-square w-full items-center justify-center overflow-hidden">
+                  <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-xl">
                     {src ? (
                       <img
                         src={src}
                         alt={catLabel(c.key)}
                         loading="eager"
                         decoding="async"
-                        className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
+                        // صورةُ التاجرةِ تملأُ المربّعَ كصورةٍ حقيقيّة، والأيقونةُ
+                        // الثابتةُ رسمٌ بلا خلفيّةٍ يبقى داخلَه بلا قصّ
+                        className={`h-full w-full transition-transform duration-500 group-hover:scale-105 ${c.image ? 'object-cover' : 'object-contain'}`}
                       />
                     ) : (
                       <svg viewBox="0 0 24 24" className="h-1/2 w-1/2 text-wine/60" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

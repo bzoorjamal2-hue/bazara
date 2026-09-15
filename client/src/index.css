@@ -4765,3 +4765,30 @@ html.dark .theme-pub .bz-pmedia::after { box-shadow: inset 0 0 0 1px rgba(243, 2
   background: radial-gradient(78% 68% at 50% 50%,
     rgba(8, 8, 8, 0.52) 0%, rgba(8, 8, 8, 0.2) 58%, rgba(8, 8, 8, 0.46) 100%);
 }
+
+/* ═══════ بلاطةُ الفئة ═══════
+   كانت الأيقونةُ تطفو على بياضِ الصفحةِ بلا أرضيّةٍ ولا حافّة — فتبدو قصاصةً
+   مرسومةً لا بطاقةً تُنقَر، ويبقى قسمُ «تصفّحي حسب الفئة» فارغاً رغمَ طولِه.
+   أرضيّةٌ رماديّةٌ فاتحةٌ وخطٌّ داخليٌّ يجعلانِ منها بطاقةً، وتُعمّقانِ عندَ
+   المرورِ فيصيرُ للقسمِ إيقاع. */
+.theme-pub .bz-cattile {
+  background: #F2F2F1;
+  box-shadow: inset 0 0 0 1px rgba(23, 23, 23, 0.06);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .theme-pub .group:hover .bz-cattile {
+    background: #ECEBE9;
+    box-shadow: inset 0 0 0 1px rgba(23, 23, 23, 0.12);
+  }
+}
+html.dark .theme-pub .bz-cattile {
+  background: #1C1B1A;
+  box-shadow: inset 0 0 0 1px rgba(243, 237, 228, 0.08);
+}
+@media (hover: hover) and (pointer: fine) {
+  html.dark .theme-pub .group:hover .bz-cattile {
+    background: #232120;
+    box-shadow: inset 0 0 0 1px rgba(243, 237, 228, 0.16);
+  }
+}

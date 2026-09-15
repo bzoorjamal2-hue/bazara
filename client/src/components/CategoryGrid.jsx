@@ -25,11 +25,15 @@ function CategoryCard({ cat }) {
   const label = cat.name || (cat.builtin ? t(`categories.${cat.key}`) : cat.key);
   // صورة المالكة المخصّصة تُحسَّن بحجم أصغر وصيغة تلقائية لظهور أسرع؛ والأيقونة الثابتة كما هي
   const src = cat.image ? cldThumb(cat.image, 400) : cat.builtin ? `/categories/${cat.key}.png` : '';
+  // صورةُ التاجرةِ صورةٌ حقيقيّةٌ تملأُ البلاطة، والأيقونةُ الثابتةُ رسمٌ بلا
+  // خلفيّةٍ يتنفّسُ داخلَها بحشوة — لا يُعامَلانِ معاملةً واحدة.
+  const isPhoto = Boolean(cat.image);
   return (
     <div className="transition duration-300 group-hover:-translate-y-1">
-      {/* بلا إطار/خلفية — يظهر شكل الأيقونة فقط (الصور بلا خلفية)، بحجم موحّد */}
-      <div className="relative flex aspect-square items-center justify-center overflow-hidden">
-        {/* هالة ذهبية ناعمة تتوهّج خلف الأيقونة عند المرور — لمسة بوتيك راقية */}
+      {/* بلاطةٌ لها أرضيّةٌ وحافّة: كانت الأيقونةُ تطفو على البياضِ فتبدو قصاصةً
+          لا بطاقة، وبقيَ القسمُ فارغاً رغمَ طولِه. */}
+      <div className="bz-cattile relative flex aspect-square items-center justify-center overflow-hidden rounded-2xl">
+        {/* هالةٌ ناعمةٌ تتوهّجُ خلفَ الأيقونةِ عند المرور — لمسةُ بوتيكٍ راقية */}
         <span aria-hidden className="pointer-events-none absolute inset-0 m-auto h-2/3 w-2/3 rounded-full bg-gold-400/25 opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100" />
         {src ? (
           <img
@@ -37,7 +41,7 @@ function CategoryCard({ cat }) {
             alt={label}
             loading="eager"
             decoding="async"
-            className="relative h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
+            className={`relative h-full w-full transition-transform duration-500 group-hover:scale-105 ${isPhoto ? 'object-cover' : 'object-contain p-3 sm:p-4'}`}
           />
         ) : (
           // فئة مخصّصة بلا صورة → أيقونة ملبس خطّية أنيقة بلون خمري
@@ -47,8 +51,8 @@ function CategoryCard({ cat }) {
           </svg>
         )}
       </div>
-      <div className="pt-1 text-center">
-        <span className="text-xs font-bold text-wine sm:text-sm">{label}</span>
+      <div className="pt-2.5 text-center">
+        <span className="text-[0.78rem] font-semibold text-wine sm:text-sm">{label}</span>
       </div>
     </div>
   );
@@ -103,7 +107,7 @@ export default function CategoryGrid({ onSelect, active, images = {}, names = {}
 
   const Item = ({ cat }) => {
     const isActive = active === cat.key;
-    const cls = `group block animate-fade-up transition-all duration-300 hover:-translate-y-1.5 ${isActive ? 'ring-2 ring-wine ring-offset-2 ring-offset-cream rounded-3xl' : ''}`;
+    const cls = `group block animate-fade-up transition-all duration-300 hover:-translate-y-1.5 ${isActive ? 'ring-2 ring-wine ring-offset-2 ring-offset-cream rounded-2xl' : ''}`;
     return onSelect ? (
       <button type="button" onClick={() => onSelect(isActive ? 'all' : cat.key)} className={cls}>
         <CategoryCard cat={cat} />
