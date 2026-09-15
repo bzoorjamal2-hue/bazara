@@ -430,11 +430,27 @@ function HomeHero({ banners = [] }) {
   // تقدّمٌ تلقائيٌّ دوريٌّ كلَّ سبعِ ثوانٍ — ويقفُ أثناءَ السحبِ باللمسِ فلا
   // تُسحَبُ الشريحةُ من تحتِ إصبعِ الزبونةِ وهي تتصفّح. وشريحةٌ واحدةٌ لا تدور.
   const [paused, setPaused] = useState(false);
+  // القفزةُ من الشريحةِ الأخيرةِ إلى الأولى تُنفَّذُ بلا حركة: الحركةُ العاديّةُ
+  // تجعلُها تمسحُ الشرائحَ كلَّها بالاتّجاهِ المعاكسِ فينكسرُ إحساسُ الدوران —
+  // يمشي الشريطُ يساراً أربعَ مرّاتٍ ثمّ يرتدُّ يميناً مسحةً طويلة.
+  const [snap, setSnap] = useState(false);
   useEffect(() => {
     if (len <= 1 || paused) return undefined;
-    const id = setInterval(() => setI((p) => (p + 1) % len), 7000);
+    const id = setInterval(() => {
+      setI((prev) => {
+        const next = (prev + 1) % len;
+        setSnap(next === 0);
+        return next;
+      });
+    }, 7000);
     return () => clearInterval(id);
   }, [len, paused, i]);
+  // تعودُ الحركةُ بعدَ رسمِ الإطارِ الجديدِ مباشرةً
+  useEffect(() => {
+    if (!snap) return undefined;
+    const id = setTimeout(() => setSnap(false), 60);
+    return () => clearTimeout(id);
+  }, [snap, i]);
 
   // تشغيل ذكي لفيديوهات الشرائح (إصلاح تعليق): كانت كل الفيديوهات تعمل معاً بلا
   // توقف حتى خارج الشاشة. الآن يعمل فيديو الشريحة الظاهرة فقط، ويتوقف الكل
@@ -567,7 +583,7 @@ function HomeHero({ banners = [] }) {
             // تصيرُ مرجعاً ملتبساً. عرضُ الإطارِ مقيسٌ ومضروبٌ بالفهرسِ لا يلتبس.
             transform: `translate3d(${(rtl ? -1 : 1) * i * frameW + drag}px, 0, 0)`,
             direction: 'ltr',
-            transition: draggingRef.current ? 'none' : 'transform 480ms cubic-bezier(0.22, 0.61, 0.36, 1)',
+            transition: draggingRef.current || snap ? 'none' : 'transform 480ms cubic-bezier(0.22, 0.61, 0.36, 1)',
             willChange: 'transform',
           }}
         >
