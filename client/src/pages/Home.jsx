@@ -80,6 +80,39 @@ export default function Home() {
       .catch(() => { /* الريل اختياري — لا يكسر الرئيسية */ });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  // رفوفُ العرضِ الثلاثةُ لا تُكرّرُ قطعةً بينَها.
+  //
+  // الخادمُ يبني كلَّ حزمةٍ باستعلامٍ مستقلّ: أعلى الخصوماتِ، وأكثرُ مبيعاً،
+  // والمميَّزة — فالقطعةُ المخفَّضةُ المميَّزةُ تقعُ بالثلاثِ معاً. قِستُ على
+  // المتجرِ الحيّ: أربعٌ وثلاثونَ خانةً تحملُ اثنتَينِ وعشرينَ قطعةً فريدة،
+  // أي اثنتا عشرةَ مكرَّرة. الصفحةُ لا تبدو متكرّرةً فحسب — هي متكرّرةٌ فعلاً.
+  //
+  // الترتيبُ بالأولويّة: الخصمُ أوّلاً فهو الأعجلُ للمشترية، ثمّ دليلُ المبيعات،
+  // ثمّ اختيارُ المديرِ يملأُ ما بقي. وشبكةُ «أحدثِ المنتجات» تبقى كاملةً بلا
+  // ترشيح: هي قسمُ التصفّحِ لا رفُّ عرض، ووجودُ القطعةِ بها بعدَ ظهورِها برفٍّ
+  // أمرٌ طبيعيٌّ بكلِّ متجر.
+  const rails = useMemo(() => {
+    const seen = new Set();
+    const take = (list) => (list || []).filter((p) => {
+      if (!p || seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    });
+    return {
+      deals: take(data?.deals),
+      bestSellers: take(data?.bestSellers),
+      featured: take(data?.featured),
+      // ما ظهرَ بالرفوفِ أو بشبكةِ التصفّح لا يُقترَحُ ثانيةً بكتلةِ «خاصٌّ بكِ»:
+      // القسمُ يُبنى من فئةٍ واحدةٍ هي الأكثرُ تصفّحاً، فيعيدُ غالباً ما مرَّ
+      // بالأعلى — وتكرارُ اقتراحِ ما رأتهُ للتوِّ يُفقِدُ القسمَ معناه.
+      shown: new Set([...seen, ...(data?.products || []).map((p) => p && p.id)]),
+    };
+  }, [data]);
+  const forYouFresh = useMemo(
+    () => forYou.filter((p) => p && !rails.shown.has(p.id)),
+    [forYou, rails],
+  );
+
   // بانرات الصفحة الرئيسية محفوظة محلياً → تظهر فوراً عند الفتح (لا وميض للسلايدر القديم)
   const persistedBanners = useMemo(() => {
     try { return JSON.parse(localStorage.getItem('bz_home_banners') || 'null'); } catch { return null; }
@@ -147,14 +180,14 @@ export default function Home() {
       )}
 
       {/* صفقات اليوم — أعلى الخصومات عبر المنصّة (أسلوب المتاجر الكبرى) */}
-      {data?.deals?.length > 0 && (
+      {rails.deals.length > 0 && (
         <Reveal>
           <>
             <ProductRail
               eyebrow={t('home.eyebrowDeals')}
               title={t('home.deals')}
               icon={<BoltIcon className="h-5 w-5 shrink-0 text-gold-500" />}
-              products={data.deals}
+              products={rails.deals}
               action={
                 <Link to="/offers" className="inline-flex items-center gap-1 text-sm font-semibold text-gold-200 transition hover:opacity-80">
                   {t('store.viewAll')} <ForwardIcon className="h-4 w-4 rtl-flip" />
@@ -162,13 +195,13 @@ export default function Home() {
               }
             />
             {/* أعمق خصم وما يوشك على الانتهاء — الرفّ وحده لا يقول أيّهما يستحقّ العجلة */}
-            <OffersBar products={data.deals} compact />
+            <OffersBar products={rails.deals} compact />
           </>
         </Reveal>
       )}
 
       {/* الأكثر مبيعاً — إثبات اجتماعي حقيقي من المبيعات المؤكّدة */}
-      {data?.bestSellers?.length > 0 && <Reveal><ProductRail ink eyebrow={t('home.eyebrowBest')} title={t('home.bestSellers')} icon={<FireIcon className="h-5 w-5 shrink-0 text-[#8a2438]" />} products={data.bestSellers} /></Reveal>}
+      {rails.bestSellers.length > 0 && <Reveal><ProductRail ink eyebrow={t('home.eyebrowBest')} title={t('home.bestSellers')} icon={<FireIcon className="h-5 w-5 shrink-0 text-[#8a2438]" />} products={rails.bestSellers} /></Reveal>}
 
       {loading ? (
         <section className="bz-sec-gap">
@@ -179,12 +212,12 @@ export default function Home() {
           {/* منتجات مميّزة — رفٌّ لا شبكة: شبكتانِ كاملتانِ متتاليتانِ (هذه
               و«أحدثُ المنتجات») تُقرآنِ شبكةً واحدةً طويلة. تبقى الشبكةُ
               الكاملةُ للأحدثِ وحدَها — هي قسمُ التصفّحِ الحقيقيّ. */}
-          {data.featured?.length > 0 && (
+          {rails.featured.length > 0 && (
             <Reveal>
               <section className="bz-sec-gap">
                 <SectionTitle eyebrow={t('landing.shelfEyebrow')}>{t('home.featuredProducts')}</SectionTitle>
                 <div className="bz-cards-rail">
-                  {(data.featured || []).map((p, i) => (
+                  {rails.featured.map((p, i) => (
                     <ProductCard key={p.id} product={p} index={i} />
                   ))}
                 </div>
@@ -264,14 +297,14 @@ export default function Home() {
       {/* كتلةٌ شخصيّةٌ واحدة: المقترحاتُ وما شوهِدَ مؤخّراً تحتَ رأسٍ واحدٍ بآخرِ
           الصفحة. كانا رفّينِ منفصلينِ بالأعلى بنفسِ شكلِ رفوفِ العرضِ تماماً —
           ومكانُهما الصحيحُ هنا: هذا تاريخُ تصفّحِها لا عرضٌ تجاريّ. */}
-      {(forYou.length >= 3 || recent.length > 0) && (
+      {(forYouFresh.length >= 3 || recent.length > 0) && (
         <Reveal>
           <section className="bz-band bz-sec-gap">
             <div className="bz-inner">
               <SectionTitle eyebrow={t('home.eyebrowPersonal')}>{t('home.personalTitle')}</SectionTitle>
               <div className="space-y-10">
-                {forYou.length >= 3 && (
-                  <ProductRail sub title={t('home.forYou')} icon={<SparkleIcon className="h-5 w-5 shrink-0 text-gold-500" />} products={forYou} />
+                {forYouFresh.length >= 3 && (
+                  <ProductRail sub title={t('home.forYou')} icon={<SparkleIcon className="h-5 w-5 shrink-0 text-gold-500" />} products={forYouFresh} />
                 )}
                 {recent.length > 0 && <ProductRail sub title={t('product.recentlyViewed')} products={recent} />}
               </div>
