@@ -207,12 +207,12 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
           واحدة بحدود ذهبية خفيفة وظل ناعم — glass بيضاء نهاراً وداكنة أنيقة ليلاً */}
       {/* flex عمودي بارتفاع كامل: كل بطاقات الصف تتساوى طولاً مهما اختلف محتواها
           (نقاط ألوان/تقييم موجودة أو لا) — الشبكة تظل مصفوفة ومنسّقة */}
-      <div className="glass flex h-full flex-col overflow-hidden !p-0 transition duration-300 group-hover:shadow-[0_18px_36px_-20px_rgba(20,20,20,0.28)]">
+      <div className="bz-pcard glass flex h-full flex-col overflow-hidden !p-0">
       {/* نسخة ضبابية ضئيلة خلف الصورة حتى تجهز (blur-up) — ملامح القطعة وألوانها
           تظهر فوراً فيبدو التحميل أنعم من مربّع رمادي. نُبقي الهيكل اللامع للصور
           غير المستضافة على Cloudinary (لا نسخة ضبابية لها) */}
       <div
-        className="relative aspect-[3/4] shrink-0 overflow-hidden bg-ink-800 bg-cover bg-center"
+        className="bz-pmedia relative aspect-[3/4] shrink-0 overflow-hidden bg-cover bg-center"
         style={blurUrl && !imgLoaded ? { backgroundImage: `url("${blurUrl}")` } : undefined}
       >
         {!imgLoaded && !blurUrl && <div className="skeleton absolute inset-0" aria-hidden="true" />}
@@ -312,10 +312,14 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
             <Countdown endsAt={product.saleEndsAt} />
           </span>
         )}
+        {/* علامةُ الفيديو: إشارةٌ لا لوحةُ تحكّم. كانت قرصاً أسودَ بقطرِ ٥٦ بكسلاً
+            وسطَ الصورة — وأكثرُ قطعِ المتجرِ لها فيديو، فتصيرُ الشبكةُ أربعاً
+            وعشرينَ دائرةً سوداءَ تُنافسُ الفساتينَ على النظر. أصغرُ وأخفُّ،
+            وتكبرُ عندَ المرورِ حينَ تصيرُ مقصودة. */}
         {product.videoUrl && (
           <span className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-center">
-            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-black/50 ring-1 ring-white/50 transition group-hover:scale-110">
-              <svg viewBox="0 0 24 24" className="h-6 w-6 translate-x-[1px] fill-white drop-shadow" aria-hidden="true">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-black/35 ring-1 ring-white/40 transition duration-300 group-hover:scale-110 group-hover:bg-black/55">
+              <svg viewBox="0 0 24 24" className="h-4 w-4 translate-x-[1px] fill-white/90 drop-shadow" aria-hidden="true">
                 <path d="M8 5v14l11-7z" />
               </svg>
             </span>
@@ -368,11 +372,14 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
       </div>
 
       {/* قسم المعلومات داخل البطاقة (اسم/سعر/تقييم/ألوان) — flex-1 يملأ الباقي فتتساوى البطاقات */}
-      <div className="flex-1 px-3 pb-3 pt-2.5 text-start">
-        <h3 title={product.name} className="bz-pname line-clamp-2 min-h-[2.6em] font-semibold leading-snug text-stone-100">{product.name}</h3>
-        <div className="mt-0.5 flex items-baseline gap-2">
-          <span className="bz-pprice text-lg font-bold">{t('common.currency')}{product.price}</span>
-          {hasDiscount && <Strike className="bz-oldprice text-sm">{t('common.currency')}{product.oldPrice}</Strike>}
+      {/* الاسمُ أهدأُ والسعرُ أعلى: كانا بحجمٍ متقاربٍ (١٦ و١٨) فتتنازعُ العينُ
+          بينهما على رفٍّ من عشرينَ بطاقة. الاسمُ يُقرأُ عند الحاجةِ والسعرُ
+          يُرى بلا قراءة — فليأخذْ كلٌّ وزنَه. */}
+      <div className="flex-1 px-3.5 pb-3.5 pt-3 text-start">
+        <h3 title={product.name} className="bz-pname line-clamp-2 min-h-[2.7em] text-[0.9rem] font-semibold leading-[1.35] text-stone-100">{product.name}</h3>
+        <div className="mt-1.5 flex items-baseline gap-2">
+          <span className="bz-pprice bz-pnum text-[1.2rem] font-bold leading-none">{t('common.currency')}{product.price}</span>
+          {hasDiscount && <Strike className="bz-oldprice bz-pnum text-[0.8rem]">{t('common.currency')}{product.oldPrice}</Strike>}
         </div>
         {/* استعجال الندرة — "بقي X" عند قِلّة المخزون */}
         {lowStock && (
@@ -382,7 +389,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
         )}
         {/* دليل اجتماعي: تقييم بنجمة (عدد المبيعات مُزال بطلب المالكة) */}
         {product.ratingCount > 0 && (
-          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
             <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-gold-200">
               <StarIcon className="h-3 w-3" /> {product.ratingAvg} <span className="font-normal text-stone-500">({product.ratingCount})</span>
             </span>
@@ -391,7 +398,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
         {/* نقاط الألوان المتوفرة — لمحة سريعة عن التشكيلة. عند وجود صور لون: تمرير/لمس
             النقطة يبدّل صورة البطاقة لصورة المنتج بذاك اللون (أسلوب Zara/ASOS) */}
         {colorDots.length >= 2 && (
-          <div className="mt-2 flex items-center gap-2">
+          <div className="mt-2.5 flex items-center gap-2">
             {colorDots.slice(0, 5).map((d) => {
               const img = colorImageOf(d.name);
               const on = swatchColor === d.name;

@@ -4318,10 +4318,10 @@ html.dark .theme-pub .bz-tabbar button.is-on > span:first-child { background: #D
    كانت تقف عند خمسة أعمدة، فحين اتّسعت الصفحة صارت البطاقةُ 355px عرضاً
    وصورةُ المنتج تتمدّد بلا داعٍ. تكسب الشبكةُ عموداً كلّما اتّسعت الشاشة
    فيبقى حجمُ البطاقة ثابتاً تقريباً من الجوّال إلى الشاشة الضخمة. */
-.bz-cards { display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-@media (min-width: 640px)  { .bz-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.bz-cards { display: grid; gap: 0.7rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 640px)  { .bz-cards { gap: 1rem; grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (min-width: 1024px) { .bz-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-@media (min-width: 1280px) { .bz-cards { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+@media (min-width: 1280px) { .bz-cards { gap: 1.25rem; grid-template-columns: repeat(5, minmax(0, 1fr)); } }
 @media (min-width: 1600px) { .bz-cards { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 @media (min-width: 2000px) { .bz-cards { grid-template-columns: repeat(7, minmax(0, 1fr)); } }
 @media (min-width: 2400px) { .bz-cards { grid-template-columns: repeat(8, minmax(0, 1fr)); } }
@@ -4682,3 +4682,58 @@ html.dark .theme-pub .bz-band { background: #161514; }
 .bz-band.bz-sec-gap { margin-top: 4.5rem; }
 @media (min-width: 640px) { .bz-band.bz-sec-gap { margin-top: 5.5rem; } }
 .bz-band > .bz-inner { margin-inline: auto; max-width: 1400px; }
+
+/* ═══════ بطاقةُ المنتجِ — الطبقةُ البصريّة ═══════
+   هي العنصرُ الذي يتكرّرُ بالعشراتِ على كلِّ صفحةٍ (الرئيسيّةُ والمتجرُ والبحثُ
+   والعروض)، فأيُّ تفصيلٍ يُضبَطُ فيها يُضبَطُ في الموقعِ كلِّه. ثلاثةُ أشياءَ
+   كانت تنقصُها: ظلٌّ بطبقتَين لا طبقةٍ واحدةٍ مسطّحة، وحافّةٌ للصورةِ كي لا
+   تذوبَ صورةُ المنتجِ ذاتُ الخلفيّةِ البيضاءِ في بياضِ البطاقة، وتدرّجٌ خافتٌ
+   أسفلَها يحملُ زرَّ السلّةِ ونمرَ المقاسِ فوقَ أيِّ صورةٍ مهما فتحَ لونُها. */
+.theme-pub .bz-pcard {
+  border-radius: 18px;
+  border-color: rgba(23, 23, 23, 0.07);
+  /* طبقتان: خطٌّ قريبٌ يرسمُ حافّةَ البطاقةِ، وهالةٌ بعيدةٌ ترفعُها عن الصفحة */
+  box-shadow: 0 1px 2px rgba(23, 23, 23, 0.05), 0 10px 26px -16px rgba(23, 23, 23, 0.22);
+  transition: box-shadow 0.35s ease, border-color 0.35s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .theme-pub .group:hover .bz-pcard {
+    border-color: rgba(23, 23, 23, 0.14);
+    box-shadow: 0 2px 5px rgba(23, 23, 23, 0.06), 0 26px 48px -24px rgba(23, 23, 23, 0.34);
+  }
+}
+html.dark .theme-pub .bz-pcard {
+  border-color: rgba(243, 237, 228, 0.09);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 30px -18px rgba(0, 0, 0, 0.7);
+}
+@media (hover: hover) and (pointer: fine) {
+  html.dark .theme-pub .group:hover .bz-pcard {
+    border-color: rgba(243, 237, 228, 0.18);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5), 0 28px 52px -24px rgba(0, 0, 0, 0.85);
+  }
+}
+
+/* لوحُ الصورةِ قبلَ أن تصل: كان حبريّاً داكناً — ومضةٌ سوداءُ بمكانِ كلِّ
+   بطاقةٍ على صفحةٍ بيضاء. رماديٌّ فاتحٌ يختفي تحتَ الصورةِ ولا يُرى. */
+.theme-pub .bz-pmedia { background: #F1F1F0; }
+html.dark .theme-pub .bz-pmedia { background: #1C1B1A; }
+
+/* حافّةُ الصورة: خطٌّ داخليٌّ رفيعٌ لا أكثر. صورةُ المنتجِ المصوَّرةُ على خلفيّةٍ
+   بيضاءَ — وأكثرُ صورِ المتاجرِ كذلك — كانت تذوبُ في بياضِ البطاقةِ فلا يُعرَفُ
+   أين تنتهي القطعةُ وأين تبدأُ البطاقة. يُرسَمُ بـ‎::after فيبقى فوقَ الصورةِ
+   وتحتَ الأزرارِ (كلُّها ‎z‑index أعلى).
+   ولا تدرّجَ سفليّاً: جرّبتُه فأطفأَ ذيلَ كلِّ فستانٍ على الرفّ، وزرُّ السلّةِ
+   مصمتٌ بظلٍّ يُقرأُ فوقَ أيِّ صورةٍ بلا مساعدة. */
+.bz-pmedia::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgba(23, 23, 23, 0.07);
+}
+html.dark .theme-pub .bz-pmedia::after { box-shadow: inset 0 0 0 1px rgba(243, 237, 228, 0.08); }
+
+/* أرقامُ الأسعارِ بعرضٍ ثابتٍ للرقمِ الواحد: أسعارُ صفٍّ كاملٍ تصطفُّ تحتَ
+   بعضِها بدل أن تتراقصَ حوافُّها باختلافِ عرضِ ١ و٧ — تفصيلٌ لا يُلاحَظُ
+   مفرداً ويُلاحَظُ أثرُه على شبكةٍ من عشرينَ بطاقة. */
+.bz-pnum { font-variant-numeric: tabular-nums; letter-spacing: -0.015em; }
