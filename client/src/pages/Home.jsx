@@ -665,16 +665,21 @@ function HomeHero({ banners = [] }) {
         </div>
       </div>
 
-      <div dir="ltr" className="mt-6 flex items-center justify-center gap-2">
-        {slides.map((_, idx) => (
-          <button
-            key={idx}
-            onClick={() => go(idx)}
-            aria-label={`slide ${idx + 1}`}
-            className={`bz-dot h-1.5 rounded-full transition-all duration-500 ${idx === i ? 'bz-dot-on w-8' : 'w-1.5'}`}
-          />
-        ))}
-      </div>
+      {/* النقاطُ تتبعُ اتّجاهَ اللغةِ كالحركة: الأولى يميناً بالعربيّةِ ويساراً
+          بالإنجليزيّة. كانت مثبّتةً ‎ltr فتبدأُ يساراً دائماً، فتمشي عكسَ الشريحة.
+          وتُخفى بشريحةٍ واحدةٍ — نقطةٌ وحيدةٌ لا تدلُّ على شيءٍ ولا تُنقَر. */}
+      {len > 1 && (
+        <div dir={rtl ? 'rtl' : 'ltr'} className="mt-6 flex items-center justify-center gap-2">
+          {slides.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => go(idx)}
+              aria-label={`slide ${idx + 1}`}
+              className={`bz-dot h-1.5 rounded-full transition-all duration-500 ${idx === i ? 'bz-dot-on w-8' : 'w-1.5'}`}
+            />
+          ))}
+        </div>
+      )}
     </section>
   );
 }
