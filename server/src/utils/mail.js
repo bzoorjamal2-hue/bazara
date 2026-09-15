@@ -1,10 +1,23 @@
 import nodemailer from 'nodemailer';
 
-// إرسال البريد عبر Brevo HTTP API (مفضّل — يعمل على Render لأنه HTTPS)،
-// ويسقط إلى SMTP إن لم يتوفّر مفتاح الـ API.
+// إرسالُ البريدِ عبرَ Resend (المزوّدُ الأوّل)، ثمّ Brevo، ثمّ SMTP.
+//
+// لماذا تبدّل المزوّد: كانت رسائلُ المنصّةِ تخرجُ من عنوانِ الإرسالِ المشتركِ
+// لخطّةِ Brevo المجّانيّة ‎(77.32.148.23)، وهو مدرَجٌ بقائمةِ Hostkarma السوداء.
+// وجيميل كان يرفضُ استلامَها بصمتٍ تامّ: لا ارتداد، ولا مجلّدَ سبام، ولا حتّى
+// حدثُ Delivered بسجلِّ Brevo — بينما وصلت نفسُ الرسالةِ لمُختبِرِ السبامِ فوراً.
+// أي أنّ المشكلةَ لم تكن بالتوثيقِ (DKIM وSPF سليمان ومتحقَّقان) ولا بالمحتوى،
+// بل بسمعةِ عنوانٍ لا نملكُه ولا نملكُ إصلاحَه. وضياعُ رسالةِ رمزِ التحقّقِ يعني
+// تاجرةً لا تستطيعُ دخولَ حسابِها — فالعلاجُ تبديلُ المزوّدِ لا ترقيعُ الرسالة.
+//
+// الترتيبُ سقوطيٌّ عمداً: إن فشل Resend ووُجد مفتاحُ Brevo جُرّب بعدَه، فلا تضيعُ
+// رسالةٌ أثناءَ الانتقالِ أو عندَ عطلٍ مؤقّتٍ عندَ أحدِ المزوّدَين — والفشلُ
+// الأوّلُ يُسجَّلُ دائماً كي لا يختبئَ خطأُ إعدادٍ خلفَ نجاحِ البديل.
 
 export function isMailConfigured() {
-  return Boolean(process.env.BREVO_API_KEY) || Boolean(process.env.EMAIL_USER && process.env.EMAIL_PASS);
+  return Boolean(process.env.RESEND_API_KEY)
+    || Boolean(process.env.BREVO_API_KEY)
+    || Boolean(process.env.EMAIL_USER && process.env.EMAIL_PASS);
 }
 
 function parseSender() {
@@ -35,6 +48,30 @@ function htmlToText(html) {
     .replace(/\n{3,}/g, '\n\n')
     .split('\n').map((l) => l.trim()).join('\n')
     .trim();
+}
+
+// إرسال عبر Resend
+async function sendViaResend({ to, subject, html }) {
+  const s = parseSender();
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: `${s.name} <${s.email}>`,
+      to: [to],
+      subject,
+      html,
+      text: htmlToText(html),
+      reply_to: s.email,
+    }),
+  });
+  if (!res.ok) {
+    const t = await res.text().catch(() => '');
+    throw new Error(`resend ${res.status}: ${t}`);
+  }
 }
 
 // إرسال عبر Brevo API
@@ -87,6 +124,18 @@ async function sendViaSmtp({ to, subject, html }) {
 
 export async function sendMail(opts) {
   if (!isMailConfigured()) throw new Error('mail-not-configured');
+
+  if (process.env.RESEND_API_KEY) {
+    try {
+      return await sendViaResend(opts);
+    } catch (err) {
+      // يُسجَّلُ دائماً: نجاحُ البديلِ لا يجوزُ أن يُخفيَ مفتاحاً خاطئاً أو نطاقاً
+      // غيرَ موثَّقٍ عندَ Resend — وإلّا بقينا على المزوّدِ القديمِ بلا أن ندري.
+      console.error('resend failed, falling back:', err.message);
+      if (!process.env.BREVO_API_KEY && !(process.env.EMAIL_USER && process.env.EMAIL_PASS)) throw err;
+    }
+  }
+
   if (process.env.BREVO_API_KEY) return sendViaApi(opts);
   return sendViaSmtp(opts);
 }

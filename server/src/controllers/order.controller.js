@@ -8,6 +8,7 @@ import {
 import { evaluateCoupon } from './coupon.controller.js';
 import { clearAbandoned } from './abandoned.controller.js';
 import { sendMail, isMailConfigured } from '../utils/mail.js';
+import { newOrderEmail } from '../utils/emailTemplates.js';
 import { notifyUser } from '../utils/notify.js';
 import { feeForCity, cityOfVillage } from '../config/deliveryCities.js';
 import { variantInStock } from './stockRequest.controller.js';
@@ -37,16 +38,17 @@ async function notifyOwnerNewOrder(storeId, info) {
     const rows = (info.items || [])
       .map((i) => `<li>${i.name}${i.color ? ` - ${i.color}` : ''}${i.size ? ` (${i.size})` : ''} ×${i.qty} — ₪${(i.price * i.qty).toFixed(2)}</li>`)
       .join('');
-    const html = `
-      <div style="font-family:Tahoma,Arial,sans-serif;direction:rtl;text-align:right;color:#2b2b2b">
-        <h2 style="color:#1F1E1D">🛍️ طلب جديد في متجرك ${row.store_name}</h2>
-        <p><b>الزبون:</b> ${info.name} — <span dir="ltr">${info.phone}</span></p>
-        ${info.city ? `<p><b>المدينة:</b> ${info.city}</p>` : ''}
-        <ul>${rows}</ul>
-        <p style="font-size:18px"><b>الإجمالي: ₪${Number(info.total).toFixed(2)}</b></p>
-        <p style="color:#6E6D6B">ادخلي لوحة التحكم → الطلبات لتأكيد الطلب ومتابعته.</p>
-      </div>`;
-    await sendMail({ to: row.email, subject: `🛍️ طلب جديد — ${row.store_name}`, html });
+    await sendMail({
+      to: row.email,
+      ...newOrderEmail({
+        storeName: row.store_name,
+        customerName: info.name,
+        customerPhone: info.phone,
+        city: info.city,
+        rowsHtml: rows,
+        total: Number(info.total).toFixed(2),
+      }),
+    });
   } catch (err) {
     console.error('notifyOwnerNewOrder:', err.message);
   }

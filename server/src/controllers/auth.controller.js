@@ -5,6 +5,7 @@ import pool, { query } from '../config/db.js';
 import { generateUniqueStoreSlug } from '../utils/slug.js';
 import { generateSubscriberCode, isUserActive, daysRemaining, isAdminEmail, planPeriodEnd } from '../utils/subscription.js';
 import { sendMail, isMailConfigured } from '../utils/mail.js';
+import { resetCodeEmail } from '../utils/emailTemplates.js';
 import { logAdmin } from '../utils/adminLog.js';
 
 const hashToken = (t) => crypto.createHash('sha256').update(t).digest('hex');
@@ -296,14 +297,7 @@ export async function forgotPassword(req, res, next) {
     // نضع الكود في العنوان ليكون كل بريد مميّزاً (لا يتجمّع في Gmail) ويظهر فوراً
     sendMail({
       to: email,
-      subject: `رمز التحقق ${code} — Bazara`,
-      html: `<div style="font-family:Tahoma,Arial;direction:rtl;text-align:right">
-        <h2>رمز استعادة كلمة المرور</h2>
-        <p>رمز التحقق الخاص بك (صالح لمدة 15 دقيقة فقط، ويُلغى أي رمز سابق):</p>
-        <p style="font-size:30px;font-weight:bold;letter-spacing:8px;color:#1F1E1D">${code}</p>
-        <p style="color:#888;font-size:13px">تم الإرسال: ${sentAt} (بتوقيت فلسطين)</p>
-        <p>إذا لم تطلب ذلك، تجاهل هذه الرسالة.</p>
-      </div>`,
+      ...resetCodeEmail(code, sentAt),
     }).catch((e) => console.error('sendMail failed:', e.message));
 
     res.json(generic);
@@ -333,13 +327,7 @@ export async function adminSendReset(req, res, next) {
     const sentAt = new Date().toLocaleString('ar', { timeZone: 'Asia/Hebron', dateStyle: 'short', timeStyle: 'short' });
     sendMail({
       to: email,
-      subject: `رمز التحقق ${code} — Bazara`,
-      html: `<div style="font-family:Tahoma,Arial;direction:rtl;text-align:right">
-        <h2>رمز استعادة كلمة المرور</h2>
-        <p>رمز التحقق الخاص بك (صالح لمدة 15 دقيقة فقط، ويُلغى أي رمز سابق):</p>
-        <p style="font-size:30px;font-weight:bold;letter-spacing:8px;color:#1F1E1D">${code}</p>
-        <p style="color:#888;font-size:13px">تم الإرسال: ${sentAt} (بتوقيت فلسطين)</p>
-      </div>`,
+      ...resetCodeEmail(code, sentAt),
     }).catch((e) => console.error('sendMail failed:', e.message));
 
     await logAdmin(req, 'user.sendReset', { type: 'user', id: email, label: email });
