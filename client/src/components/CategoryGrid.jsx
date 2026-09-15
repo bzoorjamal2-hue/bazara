@@ -25,15 +25,14 @@ function CategoryCard({ cat }) {
   const label = cat.name || (cat.builtin ? t(`categories.${cat.key}`) : cat.key);
   // صورة المالكة المخصّصة تُحسَّن بحجم أصغر وصيغة تلقائية لظهور أسرع؛ والأيقونة الثابتة كما هي
   const src = cat.image ? cldThumb(cat.image, 400) : cat.builtin ? `/categories/${cat.key}.png?v=3` : '';
-  // صورةُ التاجرةِ صورةٌ حقيقيّةٌ تملأُ البلاطة، والأيقونةُ الثابتةُ رسمٌ بلا
-  // خلفيّةٍ يتنفّسُ داخلَها بحشوة — لا يُعامَلانِ معاملةً واحدة.
-  const isPhoto = Boolean(cat.image);
   return (
     <div className="transition duration-300 group-hover:-translate-y-1">
       {/* بلا أرضيّةٍ ولا إطار: شكلُ الرسمِ وحدَه يظهر. الرسومُ مقصوصةٌ على
           شفافيّةٍ أصلاً، فالإطارُ يحبسُها ويجعلُ منها أزراراً لا رسوماً.
-          ويبقى ‎aspect-square ليتساوى مقاسُ الرسومِ ببعضِها بالصفّ.
-          وصورةُ التاجرةِ وحدَها تأخذُ زوايا: هي صورةٌ حقيقيّةٌ لا رسمٌ شفّاف. */}
+          ويبقى ‎aspect-square ليتساوى مقاسُ الجميعِ بالصفّ.
+          و‎object-contain للجميعِ بلا استثناء: كانت صورةُ الفئةِ التي ترفعُها
+          التاجرةُ تُقَصُّ ‎(cover) فتظهرُ ناقصةً وبمقاسٍ يخالفُ جاراتِها —
+          والقصُّ هنا لا مبرّرَ له، الصندوقُ واحدٌ والاحتواءُ يملؤُه بلا بتر. */}
       <div className="bz-cattile relative flex aspect-square items-center justify-center">
         {/* هالةٌ ناعمةٌ تتوهّجُ خلفَ الأيقونةِ عند المرور — لمسةُ بوتيكٍ راقية */}
         <span aria-hidden className="pointer-events-none absolute inset-0 m-auto h-2/3 w-2/3 rounded-full bg-gold-400/25 opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100" />
@@ -43,7 +42,7 @@ function CategoryCard({ cat }) {
             alt={label}
             loading="eager"
             decoding="async"
-            className={`relative h-full w-full transition-transform duration-500 group-hover:scale-105 ${isPhoto ? 'overflow-hidden rounded-2xl object-cover' : 'object-contain'}`}
+            className="relative h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
           // فئة مخصّصة بلا صورة → أيقونة ملبس خطّية أنيقة بلون خمري
