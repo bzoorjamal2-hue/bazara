@@ -25,10 +25,14 @@ export default defineConfig({
         display: 'standalone',
         theme_color: '#FAF9F7',
         background_color: '#FAF9F7',
+        // ‏maskable لها ملفٌّ خاصّ: أندرويدُ يقصُّ الأيقونةَ المقنَّعةَ إلى دائرةٍ
+        // قطرُها 80٪ من الضلع، وكان يشيرُ هنا إلى الأيقونةِ الممتلئةِ نفسِها
+        // (الختمُ فيها 76٪) — فتُقَصُّ حلقتُه الخارجيّةُ على شاشةِ الجوّال.
+        // النسخةُ المقنَّعةُ ختمُها 60٪ فتبقى كاملةً داخلَ أيِّ قناع.
         icons: [
-          { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
-          { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: '/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: '/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
           { src: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
         ],
       },

@@ -17,8 +17,8 @@
 
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-        <!-- سبلاش كريمي صافٍ بلا شعار، فيندمج مع شاشة Bazara في الموقع (شاشة واحدة) -->
+        <!-- سبلاش بلا شعار بلون أرضيّة الموقع نفسِها، فيندمج مع شاشة Bazara (شاشة واحدة) -->
         <item name="android:background">@drawable/splash</item>
-        <item name="android:windowSplashScreenBackground">#F4EDE2</item>
+        <item name="android:windowSplashScreenBackground">#FAF9F7</item>
     </style>
 </resources>

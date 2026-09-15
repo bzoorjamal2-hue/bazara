@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- الطبقتان بلوحةِ 108dp كاملةً كما يطلبُ أندرويد، والختمُ مرسومٌ داخلَ
+     دائرةِ الأمانِ (66dp) بالصورةِ نفسِها. كان هنا inset بنسبةِ 16.7% يعوّضُ
+     أنّ الملفّاتِ كانت بمقاسِ الأيقونةِ القديمةِ (48dp) لا 108dp — فيُكبّرُها
+     أندرويدُ ثمّ يقصُّ القناعُ حافّتَها. زالَ السببُ فزالَ التعويض. -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background>
-        <inset android:drawable="@mipmap/ic_launcher_background" android:inset="16.7%" />
-    </background>
-    <foreground>
-        <inset android:drawable="@mipmap/ic_launcher_foreground" android:inset="16.7%" />
-    </foreground>
+    <background android:drawable="@mipmap/ic_launcher_background" />
+    <foreground android:drawable="@mipmap/ic_launcher_foreground" />
 </adaptive-icon>
