@@ -471,7 +471,11 @@
     "pieceCount_one": "1 piece",
     "pieceCount_other": "{{count}} pieces",
     "catSale_one": "1 offer",
-    "catSale_other": "{{count}} offers"
+    "catSale_other": "{{count}} offers",
+    "eyebrowCats": "Start here",
+    "eyebrowNew": "In this week",
+    "eyebrowBest": "Most ordered in this store",
+    "eyebrowSale": "Reduced right now"
   },
   "cart": {
     "title": "Shopping cart",

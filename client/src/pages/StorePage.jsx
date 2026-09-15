@@ -558,7 +558,7 @@ export default function StorePage() {
           <Reveal>
             {/* مرساة زرّ «تسوّقي الآن» بالسلايدر — scroll-mt يترك مساحةً للرأس اللاصق */}
             <section id="cats" className="bz-sec-gap scroll-mt-24">
-              <SectionTitle>{t('store.browseByCategory')}</SectionTitle>
+              <SectionTitle eyebrow={t('store.eyebrowCats')}>{t('store.browseByCategory')}</SectionTitle>
               <CategoryGrid onSelect={pickCategory} active={cat} cats={gridCats} />
             </section>
           </Reveal>
@@ -586,12 +586,12 @@ export default function StorePage() {
             </section></Reveal>
           )}
 
-          <ProductSection title={t('store.newArrivals')} products={newest} wa={wa} />
-          <ProductSection title={t('store.bestSellers')} products={bestSellers} wa={wa} ranked />
-          {onSale.length > 0 && <ProductSection title={t('store.saleSection')} products={onSale} wa={wa} />}
+          <ProductSection eyebrow={t('store.eyebrowNew')} title={t('store.newArrivals')} products={newest} wa={wa} />
+          <ProductSection band eyebrow={t('store.eyebrowBest')} title={t('store.bestSellers')} products={bestSellers} wa={wa} ranked />
+          {onSale.length > 0 && <ProductSection eyebrow={t('store.eyebrowSale')} title={t('store.saleSection')} products={onSale} wa={wa} />}
 
           {data.products.length > 0 && (
-            <div className="mb-16 text-center sm:mb-20">
+            <div className="bz-sec-gap text-center">
               <button
                 onClick={() => { setViewAll(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                 className="bz-act px-10 py-3.5 transition duration-300 hover:-translate-y-0.5"
@@ -779,17 +779,24 @@ function SectionTitle({ children, eyebrow }) {
 // قسم منتجات بعنوان مركزي (جديدنا / الأكثر مبيعاً)
 // ranked: يرقّم أول ثلاث قطع (١·٢·٣) — أسلوب الاختيارات المنسّقة بالمتاجر العالمية.
 // نقتصر على الثلاثة الأولى عمداً: الترقيم الكامل يزحم الشبكة ويفقد معناه.
-function ProductSection({ title, products, wa, ranked = false }) {
+function ProductSection({ title, products, wa, ranked = false, eyebrow = null, band = false }) {
   if (!products || products.length === 0) return null;
+  // band: شريطٌ ممتدٌّ بعرضِ الشاشةِ يُلبَسُ لقسمٍ واحدٍ من الثلاثة — الفاصلُ
+  // البصريُّ وحدَه يمنعُ قراءةَ الشبكاتِ الثلاثِ كشبكةٍ طويلةٍ واحدة.
+  const inner = (
+    <>
+      <SectionTitle eyebrow={eyebrow}>{title}</SectionTitle>
+      <div className="bz-cards">
+        {products.map((p, i) => (
+          <ProductCard key={p.id} product={p} index={i} whatsapp={wa} rank={ranked && i < 3 ? i + 1 : 0} />
+        ))}
+      </div>
+    </>
+  );
   return (
     <Reveal>
-      <section className="bz-sec-gap">
-        <SectionTitle>{title}</SectionTitle>
-        <div className="bz-cards">
-          {products.map((p, i) => (
-            <ProductCard key={p.id} product={p} index={i} whatsapp={wa} rank={ranked && i < 3 ? i + 1 : 0} />
-          ))}
-        </div>
+      <section className={band ? 'bz-band bz-sec-gap' : 'bz-sec-gap'}>
+        {band ? <div className="bz-inner">{inner}</div> : inner}
       </section>
     </Reveal>
   );

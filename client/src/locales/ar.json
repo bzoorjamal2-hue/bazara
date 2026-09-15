@@ -504,7 +504,11 @@
     "catSale_two": "عرضان",
     "catSale_few": "{{count}} عروض",
     "catSale_many": "{{count}} عرضاً",
-    "catSale_other": "{{count}} عرض"
+    "catSale_other": "{{count}} عرض",
+    "eyebrowCats": "ابدئي من هنا",
+    "eyebrowNew": "وصل هذا الأسبوع",
+    "eyebrowBest": "الأكثر طلباً في هذا المتجر",
+    "eyebrowSale": "أسعارٌ مخفّضةٌ الآن"
   },
   "cart": {
     "title": "سلة التسوّق",
