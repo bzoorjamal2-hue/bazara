@@ -91,7 +91,7 @@ ${img ? `<meta property="og:image" content="${img}">\n<meta property="og:image:w
 <meta name="twitter:description" content="${d}">
 ${img ? `<meta name="twitter:image" content="${img}">` : ''}
 <link rel="canonical" href="${u}">
-</head><body style="font-family:sans-serif;background:#F4EDE2;color:#5e4636;text-align:center;padding:40px">
+</head><body style="font-family:sans-serif;background:#FAF9F7;color:#1F1E1D;text-align:center;padding:40px">
 <script>location.replace(${JSON.stringify(url)})</script>
 <p>جارٍ التحويل… <a href="${u}">${t}</a></p>
 </body></html>`;

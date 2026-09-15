@@ -92,18 +92,18 @@ const STYLES = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <numFmts count="1"><numFmt numFmtId="164" formatCode="#,##0.00"/></numFmts>
 <fonts count="4">
 <font><sz val="11"/><name val="Calibri"/></font>
-<font><b/><sz val="11"/><color rgb="FF3F2E22"/><name val="Calibri"/></font>
+<font><b/><sz val="11"/><color rgb="FF1F1E1D"/><name val="Calibri"/></font>
 <font><sz val="11"/><name val="Calibri"/></font>
-<font><b/><sz val="12"/><color rgb="FF5E4636"/><name val="Calibri"/></font>
+<font><b/><sz val="12"/><color rgb="FF1F1E1D"/><name val="Calibri"/></font>
 </fonts>
 <fills count="3">
 <fill><patternFill patternType="none"/></fill>
 <fill><patternFill patternType="gray125"/></fill>
-<fill><patternFill patternType="solid"><fgColor rgb="FFD4AF37"/><bgColor indexed="64"/></patternFill></fill>
+<fill><patternFill patternType="solid"><fgColor rgb="FFEDEDEC"/><bgColor indexed="64"/></patternFill></fill>
 </fills>
 <borders count="2">
 <border><left/><right/><top/><bottom/><diagonal/></border>
-<border><left style="thin"><color rgb="FFE3DDD3"/></left><right style="thin"><color rgb="FFE3DDD3"/></right><top style="thin"><color rgb="FFE3DDD3"/></top><bottom style="thin"><color rgb="FFE3DDD3"/></bottom><diagonal/></border>
+<border><left style="thin"><color rgb="FFDCDBDA"/></left><right style="thin"><color rgb="FFDCDBDA"/></right><top style="thin"><color rgb="FFDCDBDA"/></top><bottom style="thin"><color rgb="FFDCDBDA"/></bottom><diagonal/></border>
 </borders>
 <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
 <cellXfs count="5">

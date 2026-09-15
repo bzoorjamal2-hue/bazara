@@ -279,11 +279,11 @@ function ticketUser(raw) {
 function closingPage(title, body) {
   return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title></head>
-<body style="margin:0;display:flex;min-height:100vh;align-items:center;justify-content:center;background:#F4EDE2;font-family:system-ui,-apple-system,'Tajawal',sans-serif;color:#3f2e22">
+<body style="margin:0;display:flex;min-height:100vh;align-items:center;justify-content:center;background:#FAF9F7;font-family:system-ui,-apple-system,'Tajawal',sans-serif;color:#1F1E1D">
 <div style="max-width:22rem;padding:2rem;text-align:center">
 <div style="font-size:2.5rem">${title.startsWith('تم') ? '✅' : '⚠️'}</div>
 <h1 style="font-size:1.1rem;margin:.75rem 0 .5rem">${title}</h1>
-<p style="font-size:.9rem;line-height:1.7;color:#6b6560;margin:0">${body}</p>
+<p style="font-size:.9rem;line-height:1.7;color:#676664;margin:0">${body}</p>
 </div></body></html>`;
 }
 
@@ -366,14 +366,14 @@ function choicePage(ticket, pages) {
   const items = pages.map((p) => {
     const label = `${p.pageName || p.pageId}${p.igUsername ? ` · @${p.igUsername}` : ''}`;
     const href = `/api/instagram/choose?lt=${encodeURIComponent(ticket)}&page=${encodeURIComponent(p.pageId)}`;
-    return `<a href="${href}" style="display:block;margin:.5rem 0;padding:.9rem 1rem;border-radius:1rem;background:#fff;border:1px solid rgba(94,70,54,.18);color:#3f2e22;text-decoration:none;font-weight:700">${label}</a>`;
+    return `<a href="${href}" style="display:block;margin:.5rem 0;padding:.9rem 1rem;border-radius:1rem;background:#fff;border:1px solid rgba(23,23,23,.14);color:#313130;text-decoration:none;font-weight:700">${label}</a>`;
   }).join('');
   return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>اختر الصفحة</title></head>
-<body style="margin:0;min-height:100vh;background:#F4EDE2;font-family:system-ui,-apple-system,'Tajawal',sans-serif;color:#3f2e22">
+<body style="margin:0;min-height:100vh;background:#FAF9F7;font-family:system-ui,-apple-system,'Tajawal',sans-serif;color:#1F1E1D">
 <div style="max-width:26rem;margin:0 auto;padding:2.5rem 1.25rem">
 <h1 style="font-size:1.15rem;margin:0 0 .35rem">اختر الصفحة</h1>
-<p style="font-size:.85rem;color:#6b6560;margin:0 0 1.25rem">حسابك يدير أكثر من صفحة — أيّها تريد ربطها بهذا المتجر؟</p>
+<p style="font-size:.85rem;color:#676664;margin:0 0 1.25rem">حسابك يدير أكثر من صفحة — أيّها تريد ربطها بهذا المتجر؟</p>
 ${items}
 </div></body></html>`;
 }

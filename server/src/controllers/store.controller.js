@@ -298,7 +298,7 @@ export async function updateMyStore(req, res, next) {
         instagram || '',
         facebook || '',
         tiktok || '',
-        themeColor || '#d4af37',
+        themeColor || '#999795',
         deliveryInfo || '',
         paymentInfo || '',
         JSON.stringify(banners),

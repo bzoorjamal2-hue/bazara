@@ -39,12 +39,12 @@ async function notifyOwnerNewOrder(storeId, info) {
       .join('');
     const html = `
       <div style="font-family:Tahoma,Arial,sans-serif;direction:rtl;text-align:right;color:#2b2b2b">
-        <h2 style="color:#5e4636">🛍️ طلب جديد في متجرك ${row.store_name}</h2>
+        <h2 style="color:#1F1E1D">🛍️ طلب جديد في متجرك ${row.store_name}</h2>
         <p><b>الزبون:</b> ${info.name} — <span dir="ltr">${info.phone}</span></p>
         ${info.city ? `<p><b>المدينة:</b> ${info.city}</p>` : ''}
         <ul>${rows}</ul>
         <p style="font-size:18px"><b>الإجمالي: ₪${Number(info.total).toFixed(2)}</b></p>
-        <p style="color:#8a6a4f">ادخلي لوحة التحكم → الطلبات لتأكيد الطلب ومتابعته.</p>
+        <p style="color:#6E6D6B">ادخلي لوحة التحكم → الطلبات لتأكيد الطلب ومتابعته.</p>
       </div>`;
     await sendMail({ to: row.email, subject: `🛍️ طلب جديد — ${row.store_name}`, html });
   } catch (err) {

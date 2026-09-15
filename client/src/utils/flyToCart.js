@@ -33,7 +33,7 @@ export function flyToCart(sourceEl, imgUrl) {
       height: `${startSize}px`,
       objectFit: 'cover',
       borderRadius: '16px',
-      boxShadow: '0 12px 30px rgba(94,70,54,0.4)',
+      boxShadow: '0 12px 30px rgba(20,20,20,0.28)',
       zIndex: '2000',
       pointerEvents: 'none',
       willChange: 'transform, opacity',

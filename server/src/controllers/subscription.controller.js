@@ -346,7 +346,7 @@ export async function sendCodeToSubscriber(req, res, next) {
           html: `<div style="font-family:Tahoma,Arial;direction:rtl;text-align:right">
             <h2>كود تفعيل اشتراكك في Bazara</h2>
             <p>مرحباً ${u.name || ''}، تم تجهيز كود تفعيل اشتراكك (حزمة ${planLabel(plan)}):</p>
-            <p style="font-size:26px;font-weight:bold;letter-spacing:4px;color:#b8932c">${code}</p>
+            <p style="font-size:26px;font-weight:bold;letter-spacing:4px;color:#1F1E1D">${code}</p>
             <p>سجّل دخولك ← صفحة الاشتراك ← أدخل الكود لتفعيل متجرك.</p>
           </div>`,
         });
@@ -452,7 +452,7 @@ const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', 
 function broadcastHtml(subject, body) {
   const safe = escapeHtml(body).replace(/\n/g, '<br>');
   return `<div style="font-family:system-ui,Segoe UI,Arial,sans-serif;max-width:560px;margin:auto;padding:24px;color:#2b2b2b">
-    <h2 style="color:#5e4636;margin:0 0 12px">${escapeHtml(subject)}</h2>
+    <h2 style="color:#1F1E1D;margin:0 0 12px">${escapeHtml(subject)}</h2>
     <div style="font-size:15px;line-height:1.7">${safe}</div>
     <hr style="border:none;border-top:1px solid #eee;margin:24px 0">
     <p style="font-size:12px;color:#999">Bazara — بازارا</p>

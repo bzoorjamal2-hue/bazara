@@ -16,63 +16,63 @@ const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<
 // والكميّةِ ومجموعِ كلِّ قطعة — يليقُ بورقةٍ تُحفَظُ وتُرسَل.
 export const RECEIPT_CSS = `
   *{box-sizing:border-box}
-  body{font-family:'Cairo','Tajawal','Segoe UI',Tahoma,Arial,sans-serif;color:#2b2420;margin:0;padding:0;background:#fff}
+  body{font-family:'Cairo','Tajawal','Segoe UI',Tahoma,Arial,sans-serif;color:#1F1E1D;margin:0;padding:0;background:#fff}
   /* الخطُّ مكتوبٌ على .rc نفسِها لا على body وحدَها: مسارُ حفظِ الصورة يرسمُ
      القصاصةَ داخلَ <foreignObject> بلا body، فقاعدةُ body لا تصلُها وكانت
      الشهادةُ تخرجُ بخطٍّ مُذنَّبٍ (Times) لا بخطِّ الموقع. */
   .rc,.rc *{font-family:'Cairo','Tajawal','Segoe UI',Tahoma,Arial,sans-serif}
-  .rc{position:relative;max-width:820px;margin:0 auto;padding:26px 28px;background:#fffdf8;
-      border:1px solid #d9c9ad;border-radius:14px;
-      box-shadow:inset 0 0 0 4px #fffdf8, inset 0 0 0 5px #ecdfc6}
+  .rc{position:relative;max-width:820px;margin:0 auto;padding:26px 28px;background:#FFFFFF;
+      border:1px solid #C4C3C2;border-radius:14px;
+      box-shadow:inset 0 0 0 4px #FFFFFF, inset 0 0 0 5px #E4E3E2}
   .rc + .rc{page-break-before:always}
   .rc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;
            padding-bottom:14px;margin-bottom:16px;
-           border-bottom:3px solid;border-image:linear-gradient(90deg,#e3d3b5,#b09a7e,#8a7657) 1}
-  .rc-store{font-size:21px;font-weight:800;margin:0 0 3px;color:#6b5320;letter-spacing:.2px}
-  .rc-by{font-size:10.5px;color:#a2937f;letter-spacing:1.6px;font-weight:700}
-  .rc-contact{color:#6f6357;font-size:11.5px;line-height:1.8;margin-top:5px}
+           border-bottom:3px solid;border-image:linear-gradient(90deg,#CDCCCB,#999795,#72716F) 1}
+  .rc-store{font-size:21px;font-weight:800;margin:0 0 3px;color:#1F1E1D;letter-spacing:.2px}
+  .rc-by{font-size:10.5px;color:#6E6C6A;letter-spacing:1.6px;font-weight:700}
+  .rc-contact{color:#646362;font-size:11.5px;line-height:1.8;margin-top:5px}
   .rc-meta{text-align:end;flex-shrink:0}
-  .rc-tag{display:inline-block;background:linear-gradient(135deg,#cdbda4,#b09a7e);color:#3a2c1c;
+  .rc-tag{display:inline-block;background:#1F1E1D;color:#FFFFFF;
           font-weight:800;font-size:11px;padding:3px 12px;border-radius:99px;margin-bottom:5px;letter-spacing:.3px}
-  .rc-no{font-weight:800;font-size:16px;letter-spacing:1px;color:#3f2e22;direction:ltr}
-  .rc-date{color:#8a7f72;font-size:11px;margin-top:2px}
+  .rc-no{font-weight:800;font-size:16px;letter-spacing:1px;color:#1F1E1D;direction:ltr}
+  .rc-date{color:#6E6C6A;font-size:11px;margin-top:2px}
   .rc-pay{display:inline-block;margin-top:6px;font-size:11px;font-weight:800;padding:3px 10px;
           border-radius:99px;background:#eef7f0;color:#1f7a4d;border:1px solid #cfe8da}
   .rc-pay.card{background:#eef2fb;color:#2a4a8c;border-color:#d5deef}
   .rc-grid{display:flex;gap:10px;margin-bottom:12px}
-  .rc-box{flex:1;border:1px solid #ece0cb;border-radius:11px;padding:10px 12px;font-size:12.5px;line-height:1.75;background:#fff}
-  .rc-box-t{color:#a2937f;font-size:10px;font-weight:800;letter-spacing:.6px;margin-bottom:3px}
-  .rc-box b{color:#2b2420;font-size:13px}
-  .rc-note{border:1px solid #ece0cb;border-radius:11px;padding:9px 12px;font-size:12.5px;
-           background:#fbf7ee;margin-bottom:12px;line-height:1.7}
+  .rc-box{flex:1;border:1px solid #DCDCDB;border-radius:11px;padding:10px 12px;font-size:12.5px;line-height:1.75;background:#fff}
+  .rc-box-t{color:#6E6C6A;font-size:10px;font-weight:800;letter-spacing:.6px;margin-bottom:3px}
+  .rc-box b{color:#1F1E1D;font-size:13px}
+  .rc-note{border:1px solid #DCDCDB;border-radius:11px;padding:9px 12px;font-size:12.5px;
+           background:#F5F4F4;margin-bottom:12px;line-height:1.7}
   table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;
-        border:1px solid #ece0cb;border-radius:11px;overflow:hidden}
-  th{background:linear-gradient(180deg,#f8f0dd,#f1e6cd);color:#6b5320;text-align:start;
-     padding:9px 8px;border-bottom:2px solid #cdbda4;font-size:11px;font-weight:800;letter-spacing:.2px}
-  td{padding:8px;border-bottom:1px solid #f4ede0;vertical-align:middle}
-  tbody tr:last-child td{border-bottom:1px solid #ece0cb}
-  .n{width:30px;text-align:center;color:#a2937f}
+        border:1px solid #DCDCDB;border-radius:11px;overflow:hidden}
+  th{background:linear-gradient(180deg,#EBEBEA,#DFDFDF);color:#474644;text-align:start;
+     padding:9px 8px;border-bottom:2px solid #BAB9B7;font-size:11px;font-weight:800;letter-spacing:.2px}
+  td{padding:8px;border-bottom:1px solid #EAEAEA;vertical-align:middle}
+  tbody tr:last-child td{border-bottom:1px solid #DCDCDB}
+  .n{width:30px;text-align:center;color:#6E6C6A}
   .c{text-align:center;width:70px}
   .e{text-align:end;width:98px}
-  .b{font-weight:800;color:#3f2e22}
-  .lbl{color:#6f6357}
+  .b{font-weight:800;color:#1F1E1D}
+  .lbl{color:#646362}
   tfoot td{padding:7px 8px;border-bottom:none}
   tfoot .save td{color:#1f7a4d;font-weight:700}
-  .rc-total td{font-weight:800;font-size:16px;color:#5a4416;
-               border-top:2px solid #cdbda4;background:linear-gradient(180deg,#fdf7e8,#f8eed8)}
+  .rc-total td{font-weight:800;font-size:16px;color:#1F1E1D;
+               border-top:2px solid #BAB9B7;background:linear-gradient(180deg,#F3F3F2,#E8E8E8)}
   /* الباقي عند الباب: يُقرأُ قبل الإجماليِّ نفسِه لأنّه المبلغُ المطلوبُ الآن */
-  .rc-due td{font-weight:800;font-size:15px;color:#8a5a12;background:#fdf4e3;border-top:1px solid #e8d6ae}
-  .rc-due-note{margin-top:8px;font-size:11.5px;line-height:1.7;color:#6f6357;
-               background:#fdf7ec;border:1px dashed #e0d2b8;border-radius:10px;padding:8px 11px}
+  .rc-due td{font-weight:800;font-size:16px;color:#1F1E1D;background:#EDEDEC;border-top:2px solid #1F1E1D}
+  .rc-due-note{margin-top:8px;font-size:11.5px;line-height:1.7;color:#646362;
+               background:#F5F5F4;border:1px dashed #CDCCCB;border-radius:10px;padding:8px 11px}
   .rc-foot{display:flex;align-items:center;gap:14px;margin-top:16px;padding-top:14px;
-           border-top:1px dashed #e0d2b8}
+           border-top:1px dashed #CDCCCB}
   .rc-seal{width:64px;height:64px;flex-shrink:0;border-radius:50%;
-           background:linear-gradient(140deg,#f6ecd6,#e6d5b4);border:2px solid #c3ad8b;
+           background:linear-gradient(140deg,#E6E6E6,#CECDCC);border:2px solid #A8A7A6;
            display:flex;align-items:center;justify-content:center;text-align:center;
-           font-size:9px;font-weight:800;color:#6b5320;line-height:1.25;padding:6px;letter-spacing:.2px}
-  .rc-thanks{flex:1;font-size:12px;color:#6f6357;line-height:1.8}
-  .rc-thanks b{color:#3f2e22}
-  .rc-site{color:#a2937f;font-size:10.5px;letter-spacing:.4px;margin-top:3px}
+           font-size:9px;font-weight:800;color:#474644;line-height:1.25;padding:6px;letter-spacing:.2px}
+  .rc-thanks{flex:1;font-size:12px;color:#646362;line-height:1.8}
+  .rc-thanks b{color:#1F1E1D}
+  .rc-site{color:#6E6C6A;font-size:10.5px;letter-spacing:.4px;margin-top:3px}
 `;
 
 // تخطيطٌ مضغوطٌ للورقةِ الضيّقة (صورةُ الجوّال) — الأعمدةُ الثانويّةُ تسقطُ

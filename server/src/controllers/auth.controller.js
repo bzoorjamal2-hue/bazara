@@ -300,7 +300,7 @@ export async function forgotPassword(req, res, next) {
       html: `<div style="font-family:Tahoma,Arial;direction:rtl;text-align:right">
         <h2>رمز استعادة كلمة المرور</h2>
         <p>رمز التحقق الخاص بك (صالح لمدة 15 دقيقة فقط، ويُلغى أي رمز سابق):</p>
-        <p style="font-size:30px;font-weight:bold;letter-spacing:8px;color:#b8932c">${code}</p>
+        <p style="font-size:30px;font-weight:bold;letter-spacing:8px;color:#1F1E1D">${code}</p>
         <p style="color:#888;font-size:13px">تم الإرسال: ${sentAt} (بتوقيت فلسطين)</p>
         <p>إذا لم تطلب ذلك، تجاهل هذه الرسالة.</p>
       </div>`,
@@ -337,7 +337,7 @@ export async function adminSendReset(req, res, next) {
       html: `<div style="font-family:Tahoma,Arial;direction:rtl;text-align:right">
         <h2>رمز استعادة كلمة المرور</h2>
         <p>رمز التحقق الخاص بك (صالح لمدة 15 دقيقة فقط، ويُلغى أي رمز سابق):</p>
-        <p style="font-size:30px;font-weight:bold;letter-spacing:8px;color:#b8932c">${code}</p>
+        <p style="font-size:30px;font-weight:bold;letter-spacing:8px;color:#1F1E1D">${code}</p>
         <p style="color:#888;font-size:13px">تم الإرسال: ${sentAt} (بتوقيت فلسطين)</p>
       </div>`,
     }).catch((e) => console.error('sendMail failed:', e.message));
