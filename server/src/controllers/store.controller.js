@@ -157,6 +157,11 @@ export function sanitizeBanners(raw) {
       // شدّةُ تعتيمِ الصورة/الفيديو خلفَ النصّ (٠–٩٠٪). العددُ يُحصَرُ بالمدى
       // ولا نقبلُ NaN: قيمةٌ فاسدةٌ تُفقِدُ النصَّ قراءتَه فوقَ صورةٍ فاتحة.
       dim: Math.min(90, Math.max(0, Number.isFinite(Number(b?.dim)) ? Math.round(Number(b.dim)) : 50)),
+      // كلمةٌ صغيرةٌ فوقَ العنوان («تشكيلة الخريف»). كانت مكتوبةً بالشيفرةِ
+      // ‏«Bazara» بكلِّ شريحة — لا تقولُ شيئاً ولا يملكُ أحدٌ تغييرَها.
+      eyebrow: String(b?.eyebrow || '').trim().slice(0, 40),
+      // موضعُ كتلةِ النصّ: وسطاً، أو إلى جهةِ البدايةِ/النهايةِ باتّجاهِ اللغة.
+      align: ['center', 'start', 'end'].includes(b?.align) ? b.align : 'center',
     }))
     .filter((b) => b.title || b.subtitle || b.bgValue);
 }

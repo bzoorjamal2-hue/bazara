@@ -664,7 +664,14 @@
       "taglineEnPlaceholder": "Luxury abayas · Made to order",
       "bannerDim": "تعتيم الصورة خلف النصّ",
       "bannerDimLow": "بلا تعتيم",
-      "bannerDimHigh": "تعتيم قويّ"
+      "bannerDimHigh": "تعتيم قويّ",
+      "bannerEyebrow": "كلمة فوق العنوان",
+      "bannerEyebrowTip": "سطر صغير يعلو العنوان، مثل «تشكيلة الخريف» أو «وصل حديثاً». اتركيه فارغاً ليظهر اسم الموقع.",
+      "bannerEyebrowPlaceholder": "تشكيلة الخريف",
+      "bannerAlign": "موضع النصّ على الصورة",
+      "bannerAlign_start": "يمين",
+      "bannerAlign_center": "وسط",
+      "bannerAlign_end": "يسار"
     },
     "product": {
       "cost": "سعر التكلفة",

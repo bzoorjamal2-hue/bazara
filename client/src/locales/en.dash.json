@@ -646,7 +646,14 @@
       "taglineEnPlaceholder": "Luxury abayas · Made to order",
       "bannerDim": "Darken the image behind the text",
       "bannerDimLow": "None",
-      "bannerDimHigh": "Strong"
+      "bannerDimHigh": "Strong",
+      "bannerEyebrow": "Line above the title",
+      "bannerEyebrowTip": "A small line above the title, such as “Autumn collection” or “Just in”. Leave it empty to show the site name.",
+      "bannerEyebrowPlaceholder": "Autumn collection",
+      "bannerAlign": "Text position on the image",
+      "bannerAlign_start": "Start",
+      "bannerAlign_center": "Centre",
+      "bannerAlign_end": "End"
     },
     "product": {
       "cost": "Cost price",

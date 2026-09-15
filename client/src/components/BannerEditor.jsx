@@ -220,6 +220,42 @@ export default function BannerEditor({ banners = [], onChange, withButtons = fal
                     <div className="mt-2.5"><VideoInput value={b.bgValue} onChange={(v) => setBanner(idx, 'bgValue', v)} hint={t('dashboard.store.bannerVideoHint')} /></div>
                   )}
 
+                  {/* كلمةٌ صغيرةٌ فوقَ العنوان. كانت «Bazara» مكتوبةً بالشيفرةِ
+                      بكلِّ شريحةٍ — لا تقولُ شيئاً ولا يملكُ أحدٌ تغييرَها. */}
+                  <div className="mt-3">
+                    <Field label={t('dashboard.store.bannerEyebrow')} tip={t('dashboard.store.bannerEyebrowTip')} optional max={40} value={b.eyebrow || ''}>
+                      <input
+                        type="text"
+                        className="input"
+                        maxLength={40}
+                        placeholder={t('dashboard.store.bannerEyebrowPlaceholder')}
+                        value={b.eyebrow || ''}
+                        onChange={(e) => setBanner(idx, 'eyebrow', e.target.value)}
+                      />
+                    </Field>
+                  </div>
+
+                  {/* موضعُ كتلةِ النصّ: صورةٌ وجهُها بالوسطِ تحتاجُ النصَّ جانباً */}
+                  <div className="mt-3">
+                    <span className="mb-1 block text-xs font-semibold text-stone-300">{t('dashboard.store.bannerAlign')}</span>
+                    <div className="flex gap-1.5">
+                      {['start', 'center', 'end'].map((val) => {
+                        const on = (b.align || 'center') === val;
+                        return (
+                          <button
+                            key={val}
+                            type="button"
+                            onClick={() => setBanner(idx, 'align', val)}
+                            aria-pressed={on}
+                            className={`flex-1 rounded-lg border px-2 py-1.5 text-[11px] font-bold transition ${on ? 'border-gold-400 bg-gold-400/15 text-gold-200' : 'border-gold-400/20 text-stone-300 hover:border-gold-400/40'}`}
+                          >
+                            {t(`dashboard.store.bannerAlign_${val}`)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
                   {/* شدّةُ التعتيم — لصورةٍ أو فيديو فقط (اللونُ اختارَه صاحبُه
                       فلا نُعتّمُه). صورةٌ فاتحةٌ تبتلعُ النصَّ الأبيضَ فوقَها
                       وصورةٌ داكنةٌ لا تحتاجُ حجاباً ثقيلاً — رقمٌ واحدٌ يضبطُ

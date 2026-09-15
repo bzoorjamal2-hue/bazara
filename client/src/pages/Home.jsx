@@ -573,11 +573,31 @@ function HomeHero({ banners = [] }) {
                         />
                       </>
                     )}
-                    {/* شارةٌ رفيعةٌ تعطي إحساسَ دورِ الأزياءِ العالميّة */}
-                    <span className="bz-hero-el bz-kicker mb-4 text-[11px] font-semibold uppercase text-[#BEBAB4] sm:text-xs">Bazara</span>
-                    {s.title && <h1 className="bz-hero-el font-display text-3xl font-extrabold leading-tight text-[#F6F5F3] drop-shadow-lg sm:text-5xl lg:text-6xl">{s.title}</h1>}
-                    {s.subtitle && <p className="bz-hero-el mx-auto mt-4 max-w-2xl text-[#CFCCC7] drop-shadow sm:text-lg">{s.subtitle}</p>}
-                    {s.btnLabel && s.btnHref && <div className="bz-hero-el"><SlideButton href={s.btnHref} label={s.btnLabel} onLight={false} /></div>}
+                    {/* كتلةُ النصّ: موضعُها من لوحةِ المدير — وسطاً أو إلى جهةٍ
+                        كالشريطِ التحريريّ. وكلمةُ ما فوقَ العنوانِ صارت حقلاً
+                        يملؤُه، بعدَ أن كانت «Bazara» مكتوبةً بالشيفرةِ بكلِّ شريحة. */}
+                    <div className={`bz-homehero-text ${s.align === 'start' ? 'bz-ht-start' : s.align === 'end' ? 'bz-ht-end' : ''}`}>
+                      <span className="bz-hero-el bz-kicker mb-3 block text-[11px] font-semibold uppercase text-[#BEBAB4] sm:text-xs">{s.eyebrow || 'Bazara'}</span>
+                      {s.title && <h1 className="bz-hero-el font-display text-3xl font-extrabold leading-tight text-[#F6F5F3] drop-shadow-lg sm:text-5xl lg:text-6xl">{s.title}</h1>}
+                      {s.subtitle && <p className="bz-hero-el mt-4 max-w-xl text-[#CFCCC7] drop-shadow sm:text-lg">{s.subtitle}</p>}
+                      {/* أزرارُ الهيرو: زرُّ الشريحةِ إن وُضِعَ، ومعه دائماً بابانِ
+                          للتسوّقِ — الهيرو بلا بابٍ يخرجُ منه لافتةٌ لا واجهة. */}
+                      <div className="bz-hero-el mt-7 flex flex-wrap items-center gap-3">
+                        {s.btnLabel && s.btnHref
+                          ? <SlideButton href={s.btnHref} label={s.btnLabel} onLight={false} />
+                          : <Link to="/categories" className="mt-6 inline-flex items-center rounded-xl bg-[#F6F5F3] px-6 py-2.5 text-base font-semibold text-[#1F1E1D] shadow-lg transition hover:-translate-y-0.5 hover:bg-white">{t('landing.shopNow')}</Link>}
+                        <Link to="/offers" className="mt-6 inline-flex items-center rounded-xl border-2 border-[#F6F5F3]/35 px-6 py-2.5 text-base font-semibold text-[#F6F5F3] transition hover:bg-white/10">{t('nav.offers')}</Link>
+                      </div>
+                      {/* شرائطُ ثقةٍ تحتَ الأزرار: تُقرأُ قبلَ أوّلِ منتج — وهذا
+                          ترتيبُ المتاجرِ التي تبيعُ لزائرةٍ لا تعرفُها بعد. */}
+                      <ul className="bz-hero-el mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11.5px] text-[#CFCCC7] sm:text-xs">
+                        {[t('store.featDelivery'), t('store.featExchange'), t('store.featPrices')].map((f) => (
+                          <li key={f} className="inline-flex items-center gap-1.5">
+                            <span aria-hidden className="inline-block h-1 w-1 rounded-full bg-[#A8A29B]" />{f}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
                 </div>
               );

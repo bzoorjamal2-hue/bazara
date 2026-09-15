@@ -4888,3 +4888,29 @@ html.dark .theme-pub .bz-featstore {
   text-align: center;
 }
 @media (min-width: 1024px) { .bz-homehero-slide { min-height: min(80svh, 760px); } }
+
+/* كتلةُ نصِّ الهيرو: وسطاً افتراضاً، أو إلى جهةٍ كالشريطِ التحريريّ.
+   الموضعُ من لوحةِ المدير — صورةٌ وجهُها بالوسطِ تحتاجُ النصَّ جانباً، وصورةٌ
+   خاليةُ الوسطِ تحتملُه فوقَها. */
+.bz-homehero-text {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  max-width: 1400px;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.bz-homehero-text .bz-hero-el { align-items: center; justify-content: center; }
+.bz-homehero-text.bz-ht-start,
+.bz-homehero-text.bz-ht-end { align-items: flex-start; text-align: start; }
+.bz-homehero-text.bz-ht-start > *,
+.bz-homehero-text.bz-ht-end > * { justify-content: flex-start; }
+/* الجهةُ منطقيّةٌ لا فيزيائيّة: البدايةُ يمينٌ بالعربيّةِ ويسارٌ بالإنجليزيّة */
+.bz-homehero-text.bz-ht-start { margin-inline-end: auto; }
+.bz-homehero-text.bz-ht-end { margin-inline-start: auto; }
+@media (min-width: 768px) {
+  .bz-homehero-text.bz-ht-start,
+  .bz-homehero-text.bz-ht-end { max-width: 42rem; }
+}
