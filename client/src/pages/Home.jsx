@@ -427,9 +427,14 @@ function HomeHero({ banners = [] }) {
   const touch = useRef({ x: 0, y: 0, active: false, horiz: false });
 
   useEffect(() => { setI((p) => Math.min(p, len - 1)); }, [len]);
-  // لا تقدّمَ تلقائيّاً: الشريحةُ تتبدّلُ بإصبعِ الزبونةِ أو بنقرِ النقطةِ فقط.
-  // السلايدرُ الذي يمشي وحدَه يسحبُ الصورةَ من تحتِ عينِ من يقرأُ جملتَها،
-  // ويُخرِجُ الزرَّ من تحتِ إصبعِها قبلَ أن تصلَه.
+  // تقدّمٌ تلقائيٌّ دوريٌّ كلَّ سبعِ ثوانٍ — ويقفُ أثناءَ السحبِ باللمسِ فلا
+  // تُسحَبُ الشريحةُ من تحتِ إصبعِ الزبونةِ وهي تتصفّح. وشريحةٌ واحدةٌ لا تدور.
+  const [paused, setPaused] = useState(false);
+  useEffect(() => {
+    if (len <= 1 || paused) return undefined;
+    const id = setInterval(() => setI((p) => (p + 1) % len), 7000);
+    return () => clearInterval(id);
+  }, [len, paused, i]);
 
   // تشغيل ذكي لفيديوهات الشرائح (إصلاح تعليق): كانت كل الفيديوهات تعمل معاً بلا
   // توقف حتى خارج الشاشة. الآن يعمل فيديو الشريحة الظاهرة فقط، ويتوقف الكل
@@ -491,6 +496,7 @@ function HomeHero({ banners = [] }) {
     const onStart = (e) => {
       const tt = e.touches[0];
       touch.current = { x: tt.clientX, y: tt.clientY, active: true, horiz: false };
+      setPaused(true);
     };
     const onMove = (e) => {
       if (!touch.current.active) return;
@@ -528,6 +534,7 @@ function HomeHero({ banners = [] }) {
       touch.current.active = false;
       setDrag(0);
       setI(next);
+      setPaused(false);
     };
     el.addEventListener('touchstart', onStart, { passive: true });
     el.addEventListener('touchmove', onMove, { passive: false });

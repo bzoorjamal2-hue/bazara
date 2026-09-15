@@ -208,9 +208,11 @@ table { max-width: 100%; }
   @keyframes bz-halo-pulse { 0%, 100% { opacity: 0.45; transform: scale(1); } 50% { opacity: 0.85; transform: scale(1.1); } }
   .bz-hero-active .bz-logo-halo { animation: bz-halo-pulse 4s ease-in-out infinite; }
 
-  /* نقطة التقدّم: تمتلئ خلال مدّة الانتقال (٥ ثوانٍ) كمؤقّت مرئي للشريحة التالية */
+  /* نقطةُ التقدّم: تمتلئ خلالَ مدّةِ الانتقالِ (سبعُ ثوانٍ) كمؤقّتٍ مرئيٍّ للشريحةِ
+     التالية. وتمتلئُ من جهةِ البدايةِ ‎(start-0 بالوسم) فتمشي يميناً إلى يسارٍ
+     بالعربيّةِ ويساراً إلى يمينٍ بالإنجليزيّة — كاتّجاهِ الشرائحِ نفسِها. */
   @keyframes bz-dot-progress { from { width: 0%; } to { width: 100%; } }
-  .bz-dot-progress { animation: bz-dot-progress 5s linear both; }
+  .bz-dot-progress { animation: bz-dot-progress 7s linear both; }
 }
 /* بلا حركة: النقطة النشطة تبقى ممتلئة (لا مؤقّت متحرّك) */
 .bz-dot-progress { width: 100%; }

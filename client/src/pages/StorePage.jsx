@@ -969,8 +969,14 @@ function HeroSlider({ store }) {
   const draggingRef = useRef(false);
   const touch = useRef({ x: 0, y: 0, active: false, horiz: false });
 
-  // لا تقدّمَ تلقائيّاً: الشريحةُ تتبدّلُ بإصبعِ الزبونةِ أو بنقرِ النقطةِ فقط.
-  // السلايدرُ الذي يمشي وحدَه يسحبُ الصورةَ من تحتِ عينِ من يقرأُ جملتَها.
+  // تقدّمٌ تلقائيٌّ دوريٌّ كلَّ سبعِ ثوانٍ — ويقفُ أثناءَ السحبِ باللمسِ فلا
+  // تُسحَبُ الشريحةُ من تحتِ إصبعِ الزبونةِ وهي تتصفّح. وشريحةٌ واحدةٌ لا تدور.
+  const [paused, setPaused] = useState(false);
+  useEffect(() => {
+    if (len <= 1 || paused) return undefined;
+    const id = setInterval(() => setI((p) => (p + 1) % len), 7000);
+    return () => clearInterval(id);
+  }, [len, paused, i]);
 
   // تشغيل ذكي لفيديوهات الشرائح (إصلاح تعليق): يعمل فيديو الشريحة الظاهرة فقط،
   // ويتوقف الكل عندما يخرج السلايدر عن الشاشة — كانت كل الفيديوهات تعمل معاً دائماً.
@@ -1021,6 +1027,7 @@ function HeroSlider({ store }) {
     const onStart = (e) => {
       const tch = e.touches[0];
       touch.current = { x: tch.clientX, y: tch.clientY, active: true, horiz: false };
+      setPaused(true);
     };
     const onMove = (e) => {
       if (!touch.current.active) return;
@@ -1055,6 +1062,7 @@ function HeroSlider({ store }) {
       touch.current.active = false;
       setDrag(0);
       setI(next);
+      setPaused(false);
     };
 
     el.addEventListener('touchstart', onStart, { passive: true });
@@ -1263,7 +1271,7 @@ function HeroSlider({ store }) {
               {idx === i && (
                 <span
                   key={i}
-                  className="bz-dot-progress absolute inset-y-0 left-0 rounded-full bg-[#F9F9F8]"
+                  className="bz-dot-progress absolute inset-y-0 start-0 rounded-full bg-[#F9F9F8]"
                  
                 />
               )}
