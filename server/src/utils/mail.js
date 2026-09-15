@@ -14,6 +14,29 @@ function parseSender() {
   return { name: 'Bazara', email: from.trim() };
 }
 
+// نسخةٌ نصّيّةٌ من الـHTML: العناوينُ والفقراتُ تصيرُ أسطراً، والوسومُ تُنزَع،
+// والكياناتُ تُفكّ. ليست تنسيقاً جميلاً — هي ما يقرؤهُ قارئُ البريدِ النصّيُّ
+// وما يفحصُه مصفّي السبام، فيكفي أن تكونَ مقروءةً ومطابقةً للمحتوى.
+function htmlToText(html) {
+  return String(html || '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|h[1-6]|li|tr)>/gi, '\n')
+    .replace(/<li[^>]*>/gi, '• ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .split('\n').map((l) => l.trim()).join('\n')
+    .trim();
+}
+
 // إرسال عبر Brevo API
 async function sendViaApi({ to, subject, html }) {
   const res = await fetch('https://api.brevo.com/v3/smtp/email', {
@@ -23,7 +46,15 @@ async function sendViaApi({ to, subject, html }) {
       'Content-Type': 'application/json',
       accept: 'application/json',
     },
-    body: JSON.stringify({ sender: parseSender(), to: [{ email: to }], subject, htmlContent: html }),
+    body: JSON.stringify({
+      sender: parseSender(),
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+      textContent: htmlToText(html),
+      // الردُّ يذهبُ لبريدِ الدعمِ لا لعنوانِ الإرسالِ التقنيّ
+      replyTo: parseSender(),
+    }),
   });
   if (!res.ok) {
     const t = await res.text().catch(() => '');
@@ -51,7 +82,7 @@ async function sendViaSmtp({ to, subject, html }) {
         });
   }
   const from = process.env.EMAIL_FROM || `Bazara <${process.env.EMAIL_USER}>`;
-  await transporter.sendMail({ from, to, subject, html });
+  await transporter.sendMail({ from, replyTo: parseSender().email, to, subject, html, text: htmlToText(html) });
 }
 
 export async function sendMail(opts) {
