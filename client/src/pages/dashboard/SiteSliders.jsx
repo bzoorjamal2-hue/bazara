@@ -209,7 +209,13 @@ export default function SiteSliders() {
       <div className="dash-section glass space-y-4 p-5 sm:p-6">
         <SectionHead icon={<ImageIcon className="h-5 w-5" />} title={t('admin.lookbook')} desc={t('admin.lookbookHint')} />
         <Field label={t('admin.lookbookImage')} tip={t('admin.lookbookImageTip')}>
-          <ImageInput value={lb.image} onChange={(v) => setLb({ ...lb, image: v })} />
+          {/* صورةٌ جديدةٌ تُبطِلُ المواضعَ القديمة: الإحداثيّةُ نسبةٌ من صورةٍ
+              بعينِها، فإبقاؤها على غيرِها يضعُ النقطةَ على الهواء — والعدّادُ
+              يقولُ «بقي ١» فيظنُّ المديرُ أنّ الأوّلَيْنِ بمكانِهما. */}
+          <ImageInput
+            value={lb.image}
+            onChange={(v) => setLb((prev) => (v === prev.image ? prev : { ...prev, image: v, points: [] }))}
+          />
         </Field>
         <div className="grid gap-2 sm:grid-cols-2">
           <input value={lb.title} onChange={(e) => setLb({ ...lb, title: e.target.value })} maxLength={60} placeholder={t('admin.lookbookTitle')} className="input" />
