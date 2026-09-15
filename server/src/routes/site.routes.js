@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getSiteBanners, updateSiteBanners, listNewsletter } from '../controllers/site.controller.js';
+import { getSiteBanners, updateSiteBanners, listNewsletter, removeNewsletter } from '../controllers/site.controller.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
 
 const router = Router();
@@ -9,6 +9,7 @@ router.get('/banners', requireAuth, requireAdmin, getSiteBanners);
 router.put('/banners', requireAuth, requireAdmin, updateSiteBanners);
 // مشتركو النشرة (لا يخلط بـ/subscription/subscribers الخاص بالاشتراكات المدفوعة)
 router.get('/newsletter', requireAuth, requireAdmin, listNewsletter);
+router.post('/newsletter/remove', requireAuth, requireAdmin, removeNewsletter);
 
 
 export default router;

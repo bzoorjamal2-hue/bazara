@@ -354,3 +354,17 @@ export async function listNewsletter(_req, res, next) {
     next(err);
   }
 }
+
+// حذفُ مشتركٍ من النشرة (مدير). لم يكن للقائمةِ بابُ خروج: عنوانٌ يُكتَبُ خطأً
+// يبقى للأبد، ومن يطلبُ إلغاءَ اشتراكِه لا سبيلَ لتلبيتِه — وهذا يخالفُ أبسطَ
+// ما يُتوقَّعُ من قائمةٍ بريديّة.
+export async function removeNewsletter(req, res, next) {
+  try {
+    const contact = String(req.body?.contact ?? '').trim().slice(0, 120).toLowerCase();
+    if (!contact) return res.status(400).json({ error: 'حدّد العنوان المراد حذفه.' });
+    const r = await query('DELETE FROM subscribers WHERE lower(contact) = $1', [contact]);
+    res.json({ ok: true, removed: r.rowCount });
+  } catch (err) {
+    next(err);
+  }
+}
