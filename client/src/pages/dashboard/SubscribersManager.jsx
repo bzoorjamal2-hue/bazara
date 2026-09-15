@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
-import { CrownIcon, LinkIcon, BellIcon, SaveIcon, PlusIcon, MailIcon, TrashIcon, StarIcon, UsersIcon, ChartIcon, BagIcon, ReceiptIcon, LockIcon, LockOpenIcon, EditIcon, WarnIcon, EyeIcon, XIcon } from '../../components/icons.jsx';
+import { KeyIcon, CrownIcon, LinkIcon, BellIcon, SaveIcon, PlusIcon, MailIcon, TrashIcon, StarIcon, UsersIcon, ChartIcon, BagIcon, ReceiptIcon, LockIcon, LockOpenIcon, EditIcon, WarnIcon, EyeIcon, XIcon } from '../../components/icons.jsx';
 import { PageHead } from '../../components/FormField.jsx';
 import AdminStoreDetail from './AdminStoreDetail.jsx';
 import { startImpersonation } from '../../utils/impersonation.js';
@@ -40,6 +40,7 @@ function SubRow({ s, onDeleted, onUpdated, onOpen }) {
   const [confirmDel, setConfirmDel] = useState(false);
   const [delBusy, setDelBusy] = useState(false);
   const [featBusy, setFeatBusy] = useState(false);
+  const [resetBusy, setResetBusy] = useState(false);
   const [panel, setPanel] = useState('');       // 'suspend' | 'fix'
   const [reason, setReason] = useState('');
   const [fix, setFix] = useState({ newEmail: '', newSlug: '' });
@@ -107,6 +108,20 @@ function SubRow({ s, onDeleted, onUpdated, onOpen }) {
       setMsg(t('admin.fixDone'));
       setTimeout(() => setMsg(''), 3000);
     } catch (e) { setErr(getErrorMessage(e, t('errors.generic'))); } finally { setToolBusy(false); }
+  };
+
+  // إرسالُ رمزِ استعادةٍ إلى بريدِ المشتركةِ نفسِها.
+  // كانت هذه الأداةُ بتبويبِ «إعدادات المنصّة» وحدَه، فتُكتَبُ بريدُها يدويّاً
+  // بتبويبٍ آخر — والمديرُ يكونُ واقفاً على صفِّها هنا أصلاً حين تتصلُ تقولُ
+  // «ما بقدر أدخل». الزرُّ يرسلُ رمزاً لبريدِها هي، فلا تمرُّ كلمةُ سرٍّ بواتساب
+  // ولا يعرفُها أحدٌ سواها.
+  const sendResetCode = async () => {
+    setErr(''); setResetBusy(true);
+    try {
+      await api.post('/auth/admin/send-reset', { email: s.email });
+      setMsg(t('admin.sendResetBtn'));
+      setTimeout(() => setMsg(''), 3000);
+    } catch (e) { setErr(getErrorMessage(e, t('errors.generic'))); } finally { setResetBusy(false); }
   };
 
   // تمييز/إلغاء تمييز المتجر — يتصدّر «متاجر مميزة» بالرئيسية
@@ -423,6 +438,9 @@ function SubRow({ s, onDeleted, onUpdated, onOpen }) {
           <div className="flex flex-wrap items-center gap-2">
             <button onClick={send} disabled={busy} className="btn-ghost !py-1.5 text-sm flex-1 sm:flex-none">
               {busy ? t('common.loading') : <span className="inline-flex items-center gap-1.5"><MailIcon className="h-4 w-4" /> {t('admin.sendCodeBtn')}</span>}
+            </button>
+            <button onClick={sendResetCode} disabled={resetBusy} className="btn-ghost !py-1.5 text-sm flex-1 sm:flex-none">
+              {resetBusy ? t('common.loading') : <span className="inline-flex items-center gap-1.5"><KeyIcon className="h-4 w-4" /> {t('admin.sendResetShort')}</span>}
             </button>
             {confirmDel ? (
               <span className="flex flex-1 items-center gap-2 sm:flex-none">

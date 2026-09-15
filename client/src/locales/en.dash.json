@@ -1190,7 +1190,8 @@
       "activeDesc": "Visa button is live and payments reach their bank.",
       "noBank": "No bank details yet ({{count}})",
       "empty": "No stores yet."
-    }
+    },
+    "sendResetShort": "Send reset code"
   },
   "finance": {
     "title": "Profit & expenses",
