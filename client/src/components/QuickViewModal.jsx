@@ -120,7 +120,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
             stageRef={imgRef}
             onCover={setCover}
             badge={hasDiscount ? (
-              <span className="absolute start-3 top-3 z-10 rounded-full bg-[#8a2438] px-2.5 py-0.5 text-xs font-semibold text-[#F4EDE2] shadow-sm">-{discountPct}%</span>
+              <span className="absolute start-3 top-3 z-10 rounded-full bg-[#8a2438] px-2.5 py-0.5 text-xs font-semibold text-[#FAF9F7] shadow-sm">-{discountPct}%</span>
             ) : null}
           />
         </div>

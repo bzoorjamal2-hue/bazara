@@ -69,8 +69,7 @@ export default function CollectionsRow({ collections, storeSlug = '' }) {
                 {/* سهم دائريّ يميل مع اتجاه اللغة */}
                 <span
                   aria-hidden
-                  className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-[#2a1c10] transition group-hover:scale-110"
-                  style={{ background: '#cdbda4' }}
+                  className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-cream text-[#1F1E1D] transition group-hover:scale-110"
                 >
                   <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 rtl-flip" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M9 6l6 6-6 6" />

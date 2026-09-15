@@ -43,9 +43,9 @@ export default class ErrorBoundary extends Component {
   render() {
     if (!this.state.failed) return this.props.children;
     // تحميلةٌ جاريةٌ الآن: أرضيّةٌ صامتةٌ بلون الموقع لا شاشةُ خطأٍ تومضُ ثمّ تذهب.
-    if (this.state.reloading) return <div style={{ minHeight: '100vh', background: '#F4EDE2' }} />;
+    if (this.state.reloading) return <div style={{ minHeight: '100vh', background: '#FAF9F7' }} />;
     return (
-      <div className="flex min-h-screen items-center justify-center p-6" style={{ background: '#F4EDE2' }}>
+      <div className="flex min-h-screen items-center justify-center p-6" style={{ background: '#FAF9F7' }}>
         <div
           className="w-full max-w-sm rounded-3xl p-8 text-center"
           style={{ background: '#ffffff', boxShadow: '0 18px 48px -18px rgba(94,70,54,0.45)', border: '1px solid rgba(176, 154, 126, 0.35)' }}
@@ -75,7 +75,7 @@ export default class ErrorBoundary extends Component {
               type="button"
               onClick={() => window.location.reload()}
               className="rounded-full px-6 py-2.5 text-sm font-bold"
-              style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #241708 100%)', color: '#F4EDE2' }}
+              style={{ background: 'linear-gradient(150deg, #3f2e22 0%, #241708 100%)', color: '#FAF9F7' }}
             >
               تحديث الصفحة
             </button>

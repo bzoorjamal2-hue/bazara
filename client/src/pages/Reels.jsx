@@ -754,7 +754,7 @@ function ReelPlayer({ product: p, muted, t, onUnmute, onEnded, isLast, showHint,
       {/* شارة الخصم */}
       {hasDiscount && (
         <div className="absolute start-3 z-20 flex flex-col items-start gap-2" style={{ top: 'calc(env(safe-area-inset-top,0px) + 64px)' }}>
-          <span className="rounded-full bg-[#8a2438] px-2.5 py-1 text-xs font-extrabold text-[#F4EDE2] shadow">-{discountPct}%</span>
+          <span className="rounded-full bg-[#8a2438] px-2.5 py-1 text-xs font-extrabold text-[#FAF9F7] shadow">-{discountPct}%</span>
         </div>
       )}
 

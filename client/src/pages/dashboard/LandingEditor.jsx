@@ -221,8 +221,8 @@ export default function LandingEditor() {
             >
               <span className="bz-veil-preview absolute inset-0" aria-hidden="true" />
               <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 px-3 text-center">
-                <span className="text-[15px] font-extrabold text-[#F4EDE2]">{t('admin.land.dimSample')}</span>
-                <span className="text-[11px] text-[#F4EDE2]/80">{t('admin.land.dimSampleSub')}</span>
+                <span className="text-[15px] font-extrabold text-[#FAF9F7]">{t('admin.land.dimSample')}</span>
+                <span className="text-[11px] text-[#FAF9F7]/80">{t('admin.land.dimSampleSub')}</span>
               </span>
             </div>
             {!L.hero.image && L.hero.video && (

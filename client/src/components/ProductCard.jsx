@@ -334,7 +334,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
                   type="button"
                   onClick={(e) => addSize(e, s)}
                   title={mySize === s ? t('product.mySize') : `${t('product.addToCart')} — ${sizeLabel(s, t)}`}
-                  className={`rounded-md bg-[#F4EDE2]/95 px-2 py-1 text-[11px] font-bold leading-none text-[#3f2e22] shadow-sm transition hover:bg-[#F4EDE2] active:scale-95 ${mySize === s ? 'ring-2 ring-gold-400' : ''}`}
+                  className={`rounded-md bg-[#FAF9F7]/95 px-2 py-1 text-[11px] font-bold leading-none text-[#3f2e22] shadow-sm transition hover:bg-[#FAF9F7] active:scale-95 ${mySize === s ? 'ring-2 ring-gold-400' : ''}`}
                 >
                   {sizeLabel(s, t)}
                 </button>
@@ -344,7 +344,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); setQuickOpen(true); }}
                   title={t('product.quickView')}
-                  className="rounded-md bg-[#F4EDE2]/70 px-2 py-1 text-[11px] font-bold leading-none text-[#3f2e22] shadow-sm transition hover:bg-[#F4EDE2] active:scale-95"
+                  className="rounded-md bg-[#FAF9F7]/70 px-2 py-1 text-[11px] font-bold leading-none text-[#3f2e22] shadow-sm transition hover:bg-[#FAF9F7] active:scale-95"
                 >
                   +{quickSizes.length - 5}
                 </button>
@@ -357,7 +357,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
         <button
           onClick={onAdd}
           disabled={outOfStock}
-          className="absolute bottom-2.5 end-2.5 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-[#5e4636] text-[#F4EDE2] shadow-[0_10px_22px_-8px_rgba(46,33,24,0.7)] ring-1 ring-[#F4EDE2]/25 transition hover:bg-[#3f2e22] active:scale-90 disabled:cursor-not-allowed disabled:opacity-40"
+          className="absolute bottom-2.5 end-2.5 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-wine text-cream shadow-[0_10px_22px_-8px_rgba(20,20,20,0.35)] ring-1 ring-cream/25 transition hover:bg-wine-dark active:scale-90 disabled:cursor-not-allowed disabled:opacity-40"
           aria-label={t('product.addToCart')}
           title={t('product.addToCart')}
         >

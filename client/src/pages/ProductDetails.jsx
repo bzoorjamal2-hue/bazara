@@ -430,7 +430,7 @@ export default function ProductDetails() {
             {hasDiscount && (
               <span className="flex items-center gap-x-2.5">
                 <Strike className="bz-oldprice text-xl">{t('common.currency')}{product.oldPrice}</Strike>
-                <span className="rounded-full bg-[#8a2438] px-2.5 py-1 text-xs font-bold leading-none text-[#F4EDE2] shadow-sm">
+                <span className="rounded-full bg-[#8a2438] px-2.5 py-1 text-xs font-bold leading-none text-[#FAF9F7] shadow-sm">
                   {t('product.savePct', { pct: Math.round((1 - product.price / product.oldPrice) * 100) })}
                 </span>
                 <span className="text-xs font-semibold text-[#8a2438]">

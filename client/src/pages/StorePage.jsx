@@ -1208,7 +1208,7 @@ function HeroSlider({ store }) {
               {idx === i && (
                 <span
                   key={i}
-                  className="bz-dot-progress absolute inset-y-0 left-0 rounded-full bg-[#F4EDE2]"
+                  className="bz-dot-progress absolute inset-y-0 left-0 rounded-full bg-[#FAF9F7]"
                   style={{ animationPlayState: paused ? 'paused' : 'running' }}
                 />
               )}

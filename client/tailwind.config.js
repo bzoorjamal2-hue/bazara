@@ -30,7 +30,7 @@ export default {
           DEFAULT: 'rgb(var(--c-wine) / <alpha-value>)',
           dark: 'rgb(var(--c-wine-dark) / <alpha-value>)',
         },
-        cream: '#F4EDE2',
+        cream: '#FAF9F7',
         // ذهبي معدني فاخر
         // الاسم «gold» محفوظ كما هو (تستعمله ٦٥٨ موضعاً بالكود)، لكنّ القيم
         // صارت رمليّةً دافئة بلا أيّ صُفرة. الذهب المعدنيّ حين يعمّ على كلّ
