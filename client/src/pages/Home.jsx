@@ -399,6 +399,22 @@ function HomeCategoryView({ cat, onHome, custom = [] }) {
   );
 }
 
+// نسخةٌ من صورةِ الهيرو بنسبةٍ وعرضٍ محدَّدَين. تعملُ على روابطِ كلاودينري
+// (صورةً أو لقطةَ فيديو) وتتجاهلُ أيَّ تحويلاتٍ قديمةٍ بالرابطِ فلا تتراكم.
+// تُعيدُ فراغاً لأيِّ رابطٍ آخر (base64 أو مستضافٍ خارجاً) — وعندها يعملُ
+// الاحتياطيُّ بالوسمِ ‎<img> ولا يسقطُ الهيرو.
+function heroCrop(url, w, ar) {
+  const s = String(url || '');
+  const m = s.match(/^(https?:\/\/[^/]+\/[^/]+\/(image|video)\/upload\/)(.+)$/);
+  if (!m) return '';
+  const segs = m[3].split('/');
+  let vi = segs.findIndex((x) => /^v\d+$/.test(x));
+  if (vi === -1) vi = segs.length - 1;
+  const rest = segs.slice(vi).join('/').replace(/\.[a-z0-9]+$/i, '');
+  const frame = m[2] === 'video' ? 'so_0,' : '';
+  return `${m[1]}${frame}f_auto,q_auto:best,w_${w},c_fill,g_auto,ar_${ar},e_sharpen:60/${rest}.jpg`;
+}
+
 // سلايدر الـ Hero للصفحة الرئيسية: شريحة ثابتة + شريحتين, تحريك تلقائي + سحب باللمس
 function HomeHero({ banners = [] }) {
   const { t, i18n } = useTranslation();
@@ -591,7 +607,17 @@ function HomeHero({ banners = [] }) {
                         والشدّةُ تُقرأُ من المتغيّرِ نفسِه، فيبقى المقبضُ واحداً:
                         ‏‎0٪ ← بلا تعتيم · ‎50٪ ← 0.65 · ‎100٪ ← 0.30 */}
                     {isImage && (
-                      <img src={cldThumb(s.bgValue, 1920)} alt="" loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))' }} className="absolute inset-0 -z-10 h-full w-full object-cover" />
+                      // قصّةٌ لكلِّ جهازٍ لا قصّةٌ واحدةٌ للجميع: المصدرُ فيديو جوّالٍ
+                      // طوليٌّ ‎(9:16) والهيرو عريضٌ على الكمبيوتر — القصّةُ الواحدةُ
+                      // إمّا تبترُ القامةَ على الجوّالِ أو تُظهِرُ شريحةً من الخصرِ على
+                      // الشاشة. ثلاثُ نسخٍ بنسبٍ مختلفةٍ، و‎g_auto يُبقي الوجهَ داخلَ
+                      // الإطارِ بكلٍّ منها، والعرضُ لا يتجاوزُ دقّةَ الأصلِ فلا تكبيرَ
+                      // يُغبِّش.
+                      <picture>
+                        <source media="(min-width: 1024px)" srcSet={heroCrop(s.bgValue, 1440, '2:1')} />
+                        <source media="(min-width: 640px)" srcSet={heroCrop(s.bgValue, 1280, '16:10')} />
+                        <img src={heroCrop(s.bgValue, 900, '4:5') || cldThumb(s.bgValue, 1440)} alt="" loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))' }} className="absolute inset-0 -z-10 h-full w-full object-cover" />
+                      </picture>
                     )}
                     {isVideo && (
                       <>
