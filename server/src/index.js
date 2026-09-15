@@ -625,6 +625,11 @@ END $$;`,
     "ALTER TABLE ig_messages ADD COLUMN IF NOT EXISTS attachment_type VARCHAR(20) DEFAULT '';",
     // عمولةُ المنصّةِ على الطلبِ بالنسبةِ المئويّة — صفرٌ افتراضاً (الدخلُ من الاشتراكِ لا العمولة)
     "ALTER TABLE stores ADD COLUMN IF NOT EXISTS platform_fee_percent NUMERIC(5,2) NOT NULL DEFAULT 0;",
+    // تخطيطُ أقسامِ المنتجاتِ بصفحةِ المتجر: شبكةٌ تُتصفَّحُ أم رفٌّ يُسحَب.
+    // المتجرُ الصغيرُ يخنقُه الرفُّ (ستُّ قطعٍ تبدو فراغاً)، والكبيرُ تخنقُه
+    // الشبكةُ (صفحةٌ طولُها ثلاثةُ آلافِ بكسل) — فالخيارُ للتاجر. والافتراضُ
+    // «متناوب»: الإيقاعُ القائمُ اليوم، فلا يتبدّلُ شكلُ متجرٍ بلا قرارِ صاحبِه.
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS section_layout VARCHAR(10) NOT NULL DEFAULT 'mixed';",
   ];
   // كل جملة على حدة: فشل واحدة لا يمنع البقية
   for (const sql of steps) {

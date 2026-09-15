@@ -246,6 +246,11 @@ export default function StorePage() {
   if (!data) return <StorePageSkeleton />;
 
   const { store } = data;
+  // تخطيطُ الأقسام: «رفّ» يجعلُها كلَّها أرففاً، و«شبكة» كلَّها شبكات،
+  // و«متناوب» يُبقي الإيقاعَ الأصليَّ — شبكةٌ أوّلاً ثمّ رفّان.
+  const layout = store.sectionLayout || 'mixed';
+  const railNew = layout === 'rail';
+  const railRest = layout !== 'grid';
   // واتساب المتجر: رقم الإعدادات إن وُجد، وإلا رقم المالك المُدخل عند التسجيل
   const wa = store.whatsapp || store.ownerPhone || '';
   // "الأكثر مبيعاً" الحقيقي: ترتيب بعدّاد المبيعات الفعلي (يزيد مع كل طلب مؤكّد)،
@@ -587,12 +592,15 @@ export default function StorePage() {
             </section></Reveal>
           )}
 
-          {/* إيقاعُ الصفحة: شبكةٌ كاملةٌ واحدةٌ تُتصفَّح (جديدنا)، ثمّ رفٌّ على
-              شريطٍ حبريٍّ (الأكثرُ مبيعاً)، ثمّ رفٌّ فاتح (التخفيضات). لا قسمَ
-              يشبهُ الذي قبلَه، والقطعُ نفسُها بلا نقصان. */}
-          <ProductSection eyebrow={t('store.eyebrowNew')} title={t('store.newArrivals')} products={newest} wa={wa} />
-          <ProductSection ink rail eyebrow={t('store.eyebrowBest')} title={t('store.bestSellers')} products={bestSellers} wa={wa} ranked />
-          {onSale.length > 0 && <ProductSection rail eyebrow={t('store.eyebrowSale')} title={t('store.saleSection')} products={onSale} wa={wa} />}
+          {/* إيقاعُ الصفحة — يختارُه صاحبُ المتجرِ من إعداداتِه:
+              «متناوب» (الافتراض): شبكةٌ تُتصفَّح، ثمّ رفٌّ حبريٌّ، ثمّ رفٌّ فاتح.
+              «شبكة»: كلُّ الأقسامِ شبكاتٌ كاملة — يليقُ بمتجرٍ قليلِ القطعِ
+              لأنّ الرفَّ نصفَ الممتلئِ يبدو فراغاً.
+              «رفّ»: كلُّها أرففٌ تُسحَب — يليقُ بمتجرٍ كثيرِ القطعِ لأنّ الشبكاتِ
+              تصنعُ صفحةً طولُها آلافُ البكسلات. */}
+          <ProductSection rail={railNew} eyebrow={t('store.eyebrowNew')} title={t('store.newArrivals')} products={newest} wa={wa} />
+          <ProductSection ink rail={railRest} eyebrow={t('store.eyebrowBest')} title={t('store.bestSellers')} products={bestSellers} wa={wa} ranked />
+          {onSale.length > 0 && <ProductSection rail={railRest} eyebrow={t('store.eyebrowSale')} title={t('store.saleSection')} products={onSale} wa={wa} />}
 
           {data.products.length > 0 && (
             <div className="bz-sec-gap text-center">

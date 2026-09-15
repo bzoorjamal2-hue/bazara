@@ -15,7 +15,7 @@ import useDraft, { clearDraft } from '../../hooks/useDraft.js';
 import {
   SaveIcon, TruckIcon, ImageIcon, GiftIcon, FolderIcon, MegaphoneIcon, RulerIcon, ShieldIcon,
   StoreIcon, PhoneIcon, BoltIcon, ChartIcon, TagIcon, CardIcon, GearIcon, CheckIcon, CopyIcon, LinkIcon, ShareIcon,
-  ClockIcon, SparkleIcon, WhatsAppIcon, InstagramIcon, FacebookIcon, CashIcon, PinIcon,
+  ClockIcon, SparkleIcon, WhatsAppIcon, InstagramIcon, FacebookIcon, CashIcon, PinIcon, GridIcon,
 } from '../../components/icons.jsx';
 import { cldThumb } from '../../utils/cloudinary.js';
 import { SIZE_CHART } from '../../utils/sizes.js';
@@ -61,10 +61,18 @@ function ProgressRing({ pct }) {
 
 // أقسام الإعدادات بالترتيب: [معرّف المرساة، مفتاح الترجمة تحت dashboard.store، هل القسم مكتمل؟]
 // مصدر واحد لشريط التنقّل ومراقبة القسم النشط ومؤشّر الاكتمال
+// تخطيطُ الأقسام: لكلِّ خيارٍ صفّان يُريانِ إيقاعَه (ممتلئٌ = شبكة، ناقصٌ = رفّ)
+const LAYOUT_CHOICES = [
+  ['mixed', [true, false]],
+  ['grid', [true, true]],
+  ['rail', [false, false]],
+];
+
 const SECTIONS = [
   ['s-basics', 'basics', (f) => Boolean(f.name && f.slug && f.logoUrl)],
   ['s-contact', 'contact', (f) => Boolean(f.whatsapp)],
   ['s-banners', 'banners', (f) => (f.banners || []).some((b) => String(b?.title || '').trim())],
+  ['s-layout', 'layoutTitle', (f) => Boolean(f.sectionLayout) && f.sectionLayout !== 'mixed'],
   ['s-zones', 'zones', (f) => Number(f.deliveryTiers?.wb) > 0],
   ['s-flash', 'flashTitle', (f) => Number(f.flashPercent) > 0 && Boolean(f.flashEndsAt)],
   ['s-ads', 'adsTitle', (f) => Boolean(f.fbPixel || f.tiktokPixel || f.gaId)],
@@ -174,6 +182,7 @@ export default function StoreSettings() {
           returnPolicy: s.returnPolicy || '',
           announcement: s.announcement || '',
           announcementEn: s.announcementEn || '',
+          sectionLayout: s.sectionLayout || 'mixed',
           tagline: s.tagline || '',
           taglineEn: s.taglineEn || '',
           welcomeOffer: s.welcomeOffer || '',
@@ -649,6 +658,45 @@ export default function StoreSettings() {
         <div id="s-banners" className={CARD}>
           <SectionHead icon={<ImageIcon className="h-5 w-5" />} title={t('dashboard.store.banners')} desc={t('dashboard.store.bannersHint')} done={doneMap['s-banners']} />
           <BannerEditor banners={form.banners} onChange={(b) => setForm((f) => ({ ...f, banners: b }))} storeName={form.name} />
+        </div>
+
+        {/* تخطيطُ أقسامِ المنتجاتِ بصفحةِ المتجر — الشكلُ يتبعُ حجمَ البضاعة:
+            الرفُّ نصفَ الممتلئِ يبدو فراغاً بمتجرٍ قليلِ القطع، والشبكاتُ الثلاثُ
+            تصنعُ صفحةً طولُها آلافُ البكسلاتِ بمتجرٍ كثيرِها. */}
+        <div id="s-layout" className={CARD}>
+          <SectionHead icon={<GridIcon className="h-5 w-5" />} title={t('dashboard.store.layoutTitle')} desc={t('dashboard.store.layoutHint')} done={doneMap['s-layout']} />
+          <div className="grid gap-2 sm:grid-cols-3">
+            {LAYOUT_CHOICES.map(([key, rows]) => {
+              const on = (form.sectionLayout || 'mixed') === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, sectionLayout: key }))}
+                  aria-pressed={on}
+                  className={`rounded-xl border p-3 text-start transition ${on ? 'border-gold-400 bg-gold-400/10' : 'border-gold-400/20 hover:border-gold-400/50'}`}
+                >
+                  {/* رسمٌ صغيرٌ يُري الإيقاعَ نفسَه: صفٌّ ممتلئٌ شبكةٌ وصفٌّ ناقصٌ رفّ */}
+                  <span aria-hidden="true" className="mb-2 flex flex-col gap-1">
+                    {rows.map((full, r) => (
+                      <span key={r} className="flex gap-1 overflow-hidden">
+                        {/* صفُّ الشبكةِ ينتهي عندَ الحافّة، وصفُّ الرفِّ يُقَصُّ عندَها
+                            — فيُقرَأُ الفرقُ بالعينِ قبلَ قراءةِ الشرح */}
+                        {Array.from({ length: full ? 4 : 5 }).map((_, c) => (
+                          <span
+                            key={c}
+                            className={`h-3 rounded-sm ${full ? 'flex-1' : 'w-1/4 shrink-0'} ${on ? 'bg-gold-400/70' : 'bg-stone-500/40'}`}
+                          />
+                        ))}
+                      </span>
+                    ))}
+                  </span>
+                  <span className="block text-sm font-semibold text-stone-100">{t(`dashboard.store.layout_${key}`)}</span>
+                  <span className="mt-0.5 block text-[11px] leading-relaxed text-stone-400">{t(`dashboard.store.layout_${key}Hint`)}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* مناطق التوصيل ورسومها */}

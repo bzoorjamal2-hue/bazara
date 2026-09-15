@@ -7,6 +7,9 @@ import { normalizeTiers, flatInternalLocalities, mapExternalLocalities } from '.
 import { cachedLocalities, fetchAllLocalities } from '../config/opost.js';
 import { ensureToken } from './opost.controller.js';
 
+// تخطيطُ الأقسامِ الثلاثة: متناوبٌ (شبكةٌ ثمّ رفّان) أو شبكاتٌ كلُّها أو أرففٌ كلُّها
+const LAYOUTS = ['mixed', 'grid', 'rail'];
+
 function mapStore(s) {
   return {
     id: s.id,
@@ -37,6 +40,7 @@ function mapStore(s) {
     categoryMeta: s.category_meta && typeof s.category_meta === 'object' ? s.category_meta : {},
     customCategories: Array.isArray(s.custom_categories) ? s.custom_categories : [],
     collections: Array.isArray(s.collections) ? s.collections : [],
+    sectionLayout: LAYOUTS.includes(s.section_layout) ? s.section_layout : 'mixed',
     fbPixel: s.fb_pixel || '',
     tiktokPixel: s.tiktok_pixel || '',
     gaId: s.ga_id || '',
@@ -221,6 +225,8 @@ export async function updateMyStore(req, res, next) {
   const announcementEn = String(req.body.announcementEn || '').slice(0, 500);
   const tagline = String(req.body.tagline || '').slice(0, 120);
   const taglineEn = String(req.body.taglineEn || '').slice(0, 120);
+  // ثلاثُ قيمٍ لا رابعَ لها — وأيُّ شيءٍ آخرَ يعودُ للإيقاعِ المتناوب
+  const sectionLayout = LAYOUTS.includes(req.body.sectionLayout) ? req.body.sectionLayout : 'mixed';
   const welcomeOffer = String(req.body.welcomeOffer || '').slice(0, 300);
   const categoryMeta = sanitizeCategoryMeta(req.body.categoryMeta);
   const customCategories = sanitizeCustomCategories(req.body.customCategories);
@@ -290,6 +296,7 @@ export async function updateMyStore(req, res, next) {
          bank_account_name = $39, bank_name = $40,
          bank_iban = CASE WHEN $41 = '' OR $41 LIKE '••••%' THEN bank_iban ELSE $41 END,
          bank_swift = $42, bank_code = $43,
+         section_layout = $44,
          -- تغييرُ الآيبانِ يُبطلُ التسجيلَ السابقَ عند البوّابتَين: نُعيدُها للانتظار،
          -- إذ لا يصحُّ أن يبقى حسابٌ فرعيٌّ يسوقُ المالَ إلى مصرفٍ هُجِر
          paytabs_entity_id = CASE WHEN $41 = '' OR $41 LIKE '••••%' THEN paytabs_entity_id ELSE '' END,
@@ -345,6 +352,7 @@ export async function updateMyStore(req, res, next) {
         bankIban,
         bankSwift,
         bankCode,
+        sectionLayout,
       ]
     );
 
