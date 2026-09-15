@@ -115,7 +115,10 @@ export default function FeaturesBar({ store }) {
     <section className="bz-sec-gap">
       <div className="flex items-center gap-2 sm:gap-3">
         {hasNav && <Arrow dir="prev" onClick={() => go(-1)} />}
-        <div className="grid flex-1 gap-3 sm:gap-4" style={{ gridTemplateColumns: `repeat(${perPage}, minmax(0,1fr))` }}>
+        {/* أعمدةٌ بعددِ المعروضِ لا بعددِ السعة: بلا سياسةِ إرجاعٍ تصيرُ المزايا
+            ثلاثاً فتُرسَمُ بخمسةِ أعمدةٍ — بطاقتانِ فارغتانِ تتركانِ ثلثَ الشريطِ
+            فراغاً على جانبٍ واحد، فيبدو الشريطُ مقطوعاً لا مصمَّماً. */}
+        <div className="grid flex-1 gap-3 sm:gap-4" style={{ gridTemplateColumns: `repeat(${Math.max(1, Math.min(perPage, shown.length))}, minmax(0,1fr))` }}>
           {shown.map(({ Icon, title }, i) => (
             <div
               key={i}

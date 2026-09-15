@@ -204,7 +204,17 @@ export default function Home() {
               // بطاقة بوتيك بغلاف (نمط أدلّة المتاجر العالمية): غلاف المتجر من بنراته،
               // تدرّج سفلي ليُقرأ أي نص فوق أي صورة، والشعار يجلس على حدّ الغلاف بحلقة كريمية.
               // بلا غلاف نستخدم تدرّجاً خمرياً فاخراً — لا تظهر بطاقة فارغة أبداً.
-              <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 2xl:grid-cols-5">
+              // وشبكةٌ بعددِ المتاجرِ لا بعددٍ ثابت: المنصّةُ اليومَ متجران، وشبكةُ
+              // الأعمدةِ الخمسةِ كانت تتركُ ثلاثةَ أعمدةٍ فارغةٍ على جانبٍ واحدٍ،
+              // فيبدو القسمُ ناقصاً لا مختاراً.
+              <div
+                className={`mx-auto grid gap-4 ${
+                  (data.stores || []).length === 1 ? 'max-w-xs grid-cols-1'
+                    : (data.stores || []).length === 2 ? 'max-w-2xl grid-cols-2'
+                      : (data.stores || []).length === 3 ? 'max-w-4xl grid-cols-2 lg:grid-cols-3'
+                        : 'grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5'
+                }`}
+              >
                 {(data.stores || []).map((s, i) => <StoreCard key={s.id} s={s} index={i} rtl={rtl} />)}
               </div>
             )}
