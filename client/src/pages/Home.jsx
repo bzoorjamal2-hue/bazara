@@ -401,7 +401,11 @@ function HomeCategoryView({ cat, onHome, custom = [] }) {
 
 // سلايدر الـ Hero للصفحة الرئيسية: شريحة ثابتة + شريحتين, تحريك تلقائي + سحب باللمس
 function HomeHero({ banners = [] }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  // اتّجاهُ حركةِ السلايدر يتبعُ اللغة: بالعربيّةِ تدخلُ الشريحةُ من اليمينِ
+  // وتخرجُ يساراً، وبالإنجليزيّةِ العكس. كان الشريطُ مثبّتاً ‎ltr فيمشي باتّجاهٍ
+  // واحدٍ مهما كانتِ اللغة.
+  const rtl = i18n.language !== 'en';
   // بانرات المدير (إن وُجدت) تطغى على الشرائح الافتراضية
   // الشرائح ذات الوسائط (فيديو/صورة/لون) تظهر أولاً → الفيديو أول ما يُرى
   const adminSlides = (banners || [])
@@ -417,18 +421,15 @@ function HomeHero({ banners = [] }) {
       ];
   const len = slides.length;
   const [i, setI] = useState(0);
-  const [paused, setPaused] = useState(false);
   const [drag, setDrag] = useState(0); // إزاحة السحب الحيّة (px) — يتبع الإصبع
   const containerRef = useRef(null);
   const draggingRef = useRef(false);
   const touch = useRef({ x: 0, y: 0, active: false, horiz: false });
 
   useEffect(() => { setI((p) => Math.min(p, len - 1)); }, [len]);
-  useEffect(() => {
-    if (len <= 1 || paused) return undefined;
-    const id = setInterval(() => setI((p) => (p + 1) % len), 5000);
-    return () => clearInterval(id);
-  }, [len, paused]);
+  // لا تقدّمَ تلقائيّاً: الشريحةُ تتبدّلُ بإصبعِ الزبونةِ أو بنقرِ النقطةِ فقط.
+  // السلايدرُ الذي يمشي وحدَه يسحبُ الصورةَ من تحتِ عينِ من يقرأُ جملتَها،
+  // ويُخرِجُ الزرَّ من تحتِ إصبعِها قبلَ أن تصلَه.
 
   // تشغيل ذكي لفيديوهات الشرائح (إصلاح تعليق): كانت كل الفيديوهات تعمل معاً بلا
   // توقف حتى خارج الشاشة. الآن يعمل فيديو الشريحة الظاهرة فقط، ويتوقف الكل
@@ -465,6 +466,24 @@ function HomeHero({ banners = [] }) {
 
   const go = (n) => setI(((n % len) + len) % len);
 
+  // عرضُ إطارِ الهيرو بالبكسل — تُبنى عليه إزاحةُ الشريط. يُقاسُ عندَ التركيبِ
+  // ويُتابَعُ بتغيّرِ المقاسِ (دورانُ الجوّالِ وتغيّرُ النافذة)، وإلّا بقيَ الشريطُ
+  // على قياسٍ قديمٍ فتظهرُ شريحتانِ نصفَين.
+  const [frameW, setFrameW] = useState(0);
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return undefined;
+    const read = () => setFrameW(el.clientWidth);
+    read();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', read);
+      return () => window.removeEventListener('resize', read);
+    }
+    const ro = new ResizeObserver(read);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   // سحب لحظي يتبع الإصبع، ويستقر على شريحة واحدة فقط عند الإفلات
   useEffect(() => {
     const el = containerRef.current;
@@ -472,7 +491,6 @@ function HomeHero({ banners = [] }) {
     const onStart = (e) => {
       const tt = e.touches[0];
       touch.current = { x: tt.clientX, y: tt.clientY, active: true, horiz: false };
-      setPaused(true);
     };
     const onMove = (e) => {
       if (!touch.current.active) return;
@@ -485,8 +503,11 @@ function HomeHero({ banners = [] }) {
       }
       if (touch.current.horiz) {
         e.preventDefault();
+        // «التالي» يساراً بالعربيّةِ ويميناً بالإنجليزيّة. والمقاومةُ عندَ الطرفَين:
+        // بالأولى حينَ يُسحَبُ للخلف، وبالأخيرةِ حينَ يُسحَبُ للأمام.
+        const fwd = rtl ? dx < 0 : dx > 0;
         let d = dx;
-        if ((i === 0 && dx > 0) || (i === len - 1 && dx < 0)) d = dx / 3; // مقاومة عند الحواف
+        if ((i === 0 && !fwd) || (i === len - 1 && fwd)) d = dx / 3;
         setDrag(d);
       }
     };
@@ -497,14 +518,16 @@ function HomeHero({ banners = [] }) {
       const threshold = Math.min(70, w * 0.18);
       let next = i;
       if (touch.current.horiz && Math.abs(dx) > threshold) {
-        next = dx < 0 ? i + 1 : i - 1;               // يتبع الإصبع
+        // يتبعُ الإصبعَ باتّجاهِ اللغة: يساراً = التالي بالعربيّة، ويميناً = التالي
+        // بالإنجليزيّة. كانت الإشارةُ ثابتةً فيُقلَبُ المعنى على الإنجليزيّة.
+        const fwd = rtl ? dx < 0 : dx > 0;
+        next = fwd ? i + 1 : i - 1;
         next = Math.max(0, Math.min(len - 1, next));  // شريحة واحدة فقط
       }
       draggingRef.current = false;
       touch.current.active = false;
       setDrag(0);
       setI(next);
-      setPaused(false);
     };
     el.addEventListener('touchstart', onStart, { passive: true });
     el.addEventListener('touchmove', onMove, { passive: false });
@@ -518,17 +541,24 @@ function HomeHero({ banners = [] }) {
 
   return (
     <section className="relative">
-      {/* لا نوقف التقدّم التلقائي عند مرور الماوس — على اللابتوب المؤشّر يبقى فوق الهيرو
-          فكان «يضل واقف». يبقى الإيقاف أثناء السحب باللمس فقط (منطق onStart/onEnd). */}
       <div
         ref={containerRef}
         className="bz-homehero overflow-hidden"
         style={{ touchAction: 'pan-y' }}
       >
+        {/* اتّجاهُ الحركةِ يتبعُ اللغة:
+            ‏العربيّةُ — ‎row: الشريحةُ الأولى يساراً، والإزاحةُ سالبةٌ فيمشي الشريطُ
+            يساراً وتدخلُ التاليةُ من اليمين. حركةٌ من اليمينِ إلى اليسار.
+            ‏الإنجليزيّةُ — ‎row-reverse: الأولى يميناً، والإزاحةُ موجبةٌ فيمشي
+            يميناً وتدخلُ التاليةُ من اليسار. والعكسُ صحيح.
+            والسحبُ يُضافُ كما هو بالحالتَين: الإصبعُ يدفعُ الشريطَ بنفسِ جهتِه. */}
         <div
-          className="flex"
+          className={`flex ${rtl ? '' : 'flex-row-reverse'}`}
           style={{
-            transform: `translateX(calc(-${i * 100}% + ${drag}px))`,
+            // بالبكسلِ لا بالنسبة: نسبةُ ‎translateX تُحسَبُ من عرضِ العنصرِ نفسِه،
+            // وهذا الشريطُ عرضُه عرضُ شريحةٍ واحدةٍ وأبناؤُه يفيضون عنه — فالنسبةُ
+            // تصيرُ مرجعاً ملتبساً. عرضُ الإطارِ مقيسٌ ومضروبٌ بالفهرسِ لا يلتبس.
+            transform: `translate3d(${(rtl ? -1 : 1) * i * frameW + drag}px, 0, 0)`,
             direction: 'ltr',
             transition: draggingRef.current ? 'none' : 'transform 480ms cubic-bezier(0.22, 0.61, 0.36, 1)',
             willChange: 'transform',
@@ -542,7 +572,9 @@ function HomeHero({ banners = [] }) {
               const isImage = s.bgType === 'image' && s.bgValue;
               const isVideo = s.bgType === 'video' && s.bgValue;
               const onMedia = isColor || isImage || isVideo; // وسائط داكنة → نص عاجي
-              const vPoster = isVideo ? cldThumb(cldVideoPoster(s.bgValue), 1600) : ''; // poster عالي الدقة يملأ الهيرو العريض بلا تكبير مضبّب
+              // الهيرو صارَ بعرضِ الجهازِ كاملاً لا بطاقةً بحاوية، وعلى شاشةٍ بكثافةٍ
+              // مضاعفةٍ يحتاجُ ضعفَ عرضِه بكسلاتٍ — ‎1600 كانت تكفي البطاقةَ لا الشاشة.
+              const vPoster = isVideo ? cldThumb(cldVideoPoster(s.bgValue, 2600), 2600) : '';
               return (
                 <div key={idx} className="w-full shrink-0" dir="rtl">
                   <div
