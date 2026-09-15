@@ -5021,10 +5021,9 @@ html.dark .theme-pub .bz-featstore {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.38);
   transition: transform 0.2s ease, background-color 0.2s ease;
 }
-/* الجهةُ منطقيّةٌ ‎(inset-inline-start) فينقلبُ الموضعُ مع اللغة — ولذلك
-   نعكسُ الإزاحةَ الأفقيّةَ بالإنجليزيّةِ كي تبقى النقطةُ فوقَ مركزِها. */
-html[dir='ltr'] .bz-look-dot { translate: -50% -50%; }
-html[dir='rtl'] .bz-look-dot { translate: 50% -50%; }
+/* الموضعُ يُقاسُ من يسارِ الصورةِ بشاشةِ التحديد، والصورةُ نفسُها لا تنقلبُ
+   مع اللغة — فالإزاحةُ واحدةٌ بالاتّجاهَين. كانت تنقلبُ فتصيرُ نقطةُ القطعةِ
+   اليسرى فوقَ اليمنى بالعربيّة. */
 @media (hover: hover) { .bz-look-dot:hover { transform: scale(1.18); background: #FFFFFF; } }
 .bz-look-dot.is-on { transform: scale(1.18); background: #FFFFFF; }
 .bz-look-dot:focus-visible { outline: 2px solid #F6F5F3; outline-offset: 2px; }

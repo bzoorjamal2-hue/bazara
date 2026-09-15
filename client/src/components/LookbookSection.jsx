@@ -72,7 +72,9 @@ export default function LookbookSection({ lookbook }) {
               aria-label={itemName(pt.id) || `${n + 1}`}
               title={itemName(pt.id)}
               className={`bz-look-dot ${hot === pt.id ? 'is-on' : ''}`}
-              style={{ insetInlineStart: `${pt.x}%`, top: `${pt.y}%` }}
+              // يسارٌ صريحٌ لا ‎inset-inline-start: الصورةُ لا تنقلبُ مع اللغة،
+              // فالنقطةُ الموضوعةُ على القطعةِ اليسرى تبقى عليها بالعربيّةِ والإنجليزيّة.
+              style={{ left: `${pt.x}%`, top: `${pt.y}%` }}
             >
               {n + 1}
             </a>
