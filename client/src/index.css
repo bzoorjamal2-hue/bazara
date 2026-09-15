@@ -4879,7 +4879,7 @@ html.dark .theme-pub .bz-featstore {
   position: relative;
   isolation: isolate;
   display: flex;
-  min-height: min(74svh, 620px);
+  min-height: min(68svh, 560px);
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -4887,7 +4887,7 @@ html.dark .theme-pub .bz-featstore {
   padding-inline: var(--bz-gut);
   text-align: center;
 }
-@media (min-width: 1024px) { .bz-homehero-slide { min-height: min(80svh, 760px); } }
+@media (min-width: 1024px) { .bz-homehero-slide { min-height: min(72svh, 700px); } }
 
 /* كتلةُ نصِّ الهيرو: وسطاً افتراضاً، أو إلى جهةٍ كالشريطِ التحريريّ.
    الموضعُ من لوحةِ المدير — صورةٌ وجهُها بالوسطِ تحتاجُ النصَّ جانباً، وصورةٌ
