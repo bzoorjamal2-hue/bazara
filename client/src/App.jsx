@@ -94,6 +94,11 @@ const scrollPositions = (() => {
 // مواضع بحسب المسار (وليس مفتاح التاريخ): للتنقّل المباشر بين تبويبات الشريط السفلي
 // (رئيسية → ريلز → رئيسية = PUSH لا POP) — يرجع الزائر لموضعه بآخر زيارة لنفس الصفحة
 const pathPositions = new Map();
+// وارتفاعُ المستندِ لحظةَ المغادرة: بلا ارتفاعٍ محجوزٍ لا يقدرُ المتصفّحُ أن يقفزَ
+// إلى موضعٍ أبعدَ من نهايةِ صفحةٍ لم تُرسَمْ بعد — فيبقى الزائرُ بأعلاها ثلاثةَ
+// أرباعِ الثانيةِ ثمّ تهبطُ به دفعةً واحدة. قِستُها على الرئيسيّةِ الحيّة:
+// الموضعُ صفرٌ حتّى ‎٧٨٥ مللي ثانيةً ثمّ يقعُ على ‎٢٦٠٠ فجأة.
+const docHeights = new Map();
 const flushScrollPositions = () => {
   try { sessionStorage.setItem(SCROLL_STORE, JSON.stringify([...scrollPositions].slice(-80))); }
   catch { /* تجاهل */ }
@@ -136,6 +141,7 @@ function AnimatedRoutes() {
       if (document.body.style.position === 'fixed') return;
       scrollPositions.set(key, window.scrollY);
       pathPositions.set(location.pathname + location.search, window.scrollY);
+      docHeights.set(key, document.documentElement.scrollHeight);
     };
     // حزامان معاً — أحداث التمرير وحدها لم تكن كافية (قد تضيع لحظة التعليق/الزخم على
     // الموبايل فيُحفظ موضع قديم ويرجع الزائر لأعلى الصفحة):
@@ -169,12 +175,32 @@ function AnimatedRoutes() {
       if (target > 0) {
         let done = false;
         let raf = 0;
+        // حاشيةٌ مؤقّتةٌ تحجزُ ارتفاعَ الصفحةِ كما تركها الزائر، فيصيرُ الهدفُ
+        // بالمتناولِ من أوّلِ إطارٍ وتقعُ القفزةُ قبل أن يرى الزائرُ أعلى الصفحة.
+        // عنصرٌ مستقلٌّ لا ‎min-height على الجسد: بالحاشيةِ يبقى ارتفاعُ المحتوى
+        // الحقيقيِّ معلوماً (الكلُّ ناقصَ الحاشية)، فنعرفُ متى بلغَ الهدفَ بنفسِه
+        // ونرفعُها حينَها. ولو حجزنا بالجسدِ لقفزنا ثمّ فككنا الحجزَ فتقصرُ الصفحةُ
+        // ويُقَصُّ الموضعُ راجعاً — القفزةُ ذاتُها التي نداويها.
+        const reserve = navType === 'POP'
+          ? Math.min(docHeights.get(location.key) || 0, target + window.innerHeight * 3)
+          : 0;
+        let pad = null;
+        if (reserve > target + window.innerHeight) {
+          pad = document.createElement('div');
+          pad.setAttribute('aria-hidden', 'true');
+          pad.style.cssText = `height:${reserve}px;pointer-events:none;visibility:hidden`;
+          document.body.appendChild(pad);
+        }
+        const unreserve = () => { if (pad) { pad.remove(); pad = null; } };
         const apply = () => {
           if (done) return;
-          const maxReach = document.documentElement.scrollHeight - window.innerHeight;
-          // لم يكبر المستند بما يكفي بعد؟ ننتظر نموّه (المراقب يعيد استدعاءنا)
-          if (maxReach < target - 2) return;
+          const padH = pad ? pad.offsetHeight : 0;
+          const maxReach = document.documentElement.scrollHeight - padH - window.innerHeight;
+          // القفزةُ أوّلاً ما دامت الحاشيةُ تحملُ الطريق — فلا يرى الزائرُ الأعلى
           if (Math.abs(window.scrollY - target) > 2) window.scrollTo({ top: target, behavior: 'instant' });
+          // لم يكبر المحتوى الحقيقيُّ بما يكفي بعد؟ ننتظرُ نموَّه (المراقبُ يعيدُ استدعاءنا)
+          // ولا نرفعُ الحاشيةَ قبلَه، وإلّا قصرت الصفحةُ وسقطَ الموضعُ لآخرِها.
+          if (maxReach < target - 2) return;
           // وصلنا → نوقف المراقبة فوراً. سابقاً كانت تستمر حتى مهلة الـ5 ثوانٍ، فكل قفزة
           // تمرير تغيّر التخطيط فيُطلق ResizeObserver من جديد → حلقة تُصدر خطأ
           // "ResizeObserver loop completed with undelivered notifications" وتعليقاً بكل رجوع.
@@ -184,6 +210,7 @@ function AnimatedRoutes() {
         const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(scheduled) : null;
         const stop = () => {
           done = true;
+          unreserve();
           if (raf) cancelAnimationFrame(raf);
           if (ro) ro.disconnect();
           window.removeEventListener('wheel', stop);
