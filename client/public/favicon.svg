@@ -1,26 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs>
-    <linearGradient id="bazaraGold" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#cdbda4"/>
-      <stop offset="0.5" stop-color="#b09a7e"/>
-      <stop offset="1" stop-color="#8a7657"/>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#D6D2CB"/>
+      <stop offset="0.5" stop-color="#A8A29B"/>
+      <stop offset="1" stop-color="#7C766E"/>
     </linearGradient>
-    <radialGradient id="bazaraIvory" cx="0.38" cy="0.3" r="0.95">
-      <stop offset="0" stop-color="#FFFDF7"/>
-      <stop offset="1" stop-color="#F0E7D5"/>
+    <radialGradient id="disc" cx="0.38" cy="0.3" r="0.95">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EFEEEB"/>
     </radialGradient>
   </defs>
-  <!-- ختم دائري يملأ الأيقونة بالكامل — نظيف داخل حاوية Google الدائرية (بلا مربّع) -->
-  <circle cx="50" cy="50" r="49.5" fill="url(#bazaraIvory)"/>
-  <circle cx="50" cy="50" r="47.6" fill="none" stroke="url(#bazaraGold)" stroke-width="3.2"/>
-  <circle cx="50" cy="50" r="42" fill="none" stroke="url(#bazaraGold)" stroke-width="1.1" opacity="0.75"/>
+  <circle cx="50" cy="50" r="49.5" fill="url(#disc)"/>
+  <circle cx="50" cy="50" r="47.6" fill="none" stroke="url(#ring)" stroke-width="3.2"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="url(#ring)" stroke-width="1.1" opacity="0.75"/>
   <text x="51.8" y="53.8" text-anchor="middle" dominant-baseline="central"
         font-family="Georgia, 'Times New Roman', serif" font-weight="700"
-        font-size="50" fill="url(#bazaraGold)" opacity="0.85">B</text>
+        font-size="50" fill="url(#ring)" opacity="0.8">B</text>
   <text x="50" y="52" text-anchor="middle" dominant-baseline="central"
         font-family="Georgia, 'Times New Roman', serif" font-weight="700"
-        font-size="50" fill="#4a3628">B</text>
-  <path d="M31 70 Q50 79 69 70" fill="none" stroke="url(#bazaraGold)" stroke-width="2.3" stroke-linecap="round"/>
-  <path d="M25 65.3 l2.1 2.1 -2.1 2.1 -2.1 -2.1 Z" fill="url(#bazaraGold)"/>
-  <path d="M75 65.3 l2.1 2.1 -2.1 2.1 -2.1 -2.1 Z" fill="url(#bazaraGold)"/>
-</svg>
+        font-size="50" fill="#1F1E1D">B</text>
+  <path d="M31 70 Q50 79 69 70" fill="none" stroke="url(#ring)" stroke-width="2.3" stroke-linecap="round"/>
+  <path d="M25 65.3 l2.1 2.1 -2.1 2.1 -2.1 -2.1 Z" fill="url(#ring)"/>
+  <path d="M75 65.3 l2.1 2.1 -2.1 2.1 -2.1 -2.1 Z" fill="url(#ring)"/></svg>
