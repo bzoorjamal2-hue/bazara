@@ -22,7 +22,7 @@ import useInViewOnce from '../hooks/useInViewOnce.js';
 const PLACEHOLDER =
   'data:image/svg+xml;utf8,' +
   encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="100%" height="100%" fill="%23f1e9dd"/><text x="50%" y="50%" fill="%235c1a2e" font-size="48" text-anchor="middle" dy=".35em">👗</text></svg>'
+    '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="100%" height="100%" fill="%23F1F1F0"/><text x="50%" y="50%" fill="%23B5B1AB" font-size="48" text-anchor="middle" dy=".35em">👗</text></svg>'
   );
 
 // priceDrop: السعر وقت حفظ القطعة بالمفضّلة — لو أعلى من الحالي نعرض شارة "نزل السعر"
@@ -180,6 +180,15 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
   };
   const closeVideo = (e) => { if (e) e.stopPropagation(); setShowVideo(false); };
 
+  // شارةٌ واحدةٌ بأولويّةٍ ثابتة — ما بعدَها يظهرُ بصفحةِ المنتج
+  const badge = priceDrop > product.price
+    ? { label: t('wishlist.priceDrop'), sale: true, icon: <span aria-hidden>↓</span> }
+    : hasDiscount ? { label: `-${discountPct}%`, sale: true }
+      : isNew ? { label: t('product.new') }
+        : isBestSeller ? { label: t('product.bestSeller'), icon: <FireIcon className="h-3 w-3" /> }
+          : product.featured ? { label: t('product.featured'), icon: <StarIcon className="h-3 w-3" /> }
+            : null;
+
   return (
     <>
     <Link
@@ -198,7 +207,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
           واحدة بحدود ذهبية خفيفة وظل ناعم — glass بيضاء نهاراً وداكنة أنيقة ليلاً */}
       {/* flex عمودي بارتفاع كامل: كل بطاقات الصف تتساوى طولاً مهما اختلف محتواها
           (نقاط ألوان/تقييم موجودة أو لا) — الشبكة تظل مصفوفة ومنسّقة */}
-      <div className="glass flex h-full flex-col overflow-hidden !p-0 ring-1 ring-transparent transition duration-300 group-hover:shadow-[0_22px_44px_-18px_rgba(36,35,34,0.35)] group-hover:ring-gold-400/30">
+      <div className="glass flex h-full flex-col overflow-hidden !p-0 transition duration-300 group-hover:shadow-[0_18px_36px_-20px_rgba(20,20,20,0.28)]">
       {/* نسخة ضبابية ضئيلة خلف الصورة حتى تجهز (blur-up) — ملامح القطعة وألوانها
           تظهر فوراً فيبدو التحميل أنعم من مربّع رمادي. نُبقي الهيكل اللامع للصور
           غير المستضافة على Cloudinary (لا نسخة ضبابية لها) */}
@@ -207,8 +216,6 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
         style={blurUrl && !imgLoaded ? { backgroundImage: `url("${blurUrl}")` } : undefined}
       >
         {!imgLoaded && !blurUrl && <div className="skeleton absolute inset-0" aria-hidden="true" />}
-        {/* لمعة ذهبية تمرّ على الصورة عند المرور — إحساس بوتيك راقٍ (سطح لامع) */}
-        <span aria-hidden className="pointer-events-none absolute inset-y-0 -left-1/3 z-[5] w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 transition-all duration-700 ease-out group-hover:left-[110%] group-hover:opacity-100" />
         <img
           ref={imgRef}
           src={cover}
@@ -250,26 +257,21 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
         )}
 
         {/* شارات — ألوان بوتيك هادئة معتمة (بلا backdrop-blur: يسبّب تعليق تمرير على iOS مع كثرة البطاقات) */}
-        <div className="absolute start-2 top-2 z-10 flex flex-col gap-1">
-          {/* لونان لا أربعة: الغامق للحياد (جديد/مميّز/الأكثر مبيعاً) والأحمر
-              للخصم وحده — هو الرقم الذي يجب أن يُرى أوّلاً. كانت أربعة ألوان
-              على بطاقةٍ واحدة (بنّي، أخضر، ذهبي، خمري #8a2438 من خارج اللوحة)
-              فتفقد كلّها معناها. */}
-          {isNew && <span className="bz-pb">{t('product.new')}</span>}
-          {isBestSeller && <span className="bz-pb flex items-center gap-0.5"><FireIcon className="h-3 w-3" /> {t('product.bestSeller')}</span>}
-          {product.featured && <span className="bz-pb flex items-center gap-0.5"><StarIcon className="h-3 w-3" /> {t('product.featured')}</span>}
-          {hasDiscount && <span className="bz-pb bz-pb-sale">-{discountPct}%</span>}
-          {/* نزل سعرها منذ حفظها بالمفضّلة (تمرّره صفحة المفضّلة فقط) */}
-          {priceDrop > product.price && (
-            <span className="bz-pb bz-pb-sale flex items-center gap-0.5">↓ {t('wishlist.priceDrop')}</span>
-          )}
-        </div>
+        {/* شارةٌ واحدةٌ لا أربع: العينُ لا تقرأُ أربعَ لافتاتٍ فوقَ بعضِها، وكلَّما
+            كثُرت فقدت كلُّها معناها. الأولويّةُ للأعلى قيمةً للمشترية: هبوطُ السعرِ
+            ثمّ الخصمُ ثمّ الجديدُ ثمّ الأكثرُ مبيعاً ثمّ المميّز. البقيّةُ تظهرُ
+            بصفحةِ المنتجِ حيثُ للتفاصيلِ متّسع. */}
+        {badge && (
+          <div className="absolute start-2 top-2 z-10">
+            <span className={`bz-pb ${badge.sale ? 'bz-pb-sale' : ''} flex items-center gap-0.5`}>{badge.icon}{badge.label}</span>
+          </div>
+        )}
 
         {/* مفضّلة */}
         <button
           onClick={onLike}
-          className={`absolute end-2 top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full transition active:scale-90 ${
-            liked ? 'bg-red-500/90 text-white' : 'bg-black/45 text-white hover:bg-black/60'
+          className={`bz-card-ctl absolute end-2 top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full active:scale-90 ${
+            liked ? 'bg-red-500/90 text-white' : 'bg-black/40 text-white hover:bg-black/60'
           }`}
           aria-label={liked ? t('product.removeFromWishlist') : t('product.addToWishlist')}
           aria-pressed={liked}
@@ -281,7 +283,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
         {/* نظرة سريعة — تفتح نافذة بدون مغادرة الصفحة */}
         <button
           onClick={onQuickView}
-          className="absolute end-2 top-[3.25rem] z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/45 text-white transition hover:bg-black/60 active:scale-90"
+          className="bz-card-ctl absolute end-2 top-[3.25rem] z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60 active:scale-90"
           aria-label={t('product.quickView')}
           title={t('product.quickView')}
         >
@@ -357,7 +359,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
         <button
           onClick={onAdd}
           disabled={outOfStock}
-          className="absolute bottom-2.5 end-2.5 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-wine text-cream shadow-[0_10px_22px_-8px_rgba(20,20,20,0.35)] ring-1 ring-cream/25 transition hover:bg-wine-dark active:scale-90 disabled:cursor-not-allowed disabled:opacity-40"
+          className="bz-card-ctl absolute bottom-2.5 end-2.5 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-wine text-cream shadow-[0_10px_22px_-8px_rgba(20,20,20,0.35)] hover:bg-wine-dark active:scale-90 disabled:cursor-not-allowed disabled:opacity-40"
           aria-label={t('product.addToCart')}
           title={t('product.addToCart')}
         >

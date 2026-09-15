@@ -271,7 +271,14 @@
     "feature3Title": "Google visibility",
     "feature3Desc": "Sitemap, meta tags, and IndexNow for fast indexing.",
     "shopByOccasion": "Shop by occasion",
-    "lookbook": "Look of the week"
+    "lookbook": "Look of the week",
+    "eyebrowCats": "Start here",
+    "eyebrowDeals": "Ending soon",
+    "eyebrowBest": "Most ordered this week",
+    "eyebrowStores": "Trusted Palestinian boutiques",
+    "eyebrowLatest": "Just arrived",
+    "eyebrowPersonal": "Based on your browsing",
+    "personalTitle": "Just for you"
   },
   "auth": {
     "loginTitle": "Login",

@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef , Fragment } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { productPath } from '../utils/links.js';
@@ -9,11 +9,11 @@ import Strike from './Strike.jsx';
 const PH =
   'data:image/svg+xml;utf8,' +
   encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400"><rect width="100%" height="100%" fill="%23f1e9dd"/><text x="50%" y="50%" fill="%235e4636" font-size="48" text-anchor="middle" dy=".35em">👗</text></svg>'
+    '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400"><rect width="100%" height="100%" fill="%23F1F1F0"/><text x="50%" y="50%" fill="%23B5B1AB" font-size="48" text-anchor="middle" dy=".35em">👗</text></svg>'
   );
 
 // شريط أفقي من بطاقات منتجات مصغّرة (شاهدت مؤخراً / قد يعجبك أيضاً).
-export default function ProductRail({ title, products, currentId, icon = null, action = null }) {
+export default function ProductRail({ title, products, currentId, icon = null, action = null, band = false, eyebrow = null, sub = false }) {
   const { t, i18n } = useTranslation();
   const rtl = i18n.language !== 'en';
   const railRef = useRef(null);
@@ -28,11 +28,22 @@ export default function ProductRail({ title, products, currentId, icon = null, a
     el.scrollBy({ left: amount, behavior: 'smooth' });
   };
 
+  // band: يُلبِسُ الرفَّ شريطَ قسمٍ ممتدّاً — نُناوبُه بين الرفوفِ كي لا تتشابهَ
+  const Wrap = band ? 'div' : Fragment;
+  const wrapProps = band ? { className: 'bz-inner' } : {};
+  // sub: رفٌّ داخلَ كتلةٍ لها رأسُها — بلا فاصلٍ علويٍّ وبعنوانٍ أصغرَ درجةً
+  const H = sub ? 'h3' : 'h2';
   return (
-    <section className="bz-sec-gap">
-      <h2 className="mb-5 flex items-center gap-2 font-display text-2xl font-bold text-wine">
-        {icon}{title}
-        <span className="ms-auto flex items-center gap-2">
+    <section className={sub ? '' : band ? 'bz-band bz-sec-gap' : 'bz-sec-gap'}>
+      <Wrap {...wrapProps}>
+      <div className={`flex items-end gap-3 ${sub ? 'mb-4' : 'mb-5'}`}>
+        <div className="min-w-0">
+          {eyebrow ? <span className="bz-sec-eyebrow">{eyebrow}</span> : null}
+          <H className={`bz-title !inline-flex items-center gap-2 font-display font-bold ${sub ? 'text-lg sm:text-xl' : 'bz-sec-h'}`}>
+            {icon}{title}
+          </H>
+        </div>
+        <span className="ms-auto flex shrink-0 items-center gap-2 pb-1.5">
           {action}
           <span className="hidden items-center gap-1.5 md:flex">
             <button type="button" onClick={() => scrollRail(-1)} aria-label="prev" className="flex h-8 w-8 items-center justify-center rounded-full border border-wine/20 text-wine transition hover:bg-wine hover:text-cream">
@@ -43,7 +54,7 @@ export default function ProductRail({ title, products, currentId, icon = null, a
             </button>
           </span>
         </span>
-      </h2>
+      </div>
       <div ref={railRef} className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
         {list.map((p) => {
           const hasDiscount = p.oldPrice && p.oldPrice > p.price;
@@ -79,6 +90,7 @@ export default function ProductRail({ title, products, currentId, icon = null, a
           );
         })}
       </div>
+      </Wrap>
     </section>
   );
 }

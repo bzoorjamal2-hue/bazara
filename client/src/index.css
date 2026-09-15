@@ -4638,7 +4638,7 @@ html.dark .theme-pub .bz-fab {
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.18em;
-  color: #8C8780;
+  color: #6E6A64;
 }
 html.dark .theme-pub .bz-sec-eyebrow { color: #8C857C; }
 .bz-sec-h { font-size: 1.6rem; line-height: 1.25; font-weight: 700; }
@@ -4649,3 +4649,31 @@ html.dark .theme-pub .bz-sec-eyebrow { color: #8C857C; }
    فعلاً لا لحافّةِ الحاوية — وإلا ظهرت مقطوعةً بفراغٍ على جانبيها. */
 main.bz-page { max-width: 1400px; margin-inline: auto; }
 .bz-ann, .pub-footer { width: 100vw; margin-inline: calc(50% - 50vw) !important; }
+
+/* أزرارُ بطاقةِ المنتج (مفضّلة/نظرةٌ سريعة/سلّة): على الحواسيبِ تظهرُ عندَ المرورِ
+   فتبقى الصورةُ نظيفةً حتى تُطلَب، وعلى اللمسِ تبقى ظاهرةً (لا مرورَ هناك). */
+.bz-card-ctl { transition: opacity 0.25s ease, transform 0.25s ease, background-color 0.2s ease; }
+@media (hover: hover) and (pointer: fine) {
+  .bz-card-ctl { opacity: 0; transform: translateY(-4px); }
+  .group:hover .bz-card-ctl,
+  .bz-card-ctl:focus-visible { opacity: 1; transform: none; }
+}
+
+/* شريطُ قسمٍ ممتدٌّ لحافّتَي الشاشة — كما تتنفّسُ صفحةُ الواجهةِ بتبادلِ أقسامِها.
+   بلا هذا تبدو الصفحةُ بياضاً متّصلاً بطولِ ٧٨٠٠ بكسلٍ فتتشابهُ الرفوفُ ولا
+   يميّزُ القارئُ أين انتهى قسمٌ وبدأ آخر. الشريطُ يمتدُّ بعرضِ الشاشةِ ويستعيدُ
+   حشوتَه الجانبيّةَ كي يبقى المحتوى بمكانه. */
+.bz-band {
+  position: relative;
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
+  padding-inline: var(--bz-gut);
+  padding-block: 4.5rem;
+  background: #F4F4F3;
+}
+@media (min-width: 640px) { .bz-band { padding-block: 5.5rem; } }
+html.dark .theme-pub .bz-band { background: #161514; }
+/* داخلَ الشريطِ لا نحتاجُ الفاصلَ العلويَّ — الحشوةُ تكفي */
+.bz-band.bz-sec-gap { margin-top: 4.5rem; }
+@media (min-width: 640px) { .bz-band.bz-sec-gap { margin-top: 5.5rem; } }
+.bz-band > .bz-inner { margin-inline: auto; max-width: 1400px; }

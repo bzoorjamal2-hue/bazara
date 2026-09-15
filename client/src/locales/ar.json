@@ -277,7 +277,14 @@
     "feature3Title": "ظهور في جوجل",
     "feature3Desc": "خريطة موقع و meta tags و IndexNow لفهرسة سريعة.",
     "shopByOccasion": "تسوّقي حسب المناسبة",
-    "lookbook": "إطلالة الأسبوع"
+    "lookbook": "إطلالة الأسبوع",
+    "eyebrowCats": "ابدئي من هنا",
+    "eyebrowDeals": "تنتهي قريباً",
+    "eyebrowBest": "الأكثر طلباً هذا الأسبوع",
+    "eyebrowStores": "بوتيكات فلسطينيّة موثوقة",
+    "eyebrowLatest": "وصل حديثاً",
+    "eyebrowPersonal": "بناءً على تصفّحكِ",
+    "personalTitle": "خاصٌّ بكِ"
   },
   "auth": {
     "loginTitle": "تسجيل الدخول",

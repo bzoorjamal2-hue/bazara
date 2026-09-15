@@ -125,9 +125,11 @@ export default function Home() {
 
       {/* تصفّح حسب الفئة */}
       <Reveal>
-        <section className="bz-sec-gap">
-          <SectionTitle>{t('home.browseByCategory')}</SectionTitle>
-          <CategoryGrid onSelect={pickCat} active={cat} cats={gridCats} />
+        <section className="bz-band bz-sec-gap">
+          <div className="bz-inner">
+            <SectionTitle eyebrow={t('home.eyebrowCats')}>{t('home.browseByCategory')}</SectionTitle>
+            <CategoryGrid onSelect={pickCat} active={cat} cats={gridCats} />
+          </div>
         </section>
       </Reveal>
 
@@ -148,6 +150,7 @@ export default function Home() {
         <Reveal>
           <>
             <ProductRail
+              eyebrow={t('home.eyebrowDeals')}
               title={t('home.deals')}
               icon={<BoltIcon className="h-5 w-5 shrink-0 text-gold-500" />}
               products={data.deals}
@@ -164,13 +167,7 @@ export default function Home() {
       )}
 
       {/* الأكثر مبيعاً — إثبات اجتماعي حقيقي من المبيعات المؤكّدة */}
-      {data?.bestSellers?.length > 0 && <Reveal><ProductRail title={t('home.bestSellers')} icon={<FireIcon className="h-5 w-5 shrink-0 text-[#8a2438]" />} products={data.bestSellers} /></Reveal>}
-
-      {/* مقترحات لكِ — تخصيص محلي من فئات ما شاهدته (يظهر فقط عند وجود ما يكفي) */}
-      {forYou.length >= 3 && <ProductRail title={t('home.forYou')} icon={<SparkleIcon className="h-5 w-5 shrink-0 text-gold-500" />} products={forYou} />}
-
-      {/* شاهدت مؤخراً */}
-      {recent.length > 0 && <Reveal><ProductRail title={t('product.recentlyViewed')} products={recent} /></Reveal>}
+      {data?.bestSellers?.length > 0 && <Reveal><ProductRail band eyebrow={t('home.eyebrowBest')} title={t('home.bestSellers')} icon={<FireIcon className="h-5 w-5 shrink-0 text-[#8a2438]" />} products={data.bestSellers} /></Reveal>}
 
       {loading ? (
         <section className="bz-sec-gap">
@@ -194,7 +191,7 @@ export default function Home() {
 
           {/* متاجر مميزة */}
           <Reveal><section id="stores" className="bz-sec-gap">
-            <SectionTitle>{t('home.featuredStores')}</SectionTitle>
+            <SectionTitle eyebrow={t('home.eyebrowStores')}>{t('home.featuredStores')}</SectionTitle>
             {(data.stores || []).length === 0 ? (
               <EmptyState
                 icon={<SparkleIcon className="h-8 w-8" />}
@@ -215,7 +212,7 @@ export default function Home() {
           {/* أحدث المنتجات */}
           <Reveal>
             <section className="bz-sec-gap">
-              <SectionTitle>{t('home.latestProducts')}</SectionTitle>
+              <SectionTitle eyebrow={t('home.eyebrowLatest')}>{t('home.latestProducts')}</SectionTitle>
               {(data.products || []).length === 0 ? (
                 <EmptyState
                   icon={<BoltIcon className="h-8 w-8" />}
@@ -233,6 +230,25 @@ export default function Home() {
             </section>
           </Reveal>
         </>
+      )}
+
+      {/* كتلةٌ شخصيّةٌ واحدة: المقترحاتُ وما شوهِدَ مؤخّراً تحتَ رأسٍ واحدٍ بآخرِ
+          الصفحة. كانا رفّينِ منفصلينِ بالأعلى بنفسِ شكلِ رفوفِ العرضِ تماماً —
+          ومكانُهما الصحيحُ هنا: هذا تاريخُ تصفّحِها لا عرضٌ تجاريّ. */}
+      {(forYou.length >= 3 || recent.length > 0) && (
+        <Reveal>
+          <section className="bz-band bz-sec-gap">
+            <div className="bz-inner">
+              <SectionTitle eyebrow={t('home.eyebrowPersonal')}>{t('home.personalTitle')}</SectionTitle>
+              <div className="space-y-10">
+                {forYou.length >= 3 && (
+                  <ProductRail sub title={t('home.forYou')} icon={<SparkleIcon className="h-5 w-5 shrink-0 text-gold-500" />} products={forYou} />
+                )}
+                {recent.length > 0 && <ProductRail sub title={t('product.recentlyViewed')} products={recent} />}
+              </div>
+            </div>
+          </section>
+        </Reveal>
       )}
 
       {/* نشرة بازارا — قبل شريط المزايا مباشرةً بآخر الصفحة */}
