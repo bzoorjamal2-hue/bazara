@@ -614,7 +614,7 @@ function HomeHero({ banners = [] }) {
                       // الإطارِ بكلٍّ منها، والعرضُ لا يتجاوزُ دقّةَ الأصلِ فلا تكبيرَ
                       // يُغبِّش.
                       <picture>
-                        <source media="(min-width: 1024px)" srcSet={heroCrop(s.bgValue, 1440, '2:1')} />
+                        <source media="(min-width: 1024px)" srcSet={heroCrop(s.bgValue, 1440, '16:9')} />
                         <source media="(min-width: 640px)" srcSet={heroCrop(s.bgValue, 1280, '16:10')} />
                         <img src={heroCrop(s.bgValue, 900, '4:5') || cldThumb(s.bgValue, 1440)} alt="" loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))' }} className="absolute inset-0 -z-10 h-full w-full object-cover" />
                       </picture>
