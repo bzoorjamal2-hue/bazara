@@ -22,7 +22,7 @@ import { WaveIcon, GiftIcon, CheckIcon, PlusIcon, BoltIcon, TagIcon, SearchIcon,
 import CloseButton from '../components/CloseButton.jsx';
 import Reveal from '../components/Reveal.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
-import { cldVideoPoster, cldThumb, cldVideoMp4 } from '../utils/cloudinary.js';
+import { cldVideoPoster, cldThumb, cldVideoMp4, heroCrop } from '../utils/cloudinary.js';
 import { SIZES, sizeLabel } from '../utils/sizes.js';
 import { getMySize } from '../utils/mySize.js';
 import { productColors, colorToCss } from '../utils/colorDot.js';
@@ -950,6 +950,8 @@ function SlideButton({ href, label, slug }) {
 function HeroSlider({ store }) {
   const { t, i18n } = useTranslation();
   const isEn = i18n.language === 'en';
+  // اتّجاهُ حركةِ السلايدرِ يتبعُ اللغة — كهيرو الصفحةِ الرئيسيّةِ تماماً
+  const rtl = i18n.language !== 'en';
   const banners = Array.isArray(store.banners) ? store.banners.filter(Boolean) : [];
   // شعار المتجر: ما كتبته المالكة بلغة العرض (مع رجوعٍ للّغة الأخرى)، وإلا الجملة
   // العامة. السطر اللاتيني الصغير يظهر فقط مع الجملة العامة — لا معنى لترجمةٍ
@@ -962,19 +964,13 @@ function HeroSlider({ store }) {
   const slides = [{ fixed: true }, ...banners];
   const len = slides.length;
   const [i, setI] = useState(0);
-  const [paused, setPaused] = useState(false);
   const [drag, setDrag] = useState(0); // إزاحة السحب الحيّة (px) — يتبع الإصبع
   const containerRef = useRef(null);
   const draggingRef = useRef(false);
   const touch = useRef({ x: 0, y: 0, active: false, horiz: false });
 
-  useEffect(() => {
-    if (len <= 1 || paused) return undefined;
-    // تتحرّك الشرائح تلقائياً كل 5 ثوانٍ (بما فيها شرائح الفيديو) — وقت كافٍ لمشاهدة كل شريحة
-    const id = setInterval(() => setI((p) => (p + 1) % len), 5000);
-    return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [len, paused, i]);
+  // لا تقدّمَ تلقائيّاً: الشريحةُ تتبدّلُ بإصبعِ الزبونةِ أو بنقرِ النقطةِ فقط.
+  // السلايدرُ الذي يمشي وحدَه يسحبُ الصورةَ من تحتِ عينِ من يقرأُ جملتَها.
 
   // تشغيل ذكي لفيديوهات الشرائح (إصلاح تعليق): يعمل فيديو الشريحة الظاهرة فقط،
   // ويتوقف الكل عندما يخرج السلايدر عن الشاشة — كانت كل الفيديوهات تعمل معاً دائماً.
@@ -1000,6 +996,23 @@ function HeroSlider({ store }) {
 
   const go = (n) => setI(((n % len) + len) % len);
 
+  // عرضُ إطارِ الهيرو بالبكسل — تُبنى عليه إزاحةُ الشريط. يُتابَعُ بتغيّرِ المقاسِ
+  // (دورانُ الجوّالِ وتغيّرُ النافذة)، وإلّا بقيَ على قياسٍ قديمٍ فتظهرُ شريحتانِ نصفَين.
+  const [frameW, setFrameW] = useState(0);
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return undefined;
+    const read = () => setFrameW(el.clientWidth);
+    read();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', read);
+      return () => window.removeEventListener('resize', read);
+    }
+    const ro = new ResizeObserver(read);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   // سحب لحظي يتبع الإصبع: المسار يتحرّك مع إصبعك، ويستقر على شريحة واحدة فقط عند الإفلات.
   useEffect(() => {
     const el = containerRef.current;
@@ -1008,7 +1021,6 @@ function HeroSlider({ store }) {
     const onStart = (e) => {
       const tch = e.touches[0];
       touch.current = { x: tch.clientX, y: tch.clientY, active: true, horiz: false };
-      setPaused(true);
     };
     const onMove = (e) => {
       if (!touch.current.active) return;
@@ -1023,7 +1035,8 @@ function HeroSlider({ store }) {
         e.preventDefault(); // يمنع تمرير الصفحة عمودياً أثناء السحب الأفقي
         // مقاومة عند الحواف (أول/آخر شريحة) لإحساس طبيعي
         let d = dx;
-        if ((i === 0 && dx > 0) || (i === len - 1 && dx < 0)) d = dx / 3;
+        const fwd = rtl ? dx < 0 : dx > 0;
+        if ((i === 0 && !fwd) || (i === len - 1 && fwd)) d = dx / 3;
         setDrag(d);
       }
     };
@@ -1034,14 +1047,14 @@ function HeroSlider({ store }) {
       const threshold = Math.min(70, w * 0.18); // تجاوز هذه المسافة = ننتقل شريحة واحدة
       let next = i;
       if (touch.current.horiz && Math.abs(dx) > threshold) {
-        next = dx < 0 ? i + 1 : i - 1;               // سحب لليسار = التالي، لليمين = السابق (يتبع الإصبع)
+        // يتبعُ الإصبعَ باتّجاهِ اللغة: يساراً = التالي بالعربيّة، ويميناً بالإنجليزيّة
+        next = (rtl ? dx < 0 : dx > 0) ? i + 1 : i - 1;
         next = Math.max(0, Math.min(len - 1, next));  // شريحة واحدة فقط، بلا تجاوز للحواف
       }
       draggingRef.current = false;
       touch.current.active = false;
       setDrag(0);
       setI(next);
-      setPaused(false);
     };
 
     el.addEventListener('touchstart', onStart, { passive: true });
@@ -1060,14 +1073,18 @@ function HeroSlider({ store }) {
           فكان «يضل واقف». يبقى الإيقاف أثناء السحب باللمس فقط. */}
       <div
         ref={containerRef}
-        className="relative overflow-hidden rounded-3xl"
+        className="bz-homehero relative overflow-hidden"
         style={{ touchAction: 'pan-y' }}
       >
-        {/* المسار: نفرضه LTR لتفادي مشاكل اتجاه RTL مع الإزاحة */}
+        {/* اتّجاهُ الحركةِ يتبعُ اللغة — كهيرو الصفحةِ الرئيسيّةِ تماماً:
+            ‏العربيّةُ ‎row والإزاحةُ سالبة، فتدخلُ الشريحةُ من اليمينِ وتخرجُ يساراً.
+            ‏والإنجليزيّةُ ‎row-reverse والإزاحةُ موجبة، فالعكس.
+            والإزاحةُ بالبكسلِ لا بالنسبة: نسبةُ ‎translateX تُحسَبُ من عرضِ العنصرِ
+            نفسِه، وهذا الشريطُ عرضُه عرضُ شريحةٍ وأبناؤُه يفيضون — مرجعٌ ملتبس. */}
         <div
-          className="flex"
+          className={`flex ${rtl ? '' : 'flex-row-reverse'}`}
           style={{
-            transform: `translateX(calc(-${i * 100}% + ${drag}px))`,
+            transform: `translate3d(${(rtl ? -1 : 1) * i * frameW + drag}px, 0, 0)`,
             direction: 'ltr',
             transition: draggingRef.current ? 'none' : 'transform 480ms cubic-bezier(0.22, 0.61, 0.36, 1)',
             willChange: 'transform',
@@ -1102,7 +1119,10 @@ function HeroSlider({ store }) {
                   // (نسبة ~5:1) على الشاشات العريضة بعد توسيع الحاوية
                   // ارتفاع الجوال 300 لا 260: بعد إضافة زرّ «تسوّقي الآن» صار محتوى
                   // الشريحة الثابتة أطول من الصندوق، فانزاح الشعار لأعلى وخرج عن الإطار.
-                  className={`relative isolate flex h-[300px] flex-col items-center justify-center overflow-hidden px-6 text-center sm:h-[360px] lg:h-[430px] 2xl:h-[500px] ${idx === i ? 'bz-hero-active' : ''} ${custom ? 'bg-[#1C1B1A]' : 'bg-wine-dark pub-hero'}`}
+                  // الشريحةُ الثابتةُ (اسمُ المتجر) تجلسُ على خلفيّةٍ واحدةٍ لكلِّ
+                  // متاجرِ المنصّة ‎(bz-storehero): نسيجٌ حبريٌّ وقوسُ بوتيكٍ خافت.
+                  // كانت لوناً مصمتاً بتوهّجٍ — لا يقولُ شيئاً ولا يُميّزُ الصفحة.
+                  className={`bz-homehero-slide ${idx === i ? 'bz-hero-active' : ''} ${custom ? 'bg-[#1C1B1A]' : s.fixed ? 'bz-storehero' : 'bg-wine-dark pub-hero'}`}
                   style={style}
                 >
                   {/* وسائط الشريحة (صورة أو فيديو) بنفس التعتيم تماماً — معتّمة من أول لحظة بلا وميض */}
@@ -1110,14 +1130,22 @@ function HeroSlider({ store }) {
                       على iOS قد يخترق أي طبقة فوقه فيظهر مضيئاً؛ تعتيمه من مصدره يمنع ذلك
                       تماماً. مع خلفية الحاوية المخبوزة داكنة = خلفية واحدة معتّمة بلا وميض. */}
                   {isImage && (
-                    <img
-                      src={cldThumb(s.bgValue, 1920)}
-                      alt=""
-                      aria-hidden="true"
-                      decoding="async"
-                      style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))' }}
-                      className="bz-kenburns absolute inset-0 z-0 h-full w-full object-cover"
-                    />
+                    // قصّةٌ لكلِّ جهازٍ لا قصّةٌ واحدةٌ للجميع: صورةُ التاجرةِ قد تكونُ
+                    // طوليّةً من جوّالِها والهيرو عريضٌ على الكمبيوتر — القصّةُ الواحدةُ
+                    // إمّا تبترُ القامةَ أو تُظهِرُ شريحةً من الخصر. و‎c_lfill لا تُكبّرُ
+                    // أبداً، فلا تخرجُ صورةٌ صغيرةٌ مغبَّشةً بعدَ تكبيرِها.
+                    <picture>
+                      <source media="(min-width: 1024px)" srcSet={heroCrop(s.bgValue, 1440, '16:9')} />
+                      <source media="(min-width: 640px)" srcSet={heroCrop(s.bgValue, 1280, '16:10')} />
+                      <img
+                        src={heroCrop(s.bgValue, 900, '4:5') || cldThumb(s.bgValue, 1440)}
+                        alt=""
+                        aria-hidden="true"
+                        decoding="async"
+                        style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))' }}
+                        className="bz-kenburns absolute inset-0 z-0 h-full w-full object-cover"
+                      />
+                    </picture>
                   )}
                   {isVideo && (
                     <>
@@ -1218,7 +1246,7 @@ function HeroSlider({ store }) {
 
       {/* نقاط التنقّل — النشطة شريط يمتلئ ذهبياً كمؤقّت مرئي للانتقال التالي */}
       {len > 1 && (
-        <div dir="ltr" className="mt-6 flex items-center justify-center gap-2">
+        <div dir={rtl ? 'rtl' : 'ltr'} className="mt-6 flex items-center justify-center gap-2">
           {slides.map((_, idx) => (
             <button
               key={idx}
@@ -1230,7 +1258,7 @@ function HeroSlider({ store }) {
                 <span
                   key={i}
                   className="bz-dot-progress absolute inset-y-0 left-0 rounded-full bg-[#F9F9F8]"
-                  style={{ animationPlayState: paused ? 'paused' : 'running' }}
+                 
                 />
               )}
             </button>

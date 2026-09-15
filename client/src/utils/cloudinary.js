@@ -145,3 +145,22 @@ export async function uploadToCloudinary(file, resourceType = 'auto', onProgress
   if (!last?.secure_url) throw new Error('فشل الرفع.');
   return last.secure_url;
 }
+
+// نسخةٌ من صورةِ هيرو بنسبةٍ وعرضٍ محدَّدَين — للصفحةِ الرئيسيّةِ وصفحاتِ المتاجرِ
+// معاً. تتجاهلُ أيَّ تحويلاتٍ قديمةٍ بالرابطِ فلا تتراكم، وتعملُ على الصورةِ وعلى
+// لقطةِ الفيديو. وتُعيدُ فراغاً لأيِّ رابطٍ آخرَ (base64 أو مستضافٍ خارجاً) —
+// وعندها يعملُ الاحتياطيُّ بالوسمِ ولا يسقطُ الهيرو.
+//
+// ‏c_lfill لا c_fill: الثانيةُ تُكبّرُ المصدرَ ليبلغَ العرضَ المطلوب، والتكبيرُ لا
+// يُضيفُ تفصيلاً بل يُذيبُه. الأولى تقصُّ للنسبةِ ولا تتجاوزُ دقّةَ الأصلِ أبداً.
+export function heroCrop(url, w, ar) {
+  const s = String(url || '');
+  const m = s.match(/^(https?:\/\/[^/]+\/[^/]+\/(image|video)\/upload\/)(.+)$/);
+  if (!m) return '';
+  const segs = m[3].split('/');
+  let vi = segs.findIndex((x) => /^v\d+$/.test(x));
+  if (vi === -1) vi = segs.length - 1;
+  const rest = segs.slice(vi).join('/').replace(/\.[a-z0-9]+$/i, '');
+  const frame = m[2] === 'video' ? 'so_0,' : '';
+  return `${m[1]}${frame}f_auto,q_auto:best,w_${w},c_lfill,g_auto,ar_${ar},e_sharpen:60/${rest}.jpg`;
+}

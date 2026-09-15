@@ -4977,3 +4977,16 @@ html.dark .theme-pub .bz-featstore {
 @media (hover: hover) and (pointer: fine) {
   .bz-eband-link:hover .bz-eband-btn { transform: translateY(-2px); background: #FFFFFF; }
 }
+
+/* ═══════ الشريحةُ الثابتةُ بصفحاتِ المتاجر ═══════
+   خلفيّةٌ واحدةٌ لكلِّ متاجرِ المنصّة: نسيجٌ حبريٌّ ومسحةُ ضوءٍ قطريّةٌ وقوسُ
+   بوتيكٍ خافت — رُسِمت رسماً لا صورةً مأخوذةً من الشبكة: صورُ الأزياءِ محميّةٌ
+   بحقوقٍ، ووضعُ واحدةٍ غيرِ مرخّصةٍ على منصّةٍ تجاريّةٍ مسؤوليّةٌ لا داعيَ لها.
+   وكانت لوناً مصمتاً بتوهّج — لا يقولُ شيئاً ولا يُميّزُ الصفحة. */
+.bz-storehero {
+  background-color: #1C1B1A;
+  background-image: url('/store-hero.webp');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}

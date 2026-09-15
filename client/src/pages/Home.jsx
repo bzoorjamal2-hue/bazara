@@ -14,7 +14,7 @@ import OffersBar from '../components/OffersBar.jsx';
 import { getRecent, productThumb } from '../utils/recentlyViewed.js';
 import { productPath } from '../utils/links.js';
 import { getCache, setCache } from '../utils/apiCache.js';
-import { cldVideoPoster, cldThumb, cldVideoMp4 } from '../utils/cloudinary.js';
+import { cldVideoPoster, cldThumb, cldVideoMp4, heroCrop } from '../utils/cloudinary.js';
 import { GiftIcon, ForwardIcon, BoltIcon, FireIcon, SparkleIcon } from '../components/icons.jsx';
 import CategoryGrid from '../components/CategoryGrid.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
@@ -397,26 +397,6 @@ function HomeCategoryView({ cat, onHome, custom = [] }) {
       )}
     </>
   );
-}
-
-// نسخةٌ من صورةِ الهيرو بنسبةٍ وعرضٍ محدَّدَين. تعملُ على روابطِ كلاودينري
-// (صورةً أو لقطةَ فيديو) وتتجاهلُ أيَّ تحويلاتٍ قديمةٍ بالرابطِ فلا تتراكم.
-// تُعيدُ فراغاً لأيِّ رابطٍ آخر (base64 أو مستضافٍ خارجاً) — وعندها يعملُ
-// الاحتياطيُّ بالوسمِ ‎<img> ولا يسقطُ الهيرو.
-function heroCrop(url, w, ar) {
-  const s = String(url || '');
-  const m = s.match(/^(https?:\/\/[^/]+\/[^/]+\/(image|video)\/upload\/)(.+)$/);
-  if (!m) return '';
-  const segs = m[3].split('/');
-  let vi = segs.findIndex((x) => /^v\d+$/.test(x));
-  if (vi === -1) vi = segs.length - 1;
-  const rest = segs.slice(vi).join('/').replace(/\.[a-z0-9]+$/i, '');
-  const frame = m[2] === 'video' ? 'so_0,' : '';
-  // ‏c_lfill لا c_fill: الثانيةُ تُكبّرُ المصدرَ ليبلغَ العرضَ المطلوب، والتكبيرُ
-  // لا يُضيفُ تفصيلاً بل يُذيبُه — وهذا ما جعلَ صورةً بعرضِ ‎1242 تخرجُ مغبَّشةً
-  // حينَ طُلِبت بـ‎1440. الأولى تقصُّ للنسبةِ نفسِها ولا تتجاوزُ دقّةَ الأصلِ أبداً،
-  // فأيُّ صورةٍ يرفعُها المديرُ أو التاجرةُ تُعرَضُ بأحسنِ ما فيها لا أسوأ.
-  return `${m[1]}${frame}f_auto,q_auto:best,w_${w},c_lfill,g_auto,ar_${ar},e_sharpen:60/${rest}.jpg`;
 }
 
 // سلايدر الـ Hero للصفحة الرئيسية: شريحة ثابتة + شريحتين, تحريك تلقائي + سحب باللمس
