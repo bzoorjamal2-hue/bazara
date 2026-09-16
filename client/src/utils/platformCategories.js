@@ -98,3 +98,24 @@ export function storeOnlyCats(customCategories, keys = platformCatKeys()) {
   }
   return out;
 }
+
+// صورةُ فئةٍ ترفعُها التاجرة، مُعامَلةً مُعامَلةَ السبعِ المدمجة.
+//
+// السبعُ صورُ قطعٍ مقصوصةٍ على شفافيّةٍ بمربّعٍ واحدٍ وهامشٍ واحد. وما ترفعُه
+// التاجرةُ يأتي بهوامشَ بيضاءَ عريضةٍ أو ضيّقةٍ وبنسبةٍ أيِّ نسبة — فتقعُ فئتُها
+// بالصفِّ أصغرَ أو أكبرَ من جاراتِها ولو تساوى الإطار.
+//
+// ‏e_trim يقصُّ الحافّةَ الموحّدةَ حولَ القطعةِ مهما كان لونُها، ثمّ نُعيدُ هامشاً
+// واحداً بالنسبةِ نفسِها للجميع. فتخرجُ فئةُ التاجرةِ بحجمِ السبعِ بالضبطِ ولو
+// رفعت صورةً بهوامشَ مختلفة — بلا أن يُطلَبَ منها ضبطُ شيء.
+export function catImage(url, width = 400) {
+  const u = String(url || '');
+  if (!u.includes('/upload/')) return u;
+  const m = u.match(/^(https?:\/\/[^/]+\/[^/]+\/image\/upload\/)(.+)$/);
+  if (!m) return u;
+  const segs = m[2].split('/');
+  let vi = segs.findIndex((x) => /^v\d+$/.test(x));
+  if (vi === -1) vi = segs.length - 1;
+  const id = segs.slice(vi).join('/');
+  return `${m[1]}e_trim:12/c_pad,w_${width},h_${width},b_transparent/f_auto,q_auto,dpr_auto/${id}`;
+}

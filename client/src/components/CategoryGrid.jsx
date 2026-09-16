@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { cldThumb } from '../utils/cloudinary.js';
-import { usePlatformCatKeys, platformCatImage, platformCatImageFallback } from '../utils/platformCategories.js';
+import { usePlatformCatKeys, platformCatImage, platformCatImageFallback, catImage } from '../utils/platformCategories.js';
 
 // لا قائمةَ مكتوبةً هنا: الاحتياطيّ يُبنى من مفاتيح المنصّة الحيّة، وإلا لم تظهر
 // الفئة التي يضيفها المدير في أي شبكةٍ لم تُمرَّر إليها cats صراحةً.
@@ -26,7 +26,8 @@ function CategoryCard({ cat }) {
   // صورة المالكة المخصّصة تُحسَّن بحجم أصغر وصيغة تلقائية لظهور أسرع؛ والأيقونة الثابتة كما هي
   // ‏WebP لا PNG: النسختانِ بالمجلّدِ نفسِه، والـWebP عُشرُ الحجمِ بالشكلِ نفسِه.
   // كان المسارُ مكتوباً هنا بيدٍ صريحةٍ ‎(.png) فيتجاوزُ مُنتقيَ الصيغةِ المشترَك.
-  const src = cat.image ? cldThumb(cat.image, 400) : cat.builtin ? platformCatImage(cat.key) : '';
+  // صورةُ التاجرةِ تُقَصُّ هوامشُها وتُوضَعُ بمربّعٍ بنفسِ نسبةِ السبعِ المدمجة
+  const src = cat.image ? catImage(cat.image, 400) : cat.builtin ? platformCatImage(cat.key) : '';
   const srcPng = cat.image || !cat.builtin ? '' : platformCatImageFallback(cat.key);
   return (
     <div className="transition duration-300 group-hover:-translate-y-1">

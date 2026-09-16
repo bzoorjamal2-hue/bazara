@@ -32,7 +32,7 @@ import { saveRef } from '../utils/referral.js';
 import { initPixels, trackPixel } from '../utils/pixels.js';
 import { norm } from '../utils/match.js';
 import Countdown from '../components/Countdown.jsx';
-import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys, storeOnlyCats } from '../utils/platformCategories.js';
+import { platformCatKeys, platformCatName, platformCatImage, catImage, usePlatformCatKeys, storeOnlyCats } from '../utils/platformCategories.js';
 
 const PAGE_SIZE = 8;
 
@@ -390,7 +390,9 @@ export default function StorePage() {
               الموحّد بكل الحسابات، لكن الضغط يفتح فئة هذا المتجر (لا يخرج للعام) */}
           <div className="bz-cards">
             {visibleCats.map((c, i) => {
-              const src = c.image ? cldThumb(c.image, 400) : c.builtin ? `/categories/${c.key}.png?v=3` : '';
+              // المصدرُ المشترَكُ لا مسارٌ مكتوبٌ بيد: كان ‎.png?v=3 هنا فبقيت
+              // صفحاتُ المتاجرِ على الرسومِ القديمةِ بعدَ تبديلِ السبعِ كلِّها.
+              const src = c.image ? catImage(c.image, 400) : c.builtin ? platformCatImage(c.key) : '';
               const cnt = catCounts[c.key] || { total: 0, sale: 0 };
               return (
                 <button
