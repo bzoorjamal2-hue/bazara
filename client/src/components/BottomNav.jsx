@@ -123,11 +123,15 @@ function MessagesIcon({ className = 'h-6 w-6', filled }) {
     </svg>
   );
 }
+// «متجري» بنفسِ ختمِ المتجرِ المستعمَلِ بأدراجِ الموقع (icons.jsx · StoreIcon):
+// مظلّةٌ وجسمٌ وباب. رسمتُه أوّلاً بمظلّةٍ وجسمٍ بلا باب فلم يُقرَأ — ورفعُ
+// الأسماءِ من تحتِ الأيقوناتِ يعني أنّ الأيقونةَ وحدَها تشرح، فلا احتمالَ لغموض.
 function StoreGlyph({ className = 'h-6 w-6', filled }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M3.6 9.4 5 4.2a1 1 0 0 1 1-.7h12a1 1 0 0 1 1 .7l1.4 5.2a2.6 2.6 0 0 1-5 1.1 2.6 2.6 0 0 1-4.8 0 2.6 2.6 0 0 1-4.8 0 2.6 2.6 0 0 1-2.2 1.2Z" />
-      <path d="M5.2 11.8v7.7a1 1 0 0 0 1 1h11.6a1 1 0 0 0 1-1v-7.7" stroke={filled ? '#fff' : 'currentColor'} />
+      <path d="M4.3 9.5 5.3 4.8A1.1 1.1 0 0 1 6.4 3.9H17.6A1.1 1.1 0 0 1 18.7 4.8L19.7 9.5A2.9 2.9 0 0 1 14.1 9.5A2.9 2.9 0 0 1 9.9 9.5A2.9 2.9 0 0 1 4.3 9.5Z" />
+      <path d="M5.9 11.4V18.7A1.4 1.4 0 0 0 7.3 20.1H16.7A1.4 1.4 0 0 0 18.1 18.7V11.4" stroke={filled ? '#fff' : 'currentColor'} />
+      <path d="M10 20.1V15.1A1 1 0 0 1 11 14.1H13A1 1 0 0 1 14 15.1V20.1" stroke={filled ? '#fff' : 'currentColor'} />
     </svg>
   );
 }
@@ -249,7 +253,11 @@ export default function BottomNav() {
   // "حسابي" يفتح دائماً على الصفحة الرئيسية للوحة — لا نجبر المستخدم على تبويب
   // الطلبات (كان يفتحه تلقائياً عند وجود طلبات جديدة فيبدو وكأنه عالق عليه).
   // الشارة الحمراء تكفي للتنبيه، والإشعارات توصله للطلبات مباشرة عند الحاجة.
-  const accountTo = user ? '/dashboard' : '/login';
+  // «حسابي» يفتحُ نظرةَ اللوحةِ صراحةً لا ‎/dashboard المجرَّدة: اللوحةُ تستعيدُ
+  // آخرَ قسمٍ فُتح وتكتبُه بالرابط، فكانت الضغطةُ من «الطلبات» إلى «حسابي» ترجعُ
+  // إلى الطلباتِ نفسِها — زرٌّ يُضغَطُ ولا يتغيّرُ شيء.
+  const ownerNow = Boolean(user && store?.slug && !isAdmin);
+  const accountTo = user ? (ownerNow ? '/dashboard?tab=overview' : '/dashboard') : '/login';
   // المتجر الذي يتصفّحه الزائر الآن: من الرابط (/store/:slug)، أو ?store= (بحث/فئة/تتبّع)،
   // أو من ذاكرة الجلسة لصفحة المنتج (رابطها لا يحمل السلاِگ). عند وجوده تبقى كل وجهات
   // الشريط داخل المتجر — فلا يخرج الزبون لصفحات بازارا العامة إطلاقاً.
@@ -316,7 +324,10 @@ export default function BottomNav() {
   // «حسابي» يُخفى على الكمبيوتر: هو أصلاً بالشريط العلويّ بحدّ
   // الصورة الشخصية، فوجودُه هنا تكرارٌ يزحم صفّاً محدود العرض.
   // (dt = شاشةٌ عريضة)
-  const accountItem = dt ? [] : [{ key: 'account', label: t('nav.account') || 'حسابي', Icon: UserIcon, active: !cartOpen && !wishOpen && onDash && !tab, onClick: () => goto(accountTo) }];
+  // يضيءُ على اللوحةِ كلِّها إلّا القسمَينِ اللذَينِ لهما زرّاهما بالشريط.
+  // كان الشرطُ ‎!tab وحدَه، واللوحةُ تكتبُ ‎?tab بنفسِها أوّلَ ما تُفتَح — فلا يضيءُ أبداً.
+  const ownTabs = ['myOrders', 'instagram'];
+  const accountItem = dt ? [] : [{ key: 'account', label: t('nav.account') || 'حسابي', Icon: UserIcon, active: !cartOpen && !wishOpen && onDash && !ownTabs.includes(tab), onClick: () => goto(accountTo) }];
 
   const ownerItems = [
     ...accountItem,
@@ -329,7 +340,10 @@ export default function BottomNav() {
     // متجري: تحتاجُ ترى متجرَها كما تراه الزبونة — ولو صارَ شريطُها إداريّاً
     // بحتاً لفقدت هذا الطريقَ القصير.
     { key: 'mystore', label: t('nav.myStore'), Icon: StoreGlyph, active: !cartOpen && !wishOpen && pathname === `/store/${store?.slug}`, onClick: () => goto(`/store/${store?.slug}`) },
-    { key: 'home', label: t('nav.home'), Icon: HomeIcon, active: !cartOpen && !wishOpen && homeActive, onClick: () => goto(homeTo) },
+    // «الرئيسية» عندَها بازارا العامّةُ لا متجرُها: ‎homeTo يصيرُ متجرَ المشتركةِ
+    // نفسِها حين يكونُ لها متجر، فكان الزرّانِ يشيرانِ إلى المكانِ نفسِه ويضيئانِ
+    // معاً على صفحةِ متجرِها. لها بيتانِ فليُفرَّق بينهما: متجرُها، وسوقُ بازارا.
+    { key: 'home', label: t('nav.home'), Icon: HomeIcon, active: !cartOpen && !wishOpen && pathname === '/shop', onClick: () => goto('/shop') },
   ];
 
   const shopperItems = [
