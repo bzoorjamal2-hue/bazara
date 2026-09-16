@@ -29,7 +29,12 @@ const OUT = path.resolve('public/store-preview.webp');
 // ثمّ تُقصّ اللقطة — وبالعربية يبدأ القصُّ من الحافّة الخطأ، فيختفي اسمُ
 // المتجر وحقلُ البحث. 520 فوق الحدّ، وبنسبة هاتفٍ معقولة.
 const W = 540;
-const H = 1170;
+// الارتفاعُ ليس رقماً مريحاً بل نسبةُ صندوقِ الصورةِ داخلَ إطارِ الهاتفِ مقيسةً
+// من المتصفّح: 610.39 ÷ 290.56 = 2.1007، فـ540 × 2.1007 = 1134. وكان 1170 أي
+// 2.1667 — وobject-fit: cover يقصُّ الفرقَ (٣٪) من الأسفلِ لأنّ object-position علويّ،
+// وهذا الثلاثةُ بالمئة هو نصفُ الشريطِ السفليّ بأسمائِه. المقاساتُ الثلاثة
+// — اللقطةُ وسمةُ <img> والصندوقُ — تمشي معاً أو يُقصَّ أحدُها.
+const H = 1134;
 const SCALE = 2;
 const QUALITY = 0.82;
 
@@ -55,7 +60,11 @@ function findChrome() {
 }
 
 function run(chrome, args) {
-  return execFileSync(chrome, ['--headless', '--disable-gpu', '--hide-scrollbars', ...args], {
+  // --force-prefers-reduced-motion: سلايدرُ المتجرِ يتقدّمُ وحدَه كلّ سبعِ ثوانٍ،
+  // والميزانيّةُ الزمنيّةُ أدناه اثنتا عشرة — فكانت اللقطةُ تقعُ على بانرٍ عشوائيٍّ
+  // بحسبِ متى انتهى التحميل. والسلايدرُ يحترمُ السكونَ الآن، فيقفُ عندَ شريحةِ
+  // الافتتاحِ دائماً وتخرجُ اللقطةُ واحدةً كلَّ مرّة.
+  return execFileSync(chrome, ['--headless', '--disable-gpu', '--hide-scrollbars', '--force-prefers-reduced-motion', ...args], {
     stdio: 'pipe',
     maxBuffer: 512 * 1024 * 1024,
   });
@@ -72,6 +81,23 @@ const url = `${BASE.replace(/\/$/, '')}/store/${STORE}`;
 // بلا شكوى. جرّبتُ الحالتين قبل هذا الحارس فدهس الملفَّ الصحيحَ مرّتين.
 // فنقرأ DOM أوّلاً: يلزم أن يحمل اسمَ المتجر (bz-sh-name)، وألّا يحمل بطاقةَ
 // حالةٍ (bz-state) وهي ما تُرسم عند الخطأ.
+
+// نقرأ الأصنافَ لا النصَّ الخام: خادمُ التطوير يحقن الـCSS داخلَ المستند، فيصير
+// «bz-state» موجوداً كمُحدِّدٍ بورقةِ الأنماطِ وإن لم تُرسَم بطاقةُ حالةٍ واحدة —
+// فيرفض الحارسُ صفحةً سليمة. هذه تمشي على سماتِ class وحدَها وتطابق الاسمَ كاملاً.
+const classLists = function* (html) {
+  const re = /class="([^"]*)"/g;
+  let m;
+  while ((m = re.exec(html))) yield m[1].trim().split(/\s+/);
+};
+const hasClass = (html, name) => {
+  for (const list of classLists(html)) if (list.includes(name)) return true;
+  return false;
+};
+const classesOf = (html, name) => {
+  for (const list of classLists(html)) if (list.includes(name)) return list;
+  return null;
+};
 console.log(`أفحص: ${url}`);
 let dom = '';
 try {
@@ -80,7 +106,7 @@ try {
   console.error(`تعذّر فتح ${url} — هل الخادم يعمل؟  (npm run build && npm run preview)`);
   process.exit(1);
 }
-if (!dom.includes('bz-sh-name')) {
+if (!hasClass(dom, 'bz-sh-name')) {
   console.error(
     `الصفحة ليست صفحةَ متجر — لم أجد اسمَ المتجر بها.\n` +
     `  • الخادم يعمل على ${BASE}؟   (npm run build && npm run preview)\n` +
@@ -89,8 +115,22 @@ if (!dom.includes('bz-sh-name')) {
   );
   process.exit(1);
 }
-if (dom.includes('bz-state')) {
+if (hasClass(dom, 'bz-state')) {
   console.error(`الصفحة تعرض حالةَ خطأ (متجرٌ موقوف أو بلا منتجات). لم أمسّ اللقطة الحالية.`);
+  process.exit(1);
+}
+// الشريحةُ الظاهرةُ (bz-hero-active) يجب أن تكونَ شريحةَ الافتتاحِ (bz-storehero):
+// اسمُ المتجرِ وشعارُه على النسيجِ الحبريّ. لو وقعت على بانرٍ لاختلفت اللقطةُ بكلّ
+// تشغيلةٍ ولم تمثّل «ما تحصلين عليه».
+const active = classesOf(dom, 'bz-hero-active');
+if (!active || !active.includes('bz-storehero')) {
+  console.error(
+    `السلايدر ليس على شريحةِ الافتتاح — لم يمسكه السكون.
+` +
+    `  هل يحترم HeroSlider قيمةَ prefers-reduced-motion ؟  (StorePage.jsx · still)
+` +
+    `لم أمسّ اللقطة الحالية.`,
+  );
   process.exit(1);
 }
 

@@ -464,7 +464,7 @@ export default function Landing() {
                     loading="lazy"
                     decoding="async"
                     width={540}
-                    height={1132}
+                    height={1134}
                   />
                 </div>
               </div>

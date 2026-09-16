@@ -998,8 +998,22 @@ function HeroSlider({ store }) {
   // تجعلُها تمسحُ الشرائحَ كلَّها بالاتّجاهِ المعاكسِ فينكسرُ إحساسُ الدوران —
   // يمشي الشريطُ يساراً أربعَ مرّاتٍ ثمّ يرتدُّ يميناً مسحةً طويلة.
   const [snap, setSnap] = useState(false);
+  // سكونٌ لمن يطلبُ سكوناً: شريحةٌ تمشي وحدَها كلّ سبعِ ثوانٍ تسحبُ
+  // المحتوى من تحتِ عينِ من يقرأُ ببطء، وتُدوّخُ من تؤذيه الحركة. ومن طلبَ
+  // من نظامِه تقليلَ الحركة فقد قالها صراحةً — فتبقى النقاطُ والسحبُ ويقفُ
+  // الدورانُ وحدَه. وهذا ما يجعلُ لقطةَ صفحةِ الواجهة قابلةً للتكرار أيضاً:
+  // كرومُ المُلتقِطُ يطلبُ السكونَ فتقفُ الشريحةُ عندَ الافتتاحِ دائماً.
+  const [still, setStill] = useState(false);
   useEffect(() => {
-    if (len <= 1 || paused) return undefined;
+    if (typeof window.matchMedia !== 'function') return undefined;
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const read = () => setStill(mq.matches);
+    read();
+    mq.addEventListener('change', read);
+    return () => mq.removeEventListener('change', read);
+  }, []);
+  useEffect(() => {
+    if (len <= 1 || paused || still) return undefined;
     const id = setInterval(() => {
       setI((prev) => {
         const next = (prev + 1) % len;
@@ -1008,7 +1022,7 @@ function HeroSlider({ store }) {
       });
     }, 7000);
     return () => clearInterval(id);
-  }, [len, paused, i]);
+  }, [len, paused, still, i]);
   // تعودُ الحركةُ بعدَ رسمِ الإطارِ الجديدِ مباشرةً
   useEffect(() => {
     if (!snap) return undefined;
