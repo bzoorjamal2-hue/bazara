@@ -81,8 +81,12 @@ export default function DashDrawerNav({ groups, activeKey, onNavigate, badges = 
               className="menu-row flex items-center gap-2 px-3 pb-1.5 pt-4"
               style={{ animationDelay: `${row++ * 24}ms` }}
             >
-              <span className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-gold-200">{g.title}</span>
-              <span aria-hidden className="h-px flex-1 bg-gold-400/20" />
+              {/* لونٌ صريحٌ لا ‎text-gold-200: ذاك يُعاد تعيينُه داخلَ ‎.theme-pub
+                  إلى ‎#1F1E1D لأنّه مصمَّمٌ لسطوحِ الصفحةِ الفاتحة — والدرجُ داكن،
+                  فكانت عناوينُ المجموعاتِ سوداءَ على سواد: بنيةُ القائمةِ كلُّها
+                  غائبةٌ عن العين، ويبقى جدارُ روابطَ بلا أبواب. */}
+              <span className="bz-drawer-grp">{g.title}</span>
+              <span aria-hidden className="h-px flex-1 bg-cream/15" />
             </div>
             {g.items.map((s) => {
               const active = s.key === activeKey;
@@ -103,11 +107,15 @@ export default function DashDrawerNav({ groups, activeKey, onNavigate, badges = 
                 >
                   {/* شريط ذهبي على حافّة البداية يعلّم القسم المفتوح */}
                   {active && <span aria-hidden className="absolute inset-y-1.5 start-0 w-[3px] rounded-full bg-gold-400" />}
+                  {/* المربّعُ للمفتوحِ وحدَه: كان لكلِّ صفٍّ مربّعُه، فتصيرُ القائمةُ
+                      اثنَي عشرَ مربّعاً رماديّاً متشابهاً فوقَ بعضِها — جدارٌ لا
+                      قائمة، والمفتوحُ منها لا يكادُ يُميَّز. الأيقونةُ وحدَها
+                      تكفي، والامتلاءُ يصيرُ علامةَ الموضعِ لا زينةً للجميع. */}
                   <span
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 transition ${
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition ${
                       active
-                        ? 'bg-[#D5D5D4] text-[#1F1F1E] ring-[#D5D5D4]/50'
-                        : 'bg-cream/[0.12] text-cream ring-cream/10'
+                        ? 'bg-[#D5D5D4] text-[#1F1F1E] ring-1 ring-[#D5D5D4]/50'
+                        : 'text-cream/70'
                     }`}
                   >
                     <s.Icon className="h-[18px] w-[18px]" />

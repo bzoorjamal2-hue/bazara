@@ -15,7 +15,7 @@ import CloseButton from './CloseButton.jsx';
 import DashDrawerNav from './DashDrawerNav.jsx';
 import { isStandalone } from '../utils/pwa.js';
 import CatThumb from './CatThumb.jsx';
-import { cldThumb } from '../utils/cloudinary.js';
+import { cldThumb, cldVideoPoster } from '../utils/cloudinary.js';
 import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys } from '../utils/platformCategories.js';
 
 // هوية الحساب أينما ظهرت (زرّ الشريط · القائمة المنبثقة · القائمة الجانبية):
@@ -122,6 +122,12 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [noAnim, setNoAnim] = useState(false); // إلغاء حركة الهيدر لحظة تغيّر الصفحة
   const [newOrders, setNewOrders] = useState(0); // شارة الطلبات الجديدة داخل قائمة الحساب
+  // خلفيّةُ هويّةِ الدرج: بانرُ المتجرِ الأوّلُ — نفسُه خلفَ رأسِ اللوحة
+  const drawerBg = (() => {
+    const b = (store?.banners || []).find((x) => x && x.bgValue && (x.bgType === 'image' || x.bgType === 'video'));
+    if (!b || subscription?.isAdmin) return '';
+    return b.bgType === 'video' ? cldVideoPoster(b.bgValue, 640) : cldThumb(b.bgValue, 640);
+  })();
   const [stockReady, setStockReady] = useState(0); // شارة طلبات التوفّر التي رجعت متوفّرة
 
   // نجلب عدد الطلبات الجديدة عند فتح القائمة → نُظهر شارة على "الطلبات" ليعرف المالك مصدر الإشعار
@@ -362,8 +368,12 @@ export default function Navbar() {
               <LanguageSwitcher onChanged={() => setMenuOpen(false)} />
             </div>
 
-            {/* الهوية — المدير يظهر باسمه وصورته (حساب تحكّم) */}
-            <div className="mt-5 flex items-center gap-3 border-b border-cream/15 pb-4">
+            {/* الهوية — المدير يظهر باسمه وصورته (حساب تحكّم).
+                وخلفُها بانرُ المتجرِ معتَّماً كرأسِ اللوحةِ تماماً: تفتحُ التاجرةُ
+                القائمةَ فترى متجرَها لا لوحاً داكناً عامّاً، والقرابةُ بين
+                القائمةِ والرأسِ والصفحةِ تُقرَأُ بلا شرح. */}
+            <div className="bz-drawer-id relative -mx-5 mt-4 flex items-center gap-3 overflow-hidden border-b border-cream/15 px-5 py-4">
+              {drawerBg && <img src={drawerBg} alt="" aria-hidden className="bz-drawer-id-bg" />}
               {/* نفس مكوّن الهوية المستخدم بزرّ الشريط — فلا يختلف الشعار بين الاثنين */}
               <Avatar user={user} store={isAdmin ? null : store} size="h-12 w-12" />
               <div className="min-w-0">

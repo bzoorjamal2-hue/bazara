@@ -5160,3 +5160,38 @@ html[dir='ltr'] .bz-dashhero-name::after { transform: translateX(-50%); }
 @media (hover: hover) { .bz-dashhero-act:hover { background: #F9F9F8; color: #1F1E1D; } }
 .bz-dashhero-act.is-solid { background: #F9F9F8; color: #1F1E1D; border-color: #F9F9F8; }
 @media (hover: hover) { .bz-dashhero-act.is-solid:hover { background: rgba(249, 249, 248, 0.86); } }
+
+/* هويّةُ الدرج: بانرُ المتجرِ خلفَها معتَّماً — كرأسِ اللوحةِ تماماً. تفتحُ
+   التاجرةُ القائمةَ فترى متجرَها لا لوحاً داكناً يصلحُ لأيِّ حساب. */
+.bz-drawer-id-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: center 28%;
+  filter: brightness(0.32) saturate(0.85);
+}
+.bz-drawer-id::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(21, 20, 19, 0.45), rgba(21, 20, 19, 0.75));
+}
+.bz-drawer-id { isolation: isolate; }
+
+/* عنوانُ مجموعةٍ بدرجِ اللوحة — بلغةِ فوقيّاتِ صفحةِ المتجرِ نفسِها.
+   وبلونٍ صريحٍ لا عبرَ ‎text-gold-200: ذاك يُعادُ تعيينُه داخلَ ‎.theme-pub إلى
+   ‏‎#1F1E1D لأنّه مصمَّمٌ لسطوحِ الصفحةِ الفاتحة، والدرجُ داكن — فكانت العناوينُ
+   سوداءَ على سوادٍ وبنيةُ القائمةِ غائبةً عن العينِ تماماً. */
+.bz-drawer-grp {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(246, 245, 243, 0.52);
+}
+html.dark .theme-pub .bz-drawer-grp { color: rgba(246, 245, 243, 0.48); }
