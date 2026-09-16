@@ -287,6 +287,12 @@ export default function OrdersManager() {
   // (@page والتخطيط المضغوط) يُضاف عند الطباعة حسب اختيار صاحب المتجر لطابعته.
   const INVOICE_CSS = `
     *{box-sizing:border-box}
+    /* المتصفّحُ يُسقِطُ خلفيّاتِ الطباعةِ افتراضاً ‎(Background graphics مطفأةٌ
+       بحوارِ كروم)، والشارةُ خلفيّتُها سوداءُ ونصُّها أبيض — فتُطبَعُ بيضاءَ على
+       بياضٍ ويضيعُ رقمُ الطلبِ من الفاتورة. وسطرُ «مدفوعٌ مسبقاً» يفقدُ خضرتَه
+       فيقرأُه المندوبُ كسطرٍ عاديٍّ ويطلبُ المبلغَ ممّن دفع. نطلبُ الألوانَ
+       صراحةً فتُطبَعُ كما صُمِّمَت بلا أن يُغيّرَ أحدٌ إعدادَ طابعتِه. */
+    html,body,.inv *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     body{font-family:'Tajawal','Segoe UI',Tahoma,sans-serif;color:#2b2b2b;margin:0;padding:0;background:#fff}
     .inv{padding:22px 24px;max-width:800px;margin:0 auto}
     .inv + .inv{page-break-before:always}

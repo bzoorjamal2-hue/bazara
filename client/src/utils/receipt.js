@@ -17,6 +17,9 @@ const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<
 export const RECEIPT_CSS = `
   *{box-sizing:border-box}
   body{font-family:'Cairo','Tajawal','Segoe UI',Tahoma,Arial,sans-serif;color:#1F1E1D;margin:0;padding:0;background:#fff}
+  /* الألوانُ تُطلَبُ صراحةً: المتصفّحُ يُسقِطُ خلفيّاتِ الطباعةِ افتراضاً،
+     وشارةُ الرقمِ خلفيّتُها سوداءُ ونصُّها أبيض — فتُطبَعُ بيضاءَ على بياض. */
+  html,body,.rc *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   /* الخطُّ مكتوبٌ على .rc نفسِها لا على body وحدَها: مسارُ حفظِ الصورة يرسمُ
      القصاصةَ داخلَ <foreignObject> بلا body، فقاعدةُ body لا تصلُها وكانت
      الشهادةُ تخرجُ بخطٍّ مُذنَّبٍ (Times) لا بخطِّ الموقع. */

@@ -82,6 +82,9 @@ export function paperCss(id, { zoom: useZoom = true } = {}) {
     .c{width:auto}
     .e{width:auto}
     .thanks{display:none}
+    /* الطابعةُ الحراريّةُ تحرقُ الأسودَ المصمتَ كتلةً: تستهلكُ حرارةً وتبهتُ
+       مع الزمن. الحدُّ يكفي للتمييزِ ويُطبَعُ أنظفَ على الرولِ والملصق. */
+    .tag{background:#fff;color:#1F1E1D;border:1px solid #1F1E1D}
     ` : ''}
   `;
 }
