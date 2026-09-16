@@ -7,6 +7,7 @@ import Select from '../../components/Select.jsx';
 import ConfirmModal from '../../components/ConfirmModal.jsx';
 import { TicketIcon, EditIcon, TrashIcon, CopyIcon, CheckIcon, PlusIcon, CashIcon, ClockIcon, UsersIcon, XIcon, SearchIcon, ShareIcon } from '../../components/icons.jsx';
 import { PageHead, SectionHead, Field, DateInput } from '../../components/FormField.jsx';
+import { copyText } from '../../utils/links.js';
 
 const EMPTY = { code: '', type: 'percent', value: '', minTotal: '', maxUses: '', expiresAt: '', active: true };
 
@@ -21,6 +22,10 @@ export default function CouponsManager() {
   const [busy, setBusy] = useState(false);
   const [confirmDel, setConfirmDel] = useState(null);
   const [copied, setCopied] = useState('');
+  // النموذجُ مطويٌّ حتّى يُطلَب: كان سبعَ مئةٍ واثنَينِ وعشرين بكسلاً فوقَ قائمةِ
+  // الكوبوناتِ نفسِها، فمن تفتحُ الصفحةَ لتُعطّلَ كوبوناً أو تنسخَ كودَه تمرُّ
+  // على نموذجٍ كاملٍ لا تريدُه. ويبقى مفتوحاً لمن لا كوبونَ لها بعد.
+  const [formOpen, setFormOpen] = useState(false);
   const [q, setQ] = useSessionState('coupons:q', ''); // بحث بالكود
   const [stateFilter, setStateFilter] = useSessionState('coupons:state', 'all'); // all | on | off
 
@@ -28,7 +33,7 @@ export default function CouponsManager() {
   useEffect(() => { load(); }, []);
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
-  const reset = () => { setForm(EMPTY); setEditId(null); setError(''); };
+  const reset = () => { setForm(EMPTY); setEditId(null); setError(''); setFormOpen(false); };
   const flash = (m) => { setMsg(m); setTimeout(() => setMsg(''), 1800); };
 
   const edit = (c) => {
@@ -42,7 +47,9 @@ export default function CouponsManager() {
       expiresAt: c.expiresAt ? new Date(c.expiresAt).toISOString().slice(0, 10) : '',
       active: c.active,
     });
-    document.getElementById('coupon-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setFormOpen(true);
+    // الانتقالُ بعدَ رسمِ النموذجِ لا قبلَه: وهو مطويٌّ حتّى هذه اللحظة
+    setTimeout(() => document.getElementById('coupon-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
   };
 
   const submit = async (e) => {
@@ -87,8 +94,16 @@ export default function CouponsManager() {
     try { await api.delete(`/coupons/${c.id}`); } catch (e) { setError(getErrorMessage(e)); load(); }
   };
 
+  // كما بصفحةِ الطلبات: ‏navigator.clipboard وحدَه يرفضُ داخلَ متصفّحِ إنستغرام،
+  // وكان الخطأُ يُبلَعُ بصمت — فتظنُّ التاجرةُ أنّ الكودَ بحافظتِها وتلصقُ غيرَه.
   const copyCode = async (c) => {
-    try { await navigator.clipboard.writeText(c.code); setCopied(c.id); setTimeout(() => setCopied(''), 1600); } catch { /* تجاهُل */ }
+    if (await copyText(c.code)) {
+      setCopied(c.id);
+      setTimeout(() => setCopied(''), 1600);
+    } else {
+      setError(t('common.copyFailed'));
+      setTimeout(() => setError(''), 3000);
+    }
   };
 
   // نسخ كوبون: نفتح النموذج مُعبّأً بنفس الشروط وكود جديد — لعمل كوبون مشابه بسرعة
@@ -103,7 +118,9 @@ export default function CouponsManager() {
       expiresAt: '',
       active: true,
     });
-    document.getElementById('coupon-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setFormOpen(true);
+    // الانتقالُ بعدَ رسمِ النموذجِ لا قبلَه: وهو مطويٌّ حتّى هذه اللحظة
+    setTimeout(() => document.getElementById('coupon-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
   };
 
   // نصّ جاهز لمشاركة الكوبون مع الزبائن (واتساب/إنستغرام) بشروطه كاملة
@@ -121,7 +138,8 @@ export default function CouponsManager() {
     ].filter(Boolean).join('\n');
     try {
       if (navigator.share) await navigator.share({ text });
-      else { await navigator.clipboard.writeText(text); flash(t('common.copied')); }
+      else if (await copyText(text)) flash(t('common.copied'));
+      else { setError(t('common.copyFailed')); setTimeout(() => setError(''), 3000); }
     } catch { /* أُلغيت المشاركة */ }
   };
 
@@ -129,6 +147,8 @@ export default function CouponsManager() {
 
   const CARD = 'dash-section glass space-y-4 p-5 sm:p-6';
   const list = coupons || [];
+  // «تعديل» يفتحُ النموذجَ من القائمةِ تحتَه، وأوّلُ كوبونٍ يفتحُه من تلقائِه
+  const showForm = formOpen || Boolean(editId) || list.length === 0;
   // حالة الكوبون الفعلية: موقوف يدوياً · منتهي التاريخ · نفدت استخداماته · فعّال
   const stateOf = (c) => {
     if (!c.active) return { key: 'off', label: t('dashboard.coupons.statusOff'), cls: 'bg-stone-500/20 text-stone-300' };
@@ -160,8 +180,19 @@ export default function CouponsManager() {
       )}
       {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">{error}</div>}
 
-      {/* نموذج إضافة/تعديل كوبون */}
-      <form id="coupon-form" onSubmit={submit} className={`${CARD} scroll-mt-[calc(env(safe-area-inset-top,0px)+5rem)]`}>
+      {/* زرُّ فتحِ النموذجِ حين يكونُ مطويّاً — يبقى الفعلُ ظاهراً بضغطةٍ واحدة */}
+      {!showForm && (
+        <button
+          type="button"
+          onClick={() => setFormOpen(true)}
+          className="btn-primary w-full !py-2.5 text-sm"
+        >
+          ＋ {t('dashboard.coupons.newTitle')}
+        </button>
+      )}
+
+      {/* نموذج إضافة/تعديل كوبون — مطويٌّ حتّى يُطلَب متى كان لها كوبوناتٌ أصلاً */}
+      <form id="coupon-form" onSubmit={submit} hidden={!showForm} className={`${CARD} scroll-mt-[calc(env(safe-area-inset-top,0px)+5rem)]`}>
         <SectionHead
           icon={editId ? <EditIcon className="h-5 w-5" /> : <PlusIcon className="h-5 w-5" />}
           title={editId ? t('dashboard.coupons.editTitle') : t('dashboard.coupons.newTitle')}
