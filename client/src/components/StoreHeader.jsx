@@ -112,14 +112,12 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
   return (
     <header
       /* bz-bleed: يخرج من حشوة main ليمسّ الحافّتين — كان -mx-4 مربوطاً بحشوةٍ ثابتة صارت متغيّرة */
-      className={`bz-stickyhead bz-bleed sticky top-0 z-50 -mt-5 mb-5 ${noAnim ? '' : 'transition-[transform,padding] duration-300 ease-out motion-reduce:transition-none'}`}
+      className={`bz-stickyhead bz-bleed sticky top-0 z-50 -mt-5 mb-5 ${noAnim ? '' : 'transition-transform duration-300 ease-out motion-reduce:transition-none'}`}
       style={{
         transform: hidden ? 'translateY(-100%)' : 'translateZ(0)',
-        // فرجةٌ صغيرةٌ فوقَ الكبسولةِ كي تطفوَ لا تلتصقَ بحافّةِ الشاشة
-        paddingTop: collapsed ? '0.5rem' : undefined,
       }}
     >
-      <div className={`app-navbar bz-page py-2.5 ${collapsed ? 'bz-navpill' : 'shadow-sm'} ${noAnim ? 'bz-noanim' : ''}`}>
+      <div className={`app-navbar bz-page py-2.5 shadow-sm ${noAnim ? 'bz-noanim' : ''}`}>
         {/* الصف الأول: اسم/شعار المتجر + زر القائمة (☰) — يتقلّص بانتقال CSS سلس */}
         <div
           className={`grid overflow-hidden motion-reduce:transition-none ${noAnim ? 'transition-none' : 'transition-[grid-template-rows,opacity,margin] duration-300 ease-out'}`}

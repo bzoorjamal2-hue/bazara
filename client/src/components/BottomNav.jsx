@@ -4,6 +4,7 @@ import { getStoreScope, subscribeStoreScope } from '../utils/storeScope.js';
 import { useTranslation } from 'react-i18next';
 import { trackPath } from '../utils/links.js';
 import { useCart } from '../context/CartContext.jsx';
+import useHideOnScroll from '../hooks/useHideOnScroll.js';
 import { useWishlist } from '../context/WishlistContext.jsx';
 
 // فأرةٌ على شاشةٍ عريضة؟ نفسُ شرط الـCSS حرفاً بحرف — لو افترقا لظهر الشريطُ
@@ -240,6 +241,12 @@ export default function BottomNav() {
 
   const hidden = locked || kbOpen || buyBar;
 
+  // يغيبُ مع النزولِ ويعودُ بأصغرِ رفعةٍ — الهوكُ نفسُه الذي يخدمُ الهيدر،
+  // فيغيبانِ معاً ويعودانِ معاً بعتبةٍ واحدةٍ لا باثنتين تختلفان.
+  // وعلى الفأرةِ لا يغيب: الشريطُ هناك علويٌّ لا سفليّ، والهيدرُ يلتصقُ
+  // تحته بمقدارِ ارتفاعِه — فإخفاؤه يسحبُ الأرضَ من تحتِ الهيدر.
+  const away = useHideOnScroll({ paused: dt || hidden, resetKey: pathname });
+
   // ارتفاعُ الشريط يُقاس ولا يُخمَّن.
   //
   // على الشاشة العريضة يصعد هذا الشريطُ للأعلى، ويلتصق الهيدرُ تحته بمقدار
@@ -269,8 +276,23 @@ export default function BottomNav() {
   return (
     <nav
       ref={barRef}
-      className="bz-tabbar fixed inset-x-0 bottom-0 z-[78] border-t border-wine/10 bg-white/95 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 shadow-[0_-6px_20px_rgba(75,74,73,0.08)]"
-      style={vvInset ? { transform: `translateY(-${vvInset}px)` } : undefined}
+      /* كبسولةٌ طافيةٌ على اللمسِ وحدَه: هناك هو شريطُ إبهامٍ سفليٌّ
+         كإنستغرام. وعلى الفأرةِ يصعدُ شريطاً علويّاً ممتدّاً يلتصقُ به الهيدر،
+         فتدويرُه وإطافتُه تكسرُ ذلك التراصّ. والتمييزُ بـdt لا بـmedia لأنَّ
+         كتلةَ الكمبيوترِ بالـCSS تُعيدُ تعريفَ الموضعِ والحدِّ فتتصارعان. */
+      className={`bz-tabbar fixed z-[78] bg-white/95 transition-transform duration-300 ease-out motion-reduce:transition-none ${
+        dt
+          ? 'inset-x-0 bottom-0 border-t border-wine/10 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 shadow-[0_-6px_20px_rgba(75,74,73,0.08)]'
+          : 'inset-x-3 bottom-[calc(env(safe-area-inset-bottom,0px)+10px)] mx-auto max-w-md rounded-[26px] border border-wine/10 px-1 py-2 shadow-[0_16px_36px_-14px_rgba(15,15,14,0.48),0_3px_10px_-6px_rgba(15,15,14,0.20)]'
+      }`}
+      style={
+        vvInset || away
+          // التحويلانِ يتركّبانِ ولا يتنازعان: الأوّلُ يلاحقُ المنفذَ المرئيَّ
+          // على iOS، والثاني ينزلُ به خارجَ الشاشة. والمقدارُ أكبرُ من مئةٍ
+          // بالمئة ليبتلعَ الفرجةَ السفليّةَ والظلَّ معها.
+          ? { transform: `translateY(${-vvInset}px)${away ? ' translateY(calc(100% + 28px))' : ''}` }
+          : undefined
+      }
     >
       <div className="mx-auto flex max-w-md items-stretch justify-around px-2">
         {items.map(({ key, label, Icon, active, badge, onClick }) => (

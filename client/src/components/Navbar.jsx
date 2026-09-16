@@ -183,9 +183,6 @@ export default function Navbar() {
 
   // صف البحث الشامل يظهر بصفحات التصفّح فقط (قائمة بيضاء) — كان يظهر بأماكن خاطئة
   // كالريلز وصفحة المنتج ويغطّي المحتوى أو يزاحمه
-  // الشريطُ المدمج يلبس شكلَ كبسولةٍ طافية — الحالةُ نفسُها، شكلانِ لها
-  const pill = scrolled;
-
   const showSearchRow =
     pathname === '/' || pathname === '/shop' || pathname === '/categories' ||
     pathname.startsWith('/category/') || pathname === '/offers';
@@ -264,23 +261,18 @@ export default function Navbar() {
     // وهو relative — وtop على عنصرٍ نسبيّ يُنزله بصرياً بلا أن يحجز مكانَه:
     // فيبقى فوقه شريطٌ عاجيّ فارغ، ويغطّي هو بمقدارِه المحتوى الذي تحته.
     <header
-      className={`bz-stickyhead sticky top-0 z-50 ${noAnim ? '' : 'transition-[transform,padding] duration-300 ease-out motion-reduce:transition-none'}`}
+      className={`bz-stickyhead sticky top-0 z-50 ${noAnim ? '' : 'transition-transform duration-300 ease-out motion-reduce:transition-none'}`}
       /* transform لا يُكتب إلّا حين يختفي: أيّ تحويلٍ — ولو translate-y-0 — يجعل
          الهيدرَ مرجعاً للعناصر الثابتة داخله، فتُصبح خلفيّةُ قائمة الحساب
          (fixed inset-0) بحجم الهيدر لا بحجم الشاشة. */
-      style={{
-        transform: hidden ? 'translateY(-100%)' : undefined,
-        // بالكبسولةِ تنتقلُ حشوةُ منطقةِ الأمانِ إلى الغلافِ الشفّافِ فتطفو تحتها؛
-        // وبالشريطِ تبقى داخلَه كي يغطّيَ شريطَ الحالةِ بخلفيّتِه لا بفراغٍ شفّاف.
-        paddingTop: pill ? 'calc(env(safe-area-inset-top, 0px) + 0.5rem)' : undefined,
-      }}
+      style={hidden ? { transform: 'translateY(-100%)' } : undefined}
     >
       <nav
-        className={`app-navbar bz-page relative flex justify-center py-2.5 ${pill ? 'bz-navpill' : ''} ${noAnim ? 'bz-noanim transition-none' : 'transition-shadow duration-300'} ${scrolled && !pill ? 'shadow-md' : ''}`}
-        style={pill ? undefined : { paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.625rem)' }}
+        className={`app-navbar bz-page relative flex justify-center py-2.5 ${noAnim ? 'bz-noanim transition-none' : 'transition-shadow duration-300'} ${scrolled ? 'shadow-md' : ''}`}
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.625rem)' }}
       >
         <div className="w-full">
-        <div className={`relative flex w-full items-center justify-between transition-[height] duration-300 ease-out ${pill ? 'h-11' : 'h-12'}`}>
+        <div className={`relative flex w-full items-center justify-between transition-[height] duration-300 ease-out ${scrolled ? 'h-11' : 'h-12'}`}>
           {/* القائمة + الوضع الليلي — جهة البداية (اليمين في العربية، اليسار في الإنجليزية) */}
           <div className="flex items-center gap-1 sm:gap-1.5">
             <button
@@ -305,8 +297,8 @@ export default function Navbar() {
             onClick={() => { if (pathname === (user ? '/dashboard' : '/')) window.scrollTo({ top: 0, behavior: 'smooth' }); }}
             className="absolute start-1/2 flex -translate-x-1/2 flex-col items-center leading-none rtl:translate-x-1/2"
           >
-            <span className={`font-display font-extrabold tracking-wide text-wine transition-[font-size] duration-300 ease-out ${pill ? 'text-[20px]' : 'text-2xl sm:text-[28px]'}`}>Bazara</span>
-            <span className={`flex items-center gap-1.5 overflow-hidden text-[10px] font-bold tracking-[0.35em] text-wine/45 ${noAnim ? '' : 'transition-all duration-300 ease-out'} ${pill ? 'mt-0 max-h-0 opacity-0' : 'mt-1 max-h-4 opacity-100'}`}>
+            <span className={`font-display font-extrabold tracking-wide text-wine transition-[font-size] duration-300 ease-out ${scrolled ? 'text-[20px]' : 'text-2xl sm:text-[28px]'}`}>Bazara</span>
+            <span className={`flex items-center gap-1.5 overflow-hidden text-[10px] font-bold tracking-[0.35em] text-wine/45 ${noAnim ? '' : 'transition-all duration-300 ease-out'} ${scrolled ? 'mt-0 max-h-0 opacity-0' : 'mt-1 max-h-4 opacity-100'}`}>
               <span className="h-px w-4 bg-wine/25" /> بازارا <span className="h-px w-4 bg-wine/25" />
             </span>
           </Link>
