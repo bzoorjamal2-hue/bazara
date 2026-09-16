@@ -468,8 +468,14 @@ function HomeHero({ banners = [] }) {
   // تجعلُها تمسحُ الشرائحَ كلَّها بالاتّجاهِ المعاكسِ فينكسرُ إحساسُ الدوران —
   // يمشي الشريطُ يساراً أربعَ مرّاتٍ ثمّ يرتدُّ يميناً مسحةً طويلة.
   const [snap, setSnap] = useState(false);
+  // رؤيةُ الهيرو تُعلَنُ قبلَ المؤقّتِ الذي يقرؤها بقائمةِ اعتماديّاتِه —
+  // القائمةُ تُقيَّمُ وقتَ الرِندر، فالإعلانُ بعدَها خطأُ منطقةِ الموتِ الزمنيّة.
+  const visRef = useRef(true);
+  const [heroVisible, setHeroVisible] = useState(true);
+  // ولا يتقدّمُ وهو خارجَ الشاشة: كان يمشي كلَّ سبعِ ثوانٍ والزبونةُ أسفلَ الصفحة،
+  // وكلُّ تقدّمٍ يُنزّلُ فيديو شريحةٍ لا تُرى.
   useEffect(() => {
-    if (len <= 1 || paused) return undefined;
+    if (len <= 1 || paused || !heroVisible) return undefined;
     const id = setInterval(() => {
       setI((prev) => {
         const next = (prev + 1) % len;
@@ -478,7 +484,7 @@ function HomeHero({ banners = [] }) {
       });
     }, 7000);
     return () => clearInterval(id);
-  }, [len, paused, i]);
+  }, [len, paused, heroVisible, i]);
   // تعودُ الحركةُ بعدَ رسمِ الإطارِ الجديدِ مباشرةً
   useEffect(() => {
     if (!snap) return undefined;
@@ -491,8 +497,6 @@ function HomeHero({ banners = [] }) {
   // عندما يخرج السلايدر عن نافذة العرض أو تُخفى الصفحة.
   const vidRefs = useRef({});
   const iRef = useRef(0);
-  const visRef = useRef(true);
-  const [heroVisible, setHeroVisible] = useState(true);
   iRef.current = i;
   useEffect(() => {
     const el = containerRef.current;
@@ -666,6 +670,8 @@ function HomeHero({ banners = [] }) {
                     {isVideo && (
                       <>
                         <img src={vPoster} alt="" aria-hidden loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))', zIndex: -2 }} className="absolute inset-0 h-full w-full object-cover" />
+                        {/* للشريحةِ الظاهرةِ وحدَها — انظر شرحَ صفحةِ المتجر */}
+                        {idx === i && (
                         <video
                           ref={(el) => { vidRefs.current[idx] = el; }}
                           // جودةٌ اقتصاديّةٌ بالمقاساتِ الكبيرة: الفرقُ لا يُلحَظُ على
@@ -680,6 +686,7 @@ function HomeHero({ banners = [] }) {
                           style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))', opacity: 0, transition: 'opacity .35s ease', zIndex: -1 }}
                           className="absolute inset-0 h-full w-full object-cover"
                         />
+                        )}
                       </>
                     )}
                     {/* كتلةُ النصّ: موضعُها من لوحةِ المدير — وسطاً أو إلى جهةٍ

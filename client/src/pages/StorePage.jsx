@@ -1015,8 +1015,16 @@ function HeroSlider({ store }) {
     mq.addEventListener('change', read);
     return () => mq.removeEventListener('change', read);
   }, []);
+  // رؤيةُ الهيرو تُعلَنُ هنا لا تحت: قائمةُ اعتماديّاتِ المؤقّتِ أدناه تقرؤها
+  // وقتَ الرِندر، فلو بقيَ الإعلانُ بعدَها لرمى خطأَ منطقةِ الموتِ الزمنيّة.
+  const visRef = useRef(true);
+  const [heroVisible, setHeroVisible] = useState(true);
+
+  // ولا يتقدّمُ وهو خارجَ الشاشة: كان يمشي كلَّ سبعِ ثوانٍ مهما كانت الزبونةُ
+  // أسفلَ الصفحةِ تتصفّحُ المنتجات — وكلُّ تقدّمٍ يُنزّلُ فيديو شريحةٍ لا تُرى.
+  // قِستُها: ثلاثةُ ميغاباياتٍ ونصف بخمسَ عشرةَ ثانيةً من فتحةِ صفحةٍ واحدة.
   useEffect(() => {
-    if (len <= 1 || paused || still) return undefined;
+    if (len <= 1 || paused || still || !heroVisible) return undefined;
     const id = setInterval(() => {
       setI((prev) => {
         const next = (prev + 1) % len;
@@ -1025,7 +1033,7 @@ function HeroSlider({ store }) {
       });
     }, 7000);
     return () => clearInterval(id);
-  }, [len, paused, still, i]);
+  }, [len, paused, still, heroVisible, i]);
   // تعودُ الحركةُ بعدَ رسمِ الإطارِ الجديدِ مباشرةً
   useEffect(() => {
     if (!snap) return undefined;
@@ -1037,8 +1045,6 @@ function HeroSlider({ store }) {
   // ويتوقف الكل عندما يخرج السلايدر عن الشاشة — كانت كل الفيديوهات تعمل معاً دائماً.
   const vidRefs = useRef({});
   const iRef = useRef(0);
-  const visRef = useRef(true);
-  const [heroVisible, setHeroVisible] = useState(true);
   iRef.current = i;
   useEffect(() => {
     const el = containerRef.current;
@@ -1215,11 +1221,19 @@ function HeroSlider({ store }) {
                     <>
                       {/* صورة أول لقطة دائمة خلف الفيديو → لا سواد أبداً */}
                       <img src={posterImg} alt="" aria-hidden="true" loading={idx === 0 ? 'eager' : 'lazy'} style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))' }} className="bz-kenburns absolute inset-0 z-0 h-full w-full object-cover" />
+                      {/* الفيديو للشريحةِ الظاهرةِ وحدَها. كان لكلِّ شريحةٍ عنصرُها، فتنتهي الصفحةُ
+                          بأربعةِ فيديوهاتٍ بالذاكرة. قِستُ فتحةَ صفحةِ متجرٍ واحدة: ٢٫٦ ميغابايت
+                          فيديو نزلت، واثنانِ منها مخزَّنانِ بالكامل (٣١ ثانيةً و١٤) — لأنّ السلايدرَ
+                          يمرُّ عليها فتُشغَّلُ فتُنزَّل. وأربعةُ مفكِّكاتٍ تعملُ معاً تزاحمُ الرسمَ
+                          على الجوّال: هذا هو التعليق، وهو أيضاً استنزافُ حصّةِ كلاوديناري المحدودة.
+                          وبالتركيبِ عند الظهورِ وحدَه يُفكَّكُ السابقُ فيُحرِّرُ المتصفّحُ ذاكرتَه
+                          ومفكِّكَه. واللقطةُ الثابتةُ تبقى لكلِّ شريحةٍ فلا يظهرُ فراغٌ لحظةَ الانتقال. */}
+                      {idx === i && (
                       <video
                         ref={(el) => { vidRefs.current[idx] = el; }}
                         src={cldVideoCrop(s.bgValue, vs.w, vs.ar, vs.q)}
                         poster={posterImg}
-                        autoPlay={idx === 0}
+                        autoPlay
                         muted
                         loop
                         playsInline
@@ -1230,6 +1244,7 @@ function HeroSlider({ store }) {
                         style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))', opacity: 0, transition: 'opacity .35s ease' }}
                         className="bz-kenburns absolute inset-0 z-[1] h-full w-full object-cover"
                       />
+                      )}
                     </>
                   )}
                   {/* الشريحة الثابتة (اسم المتجر): خلفية حيّة فاخرة — فقاعات ذهبية/عاجية
