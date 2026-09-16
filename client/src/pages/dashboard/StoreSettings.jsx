@@ -484,7 +484,7 @@ export default function StoreSettings() {
           تغطّي المحتوى المتمرّر خلفه. يبقى الشريط في المتناول أثناء النزول. */}
       {/* --bz-tabbar-h: على الكمبيوتر ينزل الهيدرُ تحت الشريط العلويّ، فينزل
           هذا الشريطُ معه — وإلا لصق أعلى مما ينبغي واختفى خلف الهيدر. */}
-      <div className="glass sticky top-[calc(env(safe-area-inset-top,0px)+4.25rem+var(--bz-tabbar-h,0px))] z-30 flex items-center gap-2 overflow-hidden p-2">
+      <div className="glass sticky top-[calc(var(--bz-headline-h)+var(--bz-tabbar-h,0px))] z-30 flex items-center gap-2 overflow-hidden p-2 transition-[top] duration-300 ease-out motion-reduce:transition-none">
         {/* خيط تقدّم رفيع بأسفل الشريط — نسبة الاكتمال حاضرة دوماً أثناء النزول */}
         <span
           // start-0 منطقي: ينمو من بداية السطر بالعربية والإنجليزية على السواء

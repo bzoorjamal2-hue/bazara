@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { productPath } from '../utils/links.js';
 import { trackPath, searchPath } from '../utils/links.js';
@@ -11,6 +11,7 @@ import LanguageSwitcher from './LanguageSwitcher.jsx';
 import CatThumb from './CatThumb.jsx';
 import CloseButton from './CloseButton.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
+import useHideOnScroll from '../hooks/useHideOnScroll.js';
 import { MenuIcon, SearchIcon, CartIcon, HeartIcon, PackageIcon, GiftIcon } from './icons.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import StoryBar from './StoryBar.jsx';
@@ -44,6 +45,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
   const { count: wishCount, setOpen: setWishOpen } = useWishlist();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { pathname, search } = useLocation();
   const [drawer, setDrawer] = useState(false);
   const [focus, setFocus] = useState(false);
 
@@ -61,6 +63,10 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
     return () => clearTimeout(id);
   }, []);
   useScrollLock(drawer);
+
+  // ينزلق لفوق بالنزول ويعود بأصغرِ رفعة. ونوقفه حين يكتب في البحث: قائمةُ
+  // الاقتراحات معلّقةٌ بالهيدر، فانزلاقُه يسحبها من تحت الإصبع.
+  const hidden = useHideOnScroll({ paused: drawer || focus, resetKey: pathname + search });
 
   // طيّ الهيدر عند التمرير عبر تبديل حالة واحدة + انتقال CSS سلس (بدون تحريك التخطيط
   // كل فريم → بلا تعليق على كل الأجهزة). هيستيريسيس يمنع الرفرفة عند الحدّ.
@@ -94,8 +100,8 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
   return (
     <header
       /* bz-bleed: يخرج من حشوة main ليمسّ الحافّتين — كان -mx-4 مربوطاً بحشوةٍ ثابتة صارت متغيّرة */
-      className="app-navbar bz-stickyhead bz-bleed sticky top-0 z-50 -mt-5 mb-5 shadow-sm"
-      style={{ transform: 'translateZ(0)' }}
+      className={`app-navbar bz-stickyhead bz-bleed sticky top-0 z-50 -mt-5 mb-5 shadow-sm ${noAnim ? '' : 'transition-transform duration-300 ease-out motion-reduce:transition-none'}`}
+      style={{ transform: hidden ? 'translateY(-100%)' : 'translateZ(0)' }}
     >
       <div className="bz-page py-2.5">
         {/* الصف الأول: اسم/شعار المتجر + زر القائمة (☰) — يتقلّص بانتقال CSS سلس */}

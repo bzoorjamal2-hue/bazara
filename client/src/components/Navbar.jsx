@@ -8,6 +8,7 @@ import api from '../api/client.js';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import LanguageSwitcher from './LanguageSwitcher.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
+import useHideOnScroll from '../hooks/useHideOnScroll.js';
 import { CartIcon, HeartIcon, MenuIcon, UserIcon, SearchIcon, MailIcon, InstagramIcon, GridIcon, StoreIcon, BagIcon, ReceiptIcon, UsersIcon, TicketIcon, ChartIcon, BellIcon, MegaphoneIcon, GearIcon, CashIcon , HomeIcon } from './icons.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import NavBell from './NavBell.jsx';
@@ -142,6 +143,16 @@ export default function Navbar() {
   }, [menuOpen, user, store?.slug, subscription?.isAdmin]);
   useScrollLock(menuOpen); // تجميد الخلفية عند فتح قائمة الحساب
 
+  // الشريطُ ينزلق لفوق بالنزول ويعود بأصغرِ رفعة — الهوكُ نفسُه يخدم هيدرَ المتجر
+  const hidden = useHideOnScroll({ paused: menuOpen || acctOpen, resetKey: pathname + search });
+
+  // الأشرطةُ الثانويّةُ اللاصقة (تبويباتُ إعدادات المتجر) تلتصق تحت الهيدر بمقدار
+  // ارتفاعه؛ فإن انزلق ولم تتبعه بقي فوقها شريطٌ فارغ يمرّ المحتوى خلفه.
+  useEffect(() => {
+    document.documentElement.classList.toggle('bz-head-off', hidden);
+  }, [hidden]);
+  useEffect(() => () => document.documentElement.classList.remove('bz-head-off'), []);
+
   // عند التمرير: الشريط يلتصق بالأعلى بعرض كامل (بلا فراغ علوي) — وفوق يبقى طافياً.
   // صف البحث تحت الشعار ينكمش عند النزول (زي هيدر متاجر المشتركين تماماً).
   useEffect(() => {
@@ -249,7 +260,13 @@ export default function Navbar() {
     // الشريط العلويّ» على الكمبيوتر. كانت الإزاحة على .app-navbar الداخليّ
     // وهو relative — وtop على عنصرٍ نسبيّ يُنزله بصرياً بلا أن يحجز مكانَه:
     // فيبقى فوقه شريطٌ عاجيّ فارغ، ويغطّي هو بمقدارِه المحتوى الذي تحته.
-    <header className="bz-stickyhead sticky top-0 z-50">
+    <header
+      className={`bz-stickyhead sticky top-0 z-50 ${noAnim ? '' : 'transition-transform duration-300 ease-out motion-reduce:transition-none'}`}
+      /* transform لا يُكتب إلّا حين يختفي: أيّ تحويلٍ — ولو translate-y-0 — يجعل
+         الهيدرَ مرجعاً للعناصر الثابتة داخله، فتُصبح خلفيّةُ قائمة الحساب
+         (fixed inset-0) بحجم الهيدر لا بحجم الشاشة. */
+      style={hidden ? { transform: 'translateY(-100%)' } : undefined}
+    >
       <nav
         className={`app-navbar bz-page relative flex justify-center py-2.5 ${noAnim ? 'transition-none' : 'transition-shadow duration-300'} ${scrolled ? 'shadow-md' : ''}`}
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.625rem)' }}
