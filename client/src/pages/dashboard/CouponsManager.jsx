@@ -360,10 +360,13 @@ export default function CouponsManager() {
                       >
                         {st.label}
                       </button>
-                      <button onClick={() => shareCoupon(c)} title={t('dashboard.coupons.shareCoupon')} aria-label={t('dashboard.coupons.shareCoupon')} className="grid h-8 w-8 place-items-center rounded-lg text-stone-400 transition hover:bg-gold-400/10 hover:text-gold-200"><ShareIcon className="h-4 w-4" /></button>
-                      <button onClick={() => duplicate(c)} title={t('dashboard.store.duplicate')} aria-label={t('dashboard.store.duplicate')} className="grid h-8 w-8 place-items-center rounded-lg text-stone-400 transition hover:bg-gold-400/10 hover:text-gold-200"><CopyIcon className="h-4 w-4" /></button>
-                      <button onClick={() => edit(c)} title={t('common.edit')} aria-label={t('common.edit')} className="grid h-8 w-8 place-items-center rounded-lg text-stone-400 transition hover:bg-gold-400/10 hover:text-gold-200"><EditIcon className="h-4 w-4" /></button>
-                      <button onClick={() => setConfirmDel(c)} title={t('common.delete')} aria-label={t('common.delete')} className="grid h-8 w-8 place-items-center rounded-lg text-stone-400 transition hover:bg-red-500/10 hover:text-red-300"><TrashIcon className="h-4 w-4" /></button>
+                      {/* لكلِّ أداةٍ اسمُها الصغيرُ تحتَ أيقونتِها كأدواتِ الطلب:
+                          التلميحُ لا يظهرُ إلّا بتمريرِ الفأرة، ولا فأرةَ على
+                          الجوّال — و«حذف» بينَ أربعِ أيقوناتٍ متشابهةٍ خطرٌ يُضغَط. */}
+                      <button onClick={() => shareCoupon(c)} title={t('dashboard.coupons.shareCoupon')} aria-label={t('dashboard.coupons.shareCoupon')} className="bz-ordertool"><ShareIcon className="h-[17px] w-[17px]" /><span>{t('common.shareNow')}</span></button>
+                      <button onClick={() => duplicate(c)} title={t('dashboard.store.duplicate')} aria-label={t('dashboard.store.duplicate')} className="bz-ordertool"><CopyIcon className="h-[17px] w-[17px]" /><span>{t('dashboard.store.duplicate')}</span></button>
+                      <button onClick={() => edit(c)} title={t('common.edit')} aria-label={t('common.edit')} className="bz-ordertool"><EditIcon className="h-[17px] w-[17px]" /><span>{t('common.edit')}</span></button>
+                      <button onClick={() => setConfirmDel(c)} title={t('common.delete')} aria-label={t('common.delete')} className="bz-ordertool is-danger"><TrashIcon className="h-[17px] w-[17px]" /><span>{t('common.delete')}</span></button>
                     </div>
                   </div>
 

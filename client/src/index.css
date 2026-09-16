@@ -5441,3 +5441,10 @@ html.dark .theme-pub .bz-ordertool { color: #B7B2AA; border-color: rgba(239, 238
   .bz-ordertool:hover { color: #1F1E1D; border-color: rgba(31, 30, 29, 0.5); background: rgba(31, 30, 29, 0.05); }
   html.dark .theme-pub .bz-ordertool:hover { color: #F6F5F3; border-color: rgba(239, 238, 236, 0.5); background: rgba(239, 238, 236, 0.07); }
 }
+
+/* أداةٌ خطِرة (حذف): تبقى هادئةً حتّى تُلمَس، فلا تصيرُ أبرزَ ما بالصفّ */
+.bz-ordertool.is-danger { border-color: rgba(185, 28, 28, 0.25); }
+@media (hover: hover) {
+  .bz-ordertool.is-danger:hover { color: #B42318; border-color: rgba(185, 28, 28, 0.55); background: rgba(185, 28, 28, 0.06); }
+  html.dark .theme-pub .bz-ordertool.is-danger:hover { color: #FCA5A5; border-color: rgba(252, 165, 165, 0.5); background: rgba(185, 28, 28, 0.14); }
+}
