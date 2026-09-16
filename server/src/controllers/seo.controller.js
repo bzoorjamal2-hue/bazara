@@ -1,6 +1,7 @@
 import { query } from '../config/db.js';
 import { activeStoreSql } from '../utils/subscription.js';
 import { videoPoster, productPath } from '../utils/media.js';
+import { plainName, storeDescription } from '../utils/plainName.js';
 
 const site = () => (process.env.PUBLIC_SITE_URL || '').replace(/\/$/, '');
 
@@ -66,12 +67,27 @@ export async function sitemap(_req, res, next) {
 function ogImage(url) {
   if (!url) return '';
   if (url.includes('/video/')) return url; // ملصق فيديو جاهز
-  if (url.includes('/image/upload/')) return url.replace('/image/upload/', '/image/upload/f_jpg,q_auto,w_1200,c_limit/');
+  // التحويلُ يُبنى من المعرّفِ النظيفِ: الروابطُ تُخزَّنُ محوّلةً منذ الرفعِ
+  // ‏(q_auto:best,dpr_auto)، فحقنُ تحويلٍ فوقَها يُنتِجُ سلسلةً تغلبُ فيها الجودةُ
+  // المخزَّنةُ على المطلوبة — صورةُ معاينةٍ بأضعافِ حجمِها تتأخّرُ أو يتخطّاها
+  // فيسبوك. وهي علّةُ الواجهةِ نفسُها بموضعٍ آخر.
+  const m = url.match(/^(https?:\/\/[^/]+\/[^/]+\/image\/upload\/)(.+)$/);
+  if (m) {
+    const segs = m[2].split('/');
+    let vi = segs.findIndex((x) => /^v\d+$/.test(x));
+    if (vi === -1) vi = segs.length - 1;
+    return `${m[1]}f_jpg,q_auto,w_1200,c_limit/${segs.slice(vi).join('/')}`;
+  }
   if (url.includes('/upload/')) return url.replace('/upload/', '/upload/f_jpg,q_auto,w_1200,c_limit/');
   return url;
 }
 
-function shareHtml({ title, desc, image, url, type = 'website', siteName = 'Bazara' }) {
+
+// البياناتُ المنظَّمةُ داخلَ وسمِ ‎script: وصفٌ يحوي ‎</script> يُغلِقُ الوسمَ
+// ويكسرُ الصفحة. نهربُ من كلِّ ‎< إلى ‎< — وهو سليمٌ داخلَ JSON ويقرؤُه
+// المحلّلُ كما هو. والتاجرةُ تكتبُ وصفَ متجرِها بحرّيّة.
+const ldJson = (o) => JSON.stringify(o).split(String.fromCharCode(60)).join(String.fromCharCode(92) + "u003c");
+function shareHtml({ title, desc, image, url, type = 'website', siteName = 'Bazara', ld = null }) {
   const t = escapeXml(title), d = escapeXml(desc), img = escapeXml(image), u = escapeXml(url), sn = escapeXml(siteName);
   // تحويل فوري عبر meta refresh (يعمل بلا JS — متصفّح انستغرام/فيسبوك المدمج يوقف
   // بعض الـ JS فكانت تظهر صفحة شبه فارغة). الزواحف الاجتماعية تقرأ وسوم OG قبل التحويل.
@@ -91,6 +107,7 @@ ${img ? `<meta property="og:image" content="${img}">\n<meta property="og:image:w
 <meta name="twitter:description" content="${d}">
 ${img ? `<meta name="twitter:image" content="${img}">` : ''}
 <link rel="canonical" href="${u}">
+${ld ? `<script type="application/ld+json">${ldJson(ld)}</script>` : ''}
 </head><body style="font-family:sans-serif;background:#FAF9F7;color:#1F1E1D;text-align:center;padding:40px">
 <script>location.replace(${JSON.stringify(url)})</script>
 <p>جارٍ التحويل… <a href="${u}">${t}</a></p>
@@ -114,12 +131,12 @@ export async function shareProduct(req, res, next) {
     let img = p.image_url || (Array.isArray(p.images) && p.images[0]) || '';
     if (!img && p.video_url) img = videoPoster(p.video_url);
     res.set('Cache-Control', 'public, max-age=300').type('html').send(shareHtml({
-      title: `${p.name} — ${p.store_name}`,
+      title: `${p.name} — ${plainName(p.store_name)}`,
       desc: (p.description || '').replace(/\s+/g, ' ').trim().slice(0, 160) || `₪${Number(p.price)} — ${p.store_name}`,
       image: ogImage(img),
       url,
       type: 'product',
-      siteName: p.store_name,
+      siteName: plainName(p.store_name),
     }));
   } catch { res.redirect(302, url); } // أي خطأ (مثل معرّف غير صالح) → توجيه للصفحة بدل خطأ 500
 }
@@ -132,17 +149,36 @@ export async function shareStore(req, res, next) {
   try {
     const active = activeStoreSql('u');
     const r = await query(
-      `SELECT s.name, s.description, s.logo_url FROM stores s JOIN users u ON u.id = s.user_id WHERE s.slug = $1 AND ${active}`,
+      `SELECT s.name, s.description, s.logo_url, s.whatsapp, s.phone FROM stores s JOIN users u ON u.id = s.user_id WHERE s.slug = $1 AND ${active}`,
       [slug]
     );
     const s = r.rows[0];
     if (!s) return res.redirect(302, url);
+    // الاسمُ بحروفٍ يقرؤُها محرّكُ البحث: «𝓗𝓪𝓫𝓸𝓸𝓼𝓱» حروفٌ أخرى بنظرِ يونيكود
+    // ‏(U+1D4D7) لا علاقةَ لها بـH اللاتينيّة، فمن يبحثُ عن «Haboosh» لا يطابقُ
+    // شيئاً. والشكلُ المعروضُ داخلَ المتجرِ لا يتغيّر — هذا للعنوانِ وحدَه.
+    const name = plainName(s.name);
+    const logo = ogImage(s.logo_url || '');
     res.set('Cache-Control', 'public, max-age=300').type('html').send(shareHtml({
-      title: s.name,
-      desc: (s.description || '').replace(/\s+/g, ' ').trim().slice(0, 160) || `${s.name} — ${'أزياء فاخرة'}`,
-      image: ogImage(s.logo_url || ''),
+      title: name,
+      // وصفٌ لكلِّ متجرٍ وصفُه: كان «الاسم — أزياء فاخرة» على كلِّ متاجرِ
+      // المنصّة، ومحرّكُ البحثِ يخفضُ ترتيبَ الأوصافِ المكرّرة.
+      desc: storeDescription(s.name, s.description),
+      image: logo,
       url,
-      siteName: s.name,
+      siteName: name,
+      // بياناتٌ منظَّمةٌ يفهمُها جوجل: منها يبني بطاقةَ النتيجةِ بدل اقتطاعِ سطر
+      ld: {
+        '@context': 'https://schema.org',
+        '@type': 'Store',
+        name,
+        url,
+        ...(logo ? { image: logo, logo } : {}),
+        ...(s.description ? { description: String(s.description).replace(/\s+/g, ' ').trim().slice(0, 300) } : {}),
+        ...(s.whatsapp || s.phone ? { telephone: String(s.whatsapp || s.phone) } : {}),
+        address: { '@type': 'PostalAddress', addressCountry: 'PS' },
+        parentOrganization: { '@type': 'Organization', name: 'Bazara', url: site() },
+      },
     }));
   } catch { res.redirect(302, url); }
 }
@@ -164,11 +200,11 @@ export async function shareStory(req, res, next) {
     let img = st.media_url || '';
     if (st.media_type === 'video') img = videoPoster(img);
     res.set('Cache-Control', 'public, max-age=300').type('html').send(shareHtml({
-      title: `${st.store_name} — ستوري`,
+      title: `${plainName(st.store_name)} — ستوري`,
       desc: (st.caption || '').replace(/\s+/g, ' ').trim().slice(0, 160) || st.store_name,
       image: ogImage(img),
       url,
-      siteName: st.store_name,
+      siteName: plainName(st.store_name),
     }));
   } catch { res.redirect(302, site() || '/'); }
 }
