@@ -310,7 +310,11 @@ export default function BottomNav() {
             key={key}
             onClick={onClick}
             data-cart-target={key === 'cart' ? '' : undefined}
-            className={`${active ? 'is-on ' : ''}relative flex min-w-0 flex-1 flex-col items-center gap-1 py-1 text-[10px] font-medium leading-tight transition ${
+            /* الاسمُ يبقى للفأرةِ وللقارئِ الصوتيّ. وبلا نصٍّ ظاهرٍ يصيرُ الزرُّ
+               بلا اسمٍ مقروء، فنكتبُه سمةً — أيقونةٌ عاريةٌ بلا aria-label زرٌّ
+               أخرسُ عندَ من يسمعُ الصفحةَ ولا يراها. */
+            aria-label={label}
+            className={`${active ? 'is-on ' : ''}relative flex min-w-0 flex-1 flex-col items-center py-1 text-[10px] font-medium leading-tight transition ${dt ? 'gap-1' : ''} ${
               active ? 'text-wine' : 'text-stone-400'
             }`}
           >
@@ -328,7 +332,11 @@ export default function BottomNav() {
                 </span>
               )}
             </span>
-            <span className={`max-w-full truncate ${active ? 'font-bold' : ''}`}>{label}</span>
+            {/* الأيقونةُ تقولُ ما يقولُه الاسمُ تحتَها: بيتٌ وشبكةٌ وسلّةٌ وشاحنةٌ
+                ووجهٌ — لا واحدةَ منها تحتاجُ شرحاً. والسطرُ يرفعُ الشريطَ نحوَ
+                الثلثِ بلا أن يضيف. يبقى على الفأرةِ حيث الشريطُ علويٌّ ممتدٌّ
+                والمساحةُ فائضة، والاسمُ فيه بجانبِ الأيقونةِ لا تحتَها. */}
+            {dt && <span className={`max-w-full truncate ${active ? 'font-bold' : ''}`}>{label}</span>}
           </button>
         ))}
       </div>

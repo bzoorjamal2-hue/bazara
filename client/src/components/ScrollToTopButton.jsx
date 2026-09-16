@@ -9,13 +9,13 @@ import { useTranslation } from 'react-i18next';
 // زر المساعِدة لا يظهر بكل الصفحات، فلا نخمّن موضعه من المسار (جرّبناه فأخطأ: المساعِدة
 // تظهر بالرئيسية أيضاً لا بصفحات /store/ وحدها). بدلاً من ذلك نقيس الزر نفسه وقت العرض
 // ونجلس فوقه بفراغ ثابت — يبقى الترتيب صحيحاً مهما تغيّر مقاسه أو موضعه لاحقاً.
-const BASE_BOTTOM = 84; // يكفي لتخطّي الشريط السفلي حين لا يوجد زر تحتنا
-const GAP = 12;
+const GAP = 12; // الفراغُ بينه وبين زرِّ المساعِدةِ تحتَه
 
 export default function ScrollToTopButton() {
   const { t } = useTranslation();
   const [show, setShow] = useState(false);
-  const [bottom, setBottom] = useState(BASE_BOTTOM);
+  // ارتفاعُ ما تحتَنا (زرُّ المساعِدةِ + فراغُه) لا موضعُنا المطلق — انظر أدناه
+  const [stack, setStack] = useState(0);
 
   useEffect(() => {
     // بلا requestAnimationFrame: لا يعمل بالتبويبات الخلفية، و React يتجاهل نفس القيمة
@@ -25,15 +25,21 @@ export default function ScrollToTopButton() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // نقيس زر المساعِدة (إن وُجد بهذه الصفحة) ونجلس فوقه. نعيد القياس عند الظهور وبعد
-  // لحظة — قد يُركَّب الزر بعد تحميل بيانات المتجر فيتغيّر الترتيب.
+  // نقيسُ زرَّ المساعِدةِ (إن وُجد بهذه الصفحة) ونجلسُ فوقَه. نعيدُ القياسَ عند الظهورِ
+  // وبعدَ لحظة — قد يُركَّبُ الزرُّ بعدَ تحميلِ بياناتِ المتجرِ فيتغيّرُ الترتيب.
+  //
+  // والمقيسُ ارتفاعُه لا موضعُه: كان يُحسَبُ موضعٌ مطلقٌ بالبكسل من حافّةِ الشاشة،
+  // فيجمُدُ عندَه. ولمّا صارت الأزرارُ تنزلُ مع الشريطِ السفليِّ بقيَ هذا وحدَه
+  // معلّقاً حيث كان. أمّا الارتفاعُ فثابتٌ لا يتغيّرُ بحركةِ الشريط، فنبني عليه
+  // موضعاً نسبيّاً من ‎--bz-fab-bottom نفسِه — فينزلُ الثلاثةُ معاً بمدّةٍ واحدة.
+  //
+  // و‎offsetHeight لا ‎getBoundingClientRect: الأخيرُ يقرأُ المقاسَ بعدَ التحويل،
+  // فلو قِسناه والمؤشّرُ فوقَ الزرِّ (‎scale 1.06) لجاءَ أكبرَ من حقيقتِه.
   useEffect(() => {
     if (!show) return undefined;
     const measure = () => {
       const el = document.querySelector('[data-fab="stylist"]');
-      if (!el) { setBottom(BASE_BOTTOM); return; }
-      const r = el.getBoundingClientRect();
-      setBottom(Math.round(window.innerHeight - r.top + GAP));
+      setStack(el ? el.offsetHeight + GAP : 0);
     };
     measure();
     const id = setTimeout(measure, 700);
@@ -49,9 +55,7 @@ export default function ScrollToTopButton() {
       aria-label={t('common.backToTop')}
       title={t('common.backToTop')}
       className="bz-fab bz-fab-pos fixed start-5 z-40 flex h-11 w-11 items-center justify-center rounded-full animate-fade-in"
-      // بالوضع الافتراضيّ نتبع المتغيّر (يتبع الشاشة)، وحين يرفعه شريطُ
-      // شراءٍ أو ما شابه نحترم المقدارَ المحسوب.
-      style={{ bottom: bottom === BASE_BOTTOM ? 'calc(env(safe-area-inset-bottom, 0px) + var(--bz-fab-bottom))' : `${bottom}px` }}
+      style={{ bottom: `calc(env(safe-area-inset-bottom, 0px) + var(--bz-fab-bottom) + ${stack}px)` }}
     >
       {/* نصفُ قطرِ الزرّ كإخوتِه: ٢٠ من ٤٤ كانت ٤٥٪ بينما الأُخريانِ ٥٠٪،
           فيبدو السهمُ أنحلَ منهما بلا سبب */}
