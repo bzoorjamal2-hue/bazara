@@ -117,7 +117,7 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="dash mx-auto w-full max-w-4xl space-y-5">
+    <div className="dash bz-dashwrap w-full space-y-5">
       <Seo title={t('dashboard.title')} />
 
       {/* رأسُ اللوحةِ يلبسُ ثوبَ المتجر: شريطٌ بعرضِ الجهازِ خلفيّتُه بانرُ
