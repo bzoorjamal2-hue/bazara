@@ -987,6 +987,38 @@ html.dark .bz-ann-ico { color: #A8A29B; }
 /*  عبر بورتال خارج .theme-pub، فنتحكّم بالوضعين هنا مباشرة        */
 /* ============================================================= */
 .sc-panel { background: #F9F9F8; }
+
+/* ── رأسُ اللوحة: هويّةُ المتجرِ لا لوحةٌ عامّة ──
+   كان تدرّجاً خمريّاً (‎#7a2540) مكتوباً بالشيفرةِ ولمساتُه ذهبيّة — بقايا لوحةٍ
+   تركها الموقعُ منذ صار عاجيّاً وحبريّاً، فبقيت هذه النافذةُ وحدَها تتكلّمُ
+   بلغةٍ أخرى. صار حبراً كبقيّةِ الموقع، وخلفَه بانرُ المتجرِ معتَّماً: تفتحُ
+   الزبونةُ المساعِدةَ فترى متجرَها لا خدمةً عامّةً مركَّبة.
+   والتعتيمُ ثابتٌ بالوضعَين لأنّ تحتَه صورةً لا لوحاً — وهو ما يحمي النصَّ
+   فوقَ أيِّ صورةٍ ترفعُها التاجرة. */
+.sc-head {
+  background: linear-gradient(135deg, #2F2D2C 0%, #1A1918 58%, #121110 100%);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #F7F6F3;
+  isolation: isolate;
+}
+.sc-head-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+  filter: brightness(0.34) saturate(0.85);
+}
+.sc-head-sub { color: rgba(247, 246, 243, 0.72); }
+.sc-head-ico { background: rgba(255, 255, 255, 0.14); color: #F7F6F3; }
+.sc-head-btn { background: rgba(255, 255, 255, 0.16); color: #F7F6F3; }
+@media (hover: hover) { .sc-head-btn:hover { background: rgba(255, 255, 255, 0.26); } }
+/* وجهُ المتجرِ بجانبِ ترحيبِه — أرضيّةٌ فاتحةٌ كي يُقرأَ الشعارُ المقصوصُ على شفافيّة */
+.sc-bubble-av { background: #FFFFFF; box-shadow: inset 0 0 0 1px rgba(23, 23, 23, 0.10); }
+.sc-dark .sc-bubble-av { background: #2B2A29; box-shadow: inset 0 0 0 1px rgba(239, 238, 236, 0.16); }
+
 .sc-bubble-ai { background: #ffffff; color: #41403F; border-color: rgba(23, 23, 23, 0.10); }
 .sc-muted { color: rgba(23, 23, 23, 0.70); }
 .sc-row { background: #F9F9F8; border-color: rgba(23, 23, 23, 0.10); }

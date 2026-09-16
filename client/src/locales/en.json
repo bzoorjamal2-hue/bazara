@@ -7,7 +7,7 @@
     "fab": "Style assistant",
     "title": "Style assistant",
     "subtitle": "Ask me about your look",
-    "greeting": "Hi 🌷 I'm your style assistant. Tell me the occasion or style you're after, and I'll pick the best pieces from this store for you.",
+    "greeting": "Welcome to {{store}} 🌷 I am the style assistant here. Tell me the occasion or style you are after, and I will pick the best pieces from this store for you.",
     "placeholder": "e.g. an outfit for a summer wedding…",
     "send": "Send",
     "newChat": "New chat",
@@ -23,7 +23,8 @@
       "everyday": "Comfy everyday style",
       "gift": "Gift for a friend",
       "trending": "What's trending?"
-    }
+    },
+    "greetingMarket": "Hi 🌷 I am your style assistant. Tell me the occasion or style you are after, and I will pick the best pieces from Bazara stores for you."
   },
   "footer": {
     "rights": "All rights reserved",
@@ -747,8 +748,8 @@
       "imageSaved": "Invoice image saved ✓",
       "sheetOrders": "Orders",
       "payMethod": "Payment method",
-      "payCod": "Cash on delivery",
-      "payCard": "Card — paid",
+      "payCod": "Payment method: cash on delivery.",
+      "payCard": "Paid by card",
       "codDue": "To collect on delivery",
       "courierName": "Courier",
       "trackingNo": "Tracking number",
@@ -760,7 +761,6 @@
       "sheetSummary": "Summary",
       "unitPrice": "Unit price",
       "lineTotal": "Amount",
-      "payCod": "Payment method: cash on delivery.",
       "invoiceThanks": "Thank you for trusting {{store}} — always a pleasure to serve you.",
       "printAll": "Print all invoices",
       "moveTo": "Move to \"{{status}}\"",
@@ -819,7 +819,6 @@
       "paid": "Paid ✓",
       "pending": "Pending payment",
       "failed": "Failed",
-      "payCard": "Paid by card",
       "paidBadge": "Items paid",
       "payLineCod": "Payment: cash on delivery — collect {{amount}} on handover",
       "payLineCard": "Payment: items paid by card — collect {{amount}} delivery fee on handover",

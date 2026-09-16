@@ -6,6 +6,8 @@ import useScrollLock from '../hooks/useScrollLock.js';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { resizeImageFile } from '../utils/image.js';
 import CloseButton from './CloseButton.jsx';
+import { cldThumb } from '../utils/cloudinary.js';
+import { panelImage } from '../utils/panelImage.js';
 import ProductCard from './ProductCard.jsx';
 
 // مساعِدة التسوّق الذكية — زر عائم يفتح شاتاً يرشّح قطعاً من هذا المتجر (Claude على الخادم).
@@ -121,6 +123,16 @@ export default function StylistChat({ store, whatsapp = '', marketplace = false 
 
   const clearChat = () => { setMessages([]); saveHistory(convKey, []); setError(''); };
 
+  // هويّةُ اللوحة: وجهُ المتجرِ واسمُه وترحيبُه — وللسوقِ العامّ صيغتُه
+  const storeName = (store?.name || '').trim();
+  const logoSrc = !marketplace && store?.logoUrl ? cldThumb(store.logoUrl, 120) : '';
+  const headTitle = marketplace || !storeName ? t('assistant.title') : storeName;
+  const headRole = marketplace || !storeName ? t('assistant.subtitle') : t('assistant.title');
+  const headBg = marketplace ? '' : panelImage(store, 640);
+  const greeting = marketplace || !storeName
+    ? t('assistant.greetingMarket')
+    : t('assistant.greeting', { store: storeName });
+
   const chips = ['occasion', 'everyday', 'gift', 'trending'];
 
   return (
@@ -144,35 +156,52 @@ export default function StylistChat({ store, whatsapp = '', marketplace = false 
           <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={() => setOpen(false)} />
 
           <div className="sc-panel relative mx-auto flex max-h-[88vh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl shadow-2xl sm:mb-4 sm:rounded-3xl">
-            {/* رأس أنيق: أيقونة ذهبية + عنوان + إغلاق */}
-            <header className="flex shrink-0 items-center gap-3 border-b border-gold-400/25 bg-gradient-to-l from-wine to-[#7a2540] px-4 py-3 text-cream">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gold-300/20 text-gold-200 ring-1 ring-gold-300/40">
-                <SparkleIcon className="h-5 w-5" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-display text-base font-bold leading-tight">{t('assistant.title')}</p>
-                <p className="truncate text-xs text-cream/70">{t('assistant.subtitle')}</p>
+            {/* الرأسُ يحملُ وجهَ المتجرِ واسمَه: المساعِدةُ مساعِدةُ هذا المتجرِ
+                لا خدمةً عامّةً ترشّحُ من مكانٍ مجهول. والتدرّجُ كان خمريّاً (‎#7a2540) مكتوباً
+                بالشيفرة، ولمساتُه ذهبيّة — من لوحةٍ قديمةٍ تركها الموقعُ منذ صار عاجيّاً
+                وحبريّاً، فبقيت هذه اللوحةُ وحدَها تتكلّمُ بلغةٍ أخرى. */}
+            <header className="sc-head relative shrink-0 overflow-hidden border-b px-4 py-3.5">
+              {/* بانرُ المتجرِ خلفَ الرأس — المصدرُ نفسُه الذي يُطعِمُ رأسَ اللوحةِ
+                  ودرجَ المتجر، فوجهُ المتجرِ واحدٌ أينما ظهر. به تعرفُ الزبونةُ من أوّلِ
+                  نظرةٍ أنّ هذه مساعِدةُ هذا المتجرِ لا خدمةً عامّةً مركّبة */}
+              {headBg && <img src={headBg} alt="" aria-hidden className="sc-head-bg" />}
+              {/* شريطُ أدواتٍ فوقَ الصفِّ لا بداخلِه: كانا يزاحمانِ اسمَ المتجرِ
+                  على سطرٍ واحد فينقصُّ («…oosh Style») — والاسمُ هو ما يقولُ
+                  مساعِدةُ مَن هذه، فلا يُقصَّ من أجلِ زرّ. */}
+              <div className="relative mb-3 flex items-center justify-between gap-2">
+                <CloseButton variant="ghost" size="h-9 w-9" onClick={() => setOpen(false)} />
+                {messages.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={clearChat}
+                    title={t('assistant.newChat')}
+                    className="sc-head-btn shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-bold transition"
+                  >
+                    {t('assistant.newChat')}
+                  </button>
+                )}
               </div>
-              {messages.length > 0 && (
-                <button
-                  type="button"
-                  onClick={clearChat}
-                  aria-label={t('assistant.newChat')}
-                  title={t('assistant.newChat')}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cream/15 text-cream transition hover:bg-cream/25"
-                >
-                  <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" />
-                  </svg>
-                </button>
+              <div className="relative flex items-center gap-3">
+              {logoSrc ? (
+                <img src={logoSrc} alt="" className="h-10 w-10 shrink-0 rounded-full bg-white/90 object-contain p-[3px]" />
+              ) : (
+                <span className="sc-head-ico flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
+                  <SparkleIcon className="h-5 w-5" />
+                </span>
               )}
-              <CloseButton variant="cream" size="h-10 w-10" onClick={() => setOpen(false)} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-display text-base font-bold leading-tight">{headTitle}</p>
+                {/* الاسمُ أوّلاً والدورُ تحتَه: هذا متجرٌ له مساعِدة، لا مساعِدةٌ لها متجر */}
+                <p className="sc-head-sub truncate text-xs">{headRole}</p>
+              </div>
+              </div>
             </header>
 
             {/* منطقة الرسائل */}
             <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto overflow-x-hidden overscroll-contain px-4 py-4">
-              {/* ترحيب دائم بأعلى المحادثة */}
-              <Bubble role="assistant">{t('assistant.greeting')}</Bubble>
+              {/* ترحيبٌ دائمٌ بأعلى المحادثة — باسمِ المتجرِ لا بصيغةٍ عامّةٍ
+                  تصلحُ لأيِّ مكان: الزبونةُ دخلت متجراً بعينِه فلتسمعْ اسمَه */}
+              <Bubble role="assistant" avatar={logoSrc}>{greeting}</Bubble>
 
               {messages.map((m, i) => (
                 <div key={i} className="space-y-3">
@@ -285,10 +314,12 @@ export default function StylistChat({ store, whatsapp = '', marketplace = false 
 }
 
 // فقاعة رسالة — الزبونة خمرية بالجهة، المساعِدة بطاقة بيضاء. تعرض صورة البحث إن وُجدت.
-function Bubble({ role, image, children }) {
+function Bubble({ role, image, avatar, children }) {
   const isUser = role === 'user';
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+    <div className={`flex items-end gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}>
+      {/* وجهُ المتجرِ بجانبِ ترحيبِه — فالرسالةُ تُقرأُ منه لا من مجهول */}
+      {avatar && <img src={avatar} alt="" aria-hidden className="sc-bubble-av h-8 w-8 shrink-0 rounded-full object-contain p-[2px]" />}
       <div
         className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
           isUser
