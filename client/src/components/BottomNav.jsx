@@ -31,10 +31,24 @@ const useDesktop = () => useSyncExternalStore(
 import { useAuth } from '../context/AuthContext.jsx';
 import api from '../api/client.js';
 
+// البيتُ كما هو عندَ إنستغرام: كتلةٌ واحدةٌ بلا باب، قمّتُها مدوّرةٌ لا مدبّبة
+// وقاعُها بأركانٍ مستديرة. كنتُ رسمتُه بباب — وليس لها باب.
+//
+// والممتلئُ يُرسَمُ بحشوٍ وحدٍّ باللونِ نفسِه: الحدُّ بوصلاتٍ مستديرةٍ يُدوّرُ
+// الأركانَ الحادّةَ للقمّةِ والإفريزَين، وهو ما لا يفعلُه الحشوُ وحدَه.
 function HomeIcon({ className = 'h-6 w-6', filled }) {
+  // أعرضُ وأقصرُ ممّا رسمتُ أوّلاً: سقفُها منبسطٌ لا مدبَّب، وجدرانُها قصيرة.
+  const body = 'M12 4.1 20.6 10.9V18.4A2.4 2.4 0 0 1 18.2 20.8H5.8A2.4 2.4 0 0 1 3.4 18.4V10.9L12 4.1Z';
+  if (filled) {
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="currentColor" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" strokeLinecap="round" aria-hidden="true">
+        <path d={body} />
+      </svg>
+    );
+  }
   return (
-    <svg viewBox="0 0 24 24" className={className} fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M3 11l9-8 9 8M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9" />
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={body} />
     </svg>
   );
 }
@@ -74,11 +88,27 @@ function TrackIcon({ className = 'h-6 w-6', filled }) {
     </svg>
   );
 }
-function ReelsIcon({ className = 'h-6 w-6' }) {
+// الريلز عندَها ليست شريطَ فيلم: مربّعٌ مستديرُ الأركانِ وبداخلِه مثلّثُ تشغيلٍ
+// مفرّغٌ بالسُّمكِ نفسِه. رسمتُها أوّلاً لوحةَ إخراجٍ بمائلَينِ وخطٍّ — ذاك شكلُها
+// القديم، والصورةُ التي أرسلَها تُظهِرُ الشكلَ الحاليّ.
+function ReelsIcon({ className = 'h-6 w-6', filled }) {
+  const play = 'M10.4 8.9 16 12 10.4 15.1Z';
+  if (filled) {
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+        {/* الممتلئةُ تُبقي المثلّثَ ثقباً بداخلِها — لا كتلةً صمّاء */}
+        <path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d={`M8.4 2.9h7.2c3 0 5.5 2.5 5.5 5.5v7.2c0 3-2.5 5.5-5.5 5.5H8.4c-3 0-5.5-2.5-5.5-5.5V8.4c0-3 2.5-5.5 5.5-5.5Z ${play}`}
+        />
+      </svg>
+    );
+  }
   return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="3" y="4" width="18" height="16" rx="3" />
-      <path d="M10 9.5l4 2.5-4 2.5z" fill="currentColor" stroke="none" />
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="2.9" y="2.9" width="18.2" height="18.2" rx="5.5" />
+      <path d={play} />
     </svg>
   );
 }
