@@ -365,27 +365,34 @@ export default function OrdersManager() {
     const o2 = (k) => t(`dashboard.ordersSection.${k}`);
     const p2 = (k) => t(`dashboard.product.${k}`);
     const dest = (o) => [o.city, o.area && o.area !== o.city ? o.area : ''].filter(Boolean).join(' - ');
+    // خليّةُ الحالةِ ملوّنة: المسلَّمُ أخضرُ والملغيُّ أحمرُ وما بينهما رمادِيٌّ
+    // هادئ — تُمسَحُ ثلاثُ مئةِ سطرٍ بالعينِ فيُعرَفُ مكانُ الخللِ بلا قراءة.
+    const statusCell = (st) => ({
+      v: o2(st),
+      s: st === 'delivered' ? 15 : st === 'cancelled' ? 16 : 17,
+    });
 
     const ordersSheet = {
       name: o2('sheetOrders'),
       columns: [
         { header: '#', width: 9, type: 'int' },
-        { header: o2('date'), width: 20 },
+        { header: o2('date'), width: 18, type: 'datetime' },
         { header: o2('customer'), width: 22 },
         { header: o2('phone'), width: 16 },
         { header: o2('deliveryTo'), width: 18 },
         { header: o2('address'), width: 30 },
         { header: o2('items'), width: 40 },
-        { header: o2('subtotal'), width: 13, type: 'money' },
-        { header: o2('discount'), width: 12, type: 'money' },
+        { header: o2('subtotal'), width: 13, type: 'money', total: true },
+        { header: o2('discount'), width: 12, type: 'money', total: true },
         { header: o2('coupon'), width: 14 },
-        { header: o2('delivery'), width: 12, type: 'money' },
-        { header: o2('total'), width: 14, type: 'money' },
+        { header: o2('delivery'), width: 12, type: 'money', total: true },
+        { header: o2('total'), width: 14, type: 'money', total: true },
         { header: o2('status'), width: 14 },
       ],
+      totalLabel: o2('total'),
       rows: orders.map((o) => [
         o.id,
-        new Date(o.createdAt).toLocaleString(),
+        o.createdAt,
         o.customerName || '',
         o.customerPhone || '',
         dest(o),
@@ -396,7 +403,7 @@ export default function OrdersManager() {
         o.couponCode || '',
         Number(o.deliveryFee || 0),
         Number(o.total || 0),
-        o2(o.status),
+        statusCell(o.status),
       ]),
     };
 
@@ -404,7 +411,7 @@ export default function OrdersManager() {
     const itemRows = [];
     orders.forEach((o) => (o.items || []).forEach((it) => itemRows.push([
       o.id,
-      new Date(o.createdAt).toLocaleDateString(),
+      o.createdAt,
       o.customerName || '',
       it.name || '',
       it.size || '',
@@ -412,22 +419,23 @@ export default function OrdersManager() {
       Number(it.qty || 0),
       Number(it.price || 0),
       Number(((it.price || 0) * (it.qty || 0)).toFixed(2)),
-      o2(o.status),
+      statusCell(o.status),
     ])));
     const itemsSheet = {
       name: o2('sheetItems'),
       columns: [
         { header: '#', width: 9, type: 'int' },
-        { header: o2('date'), width: 14 },
+        { header: o2('date'), width: 14, type: 'date' },
         { header: o2('customer'), width: 20 },
         { header: p2('name'), width: 30 },
         { header: p2('size'), width: 10 },
         { header: p2('color'), width: 12 },
-        { header: p2('qty'), width: 9, type: 'int' },
+        { header: p2('qty'), width: 9, type: 'int', total: true },
         { header: p2('price'), width: 12, type: 'money' },
-        { header: o2('total'), width: 13, type: 'money' },
+        { header: o2('total'), width: 13, type: 'money', total: true },
         { header: o2('status'), width: 14 },
       ],
+      totalLabel: o2('total'),
       rows: itemRows,
     };
 
@@ -463,10 +471,11 @@ export default function OrdersManager() {
       name: o2('sheetBest'),
       columns: [
         { header: p2('name'), width: 34 },
-        { header: p2('qty'), width: 12, type: 'int' },
-        { header: o2('ordersCountLabel'), width: 14, type: 'int' },
-        { header: t('dashboard.analytics.revenue'), width: 16, type: 'money' },
+        { header: p2('qty'), width: 12, type: 'int', total: true },
+        { header: o2('ordersCountLabel'), width: 14, type: 'int', total: true },
+        { header: t('dashboard.analytics.revenue'), width: 16, type: 'money', total: true },
       ],
+      totalLabel: o2('total'),
       rows: [...prodMap.values()].sort((a, b) => b.qty - a.qty)
         .map((p) => [p.name, p.qty, p.orders.size, money(p.revenue)]),
     };
@@ -484,12 +493,13 @@ export default function OrdersManager() {
     const dailySheet = {
       name: o2('sheetDaily'),
       columns: [
-        { header: o2('date'), width: 16 },
-        { header: o2('ordersCountLabel'), width: 14, type: 'int' },
-        { header: p2('qty'), width: 12, type: 'int' },
-        { header: t('dashboard.analytics.revenue'), width: 16, type: 'money' },
+        { header: o2('date'), width: 16, type: 'date' },
+        { header: o2('ordersCountLabel'), width: 14, type: 'int', total: true },
+        { header: p2('qty'), width: 12, type: 'int', total: true },
+        { header: t('dashboard.analytics.revenue'), width: 16, type: 'money', total: true },
       ],
-      rows: [...dayMap.values()].sort((a, b) => a.ts - b.ts).map((d) => [d.day, d.orders, d.pieces, money(d.revenue)]),
+      totalLabel: o2('total'),
+      rows: [...dayMap.values()].sort((a, b) => a.ts - b.ts).map((d) => [d.ts, d.orders, d.pieces, money(d.revenue)]),
     };
 
     // ٥) الزبائن — من طلب أكثر ومن أنفق أكثر (أساس المكافآت وإعادة الاستهداف)
@@ -499,11 +509,12 @@ export default function OrdersManager() {
       columns: [
         { header: o2('customer'), width: 24 },
         { header: o2('phone'), width: 18 },
-        { header: o2('ordersCountLabel'), width: 14, type: 'int' },
-        { header: t('dashboard.analytics.revenue'), width: 16, type: 'money' },
-        { header: o2('date'), width: 16 },
+        { header: o2('ordersCountLabel'), width: 14, type: 'int', total: true },
+        { header: t('dashboard.analytics.revenue'), width: 16, type: 'money', total: true },
+        { header: o2('date'), width: 16, type: 'date' },
       ],
-      rows: customers.map((c) => [c.name || c.key, c.key, c.orders, money(c.revenue), new Date(c.last).toLocaleDateString()]),
+      totalLabel: o2('total'),
+      rows: customers.map((c) => [c.name || c.key, c.key, c.orders, money(c.revenue), c.last]),
     };
 
     // ٦) المدن — أين يتركّز البيع (لتسعير التوصيل واستهداف الإعلانات)
@@ -512,9 +523,10 @@ export default function OrdersManager() {
       name: o2('sheetCities'),
       columns: [
         { header: o2('deliveryTo'), width: 22 },
-        { header: o2('ordersCountLabel'), width: 14, type: 'int' },
-        { header: t('dashboard.analytics.revenue'), width: 16, type: 'money' },
+        { header: o2('ordersCountLabel'), width: 14, type: 'int', total: true },
+        { header: t('dashboard.analytics.revenue'), width: 16, type: 'money', total: true },
       ],
+      totalLabel: o2('total'),
       rows: cities.map((c) => [c.key, c.orders, money(c.revenue)]),
     };
 

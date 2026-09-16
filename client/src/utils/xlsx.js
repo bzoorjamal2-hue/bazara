@@ -86,34 +86,73 @@ const colName = (n) => { let s = ''; n += 1; while (n > 0) { const m = (n - 1) %
 // اسم الورقة بقيود Excel: ٣١ حرفاً كحدّ أقصى وبلا : \ / ? * [ ] — وإلا رفض الملف
 const safeSheetName = (name, i) => (String(name || `Sheet${i + 1}`).replace(/[:\\/?*[\]]/g, ' ').trim().slice(0, 31) || `Sheet${i + 1}`);
 
-// أنماط الخلايا: 0 عادي · 1 ترويسة · 2 عملة · 3 عدد صحيح · 4 عنوان الملخّص
+// أنماط الخلايا — الفهارس مستعملة برقمها داخل sheetXml، فلا يُعاد ترتيبها:
+//   0 نصّ · 1 ترويسة · 2 عملة · 3 عدد · 4 تاريخ · 5 وقت وتاريخ
+//   6..11 نفسها بتظليل الصفّ المتناوب
+//   12 مجموع نصّ · 13 مجموع عملة · 14 مجموع عدد
+//   15 حالة خضراء · 16 حالة حمراء · 17 حالة كهرمانيّة
+const INK = 'FF1F1E1D';
 const STYLES = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-<numFmts count="1"><numFmt numFmtId="164" formatCode="#,##0.00"/></numFmts>
-<fonts count="4">
-<font><sz val="11"/><name val="Calibri"/></font>
-<font><b/><sz val="11"/><color rgb="FF1F1E1D"/><name val="Calibri"/></font>
-<font><sz val="11"/><name val="Calibri"/></font>
-<font><b/><sz val="12"/><color rgb="FF1F1E1D"/><name val="Calibri"/></font>
+<numFmts count="3">
+<numFmt numFmtId="164" formatCode="&quot;₪&quot;#,##0.00"/>
+<numFmt numFmtId="165" formatCode="yyyy\\-mm\\-dd"/>
+<numFmt numFmtId="166" formatCode="yyyy\\-mm\\-dd\\ hh:mm"/>
+</numFmts>
+<fonts count="5">
+<font><sz val="11"/><color rgb="FF2B2A29"/><name val="Calibri"/></font>
+<font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>
+<font><b/><sz val="11"/><color rgb="${INK}"/><name val="Calibri"/></font>
+<font><b/><sz val="11"/><color rgb="FF1F7A4D"/><name val="Calibri"/></font>
+<font><b/><sz val="11"/><color rgb="FFB42318"/><name val="Calibri"/></font>
 </fonts>
-<fills count="3">
+<fills count="7">
 <fill><patternFill patternType="none"/></fill>
 <fill><patternFill patternType="gray125"/></fill>
+<fill><patternFill patternType="solid"><fgColor rgb="${INK}"/><bgColor indexed="64"/></patternFill></fill>
+<fill><patternFill patternType="solid"><fgColor rgb="FFF7F6F4"/><bgColor indexed="64"/></patternFill></fill>
 <fill><patternFill patternType="solid"><fgColor rgb="FFEDEDEC"/><bgColor indexed="64"/></patternFill></fill>
+<fill><patternFill patternType="solid"><fgColor rgb="FFEAF6EF"/><bgColor indexed="64"/></patternFill></fill>
+<fill><patternFill patternType="solid"><fgColor rgb="FFFDECEA"/><bgColor indexed="64"/></patternFill></fill>
 </fills>
-<borders count="2">
+<borders count="3">
 <border><left/><right/><top/><bottom/><diagonal/></border>
-<border><left style="thin"><color rgb="FFDCDBDA"/></left><right style="thin"><color rgb="FFDCDBDA"/></right><top style="thin"><color rgb="FFDCDBDA"/></top><bottom style="thin"><color rgb="FFDCDBDA"/></bottom><diagonal/></border>
+<border><left style="thin"><color rgb="FFE3E2E0"/></left><right style="thin"><color rgb="FFE3E2E0"/></right><top style="thin"><color rgb="FFE3E2E0"/></top><bottom style="thin"><color rgb="FFE3E2E0"/></bottom><diagonal/></border>
+<border><left style="thin"><color rgb="FFE3E2E0"/></left><right style="thin"><color rgb="FFE3E2E0"/></right><top style="medium"><color rgb="${INK}"/></top><bottom/><diagonal/></border>
 </borders>
 <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
-<cellXfs count="5">
-<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf>
+<cellXfs count="18">
+<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf>
 <xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
-<xf numFmtId="164" fontId="2" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyAlignment="1"><alignment vertical="center"/></xf>
-<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
-<xf numFmtId="0" fontId="3" fillId="0" borderId="0" xfId="0" applyFont="1"/>
+<xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>
+<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+<xf numFmtId="165" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+<xf numFmtId="166" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+<xf numFmtId="0" fontId="0" fillId="3" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf>
+<xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+<xf numFmtId="164" fontId="0" fillId="3" borderId="1" xfId="0" applyNumberFormat="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>
+<xf numFmtId="0" fontId="0" fillId="3" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+<xf numFmtId="165" fontId="0" fillId="3" borderId="1" xfId="0" applyNumberFormat="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+<xf numFmtId="166" fontId="0" fillId="3" borderId="1" xfId="0" applyNumberFormat="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+<xf numFmtId="0" fontId="2" fillId="4" borderId="2" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>
+<xf numFmtId="164" fontId="2" fillId="4" borderId="2" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>
+<xf numFmtId="0" fontId="2" fillId="4" borderId="2" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+<xf numFmtId="0" fontId="3" fillId="5" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+<xf numFmtId="0" fontId="4" fillId="6" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+<xf numFmtId="0" fontId="2" fillId="4" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
 </cellXfs>
 </styleSheet>`;
+
+// تاريخ Excel: عددُ الأيّامِ منذ ١٨٩٩-١٢-٣٠ بالتوقيتِ المحلّيّ لا UTC.
+// كانت التواريخُ تُكتَبُ نصّاً ‎(toLocaleString) — فالفرزُ بعمودِ التاريخِ يصيرُ
+// أبجديّاً: ‎«1/9» قبلَ ‎«8/27»، وتصفيةُ «هذا الشهر» لا تعملُ أصلاً.
+const EXCEL_EPOCH = Date.UTC(1899, 11, 30);
+function excelDate(v) {
+  const d = v instanceof Date ? v : new Date(v);
+  if (Number.isNaN(d.getTime())) return null;
+  const local = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds());
+  return (local - EXCEL_EPOCH) / 86400000;
+}
 
 // خلية واحدة: رقم → قيمة رقمية بنمط العملة/العدد، وغيرها → نصّ مضمّن
 function cellXml(ref, value, style) {
@@ -122,7 +161,10 @@ function cellXml(ref, value, style) {
   return `<c r="${ref}" s="${style}" t="inlineStr"><is><t xml:space="preserve">${esc(value)}</t></is></c>`;
 }
 
-// ورقة: { name, columns:[{header,width,type}], rows:[[...]], title? }
+// ورقة: { name, columns:[{header,width,type,total?}], rows:[[...]], rtl?, totalLabel? }
+//   type: 'money' | 'int' | 'date' | 'datetime' | نصّ
+//   total: true على عمودٍ رقميٍّ → يُضافُ صفُّ مجاميعَ أسفلَ الورقةِ بدالّةِ SUM
+//          حقيقيّةٍ لا برقمٍ محسوب، فيتحدّثُ المجموعُ مع أيِّ فرزٍ أو تعديل.
 function sheetXml(sheet) {
   const cols = sheet.columns || [];
   const rows = sheet.rows || [];
@@ -130,29 +172,59 @@ function sheetXml(sheet) {
     ? `<cols>${cols.map((c, i) => `<col min="${i + 1}" max="${i + 1}" width="${c.width || 18}" customWidth="1"/>`).join('')}</cols>`
     : '';
 
+  // نمطُ الخليّةِ حسبَ نوعِ العمودِ وموضعِ الصفّ: التظليلُ المتناوبُ يجعلُ قراءةَ
+  // سطرٍ كاملٍ عبرَ ثلاثةَ عشرَ عموداً ممكنةً بلا أن تضيعَ العينُ بينَ الأعمدة.
+  const styleFor = (type, alt) => {
+    const base = type === 'money' ? 2 : type === 'int' ? 3 : type === 'date' ? 4 : type === 'datetime' ? 5 : 0;
+    return alt ? base + 6 : base;
+  };
+
   let r = 1;
   const body = [];
-  body.push(`<row r="${r}" ht="26" customHeight="1">${cols.map((c, i) => cellXml(`${colName(i)}${r}`, c.header, 1)).join('')}</row>`);
+  body.push(`<row r="${r}" ht="28" customHeight="1">${cols.map((c, i) => cellXml(`${colName(i)}${r}`, c.header, 1)).join('')}</row>`);
   const headerRow = r;
-  for (const row of rows) {
+  const firstData = r + 1;
+
+  rows.forEach((row, ri) => {
     r += 1;
+    const alt = ri % 2 === 1;
     body.push(`<row r="${r}">${row.map((v, i) => {
-      const type = cols[i]?.type;
-      const style = type === 'money' ? 2 : type === 'int' ? 3 : 0;
-      return cellXml(`${colName(i)}${r}`, v, style);
+      const c = cols[i] || {};
+      // قيمةٌ بنمطٍ صريح: {v, s} — تُستعملُ لتلوينِ خليّةِ الحالة
+      if (v && typeof v === 'object' && !(v instanceof Date) && 's' in v) {
+        return cellXml(`${colName(i)}${r}`, v.v, v.s);
+      }
+      const val = (c.type === 'date' || c.type === 'datetime') ? excelDate(v) : v;
+      return cellXml(`${colName(i)}${r}`, val, styleFor(c.type, alt));
+    }).join('')}</row>`);
+  });
+  const lastData = r;
+
+  // صفُّ المجاميع: الأرقامُ التي يهمُّ مجموعُها وحدَها، والباقي فارغٌ بنفسِ الثوب
+  const totalCols = cols.map((c, i) => (c.total ? i : -1)).filter((i) => i >= 0);
+  if (totalCols.length && rows.length) {
+    r += 1;
+    body.push(`<row r="${r}" ht="24" customHeight="1">${cols.map((c, i) => {
+      const ref = `${colName(i)}${r}`;
+      if (i === 0) return `<c r="${ref}" s="12" t="inlineStr"><is><t>${esc(sheet.totalLabel || 'الإجمالي')}</t></is></c>`;
+      if (!c.total) return `<c r="${ref}" s="${c.type === 'money' ? 13 : 12}"/>`;
+      const col = colName(i);
+      const st = c.type === 'money' ? 13 : 14;
+      return `<c r="${ref}" s="${st}"><f>SUM(${col}${firstData}:${col}${lastData})</f></c>`;
     }).join('')}</row>`);
   }
+
   const lastCol = colName(Math.max(0, cols.length - 1));
   // تجميد سطر العناوين + تصفية تلقائية عليه: تبقى العناوين ظاهرة ويمكن الفرز
   // والتصفية مهما زادت الصفوف مستقبلاً.
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
 <sheetPr><outlinePr summaryBelow="1" summaryRight="1"/></sheetPr>
-<sheetViews><sheetView rightToLeft="${sheet.rtl === false ? '0' : '1'}" workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="A2" sqref="A2"/></sheetView></sheetViews>
-<sheetFormatPr defaultRowHeight="18"/>
+<sheetViews><sheetView rightToLeft="${sheet.rtl === false ? '0' : '1'}" showGridLines="0" workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="A2" sqref="A2"/></sheetView></sheetViews>
+<sheetFormatPr defaultRowHeight="19"/>
 ${colsXml}
 <sheetData>${body.join('')}</sheetData>
-<autoFilter ref="A${headerRow}:${lastCol}${Math.max(r, headerRow)}"/>
+<autoFilter ref="A${headerRow}:${lastCol}${Math.max(lastData, headerRow)}"/>
 </worksheet>`;
 }
 
