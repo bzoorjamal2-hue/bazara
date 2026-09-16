@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { siteOrigin } from '../utils/links.js';
+import { siteOrigin, copyText } from '../utils/links.js';
 import api from '../api/client.js';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import Seo from '../components/Seo.jsx';
@@ -64,7 +64,7 @@ export default function Wishlist() {
   const shareMine = async () => {
     try {
       if (navigator.share) await navigator.share({ title: t('wishlist.title'), text: t('wishlist.shareMsg'), url: shareUrl });
-      else { await navigator.clipboard.writeText(shareUrl); setCopied(true); setTimeout(() => setCopied(false), 1800); }
+      else if (await copyText(shareUrl)) { setCopied(true); setTimeout(() => setCopied(false), 1800); }
     } catch { /* أُلغيت المشاركة */ }
   };
   // إضافة كل القطع المُشاركة لمفضّلتي (نتجاهل الموجود مسبقاً فلا نحذفه بالخطأ)

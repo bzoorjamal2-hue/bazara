@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { siteOrigin } from '../utils/links.js';
+import { siteOrigin, copyText } from '../utils/links.js';
 import api, { getErrorMessage } from '../api/client.js';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { useTheme } from '../context/ThemeContext.jsx';
@@ -41,7 +41,7 @@ export default function ShareEarnModal({ store, onClose }) {
   };
 
   const copy = async () => {
-    try { await navigator.clipboard.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { /* ignore */ }
+    if (await copyText(link)) { setCopied(true); setTimeout(() => setCopied(false), 2000); }
   };
   const waShare = () => {
     const msg = t('referral.shareMsg', { store: store.name, link });

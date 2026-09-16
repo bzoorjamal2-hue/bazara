@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { productPath } from '../utils/links.js';
+import { productPath, copyText } from '../utils/links.js';
 import { trackPath } from '../utils/links.js';
 import { siteOrigin } from '../utils/links.js';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -523,7 +523,7 @@ export default function CartDrawer() {
               {doneRef && (
                 <button
                   type="button"
-                  onClick={() => { try { navigator.clipboard.writeText(doneRef); setRefCopied(true); setTimeout(() => setRefCopied(false), 1600); } catch { /* تجاهل */ } }}
+                  onClick={async () => { if (await copyText(doneRef)) { setRefCopied(true); setTimeout(() => setRefCopied(false), 1600); } }}
                   className="group w-full rounded-2xl bg-gold-400/10 px-6 py-3 ring-1 ring-gold-400/30 transition hover:bg-gold-400/15"
                   title={t('co.doneCopy')}
                 >

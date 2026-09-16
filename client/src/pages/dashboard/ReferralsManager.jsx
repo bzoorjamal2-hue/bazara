@@ -7,6 +7,7 @@ import Spinner from '../../components/Spinner.jsx';
 import { GiftIcon, UsersIcon, TrophyIcon, WhatsAppIcon, PhoneIcon, CopyIcon, CheckIcon, SearchIcon, XIcon, GearIcon, WarnIcon } from '../../components/icons.jsx';
 import { PageHead, SectionHead, Tip } from '../../components/FormField.jsx';
 import { buildWhatsappLink } from '../../utils/whatsapp.js';
+import { copyText } from '../../utils/links.js';
 
 // لوحة الإحالات لصاحب المتجر: من أحال ومن، وكم زبونة جاءت عبر كل كود.
 export default function ReferralsManager() {
@@ -43,7 +44,7 @@ export default function ReferralsManager() {
   const top = list[0]; // الخادم يرتّبها بالأكثر جلباً
 
   const copyCode = async (r) => {
-    try { await navigator.clipboard.writeText(r.code); setCopied(r.code); setTimeout(() => setCopied(''), 1600); } catch { /* تجاهُل */ }
+    if (await copyText(r.code)) { setCopied(r.code); setTimeout(() => setCopied(''), 1600); }
   };
 
   // رسالة شكر جاهزة للمُحيلة — «كافئيهنّ» بلا صياغة كل مرّة من الصفر

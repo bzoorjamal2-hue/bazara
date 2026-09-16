@@ -10,7 +10,7 @@ import { PackageIcon, CheckIcon, SearchIcon, TruckIcon, CartIcon, XIcon, BackIco
 import { PageTitle, StateCard } from '../components/PageUI.jsx';
 import { goBack } from '../utils/nav.js';
 import { getCache, setCache } from '../utils/apiCache.js';
-import { trackPath } from '../utils/links.js';
+import { trackPath, copyText } from '../utils/links.js';
 import { useCart } from '../context/CartContext.jsx';
 import { cldThumb } from '../utils/cloudinary.js';
 import { sizeLabel } from '../utils/sizes.js';
@@ -260,7 +260,7 @@ export default function Track() {
                         {/* رقم الطلب ينُسخ بضغطة (لإرساله للمتجر عند الاستفسار) */}
                         <button
                           type="button"
-                          onClick={() => { try { navigator.clipboard.writeText(o.reference); setCopiedRef(o.reference); setTimeout(() => setCopiedRef(''), 1500); } catch { /* تجاهل */ } }}
+                          onClick={async () => { if (await copyText(o.reference)) { setCopiedRef(o.reference); setTimeout(() => setCopiedRef(''), 1500); } }}
                           className="bz-ref mt-0.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[11px]"
                           dir="ltr"
                           title={t('co.doneCopy')}
@@ -348,7 +348,7 @@ export default function Track() {
                                 {t('track.trackingNo')}:{' '}
                                 <button
                                   type="button"
-                                  onClick={() => { try { navigator.clipboard.writeText(o.tracking); setCopiedTrack(o.tracking); setTimeout(() => setCopiedTrack(''), 1500); } catch { /* تجاهل */ } }}
+                                  onClick={async () => { if (await copyText(o.tracking)) { setCopiedTrack(o.tracking); setTimeout(() => setCopiedTrack(''), 1500); } }}
                                   dir="ltr" title={t('co.doneCopy')}
                                   className="bz-ref rounded-full px-1.5 font-mono font-semibold"
                                 >

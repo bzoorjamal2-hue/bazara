@@ -3,7 +3,7 @@ import NotificationsBell from '../components/NotificationsBell.jsx';
 import { Link, useSearchParams } from 'react-router-dom';
 import api from '../api/client.js';
 import { useTranslation } from 'react-i18next';
-import { storeUrl } from '../utils/links.js';
+import { storeUrl, copyText } from '../utils/links.js';
 import { panelImage } from '../utils/panelImage.js';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -239,7 +239,7 @@ function Overview({ productsCount }) {
     try { await navigator.share({ title: store?.name || 'Bazara', url: publicUrl }); } catch { /* أُلغيت المشاركة */ }
   };
   const copy = async () => {
-    await navigator.clipboard.writeText(publicUrl);
+    if (!(await copyText(publicUrl))) return;
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
   };

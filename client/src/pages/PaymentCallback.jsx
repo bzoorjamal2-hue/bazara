@@ -8,6 +8,7 @@ import Seo from '../components/Seo.jsx';
 import Spinner from '../components/Spinner.jsx';
 import { printReceipt, saveReceiptImage } from '../utils/receipt.js';
 import { sizeLabel } from '../utils/sizes.js';
+import { copyText } from '../utils/links.js';
 
 export default function PaymentCallback() {
   const { t, i18n } = useTranslation();
@@ -65,8 +66,8 @@ export default function PaymentCallback() {
     }
   };
 
-  const copyRef = () => {
-    try { navigator.clipboard.writeText(order?.reference || reference); setCopied(true); setTimeout(() => setCopied(false), 1600); } catch { /* تجاهل */ }
+  const copyRef = async () => {
+    if (await copyText(order?.reference || reference)) { setCopied(true); setTimeout(() => setCopied(false), 1600); }
   };
 
   return (

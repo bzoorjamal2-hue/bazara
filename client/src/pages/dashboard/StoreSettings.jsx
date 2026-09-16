@@ -22,6 +22,7 @@ import { SIZE_CHART } from '../../utils/sizes.js';
 import BankSelect from '../../components/BankSelect.jsx';
 import BANKS from '../../utils/banks.js';
 import { usePlatformCatKeys } from '../../utils/platformCategories.js';
+import { copyText } from '../../utils/links.js';
 
 // أيقونتا إخفاء/إظهار (عين مشطوبة / عين) — للتحكم بظهور الفئة بالمتجر
 const EyeOffGlyph = (p) => (
@@ -328,7 +329,7 @@ export default function StoreSettings() {
   // يفتح المتجر على أصل بلا جلسة فيبدو الحساب «مسجّل خروج» عند الرجوع.
   const storeOpenUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/store/${form.slug || ''}`;
   const copyUrl = async () => {
-    try { await navigator.clipboard.writeText(storeUrl); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch { /* تجاهُل */ }
+    if (await copyText(storeUrl)) { setCopied(true); setTimeout(() => setCopied(false), 1800); }
   };
   // مشاركة الرابط بورقة المشاركة الأصلية (جوال) — أسرع طريق لنشره على واتساب/إنستغرام
   const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
