@@ -12,6 +12,7 @@ import CatThumb from './CatThumb.jsx';
 import CloseButton from './CloseButton.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import useHideOnScroll from '../hooks/useHideOnScroll.js';
+import { panelImage } from '../utils/panelImage.js';
 import { MenuIcon, SearchIcon, CartIcon, HeartIcon, PackageIcon, GiftIcon } from './icons.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import StoryBar from './StoryBar.jsx';
@@ -52,6 +53,13 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
   const { pathname, search } = useLocation();
   const [drawer, setDrawer] = useState(false);
   const [focus, setFocus] = useState(false);
+
+  // هويّةُ رأسِ الدرج — من المصدرِ المشترَكِ نفسِه الذي يُطعِمُ رأسَ اللوحةِ ودرجَها،
+  // فلا يفترقُ وجهُ المتجرِ بين مكانٍ وآخر. والجملةُ بلغةِ العرضِ مع رجوعٍ للأخرى،
+  // وإلّا الجملةُ العامّةُ — نفسُ ترتيبِ شريحةِ الافتتاحِ بصفحةِ المتجر.
+  const drawerBg = panelImage(store, 640);
+  const ownTagline = (ltr ? (store.taglineEn || store.tagline) : (store.tagline || store.taglineEn)) || '';
+  const heroTagline = ownTagline.trim() || t('storePage.defaultTagline');
 
   // اقتراحات البحث الفوري: أول 6 منتجات تطابق ما يكتبه المستخدم — بتطبيع عربي
   // (همزات/تاء مربوطة/أل التعريف) حتى "عبايه" تلاقي "عباية"
@@ -235,34 +243,63 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
           <div className="absolute inset-0 bg-black/50 animate-fade-up" onClick={() => setDrawer(false)} />
           <aside
             onClick={(e) => e.stopPropagation()}
-            className={`absolute inset-y-0 start-0 flex w-[17.5rem] max-w-[80%] flex-col bg-wine-dark px-5 pt-5 text-cream shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}
+            className={`bz-drawer absolute inset-y-0 start-0 flex w-[17.5rem] max-w-[80%] flex-col shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}
             style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 88px)' }}
           >
-            {/* رأس الدرج: إغلاق + أدوات متراصّة بنفس الحجم (40px) — بلا تخبيص */}
-            <div className="flex items-center justify-between gap-2">
-              <CloseButton onClick={() => setDrawer(false)} variant="cream" size="h-10 w-10" />
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => { setDrawer(false); setWishOpen(true); }}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-cream/15 text-cream transition hover:bg-cream/25"
-                  aria-label="wishlist"
-                >
-                  <HeartIcon className="h-5 w-5" filled={wishCount > 0} />
-                </button>
-                <ThemeToggle size="h-10 w-10" className="bg-cream/15 text-cream hover:bg-cream/25" />
+            {/* رأسُ الهويّة: شعارُ المتجرِ واسمُه وجملتُه، وخلفَهم بانرُه باهتاً.
+                كان الدرجُ يفتحُ على زرِّ إغلاقٍ وأيقونتَينِ ثمّ زرٍّ أبيضَ عريضٍ
+                للوحةِ التحكّم — وهو أعلى صوتٍ فيه مع أنّه لا يخصُّ الزبونةَ
+                أصلاً — ولا شيءَ يقولُ متجرَ مَن تتصفّح. */}
+            <div className="bz-drawer-id relative shrink-0 overflow-hidden px-5 pb-5 pt-[calc(env(safe-area-inset-top,0px)+3.5rem)]">
+              {drawerBg && <img src={drawerBg} alt="" aria-hidden className="bz-drawer-id-bg" />}
+              {/* الإغلاقُ فوقَ الصفِّ لا بداخلِه: كان يزاحمُ الاسمَ على سطرٍ واحدٍ
+                  فينقصُّ («‎…oosh Style»)، والاسمُ هو أوّلُ ما يجبُ أن يُقرأ.
+                  وزجاجيٌّ شفّافٌ لأنّه فوقَ صورةٍ لا فوقَ لوح. */}
+              <CloseButton
+                onClick={() => setDrawer(false)}
+                variant="ghost"
+                size="h-9 w-9"
+                className="absolute end-5 top-[calc(env(safe-area-inset-top,0px)+0.9rem)] z-10"
+              />
+              <div className="flex items-center gap-3">
+                {store.logoUrl ? (
+                  <img
+                    src={cldThumb(store.logoUrl, 140)}
+                    alt=""
+                    className="h-12 w-12 shrink-0 rounded-full bg-white/90 object-contain p-[3px]"
+                  />
+                ) : (
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/15 font-display text-lg font-extrabold">
+                    {store.name?.trim()?.[0] || 'B'}
+                  </span>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-display text-lg font-bold leading-tight">{store.name}</p>
+                  <p className="truncate text-xs text-cream/70">{heroTagline}</p>
+                </div>
               </div>
             </div>
 
-            {/* لوحة التحكم / دخول — زر بارز عريض (صاحب متجر → لوحة التحكم، زائر → دخول) */}
-            <Link
-              to={user ? '/dashboard' : '/login'}
-              onClick={() => setDrawer(false)}
-              className="mt-4 flex items-center justify-center gap-2 rounded-2xl bg-cream px-4 py-3 text-sm font-bold text-wine shadow-sm transition hover:bg-white"
-            >
-              <UserGlyph /> {user ? t('nav.dashboard') : t('nav.login')}
-            </Link>
+            <div className="flex shrink-0 items-center gap-2 px-5 pt-4">
+              <button
+                onClick={() => { setDrawer(false); setWishOpen(true); }}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cream/15 text-cream transition hover:bg-cream/25"
+                aria-label="wishlist"
+              >
+                <HeartIcon className="h-5 w-5" filled={wishCount > 0} />
+              </button>
+              <ThemeToggle size="h-10 w-10" className="shrink-0 bg-cream/15 text-cream hover:bg-cream/25" />
+              {/* لوحة التحكم / دخول — صاحبة المتجر → اللوحة، زائرة → دخول */}
+              <Link
+                to={user ? '/dashboard' : '/login'}
+                onClick={() => setDrawer(false)}
+                className="bz-drawer-cta flex h-10 min-w-0 flex-1 items-center justify-center gap-2 rounded-full px-3 text-[13px] font-bold transition"
+              >
+                <UserGlyph /> <span className="truncate">{user ? t('nav.dashboard') : t('nav.login')}</span>
+              </Link>
+            </div>
 
-            <nav className="mt-6 min-h-0 flex-1 space-y-1 overflow-y-auto overflow-x-hidden overscroll-contain">
+            <nav className="mt-5 min-h-0 flex-1 space-y-1 overflow-y-auto overflow-x-hidden overscroll-contain px-5">
               <button
                 onClick={() => pick('all')}
                 className={`block w-full rounded-xl px-3 py-3 text-start text-lg font-bold transition hover:bg-cream/10 ${cat === 'all' ? 'text-cream' : 'text-cream/90'}`}
@@ -321,9 +358,12 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
               )}
             </nav>
 
-            <div className="flex shrink-0 items-center justify-between pt-4">
+            {/* الذيلُ بخطٍّ يفصلُه عن القائمةِ فوقَه — كان طافياً بلا حدٍّ فيبدو
+                سطراً نسيَه أحدٌ لا ذيلَ درجٍ مقصوداً. والحشوةُ الجانبيّةُ عليه
+                بنفسِه بعدما نزلت من اللوحِ إلى أبنائه. */}
+            <div className="mt-2 flex shrink-0 items-center justify-between border-t border-cream/15 px-5 pt-4">
               <LanguageSwitcher onChanged={() => setDrawer(false)} />
-              <Link to="/" onClick={() => setDrawer(false)} className="font-display text-xs text-cream/60 hover:text-cream">
+              <Link to="/" onClick={() => setDrawer(false)} className="font-display text-xs text-cream/60 transition hover:text-cream">
                 Bazara
               </Link>
             </div>

@@ -101,12 +101,13 @@ export default function DashDrawerNav({ groups, activeKey, onNavigate, badges = 
                   style={{ animationDelay: `${row++ * 24}ms` }}
                   className={`menu-row app-tap relative flex items-center gap-3 rounded-2xl py-2 pe-3 ps-3.5 text-[15px] transition duration-200 active:scale-[0.985] ${
                     active
-                      ? 'bg-cream/[0.14] font-extrabold text-cream ring-1 ring-gold-400/35'
+                      ? 'bz-drawer-ring bg-cream/[0.14] font-extrabold text-cream ring-1'
                       : 'font-semibold text-cream hover:bg-cream/10'
                   }`}
                 >
-                  {/* شريط ذهبي على حافّة البداية يعلّم القسم المفتوح */}
-                  {active && <span aria-hidden className="absolute inset-y-1.5 start-0 w-[3px] rounded-full bg-gold-400" />}
+                  {/* شريطٌ على حافّة البداية يعلّم القسم المفتوح — بلونِ حبرِ اللوحِ
+                      لا بالذهبيّ الثابت: ذاك كان مضبوطاً لسوادِ الدرجِ القديم. */}
+                  {active && <span aria-hidden className="bz-drawer-bar absolute inset-y-1.5 start-0 w-[3px] rounded-full" />}
                   {/* المربّعُ للمفتوحِ وحدَه: كان لكلِّ صفٍّ مربّعُه، فتصيرُ القائمةُ
                       اثنَي عشرَ مربّعاً رماديّاً متشابهاً فوقَ بعضِها — جدارٌ لا
                       قائمة، والمفتوحُ منها لا يكادُ يُميَّز. الأيقونةُ وحدَها
@@ -114,7 +115,7 @@ export default function DashDrawerNav({ groups, activeKey, onNavigate, badges = 
                   <span
                     className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition ${
                       active
-                        ? 'bg-[#D5D5D4] text-[#1F1F1E] ring-1 ring-[#D5D5D4]/50'
+                        ? 'bz-drawer-on'
                         : 'text-cream/70'
                     }`}
                   >
@@ -155,7 +156,7 @@ export default function DashDrawerNav({ groups, activeKey, onNavigate, badges = 
         type="button"
         onClick={scrollMore}
         tabIndex={more ? 0 : -1}
-        className={`app-tap absolute inset-x-0 bottom-1 mx-auto flex w-max items-center gap-1 rounded-full bg-[#D5D5D4] px-3 py-1 text-[11px] font-extrabold text-[#1F1F1E] shadow-[0_6px_18px_-6px_rgba(0,0,0,0.5)] transition-opacity duration-300 ${
+        className={`bz-drawer-on app-tap absolute inset-x-0 bottom-1 mx-auto flex w-max items-center gap-1 rounded-full px-3 py-1 text-[11px] font-extrabold shadow-[0_6px_18px_-8px_rgba(15,15,14,0.5)] transition-opacity duration-300 ${
           more ? 'opacity-100' : 'pointer-events-none opacity-0'
         } ${more && nudge ? 'menu-nudge' : ''}`}
       >

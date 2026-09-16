@@ -382,20 +382,20 @@ export default function Navbar() {
           <div className="absolute inset-0 bg-black/50 animate-fade-up" onClick={() => setMenuOpen(false)} />
           <aside
             onClick={(e) => e.stopPropagation()}
-            className={`dash-drawer absolute inset-y-0 start-0 flex h-[100dvh] max-h-[100dvh] w-[17.5rem] max-w-[80%] flex-col px-5 pb-[calc(env(safe-area-inset-bottom,0px)+14px)] pt-5 text-cream shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}
+            className={`bz-drawer absolute inset-y-0 start-0 flex h-[100dvh] max-h-[100dvh] w-[17.5rem] max-w-[80%] flex-col px-5 pb-[calc(env(safe-area-inset-bottom,0px)+14px)] shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}
           >
-            {/* أعلى: إغلاق + اللغة */}
-            <div className="flex items-center justify-between">
-              <CloseButton onClick={() => setMenuOpen(false)} variant="cream" size="h-10 w-10" />
-              <LanguageSwitcher onChanged={() => setMenuOpen(false)} />
-            </div>
-
             {/* الهوية — المدير يظهر باسمه وصورته (حساب تحكّم).
                 وخلفُها بانرُ المتجرِ معتَّماً كرأسِ اللوحةِ تماماً: تفتحُ التاجرةُ
                 القائمةَ فترى متجرَها لا لوحاً داكناً عامّاً، والقرابةُ بين
-                القائمةِ والرأسِ والصفحةِ تُقرَأُ بلا شرح. */}
-            <div className="bz-drawer-id relative -mx-5 mt-4 flex items-center gap-3 overflow-hidden border-b border-cream/15 px-5 py-4">
+                القائمةِ والرأسِ والصفحةِ تُقرَأُ بلا شرح.
+                والإغلاقُ واللغةُ صارا فوقَ الصورةِ داخلَه لا بصفٍّ عارٍ فوقَه:
+                رأسُ الدرجِ للهويّةِ أوّلاً، والأدواتُ ضيفٌ عليها. */}
+            <div className="bz-drawer-id relative -mx-5 flex items-center gap-3 overflow-hidden px-5 pb-4 pt-[calc(env(safe-area-inset-top,0px)+3.75rem)]">
               {drawerBg && <img src={drawerBg} alt="" aria-hidden className="bz-drawer-id-bg" />}
+              <div className="absolute inset-x-5 top-[calc(env(safe-area-inset-top,0px)+0.9rem)] z-10 flex items-center justify-between gap-2">
+                <CloseButton onClick={() => setMenuOpen(false)} variant="ghost" size="h-9 w-9" />
+                <LanguageSwitcher onChanged={() => setMenuOpen(false)} />
+              </div>
               {/* نفس مكوّن الهوية المستخدم بزرّ الشريط — فلا يختلف الشعار بين الاثنين */}
               <Avatar user={user} store={isAdmin ? null : store} size="h-12 w-12" />
               <div className="min-w-0">
@@ -459,14 +459,21 @@ export default function Navbar() {
           <div className="absolute inset-0 bg-black/50 animate-fade-up" onClick={() => setMenuOpen(false)} />
           <aside
             onClick={(e) => e.stopPropagation()}
-            className={`dash-drawer absolute inset-y-0 start-0 flex h-[100dvh] max-h-[100dvh] w-[17.5rem] max-w-[80%] flex-col px-5 pb-[calc(env(safe-area-inset-bottom,0px)+14px)] pt-5 text-cream shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}
+            className={`bz-drawer absolute inset-y-0 start-0 flex h-[100dvh] max-h-[100dvh] w-[17.5rem] max-w-[80%] flex-col px-5 pb-[calc(env(safe-area-inset-bottom,0px)+14px)] shadow-2xl ${ltr ? 'animate-slide-in-left' : 'animate-slide-in'}`}
           >
-            <div className="flex items-center justify-between">
-              <CloseButton onClick={() => setMenuOpen(false)} variant="cream" size="h-10 w-10" />
-              <LanguageSwitcher onChanged={() => setMenuOpen(false)} />
+            {/* للزائرةِ لا متجرَ تُعرَضُ هويّتُه، فالشريطُ يحملُ هويّةَ المنصّةِ
+                على تدرّجِها: نفسُ الرأسِ ونفسُ الموضعِ ونفسُ الأدواتِ فوقَه —
+                فلا يُفتَحُ درجٌ برأسٍ ودرجٌ بلا رأس. */}
+            <div className="bz-drawer-id relative -mx-5 flex flex-col items-start gap-1 overflow-hidden px-5 pb-4 pt-[calc(env(safe-area-inset-top,0px)+3.75rem)]">
+              <div className="absolute inset-x-5 top-[calc(env(safe-area-inset-top,0px)+0.9rem)] z-10 flex items-center justify-between gap-2">
+                <CloseButton onClick={() => setMenuOpen(false)} variant="ghost" size="h-9 w-9" />
+                <LanguageSwitcher onChanged={() => setMenuOpen(false)} />
+              </div>
+              <Link to="/" onClick={() => setMenuOpen(false)} className="font-display text-2xl font-extrabold tracking-wide text-cream">Bazara</Link>
+              {/* سطرٌ واحدٌ لا فقرة: ‎landing.subtitle جملةٌ من ثلاثةِ أسطرٍ تملأُ
+                  الشريطَ وتدفعُ القائمةَ لأسفل. الشعارُ يقولُ ما يكفي هنا. */}
+              <p className="truncate text-xs text-cream/70">{t('app.tagline')}</p>
             </div>
-
-            <Link to="/" onClick={() => setMenuOpen(false)} className="mt-5 font-display text-2xl font-extrabold tracking-wide text-cream">Bazara</Link>
 
             <nav className="mt-4 min-h-0 flex-1 space-y-1 overflow-y-auto">
               <Link to="/shop" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-base text-cream/90 transition hover:bg-cream/10 hover:text-cream"><GridIcon className="h-5 w-5 text-cream/80" /> {t('nav.home')}</Link>

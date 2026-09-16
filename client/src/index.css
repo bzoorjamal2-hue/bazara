@@ -3313,17 +3313,138 @@ html.dark .theme-pub .bz-doc-meta { color: rgba(239, 238, 236, 0.62); }
 .bz-rolechip { background: rgba(235, 235, 235, 0.14); color: #F9F9F8; }
 .bz-usermenu { box-shadow: 0 16px 40px -10px rgba(23, 23, 23, 0.45), inset 0 0 0 1px rgba(23, 23, 23, 0.12); }
 
-/* الزرّ الوحيد الذي يجب أن يبرز — عاجيّ صلب على الدرج الغامق */
-.bz-drawer-cta {
-  background: #F9F9F8;
-  color: #0F0F0E;
-  box-shadow: 0 10px 26px -14px rgba(0, 0, 0, 0.9);
-}
-@media (hover: hover) { .bz-drawer-cta:hover { background: #ffffff; } }
+/* ═══════ الدرجُ الجانبيّ: لوحٌ عاجيٌّ كالموقع، لا لوحٌ أسودُ غريبٌ عنه ═══════
+   كان الدرجانِ — درجُ بازارا ودرجُ المتجر — تدرّجاً بنّيّاً شبهَ أسود، وسطَ موقعٍ
+   عاجيٍّ من أوّلِه لآخرِه. يُفتَحُ فيبدو نافذةً من تطبيقٍ آخر.
 
-/* وخلفية الدرج بلا توهّجٍ ذهبيّ: التدرّج البنّي وحده يكفي لفصله عمّا خلفه */
-.dash-drawer { background: linear-gradient(180deg, #3A3938 0%, #0F0F0E 42%, #282827 100%); }
-html.dark .dash-drawer { background: linear-gradient(180deg, #232120 0%, #232120 50%, #1A1918 100%); }
+   والمفرداتُ بداخلِهما كلُّها ‎cream: ‎text-cream و‎bg-cream/15 و‎border-cream/25
+   وأمثالُها بستّينَ موضعاً — لأنّ «العاجيّ» كان يعني «الحبرَ فوقَ الداكن». فبدل
+   إعادةِ كتابتِها كلِّها، صار اللوحُ نطاقاً بمتغيّراتٍ لونيّةٍ وأُعيدَ تعيينُ تلك
+   المفرداتِ داخلَه — وهو ما يفعلُه هذا الملفُّ أصلاً مع ‎.app-navbar ليلاً.
+   مجموعةُ تعييناتٍ واحدةٌ وطاقما متغيّراتٍ: نهاريٌّ يقلبُها حبراً داكناً على
+   بياض، وليليٌّ يُرجعُها عاجيّةً على داكن.
+
+   والأدراجُ تُرسَمُ بـ‎createPortal على ‎<body>‎ — خارجَ ‎.theme-pub — فقواعدُ
+   الوضعِ الليليِّ التي تقلبُ ‎text-wine هناك لا تطالُها. لذلك الألوانُ هنا صريحةٌ
+   بنطاقِ ‎.bz-drawer نفسِه لا متوكّئةٌ على نطاقِ الصفحة. */
+.bz-drawer {
+  --dw-ink: #1F1E1D;
+  --dw-ink-90: rgba(31, 30, 29, 0.88);
+  --dw-ink-70: rgba(31, 30, 29, 0.64);
+  --dw-ink-30: rgba(31, 30, 29, 0.34);
+  --dw-fill-08: rgba(31, 30, 29, 0.055);
+  --dw-fill-12: rgba(31, 30, 29, 0.09);
+  --dw-fill-20: rgba(31, 30, 29, 0.14);
+  --dw-line: rgba(31, 30, 29, 0.10);
+  --dw-line-2: rgba(31, 30, 29, 0.16);
+  --dw-foot: #F5F3F0;
+  --dw-cta-bg: #1F1E1D;
+  --dw-cta-ink: #FAF9F7;
+  --dw-cta-hover: #0F0F0E;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F5F3F0 100%);
+  color: var(--dw-ink);
+}
+html.dark .bz-drawer {
+  --dw-ink: #EDEBE7;
+  --dw-ink-90: rgba(237, 235, 231, 0.90);
+  --dw-ink-70: rgba(237, 235, 231, 0.66);
+  --dw-ink-30: rgba(237, 235, 231, 0.36);
+  --dw-fill-08: rgba(237, 235, 231, 0.07);
+  --dw-fill-12: rgba(237, 235, 231, 0.12);
+  --dw-fill-20: rgba(237, 235, 231, 0.18);
+  --dw-line: rgba(237, 235, 231, 0.13);
+  --dw-line-2: rgba(237, 235, 231, 0.20);
+  --dw-foot: #1A1918;
+  --dw-cta-bg: #EDEBE7;
+  --dw-cta-ink: #1F1E1D;
+  --dw-cta-hover: #FFFFFF;
+  background: linear-gradient(180deg, #232120 0%, #1A1918 100%);
+}
+
+/* إعادةُ تعيينِ مفرداتِ العاجيّ داخلَ اللوح — القيمةُ من المتغيّرِ فتتبعُ الوضع */
+.bz-drawer .text-cream { color: var(--dw-ink); }
+.bz-drawer .text-cream\/90,
+.bz-drawer .text-cream\/85 { color: var(--dw-ink-90); }
+.bz-drawer .text-cream\/80,
+.bz-drawer .text-cream\/70,
+.bz-drawer .text-cream\/65,
+.bz-drawer .text-cream\/60 { color: var(--dw-ink-70); }
+.bz-drawer .text-cream\/45,
+.bz-drawer .text-cream\/40,
+.bz-drawer .text-cream\/25 { color: var(--dw-ink-30); }
+.bz-drawer .bg-cream\/10,
+.bz-drawer .bg-cream\/12,
+.bz-drawer .bg-cream\/\[0\.08\],
+.bz-drawer .bg-cream\/\[0\.12\] { background-color: var(--dw-fill-08); }
+.bz-drawer .bg-cream\/15,
+.bz-drawer .bg-cream\/\[0\.14\] { background-color: var(--dw-fill-12); }
+.bz-drawer .bg-cream\/20,
+.bz-drawer .bg-cream\/25 { background-color: var(--dw-fill-20); }
+.bz-drawer .bg-cream { background-color: var(--dw-cta-bg); color: var(--dw-cta-ink); }
+.bz-drawer .border-cream\/10,
+.bz-drawer .border-cream\/15 { border-color: var(--dw-line); }
+.bz-drawer .border-cream\/25,
+.bz-drawer .border-cream\/30,
+.bz-drawer .border-cream\/40 { border-color: var(--dw-line-2); }
+.bz-drawer .ring-cream\/10,
+.bz-drawer .ring-cream\/12 { --tw-ring-color: var(--dw-line); }
+.bz-drawer .ring-cream { --tw-ring-color: var(--dw-line-2); }
+.bz-drawer .bg-cream\/15.h-px,
+.bz-drawer .bg-cream\/10.h-px,
+.bz-drawer .h-px.bg-cream\/15,
+.bz-drawer .h-px.bg-cream\/10 { background-color: var(--dw-line); }
+.bz-drawer .ring-cream\/50 { --tw-ring-color: var(--dw-line-2); }
+@media (hover: hover) {
+  .bz-drawer .hover\:bg-cream\/10:hover,
+  .bz-drawer .hover\:bg-cream\/15:hover { background-color: var(--dw-fill-12); }
+  .bz-drawer .hover\:bg-cream\/20:hover,
+  .bz-drawer .hover\:bg-cream\/25:hover { background-color: var(--dw-fill-20); }
+  .bz-drawer .hover\:text-cream:hover { color: var(--dw-ink); }
+}
+
+/* الزرّ الوحيد الذي يجب أن يبرز — صار حبراً صلباً على اللوحِ الفاتح (وعاجيّاً
+   على الداكن). كان عاجيّاً دائماً لأنّ اللوحَ كان أسودَ دائماً. */
+.bz-drawer-cta {
+  background: var(--dw-cta-bg, #F9F9F8);
+  color: var(--dw-cta-ink, #0F0F0E);
+  box-shadow: 0 10px 26px -16px rgba(15, 15, 14, 0.55);
+}
+@media (hover: hover) { .bz-drawer-cta:hover { background: var(--dw-cta-hover, #ffffff); } }
+
+/* شريطُ الهويّة: صورةُ المتجرِ خلفَ اسمِه وشعارِه. وهو الاستثناءُ الوحيدُ —
+   يبقى داكناً بالوضعَين لأنّ تحتَه صورةً لا لوحاً: التعتيمُ هو ما يجعلُ النصَّ
+   مقروءاً فوقَ أيِّ صورةٍ ترفعُها التاجرة. فيُعيدُ المتغيّراتِ إلى العاجيّ
+   داخلَ حدودِه وحدَها، فتتبعُه تعييناتُ الأعلى بلا سطرٍ إضافيّ. */
+.bz-drawer-id {
+  --dw-ink: #F7F6F3;
+  --dw-ink-90: rgba(247, 246, 243, 0.92);
+  --dw-ink-70: rgba(247, 246, 243, 0.72);
+  --dw-ink-30: rgba(247, 246, 243, 0.45);
+  --dw-fill-08: rgba(255, 255, 255, 0.12);
+  --dw-fill-12: rgba(255, 255, 255, 0.18);
+  --dw-fill-20: rgba(255, 255, 255, 0.26);
+  --dw-line: rgba(255, 255, 255, 0.20);
+  --dw-line-2: rgba(255, 255, 255, 0.30);
+  /* ورقاقةٌ صلبةٌ فوقَ الصورةِ تبقى عاجيّةً بالوضعَين — الصورةُ داكنةٌ تحتَها دائماً */
+  --dw-cta-bg: #F7F6F3;
+  --dw-cta-ink: #1F1E1D;
+  --dw-cta-hover: #FFFFFF;
+  color: var(--dw-ink);
+  /* متجرٌ بلا صورةٍ يبقى له وجهٌ: تدرّجُ الهويّةِ بدل مستطيلٍ فارغ */
+  background: linear-gradient(145deg, #3A3938 0%, #1A1918 55%, #0F0F0E 100%);
+}
+
+/* علاماتُ «أنتَ هنا» داخلَ اللوح: بلاطةُ أيقونةِ القسمِ المفتوحِ وشريطُ حافّتِه
+   وزرُّ «في أقسامٌ تحت». كانت أرقاماً ثابتةً (#D5D5D4) مختارةً لسوادِ اللوحِ
+   القديم، فعلى البياضِ صارت رماداً باهتاً لا يدلُّ على شيء. */
+.bz-drawer-on { background: var(--dw-cta-bg); color: var(--dw-cta-ink); }
+.bz-drawer-bar { background: var(--dw-cta-bg); }
+.bz-drawer-ring { --tw-ring-color: var(--dw-line-2); }
+
+/* تلاشي حافّةِ القائمةِ السفليّة — يتبعُ قاعَ اللوحِ بالوضعَين عبر المتغيّر */
+.bz-drawer .dash-drawer-fade {
+  background: linear-gradient(to top, var(--dw-foot) 18%, color-mix(in srgb, var(--dw-foot) 82%, transparent) 50%, transparent);
+}
 
 /* ═══════ صفحات المستندات: شريط صفحة المنصّة نفسه ═══════
    كانت تُفتح بشريط التسوّق (سلّة ومفضّلة وحساب ومبدّل الوضع) — لا معنى له
@@ -5263,17 +5384,17 @@ html[dir='rtl'] .bz-dashhero-name::after { background: linear-gradient(270deg, r
 .bz-drawer-id { isolation: isolate; }
 
 /* عنوانُ مجموعةٍ بدرجِ اللوحة — بلغةِ فوقيّاتِ صفحةِ المتجرِ نفسِها.
-   وبلونٍ صريحٍ لا عبرَ ‎text-gold-200: ذاك يُعادُ تعيينُه داخلَ ‎.theme-pub إلى
-   ‏‎#1F1E1D لأنّه مصمَّمٌ لسطوحِ الصفحةِ الفاتحة، والدرجُ داكن — فكانت العناوينُ
-   سوداءَ على سوادٍ وبنيةُ القائمةِ غائبةً عن العينِ تماماً. */
+   ولونُه من متغيّرِ اللوحِ لا من ‎text-gold-200 ولا من رقمٍ ثابت: ذاك يُعادُ
+   تعيينُه داخلَ ‎.theme-pub إلى ‎#1F1E1D فتصيرُ العناوينُ سوداءَ على سواد، وهذا
+   كان عاجيّاً ثابتاً فصار — بعدَ تبييضِ اللوحِ — بياضاً على بياض. المتغيّرُ
+   يتبعُ اللوحَ أينما ذهب. */
 .bz-drawer-grp {
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(246, 245, 243, 0.52);
+  color: var(--dw-ink-30, rgba(246, 245, 243, 0.52));
 }
-html.dark .theme-pub .bz-drawer-grp { color: rgba(246, 245, 243, 0.48); }
 
 /* ═══════ مؤشّراتُ اللوحة: رقمٌ يقودُ وثلاثةٌ تسنده ═══════
    كانت أربعَ بطاقاتٍ متطابقةٍ كلُّ واحدةٍ ببلاطةِ أيقونةٍ كبيرةٍ وحدودٍ ورقم —
