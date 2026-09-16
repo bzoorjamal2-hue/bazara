@@ -75,7 +75,9 @@
     "track": "تتبّعي طلبك",
     "openStore": "افتح متجري",
     "adminRole": "مدير الموقع",
-    "offers": "العروض"
+    "offers": "العروض",
+    "myOrders": "الطلبات",
+    "messages": "الرسائل"
   },
   "offers": {
     "title": "العروض والتخفيضات",

@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getStoreScope, subscribeStoreScope } from '../utils/storeScope.js';
 import { useTranslation } from 'react-i18next';
-import { trackPath } from '../utils/links.js';
 import { useCart } from '../context/CartContext.jsx';
 import useHideOnScroll from '../hooks/useHideOnScroll.js';
 import { useWishlist } from '../context/WishlistContext.jsx';
@@ -95,13 +94,40 @@ function OffersIcon({ className = 'h-6 w-6', filled }) {
     </svg>
   );
 }
-function TrackIcon({ className = 'h-6 w-6', filled }) {
+// السلّةُ للزبونة — بنفسِ لغةِ بقيّةِ البنود (خطٌّ ١٫٧ ووصلاتٌ مستديرة)
+function CartIcon({ className = 'h-6 w-6', filled }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H14a1 1 0 0 1 1 1v9H3.5A.5.5 0 0 1 3 14.5Z" />
-      <path d="M15 8h3.2a1 1 0 0 1 .8.4l2 2.7a1 1 0 0 1 .2.6V15h-6Z" />
-      <circle cx="7.5" cy="17.5" r="1.7" fill="none" />
-      <circle cx="17" cy="17.5" r="1.7" fill="none" />
+      <path d="M3 4h1.8a1 1 0 0 1 1 .8L6.2 7m0 0 1.6 7.6a1.6 1.6 0 0 0 1.6 1.3h7.4a1.6 1.6 0 0 0 1.6-1.2L20 7Z" />
+      <circle cx="9.5" cy="19.5" r="1.4" fill={filled ? 'none' : 'currentColor'} stroke="none" />
+      <circle cx="17" cy="19.5" r="1.4" fill={filled ? 'none' : 'currentColor'} stroke="none" />
+    </svg>
+  );
+}
+// الطلباتُ لصاحبةِ المتجر — إيصالٌ لا صندوق: الصندوقُ يقولُ «شحنة»، والإيصالُ
+// يقولُ «طلبٌ ينتظرُ منكِ قراراً»، وهو ما تفتحُ التطبيقَ من أجلِه.
+function OrdersIcon({ className = 'h-6 w-6', filled }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M5.5 2.8h13a1 1 0 0 1 1 1v17.4l-3-1.8-2.5 1.8-2.5-1.8-2.5 1.8-3-1.8V3.8a1 1 0 0 1 1-1Z" />
+      <path d="M9 8h6M9 12h6" stroke={filled ? '#fff' : 'currentColor'} />
+    </svg>
+  );
+}
+function MessagesIcon({ className = 'h-6 w-6', filled }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="2.6" y="2.6" width="18.8" height="18.8" rx="5.6" />
+      <circle cx="12" cy="12" r="4.1" fill="none" stroke={filled ? '#fff' : 'currentColor'} />
+      <circle cx="17.2" cy="6.9" r="1.1" fill={filled ? '#fff' : 'currentColor'} stroke="none" />
+    </svg>
+  );
+}
+function StoreGlyph({ className = 'h-6 w-6', filled }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3.6 9.4 5 4.2a1 1 0 0 1 1-.7h12a1 1 0 0 1 1 .7l1.4 5.2a2.6 2.6 0 0 1-5 1.1 2.6 2.6 0 0 1-4.8 0 2.6 2.6 0 0 1-4.8 0 2.6 2.6 0 0 1-2.2 1.2Z" />
+      <path d="M5.2 11.8v7.7a1 1 0 0 0 1 1h11.6a1 1 0 0 0 1-1v-7.7" stroke={filled ? '#fff' : 'currentColor'} />
     </svg>
   );
 }
@@ -256,7 +282,6 @@ export default function BottomNav() {
   // العروض/التتبّع/التصنيفات تبقى ضمن متجري (بدل صفحات بازارا العامة) طالما لي متجر
   const offersTo = inDest ? `/store/${destSlug}?offers=1` : '/offers';
   const offersActive = inStore ? /[?&]offers=1/.test(search) : pathname === '/offers';
-  const trackTo = trackPath(destSlug);
   // ريلز: متجر التصفّح الحالي، أو متجر المشترك نفسه، أو العام (كل متجر له ريلز خاص)
   const reelsTo = destSlug ? `/store/${destSlug}/reels` : '/reels';
   const reelsActive = pathname.endsWith('/reels');
@@ -277,17 +302,50 @@ export default function BottomNav() {
   // الترتيب يتبع اتجاه اللغة تلقائياً: عربي (حسابي أولاً يميناً)، إنجليزي (يساراً).
   // عرضٌ عريض؟ نقرؤه مرّةً ونتابع تغيّره — البندُ المكرّر يُخفى هناك.
   const dt = useDesktop();
-  const items = [
-    // «حسابي» يُخفى على الكمبيوتر: هو أصلاً بالشريط العلويّ بحدّ
-    // الصورة الشخصية، فوجودُه هنا تكرارٌ يزحم صفّاً محدود العرض.
-    // (dt = شاشةٌ عريضة)
-    ...(dt ? [] : [{ key: 'account', label: t('nav.account') || 'حسابي', Icon: UserIcon, active: !cartOpen && !wishOpen && pathname.startsWith('/dashboard'), badge: newOrders, onClick: () => goto(accountTo) }]),
-    { key: 'track', label: t('nav.track'), Icon: TrackIcon, active: !cartOpen && !wishOpen && (pathname === '/track' || pathname.endsWith('/track')), onClick: () => goto(trackTo) },
+
+  // ═══ شريطانِ لا واحد: لكلِّ دورٍ شغلُه ═══
+  // (وعناوينُها بالحزمةِ الأساسيّةِ لا بحزمةِ اللوحةِ الكسولة — تلك لا تصلُ
+  //  إلّا بفتحِ اللوحة، فيظهرُ المفتاحُ خاماً لمن تقفُ بالرئيسيّة.)
+  // كان ستّةَ بنودٍ متطابقةٍ للجميع، فتفتحُ صاحبةُ المتجرِ تطبيقَها فتجدُ تنقّلَ
+  // زبونة: عروضٌ وريلزٌ وتصنيفات. وشغلُها هي طلبٌ وصلَ ورسالةٌ تنتظرُ ردّاً.
+  const isOwner = Boolean(user && store?.slug && !isAdmin);
+  const onDash = pathname.startsWith('/dashboard');
+  const tab = new URLSearchParams(search).get('tab');
+  const dash = (key) => `/dashboard?tab=${key}`;
+
+  // «حسابي» يُخفى على الكمبيوتر: هو أصلاً بالشريط العلويّ بحدّ
+  // الصورة الشخصية، فوجودُه هنا تكرارٌ يزحم صفّاً محدود العرض.
+  // (dt = شاشةٌ عريضة)
+  const accountItem = dt ? [] : [{ key: 'account', label: t('nav.account') || 'حسابي', Icon: UserIcon, active: !cartOpen && !wishOpen && onDash && !tab, onClick: () => goto(accountTo) }];
+
+  const ownerItems = [
+    ...accountItem,
+    // الرسائلُ لمن ربطت إنستغرام وحدَها: الزرُّ يظهرُ من نفسِه ساعةَ تربط، بلا
+    // يومِ إطلاقٍ نتذكّرُ تبديلَه — ولا شاشةً فارغةً لمن لم تربط بعد.
+    ...(store?.igConnected
+      ? [{ key: 'messages', label: t('nav.messages'), Icon: MessagesIcon, active: !cartOpen && !wishOpen && tab === 'instagram', onClick: () => goto(dash('instagram')) }]
+      : []),
+    { key: 'orders', label: t('nav.myOrders'), Icon: OrdersIcon, active: !cartOpen && !wishOpen && tab === 'myOrders', badge: newOrders, onClick: () => goto(dash('myOrders')) },
+    // متجري: تحتاجُ ترى متجرَها كما تراه الزبونة — ولو صارَ شريطُها إداريّاً
+    // بحتاً لفقدت هذا الطريقَ القصير.
+    { key: 'mystore', label: t('nav.myStore'), Icon: StoreGlyph, active: !cartOpen && !wishOpen && pathname === `/store/${store?.slug}`, onClick: () => goto(`/store/${store?.slug}`) },
+    { key: 'home', label: t('nav.home'), Icon: HomeIcon, active: !cartOpen && !wishOpen && homeActive, onClick: () => goto(homeTo) },
+  ];
+
+  const shopperItems = [
+    ...accountItem,
+    // السلّةُ مكانَ «تتبّعي طلبك»: التتبّعُ فعلٌ يقعُ مرّةً بعد الطلبِ ويصلُها
+    // رابطُه أصلاً، وهو باقٍ بدرجِ المتجرِ وفوترِ المنصّة. والسلّةُ أعلى فعلٍ
+    // تكراراً — وكانت بالهيدرِ وحدَه، والهيدرُ صارَ يغيبُ بالنزول: فتتصفّحُ
+    // الزبونةُ وسلّتُها خارجَ الشاشةِ تماماً. هذا عطبٌ أدخلناه فنسدُّه.
+    { key: 'cart', label: t('nav.cart'), Icon: CartIcon, active: cartOpen, badge: count, onClick: () => { setWishOpen(false); setOpen(true); } },
     { key: 'offers', label: t('nav.offers'), Icon: OffersIcon, active: !cartOpen && !wishOpen && offersActive, onClick: () => goto(offersTo) },
     { key: 'reels', label: t('reels.title'), Icon: ReelsIcon, active: !cartOpen && !wishOpen && reelsActive, onClick: () => goto(reelsTo) },
     { key: 'categories', label: t('nav.categories'), Icon: CategoriesIcon, active: !cartOpen && !wishOpen && categoriesActive, onClick: () => goto(categoriesTo) },
     { key: 'home', label: t('nav.home'), Icon: HomeIcon, active: !cartOpen && !wishOpen && homeActive, onClick: () => goto(homeTo) },
   ];
+
+  const items = isOwner ? ownerItems : shopperItems;
 
   const hidden = locked || kbOpen || buyBar;
 

@@ -75,7 +75,9 @@
     "track": "Track your order",
     "openStore": "Open my store",
     "adminRole": "Site admin",
-    "offers": "Offers"
+    "offers": "Offers",
+    "myOrders": "Orders",
+    "messages": "Messages"
   },
   "offers": {
     "title": "Offers & deals",

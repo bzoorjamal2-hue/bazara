@@ -171,7 +171,8 @@ export async function me(req, res, next) {
               s.id AS store_id, s.name AS store_name, s.slug AS store_slug,
               s.description AS store_description, s.logo_url AS store_logo_url,
               s.custom_categories AS store_custom_categories,
-              s.banners AS store_banners, s.panel_image AS store_panel_image
+              s.banners AS store_banners, s.panel_image AS store_panel_image,
+              s.ig_connected AS store_ig_connected
        FROM users u
        LEFT JOIN stores s ON s.user_id = u.id
        WHERE u.id = $1`,
@@ -208,6 +209,10 @@ export async function me(req, res, next) {
             panelImage: row.store_panel_image || '',
             banners: Array.isArray(row.store_banners) ? row.store_banners : [],
             customCategories: Array.isArray(row.store_custom_categories) ? row.store_custom_categories : [],
+            // زرُّ الرسائلِ بالشريطِ السفليِّ يظهرُ لمن ربطت إنستغرام وحدَها، لا
+            // لكلِّ تاجرةٍ بيومِ إطلاقٍ نتذكّرُ تبديلَه. والحقلُ يركبُ الحمولةَ
+            // التي تُحمَّلُ مرّةً عند الدخول — لا طلبَ جديدٌ بكلِّ فتحةِ صفحة.
+            igConnected: Boolean(row.store_ig_connected),
           }
         : null,
     });
