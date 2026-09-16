@@ -15,7 +15,7 @@ import useDraft, { clearDraft } from '../../hooks/useDraft.js';
 import {
   SaveIcon, TruckIcon, ImageIcon, GiftIcon, FolderIcon, MegaphoneIcon, RulerIcon, ShieldIcon,
   StoreIcon, PhoneIcon, BoltIcon, ChartIcon, TagIcon, CardIcon, GearIcon, CheckIcon, CopyIcon, LinkIcon, ShareIcon,
-  ClockIcon, SparkleIcon, WhatsAppIcon, InstagramIcon, FacebookIcon, CashIcon, PinIcon, GridIcon,
+  ClockIcon, SparkleIcon, WhatsAppIcon, InstagramIcon, FacebookIcon, CashIcon, PinIcon, GridIcon, ArrowDownIcon,
 } from '../../components/icons.jsx';
 import { cldThumb } from '../../utils/cloudinary.js';
 import { SIZE_CHART } from '../../utils/sizes.js';
@@ -84,6 +84,32 @@ const SECTIONS = [
   ['s-return', 'returnPolicy', (f) => Boolean(String(f.returnPolicy || '').trim())],
   ['s-delivery', 'deliveryPayment', (f) => Boolean(String(f.deliveryInfo || '').trim() || String(f.paymentInfo || '').trim())],
 ];
+
+// قسمٌ طويلٌ يُطوى حتّى يُفتَح.
+//
+// صفحةُ الإعداداتِ ستّةَ عشرَ ألفَ بكسل، وثلاثةُ أقسامٍ منها تسعةُ آلاف:
+// البانراتُ أربعةُ آلافٍ والمجموعاتُ ثلاثةٌ والفئاتُ ألفان. فمن تنزلُ إلى
+// «سياسة الإرجاع» تمرُّ عليها كلِّها، ومن تريدُ تعديلَ شريحةٍ واحدةٍ ترى
+// أربعةَ آلافِ بكسلٍ من محرّراتٍ دفعةً واحدة.
+//
+// والطيُّ صريحٌ لا تلقائيّ: زرٌّ مكتوبٌ يُفتَحُ ويُغلَق. جرّبتُ التخطّيَ
+// التلقائيَّ ‎(content-visibility) فوجدتُ الصفحةَ تكبرُ أثناءَ النزولِ لأنّ
+// المقاسَ المقدَّرَ يبعدُ عن الحقيقيِّ كثيراً، فيقفزُ التمرير — وهو ما داويناه.
+//
+// والقيمُ لا تضيعُ بالطيّ: كلُّ الحقولِ تقرأُ من حالةِ ‎form الواحدةِ لا من
+// عناصرِ الصفحة، والحفظُ يرسلُها كاملةً مهما كان المطويُّ منها.
+function Folded({ open, onToggle, label, children }) {
+  const { t } = useTranslation();
+  return (
+    <>
+      <button type="button" onClick={onToggle} aria-expanded={open} className="bz-fold">
+        <span>{open ? t('common.hide') : t('common.show')} {label}</span>
+        <ArrowDownIcon className={`h-4 w-4 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && children}
+    </>
+  );
+}
 
 const EMPTY = {
   name: '', slug: '', description: '', logoUrl: '', phone: '', whatsapp: '', deliveryPhone: '',
@@ -156,6 +182,8 @@ export default function StoreSettings() {
   const platformKeys = usePlatformCatKeys();
   const { refresh, store: authStore } = useAuth();
   const [form, setForm] = useState(null);
+  // قسمٌ واحدٌ مفتوحٌ من الثلاثةِ الطويلة — وكلُّها مطويّةٌ عندَ الفتح
+  const [openSec, setOpenSec] = useState('');
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -659,7 +687,9 @@ export default function StoreSettings() {
         {/* بانرات السلايدر */}
         <div id="s-banners" className={CARD}>
           <SectionHead icon={<ImageIcon className="h-5 w-5" />} title={t('dashboard.store.banners')} desc={t('dashboard.store.bannersHint')} done={doneMap['s-banners']} />
+          <Folded open={openSec === 's-banners'} onToggle={() => setOpenSec((v) => (v === 's-banners' ? '' : 's-banners'))} label={t('dashboard.store.banners')}>
           <BannerEditor banners={form.banners} onChange={(b) => setForm((f) => ({ ...f, banners: b }))} storeName={form.name} />
+          </Folded>
         </div>
 
         {/* تخطيطُ أقسامِ المنتجاتِ بصفحةِ المتجر — الشكلُ يتبعُ حجمَ البضاعة:
@@ -837,6 +867,7 @@ export default function StoreSettings() {
         {/* تخصيص الفئات — صورة واقعية + اسم لكل فئة */}
         <div id="s-categories" className={CARD}>
           <SectionHead icon={<FolderIcon className="h-5 w-5" />} title={t('dashboard.store.categories')} desc={t('dashboard.store.categoriesHint')} done={doneMap['s-categories']} />
+          <Folded open={openSec === 's-categories'} onToggle={() => setOpenSec((v) => (v === 's-categories' ? '' : 's-categories'))} label={t('dashboard.store.categories')}>
           <div className="space-y-3">
             {platformKeys.map((c) => {
               const meta = form.categoryMeta?.[c] || {};
@@ -926,6 +957,7 @@ export default function StoreSettings() {
               </div>
             )}
           </div>
+          </Folded>
         </div>
 
         {/* مجموعات المتجر: تسوّقي حسب المناسبة — صورة مرفوعة + كلمة بحث */}
@@ -941,6 +973,7 @@ export default function StoreSettings() {
               )}
             </div>
           </div>
+          <Folded open={openSec === 's-collections'} onToggle={() => setOpenSec((v) => (v === 's-collections' ? '' : 's-collections'))} label={t('dashboard.store.collections')}>
           {(form.collections || []).length === 0 ? (
             <button type="button" onClick={addCollection} className="flex w-full flex-col items-center gap-1.5 rounded-2xl border border-dashed border-gold-400/25 bg-black/15 p-5 text-center transition hover:border-gold-400/50 hover:bg-gold-400/5">
               <SparkleIcon className="h-6 w-6 text-gold-300" />
@@ -999,6 +1032,7 @@ export default function StoreSettings() {
               ))}
             </div>
           )}
+          </Folded>
         </div>
 
         {/* تسويق: نافذة ترحيب */}

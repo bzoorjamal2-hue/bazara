@@ -5448,3 +5448,25 @@ html.dark .theme-pub .bz-ordertool { color: #B7B2AA; border-color: rgba(239, 238
   .bz-ordertool.is-danger:hover { color: #B42318; border-color: rgba(185, 28, 28, 0.55); background: rgba(185, 28, 28, 0.06); }
   html.dark .theme-pub .bz-ordertool.is-danger:hover { color: #FCA5A5; border-color: rgba(252, 165, 165, 0.5); background: rgba(185, 28, 28, 0.14); }
 }
+
+/* زرُّ طيِّ قسمٍ طويلٍ بالإعدادات — صريحٌ مكتوبٌ لا سهمٌ صامت: من تفتحُ
+   الإعداداتِ أوّلَ مرّةٍ يجبُ أن تعرفَ أنّ تحتَه شيئاً وأنّه يُفتَحُ بضغطة. */
+.bz-fold {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-radius: 0.85rem;
+  border: 1px dashed rgba(163, 162, 160, 0.4);
+  padding: 0.7rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #3B3A38;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+html.dark .theme-pub .bz-fold { color: #D6D2CB; border-color: rgba(239, 238, 236, 0.28); }
+@media (hover: hover) {
+  .bz-fold:hover { border-color: rgba(31, 30, 29, 0.55); background: rgba(31, 30, 29, 0.04); }
+  html.dark .theme-pub .bz-fold:hover { border-color: rgba(239, 238, 236, 0.5); background: rgba(239, 238, 236, 0.06); }
+}

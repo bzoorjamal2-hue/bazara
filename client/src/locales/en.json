@@ -51,6 +51,8 @@
     "yourLink": "Your personal link",
     "copy": "Copy",
     "copied": "Copied ✓",
+    "show": "Show",
+    "hide": "Hide",
     "copyFailed": "Couldn't copy — copy it by hand, or open the page in your device browser.",
     "shareNow": "Share",
     "shareWhatsapp": "Share on WhatsApp",
