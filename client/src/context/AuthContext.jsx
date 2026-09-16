@@ -1,13 +1,20 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import api, { setAuthToken, clearAuthToken } from '../api/client.js';
+import { readAuthCache, writeAuthCache, clearAuthCache } from '../utils/authCache.js';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [store, setStore] = useState(null);
-  const [subscription, setSubscription] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // نُقلعُ بآخرِ جوابٍ محفوظٍ بدل الفراغ، فلا تُرسَمُ شاشةُ «لا أعرفُك» أوّلاً
+  // ثمّ تُستبدَل. والنداءُ يجري بالخلفيّةِ ويصحّح — انظر utils/authCache.js
+  const snap = useRef(readAuthCache()).current;
+  const [user, setUser] = useState(snap?.user || null);
+  const [store, setStore] = useState(snap?.store || null);
+  const [subscription, setSubscription] = useState(snap?.subscription || null);
+  // ‏loading معناه «لا أعرفُ بعد». ومع نسخةٍ محفوظةٍ نحن نعرفُ ظنّاً راجحاً،
+  // فيمرُّ الحارسُ بلا دوّارةٍ وتُلغى شاشةُ الإقلاع. وإن خابَ الظنُّ صحّحَه
+  // الجوابُ بعدَ جزءٍ من الثانيةِ كما يصحّحُ اليوم.
+  const [loading, setLoading] = useState(!snap);
 
   // بعد الخروج نرفض أي استعادةٍ للجلسة حتى لو ردّ /auth/me بمستخدم: كوكي
   // الجلسة قد يبقى لحظاتٍ (أو للأبد إن فشل نداء الخروج)، فكان أوّل تحميلٍ
@@ -26,15 +33,21 @@ export function AuthProvider({ children }) {
     try {
       const { data } = await api.get('/auth/me');
       // خرج المستخدم أثناء الطلب (أو قبله والكوكي لم يُمسح بعد) — لا نستعيده
-      if (loggedOut.current) { setLoading(false); return null; }
+      if (loggedOut.current) { clearAuthCache(); setLoading(false); return null; }
       setUser(data.user);
       setStore(data.store);
       setSubscription(data.subscription || null);
       return data;
-    } catch {
+    } catch (err) {
+      // «رفَضَك الخادم» شيءٌ و«لم يردَّ الخادم» شيءٌ آخر. خادمُنا على خطّةٍ
+      // مجّانيّةٍ ينامُ ويستيقظُ بتأخير، فلو أفرغنا الجلسةَ عند كلِّ فشلٍ لخرجَ
+      // المستخدمُ لأنّ الشبكةَ تعثّرت لحظة. ٤٠١/٤٠٣ وحدَهما جوابُ رفض.
+      const status = err?.response?.status;
+      if (status !== 401 && status !== 403) return null; // نُبقي ما لدينا ونمضي
       setUser(null);
       setStore(null);
       setSubscription(null);
+      clearAuthCache();
       return null;
     } finally {
       setLoading(false);
@@ -44,6 +57,14 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  // الحفظُ أثرٌ للحالةِ لا سطرٌ بكلِّ مسار: ‎refresh وتعديلُ الملفِّ الشخصيِّ
+  // وحفظُ إعداداتِ المتجرِ كلُّها تكتبُ هنا، فلا يبقى طريقٌ ينسى أن يحفظَ
+  // فتُقلعَ الصفحةُ التاليةُ باسمٍ أو شعارٍ قديم — انظر utils/authCache.js
+  useEffect(() => {
+    if (loggedOut.current) return;
+    writeAuthCache(user ? { user, store, subscription } : null);
+  }, [user, store, subscription]);
 
   const login = async (email, password) => {
     loggedOut.current = false;
@@ -71,6 +92,7 @@ export function AuthProvider({ children }) {
     loggedOut.current = true;
     setLoggingOut(true);
     clearAuthToken();
+    clearAuthCache();
     // مسح مسودّات النماذج كي لا تُسكب بيانات هذا الحساب على حسابٍ آخر يدخل بعده
     try {
       const pre = 'bz_draft:';

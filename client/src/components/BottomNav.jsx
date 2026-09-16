@@ -173,6 +173,13 @@ export default function BottomNav() {
   const { count: wishCount, setOpen: setWishOpen, open: wishOpen } = useWishlist();
   const { user, store, subscription } = useAuth();
   const isAdmin = subscription?.isAdmin;
+  // الهويّةُ تصلُ محفوظةً من أوّلِ فريم (utils/authCache.js)، فلا يُرسَمُ شريطُ
+  // زبونةٍ ثمّ يُستبدَلُ بشريطِ صاحبةِ متجرٍ أمامَ العين.
+  const signedIn = Boolean(user);
+  const ownerRole = Boolean(user && store?.slug && !isAdmin);
+  const roleSlug = store?.slug || '';
+  const roleActive = Boolean(subscription?.active);
+  const roleIg = Boolean(store?.igConnected);
 
   // عدّاد الطلبات الجديدة لصاحب المتجر — شارة على تبويب "حسابي"
   const [newOrders, setNewOrders] = useState(0);
@@ -257,8 +264,7 @@ export default function BottomNav() {
   // «حسابي» يفتحُ نظرةَ اللوحةِ صراحةً لا ‎/dashboard المجرَّدة: اللوحةُ تستعيدُ
   // آخرَ قسمٍ فُتح وتكتبُه بالرابط، فكانت الضغطةُ من «الطلبات» إلى «حسابي» ترجعُ
   // إلى الطلباتِ نفسِها — زرٌّ يُضغَطُ ولا يتغيّرُ شيء.
-  const ownerNow = Boolean(user && store?.slug && !isAdmin);
-  const accountTo = user ? (ownerNow ? '/dashboard?tab=overview' : '/dashboard') : '/login';
+  const accountTo = signedIn ? (ownerRole ? '/dashboard?tab=overview' : '/dashboard') : '/login';
   // المتجر الذي يتصفّحه الزائر الآن: من الرابط (/store/:slug)، أو ?store= (بحث/فئة/تتبّع)،
   // أو من ذاكرة الجلسة لصفحة المنتج (رابطها لا يحمل السلاِگ). عند وجوده تبقى كل وجهات
   // الشريط داخل المتجر — فلا يخرج الزبون لصفحات بازارا العامة إطلاقاً.
@@ -269,7 +275,7 @@ export default function BottomNav() {
   const inStore = Boolean(scopeSlug); // نحن فعلاً داخل سياق متجر الآن (يُستخدم لتفعيل التبويبات)
   // متجر المشترك نفسه — المدير مستثنى (يدير المنصّة لا متجراً)، والاشتراك المنتهي مستثنى
   // (متجره مُطفأ يرجّع «غير موجود»، فنُبقي وجهاته على بازارا العام بدل صفحة خطأ).
-  const ownStore = user && store?.slug && !isAdmin && subscription?.active ? store.slug : '';
+  const ownStore = ownerRole && roleActive ? roleSlug : '';
   // وجهة "متجري": المتجر المتصفَّح حالياً، وإلا متجر المشترك نفسه. هكذا تبقى كل وجهات
   // الشريط (رئيسية/عروض/تتبّع/تصنيفات/ريلز) ضمن متجر المشترك بهويّته — حتى قبل أن يفتح
   // صفحة متجره — فلا تظهر شعارات بازارا العامة داخل حسابه. الزائر/الزبون بلا متجر تبقى
@@ -341,7 +347,7 @@ export default function BottomNav() {
   //  إلّا بفتحِ اللوحة، فيظهرُ المفتاحُ خاماً لمن تقفُ بالرئيسيّة.)
   // كان ستّةَ بنودٍ متطابقةٍ للجميع، فتفتحُ صاحبةُ المتجرِ تطبيقَها فتجدُ تنقّلَ
   // زبونة: عروضٌ وريلزٌ وتصنيفات. وشغلُها هي طلبٌ وصلَ ورسالةٌ تنتظرُ ردّاً.
-  const isOwner = Boolean(user && store?.slug && !isAdmin);
+  const isOwner = ownerRole;
   const onDash = pathname.startsWith('/dashboard');
   const tab = new URLSearchParams(search).get('tab');
   const dash = (key) => `/dashboard?tab=${key}`;
@@ -358,13 +364,13 @@ export default function BottomNav() {
     ...accountItem,
     // الرسائلُ لمن ربطت إنستغرام وحدَها: الزرُّ يظهرُ من نفسِه ساعةَ تربط، بلا
     // يومِ إطلاقٍ نتذكّرُ تبديلَه — ولا شاشةً فارغةً لمن لم تربط بعد.
-    ...(store?.igConnected
+    ...(roleIg
       ? [{ key: 'messages', label: t('nav.messages'), Icon: MessagesIcon, active: !cartOpen && !wishOpen && tab === 'instagram', onClick: () => goto(dash('instagram')), warm: '/dashboard' }]
       : []),
     { key: 'orders', label: t('nav.myOrders'), Icon: OrdersIcon, active: !cartOpen && !wishOpen && tab === 'myOrders', badge: newOrders, onClick: () => goto(dash('myOrders')), warm: '/dashboard' },
     // متجري: تحتاجُ ترى متجرَها كما تراه الزبونة — ولو صارَ شريطُها إداريّاً
     // بحتاً لفقدت هذا الطريقَ القصير.
-    { key: 'mystore', label: t('nav.myStore'), Icon: StoreGlyph, active: !cartOpen && !wishOpen && pathname === `/store/${store?.slug}`, onClick: () => goto(`/store/${store?.slug}`), warm: '/store/x' },
+    { key: 'mystore', label: t('nav.myStore'), Icon: StoreGlyph, active: !cartOpen && !wishOpen && pathname === `/store/${roleSlug}`, onClick: () => goto(`/store/${roleSlug}`), warm: '/store/x' },
     // «الرئيسية» عندَها بازارا العامّةُ لا متجرُها: ‎homeTo يصيرُ متجرَ المشتركةِ
     // نفسِها حين يكونُ لها متجر، فكان الزرّانِ يشيرانِ إلى المكانِ نفسِه ويضيئانِ
     // معاً على صفحةِ متجرِها. لها بيتانِ فليُفرَّق بينهما: متجرُها، وسوقُ بازارا.
