@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { cldThumb } from '../utils/cloudinary.js';
@@ -85,6 +85,24 @@ function Arrow({ dir, rtl, onClick }) {
   );
 }
 
+// العنصرُ خارجَ المكوّنِ الأب قصداً. كان مُعرَّفاً داخلَ جسمِه، ودالّةٌ تُعرَّفُ
+// داخلَ الرِندرِ تصيرُ نوعاً جديداً بكلِّ رِندر — فيرى رياكت نوعاً مختلفاً فيهدمُ
+// الشجرةَ كلَّها ويبنيها من الصفر: تُفكَّكُ عُقَدُ الـDOM، وتُطلَبُ الصورُ ثانيةً،
+// وتُعادُ حركةُ الدخول. وكان هذا يقعُ بكلِّ تغييرِ حالةٍ لا عند الأسهمِ وحدَها.
+function Item({ cat, active, onSelect }) {
+  const isActive = active === cat.key;
+  const cls = `group block transition-all duration-300 hover:-translate-y-1.5 ${isActive ? 'ring-2 ring-wine ring-offset-2 ring-offset-cream rounded-2xl' : ''}`;
+  return onSelect ? (
+    <button type="button" onClick={() => onSelect(isActive ? 'all' : cat.key)} className={cls}>
+      <CategoryCard cat={cat} />
+    </button>
+  ) : (
+    <Link to={`/category/${cat.key}`} className={cls}>
+      <CategoryCard cat={cat} />
+    </Link>
+  );
+}
+
 // شبكة/كاروسيل الفئات — تظهر بعدد متجاوب مع الشاشة، مع أسهم ونقاط عند الحاجة.
 // cats: قائمة كائنات {key, name, image, builtin}. إن لم تُمرَّر، نبني من الفئات الأصلية الخمس.
 export default function CategoryGrid({ onSelect, active, images = {}, names = {}, cats }) {
@@ -107,43 +125,75 @@ export default function CategoryGrid({ onSelect, active, images = {}, names = {}
   useEffect(() => { setPage((p) => Math.min(p, pages - 1)); }, [pages]);
 
   const hasNav = list.length > perPage;
-  // صفحات غير متداخلة: كل فئة تظهر مرة واحدة فقط (آخر صفحة قد تكون أقل عدداً)
-  const start = page * perPage;
-  const shown = list.slice(start, start + perPage);
   const go = (d) => setPage((p) => (p + d + pages) % pages);
 
-  const Item = ({ cat }) => {
-    const isActive = active === cat.key;
-    const cls = `group block animate-fade-up transition-all duration-300 hover:-translate-y-1.5 ${isActive ? 'ring-2 ring-wine ring-offset-2 ring-offset-cream rounded-2xl' : ''}`;
-    return onSelect ? (
-      <button type="button" onClick={() => onSelect(isActive ? 'all' : cat.key)} className={cls}>
-        <CategoryCard cat={cat} />
-      </button>
-    ) : (
-      <Link to={`/category/${cat.key}`} className={cls}>
-        <CategoryCard cat={cat} />
-      </Link>
-    );
-  };
+  // صفحاتٌ غيرُ متداخلةٍ تُرسَمُ كلُّها معاً على شريطٍ واحدٍ يُزاح — لا شريحةٌ
+  // تُقتَطعُ بكلِّ ضغطة. كانت ‎slice تبدّلُ البطاقاتِ المعروضةَ ومفاتيحُها تختلف،
+  // فتُستبدَلُ عُقَدُ الـDOM وتُطلَبُ صورُ الصفحةِ الجديدةِ من جديد: تختفي
+  // البلاطاتُ لحظةً ثمّ تقفزُ ظاهرةً — وهو القطعُ والتعليق. الآن تُبنى مرّةً
+  // وتبقى، والانتقالُ تحويلٌ واحدٌ على وحدةِ الرسمِ بلا تخطيطٍ ولا طلبِ شبكة.
+  const chunks = Array.from({ length: pages }, (_, p) => list.slice(p * perPage, (p + 1) * perPage));
+
+  // عرضُ النافذةِ بالبكسل — عليه تُبنى الإزاحة. النسبةُ المئويّةُ مرجعُها هنا
+  // ملتبس: الشريطُ عرضُه عرضُ نافذةٍ واحدةٍ وأبناؤُه يفيضون خارجَه.
+  const frameRef = useRef(null);
+  const [frameW, setFrameW] = useState(0);
+  useEffect(() => {
+    const el = frameRef.current;
+    if (!el) return undefined;
+    const read = () => setFrameW(el.clientWidth);
+    read();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', read);
+      return () => window.removeEventListener('resize', read);
+    }
+    const ro = new ResizeObserver(read);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   return (
     <div>
       <div className="bz-catrow flex items-center gap-2 sm:gap-3">
         {hasNav && <Arrow dir="prev" rtl={rtl} onClick={() => go(-1)} />}
-        {/* صفٌّ مرنٌ لا شبكةٌ بأعمدةٍ ثابتة: الشبكةُ كانت تحجزُ خمسةَ أعمدةٍ دائماً،
-            فآخرُ صفحةٍ تحملُ قطعتَينِ من سبعٍ تتركُ ثلاثةَ أعمدةٍ فارغةٍ على جانبٍ
-            واحدٍ — يبدو القسمُ مكسوراً لا منتهياً. المرونةُ تُبقي مقاسَ البلاطةِ
-            كما هو وتوسّطُ الصفَّ الناقص. */}
-        <div className="flex flex-1 flex-wrap justify-center gap-3 sm:gap-4">
-          {shown.map((cat) => (
-            <div
-              key={cat.key}
-              className="min-w-0"
-              style={{ flex: `0 0 calc((100% - ${perPage - 1} * var(--bz-cat-gap)) / ${perPage})` }}
-            >
-              <Item cat={cat} />
-            </div>
-          ))}
+        {/* ‎py-2 ‎-my-2: القَصُّ أفقيٌّ مطلوب، أمّا رأسيّاً فرفعةُ البلاطةِ عند
+            المرورِ (‎-translate-y-1.5) وحلقةُ الفئةِ النشطةِ يخرجانِ عن الصندوقِ
+            فيُبتَرانِ من فوق. الحشوةُ تفتحُ لهما مجالاً داخلَ حدِّ القَصّ،
+            والهامشُ السالبُ يسحبُ المقدارَ نفسَه فلا يزدادُ ارتفاعُ الصفّ. */}
+        <div ref={frameRef} className="-my-2 min-w-0 flex-1 overflow-hidden py-2">
+          {/* اتّجاهُ الحركةِ يتبعُ اللغةَ كسلايدرِ الهيرو: العربيّةُ ‎row-reverse
+              فالأولى يميناً والتاليةُ إلى يسارِها، والإنجليزيّةُ ‎row والعكس. */}
+          <div
+            className={`flex ${rtl ? 'flex-row-reverse' : ''}`}
+            style={{
+              transform: `translate3d(${(rtl ? 1 : -1) * page * frameW}px, 0, 0)`,
+              direction: 'ltr',
+              transition: 'transform 420ms cubic-bezier(0.22, 0.61, 0.36, 1)',
+              willChange: 'transform',
+            }}
+          >
+            {chunks.map((chunk, p) => (
+              /* صفٌّ مرنٌ لا شبكةٌ بأعمدةٍ ثابتة: الشبكةُ كانت تحجزُ خمسةَ أعمدةٍ دائماً،
+                 فآخرُ صفحةٍ تحملُ قطعتَينِ من سبعٍ تتركُ ثلاثةَ أعمدةٍ فارغةٍ على جانبٍ
+                 واحدٍ — يبدو القسمُ مكسوراً لا منتهياً. المرونةُ تُبقي مقاسَ البلاطةِ
+                 كما هو وتوسّطُ الصفَّ الناقص. */
+              <div
+                key={p}
+                dir={rtl ? 'rtl' : 'ltr'}
+                className="flex w-full shrink-0 justify-center gap-3 sm:gap-4"
+              >
+                {chunk.map((cat) => (
+                  <div
+                    key={cat.key}
+                    className="min-w-0"
+                    style={{ flex: `0 0 calc((100% - ${perPage - 1} * var(--bz-cat-gap)) / ${perPage})` }}
+                  >
+                    <Item cat={cat} active={active} onSelect={onSelect} />
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
         {hasNav && <Arrow dir="next" rtl={rtl} onClick={() => go(1)} />}
       </div>
