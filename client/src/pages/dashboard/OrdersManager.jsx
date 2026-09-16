@@ -932,37 +932,46 @@ export default function OrdersManager() {
                   )}
                   <CourierSend order={o} couriers={couriers} onSent={markSent} />
 
-                  {/* أدوات الطلب: اتصال · نسخ التفاصيل · طباعة الفاتورة */}
+                  {/* أدوات الطلب: اتصال · نسخ التفاصيل · صورة · طباعة.
+                      لكلٍّ اسمٌ صغيرٌ ظاهرٌ تحتَ أيقونتِه لا تلميحُ ‎title وحدَه:
+                      التلميحُ لا يظهرُ إلّا بتمريرِ الفأرة، ولا فأرةَ على الجوّالِ
+                      واللوح — فتبقى أربعُ أيقوناتٍ بلا شرحٍ أمامَ من تُدير متجرَها
+                      من هاتفِها، وهنّ الأكثريّة. و‎title يبقى للوصفِ الأطولِ
+                      على الحاسوب. */}
                   <span className="ms-auto flex items-center gap-1.5">
                     {o.customerPhone && (
                       <a
                         href={`tel:${o.customerPhone.replace(/\s/g, '')}`}
                         title={t('dashboard.ordersSection.call')} aria-label={t('dashboard.ordersSection.call')}
-                        className="grid h-9 w-9 place-items-center rounded-xl border border-gold-400/20 text-stone-400 transition hover:border-gold-400/50 hover:text-gold-200"
+                        className="bz-ordertool"
                       >
-                        <PhoneIcon className="h-4 w-4" />
+                        <PhoneIcon className="h-[17px] w-[17px]" />
+                        <span>{t('dashboard.ordersSection.callShort')}</span>
                       </a>
                     )}
                     <button
                       onClick={() => copyOrder(o)}
                       title={t('dashboard.ordersSection.copyOrder')} aria-label={t('dashboard.ordersSection.copyOrder')}
-                      className="grid h-9 w-9 place-items-center rounded-xl border border-gold-400/20 text-stone-400 transition hover:border-gold-400/50 hover:text-gold-200"
+                      className="bz-ordertool"
                     >
-                      <CopyIcon className="h-4 w-4" />
+                      <CopyIcon className="h-[17px] w-[17px]" />
+                      <span>{t('dashboard.ordersSection.copyShort')}</span>
                     </button>
                     <button
                       onClick={() => saveInvoiceImage(o)}
                       title={t('dashboard.ordersSection.saveImage')} aria-label={t('dashboard.ordersSection.saveImage')}
-                      className="grid h-9 w-9 place-items-center rounded-xl border border-gold-400/20 text-stone-400 transition hover:border-gold-400/50 hover:text-gold-200"
+                      className="bz-ordertool"
                     >
-                      <ImageIcon className="h-4 w-4" />
+                      <ImageIcon className="h-[17px] w-[17px]" />
+                      <span>{t('dashboard.ordersSection.saveImageShort')}</span>
                     </button>
                     <button
                       onClick={() => printInvoice(o)}
                       title={t('dashboard.ordersSection.printInvoice')} aria-label={t('dashboard.ordersSection.printInvoice')}
-                      className="grid h-9 w-9 place-items-center rounded-xl border border-gold-400/20 text-stone-400 transition hover:border-gold-400/50 hover:text-gold-200"
+                      className="bz-ordertool"
                     >
-                      <PrintIcon className="h-4 w-4" />
+                      <PrintIcon className="h-[17px] w-[17px]" />
+                      <span>{t('dashboard.ordersSection.printShort')}</span>
                     </button>
                   </span>
                 </div>
