@@ -17,7 +17,7 @@ export default function FloatingWhatsApp({ number, message = '' }) {
       target="_blank"
       rel="noreferrer"
       aria-label="WhatsApp"
-      className="group fixed end-5 z-40 flex h-14 w-14 items-center justify-center rounded-full text-white ring-1 ring-white/25 transition-transform duration-300 hover:scale-110 active:scale-95"
+      className="bz-fab-pos group fixed end-5 z-40 flex h-14 w-14 items-center justify-center rounded-full text-white ring-1 ring-white/25 transition-transform duration-300 hover:scale-110 active:scale-95"
       style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + var(--bz-fab-bottom))', background: grad, boxShadow: shadow }}
     >
       <WhatsAppIcon className="h-7 w-7" />

@@ -48,7 +48,7 @@ export default function ScrollToTopButton() {
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       aria-label={t('common.backToTop')}
       title={t('common.backToTop')}
-      className="bz-fab fixed start-5 z-40 flex h-11 w-11 items-center justify-center rounded-full transition hover:scale-110 active:scale-95 animate-fade-in"
+      className="bz-fab bz-fab-pos fixed start-5 z-40 flex h-11 w-11 items-center justify-center rounded-full transition hover:scale-110 active:scale-95 animate-fade-in"
       // بالوضع الافتراضيّ نتبع المتغيّر (يتبع الشاشة)، وحين يرفعه شريطُ
       // شراءٍ أو ما شابه نحترم المقدارَ المحسوب.
       style={{ bottom: bottom === BASE_BOTTOM ? 'calc(env(safe-area-inset-bottom, 0px) + var(--bz-fab-bottom))' : `${bottom}px` }}

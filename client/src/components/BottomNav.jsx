@@ -247,6 +247,16 @@ export default function BottomNav() {
   // تحته بمقدارِ ارتفاعِه — فإخفاؤه يسحبُ الأرضَ من تحتِ الهيدر.
   const away = useHideOnScroll({ paused: dt || hidden, resetKey: pathname });
 
+  // الأزرارُ العائمةُ تتبعُ الشريطَ لا تعلّقُ بالهواء: ترتفعُ لتتجنّبَه،
+  // فإن غاب نزلت مكانَه بالمدّةِ نفسِها. والصنفُ للغيابِ بالتمريرِ وحدَه:
+  // درجٌ مفتوحٌ أو لوحةُ مفاتيحٍ تغطّي الشاشةَ أصلاً، وإنزالُ الأزرارِ تحتَ
+  // لوحةِ المفاتيحِ يخبّئُها لا يرتّبُها.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle('bz-tabbar-off', !dt && away && !hidden);
+    return () => root.classList.remove('bz-tabbar-off');
+  }, [dt, away, hidden]);
+
   // ارتفاعُ الشريط يُقاس ولا يُخمَّن.
   //
   // على الشاشة العريضة يصعد هذا الشريطُ للأعلى، ويلتصق الهيدرُ تحته بمقدار
