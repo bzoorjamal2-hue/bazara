@@ -23,7 +23,7 @@ import { WaveIcon, GiftIcon, CheckIcon, PlusIcon, BoltIcon, TagIcon, SearchIcon,
 import CloseButton from '../components/CloseButton.jsx';
 import Reveal from '../components/Reveal.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
-import { cldVideoPoster, cldThumb, cldVideoMp4, heroCrop } from '../utils/cloudinary.js';
+import { cldThumb, cldVideoPoster, cldVideoCrop, heroVideoShape, heroCrop } from '../utils/cloudinary.js';
 import { SIZES, sizeLabel } from '../utils/sizes.js';
 import { getMySize } from '../utils/mySize.js';
 import { productColors, colorToCss } from '../utils/colorDot.js';
@@ -998,6 +998,9 @@ function HeroSlider({ store }) {
   // تجعلُها تمسحُ الشرائحَ كلَّها بالاتّجاهِ المعاكسِ فينكسرُ إحساسُ الدوران —
   // يمشي الشريطُ يساراً أربعَ مرّاتٍ ثمّ يرتدُّ يميناً مسحةً طويلة.
   const [snap, setSnap] = useState(false);
+  // شكلُ وسائطِ الهيرو (عرضٌ ونسبةٌ وجودة) يُحسَبُ مرّةً — تغييرُه بالعرضِ
+  // يُعيدُ تحميلَ الفيديو من أوّلِه
+  const [vs] = useState(heroVideoShape);
   // سكونٌ لمن يطلبُ سكوناً: شريحةٌ تمشي وحدَها كلّ سبعِ ثوانٍ تسحبُ
   // المحتوى من تحتِ عينِ من يقرأُ ببطء، وتُدوّخُ من تؤذيه الحركة. ومن طلبَ
   // من نظامِه تقليلَ الحركة فقد قالها صراحةً — فتبقى النقاطُ والسحبُ ويقفُ
@@ -1156,8 +1159,9 @@ function HeroSlider({ store }) {
             const isVideo = !s.fixed && s.bgType === 'video' && s.bgValue;
             const custom = isColor || isImage || isVideo;
             // نضع صورة أول لقطة (poster) كخلفية الشريحة فوراً → الفيديو يظهر مباشرة بلا خلفية سوداء/بنّية
-            // poster مصغّر (يحمّل فوراً) → لا يظهر سواد قبل الفيديو
-            const posterImg = isVideo ? cldThumb(cldVideoPoster(s.bgValue), 1600) : isImage ? cldThumb(s.bgValue, 1920) : '';
+            // وبنسبةِ الصندوقِ لا بعرضٍ واحدٍ للجميع: كان يصلُ عريضاً (‎1600/1920)
+            // فيُمَدُّ ليملأَ صندوقاً طوليّاً على الجوّال — غبشٌ وهدرٌ معاً.
+            const posterImg = isVideo || isImage ? heroCrop(s.bgValue, vs.w, vs.ar) || cldThumb(s.bgValue, vs.w) : '';
             // خلفية الحاوية = البوستر مخبوز فوقه تعتيم داكن (تدرّج ثابت) — فتظهر معتّمة
             // كخلفية واحدة من أول إطار، حتى قبل رسم الوسيط/الحجاب. هذا يمنع ومضة
             // "يضيء ثم يعتم" على شرائح الفيديو نهائياً (خلفية الحاوية المضيئة كانت تظهر لحظة).
@@ -1213,7 +1217,7 @@ function HeroSlider({ store }) {
                       <img src={posterImg} alt="" aria-hidden="true" loading={idx === 0 ? 'eager' : 'lazy'} style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))' }} className="bz-kenburns absolute inset-0 z-0 h-full w-full object-cover" />
                       <video
                         ref={(el) => { vidRefs.current[idx] = el; }}
-                        src={cldVideoMp4(s.bgValue)}
+                        src={cldVideoCrop(s.bgValue, vs.w, vs.ar, vs.q)}
                         poster={posterImg}
                         autoPlay={idx === 0}
                         muted

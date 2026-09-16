@@ -14,7 +14,7 @@ import OffersBar from '../components/OffersBar.jsx';
 import { getRecent, productThumb } from '../utils/recentlyViewed.js';
 import { productPath } from '../utils/links.js';
 import { getCache, setCache } from '../utils/apiCache.js';
-import { cldVideoPoster, cldThumb, cldSrcSet, cldVideoMp4, heroVideoWidth, heroCrop } from '../utils/cloudinary.js';
+import { cldThumb, cldVideoCrop, heroVideoShape, heroCrop } from '../utils/cloudinary.js';
 import { ForwardIcon, BoltIcon, FireIcon, SparkleIcon } from '../components/icons.jsx';
 import CategoryGrid from '../components/CategoryGrid.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
@@ -432,8 +432,9 @@ function HomeCategoryView({ cat, onHome, custom = [] }) {
 
 // سلايدر الـ Hero للصفحة الرئيسية: شريحة ثابتة + شريحتين, تحريك تلقائي + سحب باللمس
 function HomeHero({ banners = [] }) {
-  // عرضُ الفيديو يُحسَبُ مرّةً: تغييرُه أثناءَ العرضِ يُعيدُ تحميلَ الفيديو من أوّلِه
-  const [vw] = useState(heroVideoWidth);
+  // شكلُ الفيديو (عرضٌ ونسبةٌ وجودة) يُحسَبُ مرّةً: تغييرُه أثناءَ العرضِ يُعيدُ
+  // تحميلَ الفيديو من أوّلِه
+  const [vs] = useState(heroVideoShape);
   const { t, i18n } = useTranslation();
   // اتّجاهُ حركةِ السلايدر يتبعُ اللغة: بالعربيّةِ تدخلُ الشريحةُ من اليمينِ
   // وتخرجُ يساراً، وبالإنجليزيّةِ العكس. كان الشريطُ مثبّتاً ‎ltr فيمشي باتّجاهٍ
@@ -630,8 +631,10 @@ function HomeHero({ banners = [] }) {
               // لقطةُ شريحةِ الفيديو: مقاسٌ لكلِّ شاشةٍ لا ‎2600 للجميع. وكانت
               // مبنيّةً بتحويلَينِ متتاليَينِ آخرُهما ‎dpr_auto — فجوّالٌ بكثافةٍ
               // مضاعفةٍ يطلبُ خمسةَ آلافِ بكسلٍ عرضاً لشاشةٍ عرضُها ثلاثُ مئة.
-              const vPoster = isVideo ? cldVideoPoster(s.bgValue, 900) : '';
-              const vPosterSet = isVideo ? cldSrcSet(s.bgValue, [600, 900, 1280, 1800]) : undefined;
+              // اللقطةُ بنسبةِ الفيديو نفسِها وقصّتِه: كانت عريضةً (‎900 بلا نسبة)
+              // بينما الفيديو يملأُ صندوقاً طوليّاً — فتُقَصُّ قصّةً أخرى، وتقفزُ
+              // الصورةُ لحظةَ ما يبدأُ الفيديو. ‎heroCrop تعرفُ الفيديو (‎so_0).
+              const vPoster = isVideo ? heroCrop(s.bgValue, vs.w, vs.ar) : '';
               return (
                 <div key={idx} className="w-full shrink-0" dir="rtl">
                   <div
@@ -662,12 +665,12 @@ function HomeHero({ banners = [] }) {
                     )}
                     {isVideo && (
                       <>
-                        <img src={vPoster} srcSet={vPosterSet} sizes="100vw" alt="" aria-hidden loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))', zIndex: -2 }} className="absolute inset-0 h-full w-full object-cover" />
+                        <img src={vPoster} alt="" aria-hidden loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))', zIndex: -2 }} className="absolute inset-0 h-full w-full object-cover" />
                         <video
                           ref={(el) => { vidRefs.current[idx] = el; }}
                           // جودةٌ اقتصاديّةٌ بالمقاساتِ الكبيرة: الفرقُ لا يُلحَظُ على
                           // فيديو متحرّكٍ والتوفيرُ خُمسُ الحجم — والحسابُ محدود.
-                          src={cldVideoMp4(s.bgValue, vw, vw > 1080 ? 'q_auto:eco' : 'q_auto')}
+                          src={cldVideoCrop(s.bgValue, vs.w, vs.ar, vs.q)}
                           poster={vPoster}
                           muted loop playsInline
                           preload="metadata"

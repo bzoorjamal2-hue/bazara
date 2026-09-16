@@ -5098,7 +5098,12 @@ html.dark .theme-pub .bz-featstore {
   position: relative;
   isolation: isolate;
   display: flex;
-  min-height: min(84svh, 680px);
+  /* كان min(84svh, 680px): أربعةٌ وثمانون بالمئةِ من شاشةِ الجوّال. والارتفاعُ
+     رُفِعَ أصلاً كي لا تُقَصَّ العارضةُ عند الخصر — لكنّ العلّةَ لم تكن الارتفاعَ
+     بل القصّ: الفيديو كان يصلُ عريضاً ويُمَدُّ ليملأَ صندوقاً طوليّاً. ولمّا صار
+     يُقَصُّ عند المصدرِ بنسبةِ الصندوقِ (‎g_auto يُبقي الوجهَ داخلَ الإطار) زالَ
+     سببُ الطول: القامةُ مضمونةٌ بالقصِّ لا بالارتفاع. */
+  min-height: min(70svh, 560px);
   flex-direction: column;
   align-items: center;
   justify-content: center;
