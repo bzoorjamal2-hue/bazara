@@ -5050,3 +5050,113 @@ html.dark .theme-pub .bz-featstore {
 @media (prefers-reduced-motion: reduce) {
   .bz-look-dot, .bz-look-lit { transition: none; transform: none; }
 }
+
+/* ═══════ رأسُ لوحةِ التحكّم ═══════
+   كان بطاقةً داكنةً بتدرّجٍ شعاعيٍّ — أنيقةً ومجهولةَ الهويّة: تصلحُ لأيِّ لوحةٍ
+   بأيِّ منتَج. وصاحبةُ المتجرِ تدخلُ لوحتَها كلَّ يومٍ فلا ترى منه شيئاً من
+   متجرِها الذي بنته. فصار الرأسُ شريطاً بعرضِ الجهازِ كهيرو صفحتِها، خلفيّتُه
+   بانرُها هي، وبلغةِ صفحتِها نفسِها: فوقيّةٌ ثمّ اسمٌ بخطِّ العرضِ وخيطٌ تحتَه.
+   وارتفاعُه دونَ هيرو المتجرِ بكثير: هذه أداةُ عملٍ يوميّةٍ لا صفحةُ تعريف. */
+.bz-dashhero {
+  position: relative;
+  isolation: isolate;
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
+  margin-top: -1.25rem;
+  overflow: hidden;
+  background: linear-gradient(165deg, #292928 0%, #1C1B1A 45%, #151413 100%);
+}
+.bz-dashhero-in {
+  position: relative;
+  display: flex;
+  min-height: 15.5rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  padding: 2.25rem var(--bz-gut);
+  text-align: center;
+}
+@media (min-width: 640px) { .bz-dashhero-in { min-height: 17.5rem; padding-block: 2.75rem; } }
+
+/* الخلفيّةُ صورةُ البانرِ نفسِها معتَّمةً: التعتيمُ مخبوزٌ بالمُرشِّحِ لا طبقةً
+   فوقَها — الطبقةُ يخترقُها فيديو iOS المُسرَّعُ أحياناً كما بالهيرو العامّ. */
+.bz-dashhero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: center 28%;
+  filter: brightness(0.38) saturate(0.88);
+}
+/* حجابٌ رقيقٌ فوقَ الصورةِ يُثبِّتُ تباينَ النصِّ مهما كانت الصورةُ فاتحة */
+.bz-dashhero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(21, 20, 19, 0.55) 0%, rgba(21, 20, 19, 0.30) 45%, rgba(21, 20, 19, 0.70) 100%);
+}
+
+.bz-dashhero-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: rgba(249, 249, 248, 0.62);
+}
+/* الاسمُ بخطِّ العرضِ وخيطٌ تحتَه — الخيطُ نفسُه الذي تحتَ كلِّ عنوانِ قسمٍ
+   بصفحةِ المتجر، فتُعرَفُ القرابةُ بلا شرح. */
+.bz-dashhero-name {
+  position: relative;
+  padding-bottom: 0.7rem;
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #F9F9F8;
+}
+@media (min-width: 640px) { .bz-dashhero-name { font-size: 2.15rem; } }
+.bz-dashhero-name::after {
+  content: '';
+  position: absolute;
+  inset-inline-start: 50%;
+  bottom: 0;
+  height: 2px;
+  width: 2.8rem;
+  transform: translateX(50%);
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(249, 249, 248, 0.75), transparent);
+}
+html[dir='ltr'] .bz-dashhero-name::after { transform: translateX(-50%); }
+
+/* سطرُ الحال: خبرٌ يُقرَأُ بنقطةٍ ملوّنةٍ لا شارةٌ صارخة. اللونُ يبقى بالنقطةِ
+   وحدَها فلا يزاحمُ اسمَ المتجرِ فوقَه. */
+.bz-dashhero-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(249, 249, 248, 0.78);
+}
+.bz-dashhero-dot { height: 0.45rem; width: 0.45rem; border-radius: 999px; }
+
+/* الأزرارُ بلغةِ أزرارِ الهيرو العامّ: حافّةٌ عاجيّةٌ رفيعةٌ تمتلئُ عند اللمس */
+.bz-dashhero-act {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(249, 249, 248, 0.42);
+  padding: 0.5rem 1.05rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #F9F9F8;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+@media (hover: hover) { .bz-dashhero-act:hover { background: #F9F9F8; color: #1F1E1D; } }
+.bz-dashhero-act.is-solid { background: #F9F9F8; color: #1F1E1D; border-color: #F9F9F8; }
+@media (hover: hover) { .bz-dashhero-act.is-solid:hover { background: rgba(249, 249, 248, 0.86); } }

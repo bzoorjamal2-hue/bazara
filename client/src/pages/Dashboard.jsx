@@ -4,6 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import api from '../api/client.js';
 import { useTranslation } from 'react-i18next';
 import { storeUrl } from '../utils/links.js';
+import { cldThumb, cldVideoPoster } from '../utils/cloudinary.js';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useAuth } from '../context/AuthContext.jsx';
 import Seo from '../components/Seo.jsx';
@@ -104,6 +105,15 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [section]);
 
+  // خلفيّةُ الرأس: بانرُ التاجرةِ الأوّلُ — صورتُها هي لا زخرفةٌ عامّة. وإن كان
+  // البانرُ فيديو أخذنا لقطتَه، وإن كان لوناً أو لا بانرَ لها بقيَ النسيجُ العامُّ
+  // ثمّ التدرّج. والمديرُ لا متجرَ له فيبقى له النسيج.
+  const heroBg = (() => {
+    const b = (store?.banners || []).find((x) => x && x.bgValue && (x.bgType === 'image' || x.bgType === 'video'));
+    if (!b) return '';
+    return b.bgType === 'video' ? cldVideoPoster(b.bgValue, 1280) : cldThumb(b.bgValue, 1280);
+  })();
+
   const avatar = user?.avatarUrl ? (
     <img src={user.avatarUrl} alt={user.name} className="h-14 w-14 rounded-full object-cover ring-2 ring-[#BAB9B7]/60" />
   ) : (
@@ -116,88 +126,68 @@ export default function Dashboard() {
     <div className="dash mx-auto w-full max-w-4xl space-y-5">
       <Seo title={t('dashboard.title')} />
 
-      {/* هيدر فاخر: تحية + اسم المتجر بخط العرض + زر معاينة المتجر */}
-      <header className="dash-hero relative overflow-hidden rounded-3xl p-5 sm:p-7">
-        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-          {avatar}
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold text-[#C2C1BF]">
-              {t('dashboard.hello')} {user?.name} 👋
-            </p>
+      {/* رأسُ اللوحةِ يلبسُ ثوبَ المتجر: شريطٌ بعرضِ الجهازِ خلفيّتُه بانرُ
+          التاجرةِ نفسُه، وبلغةِ صفحتِها — فوقيّةٌ ثمّ اسمٌ بخطِّ العرضِ وخيطٌ
+          تحتَه. كان بطاقةً داكنةً بتدرّجٍ شعاعيٍّ تصلحُ لأيِّ لوحةٍ بأيِّ
+          منتَج، فتدخلُ صاحبةُ المتجرِ كلَّ يومٍ ولا ترى من متجرِها شيئاً. */}
+      <header className="bz-dashhero">
+        {heroBg && <img src={heroBg} alt="" aria-hidden className="bz-dashhero-bg" />}
+        <div className="bz-dashhero-in">
+          <div className="flex items-center gap-3">
+            {avatar}
+            {/* الجرسُ بجانبِ الصورةِ لا بطرفِ الصفّ: رقمُه هو نفسُه رقمُ شارةِ التطبيق */}
+            {!isAdmin && <NotificationsBell />}
+          </div>
+
+          <div>
+            <span className="bz-dashhero-eyebrow">
+              {isAdmin ? t('admin.nav') : t('dashboard.heroEyebrow')}
+            </span>
             {/* dir=auto: الاسم اللاتيني يأخذ اتجاهه الصحيح فلا يظهر القص (…) بأول الاسم */}
-            <h1 dir="auto" className="mt-0.5 truncate font-display text-[1.35rem] font-extrabold leading-snug text-[#F9F9F8] sm:text-3xl">
-              {isAdmin ? t('admin.nav') : (store?.name || t('dashboard.title'))}
+            <h1 dir="auto" className="bz-dashhero-name mt-1 font-display">
+              {isAdmin ? t('dashboard.title') : (store?.name || t('dashboard.title'))}
             </h1>
           </div>
-          {/* جرس الإشعارات: رقمه هو نفسه رقم شارة أيقونة التطبيق */}
-          {!isAdmin && <NotificationsBell />}
-          {/* على الموبايل الزر يأخذ سطراً كاملاً لوحده — يترك عرض الشاشة لاسم المتجر */}
-          {!isAdmin && store && (
-            <Link
-              to={`/store/${store.slug}`}
-              className="inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-[#BAB9B7]/40 bg-[#F9F9F8]/10 px-4 py-2 text-sm font-semibold text-[#F9F9F8] transition hover:bg-[#F9F9F8]/20 sm:w-auto"
-            >
-              <StoreIcon className="h-4 w-4" /> {t('dashboard.viewStore')}
-            </Link>
+
+          {/* سطرُ الحال: خبرٌ يُقرَأ — النقطةُ وحدَها تحملُ اللون، فلا تزاحمُ الاسم */}
+          {!isAdmin && subscription && (
+            <span className="bz-dashhero-state">
+              <span
+                className="bz-dashhero-dot"
+                style={{
+                  background: subscription.active
+                    ? (subscription.daysRemaining != null && subscription.daysRemaining <= 7 ? '#F59E0B' : '#34D399')
+                    : '#F87171',
+                }}
+              />
+              {subscription.active
+                ? (subscription.daysRemaining != null
+                  ? t('subscription.daysLeft', { count: subscription.daysRemaining })
+                  : t('subscription.active'))
+                : t('subscription.expired')}
+            </span>
           )}
-        </div>
 
-        {/* حالة المتجر وإجراءاته اليومية داخل الرأس. كان الرأس تحيّةً واسماً
-            فقط: جميلٌ ولا يقول شيئاً ولا يقود إلى فعل. */}
-        {!isAdmin && store && (
-          <div className="relative mt-4 space-y-2.5">
-            {/* سطرُ الحال: خبرٌ يُقرأ، لا زرٌّ يُضغط — فلا يُخلَطُ بصفِّ الإجراءات تحته.
-                كانا معاً في صفٍّ واحدٍ يلتفُّ على ثلاثةِ أسطرٍ بأطوالٍ مختلفة. */}
-            {(subscription || newOrders > 0) && (
-              <div className="flex flex-wrap items-center gap-2">
-                {subscription && (
-                  <span
-                    className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold"
-                    style={subscription.active
-                      ? (subscription.daysRemaining != null && subscription.daysRemaining <= 7
-                        ? { background: '#92400e', color: '#F9F9F8' }
-                        : { background: 'rgba(4,120,87,0.9)', color: '#F9F9F8' })
-                      : { background: '#b91c1c', color: '#F9F9F8' }}
-                  >
-                    <BoltIcon className="h-3.5 w-3.5" />
-                    {subscription.active
-                      ? (subscription.daysRemaining != null
-                        ? t('subscription.daysLeft', { count: subscription.daysRemaining })
-                        : t('subscription.active'))
-                      : t('subscription.expired')}
-                  </span>
-                )}
-                {/* الطلبات الجديدة: الرقم يقود إلى مكانه بضغطة */}
-                {newOrders > 0 && (
-                  <Link
-                    to="/dashboard?tab=myOrders"
-                    className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition hover:brightness-110"
-                    style={{ background: '#F9F9F8', color: '#313130' }}
-                  >
-                    <ReceiptIcon className="h-3.5 w-3.5" /> {t('dashboard.heroNewOrders', { count: newOrders })}
-                  </Link>
-                )}
-              </div>
-            )}
-
-            {/* الإجراءاتُ شبكةٌ لا صفٌّ ملتفّ: على الجوّالِ عمودان متساويان فتصطفُّ
-                الحوافُّ وتتساوى الأحجام، وعلى الشاشةِ الواسعةِ صفٌّ كالعادة. */}
-            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-              <Link
-                to="/dashboard?tab=myProducts"
-                className="inline-flex items-center justify-center gap-1.5 rounded-full border border-[#BAB9B7]/40 px-3 py-2 text-xs font-bold text-[#F9F9F8] transition hover:bg-[#F9F9F8]/15"
-              >
+          {!isAdmin && store && (
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {/* الطلباتُ الجديدةُ أوّلاً ومصمتةً: هي أهمُّ ما تفتحُ اللوحةَ لأجلِه */}
+              {newOrders > 0 && (
+                <Link to="/dashboard?tab=myOrders" className="bz-dashhero-act is-solid">
+                  <ReceiptIcon className="h-3.5 w-3.5" /> {t('dashboard.heroNewOrders', { count: newOrders })}
+                </Link>
+              )}
+              <Link to="/dashboard?tab=myProducts" className="bz-dashhero-act">
                 <BagIcon className="h-3.5 w-3.5" /> {t('dashboard.addProduct')}
               </Link>
-              <Link
-                to="/dashboard?tab=finance"
-                className="inline-flex items-center justify-center gap-1.5 rounded-full border border-[#BAB9B7]/40 px-3 py-2 text-xs font-bold text-[#F9F9F8] transition hover:bg-[#F9F9F8]/15"
-              >
+              <Link to="/dashboard?tab=finance" className="bz-dashhero-act">
                 <CashIcon className="h-3.5 w-3.5" /> {t('finance.title')}
               </Link>
+              <Link to={`/store/${store.slug}`} className="bz-dashhero-act">
+                <StoreIcon className="h-3.5 w-3.5" /> {t('dashboard.viewStore')}
+              </Link>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </header>
 
       <div className="min-w-0">
