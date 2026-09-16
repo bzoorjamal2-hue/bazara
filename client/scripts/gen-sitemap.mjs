@@ -4,7 +4,9 @@
 // محلياً أو عند الفشل: نكتب خريطة احتياطية تحتوي الصفحة الرئيسية فقط (جوجل يكتشف الباقي بالزحف على الروابط).
 import { writeFileSync } from 'node:fs';
 
-const OUT = 'public/sitemap.xml';
+// اسمٌ آخر: ‎/sitemap.xml صارت دالّةً حيّةً تقرأُ من الخادم، وملفٌّ ثابتٌ
+// بالاسمِ نفسِه يحجبُها على Vercel. هذا احتياطُها حين ينامُ الخادم.
+const OUT = 'public/sitemap-build.xml';
 const HOME = 'https://bazarastore.site/';
 const API_SITEMAP = 'https://bazara-hwux.onrender.com/sitemap.xml';
 
