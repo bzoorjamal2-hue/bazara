@@ -10,6 +10,7 @@ import { downloadXlsx } from '../../utils/xlsx.js';
 import { htmlToPngBlob, safeFileName, downloadBlob } from '../../utils/htmlImage.js';
 import { PAPERS, getPaper, savePaper, paperCss, honorsPageSize, paperById } from '../../utils/invoicePaper.js';
 import { printSheet } from '../../utils/printSheet.js';
+import { copyText } from '../../utils/links.js';
 import { PinIcon, NoteIcon, TicketIcon, WhatsAppIcon, TruckIcon, BellIcon, TrashIcon, BagIcon, ReceiptIcon, SearchIcon, XIcon, DownloadIcon, CheckIcon, CopyIcon, PhoneIcon, PrintIcon, ImageIcon } from '../../components/icons.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useCouriers, syncCourierStatuses, courierOf, CourierLock, CourierSend } from '../../components/couriers.jsx';
@@ -198,8 +199,20 @@ export default function OrdersManager() {
     ].filter(Boolean).join('\n');
   };
 
+  // النسخُ بالناسخِ المشترَكِ لا بـ‎navigator.clipboard وحدَه: ذاك يرفضُ داخلَ
+  // متصفّحاتِ التطبيقاتِ ‎(إنستغرام وفيسبوك) وعلى سفاري في حالاتٍ شتّى — والتاجرةُ
+  // تفتحُ لوحتَها من رابطٍ بإنستغرام كثيراً. والمشترَكُ له مخرجٌ احتياطيٌّ قديم.
+  // وكان الخطأُ يُبلَعُ بصمتٍ تامّ: تضغطُ «نسخ» فلا يحدثُ شيءٌ ولا تعرفُ أنجحَ
+  // أم فشل، فتلصقُ ما نسختْه قبلَ ساعةٍ وترسلُه للزبونة.
   const copyOrder = async (o) => {
-    try { await navigator.clipboard.writeText(orderText(o)); setToast(t('common.copied')); setTimeout(() => setToast(''), 1600); } catch { /* تجاهُل */ }
+    const ok = await copyText(orderText(o));
+    if (ok) {
+      setToast(t('common.copied'));
+      setTimeout(() => setToast(''), 1600);
+    } else {
+      setError(t('common.copyFailed'));
+      setTimeout(() => setError(''), 3000);
+    }
   };
 
   const escHtml = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -387,6 +400,10 @@ export default function OrdersManager() {
         { header: o2('coupon'), width: 14 },
         { header: o2('delivery'), width: 12, type: 'money', total: true },
         { header: o2('total'), width: 14, type: 'money', total: true },
+        { header: o2('payMethod'), width: 18 },
+        { header: o2('codDue'), width: 16, type: 'money', total: true },
+        { header: o2('courierName'), width: 14 },
+        { header: o2('trackingNo'), width: 18 },
         { header: o2('status'), width: 14 },
       ],
       totalLabel: o2('total'),
@@ -403,6 +420,12 @@ export default function OrdersManager() {
         o.couponCode || '',
         Number(o.deliveryFee || 0),
         Number(o.total || 0),
+        o.paymentMethod === 'card' ? o2('payCard') : o2('payCod'),
+        // المستحقُّ عندَ الاستلام: صفرٌ لمن دفعَ بالبطاقةِ كاملاً — وهو ما
+        // تُطابِقُه التاجرةُ مع حوالةِ شركةِ التوصيلِ آخرَ الشهر.
+        Number(o.codDue != null ? o.codDue : (o.paymentMethod === 'card' ? 0 : o.total) || 0),
+        courierOf(o)?.name || '',
+        courierOf(o)?.tracking || '',
         statusCell(o.status),
       ]),
     };
