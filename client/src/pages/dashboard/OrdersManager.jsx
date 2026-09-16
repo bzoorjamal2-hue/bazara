@@ -567,37 +567,6 @@ export default function OrdersManager() {
         icon={<ReceiptIcon className="h-6 w-6" />}
         title={t('dashboard.ordersSection.title')}
         hint={t('dashboard.ordersSection.stockHint')}
-        action={orders?.length > 0 ? (
-          <span className="flex shrink-0 items-center gap-1.5">
-            {/* مقاس ورق الطابعة — يسري على طباعة فاتورة واحدة وعلى «طباعة الكل» */}
-            {/* عرض كامل على الجوال (PageHead يرصّ الإجراءات عمودياً هناك) وثابت على
-                الحاسوب — وبلا التفاف للتسمية كي يبقى بارتفاع زرّي الطباعة والتصدير */}
-            <span title={t('dashboard.paper.title')} className="w-full sm:w-auto">
-              <Select
-                value={paper}
-                onChange={choosePaper}
-                options={PAPERS.map((x) => ({ value: x.id, label: t(`dashboard.paper.${x.id}`) }))}
-                className="w-full whitespace-nowrap sm:w-40"
-              />
-              {paperFromDevice && (
-                <p className="mt-1 text-[11px] leading-snug text-stone-400 sm:w-40">{t('dashboard.paper.deviceHint')}</p>
-              )}
-            </span>
-            <button
-              onClick={printAllInvoices}
-              title={t('dashboard.ordersSection.printAll')}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-gold-400/30 px-3 py-2 text-sm font-semibold text-gold-200 transition hover:bg-gold-400/10"
-            >
-              <PrintIcon className="h-4 w-4 shrink-0" /> <span>{t('dashboard.ordersSection.printAll')}</span>
-            </button>
-            <button
-              onClick={exportExcel}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-gold-400/30 px-3 py-2 text-sm font-semibold text-gold-200 transition hover:bg-gold-400/10"
-            >
-              <DownloadIcon className="h-4 w-4" /> {t('dashboard.ordersSection.export')}
-            </button>
-          </span>
-        ) : null}
       />
       {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">{error}</div>}
       {toast && (
@@ -695,6 +664,35 @@ export default function OrdersManager() {
               );
             })}
           </div>
+          {/* الطباعةُ والتصديرُ يعملانِ على هذه القائمة، فمكانُهما معها لا فوقَ
+              الصفحةِ كلِّها. كانا في خانةِ إجراءاتِ الرأسِ ومعهما مقاسُ الورق —
+              وهي تترصّ عموديّاً على الجوّال: ثلاثُ كتلٍ بعرضِ الشاشةِ بينَ عنوانِ
+              الصفحةِ وأوّلِ طلب. وصاحبةُ المتجرِ تفتحُ «الطلبات» لترى طلباً جديداً
+              لا لتصدّرَ ملفَّ إكسل. وصفٌّ ملتفٌّ هنا: سطرٌ واحدٌ خفيفٌ لا ثلاثة. */}
+          <div className="flex flex-wrap items-center gap-2 border-t border-gold-400/10 pt-3">
+            <span title={t('dashboard.paper.title')} className="shrink-0">
+              <Select
+                value={paper}
+                onChange={choosePaper}
+                options={PAPERS.map((x) => ({ value: x.id, label: t(`dashboard.paper.${x.id}`) }))}
+                className="w-32 whitespace-nowrap"
+              />
+            </span>
+            <button
+              onClick={printAllInvoices}
+              title={t('dashboard.ordersSection.printAll')}
+              className="bz-listtool"
+            >
+              <PrintIcon className="h-4 w-4 shrink-0" /> <span>{t('dashboard.ordersSection.printAll')}</span>
+            </button>
+            <button onClick={exportExcel} className="bz-listtool">
+              <DownloadIcon className="h-4 w-4 shrink-0" /> {t('dashboard.ordersSection.export')}
+            </button>
+            {paperFromDevice && (
+              <p className="w-full text-[11px] leading-snug text-stone-400">{t('dashboard.paper.deviceHint')}</p>
+            )}
+          </div>
+
           {/* عدد النتائج عند وجود تصفية فعّالة */}
           {(oq.trim() || statusFilter !== 'all') && visibleOrders.length > 0 && (
             <p className="text-[11px] text-stone-400">{t('dashboard.product.showing', { shown: visibleOrders.length, total: orders.length })}</p>

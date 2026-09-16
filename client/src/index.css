@@ -5393,3 +5393,22 @@ html.dark .theme-pub .bz-shareact { color: #F6F5F3; border-color: rgba(239, 238,
   background: rgba(0, 0, 0, 0.7);
   color: #F6F5F3;
 }
+
+/* أداةُ قائمةٍ باللوحة (طباعة · تصدير): ثانويّةٌ بالمظهرِ كما هي بالرتبة */
+.bz-listtool {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(163, 162, 160, 0.3);
+  padding: 0.45rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #3B3A38;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+html.dark .theme-pub .bz-listtool { color: #D6D2CB; border-color: rgba(239, 238, 236, 0.22); }
+@media (hover: hover) {
+  .bz-listtool:hover { background: rgba(31, 30, 29, 0.06); border-color: rgba(31, 30, 29, 0.45); }
+  html.dark .theme-pub .bz-listtool:hover { background: rgba(239, 238, 236, 0.08); border-color: rgba(239, 238, 236, 0.45); }
+}
