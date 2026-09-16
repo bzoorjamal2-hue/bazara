@@ -4429,6 +4429,49 @@ html.dark .theme-pub .bz-oldprice { color: #8C857C; }
 .bz-tabbar button.is-on { color: #0F0F0E; }
 .bz-tabbar button.is-on > span:first-child { background: #1F1E1D; color: #F9F9F8; }
 
+/* مساحةُ الإصبعِ لا مساحةُ الرسم. قِستُ الشريطَ على جوّالٍ ٣٧٥×٨١٢: ارتفاعُه
+   ٥٨px لكنَّ الزرَّ لا يستجيبُ إلّا في ٤٠ منها — تسعةٌ ميّتةٌ فوقَه وتسعٌ تحته
+   (حشوةُ الكبسولة)، وعشرٌ أخرى بين الكبسولةِ وحافّةِ الشاشةِ كانت تنفذُ إلى
+   بطاقةِ متجرٍ خلفَها فتفتحُ وجهةً لم تُقصَد. فنقلنا حشوةَ الكبسولةِ إلى الأزرارِ
+   نفسِها (الشكلُ لم يتغيّر، والمضغوطُ كبر)، ومددنا هنا مساحةَ الضغطِ إلى الحافّةِ
+   السفليّةِ وإلى الجانبين — حيثُ يقعُ الإبهامُ طبيعيّاً. الامتدادُ شفّافٌ ويتبعُ
+   الزرَّ نفسَه، فالضغطةُ تصلُ صاحبَها لا ما وراءه. */
+@media (hover: none), (pointer: coarse) {
+  .bz-tabbar button::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: calc(-1 * (env(safe-area-inset-bottom, 0px) + 16px));
+    inset-inline: 0;
+  }
+  /* ٢٥px هي مجموعُ ما يفصلُ أوّلَ زرٍّ عن حافّةِ الشاشة: هامشُ الكبسولةِ
+     وحدُّها وحشوتاها. فتبلغُ مساحةُ الضغطِ الحافّةَ ولا تقفُ دونها. */
+  .bz-tabbar > div > :first-child::after { inset-inline-start: -26px; }
+  .bz-tabbar > div > :last-child::after { inset-inline-end: -26px; }
+}
+
+/* خيطُ «جارٍ»: يظهرُ حين يطولُ تجهيزُ الصفحةِ الجديدةِ فقط (١٢٠ms فأكثر).
+   بلا نسبةٍ يعرفُها أحد، فهو مسحةٌ تذهبُ وتجيءُ — معناها «يعمل» لا «بقي كذا». */
+.bz-navbusy {
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  z-index: 100;
+  height: 2px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, #7A1F2B 45%, #A8323F 55%, transparent);
+  background-size: 45% 100%;
+  background-repeat: no-repeat;
+  animation: bz-navbusy-sweep 900ms linear infinite;
+}
+@keyframes bz-navbusy-sweep {
+  from { background-position: -50% 0; }
+  to { background-position: 150% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bz-navbusy { animation: none; background: #7A1F2B; opacity: 0.55; }
+}
+
 html.dark .theme-pub .bz-tabbar {
   background: #100F0E !important;
   border-color: rgba(239, 238, 236, 0.14) !important;

@@ -302,9 +302,18 @@ export default function BottomNav() {
   // الضغطةُ كأنّها لم تُسجَّل، وهو «التعليق» بعينِه. فنُضيءُ التبويبَ المضغوطَ
   // فوراً قبلَ أن يتغيّرَ المسار: الإصبعُ يرى أثرَه بالفريمِ التالي، والانتقالُ
   // يكملُ خلفَه. وتُمسَحُ الإضاءةُ الاستباقيّةُ ساعةَ يصلُ المسارُ الجديد.
-  const [, startNav] = useTransition();
+  const [navPending, startNav] = useTransition();
   const [pendingKey, setPendingKey] = useState('');
   useEffect(() => { setPendingKey(''); }, [pathname, search]);
+  // إضاءةُ التبويبِ وحدَها لا تكفي حين تطولُ الصفحةُ الجديدة: التبويبُ يضيءُ
+  // والشاشةُ لا تتغيّر، فيُقرأُ ذلك عطلاً لا انتظاراً. فنرفعُ خيطاً علويّاً
+  // يقولُ «جارٍ» — وبعدَ ١٢٠ms فقط، كي لا يومضَ في الانتقالاتِ الفوريّة.
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    if (!navPending) { setBusy(false); return undefined; }
+    const id = setTimeout(() => setBusy(true), 120);
+    return () => clearTimeout(id);
+  }, [navPending]);
 
   const goto = (to) => {
     closeDrawers();
@@ -422,6 +431,8 @@ export default function BottomNav() {
   // بلا backdrop-blur: ضبابية دائمة فوق المحتوى تُرهق معالج الرسم مع كل فريم تمرير،
   // والخلفية 95% معتمة أصلاً فالفرق البصري صفر والفرق بالأداء محسوس
   return (
+    <>
+    {busy && <span className="bz-navbusy" aria-hidden="true" />}
     <nav
       ref={barRef}
       /* كبسولةٌ طافيةٌ على اللمسِ وحدَه: هناك هو شريطُ إبهامٍ سفليٌّ
@@ -431,7 +442,7 @@ export default function BottomNav() {
       className={`bz-tabbar fixed z-[78] bg-white/95 transition-transform duration-300 ease-out motion-reduce:transition-none ${
         dt
           ? 'inset-x-0 bottom-0 border-t border-wine/10 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 shadow-[0_-6px_20px_rgba(75,74,73,0.08)]'
-          : 'inset-x-3 bottom-[calc(env(safe-area-inset-bottom,0px)+10px)] mx-auto max-w-md rounded-[26px] border border-wine/10 px-1 py-2 shadow-[0_16px_36px_-14px_rgba(15,15,14,0.48),0_3px_10px_-6px_rgba(15,15,14,0.20)]'
+          : 'inset-x-3 bottom-[calc(env(safe-area-inset-bottom,0px)+10px)] mx-auto max-w-md rounded-[26px] border border-wine/10 px-1 shadow-[0_16px_36px_-14px_rgba(15,15,14,0.48),0_3px_10px_-6px_rgba(15,15,14,0.20)]'
       }`}
       style={
         vvInset || away
@@ -460,7 +471,7 @@ export default function BottomNav() {
                بلا اسمٍ مقروء، فنكتبُه سمةً — أيقونةٌ عاريةٌ بلا aria-label زرٌّ
                أخرسُ عندَ من يسمعُ الصفحةَ ولا يراها. */
             aria-label={label}
-            className={`${active ? 'is-on ' : ''}relative flex min-w-0 flex-1 flex-col items-center py-1 text-[10px] font-medium leading-tight transition ${dt ? 'gap-1' : ''} ${
+            className={`${active ? 'is-on ' : ''}relative flex min-w-0 flex-1 flex-col items-center text-[10px] font-medium leading-tight transition ${dt ? 'gap-1 py-1' : 'py-3'} ${
               active ? 'text-wine' : 'text-stone-400'
             }`}
           >
@@ -488,5 +499,6 @@ export default function BottomNav() {
         })}
       </div>
     </nav>
+    </>
   );
 }
