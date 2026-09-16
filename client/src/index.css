@@ -5202,6 +5202,33 @@ html.dark .theme-pub .bz-featstore {
   background: #1A1918;
 }
 @media (min-width: 768px) { .bz-eband-link { min-height: min(58svh, 520px); } }
+/* ‏cover على حاوٍ أعرضَ من الصورةِ يملأُ العرضَ ويقتطعُ من الأعلى والأسفل. وكلّما
+   اتّسعت الشاشةِ ازدادَ عرضُ الحاوي وثبتَ ارتفاعُه، فاشتدَّ القصُّ حتى صارت
+   العارضةُ تُقَصُّ عند صدرِها على الكمبيوترِ واللوحِ العرضيّ. فيرتفعُ الشريطُ
+   مع العرضِ: الشريحةُ الظاهرةُ من الصورةِ تكبرُ، ويقلُّ المقصوص. */
+@media (min-width: 1024px) { .bz-eband-link { min-height: min(66svh, 600px); } }
+@media (min-width: 1280px) { .bz-eband-link { min-height: min(72svh, 680px); } }
+
+/* حجابٌ اتّجاهيٌّ لا تعتيمٌ متساوٍ. كان التعتيمُ يُطفئُ الصورةَ كلَّها ليُقرَأَ
+   النصُّ على طرفٍ واحدٍ منها — فتبدو صورةً باهتةً وعليها كتابة. الآن يثقُلُ
+   خلفَ النصِّ ويصفو فوقَ القطعةِ نفسِها: تبقى العارضةُ بلونِها، ويبقى النصُّ
+   مقروءاً، ويصيرُ للشريطِ عمقٌ بدل سطحٍ واحدٍ مُعتِم.
+   والاتّجاهُ يتبعُ اللغة: النصُّ بجهةِ البدايةِ فالثقلُ معه. */
+.bz-eband-link::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(to left, rgba(12, 11, 10, 0.78) 0%, rgba(12, 11, 10, 0.44) 34%, rgba(12, 11, 10, 0.10) 62%, rgba(12, 11, 10, 0) 80%),
+    linear-gradient(to top, rgba(12, 11, 10, 0.32) 0%, rgba(12, 11, 10, 0) 38%);
+}
+html[dir='ltr'] .bz-eband-link::before {
+  background:
+    linear-gradient(to right, rgba(12, 11, 10, 0.78) 0%, rgba(12, 11, 10, 0.44) 34%, rgba(12, 11, 10, 0.10) 62%, rgba(12, 11, 10, 0) 80%),
+    linear-gradient(to top, rgba(12, 11, 10, 0.32) 0%, rgba(12, 11, 10, 0) 38%);
+}
 .bz-eband-img {
   position: absolute;
   inset: 0;
@@ -5233,6 +5260,27 @@ html.dark .theme-pub .bz-featstore {
   padding: 3rem var(--bz-gut);
   text-align: start;
 }
+/* عمودٌ مقيَّدٌ لا سطرٌ يعبرُ الشاشة: النصُّ التحريريُّ يُقرَأُ بعرضٍ محدودٍ،
+   وتقييدُه يترك للصورةِ مساحتَها بدل أن يزحفَ العنوانُ فوقَ القطعة.
+   ولا يُقيَّدُ على الجوّال: العرضُ هناك ضيّقٌ أصلاً، وتقييدُه يكسرُ العنوانَ
+   على سطرَينِ أو ثلاثةٍ بلا داعٍ — والصورةُ تُقَصُّ طولاً لا عرضاً فلا مساحةَ
+   جانبيّةً نحميها. */
+@media (min-width: 768px) {
+  .bz-eband-text > * { max-width: min(30rem, 62%); }
+}
+/* خيطٌ يفتحُ الكتلةَ كما تُفتَحُ صفحةُ مجلّة — فلا يبدأُ النصُّ من الفراغِ
+   مباشرةً فيُقرَأَ كتابةً أُلقيَت على صورة. ويقعُ على أوّلِ سطرٍ موجود:
+   الفوقيّةُ إن كانت، وإلّا العنوانُ نفسُه. */
+.bz-eband-eyebrow::before,
+.bz-eband-h:first-child::before {
+  content: '';
+  display: block;
+  width: 2.25rem;
+  height: 2px;
+  margin-block-end: 0.85rem;
+  border-radius: 2px;
+  background: rgba(246, 245, 243, 0.75);
+}
 .bz-eband-eyebrow {
   font-size: 0.72rem;
   font-weight: 700;
@@ -5242,7 +5290,7 @@ html.dark .theme-pub .bz-featstore {
 }
 .bz-eband-h {
   margin: 0;
-  font-size: clamp(1.6rem, 4.6vw, 2.9rem);
+  font-size: clamp(1.6rem, 4.6vw, 3.5rem);
   font-weight: 700;
   line-height: 1.18;
   color: #F6F5F3;
@@ -5258,11 +5306,11 @@ html.dark .theme-pub .bz-featstore {
   text-shadow: 0 1px 10px rgba(0, 0, 0, 0.3);
 }
 .bz-eband-btn {
-  margin-top: 0.6rem;
+  margin-top: 0.9rem;
   display: inline-block;
-  border-radius: 0.6rem;
+  border-radius: 999px;
   background: #F6F5F3;
-  padding: 0.62rem 1.5rem;
+  padding: 0.7rem 1.8rem;
   font-size: 0.9rem;
   font-weight: 700;
   color: #1F1E1D;

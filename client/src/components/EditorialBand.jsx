@@ -39,7 +39,10 @@ export default function EditorialBand({ collection, storeSlug = '' }) {
           className="bz-eband-img"
           // التعتيمُ مخبوزٌ بالصورةِ لا طبقةً فوقَها — نفسُ سببِ الهيرو:
           // الطبقةُ فوقَ وسيطٍ مُسرَّعٍ قد يخترقُها، والرقمُ من لوحةِ صاحبِ الصفحة.
-          style={{ filter: `brightness(${(1 - dim * 0.7).toFixed(3)})` }}
+          // والمعامِلُ ٠٫٤٢ لا ٠٫٧: صارَ خلفَ النصِّ حجابٌ اتّجاهيٌّ يحملُ عبءَ
+          // القراءةِ (‏.bz-eband-link::before)، فلو بقيَ التعتيمُ العامُّ على شدّتِه
+          // لاجتمعا على الصورةِ فأطفآها. يبقى الرقمُ بيدِ صاحبِ الصفحةِ كما كان.
+          style={{ filter: `brightness(${(1 - dim * 0.42).toFixed(3)})` }}
         />
         <div className="bz-eband-text">
           {c.eyebrow ? <span className="bz-eband-eyebrow">{c.eyebrow}</span> : null}
