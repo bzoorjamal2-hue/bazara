@@ -183,6 +183,7 @@ export default function StoreSettings() {
           announcement: s.announcement || '',
           announcementEn: s.announcementEn || '',
           sectionLayout: s.sectionLayout || 'mixed',
+          panelImage: s.panelImage || '',
           tagline: s.tagline || '',
           taglineEn: s.taglineEn || '',
           welcomeOffer: s.welcomeOffer || '',
@@ -697,6 +698,13 @@ export default function StoreSettings() {
               );
             })}
           </div>
+
+          {/* صورةُ لوحتِك: تظهرُ خلفَ رأسِ اللوحةِ وخلفَ هويّةِ القائمةِ الجانبيّة.
+              وإن تركتِها فارغةً أخذنا أوّلَ شريحةٍ من سلايدرِ متجرِك — فلا يبقى
+              الرأسُ لوحاً داكناً عامّاً يصلحُ لأيِّ متجر. */}
+          <Field label={t('dashboard.store.panelImage')} tip={t('dashboard.store.panelImageTip')} hint={t('dashboard.store.panelImageHint')} optional value={form.panelImage}>
+            <ImageInput value={form.panelImage} onChange={(v) => setForm((f) => ({ ...f, panelImage: v }))} />
+          </Field>
         </div>
 
         {/* مناطق التوصيل ورسومها */}

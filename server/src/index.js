@@ -630,6 +630,9 @@ END $$;`,
     // الشبكةُ (صفحةٌ طولُها ثلاثةُ آلافِ بكسل) — فالخيارُ للتاجر. والافتراضُ
     // «متناوب»: الإيقاعُ القائمُ اليوم، فلا يتبدّلُ شكلُ متجرٍ بلا قرارِ صاحبِه.
     "ALTER TABLE stores ADD COLUMN IF NOT EXISTS section_layout VARCHAR(10) NOT NULL DEFAULT 'mixed';",
+    // صورةُ رأسِ لوحةِ التحكّمِ ودرجِها — تختارُها التاجرةُ بنفسِها. وإن تركتها
+    // فارغةً أخذنا أوّلَ بانرٍ من سلايدرِ متجرِها، فلا يبقى الرأسُ لوحاً داكناً عامّاً.
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS panel_image VARCHAR(500) NOT NULL DEFAULT '';",
   ];
   // كل جملة على حدة: فشل واحدة لا يمنع البقية
   for (const sql of steps) {

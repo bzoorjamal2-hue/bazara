@@ -170,7 +170,8 @@ export async function me(req, res, next) {
               EXISTS(SELECT 1 FROM subscription_requests sr WHERE sr.user_id = u.id AND sr.status = 'pending') AS has_pending,
               s.id AS store_id, s.name AS store_name, s.slug AS store_slug,
               s.description AS store_description, s.logo_url AS store_logo_url,
-              s.custom_categories AS store_custom_categories
+              s.custom_categories AS store_custom_categories,
+              s.banners AS store_banners, s.panel_image AS store_panel_image
        FROM users u
        LEFT JOIN stores s ON s.user_id = u.id
        WHERE u.id = $1`,
@@ -202,6 +203,10 @@ export async function me(req, res, next) {
             slug: row.store_slug,
             description: row.store_description,
             logoUrl: row.store_logo_url,
+            // رأسُ اللوحةِ ودرجُها يرسمانِ صورةَ المتجر: بلا هذين الحقلَينِ
+            // كان الرأسُ يبحثُ عن بانرٍ لا يصلُه أبداً فيبقى لوحاً داكناً عامّاً.
+            panelImage: row.store_panel_image || '',
+            banners: Array.isArray(row.store_banners) ? row.store_banners : [],
             customCategories: Array.isArray(row.store_custom_categories) ? row.store_custom_categories : [],
           }
         : null,

@@ -5066,18 +5066,45 @@ html.dark .theme-pub .bz-featstore {
   overflow: hidden;
   background: linear-gradient(165deg, #292928 0%, #1C1B1A 45%, #151413 100%);
 }
+/* محورٌ واحدٌ يُقرَأُ من حافّةِ السطر، لا كلُّ سطرٍ بوسطِه. التوسيطُ يليقُ
+   بهيرو صفحةِ المتجرِ — سطرانِ وزرّان تراهما الزبونةُ لحظةً — أمّا اللوحةُ
+   فسطحُ عملٍ يوميٌّ: العينُ تنزلُ على حافّةٍ واحدةٍ فتجدُ كلَّ شيءٍ مصطفّاً.
+   وارتفاعُه أقلُّ: ما عادَ يحتاجُ فراغاً حولَ كتلةٍ وسطى. */
 .bz-dashhero-in {
   position: relative;
+  margin-inline: auto;
   display: flex;
-  min-height: 15.5rem;
+  max-width: 56rem;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.85rem;
-  padding: 2.25rem var(--bz-gut);
-  text-align: center;
+  gap: 1.25rem;
+  padding: 1.6rem var(--bz-gut);
 }
-@media (min-width: 640px) { .bz-dashhero-in { min-height: 17.5rem; padding-block: 2.75rem; } }
+@media (min-width: 768px) {
+  .bz-dashhero-in {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding-block: 2rem;
+  }
+}
+
+/* الأزرارُ شبكةٌ من عمودَينِ على الجوّالِ فتصطفُّ حوافُّها بدل صفٍّ ملتفٍّ
+   بأطوالٍ مختلفة، وصفٌّ واحدٌ ملتصقٌ بالطرفِ المقابلِ على الشاشةِ الواسعة. */
+.bz-dashhero-acts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+@media (min-width: 768px) {
+  .bz-dashhero-acts {
+    display: flex;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: 22rem;
+  }
+}
 
 /* الخلفيّةُ صورةُ البانرِ نفسِها معتَّمةً: التعتيمُ مخبوزٌ بالمُرشِّحِ لا طبقةً
    فوقَها — الطبقةُ يخترقُها فيديو iOS المُسرَّعُ أحياناً كما بالهيرو العامّ. */
@@ -5102,6 +5129,7 @@ html.dark .theme-pub .bz-featstore {
 }
 
 .bz-dashhero-eyebrow {
+  display: block;
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.2em;
@@ -5118,18 +5146,19 @@ html.dark .theme-pub .bz-featstore {
   color: #F9F9F8;
 }
 @media (min-width: 640px) { .bz-dashhero-name { font-size: 2.15rem; } }
+/* الخيطُ من حافّةِ السطرِ لا من وسطِه: كان موسَّطاً حينَ كان الرأسُ موسَّطاً،
+   فلمّا اصطفَّ النصُّ على الحافّةِ صارَ شَرطةً معلّقةً بمنتصفِ الاسمِ بلا معنى. */
 .bz-dashhero-name::after {
   content: '';
   position: absolute;
-  inset-inline-start: 50%;
+  inset-inline-start: 0;
   bottom: 0;
   height: 2px;
-  width: 2.8rem;
-  transform: translateX(50%);
+  width: 2.4rem;
   border-radius: 999px;
-  background: linear-gradient(90deg, transparent, rgba(249, 249, 248, 0.75), transparent);
+  background: linear-gradient(90deg, rgba(249, 249, 248, 0.8), transparent);
 }
-html[dir='ltr'] .bz-dashhero-name::after { transform: translateX(-50%); }
+html[dir='rtl'] .bz-dashhero-name::after { background: linear-gradient(270deg, rgba(249, 249, 248, 0.8), transparent); }
 
 /* سطرُ الحال: خبرٌ يُقرَأُ بنقطةٍ ملوّنةٍ لا شارةٌ صارخة. اللونُ يبقى بالنقطةِ
    وحدَها فلا يزاحمُ اسمَ المتجرِ فوقَه. */
@@ -5286,3 +5315,13 @@ html.dark .theme-pub .bz-quickact { color: #F6F5F3; border-color: rgba(239, 238,
   .bz-quickact:hover { transform: translateY(-2px); border-color: rgba(31, 30, 29, 0.42); background: rgba(31, 30, 29, 0.05); }
   html.dark .theme-pub .bz-quickact:hover { border-color: rgba(239, 238, 236, 0.4); background: rgba(239, 238, 236, 0.06); }
 }
+
+/* جرسُ الإشعاراتِ بزاويةِ شريطِ الرأس: كان داخلَ صفِّ الهويّةِ بـ‎ms-auto فيُقذَفُ
+   إلى الطرفِ المقابلِ ويبقى معلّقاً بمنتصفِ الفراغِ بين الاسمِ والحافّة. */
+.bz-dashhero-bell {
+  position: absolute;
+  inset-block-start: 0.9rem;
+  inset-inline-end: var(--bz-gut);
+  z-index: 2;
+}
+@media (min-width: 768px) { .bz-dashhero-bell { inset-block-start: 1.1rem; } }

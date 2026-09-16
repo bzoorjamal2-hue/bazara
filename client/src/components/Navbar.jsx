@@ -15,7 +15,8 @@ import CloseButton from './CloseButton.jsx';
 import DashDrawerNav from './DashDrawerNav.jsx';
 import { isStandalone } from '../utils/pwa.js';
 import CatThumb from './CatThumb.jsx';
-import { cldThumb, cldVideoPoster } from '../utils/cloudinary.js';
+import { cldThumb } from '../utils/cloudinary.js';
+import { panelImage } from '../utils/panelImage.js';
 import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys } from '../utils/platformCategories.js';
 
 // هوية الحساب أينما ظهرت (زرّ الشريط · القائمة المنبثقة · القائمة الجانبية):
@@ -122,12 +123,8 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [noAnim, setNoAnim] = useState(false); // إلغاء حركة الهيدر لحظة تغيّر الصفحة
   const [newOrders, setNewOrders] = useState(0); // شارة الطلبات الجديدة داخل قائمة الحساب
-  // خلفيّةُ هويّةِ الدرج: بانرُ المتجرِ الأوّلُ — نفسُه خلفَ رأسِ اللوحة
-  const drawerBg = (() => {
-    const b = (store?.banners || []).find((x) => x && x.bgValue && (x.bgType === 'image' || x.bgType === 'video'));
-    if (!b || subscription?.isAdmin) return '';
-    return b.bgType === 'video' ? cldVideoPoster(b.bgValue, 640) : cldThumb(b.bgValue, 640);
-  })();
+  // خلفيّةُ هويّةِ الدرج — الصورةُ نفسُها التي خلفَ رأسِ اللوحة
+  const drawerBg = subscription?.isAdmin ? '' : panelImage(store, 640);
   const [stockReady, setStockReady] = useState(0); // شارة طلبات التوفّر التي رجعت متوفّرة
 
   // نجلب عدد الطلبات الجديدة عند فتح القائمة → نُظهر شارة على "الطلبات" ليعرف المالك مصدر الإشعار

@@ -41,6 +41,7 @@ function mapStore(s) {
     customCategories: Array.isArray(s.custom_categories) ? s.custom_categories : [],
     collections: Array.isArray(s.collections) ? s.collections : [],
     sectionLayout: LAYOUTS.includes(s.section_layout) ? s.section_layout : 'mixed',
+    panelImage: s.panel_image || '',
     fbPixel: s.fb_pixel || '',
     tiktokPixel: s.tiktok_pixel || '',
     gaId: s.ga_id || '',
@@ -227,6 +228,9 @@ export async function updateMyStore(req, res, next) {
   const taglineEn = String(req.body.taglineEn || '').slice(0, 120);
   // ثلاثُ قيمٍ لا رابعَ لها — وأيُّ شيءٍ آخرَ يعودُ للإيقاعِ المتناوب
   const sectionLayout = LAYOUTS.includes(req.body.sectionLayout) ? req.body.sectionLayout : 'mixed';
+  // صورةُ رأسِ اللوحة: رابطٌ مستضافٌ أو فراغ — لا ‎javascript: ولا مسارٌ محلّيّ
+  const panelImage = /^https?:\/\//i.test(String(req.body.panelImage || ''))
+    ? String(req.body.panelImage).slice(0, 500) : '';
   const welcomeOffer = String(req.body.welcomeOffer || '').slice(0, 300);
   const categoryMeta = sanitizeCategoryMeta(req.body.categoryMeta);
   const customCategories = sanitizeCustomCategories(req.body.customCategories);
@@ -296,7 +300,7 @@ export async function updateMyStore(req, res, next) {
          bank_account_name = $39, bank_name = $40,
          bank_iban = CASE WHEN $41 = '' OR $41 LIKE '••••%' THEN bank_iban ELSE $41 END,
          bank_swift = $42, bank_code = $43,
-         section_layout = $44,
+         section_layout = $44, panel_image = $45,
          -- تغييرُ الآيبانِ يُبطلُ التسجيلَ السابقَ عند البوّابتَين: نُعيدُها للانتظار،
          -- إذ لا يصحُّ أن يبقى حسابٌ فرعيٌّ يسوقُ المالَ إلى مصرفٍ هُجِر
          paytabs_entity_id = CASE WHEN $41 = '' OR $41 LIKE '••••%' THEN paytabs_entity_id ELSE '' END,
@@ -353,6 +357,7 @@ export async function updateMyStore(req, res, next) {
         bankSwift,
         bankCode,
         sectionLayout,
+        panelImage,
       ]
     );
 

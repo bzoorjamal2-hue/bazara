@@ -4,7 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import api from '../api/client.js';
 import { useTranslation } from 'react-i18next';
 import { storeUrl } from '../utils/links.js';
-import { cldThumb, cldVideoPoster } from '../utils/cloudinary.js';
+import { panelImage } from '../utils/panelImage.js';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useAuth } from '../context/AuthContext.jsx';
 import Seo from '../components/Seo.jsx';
@@ -105,14 +105,8 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [section]);
 
-  // خلفيّةُ الرأس: بانرُ التاجرةِ الأوّلُ — صورتُها هي لا زخرفةٌ عامّة. وإن كان
-  // البانرُ فيديو أخذنا لقطتَه، وإن كان لوناً أو لا بانرَ لها بقيَ النسيجُ العامُّ
-  // ثمّ التدرّج. والمديرُ لا متجرَ له فيبقى له النسيج.
-  const heroBg = (() => {
-    const b = (store?.banners || []).find((x) => x && x.bgValue && (x.bgType === 'image' || x.bgType === 'video'));
-    if (!b) return '';
-    return b.bgType === 'video' ? cldVideoPoster(b.bgValue, 1280) : cldThumb(b.bgValue, 1280);
-  })();
+  // صورةُ الرأس: ما اختارته التاجرةُ، وإلّا أوّلُ بانرٍ من سلايدرِها
+  const heroBg = isAdmin ? '' : panelImage(store, 1280);
 
   const avatar = user?.avatarUrl ? (
     <img src={user.avatarUrl} alt={user.name} className="h-14 w-14 rounded-full object-cover ring-2 ring-[#BAB9B7]/60" />
@@ -132,44 +126,47 @@ export default function Dashboard() {
           منتَج، فتدخلُ صاحبةُ المتجرِ كلَّ يومٍ ولا ترى من متجرِها شيئاً. */}
       <header className="bz-dashhero">
         {heroBg && <img src={heroBg} alt="" aria-hidden className="bz-dashhero-bg" />}
+        {/* الجرسُ بزاويةِ الشريطِ لا داخلَ صفِّ الهويّة: كان ‎ms-auto يقذفُه إلى
+            الطرفِ المقابلِ فيبقى معلّقاً بمنتصفِ الفراغِ بين الاسمِ والحافّة. */}
+        {!isAdmin && <span className="bz-dashhero-bell"><NotificationsBell /></span>}
+        {/* منسّقٌ على محورٍ واحدٍ لا كلُّ سطرٍ بوسطِه. التوسيطُ يليقُ بهيرو صفحةِ
+            المتجرِ — سطرانِ وزرّان تراهما الزبونةُ لحظةً — أمّا اللوحةُ فسطوحُ
+            عملٍ يوميّةٍ تُقرَأُ من حافّةِ السطر: الصورةُ ثمّ الاسمُ ثمّ الحال
+            على عمودٍ واحد، والأزرارُ بالطرفِ المقابلِ على الشاشةِ الواسعة. */}
         <div className="bz-dashhero-in">
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3.5">
             {avatar}
-            {/* الجرسُ بجانبِ الصورةِ لا بطرفِ الصفّ: رقمُه هو نفسُه رقمُ شارةِ التطبيق */}
-            {!isAdmin && <NotificationsBell />}
+            <div className="min-w-0">
+              <span className="bz-dashhero-eyebrow">
+                {isAdmin ? t('admin.nav') : t('dashboard.heroEyebrow')}
+              </span>
+              {/* dir=auto: الاسم اللاتيني يأخذ اتجاهه الصحيح فلا يظهر القص (…) بأول الاسم */}
+              <h1 dir="auto" className="bz-dashhero-name mt-1 truncate font-display">
+                {isAdmin ? t('dashboard.title') : (store?.name || t('dashboard.title'))}
+              </h1>
+              {/* سطرُ الحال: خبرٌ يُقرَأ — النقطةُ وحدَها تحملُ اللون، فلا تزاحمُ الاسم */}
+              {!isAdmin && subscription && (
+                <span className="bz-dashhero-state mt-2">
+                  <span
+                    className="bz-dashhero-dot"
+                    style={{
+                      background: subscription.active
+                        ? (subscription.daysRemaining != null && subscription.daysRemaining <= 7 ? '#F59E0B' : '#34D399')
+                        : '#F87171',
+                    }}
+                  />
+                  {subscription.active
+                    ? (subscription.daysRemaining != null
+                      ? t('subscription.daysLeft', { count: subscription.daysRemaining })
+                      : t('subscription.active'))
+                    : t('subscription.expired')}
+                </span>
+              )}
+            </div>
           </div>
-
-          <div>
-            <span className="bz-dashhero-eyebrow">
-              {isAdmin ? t('admin.nav') : t('dashboard.heroEyebrow')}
-            </span>
-            {/* dir=auto: الاسم اللاتيني يأخذ اتجاهه الصحيح فلا يظهر القص (…) بأول الاسم */}
-            <h1 dir="auto" className="bz-dashhero-name mt-1 font-display">
-              {isAdmin ? t('dashboard.title') : (store?.name || t('dashboard.title'))}
-            </h1>
-          </div>
-
-          {/* سطرُ الحال: خبرٌ يُقرَأ — النقطةُ وحدَها تحملُ اللون، فلا تزاحمُ الاسم */}
-          {!isAdmin && subscription && (
-            <span className="bz-dashhero-state">
-              <span
-                className="bz-dashhero-dot"
-                style={{
-                  background: subscription.active
-                    ? (subscription.daysRemaining != null && subscription.daysRemaining <= 7 ? '#F59E0B' : '#34D399')
-                    : '#F87171',
-                }}
-              />
-              {subscription.active
-                ? (subscription.daysRemaining != null
-                  ? t('subscription.daysLeft', { count: subscription.daysRemaining })
-                  : t('subscription.active'))
-                : t('subscription.expired')}
-            </span>
-          )}
 
           {!isAdmin && store && (
-            <div className="flex flex-wrap items-center justify-center gap-2">
+            <div className="bz-dashhero-acts">
               {/* الطلباتُ الجديدةُ أوّلاً ومصمتةً: هي أهمُّ ما تفتحُ اللوحةَ لأجلِه */}
               {newOrders > 0 && (
                 <Link to="/dashboard?tab=myOrders" className="bz-dashhero-act is-solid">
