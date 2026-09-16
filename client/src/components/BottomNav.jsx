@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getStoreScope, subscribeStoreScope } from '../utils/storeScope.js';
 import { useTranslation } from 'react-i18next';
@@ -303,12 +303,8 @@ export default function BottomNav() {
   // إغلاق أدراج السلة/المفضلة قبل الانتقال (الشريط يبقى ظاهراً فوق الأدراج)
   const closeDrawers = () => { setOpen(false); setWishOpen(false); };
   // الضغط على تبويب أنتِ عليه أصلاً يمرّر لأعلى (نفس سلوك الشعار) بدل ألا يفعل شيئاً
-  // ثمنُ ‎startTransition أنّ الصفحةَ القديمةَ تبقى ظاهرةً حتى تجهزَ الجديدة —
-  // وإن كانت الجديدةُ ثقيلةً (صفحةُ التصنيفاتِ تحجزُ الخيطَ ٣١٩ms عندي) بدت
-  // الضغطةُ كأنّها لم تُسجَّل، وهو «التعليق» بعينِه. فنُضيءُ التبويبَ المضغوطَ
-  // فوراً قبلَ أن يتغيّرَ المسار: الإصبعُ يرى أثرَه بالفريمِ التالي، والانتقالُ
-  // يكملُ خلفَه. وتُمسَحُ الإضاءةُ الاستباقيّةُ ساعةَ يصلُ المسارُ الجديد.
-  const [navPending, startNav] = useTransition();
+  // نُضيءُ التبويبَ المضغوطَ قبلَ أن يتغيّرَ المسار: الإصبعُ يرى أثرَه بالفريمِ
+  // التالي بدل أن ينتظرَ الصفحة. وتُمسَحُ الإضاءةُ ساعةَ يصلُ المسارُ الجديد.
   const [pendingKey, setPendingKey] = useState('');
   useEffect(() => { setPendingKey(''); }, [pathname, search]);
   // إضاءةُ التبويبِ وحدَها لا تكفي حين تطولُ الصفحةُ الجديدة: التبويبُ يضيءُ
@@ -316,21 +312,25 @@ export default function BottomNav() {
   // يقولُ «جارٍ» — وبعدَ ١٢٠ms فقط، كي لا يومضَ في الانتقالاتِ الفوريّة.
   const [busy, setBusy] = useState(false);
   useEffect(() => {
-    if (!navPending) { setBusy(false); return undefined; }
+    if (!pendingKey) { setBusy(false); return undefined; }
     const id = setTimeout(() => setBusy(true), 120);
     return () => clearTimeout(id);
-  }, [navPending]);
+  }, [pendingKey]);
 
   const goto = (to) => {
     closeDrawers();
     // نقارن الرابط كاملاً (مع الاستعلام) — كي ينتقل من رئيسية المتجر إلى ?offers=1/?view=all
     // بدل أن يكتفي بالتمرير لأعلى لتطابق المسار وحده.
     if (pathname + search === to) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
-    // انتقالٌ لا تحديثٌ عاجل: الصفحةُ الجديدةُ تُحمَّلُ كسولاً، فبلا هذا يرى رياكت
-    // حدَّ ‎Suspense معلّقاً فيستبدلُ الشاشةَ كلَّها بمؤشّرِ تحميل — وميضٌ أبيضُ ثمّ
-    // ظهور. ومع ‎startTransition تبقى الصفحةُ الحاليّةُ ظاهرةً حتى تجهزَ التالية،
-    // فالشريطُ يستجيبُ فوراً والانتقالُ يُقرأُ متّصلاً لا مقطوعاً.
-    startNav(() => navigate(to));
+    // كان هذا داخلَ ‎startTransition ليمنعَ وميضَ مؤشّرِ التحميل. وثمنُه أنّ
+    // الصفحةَ القديمةَ تبقى معروضةً حتى تجهزَ الجديدة: على جهازٍ متوسّطٍ تمرُّ
+    // ثانيةٌ لا يتغيّرُ فيها شيءٌ بعدَ الضغطة — فتُقرأُ عطلاً. وقِستُ الوجهَينِ
+    // فوجدتُ الوعدَ لم يتحقّق: بلا ‎startTransition يتغيّرُ المسارُ بـ٧٠ms بدل
+    // ٦٩–١٠٠، والمحتوى بـ٧٠–١١٨ بدل ٨٨–١٤٧، والخيطُ غيرُ محجوزٍ بالحالتَين —
+    // لأنّ الجلبَ المسبَقَ عندَ ملامسةِ الإصبعِ يُنزِلُ الحزمةَ قبلَ الضغطة،
+    // فلا يُبلَغُ حدُّ ‎Suspense أصلاً. فالانتقالُ عاجلٌ الآن: الشاشةُ تتبدّلُ
+    // ساعةَ يتبدّلُ المسار.
+    navigate(to);
   };
   // الجلبُ المسبَقُ عندَ ملامسةِ الإصبعِ لا عندَ رفعِها — انظر utils/prefetchRoute.js
   const warm = (to) => prefetchRoute(routeKeyOf(to));
@@ -461,7 +461,10 @@ export default function BottomNav() {
     >
       <div className="mx-auto flex max-w-md items-stretch justify-around px-2">
         {items.map(({ key, label, Icon, active: isActive, badge, onClick, warm: warmTo }) => {
-          const active = isActive || pendingKey === key;
+          // ما إن تُضغطَ خانةٌ حتى تصيرَ هي المضاءةَ وحدَها. كان الشرطُ
+          // «القديمةُ أو المضغوطة»، والمسارُ لم يتغيّرْ بعدُ فتبقى القديمةُ
+          // مضاءةً معها — فيبدو الشريطُ عالقاً على الخانةِ التي غادرتَها.
+          const active = pendingKey ? pendingKey === key : isActive;
           return (
           <button
             key={key}
