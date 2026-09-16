@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
-import api, { setAuthToken, clearAuthToken } from '../api/client.js';
+import api, { setAuthToken, clearAuthToken, clearReadCache } from '../api/client.js';
 import { readAuthCache, writeAuthCache, clearAuthCache } from '../utils/authCache.js';
 
 const AuthContext = createContext(null);
@@ -93,6 +93,7 @@ export function AuthProvider({ children }) {
     setLoggingOut(true);
     clearAuthToken();
     clearAuthCache();
+    clearReadCache();
     // مسح مسودّات النماذج كي لا تُسكب بيانات هذا الحساب على حسابٍ آخر يدخل بعده
     try {
       const pre = 'bz_draft:';

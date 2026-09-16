@@ -954,20 +954,23 @@ html.dark .bz-ann-ico { color: #A8A29B; }
 /* انتقال الصفحة بالشفافية فقط — بلا transform: أي transform (حتى الصفري) ينشئ
    containing block فيكسر position:fixed للأزرار العائمة (واتساب/المساعِدة/العودة
    للأعلى) فتنزاح لأسفل الصفحة. الشفافية وحدها تعطي نعومة الانتقال بلا هذا الأثر. */
+/* كان يبدأُ من العدمِ ويمتدُّ ٢٦٠ms: الصفحةُ تصلُ جاهزةً ثمّ تبقى غيرَ مرئيّةٍ
+   تنتظرُ حركةً تنتهي — فيُحسَبُ زمنُ الحركةِ من زمنِ الانتقال. صارَ يبدأُ من
+   ٤٥٪ وينتهي بـ١٤٠ms: الوصولُ يُرى فوراً، ويبقى للانتقالِ طَراوتُه. */
 @keyframes route-fade {
-  from { opacity: 0; }
+  from { opacity: 0.45; }
   to { opacity: 1; }
 }
 .route-fade {
-  animation: route-fade 0.26s cubic-bezier(0.16, 0.84, 0.44, 1) both;
+  animation: route-fade 0.14s cubic-bezier(0.16, 0.84, 0.44, 1) both;
   backface-visibility: hidden;
 }
 /* الأجهزة الضعيفة: نفس الإحساس بمسافة أقصر وزمن أقصر — وصول أسرع بلا كلفة */
 @keyframes route-fade-lite {
-  from { opacity: 0; }
+  from { opacity: 0.6; }
   to { opacity: 1; }
 }
-.bz-lite .route-fade { animation: route-fade-lite 0.18s cubic-bezier(0.16, 0.84, 0.44, 1) both; }
+.bz-lite .route-fade { animation: route-fade-lite 0.1s linear both; }
 @media (prefers-reduced-motion: reduce) {
   .route-fade { animation: none; }
 }

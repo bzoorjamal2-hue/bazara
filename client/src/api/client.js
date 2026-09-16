@@ -58,6 +58,43 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
+// ————— ذاكرةُ القراءةِ العامّة —————
+// كلُّ عودةٍ إلى تبويبٍ زرتَه قبلَ لحظةٍ كانت تدفعُ ثمنَ الشبكةِ كاملاً من
+// جديد: الشريطُ السفليُّ يُبدّلُ بين أربعِ صفحاتٍ كلٌّ منها تسألُ الخادمَ
+// سؤالَها نفسَه بكلِّ ضغطة. وعلى بياناتِ الجوّالِ مع خادمٍ ينامُ ويستيقظُ
+// صارت تلك الرحلةُ هي «الثانيةُ» التي تُنتظَر.
+//
+// فنحفظُ جوابَ القراءةِ العامّةِ دقيقةً واحدة. دقيقةٌ تكفي لتبديلِ التبويبات
+// ذهاباً وإياباً بلا انتظار، وتقصُرُ عن أن تُخفيَ تغييراً حقيقيّاً. وأيُّ
+// كتابةٍ (إضافةُ منتجٍ أو تعديلُه) تمسحُ الذاكرةَ كلَّها فوراً، فلا تُرى
+// صاحبةُ المتجرِ تعديلَها متأخّراً.
+//
+// والقراءةُ العامّةُ وحدَها: ما خلفَ ‎/public لا يُحفَظُ أبداً، فلا تُخزَّنُ
+// بياناتُ حسابٍ ولا تُسلَّمُ لعينٍ أخرى.
+const READ_TTL = 60000;
+const readCache = new Map();
+const readKey = (cfg) => {
+  if ((cfg.method || 'get').toLowerCase() !== 'get') return '';
+  const url = cfg.url || '';
+  if (!url.includes('/public/')) return '';
+  let params = '';
+  try { params = cfg.params ? JSON.stringify(cfg.params) : ''; } catch { return ''; }
+  return url + '|' + params;
+};
+export function clearReadCache() { readCache.clear(); }
+
+api.interceptors.request.use((config) => {
+  const key = readKey(config);
+  if (!key) return config;
+  const hit = readCache.get(key);
+  // محوَّلٌ يردُّ من الذاكرة: أسرعُ من الشبكةِ بمراتب، ويمرُّ ببقيّةِ
+  // المعترِضاتِ كأيِّ ردٍّ عاديّ فلا يشذُّ عن المسار.
+  if (hit && Date.now() - hit.at < READ_TTL) {
+    config.adapter = () => Promise.resolve({ ...hit.res, config, cached: true });
+  }
+  return config;
+});
+
 // تعثّرٌ عابر: خادمٌ نائم يستيقظ، أو بوّابةٌ ترد 502/503/504، أو مهلةٌ انتهت.
 // نعيد المحاولة مرّتين بتراجعٍ أُسّيّ بدل إظهار خطأٍ على أوّل تعثّر.
 const RETRY_STATUS = [502, 503, 504, 522, 524];
@@ -76,7 +113,22 @@ const mayRetry = (cfg, err) => {
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 api.interceptors.response.use(
-  (res) => { markServerUp(); return res; },
+  (res) => {
+    markServerUp();
+    if (!res.cached) {
+      const key = readKey(res.config || {});
+      if (key) {
+        // بلا ‎request: كائنُ ‎XHR لا يُقرأُ من الذاكرةِ ولا نريدُ إمساكَه دقيقة.
+        // وسقفٌ للعدد: حارسٌ رخيصٌ ضدّ نموٍّ لا ينتهي بمفاتيحَ متغيّرةِ المعاملات.
+        if (readCache.size > 60) readCache.clear();
+        readCache.set(key, { at: Date.now(), res: { ...res, request: undefined, cached: undefined } });
+      }
+      // أيُّ كتابةٍ تُبطِلُ كلَّ ما حفظناه: أرخصُ من تتبّعِ أيِّ مفتاحٍ مسَّته،
+      // وأصدقُ — فالكتابةُ الواحدةُ قد تُغيّرُ صفحاتٍ لا صفحة.
+      else if ((res.config?.method || 'get').toLowerCase() !== 'get') readCache.clear();
+    }
+    return res;
+  },
   async (error) => {
     const original = error.config;
     if (error.response?.status === 403 && !original._retried) {
