@@ -29,21 +29,37 @@ function FunnelGlyph({ className = 'h-5 w-5' }) {
 
 // بطاقة إحصاء: بطاقة فرعية داخل قسم (لا بطاقة زجاجية مستقلّة) — نفس نمط
 // إعدادات المتجر والنظرة العامة، فلا تتداخل طبقتا زجاج ويبقى الإيقاع واحداً.
+// مؤشّرٌ مسانِد: أيقونةٌ صغيرةٌ بجانبِ التسميةِ ورقمٌ تحتَها — نفسُ مكوّنِ
+// النظرةِ العامّة، فلا تفترقُ لغةُ الصفحتَينِ لرقمٍ واحد.
+function MiniStat({ label, value, icon, tip }) {
+  const Icon = I[icon];
+  return (
+    <div className="bz-metric-mini">
+      <p className="bz-metric-mini-lbl">
+        {Icon && Icon('h-[15px] w-[15px] shrink-0 opacity-70')}
+        <span className="truncate">{label}</span>
+        <Tip text={tip} />
+      </p>
+      <p className="bz-metric-mini-num">{value}</p>
+    </div>
+  );
+}
+
 function StatCard({ label, value, icon, tip, badge }) {
   const Icon = I[icon];
   return (
     <div className="rounded-2xl border border-gold-400/15 bg-black/20 p-4">
+      {/* الأيقونةُ بجانبِ التسميةِ لا بلاطةً داكنةً فوقَها: ثلاثُ بلاطاتٍ
+          متطابقةٍ بصفٍّ واحدٍ تُقرَأُ جداراً من المربّعاتِ لا ثلاثَ حقائقَ مختلفة. */}
       <div className="flex items-start justify-between gap-2">
-        <span className="dash-ico inline-flex h-11 w-11 items-center justify-center rounded-2xl">
-          {Icon && Icon('h-[22px] w-[22px]')}
-        </span>
+        <p className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-stone-400">
+          {Icon && Icon('h-[15px] w-[15px] shrink-0 opacity-70')}
+          <span className="truncate">{label}</span>
+          <Tip text={tip} />
+        </p>
         {badge}
       </div>
-      <p className="mt-3 flex items-center gap-1.5 text-xs font-medium text-stone-400">
-        <span className="truncate">{label}</span>
-        <Tip text={tip} />
-      </p>
-      <p className="dash-stat mt-1 truncate text-3xl font-extrabold leading-tight">{value}</p>
+      <p className="dash-stat mt-2 truncate text-3xl font-extrabold leading-tight">{value}</p>
     </div>
   );
 }
@@ -91,11 +107,23 @@ export default function AnalyticsManager() {
       {/* المؤشّرات الرئيسية */}
       <div className={CARD}>
         <SectionHead icon={<ChartIcon className="h-5 w-5" />} title={t('dashboard.analytics.metricsTitle')} desc={t('dashboard.analytics.metricsHint')} />
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <StatCard icon="revenue" label={t('dashboard.analytics.revenue')} tip={t('dashboard.analytics.revenueTip')} value={<CountUp value={data.revenue} format={(x) => `${cur}${Math.round(x).toLocaleString()}`} />} />
-          <StatCard icon="confirmed" label={t('dashboard.analytics.confirmed')} tip={t('dashboard.analytics.confirmedTip')} value={<CountUp value={data.confirmedOrders} />} />
-          <StatCard icon="newOrders" label={t('dashboard.analytics.newOrders')} tip={t('dashboard.analytics.newOrdersTip')} value={<CountUp value={data.newOrders} />} />
-          <StatCard icon="products" label={t('dashboard.productsCount')} tip={t('dashboard.analytics.productsTip')} value={<CountUp value={data.productsCount} />} />
+        {/* رقمٌ يقودُ وثلاثةٌ تسنده — كما بالنظرةِ العامّةِ تماماً. كانت أربعاً
+            متطابقةً لكلٍّ بلاطةُ أيقونةٍ داكنةٌ وحدود، فالإيرادُ رابعُ أربعةٍ لا
+            يتميّزُ عن عددِ المنتجاتِ بشيء. */}
+        <div className="grid gap-3 sm:grid-cols-[1.25fr_1fr]">
+          <div className="bz-metric-lead">
+            <p className="bz-metric-lead-lbl">
+              {t('dashboard.analytics.revenue')} <Tip text={t('dashboard.analytics.revenueTip')} />
+            </p>
+            <p className="bz-metric-lead-num font-display">
+              <CountUp value={data.revenue} format={(x) => `${cur}${Math.round(x).toLocaleString()}`} />
+            </p>
+          </div>
+          <div className="bz-metric-row">
+            <MiniStat icon="confirmed" label={t('dashboard.analytics.confirmed')} tip={t('dashboard.analytics.confirmedTip')} value={<CountUp value={data.confirmedOrders} />} />
+            <MiniStat icon="newOrders" label={t('dashboard.analytics.newOrders')} tip={t('dashboard.analytics.newOrdersTip')} value={<CountUp value={data.newOrders} />} />
+            <MiniStat icon="products" label={t('dashboard.productsCount')} tip={t('dashboard.analytics.productsTip')} value={<CountUp value={data.productsCount} />} />
+          </div>
         </div>
       </div>
 
