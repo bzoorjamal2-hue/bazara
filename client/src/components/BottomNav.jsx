@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getStoreScope, subscribeStoreScope } from '../utils/storeScope.js';
 import { useTranslation } from 'react-i18next';
 import { useCart } from '../context/CartContext.jsx';
 import useHideOnScroll from '../hooks/useHideOnScroll.js';
+import { prefetchRoute, routeKeyOf } from '../utils/prefetchRoute.js';
 import { useWishlist } from '../context/WishlistContext.jsx';
 
 // فأرةٌ على شاشةٍ عريضة؟ نفسُ شرط الـCSS حرفاً بحرف — لو افترقا لظهر الشريطُ
@@ -296,13 +297,28 @@ export default function BottomNav() {
   // إغلاق أدراج السلة/المفضلة قبل الانتقال (الشريط يبقى ظاهراً فوق الأدراج)
   const closeDrawers = () => { setOpen(false); setWishOpen(false); };
   // الضغط على تبويب أنتِ عليه أصلاً يمرّر لأعلى (نفس سلوك الشعار) بدل ألا يفعل شيئاً
+  // ثمنُ ‎startTransition أنّ الصفحةَ القديمةَ تبقى ظاهرةً حتى تجهزَ الجديدة —
+  // وإن كانت الجديدةُ ثقيلةً (صفحةُ التصنيفاتِ تحجزُ الخيطَ ٣١٩ms عندي) بدت
+  // الضغطةُ كأنّها لم تُسجَّل، وهو «التعليق» بعينِه. فنُضيءُ التبويبَ المضغوطَ
+  // فوراً قبلَ أن يتغيّرَ المسار: الإصبعُ يرى أثرَه بالفريمِ التالي، والانتقالُ
+  // يكملُ خلفَه. وتُمسَحُ الإضاءةُ الاستباقيّةُ ساعةَ يصلُ المسارُ الجديد.
+  const [, startNav] = useTransition();
+  const [pendingKey, setPendingKey] = useState('');
+  useEffect(() => { setPendingKey(''); }, [pathname, search]);
+
   const goto = (to) => {
     closeDrawers();
     // نقارن الرابط كاملاً (مع الاستعلام) — كي ينتقل من رئيسية المتجر إلى ?offers=1/?view=all
     // بدل أن يكتفي بالتمرير لأعلى لتطابق المسار وحده.
-    if (pathname + search === to) window.scrollTo({ top: 0, behavior: 'smooth' });
-    else navigate(to);
+    if (pathname + search === to) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+    // انتقالٌ لا تحديثٌ عاجل: الصفحةُ الجديدةُ تُحمَّلُ كسولاً، فبلا هذا يرى رياكت
+    // حدَّ ‎Suspense معلّقاً فيستبدلُ الشاشةَ كلَّها بمؤشّرِ تحميل — وميضٌ أبيضُ ثمّ
+    // ظهور. ومع ‎startTransition تبقى الصفحةُ الحاليّةُ ظاهرةً حتى تجهزَ التالية،
+    // فالشريطُ يستجيبُ فوراً والانتقالُ يُقرأُ متّصلاً لا مقطوعاً.
+    startNav(() => navigate(to));
   };
+  // الجلبُ المسبَقُ عندَ ملامسةِ الإصبعِ لا عندَ رفعِها — انظر utils/prefetchRoute.js
+  const warm = (to) => prefetchRoute(routeKeyOf(to));
   // "التصنيفات" داخل متجر → صفحة تصنيفات المتجر (?cats=1): تلبس هيدر/فوتر المتجر
   // وتعرض شبكة فئاته كصفحة كاملة، فلا يخرج الزبون للموقع العام ولا يفتح درجاً.
   const categoriesTo = inDest ? `/store/${destSlug}?cats=1` : '/categories';
@@ -327,23 +343,23 @@ export default function BottomNav() {
   // يضيءُ على اللوحةِ كلِّها إلّا القسمَينِ اللذَينِ لهما زرّاهما بالشريط.
   // كان الشرطُ ‎!tab وحدَه، واللوحةُ تكتبُ ‎?tab بنفسِها أوّلَ ما تُفتَح — فلا يضيءُ أبداً.
   const ownTabs = ['myOrders', 'instagram'];
-  const accountItem = dt ? [] : [{ key: 'account', label: t('nav.account') || 'حسابي', Icon: UserIcon, active: !cartOpen && !wishOpen && onDash && !ownTabs.includes(tab), onClick: () => goto(accountTo) }];
+  const accountItem = dt ? [] : [{ key: 'account', label: t('nav.account') || 'حسابي', Icon: UserIcon, active: !cartOpen && !wishOpen && onDash && !ownTabs.includes(tab), onClick: () => goto(accountTo), warm: accountTo }];
 
   const ownerItems = [
     ...accountItem,
     // الرسائلُ لمن ربطت إنستغرام وحدَها: الزرُّ يظهرُ من نفسِه ساعةَ تربط، بلا
     // يومِ إطلاقٍ نتذكّرُ تبديلَه — ولا شاشةً فارغةً لمن لم تربط بعد.
     ...(store?.igConnected
-      ? [{ key: 'messages', label: t('nav.messages'), Icon: MessagesIcon, active: !cartOpen && !wishOpen && tab === 'instagram', onClick: () => goto(dash('instagram')) }]
+      ? [{ key: 'messages', label: t('nav.messages'), Icon: MessagesIcon, active: !cartOpen && !wishOpen && tab === 'instagram', onClick: () => goto(dash('instagram')), warm: '/dashboard' }]
       : []),
-    { key: 'orders', label: t('nav.myOrders'), Icon: OrdersIcon, active: !cartOpen && !wishOpen && tab === 'myOrders', badge: newOrders, onClick: () => goto(dash('myOrders')) },
+    { key: 'orders', label: t('nav.myOrders'), Icon: OrdersIcon, active: !cartOpen && !wishOpen && tab === 'myOrders', badge: newOrders, onClick: () => goto(dash('myOrders')), warm: '/dashboard' },
     // متجري: تحتاجُ ترى متجرَها كما تراه الزبونة — ولو صارَ شريطُها إداريّاً
     // بحتاً لفقدت هذا الطريقَ القصير.
-    { key: 'mystore', label: t('nav.myStore'), Icon: StoreGlyph, active: !cartOpen && !wishOpen && pathname === `/store/${store?.slug}`, onClick: () => goto(`/store/${store?.slug}`) },
+    { key: 'mystore', label: t('nav.myStore'), Icon: StoreGlyph, active: !cartOpen && !wishOpen && pathname === `/store/${store?.slug}`, onClick: () => goto(`/store/${store?.slug}`), warm: '/store/x' },
     // «الرئيسية» عندَها بازارا العامّةُ لا متجرُها: ‎homeTo يصيرُ متجرَ المشتركةِ
     // نفسِها حين يكونُ لها متجر، فكان الزرّانِ يشيرانِ إلى المكانِ نفسِه ويضيئانِ
     // معاً على صفحةِ متجرِها. لها بيتانِ فليُفرَّق بينهما: متجرُها، وسوقُ بازارا.
-    { key: 'home', label: t('nav.home'), Icon: HomeIcon, active: !cartOpen && !wishOpen && pathname === '/shop', onClick: () => goto('/shop') },
+    { key: 'home', label: t('nav.home'), Icon: HomeIcon, active: !cartOpen && !wishOpen && pathname === '/shop', onClick: () => goto('/shop'), warm: '/shop' },
   ];
 
   const shopperItems = [
@@ -353,10 +369,10 @@ export default function BottomNav() {
     // تكراراً — وكانت بالهيدرِ وحدَه، والهيدرُ صارَ يغيبُ بالنزول: فتتصفّحُ
     // الزبونةُ وسلّتُها خارجَ الشاشةِ تماماً. هذا عطبٌ أدخلناه فنسدُّه.
     { key: 'cart', label: t('nav.cart'), Icon: CartIcon, active: cartOpen, badge: count, onClick: () => { setWishOpen(false); setOpen(true); } },
-    { key: 'offers', label: t('nav.offers'), Icon: OffersIcon, active: !cartOpen && !wishOpen && offersActive, onClick: () => goto(offersTo) },
-    { key: 'reels', label: t('reels.title'), Icon: ReelsIcon, active: !cartOpen && !wishOpen && reelsActive, onClick: () => goto(reelsTo) },
-    { key: 'categories', label: t('nav.categories'), Icon: CategoriesIcon, active: !cartOpen && !wishOpen && categoriesActive, onClick: () => goto(categoriesTo) },
-    { key: 'home', label: t('nav.home'), Icon: HomeIcon, active: !cartOpen && !wishOpen && homeActive, onClick: () => goto(homeTo) },
+    { key: 'offers', label: t('nav.offers'), Icon: OffersIcon, active: !cartOpen && !wishOpen && offersActive, onClick: () => goto(offersTo), warm: offersTo },
+    { key: 'reels', label: t('reels.title'), Icon: ReelsIcon, active: !cartOpen && !wishOpen && reelsActive, onClick: () => goto(reelsTo), warm: reelsTo },
+    { key: 'categories', label: t('nav.categories'), Icon: CategoriesIcon, active: !cartOpen && !wishOpen && categoriesActive, onClick: () => goto(categoriesTo), warm: categoriesTo },
+    { key: 'home', label: t('nav.home'), Icon: HomeIcon, active: !cartOpen && !wishOpen && homeActive, onClick: () => goto(homeTo), warm: homeTo },
   ];
 
   const items = isOwner ? ownerItems : shopperItems;
@@ -427,10 +443,18 @@ export default function BottomNav() {
       }
     >
       <div className="mx-auto flex max-w-md items-stretch justify-around px-2">
-        {items.map(({ key, label, Icon, active, badge, onClick }) => (
+        {items.map(({ key, label, Icon, active: isActive, badge, onClick, warm: warmTo }) => {
+          const active = isActive || pendingKey === key;
+          return (
           <button
             key={key}
-            onClick={onClick}
+            /* الإضاءةُ الاستباقيّةُ للبنودِ التي تنقلُ وحدَها: السلّةُ تفتحُ درجاً
+               ولا يتغيّرُ المسار، فلو أضأناها لبقيت مضاءةً بعدَ إغلاقِ الدرج —
+               لا شيءَ يمسحُها. و‎warmTo هو علامةُ «هذا البندُ ينقل». */
+            onClick={() => { if (warmTo) setPendingKey(key); onClick(); }}
+            // ‏pointerdown يسبقُ الضغطةَ بنحوِ مئةِ مليّ ثانيةٍ على اللمس: نبدأُ
+            // تنزيلَ حزمةِ الصفحةِ فيها، فتصلُ الضغطةُ والحزمةُ جاهزةٌ أو قاربت.
+            onPointerDown={() => warmTo && warm(warmTo)}
             data-cart-target={key === 'cart' ? '' : undefined}
             /* الاسمُ يبقى للفأرةِ وللقارئِ الصوتيّ. وبلا نصٍّ ظاهرٍ يصيرُ الزرُّ
                بلا اسمٍ مقروء، فنكتبُه سمةً — أيقونةٌ عاريةٌ بلا aria-label زرٌّ
@@ -460,7 +484,8 @@ export default function BottomNav() {
                 والمساحةُ فائضة، والاسمُ فيه بجانبِ الأيقونةِ لا تحتَها. */}
             {dt && <span className={`max-w-full truncate ${active ? 'font-bold' : ''}`}>{label}</span>}
           </button>
-        ))}
+          );
+        })}
       </div>
     </nav>
   );
