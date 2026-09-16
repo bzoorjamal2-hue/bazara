@@ -51,7 +51,11 @@ function HomeIcon({ className = 'h-6 w-6', filled }) {
   // عرضُه نحوَ ثلثِ عرضِ البيت، ويرتفعُ نحوَ نصفِ الجدار، ورأسُه مقوّس.
   // وبالممتلئةِ يُثقَبُ بـevenodd فيبقى فتحةً لا حبراً.
   const doorFill = 'M9.28 19.8L9.28 17.29A2.72 2.72 0 0 1 14.72 17.29L14.72 19.8Z';
-  const doorLine = 'M9.28 19.8V17.29A2.72 2.72 0 0 1 14.72 17.29V19.8';
+  // وبالخطّيّةِ يندمجُ البابُ بمسارِ البيتِ ولا يُرسَمُ فوقَه: كان البيتُ مساراً
+  // مغلقاً قاعدتُه تمرُّ من طرفٍ لطرف، والبابُ مساراً ثانياً فوقَها — فيظهرُ خطٌّ
+  // يقفلُ قاعَ الباب، وهو بابٌ لا نافذة. هنا تنقطعُ القاعدةُ عند حافّتَيه وتصعدُ
+  // مع جانبَيه ثمّ تعودُ: مسارٌ واحدٌ متّصلٌ بلا خطٍّ زائد.
+  const outline = 'M10.85 5.58A1.6 1.6 0 0 1 13.15 5.58L19.82 12.43A1.5 1.5 0 0 1 20.25 13.48L20.25 17.6A2.2 2.2 0 0 1 18.05 19.8L14.72 19.8L14.72 17.29A2.72 2.72 0 0 0 9.28 17.29L9.28 19.8L5.95 19.8A2.2 2.2 0 0 1 3.75 17.6L3.75 13.48A1.5 1.5 0 0 1 4.18 12.43Z';
   if (filled) {
     return (
       <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
@@ -61,8 +65,7 @@ function HomeIcon({ className = 'h-6 w-6', filled }) {
   }
   return (
     <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d={body} />
-      <path d={doorLine} />
+      <path d={outline} />
     </svg>
   );
 }
