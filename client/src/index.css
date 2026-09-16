@@ -5470,3 +5470,25 @@ html.dark .theme-pub .bz-fold { color: #D6D2CB; border-color: rgba(239, 238, 236
   .bz-fold:hover { border-color: rgba(31, 30, 29, 0.55); background: rgba(31, 30, 29, 0.04); }
   html.dark .theme-pub .bz-fold:hover { border-color: rgba(239, 238, 236, 0.5); background: rgba(239, 238, 236, 0.06); }
 }
+
+/* ═══════ المحتوى المكتوبُ قبلَ إقلاعِ التطبيق ═══════
+   دالّةُ ‎/api/seo تحقنُ داخلَ جذرِ التطبيقِ اسمَ المتجرِ وبضاعتَه مكتوبةً
+   بالـHTML، فيقرؤُها محرّكُ البحثِ بلا انتظارِ الجافاسكربت ويراها الزائرُ قبلَ
+   وصولِ الحزم. و‎React يستبدلُها عندَ التركيبِ — وهذه الأنماطُ تجعلُها لحظتَها
+   لمحةً هادئةً لا صفحةً خاماً بخطٍّ أسودَ عارٍ على أبيض. */
+.bz-pre {
+  margin-inline: auto;
+  max-width: 48rem;
+  padding: 2rem 1.25rem;
+  color: #55534F;
+  font-size: 0.9rem;
+  line-height: 1.9;
+}
+.bz-pre h1 { font-size: 1.5rem; font-weight: 800; color: #1F1E1D; margin-bottom: 0.4rem; }
+.bz-pre h2 { font-size: 1rem; font-weight: 700; color: #1F1E1D; margin: 1.2rem 0 0.4rem; }
+.bz-pre ul { list-style: none; padding: 0; }
+.bz-pre li { padding: 0.35rem 0; border-bottom: 1px solid rgba(163, 162, 160, 0.18); }
+.bz-pre a { color: #1F1E1D; font-weight: 600; }
+.bz-pre img { max-width: 100%; height: auto; border-radius: 0.75rem; margin-top: 0.75rem; }
+html.dark .bz-pre { color: #A8A29B; }
+html.dark .bz-pre h1, html.dark .bz-pre h2, html.dark .bz-pre a { color: #F6F5F3; }
