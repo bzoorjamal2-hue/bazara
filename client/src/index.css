@@ -5195,3 +5195,94 @@ html[dir='ltr'] .bz-dashhero-name::after { transform: translateX(-50%); }
   color: rgba(246, 245, 243, 0.52);
 }
 html.dark .theme-pub .bz-drawer-grp { color: rgba(246, 245, 243, 0.48); }
+
+/* ═══════ مؤشّراتُ اللوحة: رقمٌ يقودُ وثلاثةٌ تسنده ═══════
+   كانت أربعَ بطاقاتٍ متطابقةٍ كلُّ واحدةٍ ببلاطةِ أيقونةٍ كبيرةٍ وحدودٍ ورقم —
+   فالإيرادُ، وهو ما تفتحُ التاجرةُ اللوحةَ لتراه، رابعُ أربعةٍ لا يتميّزُ عن
+   عددِ المنتجاتِ بشيء. */
+.bz-metric-lead {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  padding: 1.15rem 1.25rem;
+  background: linear-gradient(150deg, #2B2A29 0%, #1C1B1A 60%, #151413 100%);
+  box-shadow: 0 18px 36px -22px rgba(21, 20, 19, 0.7);
+}
+.bz-metric-lead-lbl {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: rgba(249, 249, 248, 0.6);
+}
+.bz-metric-lead-num {
+  margin-top: 0.5rem;
+  font-size: 2.1rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #F9F9F8;
+  font-variant-numeric: tabular-nums;
+}
+@media (min-width: 640px) { .bz-metric-lead-num { font-size: 2.5rem; } }
+
+/* صفُّ المساندين: خيطٌ يفصلُ لا حدٌّ يحيط */
+.bz-metric-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-radius: 1rem;
+  border: 1px solid rgba(163, 162, 160, 0.18);
+}
+/* شفّافٌ نهاراً: الحشوةُ الرماديّةُ فوقَ بطاقةٍ بيضاءَ تُقرَأُ لوحاً مصمتاً
+   ينافسُ الإيرادَ بدل أن يسنده. وليلاً تُفيدُ حشوةٌ خفيفةٌ لفصلِه عن الخلفيّة. */
+html.dark .theme-pub .bz-metric-row { background: rgba(0, 0, 0, 0.18); }
+/* توسيطٌ رأسيّ: الصفُّ يمتدُّ بامتدادِ بطاقةِ الإيرادِ بجانبِه، فتبقى الأرقامُ
+   بوسطِه لا معلّقةً بأعلاه وتحتَها فراغ. */
+.bz-metric-mini {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0.9rem 0.7rem;
+}
+.bz-metric-mini + .bz-metric-mini { border-inline-start: 1px solid rgba(163, 162, 160, 0.16); }
+.bz-metric-mini-lbl {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #6C6A68;
+}
+html.dark .theme-pub .bz-metric-mini-lbl { color: #A8A29B; }
+.bz-metric-mini-num {
+  margin-top: 0.35rem;
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #1F1E1D;
+  font-variant-numeric: tabular-nums;
+}
+html.dark .theme-pub .bz-metric-mini-num { color: #F6F5F3; }
+
+/* اختصارٌ سريعٌ باللوحة: البطاقةُ نفسُها هي ما يُضغَط، لا بلاطةٌ متدرّجةٌ داخلَها.
+   أربعُ بلاطاتٍ رماديّةٍ متطابقةٍ بصفٍّ واحدٍ تُقرَأُ جداراً من المربّعاتِ لا
+   أربعةَ أفعالٍ مختلفة — وهي علّةُ الدرجِ نفسُها بموضعٍ آخر. */
+.bz-quickact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(163, 162, 160, 0.18);
+  padding: 1.15rem 0.75rem;
+  text-align: center;
+  color: #1F1E1D;
+  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+html.dark .theme-pub .bz-quickact { color: #F6F5F3; border-color: rgba(239, 238, 236, 0.16); }
+@media (hover: hover) {
+  .bz-quickact:hover { transform: translateY(-2px); border-color: rgba(31, 30, 29, 0.42); background: rgba(31, 30, 29, 0.05); }
+  html.dark .theme-pub .bz-quickact:hover { border-color: rgba(239, 238, 236, 0.4); background: rgba(239, 238, 236, 0.06); }
+}

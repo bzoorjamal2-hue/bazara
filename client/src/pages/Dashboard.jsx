@@ -264,16 +264,27 @@ function Overview({ productsCount }) {
       {/* المؤشّرات الرئيسية */}
       <div className={CARD}>
         <SectionHead icon={<ChartIcon className="h-5 w-5" />} title={t('dashboard.ovMetrics')} desc={t('dashboard.ovMetricsHint')} />
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <MetricCard
-            label={t('dashboard.analytics.revenue')} tip={t('dashboard.ovRevenueTip')}
-            value={stats ? <CountUp value={stats.revenue} format={(x) => `${cur}${Math.round(x).toLocaleString()}`} /> : '—'}
-            Icon={WalletGlyph}
-            badge={stats && stats.lastMonth > 0 ? <GrowthBadge pct={stats.monthGrowth} /> : null}
-          />
-          <MetricCard label={t('dashboard.analytics.newOrders')} tip={t('dashboard.ovNewOrdersTip')} value={stats ? <CountUp value={stats.newOrders} /> : '—'} Icon={ReceiptIcon} />
-          <MetricCard label={t('dashboard.visitors')} tip={t('dashboard.ovVisitorsTip')} value={visitors != null ? <CountUp value={visitors} /> : '—'} Icon={UsersIcon} />
-          <MetricCard label={t('dashboard.productsCount')} tip={t('dashboard.ovProductsTip')} value={productCount != null ? <CountUp value={productCount} /> : '—'} Icon={BagIcon} />
+        {/* رقمٌ يقودُ وثلاثةٌ تسنده، لا أربعةٌ متساويةٌ في مربّعاتٍ متطابقة.
+            الإيرادُ هو ما تفتحُ التاجرةُ اللوحةَ لتراه — وكان رابعَ أربعةٍ لا
+            يتميّزُ عن عددِ المنتجاتِ بشيء. */}
+        <div className="grid gap-3 sm:grid-cols-[1.25fr_1fr]">
+          <div className="bz-metric-lead">
+            <p className="bz-metric-lead-lbl">
+              {t('dashboard.analytics.revenue')} <Tip text={t('dashboard.ovRevenueTip')} />
+            </p>
+            <p className="bz-metric-lead-num font-display">
+              {stats ? <CountUp value={stats.revenue} format={(x) => `${cur}${Math.round(x).toLocaleString()}`} /> : '—'}
+            </p>
+            {stats && stats.lastMonth > 0 && <div className="mt-2"><GrowthBadge pct={stats.monthGrowth} /></div>}
+          </div>
+
+          {/* الثلاثةُ الباقيةُ صفٌّ هادئٌ بخيوطٍ فاصلةٍ لا بطاقاتٍ بحدودٍ وبلاطاتِ
+              أيقونات: هي سياقُ الرقمِ الأوّلِ لا منافسوه. */}
+          <div className="bz-metric-row">
+            <MiniMetric label={t('dashboard.analytics.newOrders')} tip={t('dashboard.ovNewOrdersTip')} value={stats ? <CountUp value={stats.newOrders} /> : '—'} Icon={ReceiptIcon} />
+            <MiniMetric label={t('dashboard.visitors')} tip={t('dashboard.ovVisitorsTip')} value={visitors != null ? <CountUp value={visitors} /> : '—'} Icon={UsersIcon} />
+            <MiniMetric label={t('dashboard.productsCount')} tip={t('dashboard.ovProductsTip')} value={productCount != null ? <CountUp value={productCount} /> : '—'} Icon={BagIcon} />
+          </div>
         </div>
 
         {/* اتجاه آخر ٧ أيام — يقرأ الشكل العام بلمحة قبل فتح صفحة الإحصائيات */}
@@ -394,6 +405,21 @@ function Overview({ productsCount }) {
 // overflow-hidden لا يقصّ عنصر البلور هناك، فيظهر مربّع باهت مقزّز بالزاوية.)
 // (صارت بطاقة فرعية داخل قسم لا بطاقة زجاجية مستقلّة — نفس نمط البطاقات الفرعية
 //  بصفحة الإعدادات، فلا تتداخل طبقتا زجاج ويبقى الإيقاع البصري واحداً.)
+// مؤشّرٌ مسانِد: أيقونةٌ صغيرةٌ بجانبِ التسميةِ ورقمٌ تحتَها — بلا بلاطةٍ ولا
+// حدود، فلا يزاحمُ الإيرادَ ولا يصيرُ الصفُّ جداراً من المربّعات.
+function MiniMetric({ label, value, Icon, tip }) {
+  return (
+    <div className="bz-metric-mini">
+      <p className="bz-metric-mini-lbl">
+        <Icon className="h-[15px] w-[15px] shrink-0 opacity-70" />
+        <span className="truncate">{label}</span>
+        <Tip text={tip} />
+      </p>
+      <p className="bz-metric-mini-num">{value}</p>
+    </div>
+  );
+}
+
 function MetricCard({ label, value, Icon, tip, badge }) {
   return (
     <div className="rounded-2xl border border-gold-400/15 bg-black/20 p-4">
@@ -415,14 +441,12 @@ function MetricCard({ label, value, Icon, tip, badge }) {
 // اختصار سريع أنيق — بلاطة أيقونة ذهبية متدرّجة واضحة (تبرز بالوضعين) + عنوان
 function QuickAction({ to, label, Icon }) {
   return (
-    <Link to={to} className="group flex flex-col items-center gap-2.5 rounded-2xl border border-gold-400/15 bg-black/20 p-4 text-center transition duration-200 hover:-translate-y-0.5 hover:border-gold-400/40 hover:bg-gold-400/5">
-      <span
-        className="flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-md transition group-hover:brightness-110"
-        style={{ background: 'linear-gradient(135deg, #BAB9B7 0%, #999795 55%, #73716E 100%)' }}
-      >
-        <Icon className="h-[22px] w-[22px]" />
-      </span>
-      <span className="text-sm font-semibold text-stone-200">{label}</span>
+    // بلا بلاطةٍ متدرّجةٍ تحتَ كلِّ أيقونة: أربعُ بلاطاتٍ رماديّةٍ متطابقةٍ بصفٍّ
+    // واحدٍ تُقرأُ جداراً من المربّعاتِ لا أربعةَ أفعالٍ مختلفة. الأيقونةُ وحدَها
+    // بلونِ الحبرِ، والبطاقةُ نفسُها هي ما يُضغَط.
+    <Link to={to} className="bz-quickact group">
+      <Icon className="h-6 w-6 shrink-0 transition group-hover:scale-110" />
+      <span className="text-sm font-semibold">{label}</span>
     </Link>
   );
 }
