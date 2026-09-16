@@ -84,10 +84,10 @@ export default function VideoInput({ value, onChange, label, hint = '' }) {
               className="max-h-52 w-full rounded-xl bg-[#151515]"
             />
             {busy && (
-              <span className="absolute inset-x-0 bottom-0 flex items-center gap-2 rounded-b-xl bg-black/70 px-2.5 py-1.5 text-[11px] font-bold text-gold-200">
+              <span className="bz-uploading absolute inset-x-0 bottom-0 flex items-center gap-2 rounded-b-xl px-2.5 py-1.5 text-[11px] font-bold">
                 {t('video.uploading')} {pct}%
                 <span className="h-1 flex-1 overflow-hidden rounded-full bg-white/15">
-                  <span className="block h-full rounded-full bg-gold-400 transition-all" style={{ width: `${pct || 6}%` }} />
+                  <span className="block h-full rounded-full bg-[#F6F5F3] transition-all" style={{ width: `${pct || 6}%` }} />
                 </span>
               </span>
             )}

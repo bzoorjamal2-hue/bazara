@@ -106,10 +106,10 @@ export default function ImageInput({ value, onChange, round = false, label, plac
 
           {/* طبقة تقدّم الرفع فوق المعاينة */}
           {busy && (
-            <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/70 text-[11px] font-bold text-gold-200">
+            <span className="bz-uploading absolute inset-0 flex flex-col items-center justify-center gap-1 text-[11px] font-bold">
               {pct > 0 ? `${pct}%` : '…'}
               <span className="h-1 w-12 overflow-hidden rounded-full bg-white/15">
-                <span className="block h-full rounded-full bg-gold-400 transition-all" style={{ width: `${pct || 8}%` }} />
+                <span className="block h-full rounded-full bg-[#F6F5F3] transition-all" style={{ width: `${pct || 8}%` }} />
               </span>
             </span>
           )}

@@ -5384,3 +5384,12 @@ html.dark .theme-pub .bz-shareact { color: #F6F5F3; border-color: rgba(239, 238,
   .bz-shareact:hover { background: rgba(31, 30, 29, 0.06); border-color: rgba(31, 30, 29, 0.4); }
   html.dark .theme-pub .bz-shareact:hover { background: rgba(239, 238, 236, 0.08); border-color: rgba(239, 238, 236, 0.45); }
 }
+
+/* طبقةُ الرفعِ فوقَ المعاينة — لونُها صريحٌ لا عبرَ ‎text-gold-*: سطحُها داكنٌ
+   دائماً ‎(rgba أسود)، والذهبيُّ يُعادُ تعيينُه نهاراً إلى ‎#1F1E1D. فكانت
+   النسبةُ حبراً أسودَ على أسودَ والشريطُ كذلك: تضغطُ التاجرةُ «رفع» فترى
+   مستطيلاً أسودَ فارغاً لا تعرفُ أوصلَ الرفعُ أم تعلّق. */
+.bz-uploading {
+  background: rgba(0, 0, 0, 0.7);
+  color: #F6F5F3;
+}
