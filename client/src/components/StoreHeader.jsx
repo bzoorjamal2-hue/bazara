@@ -28,7 +28,11 @@ function MenuBtn({ onOpen }) {
     <button
       onClick={onOpen}
       aria-label="menu"
-      className="flex h-9 w-9 items-center justify-center rounded-full bg-wine text-cream shadow-md ring-1 ring-wine/20 transition hover:bg-wine-dark"
+      /* وصفةُ جيرانِه حرفاً: السلّةُ والمفضّلةُ وزرُّ اللغة دوائرُ بيضاءُ
+         مرفوعةٌ بحلقةٍ وظلّ، وكان هو وحدَه دائرةً خمريّةً مصمتةً تسرقُ النظرةَ
+         الأولى. وهذا عكسُ ما صار بهيدرِ بازارا — هناك الأيقوناتُ عاريةٌ فتعرّى،
+         وهنا مرفوعةٌ فارتفع. التوحيدُ مع الجارِ لا مع النظيرِ البعيد. */
+      className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-wine shadow-sm ring-1 ring-wine/15 transition hover:bg-wine hover:text-cream"
     >
       <MenuIcon className="h-[18px] w-[18px]" />
     </button>
