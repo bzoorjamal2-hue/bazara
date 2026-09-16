@@ -14,7 +14,7 @@ import OffersBar from '../components/OffersBar.jsx';
 import { getRecent, productThumb } from '../utils/recentlyViewed.js';
 import { productPath } from '../utils/links.js';
 import { getCache, setCache } from '../utils/apiCache.js';
-import { cldThumb, cldVideoCrop, heroVideoShape, heroCrop } from '../utils/cloudinary.js';
+import { cldThumb, cldVideoCrop, heroVideoShape, heroVideoAllowed, heroCrop } from '../utils/cloudinary.js';
 import { ForwardIcon, BoltIcon, FireIcon, SparkleIcon } from '../components/icons.jsx';
 import CategoryGrid from '../components/CategoryGrid.jsx';
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx';
@@ -435,6 +435,7 @@ function HomeHero({ banners = [] }) {
   // شكلُ الفيديو (عرضٌ ونسبةٌ وجودة) يُحسَبُ مرّةً: تغييرُه أثناءَ العرضِ يُعيدُ
   // تحميلَ الفيديو من أوّلِه
   const [vs] = useState(heroVideoShape);
+  const [motionOk] = useState(heroVideoAllowed);
   const { t, i18n } = useTranslation();
   // اتّجاهُ حركةِ السلايدر يتبعُ اللغة: بالعربيّةِ تدخلُ الشريحةُ من اليمينِ
   // وتخرجُ يساراً، وبالإنجليزيّةِ العكس. كان الشريطُ مثبّتاً ‎ltr فيمشي باتّجاهٍ
@@ -671,7 +672,7 @@ function HomeHero({ banners = [] }) {
                       <>
                         <img src={vPoster} alt="" aria-hidden loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))', zIndex: -2 }} className="absolute inset-0 h-full w-full object-cover" />
                         {/* للشريحةِ الظاهرةِ وحدَها — انظر شرحَ صفحةِ المتجر */}
-                        {idx === i && (
+                        {idx === i && motionOk && (
                         <video
                           ref={(el) => { vidRefs.current[idx] = el; }}
                           // جودةٌ اقتصاديّةٌ بالمقاساتِ الكبيرة: الفرقُ لا يُلحَظُ على

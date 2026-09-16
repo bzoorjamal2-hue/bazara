@@ -23,7 +23,7 @@ import { WaveIcon, GiftIcon, CheckIcon, PlusIcon, BoltIcon, TagIcon, SearchIcon,
 import CloseButton from '../components/CloseButton.jsx';
 import Reveal from '../components/Reveal.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
-import { cldThumb, cldVideoPoster, cldVideoCrop, heroVideoShape, heroCrop } from '../utils/cloudinary.js';
+import { cldThumb, cldVideoPoster, cldVideoCrop, heroVideoShape, heroVideoAllowed, heroCrop } from '../utils/cloudinary.js';
 import { SIZES, sizeLabel } from '../utils/sizes.js';
 import { getMySize } from '../utils/mySize.js';
 import { productColors, colorToCss } from '../utils/colorDot.js';
@@ -1001,6 +1001,8 @@ function HeroSlider({ store }) {
   // شكلُ وسائطِ الهيرو (عرضٌ ونسبةٌ وجودة) يُحسَبُ مرّةً — تغييرُه بالعرضِ
   // يُعيدُ تحميلَ الفيديو من أوّلِه
   const [vs] = useState(heroVideoShape);
+  // شبكةٌ ضعيفةٌ أو وضعُ توفير؟ اللقطةُ وحدَها — تُقرأُ مرّةً كالشكل
+  const [motionOk] = useState(heroVideoAllowed);
   // سكونٌ لمن يطلبُ سكوناً: شريحةٌ تمشي وحدَها كلّ سبعِ ثوانٍ تسحبُ
   // المحتوى من تحتِ عينِ من يقرأُ ببطء، وتُدوّخُ من تؤذيه الحركة. ومن طلبَ
   // من نظامِه تقليلَ الحركة فقد قالها صراحةً — فتبقى النقاطُ والسحبُ ويقفُ
@@ -1228,7 +1230,7 @@ function HeroSlider({ store }) {
                           على الجوّال: هذا هو التعليق، وهو أيضاً استنزافُ حصّةِ كلاوديناري المحدودة.
                           وبالتركيبِ عند الظهورِ وحدَه يُفكَّكُ السابقُ فيُحرِّرُ المتصفّحُ ذاكرتَه
                           ومفكِّكَه. واللقطةُ الثابتةُ تبقى لكلِّ شريحةٍ فلا يظهرُ فراغٌ لحظةَ الانتقال. */}
-                      {idx === i && (
+                      {idx === i && motionOk && (
                       <video
                         ref={(el) => { vidRefs.current[idx] = el; }}
                         src={cldVideoCrop(s.bgValue, vs.w, vs.ar, vs.q)}

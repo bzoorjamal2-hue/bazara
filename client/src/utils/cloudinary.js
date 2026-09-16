@@ -105,11 +105,31 @@ export function cldVideoCrop(url, width, ar, quality = 'q_auto') {
 // 720×378 = 272 ألفاً اليوم. زيادةٌ 34٪ بالبايتات، لكنّ المرئيَّ منها كان 29٪
 // فقط — فالبكسلاتُ النافعةُ تتضاعفُ أربعَ مرّاتٍ ونصفاً بثلثِ زيادةٍ بالحجم.
 export function heroVideoShape() {
-  if (typeof window === 'undefined') return { w: 1080, ar: '16:10', q: 'q_auto' };
+  // والجودةُ اقتصاديّةٌ بكلِّ المقاسات: خلفيّةُ الهيرو معتَّمةٌ بالنصفِ وفوقَها
+  // عنوانٌ وأزرار، وهي متحرّكةٌ — ثلاثةُ أسبابٍ يختفي معها فرقُ الجودةِ تماماً،
+  // ويبقى التوفيرُ خُمسَ الحجمِ إلى ربعِه. كانت ‎eco للشاشةِ العريضةِ وحدَها،
+  // وهي أوسعُ الشاشاتِ بياناً وأقلُّها حاجةً للتوفير — والجوّالُ العكس.
+  if (typeof window === 'undefined') return { w: 1080, ar: '16:10', q: 'q_auto:eco' };
   const w = window.innerWidth;
-  if (w <= 640) return { w: 540, ar: '4:5', q: 'q_auto' };
-  if (w <= 1280) return { w: 1080, ar: '16:10', q: 'q_auto' };
+  if (w <= 640) return { w: 540, ar: '4:5', q: 'q_auto:eco' };
+  if (w <= 1280) return { w: 1080, ar: '16:10', q: 'q_auto:eco' };
   return { w: 1440, ar: '16:9', q: 'q_auto:eco' };
+}
+
+// شبكةٌ ضعيفةٌ أو وضعُ توفيرِ بيانات؟ لا فيديو أصلاً — اللقطةُ الثابتةُ تكفي.
+//
+// اللقطةُ مقصوصةٌ بنسبةِ الصندوقِ نفسِها ومأخوذةٌ من أوّلِ إطارِ الفيديو، فالهيرو
+// يبقى كما هو شكلاً؛ ما يُفقَدُ الحركةُ وحدَها. وهي مقايضةٌ سهلة: زبونةٌ على
+// شبكةِ بياناتٍ بطيئةٍ تفضّلُ صفحةً تفتحُ على ميغابايتٍ يمشي خلفَ نصّ.
+//
+// و‎saveData صريحٌ من الزبونةِ نفسِها (وضعُ توفيرِ البياناتِ بالمتصفّح) —
+// تجاهلُه بعدَ أن تطلبَه سوءُ أدب.
+export function heroVideoAllowed() {
+  if (typeof navigator === 'undefined') return true;
+  const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if (!c) return true;
+  if (c.saveData) return false;
+  return !['slow-2g', '2g'].includes(c.effectiveType);
 }
 
 // نسخة معاينة صامتة: عرض صغير وجودة اقتصاديّة. تُستعمل حيث يُشغَّل الفيديو تلقائياً
