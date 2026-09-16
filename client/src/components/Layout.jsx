@@ -31,10 +31,14 @@ import { BAZARA_WHATSAPP, BAZARA_INSTAGRAM, BAZARA_FACEBOOK, BAZARA_REGISTRY_NO,
 import { setPlatformCategories } from '../utils/platformCategories.js';
 import ImpersonationBar from './ImpersonationBar.jsx';
 import ServerDownBanner from './ServerDownBanner.jsx';
+import useLinkPrefetch from '../hooks/useLinkPrefetch.js';
 import { isImpersonating } from '../utils/impersonation.js';
 
 // الهوية الخمرية/العاجية الفاخرة مطبّقة على كل الموقع (متجر عام + لوحة تحكم لكل المشتركين).
 export default function Layout({ children }) {
+  // جلبُ حزمةِ الوجهةِ عند ملامسةِ أيِّ رابطٍ بالموقع — مستمعٌ واحدٌ لا تعديلٌ
+  // بكلِّ مكوّن. انظر hooks/useLinkPrefetch.js
+  useLinkPrefetch();
   const { pathname, search } = useLocation();
   // حالةُ فتح الدرجين تُقرأ هنا كي نؤجّل تركيبهما حتى تُفتح فعلاً
   const { open: cartOpen } = useCart();

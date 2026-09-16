@@ -41,7 +41,9 @@ export function routeKeyOf(to) {
   if (path === '/categories' || path.startsWith('/category/')) return 'categories';
   if (path.endsWith('/reels')) return 'reels';
   if (path === '/offers') return 'offers';
-  if (path.startsWith('/product/')) return 'product';
+  // المنتجُ قبلَ المتجر: رابطُه ‎/store/<slug>/product/<id> — فلو فُحص المتجرُ
+  // أوّلاً لجلبنا صفحةَ المتجرِ لضغطةٍ تفتحُ صفحةَ منتج.
+  if (path.includes('/product/')) return 'product';
   if (path.startsWith('/store/')) return 'store';
   if (path.startsWith('/dashboard')) return 'dashboard';
   if (path === '/login') return 'login';
