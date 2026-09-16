@@ -20,7 +20,11 @@ export default function StoreFooter({ store, wa, onShare }) {
   ].filter(Boolean);
 
   return (
-    <footer className="pub-footer relative -mx-4 -mb-8 mt-16 overflow-hidden sm:-mx-6 sm:mt-20">
+    <footer
+      /* ‎bz-footer-eat بدل ‎-mb-8: كان يسحبُ ٣٢px من حجزٍ مقدارُه ١٠٤ — فيبقى
+         تحتَه ٧٢ بيضاء. صار يسحبُ الحجزَ كلَّه ويُعيدُه حشوةً بداخلِه. */
+      className="pub-footer bz-footer-eat relative -mx-4 mt-16 overflow-hidden sm:-mx-6 sm:mt-20"
+    >
       {/* توهّج ذهبي ناعم بأعلى الفوتر — انتقال أنيق من المحتوى (كفوتر المنصّة) */}
       <span aria-hidden className="pointer-events-none absolute -top-24 start-1/2 h-48 w-96 -translate-x-1/2 rounded-full bg-gold-400/10 blur-3xl" />
       <div className="bz-page relative py-10 text-center">
