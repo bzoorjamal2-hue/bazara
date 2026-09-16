@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
+import { plainName } from '../utils/plainName.js';
 import Seo from '../components/Seo.jsx';
 import { StateCard, Act, Act2 } from '../components/PageUI.jsx';
 import { StorePageSkeleton } from '../components/Skeleton.jsx';
@@ -311,10 +312,13 @@ export default function StorePage() {
   const clearSearch = () => { setQ(''); setSearchParams({}); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
   // بيانات Schema.org للمتجر → Google يعرضه كمتجر (اسم/شعار/تواصل/روابط) بنتائج البحث
+  // الاسمُ بحروفٍ يقرؤُها محرّكُ البحثِ لا بالزخرفةِ المعروضة — «𝓗𝓪𝓫𝓸𝓸𝓼𝓱»
+  // حروفٌ أخرى بنظرِ يونيكود، فلا يطابقُها من يبحثُ عن «Haboosh».
+  const seoName = plainName(store.name);
   const storeLd = {
     '@context': 'https://schema.org/',
     '@type': 'Store',
-    name: store.name,
+    name: seoName,
     ...(store.description ? { description: store.description } : {}),
     ...(store.logoUrl ? { image: store.logoUrl, logo: store.logoUrl } : {}),
     ...(typeof window !== 'undefined' ? { url: window.location.href } : {}),
@@ -324,7 +328,15 @@ export default function StorePage() {
 
   return (
     <>
-      <Seo title={store.name} description={store.description || `${store.name}`} image={store.logoUrl} jsonLd={storeLd} />
+      {/* وصفٌ لكلِّ متجرٍ وصفُه: كان الاسمَ مكرّراً وحدَه، وهو أسوأُ وصفٍ
+          ممكنٍ لمحرّكِ البحث — لا يقولُ شيئاً ويتكرّرُ على كلِّ المتاجر. */}
+      <Seo
+        title={seoName}
+        description={store.description
+          || `${seoName}: تسوّقي فساتين وأطقم وعبايات — توصيل لكل فلسطين والدفع عند الاستلام.`}
+        image={store.logoUrl}
+        jsonLd={storeLd}
+      />
 
       {/* الهيدر الخاص بالمتجر: قائمة + اسم + بحث + ستوري على الشعار */}
       <StoreHeader
