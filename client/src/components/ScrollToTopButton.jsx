@@ -48,12 +48,14 @@ export default function ScrollToTopButton() {
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       aria-label={t('common.backToTop')}
       title={t('common.backToTop')}
-      className="bz-fab bz-fab-pos fixed start-5 z-40 flex h-11 w-11 items-center justify-center rounded-full transition hover:scale-110 active:scale-95 animate-fade-in"
+      className="bz-fab bz-fab-pos fixed start-5 z-40 flex h-11 w-11 items-center justify-center rounded-full animate-fade-in"
       // بالوضع الافتراضيّ نتبع المتغيّر (يتبع الشاشة)، وحين يرفعه شريطُ
       // شراءٍ أو ما شابه نحترم المقدارَ المحسوب.
       style={{ bottom: bottom === BASE_BOTTOM ? 'calc(env(safe-area-inset-bottom, 0px) + var(--bz-fab-bottom))' : `${bottom}px` }}
     >
-      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {/* نصفُ قطرِ الزرّ كإخوتِه: ٢٠ من ٤٤ كانت ٤٥٪ بينما الأُخريانِ ٥٠٪،
+          فيبدو السهمُ أنحلَ منهما بلا سبب */}
+      <svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M12 19V5M5 12l7-7 7 7" />
       </svg>
     </button>

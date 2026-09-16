@@ -4484,8 +4484,55 @@ html.bz-tabbar-off { --bz-fab-bottom: 18px; }
    والتحويلُ مذكورٌ معَ الموضع: المختصَرُ يدهسُ ما قبلَه، فلو ذكرتُ
    bottom وحدَه لماتت حركةُ التكبيرِ عندَ المرور. ومدّتُه مدّةُ الشريطِ
    نفسُها فينزلانِ معاً لا واحدٌ قبلَ الآخر. */
-.bz-fab-pos { transition: bottom 300ms ease-out, transform 300ms ease; }
+/* ═══════ الأزرارُ العائمةُ عائلةٌ واحدةٌ بوزنٍ واحد ═══════
+   كانت ثلاثَ دوائرَ بثلاثةِ أوزان: خضراءُ بتدرّجٍ صارخٍ وحلقةٍ بيضاءَ وظلٍّ أخضر،
+   وبيضاوانِ بظلٍّ آخر. والخضرةُ هي اللونُ المشبَعُ الوحيدُ بموقعٍ عاجيٍّ ورماديٍّ
+   من أوّلِه لآخرِه، فتُقرأُ كأداةٍ خارجيّةٍ رُكِّبت لا كجزءٍ من التصميم.
+
+   الشكلُ والارتفاعُ وإحساسُ الضغطِ من مكانٍ واحدٍ الآن، واللونُ وحدَه يفترق:
+   كلُّ زرٍّ يضبطُ صبغةَ ظلِّه وحافّتَه بمتغيّرَين، والهندسةُ واحدةٌ للجميع —
+   فيتفقُ الثلاثةُ بلا أن يفقدَ واحدٌ منهم هويّتَه.
+
+   والتكبيرُ عند المرورِ نزلَ من ١١٠٪ إلى ١٠٦٪: عشرةٌ بالمئةِ على دائرةٍ ٥٦px
+   قفزةٌ تُرى لا لمسةٌ تُحَسّ. ويرتفعُ الظلُّ معه فيبدو الزرُّ يقتربُ لا ينتفخ. */
+.bz-fab-pos {
+  --fab-tint: rgba(24, 23, 22, 0.45);
+  --fab-edge: rgba(24, 23, 22, 0.10);
+  box-shadow: 0 10px 26px -12px var(--fab-tint), inset 0 0 0 1px var(--fab-edge);
+  transition: bottom 300ms ease-out, transform 260ms cubic-bezier(0.22, 0.61, 0.36, 1), box-shadow 260ms ease-out, background-color 200ms ease;
+}
+@media (hover: hover) {
+  .bz-fab-pos:hover { transform: scale(1.06); box-shadow: 0 18px 38px -14px var(--fab-tint), inset 0 0 0 1px var(--fab-edge); }
+}
+.bz-fab-pos:active { transform: scale(0.94); }
 @media (prefers-reduced-motion: reduce) { .bz-fab-pos { transition: none; } }
+
+/* السطحُ المحايد: مساعِدةُ الأناقةِ والعودةُ للأعلى */
+.bz-fab { background: #FFFFFF; color: #1F1E1D; }
+@media (hover: hover) { .bz-fab:hover { background: #F7F7F6; } }
+html.dark .bz-fab,
+html.dark .theme-pub .bz-fab {
+  background: #232120;
+  color: #E8E3DA;
+  --fab-tint: rgba(0, 0, 0, 0.75);
+  --fab-edge: rgba(239, 238, 236, 0.14);
+}
+
+/* واتساب: خضرتُه باقيةٌ — هويّتُه وتُعرَفُ بلمحةٍ ولا تُستبدَل — لكن لوناً واحداً
+   مصمتاً بلا تدرّجٍ صارخ، وبلا حلقةٍ بيضاءَ تصرخُ حولَه، وبظلِّ العائلةِ نفسِه
+   مصبوغاً بخضرتِه فيجلسُ بينهم لا فوقَهم. */
+.bz-fab-wa {
+  background: #1FA855;
+  color: #FFFFFF;
+  --fab-tint: rgba(18, 88, 48, 0.55);
+  --fab-edge: rgba(8, 40, 22, 0.22);
+}
+@media (hover: hover) { .bz-fab-wa:hover { background: #1B9A4D; } }
+html.dark .bz-fab-wa {
+  background: #1C8F4B;
+  --fab-tint: rgba(0, 0, 0, 0.72);
+  --fab-edge: rgba(255, 255, 255, 0.12);
+}
 
 /* ═══════ الهيدر ملتصقٌ بالشريط العلويّ، لا نازلٌ عنه ═══════
    الهيدران يلتصقان تحت الشريط بمقدار ارتفاعه بدل أن يتراكبا معه.
@@ -4770,18 +4817,6 @@ html.dark .theme-pub .text-\[\#8a2438\] { color: #F0A0A8; }
    بحدٍّ رفيعٍ وأيقونةٍ حبريّة. كانت كتلةً سوداءَ تنافسُ زرَّ الشراءِ بصريّاً —
    والأسوأُ أنّ أيقونتَها كانت حبريّةً على أسودَ فتكادُ لا تُرى. الزرُّ العائمُ
    إجراءٌ ثانويّ: يُرى حين يُبحَثُ عنه ولا يزاحمُ الشراء. */
-.bz-fab {
-  background: #FFFFFF;
-  color: #1F1E1D;
-  box-shadow: 0 10px 26px -12px rgba(24, 23, 22, 0.45), inset 0 0 0 1px rgba(24, 23, 22, 0.10);
-}
-@media (hover: hover) { .bz-fab:hover { background: #F7F7F6; } }
-html.dark .bz-fab,
-html.dark .theme-pub .bz-fab {
-  background: #232120;
-  color: #E8E3DA;
-  box-shadow: 0 10px 26px -12px rgba(0, 0, 0, 0.75), inset 0 0 0 1px rgba(239, 238, 236, 0.14);
-}
 
 /* ═══ إيقاعُ صفحاتِ التسوّقِ ورؤوسُ أقسامِها ═══
    كانت المسافاتُ بين الأقسامِ ٤٠ و٥٦ و٦٤ و٨٠ بلا قاعدة، وعناوينُها ٢٠px —
