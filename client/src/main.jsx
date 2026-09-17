@@ -20,6 +20,7 @@ import './index.css';
 import App from './App.jsx';
 import { applyPerfTier } from './utils/perfTier.js';
 import { installImageFallback } from './utils/imageFallback.js';
+import { purgeLegacyStorage } from './utils/legacyStorage.js';
 import api from './api/client.js';
 import { startOrderQueue } from './utils/orderQueue.js';
 import { registerSW } from 'virtual:pwa-register';
@@ -27,6 +28,9 @@ import { registerSW } from 'virtual:pwa-register';
 // نحدّد مستوى أداء الجهاز قبل أول رسمة — فتبدأ الحركات مضبوطة من اللحظة الأولى
 // (بلا وميض تأثيرات ثقيلة ثم تخفيفها)
 applyPerfTier();
+// مفاتيحُ خزنٍ خلّفَتها نسخٌ سابقةٌ تُمسَحُ قبلَ أيِّ شيءٍ آخر — أهمُّها كلمةُ المرورِ
+// التي كانت «تذكّرني» تحفظُها نصّاً على الجهاز.
+purgeLegacyStorage();
 // أيُّ صورةٍ يسقطُ مصدرُها تُستبدَلُ ببديلٍ يشبهُ التصميم، لا بأيقونةٍ مكسورة.
 installImageFallback();
 // طلباتٌ تعثّر حفظُها تُعاد تلقائياً حين تعود الشبكة — لا يفعل شيئاً إن كان

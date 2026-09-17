@@ -15,12 +15,9 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const justRegistered = location.state?.registered;
-  // استرجاع البريد + كلمة المرور المحفوظين (تذكّرني) — على جهاز المشترك فقط
-  const dec = (s) => { try { return s ? decodeURIComponent(escape(atob(s))) : ''; } catch { return ''; } };
-  const enc = (s) => { try { return btoa(unescape(encodeURIComponent(s))); } catch { return ''; } };
+  // استرجاعُ البريدِ المحفوظِ (تذكّرني) — البريدُ وحدَه، ولا شيءَ سواه.
   const savedEmail = typeof localStorage !== 'undefined' ? localStorage.getItem('bz_remember_email') || '' : '';
-  const savedPw = typeof localStorage !== 'undefined' ? dec(localStorage.getItem('bz_remember_pw')) : '';
-  const [form, setForm] = useState({ email: location.state?.email || savedEmail, password: savedPw });
+  const [form, setForm] = useState({ email: location.state?.email || savedEmail, password: '' });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [needsCode, setNeedsCode] = useState(false); // اشتراك منتهٍ: يطلب كود التجديد
@@ -29,16 +26,13 @@ export default function Login() {
   const [remember, setRemember] = useState(true);
   const emailRef = useRef(null);
 
-  // حفظ/مسح البريد وكلمة المرور المتذكَّرين (مُعمّاة base64، وعلى الجهاز نفسه فقط)
-  const persistRemember = (email, password) => {
+  // حفظُ/مسحُ البريدِ المتذكَّرِ وحدَه. كلمةُ المرورِ لا تُحفَظُ أبداً: بقاءُ الجلسةِ
+  // مهمّةُ bz_auth_token (تسعونَ يوماً)، وتعبئةُ الحقلِ مهمّةُ مديرِ كلماتِ المرورِ
+  // في المتصفّحِ عبرَ autoComplete — لا شأنَ لـlocalStorage بها.
+  const persistRemember = (email) => {
     try {
-      if (remember && email) {
-        localStorage.setItem('bz_remember_email', email);
-        if (password) localStorage.setItem('bz_remember_pw', enc(password));
-      } else {
-        localStorage.removeItem('bz_remember_email');
-        localStorage.removeItem('bz_remember_pw');
-      }
+      if (remember && email) localStorage.setItem('bz_remember_email', email);
+      else localStorage.removeItem('bz_remember_email');
     } catch { /* تجاهل */ }
   };
 
@@ -50,7 +44,7 @@ export default function Login() {
       setError(t('errors.invalidEmail'));
       return;
     }
-    persistRemember(email, form.password);
+    persistRemember(email);
     setBusy(true);
     try {
       const data = await login(email, form.password);
