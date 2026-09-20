@@ -152,6 +152,17 @@ export async function sendReaction(pageToken, recipientId, mid, reaction) {
   });
 }
 
+// «عم تكتب…» — ثلاثُ نقاطٍ متحرّكةٍ بدل فراغٍ ميّتٍ أربعَ ثوانٍ ريثما يفكّرُ
+// النموذج. الانتظارُ نفسُه لا يقصُر، لكنّ الزبونَ يعرفُ أنّ أحداً هناك بدل أن يظنَّ
+// أنّ أحداً تجاهلَه — وهو الفرقُ بين انتظارٍ عاديٍّ وانتظارٍ يُغضِب.
+export async function sendTyping(pageToken, recipientId, on = true) {
+  return graph('/me/messages', {
+    method: 'POST',
+    token: pageToken,
+    body: { recipient: { id: recipientId }, sender_action: on ? 'typing_on' : 'typing_off' },
+  });
+}
+
 // إرسال صورة. إنستغرام لا تقبل أن نرفع إليها الملفّ، بل تطلب رابطاً عامّاً تجلبه هي
 // بنفسها — فترفع الواجهةُ الصورةَ إلى Cloudinary أوّلاً ويصل الرابطُ هنا. ورسالةٌ
 // واحدةٌ لا تحمل نصّاً ومرفقاً معاً، فمن أراد الاثنين أرسل رسالتين.

@@ -19,6 +19,7 @@ import {
   subscribePageMessages,
   unsubscribePageMessages,
   sendMessage,
+  sendTyping,
   sendReplyTo,
   sendReaction,
   sendAttachment,
@@ -295,7 +296,33 @@ async function maybeAutoReply({ store, convId, customerId, text, isNew, who }) {
   // وضعُ التجربة: لا تُكلَّمُ إلّا الحساباتُ المذكورةُ بالاسم. ويُفحَصُ قبلَ كلِّ
   // شيءٍ آخرَ ليبقى الحارسُ واحداً لا يُلتَفُّ عليه من أيِّ مسار.
   if (!testModeAllows(bot, conv.customer_username)) return;
-  if (Number(conv.bot_replies) >= MAX_BOT_REPLIES) return; // حلقةٌ آليّةٌ بلا بشر: نصمتُ ونتركُها للتاجرة
+  // بلغَت حدَّها: تُسلِّمُ **معلنةً** لا صامتة. الصمتُ هنا أسوأُ من الحدِّ نفسِه —
+  // ظلَّ الزبونُ يسألُ ثمّ كتب «مالك بطّلت تردّي؟» ولا أحدَ يعلمُ أنّه ينتظر.
+  if (Number(conv.bot_replies) >= MAX_BOT_REPLIES) {
+    if (!conv.bot_paused) {
+      const token = decrypt(store.ig_access_token);
+      const bye = 'خليني أخلي صاحبة المتجر ترد عليك بنفسها، بتكون معك بعد شوي 🌷';
+      if (token) {
+        try {
+          const sent = await sendMessage(token, customerId, bye);
+          await query(
+            `INSERT INTO ig_messages (conversation_id, mid, direction, text, ai)
+             VALUES ($1, $2, 'out', $3, true) ON CONFLICT (mid) DO NOTHING`,
+            [convId, sent?.message_id || null, bye]
+          );
+        } catch { /* خارجَ النافذةِ أو توكنٌ ميّت: التسليمُ يبقى قائماً */ }
+      }
+      await query('UPDATE ig_conversations SET bot_paused = true, last_at = now() WHERE id = $1', [convId]);
+      notifyUser(store.user_id, {
+        type: 'instagram',
+        title: `🙋 ${who || 'زبون'} بانتظار ردّك`,
+        body: 'البائعة الآلية وصلت حدّها بهالمحادثة وسلّمتك إيّاها.',
+        url: `/dashboard/instagram/${convId}`,
+        tag: `ig-${convId}`,
+      });
+    }
+    return;
+  }
 
   // هل ردّت التاجرةُ بيدِها قريباً؟ (ردُّها من تطبيقِ إنستغرام يصلُنا echo ويُخزَّنُ
   // out بلا وسمِ ai — فالحارسُ يعملُ أينما ردّت.)
@@ -318,9 +345,16 @@ async function maybeAutoReply({ store, convId, customerId, text, isNew, who }) {
     messages.push({ role: 'user', content: text });
   }
 
+  // «عم تكتب…» قبلَ التفكيرِ لا بعدَه: النموذجُ يأخذُ أربعَ ثوانٍ، وهي فراغٌ ميّتٌ
+  // بالمحادثةِ ما لم يرَ الزبونُ أنّ أحداً يكتب. فشلُه لا يوقفُ شيئاً.
+  const igToken = decrypt(store.ig_access_token);
+  if (igToken) sendTyping(igToken, customerId, true).catch(() => {});
+
   const out = await agentReply({
     store: { id: store.id, name: store.name || 'متجرنا' },
     bot, messages, stage: Number(conv.bot_stage) || 0,
+    // الاسمُ كما يصلُنا من ميتا — به تعرفُ البائعةُ أتخاطبُ رجلاً أم امرأة
+    customerName: conv.customer_name || conv.customer_username || who || '',
   });
   if (!out.reply) return;
 
@@ -349,7 +383,7 @@ ${link}` : out.reply;
 
 ${sign}` : withLink;
 
-  const token = decrypt(store.ig_access_token);
+  const token = igToken; // فُكَّ قبلَ مؤشّرِ الكتابة — لا نفكُّه مرّتين
   if (!token) return;
 
   // اللقطةُ أوّلاً ثمّ النصُّ تحتَها — ترتيبُ ما تراه الزبونةُ بمحادثتِها.

@@ -18,7 +18,11 @@ const AI_CATALOG = 30;             // سقفُ القطعِ المُمرَّرة
 const AI_HISTORY = 8;              // آخرُ رسائلِ المحادثةِ المُمرَّرة
 const TOP_N = 4;                   // أقصى ما تعرضُه البائعةُ بردٍّ واحد
 export const MONTHLY_QUOTA = 300;  // ردودٌ ذكيّةٌ بالشهرِ لكلِّ متجر، وبعدَها القواعدُ المجّانيّة
-export const MAX_BOT_REPLIES = 3;  // ردودٌ آليّةٌ متتاليةٌ بلا بشرٍ ثمّ تسلّم
+// ردودٌ آليّةٌ متتاليةٌ بلا بشرٍ ثمّ تسلّم. كانت ثلاثةً فوقفت البائعةُ في منتصفِ
+// محادثةِ بيعٍ سليمة — والزبونُ ظلَّ يسألُ ثمّ كتب «مالك بطّلت تردّي؟». خمسةُ
+// أسئلةٍ من زبونٍ مهتمٍّ أمرٌ طبيعيٌّ ومطلوب، وثمانيةٌ تكفي حواراً كاملاً وتبقى
+// حاجزاً أمامَ الحلقةِ التي لا تنتهي.
+export const MAX_BOT_REPLIES = 8;
 
 const catalogCache = new Map(); // storeId -> { rows, ts }
 
@@ -234,7 +238,7 @@ function catalogLine(p, bot, stageFor) {
   return '- ' + parts.join(' | ');
 }
 
-function buildSystem({ storeName, bot, rows, stage, promo, lang }) {
+function buildSystem({ storeName, bot, rows, stage, promo, lang, customerName }) {
   const tone = TONES[bot.bot_tone] || TONES.warm;
   const dialect = lang === 'en' ? 'English, warm and natural.' : (DIALECTS[bot.bot_dialect] || DIALECTS.ps);
   const promoLine = promo
@@ -245,7 +249,17 @@ function buildSystem({ storeName, bot, rows, stage, promo, lang }) {
     : '\nالمفاصلة: ممنوعة. السعرُ المكتوبُ هو السعر. إن ألحَّتْ فاعتذري بلطفٍ واذكري ما يستحقُّ به السعر.';
   const notes = (bot.bot_notes || '').trim().slice(0, 600);
 
-  return `أنتِ بائعةٌ في متجرِ "${storeName}" للأزياءِ النسائيّة، تكلّمينَ زبونةً حقيقيّةً الآن. لستِ روبوتاً يُجيبُ بقوائم — أنتِ بائعةٌ شاطرةٌ هدفُها أن تخرجَ الزبونةُ بقطعةٍ تحبُّها.
+  // الخطابُ كان مفروضاً بالمؤنّثِ دائماً، فخاطبَ رجلاً بـ«حبيبتي، كيفك انتِ».
+  // المتجرُ نسائيٌّ نعم، لكنّ الرجالَ يشترونَ الهدايا — واسمُ المُرسِلِ يصلُنا من
+  // ميتا، فلا عذرَ للافتراض.
+  const who = String(customerName || '').trim();
+  const address = who
+    ? `اسمُ من تكلّمينَه: "${who}". خاطبيه بما يناسبُ اسمَه — مذكّراً إن كان اسمَ رجلٍ ومؤنّثاً إن كان اسمَ امرأة. وإن لم يتّضحْ من الاسمِ فاستعملي صيغةً محايدةً ("أهلاً وسهلاً"، "تفضّل") ولا تفترضي.`
+    : 'لا تعرفينَ اسمَ من تكلّمينَه: استعملي صيغةً محايدةً ولا تفترضي أنّه امرأة.';
+
+  return `أنتِ بائعةٌ في متجرِ "${storeName}" للأزياءِ النسائيّة، تكلّمينَ زبوناً حقيقيّاً الآن. لستِ روبوتاً يُجيبُ بقوائم — أنتِ بائعةٌ شاطرةٌ هدفُها أن يخرجَ من عندكِ بقطعةٍ يحبُّها.
+
+${address}
 
 أسلوبُكِ: ${tone}
 لغتُكِ: ${dialect}
@@ -407,7 +421,7 @@ function freeReply({ rows, bot, stage, lastUser, promo }) {
 
 // يُنادى من قناتين: مساعِدةُ الموقع (assistant.controller) وwebhook إنستغرام.
 // messages: [{ role:'user'|'assistant', content }] — آخرُها رسالةُ الزبونة.
-export async function agentReply({ store, bot, messages, stage = 0 }) {
+export async function agentReply({ store, bot, messages, stage = 0, customerName = '' }) {
   const lastUser = [...messages].reverse().find((m) => m.role === 'user')?.content || '';
   const lang = hasArabic(lastUser) ? 'ar' : 'en';
 
@@ -440,7 +454,7 @@ export async function agentReply({ store, bot, messages, stage = 0 }) {
 
   if (canAi) {
     try {
-      const system = buildSystem({ storeName: store.name, bot, rows, stage: nextStage, promo, lang });
+      const system = buildSystem({ storeName: store.name, bot, rows, stage: nextStage, promo, lang, customerName });
       const history = messages.slice(-AI_HISTORY).map((m) => ({ role: m.role, content: String(m.content).slice(0, 800) }));
       const out = process.env.ANTHROPIC_API_KEY
         ? await callClaude(system, history)
