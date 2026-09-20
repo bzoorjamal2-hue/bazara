@@ -1429,5 +1429,110 @@
         "complaint": "I want to return the item"
       }
     }
+  },
+  "adStudio": {
+    "nav": "Ad Studio",
+    "title": "Ad Studio",
+    "hint": "From a piece in your store to a ready ad: copy, image, audience and budget — you publish it.",
+    "saved": "Campaign saved to the queue.",
+    "generate": "Write my ad",
+    "generating": "Writing…",
+    "saveReady": "Save as ready",
+    "saveDraft": "Save as draft",
+    "update": "Update campaign",
+    "perDay": "per day",
+    "daysN": "{{n}} days",
+    "badgeSale": "{{n}}% off",
+    "badgeNew": "New arrival",
+    "freeMode": "This server has no AI provider yet, so the copy comes from prepared templates filled with your product data. Edit it however you like.",
+    "pick": {
+      "title": "1 · Piece and goal",
+      "desc": "Pick the piece you want to advertise, and what you want the ad to do.",
+      "empty": "No pieces in your store yet. Add one and come back."
+    },
+    "goal": {
+      "label": "Ad goal",
+      "tip": "The goal changes the tone and the call to action: a sales ad talks price, a messages ad opens a question.",
+      "sales": "Sales",
+      "traffic": "Traffic",
+      "messages": "Messages",
+      "awareness": "Awareness"
+    },
+    "tone": {
+      "label": "Tone",
+      "tip": "The same piece reads three ways. Pick the one that sounds like your store.",
+      "warm": "Warm and close",
+      "luxury": "Quiet and premium",
+      "playful": "Light and playful"
+    },
+    "copy": {
+      "title": "2 · Copy",
+      "desc": "Three versions from different angles. Pick one and edit it freely.",
+      "n": "Version {{n}}",
+      "headline": "Headline",
+      "headlineTip": "This goes on the image and is read at a glance. Keep it short.",
+      "primary": "Post text",
+      "primaryTip": "The text that runs with the image. Short lines read better than a long paragraph.",
+      "tags": "Hashtags",
+      "copyAll": "Copy text and hashtags"
+    },
+    "creative": {
+      "title": "3 · Image",
+      "desc": "The image is drawn in your own browser — try as many as you like, nothing is uploaded.",
+      "template": "Template",
+      "templateTip": "Bold: full image with text over it. Soft: image on top, light panel below. Split: half image, half text — good when the number is the hero.",
+      "tpl": {
+        "bold": "Bold",
+        "soft": "Soft",
+        "split": "Split"
+      },
+      "size": "Size",
+      "sizeTip": "Square for a post, tall for stories and reels, wide for a Facebook ad.",
+      "sz": {
+        "square": "Square",
+        "story": "Story",
+        "wide": "Wide"
+      },
+      "badge": "Badge",
+      "badgeTip": "A small word in the corner (20% off, new arrival). Leave it empty and it disappears.",
+      "showPrice": "Show the price on the image",
+      "download": "Download the image",
+      "downloadTip": "It downloads at full size, and you post it from Instagram or Facebook like any image.",
+      "downloadFailed": "Could not download the image. If the product photo is hosted elsewhere, try a piece whose photo was uploaded to the site."
+    },
+    "target": {
+      "title": "4 · Audience and budget",
+      "desc": "A starting point you adjust. Not market research — just a sensible guess for a piece like this.",
+      "age": "Age",
+      "ageTip": "Who do you expect to wear this? A narrow range reaches closer people, a wide one reaches more.",
+      "genders": "Gender",
+      "gendersTip": "Most womenswear stores pick women, but gifts are bought by men too.",
+      "g": {
+        "female": "Women",
+        "male": "Men",
+        "all": "Everyone"
+      },
+      "locations": "Locations",
+      "locationsTip": "Where do you deliver? An ad reaching a place you do not ship to is wasted.",
+      "interests": "Interests",
+      "interestsTip": "Words describing what she is into (abayas, modest fashion, evening dresses).",
+      "chipPlaceholder": "Type and press Enter",
+      "budget": "Daily budget (ILS)",
+      "budgetTip": "Roughly the price of the piece spread over five days. Start small, and raise it if the ad works.",
+      "days": "Days",
+      "daysTip": "Under three days does not give the ad time to learn who responds.",
+      "total": "Campaign total",
+      "totalTip": "This is what gets spent in full if you run every day. Meta charges the payment method on your ad account."
+    },
+    "queue": {
+      "title": "Campaign queue",
+      "desc": "What you prepared lives here — its copy, audience and image recipe. Open it any time and redraw the image.",
+      "open": "Open it"
+    },
+    "status": {
+      "draft": "Draft",
+      "ready": "Ready",
+      "published": "Published"
+    }
   }
 }

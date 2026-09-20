@@ -58,7 +58,9 @@ export async function getBotSettings(req, res, next) {
       name: p.name,
       price: Number(p.price),
       floorPrice: p.floor_price != null ? Number(p.floor_price) : null,
-      image: Array.isArray(p.images) ? p.images[0] || '' : '',
+      // منتجاتُ المنصّةِ فيديو بلا صور، وcldThumb تأخذُ لقطةً من الفيديو —
+      // فبلا هذا تبقى كلُّ مصغّراتِ القائمةِ مربّعاتٍ فارغة.
+      image: (Array.isArray(p.images) ? p.images.filter(Boolean)[0] : '') || p.video_url || '',
       stock: stockLine(p),
     }));
 

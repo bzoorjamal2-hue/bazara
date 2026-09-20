@@ -9,7 +9,7 @@ import { useWishlist } from '../context/WishlistContext.jsx';
 import LanguageSwitcher from './LanguageSwitcher.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import useHideOnScroll from '../hooks/useHideOnScroll.js';
-import { CartIcon, HeartIcon, MenuIcon, UserIcon, SearchIcon, MailIcon, InstagramIcon, GridIcon, StoreIcon, BagIcon, ReceiptIcon, UsersIcon, TicketIcon, ChartIcon, BellIcon, MegaphoneIcon, GearIcon, CashIcon , HomeIcon, SparkleIcon } from './icons.jsx';
+import { CartIcon, HeartIcon, MenuIcon, UserIcon, SearchIcon, MailIcon, InstagramIcon, GridIcon, StoreIcon, BagIcon, ReceiptIcon, UsersIcon, TicketIcon, ChartIcon, BellIcon, MegaphoneIcon, GearIcon, CashIcon , HomeIcon, SparkleIcon, PaletteIcon } from './icons.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import NavBell from './NavBell.jsx';
 import CloseButton from './CloseButton.jsx';
@@ -247,6 +247,7 @@ export default function Navbar() {
           { key: 'campaign', label: t('campaign.title'), Icon: MegaphoneIcon },
           { key: 'instagram', label: t('dashboard.instagram.title'), Icon: InstagramIcon },
           { key: 'salesBot', label: t('salesBot.nav'), Icon: SparkleIcon },
+          { key: 'adStudio', label: t('adStudio.nav'), Icon: PaletteIcon },
         ] },
         { id: 'account', title: t('dashboard.menu.account'), items: [
           { key: 'finance', label: t('finance.title'), Icon: CashIcon },

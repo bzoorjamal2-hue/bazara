@@ -306,3 +306,24 @@ ALTER TABLE ig_conversations ADD COLUMN IF NOT EXISTS bot_paused BOOLEAN NOT NUL
 ALTER TABLE ig_conversations ADD COLUMN IF NOT EXISTS bot_replies SMALLINT NOT NULL DEFAULT 0;
 ALTER TABLE ig_conversations ADD COLUMN IF NOT EXISTS bot_stage SMALLINT NOT NULL DEFAULT 0;
 ALTER TABLE ig_messages ADD COLUMN IF NOT EXISTS ai BOOLEAN NOT NULL DEFAULT false;
+
+-- ── مصنع الإعلانات ────────────────────────────────────────────────────────
+-- حملة محفوظة بالطابور: نصوصها وجمهورها وميزانيتها و**وصفة** صورتها لا الصورة
+-- نفسها — الصورة تُرسم بمتصفّح التاجرة، فلا كريدت يُصرف من حساب الوسائط المحدود.
+CREATE TABLE IF NOT EXISTS ad_campaigns (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    store_id    UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+    product_id  UUID REFERENCES products(id) ON DELETE SET NULL,
+    name        VARCHAR(160) NOT NULL DEFAULT '',
+    goal        VARCHAR(16) NOT NULL DEFAULT 'sales',   -- sales | traffic | messages | awareness
+    status      VARCHAR(12) NOT NULL DEFAULT 'draft',   -- draft | ready | published
+    copies      JSONB NOT NULL DEFAULT '[]'::jsonb,     -- ثلاث نسخ إعلانية
+    chosen      SMALLINT NOT NULL DEFAULT 0,
+    audience    JSONB NOT NULL DEFAULT '{}'::jsonb,
+    budget      NUMERIC(10,2) NOT NULL DEFAULT 0,       -- يوميّة
+    days        SMALLINT NOT NULL DEFAULT 5,
+    creative    JSONB NOT NULL DEFAULT '{}'::jsonb,     -- وصفة الصورة (قالب/مقاس/ألوان)
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    published_at TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_adcamp_store ON ad_campaigns(store_id, created_at DESC);

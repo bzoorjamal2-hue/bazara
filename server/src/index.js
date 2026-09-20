@@ -31,6 +31,7 @@ import goboxRoutes from './routes/gobox.routes.js';
 import { goboxWebhook, syncAllGoboxStores } from './controllers/gobox.controller.js';
 import instagramRoutes from './routes/instagram.routes.js';
 import botRoutes from './routes/bot.routes.js';
+import adsRoutes from './routes/ads.routes.js';
 import { verifyWebhook, receiveWebhook, igLoginRedirect, igCallback, igChoose } from './controllers/instagram.controller.js';
 import { paytabsCallback } from './controllers/order.controller.js';
 import { subscriptionPaytabsCallback } from './controllers/subscription.controller.js';
@@ -160,6 +161,7 @@ app.use('/api/eps', epsRoutes);
 app.use('/api/gobox', goboxRoutes);
 app.use('/api/instagram', instagramRoutes);
 app.use('/api/bot', botRoutes);
+app.use('/api/ads', adsRoutes);
 
 // مسارات SEO (على الجذر)
 app.get('/robots.txt', robots);
@@ -670,6 +672,27 @@ END $$;`,
     // الرسالةُ الصادرةُ: أَمِنَ البائعةِ الآليّةِ هي أم من يدِ التاجرة؟ الوسمُ يظهرُ
     // بالمحادثةِ فلا تظنُّ التاجرةُ أنّها كتبَتْها بنفسِها.
     "ALTER TABLE ig_messages ADD COLUMN IF NOT EXISTS ai BOOLEAN NOT NULL DEFAULT false;",
+    // ═══ مصنع الإعلانات ═══
+    // حملةٌ محفوظةٌ بالطابور: نصوصُها وجمهورُها وميزانيتُها و**وصفةُ** صورتِها لا
+    // الصورةُ نفسُها. الصورةُ تُرسَمُ بمتصفّحِ التاجرةِ متى شاءت — فلا بايتَ يُرفَعُ
+    // ولا كريدت يُصرَفُ من حسابِ الوسائطِ المحدود.
+    `CREATE TABLE IF NOT EXISTS ad_campaigns (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+      product_id UUID REFERENCES products(id) ON DELETE SET NULL,
+      name VARCHAR(160) NOT NULL DEFAULT '',
+      goal VARCHAR(16) NOT NULL DEFAULT 'sales',
+      status VARCHAR(12) NOT NULL DEFAULT 'draft',
+      copies JSONB NOT NULL DEFAULT '[]'::jsonb,
+      chosen SMALLINT NOT NULL DEFAULT 0,
+      audience JSONB NOT NULL DEFAULT '{}'::jsonb,
+      budget NUMERIC(10,2) NOT NULL DEFAULT 0,
+      days SMALLINT NOT NULL DEFAULT 5,
+      creative JSONB NOT NULL DEFAULT '{}'::jsonb,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      published_at TIMESTAMPTZ
+    );`,
+    "CREATE INDEX IF NOT EXISTS idx_adcamp_store ON ad_campaigns(store_id, created_at DESC);",
   ];
   // كل جملة على حدة: فشل واحدة لا يمنع البقية
   for (const sql of steps) {
