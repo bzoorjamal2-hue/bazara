@@ -1,6 +1,7 @@
 import { query } from '../config/db.js';
 import { mapProduct } from './product.controller.js';
 import { activeStoreSql } from '../utils/subscription.js';
+import { loadBot, botActiveNow, agentReply, countReply } from '../utils/salesAgent.js';
 
 // مساعِدة التسوّق الذكية — ترشّح للزبونة قطعاً من منتجات هذا المتجر فقط (grounding).
 // تعمل بثلاث طبقات حسب المتوفّر، فلا تتعطّل أبداً وتشتغل مجاناً افتراضياً:
@@ -404,6 +405,7 @@ export async function chatAssistant(req, res, next) {
     const active = activeStoreSql('u');
     let storeName = 'بازارا';
     let rows;
+    let botResult = null; // ردُّ البائعةِ الآليّةِ إن كانت شغّالةً على قناةِ الموقع
 
     if (marketplace) {
       // كتالوج السوق: قطع من كل المتاجر الفعّالة (مميّزة ثم الأحدث) — كاش بمفتاح خاص
@@ -420,6 +422,29 @@ export async function chatAssistant(req, res, next) {
       const store = storeRes.rows[0];
       if (!store) return res.status(404).json({ error: 'المتجر غير موجود.' });
       storeName = store.name;
+
+      // البائعةُ الآليّة: إن شغّلتها التاجرةُ على قناةِ الموقعِ فهي من تردُّ هنا —
+      // بنبرتِها ولهجتِها ومخزونِها الحيِّ — لا المساعِدةُ العامّة.
+      //
+      // والمفاصلةُ مُطفأةٌ على هذه القناةِ عمداً مهما فتحَتْها التاجرة: سلّةُ الموقعِ
+      // تحسبُ السعرَ المعروضَ من القاعدة، فسعرٌ تعرضُه البائعةُ هنا وعدٌ لا تستطيعُ
+      // السلّةُ الوفاءَ به. المفاصلةُ مكانُها إنستغرام، حيثُ تكتبُ التاجرةُ الطلبَ
+      // بالسعرِ المتّفقِ عليه.
+      try {
+        const bot = image ? null : await loadBot(store.id);
+        if (botActiveNow(bot, 'site', { isFirstMessage: messages.length <= 1 })) {
+          const out = await agentReply({
+            store, bot: { ...bot, bot_haggle: false }, messages, stage: 0,
+          });
+          if (out.reply) {
+            botResult = { reply: out.reply, ids: out.ids };
+            countReply(store.id, out.usedAi, out.handoff);
+          }
+        }
+      } catch (e) {
+        // البائعةُ ميزةٌ فوقَ المساعِدةِ لا بديلٌ عنها: سقوطُها يُعيدُنا للمحرّكِ العام
+        console.error('⚠️ البائعة الآلية (الموقع):', e.message);
+      }
       // كتالوج المتجر من الكاش (معزول بالسلَگ)
       let cached = catalogCache.get(slug);
       if (!cached || Date.now() - cached.ts > CATALOG_TTL) {
@@ -441,8 +466,8 @@ export async function chatAssistant(req, res, next) {
     const recentUserText = messages.filter((m) => m.role === 'user').slice(-2).map((m) => m.content).join(' ');
 
     // اختيار المزوّد حسب المتوفّر، مع السقوط للقواعد عند أي فشل
-    let result;
-    try {
+    let result = botResult;
+    if (!result) try {
       const aiRows = rows.slice(0, AI_CATALOG);            // كتالوج أصغر للذكاء = توكنات أقل
       let aiMessages = messages.slice(-AI_HISTORY);         // آخر رسائل فقط = توكنات أقل
       let sys = systemPrompt(storeName, aiRows, marketplace);

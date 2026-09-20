@@ -11,7 +11,7 @@ import Seo from '../components/Seo.jsx';
 import {
   UserIcon, DownloadIcon, HomeIcon, ChartIcon, GearIcon, BagIcon, ReceiptIcon,
   TicketIcon, GiftIcon, BellIcon, UsersIcon, ShieldIcon, ImageIcon, StoreIcon, LinkIcon, MailIcon, InstagramIcon, BoltIcon, CashIcon,
-  WhatsAppIcon, ShareIcon,
+  WhatsAppIcon, ShareIcon, SparkleIcon,
 } from '../components/icons.jsx';
 import SubscriptionBanner from '../components/SubscriptionBanner.jsx';
 import { SectionHead, Tip, PageHead } from '../components/FormField.jsx';
@@ -35,6 +35,7 @@ import LandingEditor from './dashboard/LandingEditor.jsx';
 import NewsletterManager from './dashboard/NewsletterManager.jsx';
 import InstagramInbox from './dashboard/InstagramInbox.jsx';
 import CampaignManager from './dashboard/CampaignManager.jsx';
+import SalesBot from './dashboard/SalesBot.jsx';
 import FinanceManager from './dashboard/FinanceManager.jsx';
 import PayoutsManager from './dashboard/PayoutsManager.jsx';
 
@@ -44,6 +45,7 @@ const SECTIONS = [
   { key: 'myOrders', Icon: ReceiptIcon },
   { key: 'myProducts', Icon: BagIcon },
   { key: 'instagram', Icon: InstagramIcon },
+  { key: 'salesBot', Icon: SparkleIcon },
   { key: 'analytics', Icon: ChartIcon },
   { key: 'finance', Icon: CashIcon },
   { key: 'coupons', Icon: TicketIcon },
@@ -204,6 +206,7 @@ export default function Dashboard() {
         {section === 'coupons' && !isAdmin && <CouponsManager />}
         {section === 'referrals' && !isAdmin && <ReferralsManager />}
         {section === 'campaign' && !isAdmin && <CampaignManager />}
+        {section === 'salesBot' && !isAdmin && <SalesBot />}
         {section === 'stockRequests' && !isAdmin && <StockRequestsManager />}
         {section === 'adminOverview' && isAdmin && <AdminOverview />}
         {section === 'subscribers' && isAdmin && <SubscribersManager />}

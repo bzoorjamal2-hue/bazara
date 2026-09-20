@@ -662,6 +662,10 @@ export default function InstagramChat() {
                     {m.text && <p className={`whitespace-pre-wrap break-words text-[14px] leading-[1.45] ${media ? 'px-2 pb-1 pt-1.5' : ''}`}>{m.text}</p>}
                     {it.last && (
                       <span className={`bz-chat-time mt-0.5 block text-[10px] leading-none ${media ? 'px-2 pb-1.5' : 'pb-0.5'} ${out ? 'text-start' : 'text-end'}`}>
+                        {/* ما كتبَتْه البائعةُ الآليّةُ يُوسَمُ صراحةً: بلا الوسمِ تقرأُ
+                            التاجرةُ ردّاً لا تذكرُ أنّها كتبَتْه، فلا تعرفُ ما وُعِدَت
+                            به زبونتُها ولا من وعدَها. */}
+                        {m.ai && <span className="me-1 font-bold">🤖 {t('dashboard.instagram.aiReply')} ·</span>}
                         {timeOf(m)}
                       </span>
                     )}

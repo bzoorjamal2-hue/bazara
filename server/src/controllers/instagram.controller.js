@@ -4,6 +4,9 @@ import { query } from '../config/db.js';
 import { encrypt, decrypt } from '../config/opost.js';
 import { notifyUser } from '../utils/notify.js';
 import {
+  loadBot, botActiveNow, agentReply, countReply, MAX_BOT_REPLIES,
+} from '../utils/salesAgent.js';
+import {
   isInstagramConfigured,
   verifySignature,
   VERIFY_TOKEN,
@@ -142,7 +145,7 @@ async function processWebhook(body) {
       const customerId = isEcho ? businessId : senderId;
 
       const sr = await query(
-        'SELECT id, user_id, ig_access_token FROM stores WHERE ig_user_id = $1 AND ig_connected = true',
+        'SELECT id, user_id, name, ig_access_token FROM stores WHERE ig_user_id = $1 AND ig_connected = true',
         [storeIgId]
       );
       const store = sr.rows[0];
@@ -228,7 +231,117 @@ async function processWebhook(body) {
         tag: `ig-${convId}`,
         icon: avatar || undefined,
       });
+
+      // البائعةُ الآليّة: تردُّ الآنَ إن أذنت التاجرةُ وغابت عن الشاشة. تُنادى بعدَ
+      // الإشعارِ لا قبلَه — لو تعثّرت (مزوّدُ ذكاءٍ ساقطٌ مثلاً) تكونُ التاجرةُ قد
+      // عرفت برسالةِ زبونتِها على أيِّ حال. ولا ننتظرُها: الـwebhook ردَّ 200 من
+      // زمان، وتأخيرُ الحلقةِ هنا يؤخّرُ باقي رسائلِ الدفعة.
+      maybeAutoReply({ store, convId, customerId, text, isNew: conv.rows[0].is_new, who })
+        .catch((e) => console.error('⚠️ البائعة الآلية:', e.message));
     }
+  }
+}
+
+// ═════════════════════ البائعة الآلية ═════════════════════
+
+// كم دقيقةً نعتبرُ التاجرةَ فيها «على الشاشة» بعدَ ردِّها؟ ردُّها بيدِها يعني أنّها
+// موجودة، ومقاطعتُها بردٍّ آليٍّ في منتصفِ حديثِها أسوأُ من ألّا نردَّ أصلاً.
+const OWNER_PRESENT_MINUTES = 10;
+
+// ردٌّ آليٌّ على رسالةٍ واردة. كلُّ حارسٍ هنا مكتوبٌ لأنّ ما بعدَه يذهبُ لزبونةٍ
+// حقيقيّةٍ باسمِ المتجر: لا رجعةَ في رسالةٍ أُرسِلت.
+async function maybeAutoReply({ store, convId, customerId, text, isNew, who }) {
+  if (!text) return;                       // صورةٌ بلا كلام: لا شيءَ يُفهَمُ فيُجاب
+  const bot = await loadBot(store.id);
+  if (!botActiveNow(bot, 'instagram', { isFirstMessage: Boolean(isNew) })) return;
+
+  // حالةُ المحادثةِ مقروءةٌ على حدةٍ لا ضمنَ upsert الرسالة: خادمٌ لم تصلْه
+  // الترقيةُ بعدُ كان سيُسقطُ استقبالَ الرسائلِ كلَّه بعمودٍ مفقود.
+  let conv;
+  try {
+    const r = await query(
+      `SELECT bot_paused, bot_replies, bot_stage FROM ig_conversations WHERE id = $1`,
+      [convId]
+    );
+    conv = r.rows[0];
+  } catch (err) {
+    if (err.code === '42703') return; // الأعمدةُ لم تصل بعد
+    throw err;
+  }
+  if (!conv || conv.bot_paused) return;
+  if (Number(conv.bot_replies) >= MAX_BOT_REPLIES) return; // حلقةٌ آليّةٌ بلا بشر: نصمتُ ونتركُها للتاجرة
+
+  // هل ردّت التاجرةُ بيدِها قريباً؟ (ردُّها من تطبيقِ إنستغرام يصلُنا echo ويُخزَّنُ
+  // out بلا وسمِ ai — فالحارسُ يعملُ أينما ردّت.)
+  const recent = await query(
+    `SELECT 1 FROM ig_messages
+     WHERE conversation_id = $1 AND direction = 'out' AND ai = false
+       AND created_at > now() - interval '${OWNER_PRESENT_MINUTES} minutes' LIMIT 1`,
+    [convId]
+  ).catch(() => ({ rows: [] }));
+  if (recent.rows.length) return;
+
+  const hist = await query(
+    `SELECT direction, text FROM ig_messages
+     WHERE conversation_id = $1 AND text <> '' ORDER BY created_at DESC LIMIT 8`,
+    [convId]
+  );
+  const messages = hist.rows.reverse()
+    .map((m) => ({ role: m.direction === 'in' ? 'user' : 'assistant', content: m.text }));
+  if (!messages.length || messages[messages.length - 1].role !== 'user') {
+    messages.push({ role: 'user', content: text });
+  }
+
+  const out = await agentReply({
+    store: { id: store.id, name: store.name || 'متجرنا' },
+    bot, messages, stage: Number(conv.bot_stage) || 0,
+  });
+  if (!out.reply) return;
+
+  // الإفصاح: سياسةُ المراسلةِ عندَ Meta تطلبُ أن تعرفَ الزبونةُ أنّها تكلّمُ آليّاً،
+  // والتاجرةُ تختارُ صيغتَه. يُضافُ مرّةً واحدةً بأوّلِ ردٍّ آليٍّ بالمحادثةِ فقط —
+  // تكرارُه بكلِّ رسالةٍ يجعلُ الحديثَ آليّاً أكثرَ ممّا هو.
+  const sign = String(bot.bot_signature || '').trim();
+  const body = (sign && Number(conv.bot_replies) === 0) ? `${out.reply}
+
+${sign}` : out.reply;
+
+  const token = decrypt(store.ig_access_token);
+  if (!token) return;
+  let result;
+  try {
+    result = await sendMessage(token, customerId, body);
+  } catch (e) {
+    if (isAuthError(e)) await markDisconnected(store.id, store.user_id);
+    // خارجَ نافذةِ الـ24 ساعةِ أو أيُّ رفضٍ آخر: نصمتُ ولا نُزعجُ التاجرةَ بخطأٍ
+    // لا تملكُ حياله شيئاً — رسالتُها وصلتها بالإشعارِ أصلاً.
+    return;
+  }
+
+  await query(
+    `INSERT INTO ig_messages (conversation_id, mid, direction, text, ai)
+     VALUES ($1, $2, 'out', $3, true) ON CONFLICT (mid) DO NOTHING`,
+    [convId, result?.message_id || null, body]
+  );
+  await query(
+    `UPDATE ig_conversations
+     SET last_message = $2, last_at = now(),
+         bot_replies = bot_replies + 1, bot_stage = $3, bot_paused = $4
+     WHERE id = $1`,
+    [convId, body.slice(0, 200), out.stage, out.handoff === true]
+  );
+  await countReply(store.id, out.usedAi, out.handoff);
+
+  // التسليم: البائعةُ تعرفُ حدَّها، والتاجرةُ يجبُ أن تعرفَ أنّه بلغ — وإلّا
+  // بقيت زبونةٌ تنتظرُ جواباً قالت لها البائعةُ إنّه قادم.
+  if (out.handoff) {
+    notifyUser(store.user_id, {
+      type: 'instagram',
+      title: `🙋 ${who || 'زبونة'} بحاجة لردّك`,
+      body: 'البائعة الآلية سلّمتك المحادثة — فيها سؤال بدّه قرارك.',
+      url: `/dashboard/instagram/${convId}`,
+      tag: `ig-${convId}`,
+    });
   }
 }
 
@@ -580,18 +693,26 @@ export async function listMessages(req, res, next) {
     // ?after=<وقت>: لا نُعيدُ المحادثةَ كلَّها كلَّ أربعِ ثوانٍ لنرى رسالةً واحدةً
     // جديدة. بلا هذا يصيرُ التحديثُ اللحظيُّ أثقلَ ممّا يُفيد.
     const after = String(req.query.after || '').trim();
-    const r = after
-      ? await query(
-          `SELECT id, mid, direction, text, attachment_url, attachment_type, reply_to_mid, reaction, story_url, created_at
-           FROM ig_messages WHERE conversation_id = $1 AND created_at > $2
+    // عمودُ ai يميّزُ ردَّ البائعةِ الآليّةِ عن يدِ التاجرةِ بالمحادثة. وإن كان
+    // الخادمُ لم تصلْه الترقيةُ بعدُ نُعيدُ الاستعلامَ بلا العمود: وسمٌ ناقصٌ أهونُ
+    // من محادثةٍ لا تُفتَح.
+    const cols = (ai) => `id, mid, direction, text, attachment_url, attachment_type,
+      reply_to_mid, reaction, story_url, ${ai ? 'ai' : 'false AS ai'}, created_at`;
+    const run = (ai) => (after
+      ? query(
+          `SELECT ${cols(ai)} FROM ig_messages WHERE conversation_id = $1 AND created_at > $2
            ORDER BY created_at ASC LIMIT 200`,
           [conv.id, after]
         )
-      : await query(
-          `SELECT id, mid, direction, text, attachment_url, attachment_type, reply_to_mid, reaction, story_url, created_at
-           FROM ig_messages WHERE conversation_id = $1 ORDER BY created_at ASC LIMIT 200`,
+      : query(
+          `SELECT ${cols(ai)} FROM ig_messages WHERE conversation_id = $1
+           ORDER BY created_at ASC LIMIT 200`,
           [conv.id]
-        );
+        ));
+    const r = await run(true).catch((e) => {
+      if (e.code === '42703') return run(false);
+      throw e;
+    });
     await query('UPDATE ig_conversations SET unread = 0 WHERE id = $1', [conv.id]);
     res.json({
       conversation: {
@@ -669,9 +790,13 @@ export async function sendReply(req, res, next) {
 
     const preview = text || ATTACHMENT_LABEL[attachmentKind] || ATTACHMENT_LABEL.image;
     await query(
-      'UPDATE ig_conversations SET last_message = $2, last_at = now(), unread = 0 WHERE id = $1',
+      'UPDATE ig_conversations SET last_message = $2, last_at = now(), unread = 0, bot_replies = 0 WHERE id = $1',
       [conv.id, preview]
-    );
+    ).catch(async (e) => {
+      // خادمٌ لم تصلْه ترقيةُ البائعةِ بعد: الردُّ أهمُّ من العدّاد
+      if (e.code !== '42703') throw e;
+      await query('UPDATE ig_conversations SET last_message = $2, last_at = now(), unread = 0 WHERE id = $1', [conv.id, preview]);
+    });
     res.json({ sent: true });
   } catch (err) {
     next(err);
@@ -750,7 +875,10 @@ export async function convertToOrder(req, res, next) {
 
     // نحسب الإجمالي من قاعدة البيانات (لا نثق بأسعار الواجهة) ونتأكد أنها من متجر هذا المستخدم
     const ids = items.map((i) => i.id);
-    const r = await query('SELECT id, name, price, store_id FROM products WHERE id = ANY($1::uuid[])', [ids]);
+    const r = await query('SELECT id, name, price, floor_price, store_id FROM products WHERE id = ANY($1::uuid[])', [ids])
+      .catch((e) => (e.code === '42703'
+        ? query('SELECT id, name, price, NULL AS floor_price, store_id FROM products WHERE id = ANY($1::uuid[])', [ids])
+        : Promise.reject(e)));
     if (r.rows.length === 0) return res.status(400).json({ error: 'منتجات غير صالحة.' });
     if (!r.rows.every((p) => p.store_id === conv.store_id)) {
       return res.status(400).json({ error: 'كل المنتجات يجب أن تكون من متجرك.' });
@@ -762,8 +890,16 @@ export async function convertToOrder(req, res, next) {
         const p = r.rows.find((x) => x.id === i.id);
         if (!p) return null;
         const qty = Math.max(1, parseInt(i.qty, 10) || 1);
-        subtotal += Number(p.price) * qty;
-        return { id: p.id, name: p.name, price: Number(p.price), qty, size: i.size || '', color: i.color || '' };
+        // السعرُ المتّفقُ عليه بالمحادثة: مفاصلةٌ جرت فعلاً، فلو سجّلنا الطلبَ
+        // بالسعرِ المعروضِ لصارت البائعةُ تَعِدُ بما لا يُنفَّذ. ومع ذلك لا نثقُ
+        // برقمِ الواجهة: يُقبَلُ فقط بين أرضيّةِ القطعةِ وسعرِها المعروض.
+        const floor = p.floor_price != null ? Number(p.floor_price) : Number(p.price);
+        const asked = Number(i.price);
+        const unit = Number.isFinite(asked) && asked >= floor && asked <= Number(p.price)
+          ? Math.round(asked * 100) / 100
+          : Number(p.price);
+        subtotal += unit * qty;
+        return { id: p.id, name: p.name, price: unit, qty, size: i.size || '', color: i.color || '' };
       })
       .filter(Boolean);
     if (orderItems.length === 0 || subtotal <= 0) return res.status(400).json({ error: 'طلب غير صالح.' });

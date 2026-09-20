@@ -144,7 +144,8 @@
       "voice": "Voice message",
       "editQuick": "Edit quick replies",
       "quickPlaceholder": "New quick reply…",
-      "waking": "The server is taking longer than usual — it may be updating. It will be back shortly."
+      "waking": "The server is taking longer than usual — it may be updating. It will be back shortly.",
+      "aiReply": "Auto reply"
     },
     "opost": {
       "title": "Optimus courier",
@@ -1308,5 +1309,125 @@
     "trendTitle": "Net profit — last 6 months (tap a bar to open that month)",
     "recurringTitle": "Repeat from last month",
     "recurringTip": "Expenses you logged last month that are not logged yet this month. Tapping fills the form — it does not save."
+  },
+  "salesBot": {
+    "nav": "AI Salesperson",
+    "title": "AI Salesperson",
+    "hint": "She answers your customers in your store voice while you are busy — from your real stock, and never below the price you allow.",
+    "saved": "Settings saved.",
+    "saving": "Saving…",
+    "power": {
+      "title": "Power",
+      "desc": "You decide when she speaks and on which channel. One tap turns her off.",
+      "on": "Salesperson is on",
+      "off": "Salesperson is off",
+      "onHint": "She replies on her own, following the mode you pick below.",
+      "offHint": "She replies to nobody. Every message waits for you."
+    },
+    "channels": {
+      "label": "Where does she work?",
+      "tip": "Site assistant = the chat box on your store page. Instagram = the DMs that reach your dashboard. Pick one or both.",
+      "site": "Site assistant",
+      "instagram": "Instagram DMs"
+    },
+    "mode": {
+      "label": "When does she reply?",
+      "tip": "\"Always\" answers every message. \"First message only\" greets and steps aside. \"Outside hours\" covers only the hours you are away.",
+      "always": "Always",
+      "first": "First message only",
+      "offhours": "Outside working hours"
+    },
+    "hours": {
+      "label": "Your working hours",
+      "tip": "She replies outside these hours. Times are Palestine time.",
+      "from": "From",
+      "to": "To"
+    },
+    "quota": {
+      "label": "Smart replies left this month",
+      "tip": "Smart replies have a monthly cap. When it runs out she does not go silent — she falls back to the free engine, answering stock and price straight from your inventory."
+    },
+    "stats": {
+      "replies": "Replied {{n}} times",
+      "handoffs": "Handed you {{n}} chats"
+    },
+    "freeMode": "This server has no AI provider yet, so she runs on the free engine: she answers stock and price straight from your inventory, but without open conversation.",
+    "persona": {
+      "title": "Her personality",
+      "desc": "This is your store voice. Make her talk the way you talk to your customers."
+    },
+    "tone": {
+      "label": "Tone",
+      "tip": "Warm sounds like a shop owner who knows her customer. Short answers the question and stops. Formal is polite and professional.",
+      "warm": "Warm",
+      "short": "Short",
+      "formal": "Formal"
+    },
+    "dialect": {
+      "label": "Dialect",
+      "tip": "Customers relax when they hear their own dialect. Pick the one most of yours speak.",
+      "ps": "Palestinian",
+      "sy": "Levantine",
+      "eg": "Egyptian",
+      "gulf": "Gulf",
+      "msa": "Simple Standard Arabic"
+    },
+    "signature": {
+      "label": "Disclosure line",
+      "tip": "Instagram requires customers to know they are talking to automation. It is added once on the first automated reply of a chat, not on every message.",
+      "hint": "Leave it empty and nothing is added — but writing it is better.",
+      "placeholder": "🤖 Automated reply — the owner will get back to you shortly"
+    },
+    "notes": {
+      "label": "Your own instructions",
+      "tip": "Anything she should know: delivery, areas, shipping times, or a line you always say. It overrides her taste, never the honesty rules (she never invents stock or prices).",
+      "hint": "Example: Delivery inside the West Bank is 20 ILS and takes 3 days.",
+      "placeholder": "Anything the salesperson should know about your store…"
+    },
+    "pricing": {
+      "title": "Pricing and bargaining",
+      "desc": "Pick the piece she promotes, and the lowest price she is allowed to reach."
+    },
+    "promo": {
+      "label": "Promoted piece",
+      "tip": "She offers it first to any customer who did not ask for another piece by name.",
+      "hint": "Useful while you are running a campaign on one model.",
+      "none": "No promoted piece"
+    },
+    "haggle": {
+      "label": "Allow bargaining",
+      "hint": "She lowers the price step by step, and only if the customer actually bargains — never below the floor you set for the piece.",
+      "siteNote": "Bargaining works on Instagram only. On the site the cart charges the listed price, so a discount promised there could not be honoured."
+    },
+    "steps": {
+      "label": "Bargaining steps",
+      "tip": "How many times she lowers the price before reaching your floor. One step means she gives her last price on the first push.",
+      "n": "{{n}} steps"
+    },
+    "floors": {
+      "label": "Price floor per piece",
+      "tip": "The lowest price you accept for the piece. Leave it empty and there is no bargaining on it at all. She never goes below it, however hard the customer pushes.",
+      "count": "{{n}} pieces have a floor",
+      "search": "Search for a piece…",
+      "placeholder": "Floor",
+      "empty": "No pieces by that name."
+    },
+    "try": {
+      "title": "Try her before you switch her on",
+      "desc": "Write like your customer writes and see what she answers. Nothing is sent to anyone.",
+      "offNote": "She is off right now — the trial still works, but she will not answer a real customer until you switch her on and save.",
+      "empty": "Ask her anything a customer of {{store}} would ask.",
+      "typing": "typing…",
+      "handoff": "Handed the chat to you",
+      "placeholder": "Write a customer message…",
+      "send": "Send",
+      "reset": "Start a new chat",
+      "samples": {
+        "stock": "Do you have size 38?",
+        "price": "How much is this?",
+        "haggle": "A bit pricey, best price?",
+        "complaint": "I want to return the item"
+      }
+    }
   }
 }

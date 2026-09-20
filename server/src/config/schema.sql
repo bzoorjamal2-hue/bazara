@@ -280,3 +280,29 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS suspended_by UUID REFERENCES users(id
 
 -- فئات المنصّة التي يعرّفها المدير (إضافات + إخفاء مدمجة) — كانت مكتوبةً في الكود.
 ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS platform_categories JSONB NOT NULL DEFAULT '{}'::jsonb;
+
+-- ── البائعة الآلية ────────────────────────────────────────────────────────
+-- تردُّ على الزبونة باسم المتجر حين لا تكون التاجرة على الشاشة. ما تقوله محسوبٌ
+-- عندنا لا عند النموذج: التوفّر من color_stock الحيّ، والسعر من سُلَّمٍ لا ينزل
+-- تحت floor_price. (المرجع هنا، والترقية الفعلية في ensureAccounting بـ index.js)
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_enabled BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_channels JSONB NOT NULL DEFAULT '["site"]'::jsonb;
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_mode VARCHAR(12) NOT NULL DEFAULT 'always'; -- always | first | offhours
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_tone VARCHAR(12) NOT NULL DEFAULT 'warm';
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_dialect VARCHAR(12) NOT NULL DEFAULT 'ps';
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_hours JSONB NOT NULL DEFAULT '{"from":"09:00","to":"21:00"}'::jsonb;
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_haggle BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_haggle_steps SMALLINT NOT NULL DEFAULT 2;
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_signature VARCHAR(120) NOT NULL DEFAULT '';
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_notes TEXT NOT NULL DEFAULT '';
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_promo_product UUID;
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_quota_used INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_quota_month VARCHAR(7) NOT NULL DEFAULT '';
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_replies_total INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_handoffs_total INTEGER NOT NULL DEFAULT 0;
+-- أدنى سعر تقبله التاجرة لهذه القطعة. NULL = لا مفاصلة عليها.
+ALTER TABLE products ADD COLUMN IF NOT EXISTS floor_price NUMERIC(10,2);
+ALTER TABLE ig_conversations ADD COLUMN IF NOT EXISTS bot_paused BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE ig_conversations ADD COLUMN IF NOT EXISTS bot_replies SMALLINT NOT NULL DEFAULT 0;
+ALTER TABLE ig_conversations ADD COLUMN IF NOT EXISTS bot_stage SMALLINT NOT NULL DEFAULT 0;
+ALTER TABLE ig_messages ADD COLUMN IF NOT EXISTS ai BOOLEAN NOT NULL DEFAULT false;

@@ -30,6 +30,7 @@ import { epsWebhook, syncAllEpsStores } from './controllers/eps.controller.js';
 import goboxRoutes from './routes/gobox.routes.js';
 import { goboxWebhook, syncAllGoboxStores } from './controllers/gobox.controller.js';
 import instagramRoutes from './routes/instagram.routes.js';
+import botRoutes from './routes/bot.routes.js';
 import { verifyWebhook, receiveWebhook, igLoginRedirect, igCallback, igChoose } from './controllers/instagram.controller.js';
 import { paytabsCallback } from './controllers/order.controller.js';
 import { subscriptionPaytabsCallback } from './controllers/subscription.controller.js';
@@ -158,6 +159,7 @@ app.use('/api/opost', opostRoutes);
 app.use('/api/eps', epsRoutes);
 app.use('/api/gobox', goboxRoutes);
 app.use('/api/instagram', instagramRoutes);
+app.use('/api/bot', botRoutes);
 
 // مسارات SEO (على الجذر)
 app.get('/robots.txt', robots);
@@ -633,6 +635,41 @@ END $$;`,
     // صورةُ رأسِ لوحةِ التحكّمِ ودرجِها — تختارُها التاجرةُ بنفسِها. وإن تركتها
     // فارغةً أخذنا أوّلَ بانرٍ من سلايدرِ متجرِها، فلا يبقى الرأسُ لوحاً داكناً عامّاً.
     "ALTER TABLE stores ADD COLUMN IF NOT EXISTS panel_image VARCHAR(500) NOT NULL DEFAULT '';",
+    // ═══ البائعة الآلية ═══
+    // تردُّ على الزبونةِ باسمِ المتجرِ حين لا تكونُ التاجرةُ على الشاشة. وكلُّ ما
+    // تقولُه محسوبٌ عندنا لا عندَ النموذج: التوفّرُ من العمودِ الحيِّ، والسعرُ من
+    // سُلَّمٍ لا ينزلُ تحتَ أرضيّةِ التاجرة.
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_enabled BOOLEAN NOT NULL DEFAULT false;",
+    // القنواتُ التي تعملُ فيها: مساعِدةُ الموقعِ و/أو رسائلُ إنستغرام
+    `ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_channels JSONB NOT NULL DEFAULT '["site"]'::jsonb;`,
+    // always (دائماً) · first (أوّلُ رسالةٍ فقط) · offhours (خارجَ الدوامِ وحدَه)
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_mode VARCHAR(12) NOT NULL DEFAULT 'always';",
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_tone VARCHAR(12) NOT NULL DEFAULT 'warm';",
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_dialect VARCHAR(12) NOT NULL DEFAULT 'ps';",
+    `ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_hours JSONB NOT NULL DEFAULT '{"from":"09:00","to":"21:00"}'::jsonb;`,
+    // المفاصلة: مطفأةٌ افتراضاً، ولا تنزلُ إلّا لقطعةٍ وضعت لها التاجرةُ أرضيّةً.
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_haggle BOOLEAN NOT NULL DEFAULT false;",
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_haggle_steps SMALLINT NOT NULL DEFAULT 2;",
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_signature VARCHAR(120) NOT NULL DEFAULT '';",
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_notes TEXT NOT NULL DEFAULT '';",
+    // المنتجُ المروَّج: تُقدّمُه البائعةُ أوّلاً وتبني عليه العرض
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_promo_product UUID;",
+    // حصّةُ الشهرِ الذكيّ: تُستهلَكُ بالردودِ عبرَ مزوّدِ الذكاء، وبعدَها تعملُ
+    // البائعةُ بالمحرّكِ المجّانيِّ بدلَ أن تصمت.
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_quota_used INTEGER NOT NULL DEFAULT 0;",
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_quota_month VARCHAR(7) NOT NULL DEFAULT '';",
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_replies_total INTEGER NOT NULL DEFAULT 0;",
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_handoffs_total INTEGER NOT NULL DEFAULT 0;",
+    // سعرُ المفاصلة: أدنى سعرٍ تقبلُه التاجرةُ لهذه القطعة. NULL = لا مفاصلةَ عليها.
+    "ALTER TABLE products ADD COLUMN IF NOT EXISTS floor_price NUMERIC(10,2);",
+    // حالةُ البائعةِ داخلَ المحادثة: أَوقفَتْها التاجرةُ بردِّها · كم ردّاً آليّاً
+    // متتالياً بلا بشر · وأيَّ درجةٍ من سُلَّمِ التنازلِ بلغَتْ.
+    "ALTER TABLE ig_conversations ADD COLUMN IF NOT EXISTS bot_paused BOOLEAN NOT NULL DEFAULT false;",
+    "ALTER TABLE ig_conversations ADD COLUMN IF NOT EXISTS bot_replies SMALLINT NOT NULL DEFAULT 0;",
+    "ALTER TABLE ig_conversations ADD COLUMN IF NOT EXISTS bot_stage SMALLINT NOT NULL DEFAULT 0;",
+    // الرسالةُ الصادرةُ: أَمِنَ البائعةِ الآليّةِ هي أم من يدِ التاجرة؟ الوسمُ يظهرُ
+    // بالمحادثةِ فلا تظنُّ التاجرةُ أنّها كتبَتْها بنفسِها.
+    "ALTER TABLE ig_messages ADD COLUMN IF NOT EXISTS ai BOOLEAN NOT NULL DEFAULT false;",
   ];
   // كل جملة على حدة: فشل واحدة لا يمنع البقية
   for (const sql of steps) {
