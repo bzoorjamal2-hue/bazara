@@ -145,7 +145,7 @@ async function processWebhook(body) {
       const customerId = isEcho ? businessId : senderId;
 
       const sr = await query(
-        'SELECT id, user_id, name, ig_access_token FROM stores WHERE ig_user_id = $1 AND ig_connected = true',
+        'SELECT id, user_id, name, slug, ig_access_token FROM stores WHERE ig_user_id = $1 AND ig_connected = true',
         [storeIgId]
       );
       const store = sr.rows[0];
@@ -244,6 +244,27 @@ async function processWebhook(body) {
 
 // ═════════════════════ البائعة الآلية ═════════════════════
 
+// لقطةُ القطعةِ الساكنة. كلُّ منتجاتِ المنصّةِ فيديو، وإرسالُ الفيديو نفسِه يعني
+// أن تجلبَه خوادمُ ميتا من حسابِنا مع كلِّ محادثة — والحسابُ مجّانيٌّ بخمسةٍ
+// وعشرينَ كريدت، وقد تعطَّلَ مرّةً فاختفت صورُ الموقعِ كلُّها. فنرسلُ لقطةً بمئةِ
+// كيلوبايت، والفيديو يصلُ الزبونةَ من الرابطِ بصفحةِ المنتجِ بلا كلفةٍ علينا.
+function mediaPoster(prod) {
+  const img = Array.isArray(prod && prod.images) ? prod.images.filter(Boolean)[0] : '';
+  if (img) {
+    return img.includes('/upload/')
+      ? img.replace('/upload/', '/upload/f_jpg,q_auto,w_720,c_limit/')
+      : img;
+  }
+  const v = String((prod && prod.video_url) || '');
+  const m = v.match(/^(https?:\/\/[^/]+\/[^/]+\/video\/upload\/)(.+)$/);
+  if (!m) return '';
+  const segs = m[2].split('/');
+  let vi = segs.findIndex((x) => /^v\d+$/.test(x));
+  if (vi === -1) vi = segs.length - 1;
+  const rest = segs.slice(vi).join('/').replace(/\.[a-z0-9]+(\?.*)?$/i, '');
+  return `${m[1]}so_0,f_jpg,q_auto,w_720,c_limit/${rest}.jpg`;
+}
+
 // كم دقيقةً نعتبرُ التاجرةَ فيها «على الشاشة» بعدَ ردِّها؟ ردُّها بيدِها يعني أنّها
 // موجودة، ومقاطعتُها بردٍّ آليٍّ في منتصفِ حديثِها أسوأُ من ألّا نردَّ أصلاً.
 const OWNER_PRESENT_MINUTES = 10;
@@ -303,16 +324,58 @@ async function maybeAutoReply({ store, convId, customerId, text, isNew, who }) {
   });
   if (!out.reply) return;
 
+  // القطعةُ التي تكلّمَتْ عنها: رابطُها يحوّلُ الحديثَ إلى طلبٍ بضغطة، ولقطتُها
+  // تُري الزبونةَ ما يُقالُ لها. بلا الرابطِ تبقى تدوّرُ على القطعةِ بنفسِها،
+  // وهناك يضيعُ أكثرُ البيع.
+  let prod = null;
+  if (out.ids && out.ids.length) {
+    const pr = await query(
+      `SELECT id, name, images, video_url FROM products
+       WHERE id = $1 AND store_id = $2 AND hidden_at IS NULL`,
+      [out.ids[0], store.id]
+    ).catch(() => ({ rows: [] }));
+    prod = pr.rows[0] || null;
+  }
+  const site = (process.env.PUBLIC_SITE_URL || 'https://bazarastore.site').replace(/\/$/, '');
+  const link = prod && store.slug ? `${site}/store/${store.slug}/product/${prod.id}` : '';
+
   // الإفصاح: سياسةُ المراسلةِ عندَ Meta تطلبُ أن تعرفَ الزبونةُ أنّها تكلّمُ آليّاً،
   // والتاجرةُ تختارُ صيغتَه. يُضافُ مرّةً واحدةً بأوّلِ ردٍّ آليٍّ بالمحادثةِ فقط —
   // تكرارُه بكلِّ رسالةٍ يجعلُ الحديثَ آليّاً أكثرَ ممّا هو.
   const sign = String(bot.bot_signature || '').trim();
-  const body = (sign && Number(conv.bot_replies) === 0) ? `${out.reply}
+  const withLink = link ? `${out.reply}
+${link}` : out.reply;
+  const body = (sign && Number(conv.bot_replies) === 0) ? `${withLink}
 
-${sign}` : out.reply;
+${sign}` : withLink;
 
   const token = decrypt(store.ig_access_token);
   if (!token) return;
+
+  // اللقطةُ أوّلاً ثمّ النصُّ تحتَها — ترتيبُ ما تراه الزبونةُ بمحادثتِها.
+  // ولا تُرسَلُ القطعةُ الواحدةُ مرّتين: البائعةُ قد تعودُ لذكرِها بردٍّ تالٍ،
+  // وإعادةُ الإرسالِ جلبٌ ثانٍ من حسابِ الوسائطِ بلا فائدةٍ للزبونة.
+  const poster = prod ? mediaPoster(prod) : '';
+  if (poster && poster.startsWith('https://res.cloudinary.com/')) {
+    const seen = await query(
+      `SELECT 1 FROM ig_messages WHERE conversation_id = $1 AND attachment_url = $2 LIMIT 1`,
+      [convId, poster]
+    ).catch(() => ({ rows: [] }));
+    if (!seen.rows.length) {
+      try {
+        const sent = await sendAttachment(token, customerId, poster, 'image');
+        await query(
+          `INSERT INTO ig_messages (conversation_id, mid, direction, text, attachment_url, attachment_type, ai)
+           VALUES ($1, $2, 'out', '', $3, 'image', true) ON CONFLICT (mid) DO NOTHING`,
+          [convId, sent?.message_id || null, poster]
+        );
+      } catch (e) {
+        // اللقطةُ زينةٌ لا ركن: فشلُها لا يمنعُ الردَّ نفسَه من الوصول
+        console.error('⚠️ لقطة المنتج:', e.message);
+      }
+    }
+  }
+
   let result;
   try {
     result = await sendMessage(token, customerId, body);
