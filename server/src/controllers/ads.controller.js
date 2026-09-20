@@ -21,7 +21,13 @@ const STATUSES = ['draft', 'ready', 'published'];
 const MAX_CAMPAIGNS = 60; // طابورٌ لا مستودع
 
 async function getUserStore(userId) {
-  const r = await query('SELECT id, name, slug, logo_url, theme_color FROM stores WHERE user_id = $1', [userId]);
+  // اللهجةُ اختارَتها التاجرةُ مرّةً بتبويبِ البائعة، فلا تُسألُ عنها ثانيةً هنا:
+  // صوتُ المتجرِ واحدٌ بالمحادثةِ والإعلان.
+  const cols = 'id, name, slug, logo_url, theme_color, bot_dialect';
+  const r = await query(`SELECT ${cols} FROM stores WHERE user_id = $1`, [userId])
+    .catch((e) => (e.code === '42703'
+      ? query("SELECT id, name, slug, logo_url, theme_color, 'ps' AS bot_dialect FROM stores WHERE user_id = $1", [userId])
+      : Promise.reject(e)));
   return r.rows[0] || null;
 }
 
@@ -107,6 +113,7 @@ export async function generateAd(req, res, next) {
       store,
       goal: GOAL_KEYS.includes(req.body.goal) ? req.body.goal : 'sales',
       tone: ['warm', 'luxury', 'playful'].includes(req.body.tone) ? req.body.tone : 'warm',
+      dialect: store.bot_dialect || 'ps',
     });
     res.json(out);
   } catch (err) { next(err); }

@@ -423,10 +423,10 @@ function CreativeCard({ product, store, headline, sub, facts, creative, setCreat
             aria-checked={creative.showPrice}
             onClick={() => setCreative((c) => ({ ...c, showPrice: !c.showPrice }))}
             className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-start transition ${
-              creative.showPrice ? 'border-gold-400/40 bg-gold-400/10' : 'border-gold-400/20 bg-black/20'
+              creative.showPrice ? 'border-emerald-400/40 bg-emerald-500/10' : 'border-gold-400/20 bg-black/20'
             }`}
           >
-            <span className={`relative h-6 w-11 shrink-0 rounded-full transition ${creative.showPrice ? 'bg-[#999795]' : 'bg-stone-500/50'}`}>
+            <span className={`relative h-6 w-11 shrink-0 rounded-full transition ${creative.showPrice ? 'bg-emerald-500' : 'bg-stone-500/50'}`}>
               <span className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all ${creative.showPrice ? 'start-6' : 'start-1'}`} />
             </span>
             <span className="min-w-0 flex-1 text-xs font-bold text-stone-200">{t('adStudio.creative.showPrice')}</span>

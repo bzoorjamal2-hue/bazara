@@ -16,6 +16,19 @@ const GOALS = {
 
 export const GOAL_KEYS = Object.keys(GOALS);
 
+// اللهجةُ تُفرَضُ بأمثلةٍ لا باسمِها. قلنا للنموذجِ «بلهجةٍ فلسطينيّةٍ محكيّة»
+// فكتبَ «حطّ في الكارت الحين» و«شنو اللي تدوّري عليه» — خليجيّةٌ صريحة. النماذجُ
+// تنجرفُ إلى أشهرِ لهجةٍ بتدريبِها ما لم تُمسَك بكلماتٍ بعينِها. وهذه الخريطةُ
+// نفسُها تحكمُ البائعةَ الآليّة، فيخرجُ صوتُ المتجرِ واحداً بالمحادثةِ والإعلان.
+const DIALECTS = {
+  ps: 'الفلسطينيّة المحكيّة: بدّي، كتير، مش، هيك، منيح، شو، لسّا، هلّق، عنّا.',
+  sy: 'الشاميّة المحكيّة: بدّي، كتير، شو، هلّق، منيح، هيك.',
+  eg: 'المصريّة المحكيّة: عايزة، أوي، إزاي، دلوقتي، كده، جامد.',
+  gulf: 'الخليجيّة المحكيّة: أبغى، وايد، شنو، الحين، زين، تبين.',
+  msa: 'العربيّة الفصحى المبسّطة بلا تقعّر.',
+};
+export const DIALECT_KEYS = Object.keys(DIALECTS);
+
 // ───────────────────── حقائقُ القطعة ─────────────────────
 
 function inStockBits(p) {
@@ -134,7 +147,7 @@ const SCHEMA = {
   required: ['copies'],
 };
 
-function systemPrompt(p, store, goal, tone) {
+function systemPrompt(p, store, goal, tone, dialect) {
   const { colors, sizes } = inStockBits(p);
   const sale = saleInfo(p);
   const facts = [
@@ -151,12 +164,15 @@ function systemPrompt(p, store, goal, tone) {
 اكتبي **ثلاثَ نسخٍ مختلفةٍ فعلاً** لإعلانٍ واحدٍ على فيسبوك وإنستغرام لهذه القطعة. مختلفةٌ بالزاويةِ لا بالكلمات: واحدةٌ مباشرةٌ بالعرضِ والسعر، وواحدةٌ تخاطبُ شعورَ الزبونةِ ومناسبتَها، وواحدةٌ تبدأُ بسؤالٍ أو بحاجةٍ ملموسة.
 
 الهدفُ الإعلانيّ: ${GOALS[goal]?.ar || 'مبيعات'}.
-النبرة: ${tone === 'luxury' ? 'راقيةٌ هادئةٌ تليقُ بقطعةٍ ثمينة' : tone === 'playful' ? 'مرحةٌ خفيفةٌ قريبةٌ من البنات' : 'دافئةٌ قريبةٌ بلهجةٍ فلسطينيّةٍ محكيّة'}.
+النبرة: ${tone === 'luxury' ? 'راقيةٌ هادئة' : tone === 'playful' ? 'مرحةٌ خفيفة' : 'دافئةٌ قريبة'}.
+**اللهجة (إلزاميّة): ${DIALECTS[dialect] || DIALECTS.ps}** لا تكتبي بلهجةٍ أخرى ولا بكلماتٍ من لهجةٍ أخرى مهما بدت مألوفة.
+المخاطَبةُ بصيغةِ المؤنّثِ دائماً (بتحبّي، إلك، شوفي) — الجمهورُ سيّدات.
 
 قواعدُ لا تُكسَر:
 - لا تخترعي لوناً ولا نمرةً ولا سعراً ولا خصماً غيرَ المكتوبِ بالحقائقِ أدناه. القطعةُ التي لا عرضَ عليها لا تُكتَبُ لها كلمةُ «خصم».
 - لا تَعِدي بتوصيلٍ مجّانيٍّ ولا بموعدِ وصولٍ ولا بإرجاعٍ — لا نعرفُ سياسةَ هذا المتجر.
 - لا تقولي «الأفضل» ولا «الأرخص» ولا أيَّ ادّعاءٍ لا يُثبَت.
+- النمرُ تُذكَرُ كما هي مفصولةً بفواصل، ولا تُحوَّلُ إلى مدى: «٣٦ إلى ٤٤» تَعِدُ بنمرٍ بينهما قد تكونُ نفدت.
 - primary: أربعةُ أسطرٍ كحدٍّ أقصى، كلُّ سطرٍ قصير. لا فقراتٍ طويلة. إيموجي واحدٌ أو اثنانِ بالنسخةِ كلِّها.
 - headline: ستُّ كلماتٍ كحدٍّ أقصى — تُقرأُ بلمحةٍ فوقَ الصورة.
 - hashtags: من أربعةٍ إلى ستّةٍ عربيّةٍ مناسبة.
@@ -252,14 +268,14 @@ function sanitize(out, p, goal) {
 
 // ───────────────────── المدخلُ الوحيد ─────────────────────
 
-export async function writeAd({ product, store, goal = 'sales', tone = 'warm' }) {
+export async function writeAd({ product, store, goal = 'sales', tone = 'warm', dialect = 'ps' }) {
   const g = GOAL_KEYS.includes(goal) ? goal : 'sales';
   let copies = [];
   let usedAi = false;
 
   if (process.env.ANTHROPIC_API_KEY || process.env.GEMINI_API_KEY) {
     try {
-      const system = systemPrompt(product, store, g, tone);
+      const system = systemPrompt(product, store, g, tone, DIALECTS[dialect] ? dialect : 'ps');
       const out = process.env.ANTHROPIC_API_KEY ? await callClaude(system) : await callGemini(system);
       copies = sanitize(out, product, g);
       usedAi = copies.length > 0;

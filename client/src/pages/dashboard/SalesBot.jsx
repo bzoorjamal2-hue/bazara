@@ -305,10 +305,10 @@ function PricingCard({ s, set, products, setProducts, onError }) {
         aria-checked={s.haggle}
         onClick={() => set({ haggle: !s.haggle })}
         className={`flex w-full items-center gap-3 rounded-2xl border p-4 text-start transition ${
-          s.haggle ? 'border-gold-400/40 bg-gold-400/10' : 'border-gold-400/20 bg-black/20'
+          s.haggle ? 'border-emerald-400/40 bg-emerald-500/10' : 'border-gold-400/20 bg-black/20'
         }`}
       >
-        <span className={`relative h-7 w-12 shrink-0 rounded-full transition ${s.haggle ? 'bg-[#999795]' : 'bg-stone-500/50'}`}>
+        <span className={`relative h-7 w-12 shrink-0 rounded-full transition ${s.haggle ? 'bg-emerald-500' : 'bg-stone-500/50'}`}>
           <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${s.haggle ? 'start-6' : 'start-1'}`} />
         </span>
         <span className="min-w-0 flex-1">
