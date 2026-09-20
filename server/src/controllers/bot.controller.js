@@ -31,6 +31,8 @@ function mapBot(b) {
     signature: b.bot_signature || '',
     notes: b.bot_notes || '',
     promoProduct: b.bot_promo_product || '',
+    testOnly: Boolean(b.bot_test_only),
+    testAccounts: Array.isArray(b.bot_test_accounts) ? b.bot_test_accounts : [],
     quotaUsed: Number(b.bot_quota_used) || 0,
     quotaLeft: quotaLeft(b),
     quotaTotal: MONTHLY_QUOTA,
@@ -96,7 +98,8 @@ export async function saveBotSettings(req, res, next) {
       `UPDATE stores SET
          bot_enabled = $2, bot_channels = $3, bot_mode = $4, bot_tone = $5, bot_dialect = $6,
          bot_hours = $7, bot_haggle = $8, bot_haggle_steps = $9, bot_signature = $10,
-         bot_notes = $11, bot_promo_product = $12
+         bot_notes = $11, bot_promo_product = $12,
+         bot_test_only = $13, bot_test_accounts = $14
        WHERE id = $1`,
       [
         store.id,
@@ -111,6 +114,12 @@ export async function saveBotSettings(req, res, next) {
         String(b.signature || '').trim().slice(0, 120),
         String(b.notes || '').trim().slice(0, 2000),
         promo,
+        b.testOnly === true,
+        // الأسماءُ تُنظَّفُ هنا لا بالواجهة: ‎@ وحروفٌ كبيرةٌ ومسافاتٌ تجعلُ
+        // المقارنةَ تفشلُ صامتةً، فتظنُّ التاجرةُ أنّها بأمانٍ وهي ليست فيه.
+        JSON.stringify((Array.isArray(b.testAccounts) ? b.testAccounts : [])
+          .map((x) => String(x).trim().replace(/^@+/, '').toLowerCase())
+          .filter(Boolean).slice(0, 10)),
       ]
     );
     const bot = await loadBot(store.id);

@@ -672,6 +672,11 @@ END $$;`,
     // الرسالةُ الصادرةُ: أَمِنَ البائعةِ الآليّةِ هي أم من يدِ التاجرة؟ الوسمُ يظهرُ
     // بالمحادثةِ فلا تظنُّ التاجرةُ أنّها كتبَتْها بنفسِها.
     "ALTER TABLE ig_messages ADD COLUMN IF NOT EXISTS ai BOOLEAN NOT NULL DEFAULT false;",
+    // وضعُ التجربة: البائعةُ تردُّ على حساباتٍ بعينِها وتتجاهلُ كلَّ من سواها.
+    // بلا هذا كانت أوّلُ تجربةٍ على حسابٍ حقيقيٍّ تعني أن تتكلّمَ البائعةُ مع
+    // زبوناتٍ حقيقيّاتٍ قبل أن تثقَ بها التاجرةُ ولو مرّةً واحدة.
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_test_only BOOLEAN NOT NULL DEFAULT false;",
+    `ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_test_accounts JSONB NOT NULL DEFAULT '[]'::jsonb;`,
     // ═══ مصنع الإعلانات ═══
     // حملةٌ محفوظةٌ بالطابور: نصوصُها وجمهورُها وميزانيتُها و**وصفةُ** صورتِها لا
     // الصورةُ نفسُها. الصورةُ تُرسَمُ بمتصفّحِ التاجرةِ متى شاءت — فلا بايتَ يُرفَعُ

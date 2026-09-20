@@ -4,7 +4,7 @@ import { query } from '../config/db.js';
 import { encrypt, decrypt } from '../config/opost.js';
 import { notifyUser } from '../utils/notify.js';
 import {
-  loadBot, botActiveNow, agentReply, countReply, MAX_BOT_REPLIES,
+  loadBot, botActiveNow, agentReply, countReply, MAX_BOT_REPLIES, testModeAllows,
 } from '../utils/salesAgent.js';
 import {
   isInstagramConfigured,
@@ -260,7 +260,8 @@ async function maybeAutoReply({ store, convId, customerId, text, isNew, who }) {
   let conv;
   try {
     const r = await query(
-      `SELECT bot_paused, bot_replies, bot_stage FROM ig_conversations WHERE id = $1`,
+      `SELECT bot_paused, bot_replies, bot_stage, customer_username, customer_name
+       FROM ig_conversations WHERE id = $1`,
       [convId]
     );
     conv = r.rows[0];
@@ -269,6 +270,10 @@ async function maybeAutoReply({ store, convId, customerId, text, isNew, who }) {
     throw err;
   }
   if (!conv || conv.bot_paused) return;
+
+  // وضعُ التجربة: لا تُكلَّمُ إلّا الحساباتُ المذكورةُ بالاسم. ويُفحَصُ قبلَ كلِّ
+  // شيءٍ آخرَ ليبقى الحارسُ واحداً لا يُلتَفُّ عليه من أيِّ مسار.
+  if (!testModeAllows(bot, conv.customer_username)) return;
   if (Number(conv.bot_replies) >= MAX_BOT_REPLIES) return; // حلقةٌ آليّةٌ بلا بشر: نصمتُ ونتركُها للتاجرة
 
   // هل ردّت التاجرةُ بيدِها قريباً؟ (ردُّها من تطبيقِ إنستغرام يصلُنا echo ويُخزَّنُ

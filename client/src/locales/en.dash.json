@@ -1428,6 +1428,12 @@
         "haggle": "A bit pricey, best price?",
         "complaint": "I want to return the item"
       }
+    },
+    "test": {
+      "label": "Test mode",
+      "hint": "She replies only to the accounts you list below and ignores everyone else. Keep it on until you trust her.",
+      "placeholder": "Instagram username (without @)",
+      "empty": "The list is empty — she will reply to nobody. Add an account or switch test mode off."
     }
   },
   "adStudio": {

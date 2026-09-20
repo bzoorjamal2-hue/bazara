@@ -336,3 +336,7 @@ ALTER TABLE ad_campaigns ADD COLUMN IF NOT EXISTS meta_ad_id       VARCHAR(40) D
 ALTER TABLE ad_campaigns ADD COLUMN IF NOT EXISTS meta_status      VARCHAR(12) NOT NULL DEFAULT '';
 ALTER TABLE stores ADD COLUMN IF NOT EXISTS ads_account_id VARCHAR(40) NOT NULL DEFAULT '';
 ALTER TABLE stores ADD COLUMN IF NOT EXISTS ads_currency   VARCHAR(8)  NOT NULL DEFAULT '';
+
+-- وضع التجربة: البائعة تردّ على حسابات إنستغرام المذكورة وحدها
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_test_only BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_test_accounts JSONB NOT NULL DEFAULT '[]'::jsonb;

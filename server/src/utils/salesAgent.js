@@ -46,7 +46,8 @@ const money = (n) => Math.round(Number(n) * 100) / 100;
 
 export const BOT_COLUMNS = `bot_enabled, bot_channels, bot_mode, bot_tone, bot_dialect,
   bot_hours, bot_haggle, bot_haggle_steps, bot_signature, bot_notes, bot_promo_product,
-  bot_quota_used, bot_quota_month, bot_replies_total, bot_handoffs_total`;
+  bot_quota_used, bot_quota_month, bot_replies_total, bot_handoffs_total,
+  bot_test_only, bot_test_accounts`;
 
 export async function loadBot(storeId) {
   try {
@@ -57,6 +58,19 @@ export async function loadBot(storeId) {
     if (err.code === '42703') return null;
     throw err;
   }
+}
+
+// اسمُ المستخدمِ يُكتَبُ بأشكال: ‎@name أو Name أو بمسافات. نوحّدُه قبلَ المقارنةِ
+// كي لا يفشلَ الحارسُ على فرقِ حرفٍ كبيرٍ أو علامةِ ‎@.
+const normUser = (s) => String(s || '').trim().replace(/^@+/, '').toLowerCase();
+
+// وضعُ التجربة: قائمةٌ فارغةٌ مع تشغيلِ الوضعِ تعني **لا أحد** — لا الجميع.
+// الفشلُ هنا يجبُ أن يكونَ إلى الصمتِ لا إلى الكلام.
+export function testModeAllows(bot, username) {
+  if (!bot?.bot_test_only) return true;
+  const list = Array.isArray(bot.bot_test_accounts) ? bot.bot_test_accounts.map(normUser) : [];
+  const u = normUser(username);
+  return Boolean(u) && list.includes(u);
 }
 
 function channels(bot) {

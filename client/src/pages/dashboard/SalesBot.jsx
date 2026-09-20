@@ -5,7 +5,7 @@ import Select from '../../components/Select.jsx';
 import { PageHead, SectionHead, Field, Tip } from '../../components/FormField.jsx';
 import {
   SparkleIcon, InstagramIcon, StoreIcon, CheckIcon, WarnIcon, ClockIcon, TagIcon,
-  CashIcon, BoltIcon, SearchIcon, UserIcon,
+  CashIcon, BoltIcon, SearchIcon, UserIcon, ShieldIcon, XIcon,
 } from '../../components/icons.jsx';
 import { cldThumb } from '../../utils/cloudinary.js';
 
@@ -147,6 +147,44 @@ export default function SalesBot() {
           </div>
         </Field>
 
+        {/* وضعُ التجربة: يظهرُ حين تكونُ قناةُ إنستغرام مفتوحةً وحدَها — فهو حارسُها.
+            مساعِدةُ الموقعِ بلا هويّةٍ للزائر، فلا معنى لقائمةِ أسماءٍ فيها. */}
+        {chan.has('instagram') && (
+          <div className={`rounded-2xl border p-4 ${s.testOnly ? 'border-emerald-400/40 bg-emerald-500/10' : 'border-gold-400/20 bg-black/20'}`}>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={s.testOnly}
+              onClick={() => set({ testOnly: !s.testOnly })}
+              className="flex w-full items-center gap-3 text-start"
+            >
+              <span className={`relative h-7 w-12 shrink-0 rounded-full transition ${s.testOnly ? 'bg-emerald-500' : 'bg-stone-500/50'}`}>
+                <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${s.testOnly ? 'start-6' : 'start-1'}`} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center gap-1.5 text-sm font-extrabold text-stone-100">
+                  <ShieldIcon className="h-4 w-4" /> {t('salesBot.test.label')}
+                </span>
+                <span className="mt-0.5 block text-[11px] leading-snug text-stone-400">{t('salesBot.test.hint')}</span>
+              </span>
+            </button>
+
+            {s.testOnly && (
+              <div className="mt-3">
+                <TestAccounts
+                  values={s.testAccounts || []}
+                  onChange={(v) => set({ testAccounts: v })}
+                />
+                {(s.testAccounts || []).length === 0 && (
+                  <p className="mt-2 flex items-start gap-2 rounded-xl border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-[11px] font-semibold leading-relaxed text-amber-300">
+                    <WarnIcon className="mt-px h-3.5 w-3.5 shrink-0" /> {t('salesBot.test.empty')}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         <Field label={t('salesBot.mode.label')} tip={t('salesBot.mode.tip')}>
           <Select
             value={s.mode}
@@ -254,6 +292,45 @@ export default function SalesBot() {
       {/* ═══ التجربة ═══ */}
       <TryBox storeName={storeName} enabled={s.enabled} />
     </div>
+  );
+}
+
+// حساباتُ التجربة: أسماءُ إنستغرام التي يُسمَحُ للبائعةِ بمكالمتِها وحدَها.
+function TestAccounts({ values, onChange }) {
+  const { t } = useTranslation();
+  const [text, setText] = useState('');
+  const add = () => {
+    // نقبلُ ‎@name وname معاً وننظّفُهما — الفرقُ بينهما يُفشلُ الحارسَ صامتاً
+    const v = text.trim().replace(/^@+/, '').toLowerCase();
+    if (!v || values.includes(v) || values.length >= 10) { setText(''); return; }
+    onChange([...values, v]);
+    setText('');
+  };
+  return (
+    <>
+      <div className="flex gap-2">
+        <input
+          className="input flex-1"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } }}
+          placeholder={t('salesBot.test.placeholder')}
+        />
+        <button type="button" onClick={add} className="btn-ghost shrink-0 px-4 text-xs">{t('common.add')}</button>
+      </div>
+      {values.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {values.map((v) => (
+            <span key={v} className="inline-flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-300">
+              @{v}
+              <button type="button" onClick={() => onChange(values.filter((x) => x !== v))} className="text-emerald-300/70 transition hover:text-red-300">
+                <XIcon className="h-3 w-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+    </>
   );
 }
 
