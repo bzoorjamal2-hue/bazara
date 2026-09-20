@@ -235,6 +235,9 @@ async function callGemini(system) {
 function sanitize(out, p, goal) {
   const sale = saleInfo(p);
   const price = Number(p.price);
+  const { sizes } = inStockBits(p);
+  const sizeSet = new Set(sizes.map(String));
+  const sizeList = sizes.join('، ');
   const clean = [];
   for (const c of Array.isArray(out.copies) ? out.copies : []) {
     let primary = String(c?.primary || '').trim().slice(0, 600);
@@ -253,6 +256,16 @@ function sanitize(out, p, goal) {
     primary = primary.replace(/(\d+(?:[.,]\d+)?)\s*(₪|شيكل|شيقل|ils)/gi, (m, n, cur) => (
       allowed.has(String(Number(String(n).replace(',', '.')))) ? m : `${price} ${cur}`
     ));
+
+    // «٣٦ لـ ٤٤» تَعِدُ بنمرٍ بينهما قد تكونُ نفدت. نستبدلُها بالقائمةِ الحقيقيّةِ
+    // متى كان طرفاها نمرتينِ متوفّرتينِ فعلاً — فلا نلمسُ رقماً ليس مقاساً.
+    if (sizeList) {
+      const range = /(\d{2})\s*(?:إلى|الى|لحدّ|لحد|حتى|لـ|ل|[-–—])\s*(\d{2})/g;
+      const fix = (m, a, b) => (sizeSet.has(a) && sizeSet.has(b) ? sizeList : m);
+      primary = primary.replace(range, fix);
+      headline = headline.replace(range, fix);
+      primary = primary.replace(/(كلّ|كل)\s+(المقاسات|النمر)(\s+متوفّرة|\s+موجودة)?/g, sizeList);
+    }
 
     clean.push({
       headline,
