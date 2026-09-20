@@ -327,3 +327,12 @@ CREATE TABLE IF NOT EXISTS ad_campaigns (
     published_at TIMESTAMPTZ
 );
 CREATE INDEX IF NOT EXISTS idx_adcamp_store ON ad_campaigns(store_id, created_at DESC);
+
+-- معرّفات ما أُنشئ عند ميتا لكل حملة، والحساب الإعلاني المربوط لكل متجر
+ALTER TABLE ad_campaigns ADD COLUMN IF NOT EXISTS meta_account_id  VARCHAR(40) DEFAULT '';
+ALTER TABLE ad_campaigns ADD COLUMN IF NOT EXISTS meta_campaign_id VARCHAR(40) DEFAULT '';
+ALTER TABLE ad_campaigns ADD COLUMN IF NOT EXISTS meta_adset_id    VARCHAR(40) DEFAULT '';
+ALTER TABLE ad_campaigns ADD COLUMN IF NOT EXISTS meta_ad_id       VARCHAR(40) DEFAULT '';
+ALTER TABLE ad_campaigns ADD COLUMN IF NOT EXISTS meta_status      VARCHAR(12) NOT NULL DEFAULT '';
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS ads_account_id VARCHAR(40) NOT NULL DEFAULT '';
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS ads_currency   VARCHAR(8)  NOT NULL DEFAULT '';
