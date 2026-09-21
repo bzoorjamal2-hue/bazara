@@ -279,6 +279,75 @@ const stuck = (await query(
 t('لا محادثةَ عالقةٌ بلا مَن يردُّ عليها',
   stuck.every((c) => shouldResume({ pausedAt: c.bot_paused_at })), stuck.length + ' موقوفة');
 
+H('١٠ب) صدى ميتا لا يجعلُ ردَّ البائعةِ يبدو ردَّ التاجرة');
+// السباقُ الذي أسكتَ البائعةَ بعدَ ردٍّ واحد: ميتا تُعيدُ ما نرسلُه كـecho،
+// والصدى يُدرَجُ بلا وسمِ ai. نُجرّبُ الترتيبَين على الجدولِ الحقيقيِّ بفهرسِه
+// الفريد، داخلَ معاملةٍ تُلغى.
+const anyConv = (await query(
+  'SELECT id FROM ig_conversations WHERE store_id = $1 ORDER BY last_at DESC LIMIT 1', [st.id]
+)).rows[0];
+if (!anyConv) { console.log('  (لا محادثاتٍ — يُتخطّى)'); } else {
+  const M = 'echo-test-' + Date.now();
+  try {
+    await withTransaction(async (q) => {
+      // الترتيبُ الأوّل: الصدى يسبقُنا (وهذا ما وقعَ فعلاً)
+      await q(
+        `INSERT INTO ig_messages (conversation_id, mid, direction, text, attachment_url, attachment_type, reply_to_mid, story_url, ai)
+         VALUES ($1,$2,'out',$3,'','','','',$4) ON CONFLICT (mid) DO NOTHING`,
+        [anyConv.id, M, 'أهلا وسهلا يا جمال', false]
+      );
+      const pre = (await q('SELECT ai FROM ig_messages WHERE mid = $1', [M])).rows[0];
+      t('صدى ميتا يصلُ أوّلاً بلا وسم', pre.ai === false);
+      await q(
+        `INSERT INTO ig_messages (conversation_id, mid, direction, text, ai)
+         VALUES ($1, $2, 'out', $3, true) ON CONFLICT (mid) DO UPDATE SET ai = true`,
+        [anyConv.id, M, 'أهلا وسهلا يا جمال']
+      );
+      const post = (await q('SELECT ai FROM ig_messages WHERE mid = $1', [M])).rows[0];
+      t('  ثمّ كتابتُنا تَسِمُه آليّاً (كان يسقطُ صامتاً)', post.ai === true);
+      const dup = (await q('SELECT count(*)::int AS n FROM ig_messages WHERE mid = $1', [M])).rows[0].n;
+      t('  ولا صفَّ مكرّر', dup === 1, String(dup));
+
+      // الترتيبُ الثاني: نحن نسبقُ الصدى
+      const M2 = M + '-b';
+      await q(
+        `INSERT INTO ig_messages (conversation_id, mid, direction, text, ai)
+         VALUES ($1, $2, 'out', $3, true) ON CONFLICT (mid) DO UPDATE SET ai = true`,
+        [anyConv.id, M2, 'تمام بحجزهالك']
+      );
+      await q(
+        `INSERT INTO ig_messages (conversation_id, mid, direction, text, attachment_url, attachment_type, reply_to_mid, story_url, ai)
+         VALUES ($1,$2,'out',$3,'','','','',$4) ON CONFLICT (mid) DO NOTHING`,
+        [anyConv.id, M2, 'تمام بحجزهالك', false]
+      );
+      const keep = (await q('SELECT ai FROM ig_messages WHERE mid = $1', [M2])).rows[0];
+      t('كتابتُنا أوّلاً: الصدى لا يمحو الوسم', keep.ai === true);
+
+      // حارسُ «التاجرةُ على الشاشة» لم يعدْ يرى ردَّ البائعةِ ردّاً يدويّاً
+      // يُسألُ عن صفَّي الفحصِ وحدَهما: المحادثةُ الحيّةُ قد تحملُ ردّاً يدويّاً
+      // حقيقيّاً من التاجرة، وذاك يجبُ أن يُسكِتَ البائعةَ فعلاً.
+      const seen = (await q(
+        `SELECT 1 FROM ig_messages WHERE conversation_id = $1 AND direction = 'out'
+           AND ai = false AND mid = ANY($2::text[]) LIMIT 1`,
+        [anyConv.id, [M, M + '-b']]
+      )).rows.length > 0;
+      t('⇒ حارسُ العشرِ دقائقَ لا يُسكِتُ البائعةَ بردِّها هي', seen === false);
+
+      // وصدى بلا mid: الفحصُ بالنصِّ يَسِمُه
+      const echoIsBot = (await q(
+        `SELECT 1 FROM ig_messages WHERE conversation_id = $1 AND direction = 'out'
+           AND ai = true AND text = $2 AND created_at > now() - interval '3 minutes' LIMIT 1`,
+        [anyConv.id, 'تمام بحجزهالك']
+      )).rows.length > 0;
+      t('صدى بلا mid يُعرَفُ بنصِّه', echoIsBot === true);
+
+      throw new Error('__ROLLBACK__');
+    });
+  } catch (e) { if (e.message !== '__ROLLBACK__') { console.log('  ✗ ' + e.message); bad += 1; } }
+  const left = (await query("SELECT count(*)::int AS n FROM ig_messages WHERE mid LIKE 'echo-test-%'")).rows[0].n;
+  t('لم تبقَ رسالةُ فحصٍ بالقاعدة', left === 0, 'بقيَ ' + left);
+}
+
 clearCatalog(st.id);
 console.log('\n' + '═'.repeat(58));
 console.log(bad ? ('✗ ' + bad + ' فاشل من ' + (ok + bad)) : ('✓ ' + ok + '/' + ok + ' — النظامُ سليم'));

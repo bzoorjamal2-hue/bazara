@@ -204,12 +204,23 @@ async function processWebhook(body) {
         ? await mirrorRemote(msg.reply_to.story.url, 'ig/stories')
         : '';
 
+      // صدى رسالةٍ كتبَتْها البائعةُ قبلَ قليل؟ إذاً هو ردُّها لا ردُّ التاجرة.
+      // الطرفُ الآخرُ من السباقِ نفسِه: recordBotMessage تَسِمُ متى سبقَنا الصدى،
+      // وهذا يَسِمُ متى سبقناه نحن بصفٍّ بلا mid.
+      const echoIsBot = isEcho && text
+        ? (await query(
+          `SELECT 1 FROM ig_messages WHERE conversation_id = $1 AND direction = 'out'
+             AND ai = true AND text = $2 AND created_at > now() - interval '3 minutes' LIMIT 1`,
+          [convId, text]
+        ).catch(() => ({ rows: [] }))).rows.length > 0
+        : false;
+
       // نخزّن الرسالة (mid فريد → لا يتكرّر نفس الحدث ولا ردّنا الذي عاد كـ echo)
       await query(
-        `INSERT INTO ig_messages (conversation_id, mid, direction, text, attachment_url, attachment_type, reply_to_mid, story_url)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (mid) DO NOTHING`,
+        `INSERT INTO ig_messages (conversation_id, mid, direction, text, attachment_url, attachment_type, reply_to_mid, story_url, ai)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) ON CONFLICT (mid) DO NOTHING`,
         [convId, msg.mid || null, isEcho ? 'out' : 'in', text, attachment, attType,
-          msg.reply_to?.mid || '', storyUrl]
+          msg.reply_to?.mid || '', storyUrl, echoIsBot]
       );
 
       if (isEcho) continue; // ردّنا/ردّ المتجر — لا إشعار
@@ -263,6 +274,42 @@ async function processWebhook(body) {
 }
 
 // ═════════════════════ البائعة الآلية ═════════════════════
+
+// تسجيلُ رسالةٍ أرسلَتْها البائعةُ — موسومةً أنّها آليّة، مهما سبقَنا صدى ميتا.
+//
+// ميتا تُعيدُ إلينا كلَّ ما نرسلُه كحدثِ echo، وحدثُ الصدى يُدرَجُ بلا وسمِ ai
+// (افتراضُ العمودِ false). فإذا وصلَ الصدى قبلَ أن نكتبَ صفَّنا — وهو سباقٌ يقعُ
+// فعلاً — كان `ON CONFLICT DO NOTHING` يُسقِطُ كتابتَنا بصمت، فيبقى ردُّ البائعةِ
+// مكتوباً في القاعدةِ كأنّه **ردُّ التاجرةِ بيدِها**. وحارسُ «التاجرةُ على الشاشة»
+// يرى ردّاً يدويّاً عمرُه ثانية، فيُسكِتُ البائعةَ عشرَ دقائق — بعدَ ردٍّ واحد.
+//
+// فالكتابةُ هنا تُصرُّ على الوسمِ أيّاً كان الترتيب.
+async function recordBotMessage(convId, mid, text) {
+  if (mid) {
+    await query(
+      `INSERT INTO ig_messages (conversation_id, mid, direction, text, ai)
+       VALUES ($1, $2, 'out', $3, true)
+       ON CONFLICT (mid) DO UPDATE SET ai = true`,
+      [convId, mid, text]
+    );
+    return;
+  }
+  // بلا mid لا يقعُ تعارضٌ أصلاً (NULL لا يساوي NULL في فهرسٍ فريد)، فصدى ميتا
+  // يُنشئُ صفّاً ثانياً بلا وسم. نَسِمُ الموجودَ إن كان وصلَ، وإلّا نكتبُ صفَّنا.
+  const up = await query(
+    `UPDATE ig_messages SET ai = true
+      WHERE conversation_id = $1 AND direction = 'out' AND text = $2
+        AND created_at > now() - interval '3 minutes'`,
+    [convId, text]
+  );
+  if (!up.rowCount) {
+    await query(
+      `INSERT INTO ig_messages (conversation_id, mid, direction, text, ai)
+       VALUES ($1, NULL, 'out', $2, true)`,
+      [convId, text]
+    );
+  }
+}
 
 // تسجيلُ طلبٍ من محادثةٍ اكتملت شروطُها. يُنشَأُ بنفسِ شكلِ طلبِ الموقعِ حرفيّاً
 // (نفسُ الجدولِ ونفسُ الحالةِ ونفسُ صيغةِ البنود)، فيظهرُ في «طلباتي» ويدخلُ
@@ -421,11 +468,7 @@ async function maybeAutoReply({ store, convId, customerId, text, isNew, who, cha
       if (token) {
         try {
           const sent = await sendMessage(token, customerId, bye);
-          await query(
-            `INSERT INTO ig_messages (conversation_id, mid, direction, text, ai)
-             VALUES ($1, $2, 'out', $3, true) ON CONFLICT (mid) DO NOTHING`,
-            [convId, sent?.message_id || null, bye]
-          );
+          await recordBotMessage(convId, sent?.message_id || null, bye);
         } catch { /* خارجَ النافذةِ أو توكنٌ ميّت: التسليمُ يبقى قائماً */ }
       }
       await query('UPDATE ig_conversations SET bot_paused = true, bot_paused_at = now(), last_at = now() WHERE id = $1', [convId]);
@@ -479,10 +522,7 @@ async function maybeAutoReply({ store, convId, customerId, text, isNew, who, cha
       if (igToken) {
         try {
           const sent = await sendMessage(igToken, customerId, say);
-          await query(
-            "INSERT INTO ig_messages (conversation_id, mid, direction, text, ai) VALUES ($1,$2,'out',$3,true) ON CONFLICT (mid) DO NOTHING",
-            [convId, sent?.message_id || null, say]
-          );
+          await recordBotMessage(convId, sent?.message_id || null, say);
           await query('UPDATE ig_conversations SET last_message = $2, last_at = now(), bot_replies = bot_replies + 1 WHERE id = $1', [convId, say]);
         } catch { /* خارجَ النافذة */ }
       }
@@ -591,11 +631,7 @@ ${sign}` : withOrder;
     return;
   }
 
-  await query(
-    `INSERT INTO ig_messages (conversation_id, mid, direction, text, ai)
-     VALUES ($1, $2, 'out', $3, true) ON CONFLICT (mid) DO NOTHING`,
-    [convId, result?.message_id || null, body]
-  );
+  await recordBotMessage(convId, result?.message_id || null, body);
   // بطاقةُ كلِّ قطعةٍ برسالةٍ مستقلّة: إنستغرام ترسمُ معاينةً (صورةٌ واسمٌ ومتجرٌ
   // ورابطٌ يُضغَط) للرابطِ **الأوّلِ وحدَه** في الرسالة — فعشرُ روابطَ برسالةٍ
   // واحدةٍ بطاقةٌ واحدةٌ وتسعُ عناوينَ عارية. ومن طلبَ «تشكيلة» يستحقُّ تشكيلة.
@@ -614,11 +650,7 @@ ${sign}` : withOrder;
     const card = `${p.name} — ${Number(p.price)}₪\n${url}`;
     try {
       const sent = await sendMessage(token, customerId, card);
-      await query(
-        `INSERT INTO ig_messages (conversation_id, mid, direction, text, ai)
-         VALUES ($1, $2, 'out', $3, true) ON CONFLICT (mid) DO NOTHING`,
-        [convId, sent?.message_id || null, card]
-      );
+      await recordBotMessage(convId, sent?.message_id || null, card);
     } catch (e) {
       // البطاقةُ زينةٌ لا ركن: الردُّ نفسُه وصلَ قبلَها
       console.error('⚠️ بطاقة المنتج:', e.message);
