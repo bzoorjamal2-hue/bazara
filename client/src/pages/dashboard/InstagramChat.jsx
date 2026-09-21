@@ -9,6 +9,12 @@ import { uploadToCloudinary, cloudinaryEnabled, cldThumb, cldBlur, cldOptimized 
 import { Avatar, ConvertForm } from '../../components/OrderComposer.jsx';
 import { buildItems, guessKind, findMobile, cldAudioMp3, sameDay } from '../../utils/chat.js';
 
+// شاشةُ المحادثةِ تُرسَمُ على ‎document.body، فتخرجُ من ‎.theme-pub — وكلُّ قواعدِ
+// الوضعِ النهاريِّ مكتوبةٌ ‎.theme-pub .x. فكانت الحقولُ والأزرارُ والنصوصُ داخلَها
+// تسقطُ إلى قيمِها الليليّةِ فوقَ صفحةٍ نهاريّة: خاناتٌ رماديّةٌ داكنةٌ بنصٍّ أبيضَ
+// على بياض. نرسمُ داخلَ ‎.theme-pub كما تفعلُ بقيّةُ النوافذِ بالمشروع.
+const bzPortalRoot = () => (typeof document !== 'undefined' && (document.querySelector('.theme-pub') || document.body)) || null;
+
 // ═════════ شاشةُ محادثةٍ واحدة ═════════
 // المحادثةُ صفحةٌ قائمةٌ بذاتها تُرسَمُ على body: رأسٌ في الأعلى، ورسائلٌ تملأُ ما
 // بينهما، وصندوقُ كتابةٍ ملتصقٌ بالأسفل — كما في كلِّ تطبيقِ محادثة.
@@ -35,7 +41,7 @@ function ImageViewer({ url, onClose }) {
         <XIcon className="h-5 w-5" />
       </button>
     </div>,
-    document.body
+    bzPortalRoot() || document.body
   );
 }
 
@@ -856,6 +862,6 @@ export default function InstagramChat() {
       {hud && <PerfHud />}
       {viewing && <ImageViewer url={viewing} onClose={() => setViewing('')} />}
     </div>,
-    document.body
+    bzPortalRoot() || document.body
   );
 }
