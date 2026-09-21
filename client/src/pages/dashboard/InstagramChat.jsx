@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
-import { BackIcon, BagIcon, CameraIcon, ImageIcon, TrashIcon, XIcon, MicIcon } from '../../components/icons.jsx';
+import { BackIcon, BagIcon, CameraIcon, ImageIcon, TrashIcon, XIcon, MicIcon, SparkleIcon } from '../../components/icons.jsx';
 import { uploadToCloudinary, cloudinaryEnabled, cldThumb, cldBlur, cldOptimized } from '../../utils/cloudinary.js';
 import { Avatar, ConvertForm } from '../../components/OrderComposer.jsx';
 import { buildItems, guessKind, findMobile, cldAudioMp3, sameDay } from '../../utils/chat.js';
@@ -665,7 +665,8 @@ export default function InstagramChat() {
                         {/* ما كتبَتْه البائعةُ الآليّةُ يُوسَمُ صراحةً: بلا الوسمِ تقرأُ
                             التاجرةُ ردّاً لا تذكرُ أنّها كتبَتْه، فلا تعرفُ ما وُعِدَت
                             به زبونتُها ولا من وعدَها. */}
-                        {m.ai && <span className="me-1 font-bold">🤖 {t('dashboard.instagram.aiReply')} ·</span>}
+                        {/* كان «🤖» رمزاً نصّيّاً: شكلُه يختلفُ بين الأجهزةِ ولا يتمركزُ مع السطر */}
+                        {m.ai && <span className="me-1 inline-flex items-center gap-1 align-middle font-bold"><SparkleIcon className="h-3 w-3" />{t('dashboard.instagram.aiReply')} ·</span>}
                         {timeOf(m)}
                       </span>
                     )}

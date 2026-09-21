@@ -57,7 +57,7 @@ export default function InstagramInbox() {
     <div className="space-y-5">
       <PageHead icon={<InstagramIcon className="h-6 w-6" />} title={t('dashboard.instagram.title')} hint={t('dashboard.instagram.hint')} />
 
-      {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
+      {error && <div className="bz-note-err rounded-xl px-4 py-2.5 text-sm font-semibold">{error}</div>}
 
       {/* حلّ عملي فوري: تسجيل طلب من محادثة يدوياً — يعمل الآن بلا انتظار موافقة Meta */}
       <ManualOrderPanel />
@@ -145,7 +145,7 @@ function ConnectCard({ status, pendingPages, onConnected, onPages }) {
         </div>
       </div>
 
-      {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
+      {error && <div className="bz-note-err rounded-xl px-4 py-2.5 text-sm font-semibold">{error}</div>}
 
       {pages && pages.length ? (
         <div className="space-y-2">
@@ -155,7 +155,7 @@ function ConnectCard({ status, pendingPages, onConnected, onPages }) {
               key={p.pageId}
               onClick={() => pick(p.pageId)}
               disabled={busy}
-              className="flex w-full items-center justify-between rounded-xl bg-white/5 px-4 py-3 text-sm text-stone-100 ring-1 ring-white/10 transition hover:bg-white/10 disabled:opacity-50"
+              className="flex w-full items-center justify-between rounded-xl border border-gold-400/15 bg-black/20 px-4 py-3 text-sm text-stone-100 transition hover:bg-white/10 disabled:opacity-50"
             >
               <span>{p.name || p.pageId}{p.username ? <span className="text-gold-300"> · @{p.username}</span> : null}</span>
               <BackIcon className="h-4 w-4 rotate-180 text-stone-400" />
@@ -257,7 +257,7 @@ function Inbox({ username, onDisconnected }) {
         </div>
       </div>
 
-      {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">{error}</div>}
+      {error && <div className="bz-note-err rounded-xl px-4 py-2.5 text-sm font-semibold">{error}</div>}
 
       {/* البحثُ لا يظهرُ إلّا حين يكونُ له معنى: محادثتان لا تُبحَثان */}
       {(convs || []).length > 4 && (
@@ -288,7 +288,7 @@ function Inbox({ username, onDisconnected }) {
                     ? <FacebookIcon className="h-3.5 w-3.5 shrink-0 text-sky-400" />
                     : <InstagramIcon className="h-3.5 w-3.5 shrink-0 text-pink-400" />}
                   <span className="truncate font-semibold text-stone-100">{c.customer_name || (c.customer_username ? `@${c.customer_username}` : t('dashboard.instagram.customer'))}</span>
-                  {c.order_id && <span className="shrink-0 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-300 ring-1 ring-emerald-500/25">{t('dashboard.instagram.hasOrder')}</span>}
+                  {c.order_id && <span className="bz-chat-ok shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold">{t('dashboard.instagram.hasOrder')}</span>}
                 </span>
                 <span className="mt-0.5 block truncate text-xs text-stone-400">{c.last_message || '—'}</span>
               </span>
@@ -339,7 +339,7 @@ function ManualOrderPanel() {
       </div>
 
       {done && (
-        <div className="mx-4 mb-4 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-200">
+        <div className="bz-note-ok mx-4 mb-4 rounded-xl px-4 py-2.5 text-sm font-semibold">
           {t('dashboard.instagram.orderCreated')} — <span dir="ltr" className="font-mono font-bold">{done.reference}</span>
         </div>
       )}

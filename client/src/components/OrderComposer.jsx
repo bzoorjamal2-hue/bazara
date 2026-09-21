@@ -62,11 +62,11 @@ function PickedRow({ item, onChange, onRemove }) {
   const img = productImg(item.product);
   const line = Number(item.price) * Math.max(1, item.qty);
   return (
-    <div className="flex gap-2.5 rounded-xl bg-black/20 p-2.5 ring-1 ring-white/5">
+    <div className="flex gap-2.5 rounded-2xl border border-gold-400/15 bg-black/20 p-2.5">
       {img ? (
-        <img src={img} alt="" className="h-16 w-14 shrink-0 rounded-lg object-cover ring-1 ring-white/10" />
+        <img src={img} alt="" className="h-16 w-14 shrink-0 rounded-xl object-cover ring-1 ring-gold-400/20" />
       ) : (
-        <span className="flex h-16 w-14 shrink-0 items-center justify-center rounded-lg bg-white/5 text-stone-500"><BagIcon className="h-5 w-5" /></span>
+        <span className="dash-avatar flex h-16 w-14 shrink-0 items-center justify-center rounded-xl text-stone-400"><BagIcon className="h-5 w-5" /></span>
       )}
       <div className="min-w-0 flex-1 space-y-1.5">
         <div className="flex items-start gap-2">
@@ -93,9 +93,12 @@ function PickedRow({ item, onChange, onRemove }) {
               onChange={(e) => onChange({ qty: Math.max(1, parseInt(e.target.value, 10) || 1) })} />
           </div>
         )}
-        <div className="text-xs text-stone-400">
-          {t('common.currency')}{Number(item.price).toFixed(0)}{item.qty > 1 ? ` × ${item.qty}` : ''}
-          {' = '}<span className="font-display text-sm font-bold text-gold-300">{t('common.currency')}{line.toFixed(2)}</span>
+        <div className="flex items-baseline gap-1.5 text-xs text-stone-400">
+          <span className="tabular-nums">
+            {t('common.currency')}{Number(item.price).toFixed(0)}{item.qty > 1 ? ` × ${item.qty}` : ''}
+          </span>
+          <span aria-hidden>=</span>
+          <span className="font-display text-sm font-bold tabular-nums text-stone-100">{t('common.currency')}{line.toFixed(2)}</span>
         </div>
       </div>
     </div>
@@ -232,7 +235,7 @@ export function OrderComposer({ defaultName = '', defaultPhone = '', hintText = 
       {/* ما قُرئ من المحادثة: تُخبَرُ التاجرةُ أنّ الخاناتِ مملوءةٌ سلفاً كي تراجعَها
           لا كي تُفاجأَ بها — والمراجعةُ أسرعُ من الكتابةِ من الصفر. */}
       {draft?.found && (draft.name || draft.phone || draft.city || draft.productId) && (
-        <p className="flex items-start gap-1.5 rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-2.5 py-1.5 text-[11px] font-semibold leading-relaxed text-emerald-300">
+        <p className="bz-note-ok flex items-start gap-1.5 rounded-xl px-2.5 py-1.5 text-[11px] font-semibold leading-relaxed">
           <CheckIcon className="mt-px h-3.5 w-3.5 shrink-0" />
           {t('dashboard.instagram.draftFilled')}
         </p>
@@ -241,12 +244,12 @@ export function OrderComposer({ defaultName = '', defaultPhone = '', hintText = 
       {/* منتجاتٌ ذُكرت في المحادثة — ضغطةٌ واحدةٌ بدل بحثٍ عن اسمٍ قرأته للتوّ */}
       {hints.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-[11px] font-semibold text-gold-200">{t('dashboard.instagram.mentioned')}</span>
+          <span className="text-[11px] font-semibold text-stone-400">{t('dashboard.instagram.mentioned')}</span>
           {hints.map((p) => (
             <button
               key={p.id}
               onClick={() => add(p)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-gold-400/30 bg-gold-400/10 px-2.5 py-1 text-xs font-semibold text-gold-100 transition hover:bg-gold-400/20"
+              className="inline-flex items-center gap-1.5 rounded-full border border-gold-400/30 bg-gold-400/10 px-2.5 py-1 text-xs font-semibold text-stone-100 transition hover:bg-gold-400/20"
             >
               <PlusIcon className="h-3.5 w-3.5" /> {p.name}
             </button>
@@ -254,19 +257,21 @@ export function OrderComposer({ defaultName = '', defaultPhone = '', hintText = 
         </div>
       )}
 
-      {/* بحث المنتجات — قائمة نهارية بيضاء متناسقة مع باقي الدشبورد */}
+      {/* بحثُ المنتجات. كانت القائمةُ `bg-white` ونصُّها `text-wine` — وكلاهما
+          يُقلَبُ ليلاً: الخلفيّةُ تصيرُ فحماً والنصُّ يبقى داكناً، فيختفي الاسمُ
+          والسعرُ تماماً. الآن سطحٌ وحدودٌ ونصٌّ لكلٍّ منها مقابلٌ بالوضعين. */}
       <div className="relative">
         <input className="input" placeholder={t('dashboard.instagram.searchProduct')} value={q} onChange={(e) => setQ(e.target.value)} />
         {results.length > 0 && (
-          <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-2xl border border-wine/15 bg-white p-1.5 shadow-2xl">
+          <div className="bz-pop absolute z-20 mt-1 w-full overflow-hidden rounded-2xl border border-gold-400/25 p-1.5">
             {results.map((p) => {
               const img = productImg(p);
               return (
-                <button key={p.id} onClick={() => add(p)} className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-start text-sm text-[#2b2b2b] transition hover:bg-wine/5">
-                  {img ? <img src={img} alt="" className="h-9 w-9 rounded-lg object-cover ring-1 ring-black/5" /> : <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-wine/5 text-wine/50"><BagIcon className="h-4 w-4" /></span>}
+                <button key={p.id} onClick={() => add(p)} className="bz-pop-row flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-start text-sm text-stone-100 transition">
+                  {img ? <img src={img} alt="" className="h-9 w-9 rounded-lg object-cover ring-1 ring-gold-400/20" /> : <span className="dash-avatar flex h-9 w-9 items-center justify-center rounded-lg text-stone-400"><BagIcon className="h-4 w-4" /></span>}
                   <span className="min-w-0 flex-1 truncate font-medium">{p.name}</span>
-                  <span className="shrink-0 font-semibold text-wine">{t('common.currency')}{Number(p.price).toFixed(0)}</span>
-                  <PlusIcon className="h-4 w-4 shrink-0 text-wine" />
+                  <span className="shrink-0 font-semibold tabular-nums text-stone-100">{t('common.currency')}{Number(p.price).toFixed(0)}</span>
+                  <PlusIcon className="h-4 w-4 shrink-0 text-stone-400" />
                 </button>
               );
             })}
@@ -310,20 +315,26 @@ export function OrderComposer({ defaultName = '', defaultPhone = '', hintText = 
         <input className="input sm:col-span-2" placeholder={t('dashboard.ordersSection.notes')} value={f.notes} onChange={set('notes')} />
       </div>
 
-      {error && <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs text-red-200">{error}</div>}
+      {error && <div className="bz-note-err rounded-xl px-3 py-2 text-xs font-semibold">{error}</div>}
 
-      <div className="flex flex-wrap items-center gap-3">
-        <button onClick={submit} disabled={busy} className="btn-primary gap-1.5 !px-3 !py-1.5 text-xs disabled:opacity-50">
-          {busy ? t('common.loading') : <><BagIcon className="h-4 w-4" /> {t('dashboard.instagram.createOrder')}</>}
-        </button>
-        {/* الإجماليُّ مفصَّلاً: التاجرةُ تقولُ الرقمَ للزبونِ فتحتاجُ أن ترى ممّ تكوّن */}
-        <span className="text-xs text-stone-400">
-          {t('common.currency')}{subtotal.toFixed(0)}
-          {' + '}{t('common.currency')}{(Number(f.deliveryFee) || 0).toFixed(0)} {t('dashboard.ordersSection.delivery')}
-          {' = '}
-          <span className="font-display text-sm font-bold text-gold-300">{t('common.currency')}{total.toFixed(2)}</span>
+      {/* الإجماليُّ مفصَّلاً ببطاقتِه: هو الرقمُ الذي تقولُه التاجرةُ للزبونِ بصوتِها،
+          فيحتاجُ أن يُرى من نصفِ متر — لا أن يكونَ سطراً رماديّاً بجانبِ زرّ. */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gold-400/20 bg-black/20 px-3.5 py-3">
+        <span className="min-w-0 text-[11px] leading-relaxed text-stone-400">
+          <span className="block">{t('dashboard.instagram.orderTotal')}</span>
+          <span className="tabular-nums">
+            {t('common.currency')}{subtotal.toFixed(0)}
+            {' + '}{t('common.currency')}{(Number(f.deliveryFee) || 0).toFixed(0)} {t('dashboard.ordersSection.delivery')}
+          </span>
+        </span>
+        <span className="font-display text-xl font-bold tabular-nums text-stone-100">
+          {t('common.currency')}{total.toFixed(2)}
         </span>
       </div>
+
+      <button onClick={submit} disabled={busy} className="btn-primary w-full justify-center gap-1.5 !py-2.5 text-sm disabled:opacity-50">
+        {busy ? t('common.loading') : <><BagIcon className="h-4 w-4" /> {t('dashboard.instagram.createOrder')}</>}
+      </button>
     </div>
   );
 }
@@ -346,10 +357,11 @@ export function ConvertForm({ convId, defaultName, defaultPhone = '', hintText =
   }, [convId]);
 
   return (
-    <div className="space-y-3 border-b border-white/5 bg-gold-400/5 p-3">
-      <p className="flex items-center gap-2 text-xs font-semibold text-gold-200">
+    <div className="space-y-3 border-b border-gold-400/20 bg-gold-400/5 p-3">
+      <p className="flex items-center gap-2 text-sm font-bold text-stone-100">
+        <BagIcon className="h-4 w-4 shrink-0 text-stone-400" />
         {t('dashboard.instagram.convertTitle')}
-        {reading && <span className="font-normal text-stone-400">{t('dashboard.instagram.draftReading')}</span>}
+        {reading && <span className="text-xs font-normal text-stone-400">{t('dashboard.instagram.draftReading')}</span>}
       </p>
       <OrderComposer
         defaultName={defaultName}

@@ -4725,19 +4725,43 @@ body.bz-chat-open { overflow: hidden; }
    الشاشةُ تغطّي كلَّ شيءٍ فلا يصلُها لونُ الصفحةِ من تحتها، ولو تُركت بألوانٍ داكنةٍ
    ثابتةٍ بقيت ليليّةً في وضعِ النهار. ولأنّها قد تُرسَمُ خارجَ `.theme-pub` يُكتَفى
    بـhtml.dark وحدَه شرطاً لليل. */
-.bz-chat { background: #F9F9F8; color: #0F0F0E; }
-html.dark .bz-chat { background: #100F0E; color: #E4E2DE; }
+.bz-chat { background: rgb(var(--c-gold-50)); color: rgb(var(--c-wine-dark)); }
+html.dark .bz-chat { background: #100F0E; color: rgb(var(--c-gold-200)); }
 
 /* الرأسُ وصندوقُ الكتابة: سطحٌ يعلو الأرضيّةَ قليلاً ليُقرأَ حدُّهما */
-.bz-chat-bar { background: #ffffff; border-color: rgba(23, 23, 23, 0.14); }
-html.dark .bz-chat-bar { background: #1A1918; border-color: rgba(255, 255, 255, 0.10); }
+/* الشريطُ أبيضُ على قماشٍ رمليٍّ فاتحٍ جدّاً: بلا خيطٍ دافئٍ وظلٍّ خفيفٍ لا
+   يُرى الفرقُ بينهما أصلاً، فيبدو الرأسُ والقدمُ ملتصقَين بالمحادثة. */
+.bz-chat-bar {
+  background: #ffffff;
+  border-color: rgb(var(--c-gold-300));
+  box-shadow: 0 1px 12px -6px rgba(23, 23, 23, 0.18);
+}
+html.dark .bz-chat-bar { background: #1A1918; border-color: rgba(214, 210, 203, 0.14); box-shadow: none; }
 
 /* الفقاعتان: رسالةُ الزبون سطحٌ محايد، وردُّ المتجرِ مملوءٌ بلونِ الهويّة — والفرقُ
    بينهما يجبُ أن يُرى من نظرة، فقد كانتا بنّيّتين متقاربتين لا تكادان تفترقان. */
-.bz-chat-in { background: #ffffff; color: #0F0F0E; border: 1px solid rgba(23, 23, 23, 0.10); }
-html.dark .bz-chat-in { background: rgba(255, 255, 255, 0.07); color: #E4E2DE; border-color: rgba(255, 255, 255, 0.09); }
-.bz-chat-out { background: #1F1E1D; color: #F9F9F8; border: 1px solid transparent; }
-html.dark .bz-chat-out { background: #D6D2CB; color: #171615; }
+/* فقاعةُ الزبونة: بيضاءُ بحدٍّ رمليٍّ وظلٍّ ناعم — ترتفعُ عن القماشِ قليلاً
+   كبطاقاتِ الموقع، بدل خيطٍ رماديٍّ مسطّح. */
+.bz-chat-in {
+  background: #ffffff;
+  color: rgb(var(--c-wine-dark));
+  border: 1px solid rgb(var(--c-gold-300));
+  box-shadow: 0 1px 2px rgba(23, 23, 23, 0.04), 0 6px 16px -10px rgba(23, 23, 23, 0.22);
+}
+html.dark .bz-chat-in {
+  background: rgba(255, 255, 255, 0.07);
+  color: rgb(var(--c-gold-200));
+  border-color: rgba(214, 210, 203, 0.12);
+  box-shadow: none;
+}
+/* وفقاعةُ المتجرِ بلونِ زرِّ الموقعِ الأساسيِّ نفسِه — فالمحادثةُ من عائلتِه البصريّة */
+.bz-chat-out {
+  background: rgb(var(--c-wine));
+  color: rgb(var(--c-gold-50));
+  border: 1px solid transparent;
+  box-shadow: 0 2px 10px -4px rgba(23, 23, 23, 0.45);
+}
+html.dark .bz-chat-out { background: rgb(var(--c-gold-300)); color: #171615; box-shadow: none; }
 
 /* الوقتُ تحت الرسالة: باهتٌ بقدرِ ما يُقرأُ على أرضيّةِ فقاعتِه هو لا على الصفحة */
 .bz-chat-time { color: rgba(31, 30, 29, 0.55); }
@@ -4749,8 +4773,8 @@ html.dark .bz-chat-out .bz-chat-time { color: rgba(23, 21, 15, 0.55); }
 html.dark .bz-chat-muted { color: rgba(239, 238, 236, 0.5); }
 
 /* أزرارُ الرأسِ وصندوقِ الكتابة (رجوع · معرض · كاميرا · حذف) */
-.bz-chat-icon { color: #1F1E1D; background: transparent; }
-.bz-chat-icon:hover { background: rgba(23, 23, 23, 0.10); }
+.bz-chat-icon { color: rgb(var(--c-wine)); background: transparent; }
+.bz-chat-icon:hover { background: rgb(var(--c-gold-200)); }
 html.dark .bz-chat-icon { color: #D6D2CB; }
 html.dark .bz-chat-icon:hover { background: rgba(255, 255, 255, 0.08); }
 
@@ -4767,8 +4791,12 @@ html.dark .bz-chat-ok { background: rgba(4, 120, 87, 0.22); color: #6ee7b7; bord
 html.dark .bz-chat-err { background: rgba(239, 68, 68, 0.12); color: #fca5a5; border-color: rgba(239, 68, 68, 0.3); }
 
 /* فاصلُ اليوم بين الرسائل */
-.bz-chat-day { background: rgba(23, 23, 23, 0.09); color: rgba(15, 15, 14, 0.62); }
-html.dark .bz-chat-day { background: rgba(255, 255, 255, 0.07); color: rgba(239, 238, 236, 0.55); }
+.bz-chat-day {
+  background: rgb(var(--c-gold-200));
+  color: rgb(var(--c-gold-700));
+  border: 1px solid rgb(var(--c-gold-300));
+}
+html.dark .bz-chat-day { background: rgba(255, 255, 255, 0.07); color: rgba(239, 238, 236, 0.55); border-color: transparent; }
 
 /* الفقاعةُ تدخلُ بحركةٍ قصيرةٍ جدّاً: تكفي لتُحسَّ ولا تكفي لتُنتظَر */
 .bz-bubble { animation: bz-bubble-in 0.16s ease-out both; }
@@ -4800,6 +4828,37 @@ html.dark .bz-chat-input::placeholder { color: rgba(239, 238, 236, 0.4); }
 html.dark .bz-chat-input:focus { border-color: rgba(239, 238, 236, 0.35); }
 
 /* عارضُ الصورة بملءِ الشاشة — أسودُ في الوضعين لأنّه إطارُ صورةٍ لا سطحُ واجهة */
+/* قائمةٌ منبثقةٌ فوقَ بطاقة (بحثُ المنتجِ بمحوّلِ الطلب). كانت `bg-white` ونصُّها
+   `text-wine`: نهاراً بيضاءُ على بيضاءَ بلا حدّ، وليلاً نصٌّ داكنٌ على سطحٍ
+   داكنٍ — أي اسمٌ وسعرٌ لا يُقرآن. */
+.theme-pub .bz-pop { background: #ffffff; box-shadow: 0 18px 44px -18px rgba(23, 23, 23, 0.4); }
+html.dark .theme-pub .bz-pop { background: #232120; box-shadow: 0 18px 44px -18px rgba(0, 0, 0, 0.8); }
+.theme-pub .bz-pop-row:hover { background: rgb(var(--c-gold-100)); }
+html.dark .theme-pub .bz-pop-row:hover { background: rgba(255, 255, 255, 0.07); }
+
+/* شاراتُ التطمينِ والخطأ: كانت `text-emerald-300` و`text-red-200` — درجاتٌ
+   فاتحةٌ موضوعةٌ لخلفيّةٍ داكنة، تبهتُ على البطاقةِ البيضاءِ نهاراً. */
+.theme-pub .bz-note-ok {
+  background: rgba(4, 120, 87, 0.10);
+  color: #046C4E;
+  border: 1px solid rgba(4, 120, 87, 0.28);
+}
+html.dark .theme-pub .bz-note-ok {
+  background: rgba(4, 120, 87, 0.20);
+  color: #6EE7B7;
+  border-color: rgba(110, 231, 183, 0.3);
+}
+.theme-pub .bz-note-err {
+  background: rgba(185, 28, 28, 0.09);
+  color: #B42318;
+  border: 1px solid rgba(185, 28, 28, 0.28);
+}
+html.dark .theme-pub .bz-note-err {
+  background: rgba(239, 68, 68, 0.14);
+  color: #FCA5A5;
+  border-color: rgba(239, 68, 68, 0.32);
+}
+
 .bz-chat-viewer { background: rgba(0, 0, 0, 0.94); animation: bz-fade-in 0.14s ease-out both; }
 @keyframes bz-fade-in { from { opacity: 0; } to { opacity: 1; } }
 

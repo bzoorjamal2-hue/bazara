@@ -147,7 +147,8 @@
       "waking": "The server is taking longer than usual — it may be updating. It will be back shortly.",
       "aiReply": "Auto reply",
       "draftFilled": "We filled the fields from the chat — review and edit anything missing",
-      "draftReading": "reading the chat…"
+      "draftReading": "reading the chat…",
+      "orderTotal": "Order total"
     },
     "opost": {
       "title": "Optimus courier",
