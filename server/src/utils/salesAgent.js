@@ -325,7 +325,13 @@ export function allowedPrice(product, bot, stage) {
 const HAGGLE_WORDS = ['غالي', 'غاليه', 'غالييه', 'اخر سعر', 'احسن سعر', 'اقل سعر', 'افضل سعر',
   'نزلي', 'بتنزلي', 'تنزلي', 'ما بتنزل', 'خصم', 'حسم', 'تخفيض', 'ارخص', 'ارخصلي',
   'ما بقدر ادفع', 'ميزانيتي', 'مفاصله', 'فاصلني', 'بزياده', 'last price', 'best price',
-  'discount', 'cheaper', 'too expensive', 'lower the price'];
+  'discount', 'cheaper', 'too expensive', 'lower the price',
+  // «راعيني» أشهرُ ما يُقالُ بالمفاصلةِ عندنا، ولم تكن بالقاموس: قالها الزبونُ
+  // مرّتين فبقيت البائعةُ متمسّكةً بسعرِها ثمّ سلّمت المحادثة — تصرّفٌ صحيحٌ
+  // بحسبِ ما تعرف، لكنّها لم تكن تعرفُ أنّه يفاصلُ أصلاً.
+  'راعيني', 'راعينا', 'تراعيني', 'بتراعيني', 'ما بتراعي', 'مراعاه', 'راعي حالك',
+  'زبطني', 'زبطنا', 'بتزبطني', 'ظبطني', 'شيل اشي', 'شيلي اشي', 'حسملي', 'خصملي',
+  'كسرلي', 'اكسرلي', 'وكل', 'رخصلي', 'معقوله', 'كتير علي', 'زياده شوي', 'شوي شوي'];
 
 export function haggleIntent(text) {
   const q = normalizeAr(westernDigits(text));
@@ -438,6 +444,7 @@ ${address}
 - offerProductId/offerPrice: املئيهما فقط إن عرضتِ سعراً مخفَّضاً بردِّكِ هذا.
 - showPhoto: إن طلبت الزبونةُ أن **ترى** قطعةً أو لوناً ("بعتيلي صورة"، "بدي أشوف الأخضر"، "في صورة أوضح؟") فاملئي showPhoto بمعرّفِ القطعةِ واللونِ المطلوبِ إن ذكرته. نحن من يُرسلُ الصورةَ بعدَ ردِّكِ — فلا تَعِدي بصورةٍ بصيغةِ "رح أبعتلك" ولا تصفي صورةً لم ترَيْها، فقط أكملي كلامَكِ الطبيعيَّ واتركي الباقيَ لنا.
 - handoff: true إن وجبَ تسليمُ المحادثةِ لصاحبةِ المتجر.
+- haggling: true إذا كان الزبونُ **يطلبُ سعراً أقلّ** بأيِّ صيغةٍ كانت — بأيِّ لهجةٍ فلسطينيّةٍ أو عربيّة، صريحةً أو مُلمِّحة: «راعيني»، «زبطني»، «شيل اشي»، «كسرلي»، «معقولة»، «كتير عليّ»، «ما بقدر»، «وكل»، «بدي أحسن سعر»، أو حتى تردّدٌ على السعرِ وحدَه. لا تضعْها لمجرّدِ سؤالٍ عن السعر. وأنتِ لا تُقرّرينَ الخصمَ بها — نحن نقرّر، أنتِ تُخبرينَنا فقط.
 - order: مسوّدةُ الطلب — انظري «إتمامُ الطلب» أدناه.
 
 إتمامُ الطلب (هذه مهمّتُكِ الأهمّ):
@@ -464,6 +471,10 @@ const SCHEMA = {
     offerProductId: { type: 'string' },
     offerPrice: { type: 'number' },
     handoff: { type: 'boolean' },
+    // هل يفاصلُ الزبونُ الآن؟ القوائمُ الجامدةُ لا تسعُ لهجاتِ فلسطينَ كلَّها،
+    // والنموذجُ يفهمُ ما لم يخطرْ لنا. وهو يُبلِغُ فقط — **السعرُ يبقى قرارَ
+    // الخادمِ وحدَه**، فلا شيءَ يُعطى لمجرّدِ أنّ النموذجَ رأى إلحاحاً.
+    haggling: { type: 'boolean' },
     // طلبُ عرضِ صورة: النموذجُ يقولُ ماذا تريدُ الزبونةُ أن ترى، والخادمُ يقرّرُ
     // أيملكُ ذلك فعلاً أم لا. لا يُرسِلُ النموذجُ رابطاً ولا يصفُ صورةً لم يرَها.
     showPhoto: {
@@ -670,7 +681,7 @@ export function sanitize(out, { rows, bot, stage }) {
     }
   }
 
-  return { reply, ids, offer, handoff: out.handoff === true, order, photo };
+  return { reply, ids, offer, handoff: out.handoff === true, haggling: out.haggling === true, order, photo };
 }
 
 // رقمُ الجوّالِ الفلسطينيُّ بأشكالِه: 059… · 0599… · ‎+97059… · ‎97259…
@@ -767,7 +778,13 @@ export async function agentReply({ store, bot, messages, stage = 0, customerName
         ? await callClaude(system, history)
         : await callGemini(system, history);
       const clean = sanitize(out, { rows, bot, stage: nextStage });
-      if (clean.reply) return { ...clean, stage: nextStage, usedAi: true };
+      // مفاصلةٌ بلهجةٍ لم تخطرْ لقائمتِنا: النموذجُ يفهمُها ويرفعُ العَلَم، فترتفعُ
+      // الدرجةُ للرسالةِ التالية. القائمةُ تلتقطُ المألوفَ فوراً، والنموذجُ يسدُّ
+      // ما بعدَها — فلا كلمةَ تُفوِّتُ المفاصلةَ إلى الأبد. والسعرُ يبقى قرارَنا.
+      const bumped = bot.bot_haggle && clean.haggling && nextStage === Number(stage || 0)
+        ? Math.min(Number(bot.bot_haggle_steps) || 2, nextStage + 1)
+        : nextStage;
+      if (clean.reply) return { ...clean, stage: bumped, usedAi: true };
     } catch (err) {
       console.error('⚠️ البائعة الآلية — سقوطٌ للقواعد:', err.message);
     }
