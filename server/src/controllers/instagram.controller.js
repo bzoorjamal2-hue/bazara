@@ -247,78 +247,6 @@ async function processWebhook(body) {
 
 // ═════════════════════ البائعة الآلية ═════════════════════
 
-// لقطةُ القطعةِ الساكنة. كلُّ منتجاتِ المنصّةِ فيديو، وإرسالُ الفيديو نفسِه يعني
-// أن تجلبَه خوادمُ ميتا من حسابِنا مع كلِّ محادثة — والحسابُ مجّانيٌّ بخمسةٍ
-// وعشرينَ كريدت، وقد تعطَّلَ مرّةً فاختفت صورُ الموقعِ كلُّها. فنرسلُ لقطةً بمئةِ
-// كيلوبايت، والفيديو يصلُ الزبونةَ من الرابطِ بصفحةِ المنتجِ بلا كلفةٍ علينا.
-function mediaPoster(prod) {
-  const img = Array.isArray(prod && prod.images) ? prod.images.filter(Boolean)[0] : '';
-  if (img) {
-    return img.includes('/upload/')
-      ? img.replace('/upload/', '/upload/f_jpg,q_auto,w_720,c_limit/')
-      : img;
-  }
-  const v = String((prod && prod.video_url) || '');
-  const m = v.match(/^(https?:\/\/[^/]+\/[^/]+\/video\/upload\/)(.+)$/);
-  if (!m) return '';
-  const segs = m[2].split('/');
-  let vi = segs.findIndex((x) => /^v\d+$/.test(x));
-  if (vi === -1) vi = segs.length - 1;
-  const rest = segs.slice(vi).join('/').replace(/\.[a-z0-9]+(\?.*)?$/i, '');
-  return `${m[1]}so_0,f_jpg,q_auto,w_720,c_limit/${rest}.jpg`;
-}
-
-// تسجيلُ طلبٍ من محادثةٍ اكتملت شروطُها. يُنشَأُ بنفسِ شكلِ طلبِ الموقعِ حرفيّاً
-// (نفسُ الجدولِ ونفسُ الحالةِ ونفسُ صيغةِ البنود)، فيظهرُ في «طلباتي» ويدخلُ
-// الحسابَ والمخزونَ وشركةَ التوصيلِ كأيِّ طلبٍ آخر — لا كسجلٍّ جانبيٍّ للبائعة.
-//
-// والسعرُ يُقرأُ من القاعدةِ لا ممّا قالته البائعة، وأجرةُ التوصيلِ تُحسَبُ من
-// مدينةِ الزبونةِ بجدولِ المتجر. فحتى لو أخطأَ النموذجُ برقمٍ بالمحادثة، الطلبُ
-// المسجَّلُ صحيح.
-async function createChatOrder(store, conv, order, customerId) {
-  const p = (await query(
-    'SELECT id, name, price, store_id FROM products WHERE id = $1 AND store_id = $2 AND hidden_at IS NULL',
-    [order.product.id, store.id]
-  )).rows[0];
-  if (!p) throw new Error('القطعة لم تعد متاحة.');
-
-  const unit = Number(p.price);
-  const subtotal = unit * order.qty;
-  const deliveryFee = feeForCity(order.city, store.delivery_tiers);
-  const freeOver = Number(store.free_shipping_over) || 0;
-  const fee = freeOver > 0 && subtotal >= freeOver ? 0 : deliveryFee;
-  const total = subtotal + fee;
-  const reference = 'BZ-' + crypto.randomBytes(5).toString('hex').toUpperCase();
-  const items = [{
-    id: p.id, name: p.name, price: unit, qty: order.qty,
-    size: order.size || '', color: order.color || '',
-  }];
-
-  const ins = await query(
-    `INSERT INTO orders (store_id, customer_name, customer_email, customer_phone, items, total,
-       currency, status, reference, city, area, address, notes, delivery_fee)
-     VALUES ($1,$2,'',$3,$4,$5,'ILS','new',$6,$7,'',$8,$9,$10) RETURNING id`,
-    [store.id, order.name, order.phone, JSON.stringify(items), total, reference,
-      order.city, order.address, 'طلب سجّلته البائعة الآلية من رسائل إنستغرام', fee]
-  );
-
-  await query('UPDATE ig_conversations SET order_id = $2 WHERE id = $1', [conv.id, ins.rows[0].id]);
-  notifyUser(store.user_id, {
-    type: 'order',
-    title: `🛍️ طلب جديد — ${order.name}`,
-    body: `${p.name}${order.color ? ' · ' + order.color : ''}${order.size ? ' · نمرة ' + order.size : ''} — ₪${total}`,
-    url: '/dashboard?tab=myOrders',
-    tag: `order-${ins.rows[0].id}`,
-  });
-
-  return {
-    reference,
-    total,
-    deliveryFee: fee,
-    itemLine: `${p.name}${order.color ? ' — ' + order.color : ''}${order.size ? ' — نمرة ' + order.size : ''}${order.qty > 1 ? ` — ${order.qty} قطع` : ''}`,
-  };
-}
-
 // كم دقيقةً نعتبرُ التاجرةَ فيها «على الشاشة» بعدَ ردِّها؟ ردُّها بيدِها يعني أنّها
 // موجودة، ومقاطعتُها بردٍّ آليٍّ في منتصفِ حديثِها أسوأُ من ألّا نردَّ أصلاً.
 const OWNER_PRESENT_MINUTES = 10;
@@ -414,17 +342,22 @@ async function maybeAutoReply({ store, convId, customerId, text, isNew, who }) {
   // القطعةُ التي تكلّمَتْ عنها: رابطُها يحوّلُ الحديثَ إلى طلبٍ بضغطة، ولقطتُها
   // تُري الزبونةَ ما يُقالُ لها. بلا الرابطِ تبقى تدوّرُ على القطعةِ بنفسِها،
   // وهناك يضيعُ أكثرُ البيع.
-  let prod = null;
+  // القطعُ التي تكلّمَتْ عنها بردِّها هذا — **كلُّها** لا أوّلُها وحدَه: من طلبَ
+  // «تشكيلة» كان يأخذُ قطعةً واحدةً لأنّنا كنّا نقرأُ ids[0] فقط.
+  let prods = [];
   if (out.ids && out.ids.length) {
     const pr = await query(
-      `SELECT id, name, images, video_url FROM products
-       WHERE id = $1 AND store_id = $2 AND hidden_at IS NULL`,
-      [out.ids[0], store.id]
+      `SELECT id, name, price FROM products
+       WHERE id = ANY($1::uuid[]) AND store_id = $2 AND hidden_at IS NULL`,
+      [out.ids.slice(0, 3), store.id]
     ).catch(() => ({ rows: [] }));
-    prod = pr.rows[0] || null;
+    // نحفظُ ترتيبَ ترشيحِ البائعةِ لا ترتيبَ القاعدة
+    const byId = new Map(pr.rows.map((x) => [String(x.id), x]));
+    prods = out.ids.map((id) => byId.get(String(id))).filter(Boolean).slice(0, 3);
   }
+  const prod = prods[0] || null;
   const site = (process.env.PUBLIC_SITE_URL || 'https://bazarastore.site').replace(/\/$/, '');
-  const link = prod && store.slug ? `${site}/store/${store.slug}/product/${prod.id}` : '';
+  const linkOf = (p) => (store.slug ? `${site}/store/${store.slug}/product/${p.id}` : '');
 
   // الإفصاح: سياسةُ المراسلةِ عندَ Meta تطلبُ أن تعرفَ الزبونةُ أنّها تكلّمُ آليّاً،
   // والتاجرةُ تختارُ صيغتَه. يُضافُ مرّةً واحدةً بأوّلِ ردٍّ آليٍّ بالمحادثةِ فقط —
@@ -447,11 +380,10 @@ async function maybeAutoReply({ store, convId, customerId, text, isNew, who }) {
   }
 
   const sign = String(bot.bot_signature || '').trim();
-  const withLink = (link ? `${out.reply}
-${link}` : out.reply) + orderLine;
-  const body = (sign && Number(conv.bot_replies) === 0) ? `${withLink}
+  const withOrder = out.reply + orderLine;
+  const body = (sign && Number(conv.bot_replies) === 0) ? `${withOrder}
 
-${sign}` : withLink;
+${sign}` : withOrder;
 
   const token = igToken; // فُكَّ قبلَ مؤشّرِ الكتابة — لا نفكُّه مرّتين
   if (!token) return;
@@ -459,27 +391,6 @@ ${sign}` : withLink;
   // اللقطةُ أوّلاً ثمّ النصُّ تحتَها — ترتيبُ ما تراه الزبونةُ بمحادثتِها.
   // ولا تُرسَلُ القطعةُ الواحدةُ مرّتين: البائعةُ قد تعودُ لذكرِها بردٍّ تالٍ،
   // وإعادةُ الإرسالِ جلبٌ ثانٍ من حسابِ الوسائطِ بلا فائدةٍ للزبونة.
-  const poster = prod ? mediaPoster(prod) : '';
-  if (poster && poster.startsWith('https://res.cloudinary.com/')) {
-    const seen = await query(
-      `SELECT 1 FROM ig_messages WHERE conversation_id = $1 AND attachment_url = $2 LIMIT 1`,
-      [convId, poster]
-    ).catch(() => ({ rows: [] }));
-    if (!seen.rows.length) {
-      try {
-        const sent = await sendAttachment(token, customerId, poster, 'image');
-        await query(
-          `INSERT INTO ig_messages (conversation_id, mid, direction, text, attachment_url, attachment_type, ai)
-           VALUES ($1, $2, 'out', '', $3, 'image', true) ON CONFLICT (mid) DO NOTHING`,
-          [convId, sent?.message_id || null, poster]
-        );
-      } catch (e) {
-        // اللقطةُ زينةٌ لا ركن: فشلُها لا يمنعُ الردَّ نفسَه من الوصول
-        console.error('⚠️ لقطة المنتج:', e.message);
-      }
-    }
-  }
-
   let result;
   try {
     result = await sendMessage(token, customerId, body);
@@ -495,6 +406,35 @@ ${sign}` : withLink;
      VALUES ($1, $2, 'out', $3, true) ON CONFLICT (mid) DO NOTHING`,
     [convId, result?.message_id || null, body]
   );
+  // بطاقةُ كلِّ قطعةٍ برسالةٍ مستقلّة: إنستغرام ترسمُ معاينةً (صورةٌ واسمٌ ومتجرٌ
+  // ورابطٌ يُضغَط) للرابطِ **الأوّلِ وحدَه** في الرسالة — فعشرُ روابطَ برسالةٍ
+  // واحدةٍ بطاقةٌ واحدةٌ وتسعُ عناوينَ عارية. ومن طلبَ «تشكيلة» يستحقُّ تشكيلة.
+  //
+  // ولا تتكرّرُ قطعةٌ أُرسِلَ رابطُها قبلاً بهذه المحادثة: كان الرابطُ يُلحَقُ بكلِّ
+  // ردٍّ فتُعيدُ إنستغرام رسمَ البطاقةِ نفسِها بعدَ كلِّ رسالة — نفسُ الصورةِ خمسَ
+  // مرّاتٍ بمحادثةٍ واحدة.
+  for (const p of prods) {
+    const url = linkOf(p);
+    if (!url) continue;
+    const seen = await query(
+      `SELECT 1 FROM ig_messages WHERE conversation_id = $1 AND text LIKE $2 LIMIT 1`,
+      [convId, `%${p.id}%`]
+    ).catch(() => ({ rows: [] }));
+    if (seen.rows.length) continue;
+    const card = `${p.name} — ${Number(p.price)}₪\n${url}`;
+    try {
+      const sent = await sendMessage(token, customerId, card);
+      await query(
+        `INSERT INTO ig_messages (conversation_id, mid, direction, text, ai)
+         VALUES ($1, $2, 'out', $3, true) ON CONFLICT (mid) DO NOTHING`,
+        [convId, sent?.message_id || null, card]
+      );
+    } catch (e) {
+      // البطاقةُ زينةٌ لا ركن: الردُّ نفسُه وصلَ قبلَها
+      console.error('⚠️ بطاقة المنتج:', e.message);
+    }
+  }
+
   await query(
     `UPDATE ig_conversations
      SET last_message = $2, last_at = now(),
