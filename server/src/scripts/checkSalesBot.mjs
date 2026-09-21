@@ -16,7 +16,8 @@ import {
 } from '../utils/salesAgent.js';
 import { feeForCity, cityOfVillage, flatInternalLocalities } from '../config/deliveryCities.js';
 import { extractOrderDraft } from '../utils/orderExtract.js';
-import { shouldResume, isAuthError, attachmentKind } from '../controllers/instagram.controller.js';
+import { shouldResume, isAuthError, attachmentKind, burstDelay } from '../controllers/instagram.controller.js';
+import { palestinize } from '../utils/palestinian.js';
 import { orderProfit } from '../controllers/order.controller.js';
 
 let ok = 0; let bad = 0;
@@ -500,6 +501,51 @@ if (!anyConv) { console.log('  (لا محادثاتٍ — يُتخطّى)'); } e
   } catch (e) { if (e.message !== '__ROLLBACK__') { console.log('  ✗ ' + e.message); bad += 1; } }
   const left = (await query("SELECT count(*)::int AS n FROM ig_messages WHERE mid LIKE 'echo-test-%'")).rows[0].n;
   t('لم تبقَ رسالةُ فحصٍ بالقاعدة', left === 0, 'بقيَ ' + left);
+}
+
+// ═══ ١٤) اللهجةُ فلسطينيّةٌ لا خليطَ لهجات ═══
+//
+// كلُّ جملةٍ هنا منسوخةٌ حرفيّاً من محادثةٍ حقيقيّةٍ ضحكت فيها الزبونةُ على البائعةِ
+// حتى قاطعتها التاجرةُ واعتذرت. الاختبارُ يمنعُ عودتَها لا أكثر.
+H('١٤) اللهجةُ فلسطينيّةٌ لا خليطَ لهجات');
+{
+  const fixed = (src, must, mustNot) => {
+    const out = palestinize(src);
+    return (!mustNot || !out.includes(mustNot)) && (!must || out.includes(must));
+  };
+  t('«شنو» عراقيّةٌ ⇒ «شو»', fixed('شنو أخبارك؟', 'شو', 'شنو'));
+  t('«اللون ده» مصريّةٌ ⇒ «هاد»', fixed('صورة اللون ده', 'هاد', ' ده'));
+  t('«بتبغي» خليجيّةٌ ⇒ «بدّك»', fixed('بتبغي تشوفي؟', 'بدّك', 'بتبغي'));
+  t('«هسع» شاميّةٌ ⇒ «هسّا»', fixed('شوفي الصورة هسع', 'هسّا', 'هسع'));
+  t('«ما في مشكلة خالص» ⇒ «ولا يهمّك»', fixed('ما في مشكلة خالص!', 'ولا يهمّك', 'خالص'));
+  t('«حسناً» ترجمةٌ ⇒ «تمام»', fixed('حسناً، بدي أوضح', 'تمام', 'حسناً'));
+  t('«هل» لا تدخلُ المحكيّ', fixed('هل بدك تشوفي؟', 'بدك تشوفي', 'هل '));
+  t('«هذا/الآن/جداً» ⇒ محكيّ', fixed('هذا الطقم رائع جداً الآن', 'هاد الطقم حلو كتير هلأ', 'جداً'));
+  t('حرفُ العطفِ لا يحجبُ الإصلاح', fixed('وأيضاً فقط بنمرة 46', 'وكمان بس', 'أيضاً'));
+  t('نداءٌ باسمٍ لاتينيٍّ يسقط', fixed('حسناً يا Edaa، تمام', null, 'Edaa'));
+
+  // والمصفاةُ التي تُفسِدُ السليمَ أسوأُ من لا مصفاة
+  const same = (s) => palestinize(s) === s;
+  t('«ايش» فلسطينيّةٌ (الخليل وغزّة) فلا تُمَسّ', same('ايش بدك؟'));
+  t('«تاني» فلسطينيّةٌ فلا تصيرُ «ثاني»', same('بدي إشي تاني'));
+  t('«خالص» بمعنى مدفوعٍ لا تُمَسّ', same('خالص الحساب اليوم'));
+  t('«نعم» لا تُمَسّ («ونعم بالله»)', same('ونعم بالله، نعم؟'));
+  t('الإنجليزيّةُ تمرُّ كما هي', same('Hi, do you have size 46?'));
+  t('لهجةٌ مصريّةٌ اختارتها التاجرةُ تبقى مصريّة', palestinize('اللون ده حلو', 'eg') === 'اللون ده حلو');
+
+  // والنموذجُ نفسُه: هبوطٌ صامتٌ إلى هايكو يُعيدُ الخليطَ كلَّه من أوّلِه
+  const model = process.env.ASSISTANT_MODEL || 'claude-sonnet-5';
+  t('النموذجُ ليس هايكو', !/haiku/i.test(model), model);
+}
+
+// ═══ ١٥) دفعةُ رسائلٍ واحدةٍ ⇒ ردٌّ واحد ═══
+H('١٥) دفعةُ رسائلٍ واحدةٍ ⇒ ردٌّ واحد');
+{
+  t('أوّلُ رسالةٍ تنتظرُ ثمانيَ ثوانٍ', burstDelay(0) === 8000);
+  t('رسالةٌ بعدَ ثانيتينِ تُعيدُ الانتظارَ كاملاً', burstDelay(2000) === 8000);
+  t('وبعدَ ٢٥ ثانيةً لا يتجاوزُ الانتظارُ السقف', burstDelay(25000) === 5000);
+  t('وبعدَ السقفِ نردُّ فوراً', burstDelay(30000) === 0);
+  t('ولا انتظارَ سالباً مهما طالت', burstDelay(99000) === 0);
 }
 
 clearCatalog(st.id);

@@ -506,7 +506,59 @@ export function shouldResume({ pausedAt, ownerRepliedAfter = false, now = Date.n
 
 // ردٌّ آليٌّ على رسالةٍ واردة. كلُّ حارسٍ هنا مكتوبٌ لأنّ ما بعدَه يذهبُ لزبونةٍ
 // حقيقيّةٍ باسمِ المتجر: لا رجعةَ في رسالةٍ أُرسِلت.
-async function maybeAutoReply({ store, convId, customerId, text, isNew, who, channel = 'instagram', mediaUrl = '', mediaType = '' }) {
+// ───────────────────── دفعةُ الرسائلِ الواحدة ─────────────────────
+//
+// الناسُ لا يكتبونَ بالدايركت رسالةً واحدةً مكتملة، يكتبونَ فكرةً مقطّعةً على أربعِ
+// رسائلٍ بأربعِ ثوانٍ. وكانت البائعةُ تردُّ على كلِّ واحدةٍ على حدةٍ لأنّ كلَّ واحدةٍ
+// حدثُ webhook مستقلّ — فتخرجُ ردّانِ متتاليانِ متشابهانِ ومتناقضان. هذا حرفيّاً ما
+// رأته الزبونةُ في المحادثةِ الأخيرة: تحيّتانِ مختلفتانِ بنفسِ الدقيقة، ثمّ ضحكتانِ
+// على ضحكتِها الواحدة. ولا بائعةَ بشرٌ تفعلُ هذا.
+//
+// فننتظرُ أن تسكتَ ثمانيَ ثوانٍ قبلَ أن نفكّر. كلُّ رسالةٍ جديدةٍ تُلغي الموعدَ
+// وتفتحُ غيرَه، وحينَ يحينُ الموعدُ نقرأُ المحادثةَ كلَّها من القاعدةِ — وقد صارت
+// رسائلُها الأربعُ فيها — فنردُّ ردّاً واحداً يجمعُهنّ.
+//
+// والانتظارُ ليس أبديّاً: زبونةٌ تكتبُ بلا توقّفٍ كانت ستبقى بلا ردّ، فبعدَ نصفِ
+// دقيقةٍ من أوّلِ رسالةٍ نردُّ مهما استمرّت.
+//
+// وفائدةٌ ثانيةٌ مجّانيّة: ثماني ثوانٍ نافذةٌ تلحقُ فيها التاجرةُ لتردَّ بنفسِها
+// قبلَ أن تسبقَها البائعة، وحُرّاسُ «التاجرةُ على الشاشة» كلُّها تُفحَصُ عندَ
+// الموعدِ لا عندَ وصولِ الرسالة.
+const BURST_MS = 8000;
+const BURST_MAX_MS = 30000;
+const bursts = new Map();
+
+// كم ننتظرُ بعدَ هذه الرسالة، ونحن ننتظرُ منذُ waited مللي؟ مُصدَّرةٌ ليفحصَها
+// الاختبار: السقفُ هو ما يمنعُ زبونةً كثيرةَ الكتابةِ أن تبقى بلا ردٍّ إلى الأبد.
+export function burstDelay(waited) {
+  return Math.max(0, Math.min(BURST_MS, BURST_MAX_MS - Number(waited || 0)));
+}
+
+function maybeAutoReply(args) {
+  const key = args.convId;
+  if (!key) return runAutoReply(args).catch((e) => console.error('⚠️ البائعة الآلية:', e.message));
+
+  const prev = bursts.get(key);
+  if (prev) clearTimeout(prev.timer);
+  const since = prev?.since || Date.now();
+
+  // مرفقٌ وصلَ بأوّلِ الدفعةِ ثمّ تلتْه كلمة: الكلمةُ لا تُلغي الصورة. نحملُ آخرَ
+  // مرفقٍ رأيناهُ بالدفعةِ إن لم يحملْ آخرُ رسالةٍ مرفقاً بنفسِها.
+  const merged = args.mediaUrl ? args : { ...args, mediaUrl: prev?.args?.mediaUrl || '', mediaType: prev?.args?.mediaType || '' };
+  // «جديدة» صفةُ الدفعةِ لا صفةُ آخرِ رسالةٍ فيها
+  merged.isNew = prev?.args?.isNew || args.isNew;
+
+  const delay = burstDelay(Date.now() - since);
+  const timer = setTimeout(() => {
+    bursts.delete(key);
+    runAutoReply(merged).catch((e) => console.error('⚠️ البائعة الآلية:', e.message));
+  }, delay);
+  if (typeof timer.unref === 'function') timer.unref();
+  bursts.set(key, { timer, since, args: merged });
+  return Promise.resolve();
+}
+
+async function runAutoReply({ store, convId, customerId, text, isNew, who, channel = 'instagram', mediaUrl = '', mediaType = '' }) {
   // صورةٌ أو صوتٌ بلا كلام لم يكن يُجابُ عليه أصلاً — كانت البائعةُ تُدير ظهرَها
   // لنصفِ ما يصلُ الدايركت. الآن تنظرُ وتسمع.
   const isImage = mediaType === 'image' && Boolean(mediaUrl);
