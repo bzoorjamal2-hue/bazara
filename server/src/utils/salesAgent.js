@@ -395,12 +395,25 @@ function catalogLine(p, bot, stageFor) {
   return '- ' + parts.join(' | ');
 }
 
-function buildSystem({ storeName, bot, rows, stage, promo, lang, customerName }) {
+function buildSystem({ storeName, bot, rows, stage, promo, lang, customerName, adRef, adPhotoSeen }) {
   const tone = TONES[bot.bot_tone] || TONES.warm;
   const dialect = lang === 'en' ? 'English, warm and natural.' : (DIALECTS[bot.bot_dialect] || DIALECTS.ps);
   // الوصفُ يشرحُ اللهجة، والأمثلةُ تُسمِعُها. تُوضَعُ للفلسطينيّةِ وحدَها لأنّ صوتَها
   // هو ما نملكُ منه نصّاً حقيقيّاً من تاجرةٍ حقيقيّة.
   const voice = lang === 'en' || (bot.bot_dialect && bot.bot_dialect !== 'ps') ? '' : `\n\n${PS_VOICE}`;
+  // الزبونةُ ضغطت إعلاناً فوصلت. وهذا أهمُّ ما نعرفُه عنها بأوّلِ رسالة: «كم
+  // السعر؟» بلا سياقٍ سؤالٌ بلا جواب، ومعَ الإعلانِ سؤالٌ عن قطعةٍ بعينِها.
+  //
+  // ولا نختارُ نحن القطعةَ ولا نُطابِقُ العنوانَ بالأسماءِ برمجيّاً: مطابقةٌ تقريبيّةٌ
+  // تُخطئُ فتُعطي سعرَ قطعةٍ غيرِ التي أعلنّا عنها — وهو أسوأُ من «أي قطعة؟» بكثير.
+  // نُعطي النموذجَ ما أعطتْنا ميتا ونتركُ له الترشيحَ من الكتالوجِ وحدَه، والسعرُ
+  // يبقى قرارَنا كما هو. وإن لم يتّضحْ فسؤالٌ واحدٌ قصيرٌ خيرٌ من تخمين.
+  const ad = adRef && (adRef.title || adRef.photo) ? `
+الزبونةُ وصلتْكِ من **إعلانِ المتجرِ** لا من الصفحة${adRef.title ? `، وعنوانُ الإعلان: "${adRef.title}"` : ''}.${adPhotoSeen ? `
+والصورةُ المرفقةُ بهذه الرسالةِ هي **صورةُ الإعلانِ الذي ضغطته**، لا صورةً أرسلَتْها هي — فلا تقولي «الصورة اللي بعتيها» ولا تشكريها عليها.` : ''}
+فهي تسألُ عن قطعةٍ بعينِها رأتْها للتوّ، وإن قالت «كم السعر؟» أو «بكم؟» بلا اسمٍ فهي تقصدُ قطعةَ الإعلان.
+رشّحي من الكتالوجِ أقربَ قطعةٍ للإعلانِ وابدئي بها بالاسمِ والسعر. وإن تشابهت عليكِ قطعتانِ فاعرضيهما معاً بسطرٍ واحد. وإن لم يتّضحْ شيءٌ أبداً فاسألي سؤالاً واحداً قصيراً — ولا تخمّني سعراً لقطعةٍ لستِ متأكّدةً أنّها هي.` : '';
+
   const promoLine = promo
     ? `\nالقطعةُ التي تُروّجينَ لها اليوم: "${promo.name}" (id:${promo.id}). قدّميها أوّلاً ما لم تسألِ الزبونةُ عن غيرِها صراحةً.`
     : '';
@@ -444,7 +457,7 @@ ${address}
 
 أسلوبُكِ: ${tone}
 لغتُكِ: ${dialect}${voice}
-اكتبي كما يكتبُ الناسُ بالمحادثة: جملٌ قصيرة، بلا عناوينَ ولا نقاطٍ ولا تنسيق، وإيموجي واحدٌ على الأكثرِ بالردّ.${promoLine}${haggleLine}
+اكتبي كما يكتبُ الناسُ بالمحادثة: جملٌ قصيرة، بلا عناوينَ ولا نقاطٍ ولا تنسيق، وإيموجي واحدٌ على الأكثرِ بالردّ.${ad}${promoLine}${haggleLine}
 
 قواعدُ لا تُكسَرُ أبداً:
 - لا تذكري قطعةً ليست في الكتالوجِ أدناه، ولا تخترعي لوناً ولا نمرةً ولا سعراً.
@@ -780,7 +793,7 @@ function freeReply({ rows, bot, stage, lastUser, promo }) {
 
 // يُنادى من قناتين: مساعِدةُ الموقع (assistant.controller) وwebhook إنستغرام.
 // messages: [{ role:'user'|'assistant', content }] — آخرُها رسالةُ الزبونة.
-export async function agentReply({ store, bot, messages, stage = 0, customerName = '', image = null }) {
+export async function agentReply({ store, bot, messages, stage = 0, customerName = '', image = null, adRef = null, adPhotoSeen = false }) {
   const lastUser = [...messages].reverse().find((m) => m.role === 'user')?.content || '';
   const lang = hasArabic(lastUser) ? 'ar' : 'en';
 
@@ -813,7 +826,7 @@ export async function agentReply({ store, bot, messages, stage = 0, customerName
 
   if (canAi) {
     try {
-      const system = buildSystem({ storeName: store.name, bot, rows, stage: nextStage, promo, lang, customerName });
+      const system = buildSystem({ storeName: store.name, bot, rows, stage: nextStage, promo, lang, customerName, adRef, adPhotoSeen });
       const history = messages.slice(-AI_HISTORY).map((m) => ({ role: m.role, content: String(m.content).slice(0, 800) }));
       // الصورةُ تُلحَقُ بآخرِ رسالةٍ من الزبونةِ وحدَها: تاريخُ المحادثةِ نصٌّ،
       // والصورةُ هي ما وصلَ الآن.

@@ -35,6 +35,30 @@ import {
 // صوتاً، فيقولُ نوعَها بدل «مرفق» مبهمة.
 // نوعُ المرفقِ كما نُصنّفُه نحن لا كما تُسمّيه ميتا. مُصدَّرةٌ ليفحصَها الاختبار:
 // الخطأُ هنا يُحوِّلُ إبهاماً إلى نداءِ رؤيةٍ كامل.
+// ───────────────── الإعلانُ الذي جاءت منه الزبونة ─────────────────
+//
+// إعلانُ «راسِلنا» (Click To Direct) يُرسِلُ معه سياقَه: عنوانَ الإعلانِ وصورتَه
+// ومعرّفَه. وهو يصلُ بثلاثةِ أشكالٍ حسبَ القناةِ ونوعِ الدخول — ملتصقاً بالرسالةِ
+// (إنستغرام)، أو حدثاً مستقلّاً، أو داخلَ postback (زرُّ البدءِ بماسنجر) — ولا
+// يحتاجُ أيَّ اشتراكٍ جديدٍ بالـwebhook، فحقلُ messages يحملُه أصلاً.
+//
+// مُصدَّرةٌ ليفحصَها الاختبار: ثلاثةُ أشكالٍ يعني ثلاثَ فرصٍ لأن نرميَ الإعلانَ بصمت.
+export function adRefFrom(ev) {
+  const r = ev?.referral || ev?.message?.referral || ev?.postback?.referral;
+  if (!r || typeof r !== 'object') return null;
+  const ctx = r.ads_context_data || {};
+  const out = {
+    adId: String(r.ad_id || ''),
+    title: String(ctx.ad_title || '').trim().slice(0, 200),
+    photo: String(ctx.photo_url || ctx.video_url || ''),
+    ref: String(r.ref || '').slice(0, 200),
+    source: String(r.source || ''),
+  };
+  // إحالةٌ بلا معرّفٍ ولا عنوانٍ ولا صورةٍ لا تقولُ شيئاً (دخولٌ من رابطِ m.me
+  // مثلاً): تُهمَلُ بدل أن تُخزَّنَ سطراً فارغاً يُوهِمُ البائعةَ بإعلانٍ لا وجودَ له.
+  return out.adId || out.title || out.photo ? out : null;
+}
+
 export function attachmentKind(msg, att) {
   if (msg?.sticker_id || att?.payload?.sticker_id) return 'sticker';
   return att?.type || '';
@@ -156,6 +180,29 @@ async function processWebhook(body) {
         } else if (ev.reaction?.mid) {
           const val = ev.reaction.action === 'unreact' ? '' : (ev.reaction.reaction || 'love');
           await query('UPDATE ig_messages SET reaction = $2 WHERE mid = $1', [ev.reaction.mid, val]);
+        } else if (businessId && senderId) {
+          // إحالةُ إعلانٍ تصلُ **قبلَ** الرسالةِ وحدَها (ماسنجر يفعلُها): لو أهملناها
+          // هنا وصلت رسالةُ «كم السعر» بعدَها بلا سياقٍ أبداً. نُنشئُ المحادثةَ
+          // ونحفظُها بلا أن نلمسَ عدّادَ غيرِ المقروءِ ولا سطرَ آخرِ رسالة — فليست
+          // رسالةً تُعرَضُ للتاجرة.
+          const ref = adRefFrom(ev);
+          if (ref) {
+            const sr2 = await query(
+              'SELECT id, ig_page_id FROM stores WHERE (ig_user_id = $1 OR ig_page_id = $1) AND ig_connected = true',
+              [businessId]
+            );
+            const st2 = sr2.rows[0];
+            if (st2) {
+              await query(
+                `INSERT INTO ig_conversations (store_id, ig_sender_id, last_message, last_at, unread, channel, ad_ref)
+                 VALUES ($1, $2, '', now(), 0, $3, $4)
+                 ON CONFLICT (store_id, ig_sender_id) DO UPDATE SET ad_ref = EXCLUDED.ad_ref`,
+                [st2.id, senderId,
+                  String(businessId) === String(st2.ig_page_id || '') ? 'messenger' : 'instagram',
+                  JSON.stringify(ref)]
+              ).catch((e) => { if (e.code !== '42703') throw e; });
+            }
+          }
         }
         continue;
       }
@@ -220,6 +267,14 @@ async function processWebhook(body) {
         [store.id, customerId, preview, isEcho ? 0 : 1, channel]
       );
       const convId = conv.rows[0].id;
+
+      // جاءت من إعلان؟ نحفظُ سياقَه على المحادثة. ويُكتَبُ فوقَ القديمِ عمداً:
+      // زبونةٌ عادت بعدَ أسبوعٍ من إعلانٍ ثانٍ تسألُ عن الجديدِ لا عن القديم.
+      const adRef = isEcho ? null : adRefFrom(ev);
+      if (adRef) {
+        await query('UPDATE ig_conversations SET ad_ref = $2 WHERE id = $1', [convId, JSON.stringify(adRef)])
+          .catch((e) => { if (e.code !== '42703') throw e; }); // الترقيةُ لم تصلْ بعد
+      }
 
       // ردُّ الزبونِ على ستوري: صورتُها تُنسَخُ عندنا لتبقى، فرابطُ Meta ينتهي.
       const storyUrl = msg.reply_to?.story?.url
@@ -577,7 +632,7 @@ async function runAutoReply({ store, convId, customerId, text, isNew, who, chann
   let conv;
   try {
     const r = await query(
-      `SELECT id, order_id, bot_paused, bot_paused_at, bot_sent_at, bot_replies, bot_stage, customer_username, customer_name
+      `SELECT id, order_id, bot_paused, bot_paused_at, bot_sent_at, bot_replies, bot_stage, customer_username, customer_name, ad_ref
        FROM ig_conversations WHERE id = $1`,
       [convId]
     );
@@ -727,12 +782,23 @@ async function runAutoReply({ store, convId, customerId, text, isNew, who, chann
     messages[messages.length - 1] = { role: 'user', content: spoken };
   }
 
+  // الإعلانُ الذي جاءت منه: عنوانُه نصٌّ يُمرَّرُ دائماً، وصورتُه تُعرَضُ للنموذجِ
+  // **مرّةً واحدةً** بأوّلِ ردٍّ بالمحادثة. والصورةُ أصدقُ من العنوان: عنوانٌ مثلُ
+  // «تشكيلة الخريف 🍂» لا يدلُّ على قطعة، والصورةُ تدلُّ. ومرّةً واحدةً لأنّ
+  // نداءَ الرؤيةِ يُكلِّف، وما بعدَ الردِّ الأوّلِ صارَ الحديثُ يقودُ نفسَه.
+  const adRef = conv.ad_ref && typeof conv.ad_ref === 'object' ? conv.ad_ref : null;
+  let adPhotoSeen = false;
+  if (adRef?.photo && !image && Number(conv.bot_replies) === 0) {
+    try { image = await imageBlock(adRef.photo); adPhotoSeen = Boolean(image); }
+    catch (e) { console.error('⚠️ صورة الإعلان:', e.message); }
+  }
+
   const out = await agentReply({
     store: { id: store.id, name: store.name || 'متجرنا' },
     bot, messages, stage: Number(conv.bot_stage) || 0,
     // الاسمُ كما يصلُنا من ميتا — به تعرفُ البائعةُ أتخاطبُ رجلاً أم امرأة
     customerName: conv.customer_name || conv.customer_username || who || '',
-    image,
+    image, adRef, adPhotoSeen,
   });
   if (!out.reply) return;
 

@@ -16,7 +16,7 @@ import {
 } from '../utils/salesAgent.js';
 import { feeForCity, cityOfVillage, flatInternalLocalities } from '../config/deliveryCities.js';
 import { extractOrderDraft } from '../utils/orderExtract.js';
-import { shouldResume, isAuthError, attachmentKind, burstDelay } from '../controllers/instagram.controller.js';
+import { shouldResume, isAuthError, attachmentKind, burstDelay, adRefFrom } from '../controllers/instagram.controller.js';
 import { palestinize } from '../utils/palestinian.js';
 import { smalltalkType } from '../controllers/assistant.controller.js';
 import { orderProfit } from '../controllers/order.controller.js';
@@ -560,6 +560,30 @@ H('١٦) اختصارُ التحيّةِ لا يبلعُ كلامَ الزبون
   t('«رسالة» ليست تحيّة', smalltalkType('وصلتك رسالة؟') === null);
   t('«هايل» ليست «هاي»', smalltalkType('الطقم هايل') === null);
   t('نيّةُ الشراءِ تتقدّمُ على التحيّة', smalltalkType('مرحبا بدي فستان') === null);
+}
+
+// ═══ ١٧) الزبونةُ الجايةُ من إعلان ═══
+//
+// «كم السعر؟» أوّلَ رسالةٍ كان جوابُها «أي قطعة؟» — والزبونةُ ضغطت الإعلانَ للتوّ
+// ورأت القطعةَ قدّامها. ميتا تُرسلُ سياقَ الإعلانِ مع الرسالةِ بثلاثةِ أشكال.
+H('١٧) الزبونةُ الجايةُ من إعلان');
+{
+  const ctx = { ad_title: 'طقم إلين الخمري', photo_url: 'https://x/a.jpg' };
+  t('ملتصقاً بالرسالة (إنستغرام)',
+    adRefFrom({ message: { referral: { ad_id: '1', source: 'ADS', ads_context_data: ctx } } })?.title === ctx.ad_title);
+  t('حدثاً مستقلّاً',
+    adRefFrom({ referral: { ad_id: '2', source: 'ADS', ads_context_data: ctx } })?.adId === '2');
+  t('داخلَ postback (زرُّ البدء)',
+    adRefFrom({ postback: { referral: { ad_id: '3', ads_context_data: ctx } } })?.adId === '3');
+  t('الصورةُ تُلتقَط', adRefFrom({ referral: { ad_id: '4', ads_context_data: ctx } })?.photo === ctx.photo_url);
+  t('وفيديو الإعلانِ يقومُ مقامَ الصورة',
+    adRefFrom({ referral: { ad_id: '5', ads_context_data: { video_url: 'https://x/v.mp4' } } })?.photo === 'https://x/v.mp4');
+  // وما لا يقولُ شيئاً لا يُخزَّن: سطرٌ فارغٌ يُوهِمُ البائعةَ بإعلانٍ لا وجودَ له
+  t('رسالةٌ عاديّةٌ بلا إحالةٍ ⇒ لا شيء', adRefFrom({ message: { text: 'مرحبا' } }) === null);
+  t('إحالةٌ جوفاءُ (m.me) ⇒ لا شيء', adRefFrom({ referral: { source: 'SHORTLINK', type: 'OPEN_THREAD' } }) === null);
+  t('حدثٌ فارغٌ لا يكسر', adRefFrom(null) === null && adRefFrom({}) === null);
+  t('عنوانٌ طويلٌ يُقَصّ',
+    adRefFrom({ referral: { ads_context_data: { ad_title: 'ط'.repeat(500) } } }).title.length === 200);
 }
 
 clearCatalog(st.id);
