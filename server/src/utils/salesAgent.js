@@ -395,7 +395,8 @@ function catalogLine(p, bot, stageFor) {
   return '- ' + parts.join(' | ');
 }
 
-function buildSystem({ storeName, bot, rows, stage, promo, lang, customerName, adRef, adPhotoSeen }) {
+// مُصدَّرةٌ ليفحصَها الاختبار: سياقٌ لا يصلُ النصَّ كأنّه لم يُلتقَطْ أصلاً.
+export function buildSystem({ storeName, bot, rows, stage, promo, lang, customerName, adRef, adPhotoSeen }) {
   const tone = TONES[bot.bot_tone] || TONES.warm;
   const dialect = lang === 'en' ? 'English, warm and natural.' : (DIALECTS[bot.bot_dialect] || DIALECTS.ps);
   // الوصفُ يشرحُ اللهجة، والأمثلةُ تُسمِعُها. تُوضَعُ للفلسطينيّةِ وحدَها لأنّ صوتَها

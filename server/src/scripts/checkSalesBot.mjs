@@ -12,7 +12,7 @@ import {
   loadBot, sanitize, allowedPrice, effectiveFloor, haggleMargin, DEFAULT_HAGGLE_MARGIN,
   quotaLeft, MONTHLY_QUOTA,
   normalizePhone, testModeAllows, botActiveNow, stockLine, sizesOf, colorsOf, MAX_HAGGLE_MARGIN,
-  variantAvailable, haggleIntent, needsHuman, clearCatalog, photoFor,
+  variantAvailable, haggleIntent, needsHuman, clearCatalog, photoFor, buildSystem,
 } from '../utils/salesAgent.js';
 import { feeForCity, cityOfVillage, flatInternalLocalities } from '../config/deliveryCities.js';
 import { extractOrderDraft } from '../utils/orderExtract.js';
@@ -584,6 +584,18 @@ H('١٧) الزبونةُ الجايةُ من إعلان');
   t('حدثٌ فارغٌ لا يكسر', adRefFrom(null) === null && adRefFrom({}) === null);
   t('عنوانٌ طويلٌ يُقَصّ',
     adRefFrom({ referral: { ads_context_data: { ad_title: 'ط'.repeat(500) } } }).title.length === 200);
+
+  // ولا يكفي أن نلتقطَه: سياقٌ لا يصلُ نصَّ البائعةِ كأنّه لم يُلتقَطْ أصلاً
+  const sys = (adRef, adPhotoSeen = false) =>
+    buildSystem({ storeName: st.name, bot, rows: rows.slice(0, 3), stage: 0, promo: null, lang: 'ar', customerName: '', adRef, adPhotoSeen });
+  const withAd = sys({ title: 'طقم إلين الخمري', photo: 'https://x/a.jpg' });
+  t('عنوانُ الإعلانِ يصلُ نصَّ البائعة', withAd.includes('طقم إلين الخمري'));
+  t('وتعرفُ أنّ «كم السعر؟» تعني قطعةَ الإعلان', withAd.includes('كم السعر؟'));
+  t('ولا تخمّنُ سعراً لقطعةٍ ليست هي', withAd.includes('ولا تخمّني سعراً'));
+  t('بلا إعلانٍ لا يُذكَرُ إعلانٌ أصلاً', !sys(null).includes('إعلانِ المتجرِ'));
+  // الصورةُ صورةُ إعلانِنا لا صورةً أرسلَتْها هي — وشكرُها عليها فضيحةٌ صغيرة
+  t('صورةُ الإعلانِ تُعرَّفُ أنّها إعلانُنا', sys({ title: 'ت', photo: 'p' }, true).includes('صورةُ الإعلانِ الذي ضغطته'));
+  t('ولا تُذكَرُ الصورةُ إن لم تُعرَضْ عليها', !withAd.includes('صورةُ الإعلانِ الذي ضغطته'));
 }
 
 clearCatalog(st.id);
