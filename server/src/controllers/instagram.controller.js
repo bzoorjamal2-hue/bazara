@@ -5,6 +5,7 @@ import { encrypt, decrypt } from '../config/opost.js';
 import { notifyUser } from '../utils/notify.js';
 import { feeForCity, flatInternalLocalities } from '../config/deliveryCities.js';
 import { extractOrderDraft } from '../utils/orderExtract.js';
+import { imageBlock, transcribe, canHear } from '../utils/mediaUnderstand.js';
 import {
   loadBot, botActiveNow, agentReply, countReply, MAX_BOT_REPLIES, testModeAllows,
 } from '../utils/salesAgent.js';
@@ -240,7 +241,12 @@ async function processWebhook(body) {
       // الإشعارِ لا قبلَه — لو تعثّرت (مزوّدُ ذكاءٍ ساقطٌ مثلاً) تكونُ التاجرةُ قد
       // عرفت برسالةِ زبونتِها على أيِّ حال. ولا ننتظرُها: الـwebhook ردَّ 200 من
       // زمان، وتأخيرُ الحلقةِ هنا يؤخّرُ باقي رسائلِ الدفعة.
-      maybeAutoReply({ store, convId, customerId, text, isNew: conv.rows[0].is_new, who })
+      maybeAutoReply({
+        store, convId, customerId, text, isNew: conv.rows[0].is_new, who,
+        // رابطُ Meta الأصليُّ لا نسختُنا على كلاوديناري: هو طازجٌ الآنَ وقراءتُه
+        // مجّانيّةٌ علينا، ونسختُنا تُكلّفُ من حصّةِ التسليمِ المحدودة.
+        mediaUrl: att?.payload?.url || '', mediaType: attType,
+      })
         .catch((e) => console.error('⚠️ البائعة الآلية:', e.message));
     }
   }
@@ -254,8 +260,12 @@ const OWNER_PRESENT_MINUTES = 10;
 
 // ردٌّ آليٌّ على رسالةٍ واردة. كلُّ حارسٍ هنا مكتوبٌ لأنّ ما بعدَه يذهبُ لزبونةٍ
 // حقيقيّةٍ باسمِ المتجر: لا رجعةَ في رسالةٍ أُرسِلت.
-async function maybeAutoReply({ store, convId, customerId, text, isNew, who }) {
-  if (!text) return;                       // صورةٌ بلا كلام: لا شيءَ يُفهَمُ فيُجاب
+async function maybeAutoReply({ store, convId, customerId, text, isNew, who, mediaUrl = '', mediaType = '' }) {
+  // صورةٌ أو صوتٌ بلا كلام لم يكن يُجابُ عليه أصلاً — كانت البائعةُ تُدير ظهرَها
+  // لنصفِ ما يصلُ الدايركت. الآن تنظرُ وتسمع.
+  const isImage = mediaType === 'image' && Boolean(mediaUrl);
+  const isVoice = mediaType === 'audio' && Boolean(mediaUrl);
+  if (!text && !isImage && !isVoice) return;
   const bot = await loadBot(store.id);
   if (!botActiveNow(bot, 'instagram', { isFirstMessage: Boolean(isNew) })) return;
 
@@ -316,6 +326,54 @@ async function maybeAutoReply({ store, convId, customerId, text, isNew, who }) {
   ).catch(() => ({ rows: [] }));
   if (recent.rows.length) return;
 
+  // «عم تكتب…» قبلَ التفكيرِ لا بعدَه: النموذجُ يأخذُ أربعَ ثوانٍ، وهي فراغٌ ميّتٌ
+  // بالمحادثةِ ما لم يرَ الزبونُ أنّ أحداً يكتب. فشلُه لا يوقفُ شيئاً.
+  const igToken = decrypt(store.ig_access_token);
+  if (igToken) sendTyping(igToken, customerId, true).catch(() => {});
+
+  // الصوتُ يُفرَّغُ نصّاً فيدخلُ المحادثةَ ككلامٍ عاديّ — والتفريغُ يُحفَظُ بالرسالةِ
+  // نفسِها كي تقرأَه التاجرةُ أيضاً بدل أن ترى «🎤 رسالة صوتية» بلا مضمون.
+  let heard = '';
+  if (isVoice) {
+    if (canHear()) {
+      try {
+        heard = await transcribe(mediaUrl);
+        if (heard) {
+          await query(
+            "UPDATE ig_messages SET text = $2 WHERE conversation_id = $1 AND attachment_url <> '' AND text = '' AND direction = 'in' AND id = (SELECT id FROM ig_messages WHERE conversation_id = $1 AND direction = 'in' ORDER BY created_at DESC LIMIT 1)",
+            [convId, heard]
+          ).catch(() => {});
+
+        }
+      } catch (e) {
+        console.error('⚠️ تفريغ الصوت:', e.message);
+      }
+    }
+    if (!heard) {
+      // لا نصمت: الصمتُ أمامَ رسالةٍ صوتيّةٍ يبدو تجاهلاً. نقولُها بصراحةٍ ونطلبُ الكتابة.
+      const say = 'سمعت إنّك بعتّ رسالة صوتية بس ما قدرت أسمعها 🌷 بتكتبيلي شو بتحتاجي؟';
+      if (igToken) {
+        try {
+          const sent = await sendMessage(igToken, customerId, say);
+          await query(
+            "INSERT INTO ig_messages (conversation_id, mid, direction, text, ai) VALUES ($1,$2,'out',$3,true) ON CONFLICT (mid) DO NOTHING",
+            [convId, sent?.message_id || null, say]
+          );
+          await query('UPDATE ig_conversations SET last_message = $2, last_at = now(), bot_replies = bot_replies + 1 WHERE id = $1', [convId, say]);
+        } catch { /* خارجَ النافذة */ }
+      }
+      return;
+    }
+  }
+
+  // الصورةُ تُقرأُ بايتاتٍ وتُمرَّرُ للنموذج. فشلُها لا يُسكِتُ البائعةَ — تردُّ على
+  // النصِّ إن وُجد، وتعتذرُ إن لم يوجد.
+  let image = null;
+  if (isImage) {
+    try { image = await imageBlock(mediaUrl); }
+    catch (e) { console.error('⚠️ قراءة الصورة:', e.message); }
+  }
+
   const hist = await query(
     `SELECT direction, text FROM ig_messages
      WHERE conversation_id = $1 AND text <> '' ORDER BY created_at DESC LIMIT 8`,
@@ -323,20 +381,20 @@ async function maybeAutoReply({ store, convId, customerId, text, isNew, who }) {
   );
   const messages = hist.rows.reverse()
     .map((m) => ({ role: m.direction === 'in' ? 'user' : 'assistant', content: m.text }));
+  const spoken = heard || text || (image ? 'بعتتلك صورة — شو رأيك فيها؟ في شي شبهها عندكم؟' : '');
   if (!messages.length || messages[messages.length - 1].role !== 'user') {
-    messages.push({ role: 'user', content: text });
+    messages.push({ role: 'user', content: spoken });
+  } else if (heard || (image && !text)) {
+    // آخرُ رسالةٍ محفوظةٌ بلا نصّ (مرفقٌ وحدَه) — نضعُ مكانَها ما فهمناه
+    messages[messages.length - 1] = { role: 'user', content: spoken };
   }
-
-  // «عم تكتب…» قبلَ التفكيرِ لا بعدَه: النموذجُ يأخذُ أربعَ ثوانٍ، وهي فراغٌ ميّتٌ
-  // بالمحادثةِ ما لم يرَ الزبونُ أنّ أحداً يكتب. فشلُه لا يوقفُ شيئاً.
-  const igToken = decrypt(store.ig_access_token);
-  if (igToken) sendTyping(igToken, customerId, true).catch(() => {});
 
   const out = await agentReply({
     store: { id: store.id, name: store.name || 'متجرنا' },
     bot, messages, stage: Number(conv.bot_stage) || 0,
     // الاسمُ كما يصلُنا من ميتا — به تعرفُ البائعةُ أتخاطبُ رجلاً أم امرأة
     customerName: conv.customer_name || conv.customer_username || who || '',
+    image,
   });
   if (!out.reply) return;
 

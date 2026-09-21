@@ -324,6 +324,7 @@ ${address}
 - أجرةُ التوصيلِ مكتوبةٌ لكِ تحت. اجمعيها على سعرِ القطعةِ حين تُسألينَ عن الإجمالي، ولا تخترعي رقماً ولا تقولي «ما بعرف».${deliveryLine}
 - عندَ الشكوى أو الإرجاعِ أو أيِّ أمرٍ يحتاجُ قراراً، لا تجاوبي: اضبطي handoff=true وقولي إنّ صاحبةَ المتجرِ ستردُّ بنفسِها بعدَ قليل.
 - أنهي ردَّكِ بخطوةٍ واحدةٍ واضحة: سؤالٌ عن اللونِ أو النمرة، أو "بحجزهالك؟".
+- إن وصلتْكِ **صورة**: انظري إليها واذكري ما فيها بكلماتِكِ (النوعُ والقصّةُ واللون)، ثمّ رشّحي أقربَ قطعةٍ من الكتالوجِ شبهاً بها وقولي لماذا تُشبهُها. وإن لم يكن في الكتالوجِ شبيهٌ فقولي ذلك بصراحةٍ واعرضي أقربَ ما عندَكِ.
 
 الردّ:
 - reply: نصُّ رسالتِكِ للزبونةِ كما تُرسَلُ حرفيّاً (بلا مقدّماتٍ ولا شرحٍ لنفسِكِ).
@@ -388,7 +389,16 @@ async function callClaude(system, messages) {
         system,
         tools: [{ name: 'say', description: 'ردُّ البائعةِ على الزبونة.', input_schema: SCHEMA }],
         tool_choice: { type: 'tool', name: 'say' },
-        messages,
+        // الصورةُ تُرفَقُ بالرسالةِ نفسِها قبلَ نصِّها — هكذا تقرأُها Claude
+        messages: messages.map((m) => (m.image
+          ? {
+            role: m.role,
+            content: [
+              { type: 'image', source: { type: 'base64', media_type: m.image.mime, data: m.image.base64 } },
+              { type: 'text', text: m.content || 'شو رأيك بهاي؟' },
+            ],
+          }
+          : { role: m.role, content: m.content })),
       }),
     });
     if (!r.ok) throw new Error(`claude ${r.status}: ${(await r.text().catch(() => '')).slice(0, 200)}`);
@@ -410,7 +420,12 @@ async function callGemini(system, messages) {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         system_instruction: { parts: [{ text: system }] },
-        contents: messages.map((m) => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })),
+        contents: messages.map((m) => ({
+          role: m.role === 'assistant' ? 'model' : 'user',
+          parts: m.image
+            ? [{ inline_data: { mime_type: m.image.mime, data: m.image.base64 } }, { text: m.content || '' }]
+            : [{ text: m.content }],
+        })),
         generationConfig: {
           temperature: 0.8,
           maxOutputTokens: 600,
@@ -548,7 +563,7 @@ function freeReply({ rows, bot, stage, lastUser, promo }) {
 
 // يُنادى من قناتين: مساعِدةُ الموقع (assistant.controller) وwebhook إنستغرام.
 // messages: [{ role:'user'|'assistant', content }] — آخرُها رسالةُ الزبونة.
-export async function agentReply({ store, bot, messages, stage = 0, customerName = '' }) {
+export async function agentReply({ store, bot, messages, stage = 0, customerName = '', image = null }) {
   const lastUser = [...messages].reverse().find((m) => m.role === 'user')?.content || '';
   const lang = hasArabic(lastUser) ? 'ar' : 'en';
 
@@ -583,6 +598,12 @@ export async function agentReply({ store, bot, messages, stage = 0, customerName
     try {
       const system = buildSystem({ storeName: store.name, bot, rows, stage: nextStage, promo, lang, customerName });
       const history = messages.slice(-AI_HISTORY).map((m) => ({ role: m.role, content: String(m.content).slice(0, 800) }));
+      // الصورةُ تُلحَقُ بآخرِ رسالةٍ من الزبونةِ وحدَها: تاريخُ المحادثةِ نصٌّ،
+      // والصورةُ هي ما وصلَ الآن.
+      if (image && history.length) {
+        const last = history.length - 1;
+        if (history[last].role === 'user') history[last] = { ...history[last], image };
+      }
       const out = process.env.ANTHROPIC_API_KEY
         ? await callClaude(system, history)
         : await callGemini(system, history);
