@@ -15,7 +15,7 @@ import {
 } from '../utils/salesAgent.js';
 import { feeForCity, cityOfVillage, flatInternalLocalities } from '../config/deliveryCities.js';
 import { extractOrderDraft } from '../utils/orderExtract.js';
-import { shouldResume } from '../controllers/instagram.controller.js';
+import { shouldResume, isAuthError } from '../controllers/instagram.controller.js';
 import { orderProfit } from '../controllers/order.controller.js';
 
 let ok = 0; let bad = 0;
@@ -369,6 +369,27 @@ if (paused.length) {
 }
 t('لا محادثةَ عالقةٌ بلا مَن يردُّ عليها أبداً',
   paused.every(willResume), paused.length + ' موقوفة');
+
+H('١١) لا يُفصَلُ حسابُ إنستغرام إلّا لموتِ التوكنِ حقّاً');
+// كان الفحصُ يقبلُ `type === 'OAuthException'` وحدَه، وميتا تُعطيه لعائلةٍ كاملةٍ
+// من الأخطاء. فمرفقٌ صوتيٌّ ترفضُه ميتا كان يمسحُ التوكنَ ويفصلُ المتجرَ كلَّه.
+{
+  const err = (code, type, sub) => ({ body: { error: { code, type, error_subcode: sub } } });
+  const cases = [
+    ['توكنٌ منتهٍ (١٩٠)', err(190, 'OAuthException', 463), true],
+    ['التطبيقُ أُزيل (١٩٠/٤٥٨)', err(190, 'OAuthException', 458), true],
+    ['جلسةٌ باطلة (١٠٢)', err(102, 'OAuthException'), true],
+    ['خارجَ نافذةِ ٢٤ ساعة (١٠)', err(10, 'OAuthException'), false],
+    ['مرفقٌ مرفوض (١٠٠)', err(100, 'OAuthException', 2534014), false],
+    ['نقصُ صلاحيّة (٢٠٠)', err(200, 'OAuthException'), false],
+    ['حدُّ الاستدعاءات (٦١٣)', err(613, 'OAuthException'), false],
+    ['عطلٌ مؤقّتٌ بميتا (٢)', err(2, 'OAuthException'), false],
+    ['خطأٌ بلا جسمِ ميتا', new Error('network'), false],
+  ];
+  for (const [name, e, want] of cases) {
+    t(name + (want ? ' ⇒ يفصل' : ' ⇒ لا يفصل'), isAuthError(e) === want);
+  }
+}
 
 H('١٠ب) صدى ميتا لا يجعلُ ردَّ البائعةِ يبدو ردَّ التاجرة');
 // السباقُ الذي أسكتَ البائعةَ بعدَ ردٍّ واحد: ميتا تُعيدُ ما نرسلُه كـecho،
