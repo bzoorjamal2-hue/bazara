@@ -112,12 +112,20 @@ function hasShoppingIntent(q) {
   return all.some((w) => q.includes(normalizeAr(w)));
 }
 
+// التحيّةُ كلمةٌ قائمةٌ بذاتِها لا حروفٌ داخلَ كلمة. كان الفحصُ بـincludes فصارَ
+// «استلام» فيها «سلام»، و«رسالة» فيها «سلا». الحدُّ يُحسَبُ بأنفسِنا لأنّ \b
+// مبنيٌّ على ASCII ولا يرى العربيّة.
+function hasWord(q, word) {
+  const w = normalizeAr(word).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`(?<![\\p{L}\\p{M}])${w}(?![\\p{L}\\p{M}])`, 'u').test(q);
+}
+
 // تصنيف الدردشة: تحية/شكر فقط إن لم تتضمّن أي نيّة شراء
-function smalltalkType(text) {
+export function smalltalkType(text) {
   const q = normalizeAr(text);
   if (hasShoppingIntent(q)) return null;
-  if (GREET_WORDS.some((w) => q.includes(normalizeAr(w)))) return 'greet';
-  if (THANKS_WORDS.some((w) => q.includes(normalizeAr(w)))) return 'thanks';
+  if (GREET_WORDS.some((w) => hasWord(q, w))) return 'greet';
+  if (THANKS_WORDS.some((w) => hasWord(q, w))) return 'thanks';
   return null;
 }
 
@@ -398,7 +406,14 @@ export async function chatAssistant(req, res, next) {
   }
 
   // تحية/شكر بلا نيّة شراء (وبلا صورة) → ردّ ودّي فوري بلا منتجات (بلا قاعدة بيانات ولا توكنات)
-  const chat = !image && smalltalkType(lastUser);
+  //
+  // وهذا الاختصارُ يُجيبُ عن أوّلِ الكلامِ وحدَه. كان يعترضُ كلَّ رسالةٍ مهما بلغَ
+  // الحديث، و«هاي» بالعربيّةِ تحيّةٌ وتعني «هاي القطعة» أيضاً — فزبونةٌ سُئلت «شو
+  // بدك تشوفي؟» وأجابت «هاي» كانت تُقابَلُ بـ«أهلاً وسهلاً، أنا مساعِدة الأناقة»
+  // وكأنّها دخلت للتوّ. وبعدَ أن ردَّت البائعةُ مرّةً، السياقُ هو من يفسّرُ لا
+  // قائمةُ كلمات — فيمضي الكلامُ للمحرّكِ الذي يقرأُ المحادثةَ كلَّها.
+  const opening = !messages.some((m) => m.role === 'assistant');
+  const chat = !image && opening && smalltalkType(lastUser);
   if (chat) return res.json({ reply: smalltalkReply(chat, lang), products: [] });
 
   try {

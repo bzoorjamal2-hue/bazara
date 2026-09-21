@@ -18,6 +18,7 @@ import { feeForCity, cityOfVillage, flatInternalLocalities } from '../config/del
 import { extractOrderDraft } from '../utils/orderExtract.js';
 import { shouldResume, isAuthError, attachmentKind, burstDelay } from '../controllers/instagram.controller.js';
 import { palestinize } from '../utils/palestinian.js';
+import { smalltalkType } from '../controllers/assistant.controller.js';
 import { orderProfit } from '../controllers/order.controller.js';
 
 let ok = 0; let bad = 0;
@@ -546,6 +547,19 @@ H('١٥) دفعةُ رسائلٍ واحدةٍ ⇒ ردٌّ واحد');
   t('وبعدَ ٢٥ ثانيةً لا يتجاوزُ الانتظارُ السقف', burstDelay(25000) === 5000);
   t('وبعدَ السقفِ نردُّ فوراً', burstDelay(30000) === 0);
   t('ولا انتظارَ سالباً مهما طالت', burstDelay(99000) === 0);
+}
+
+// ═══ ١٦) اختصارُ التحيّةِ لا يبلعُ كلامَ الزبونة ═══
+H('١٦) اختصارُ التحيّةِ لا يبلعُ كلامَ الزبونة');
+{
+  t('«مرحبا» وحدَها تحيّة', smalltalkType('مرحبا') === 'greet');
+  t('«شكراً» وحدَها شكر', smalltalkType('شكرا') === 'thanks');
+  t('«هاي» كلمةٌ قائمةٌ ⇒ تحيّة', smalltalkType('هاي') === 'greet');
+  // وهذه هي التي كسرت: حروفُ التحيّةِ داخلَ كلمةٍ أخرى
+  t('«استلام» ليست «سلام»', smalltalkType('امتى الاستلام؟') === null);
+  t('«رسالة» ليست تحيّة', smalltalkType('وصلتك رسالة؟') === null);
+  t('«هايل» ليست «هاي»', smalltalkType('الطقم هايل') === null);
+  t('نيّةُ الشراءِ تتقدّمُ على التحيّة', smalltalkType('مرحبا بدي فستان') === null);
 }
 
 clearCatalog(st.id);
