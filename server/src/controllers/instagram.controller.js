@@ -397,7 +397,11 @@ async function createChatOrder(store, conv, order, customerId, { offer = null, b
       'SELECT id, reference, status FROM orders WHERE id = $1 AND store_id = $2',
       [orderId, store.id]
     )).rows[0];
-    if (cur && cur.status === 'new') {
+    // طلبٌ مُلغىً ليس طلباً يُعدَّل — ولا هو حاجزٌ يمنعُ الزبونَ من الطلبِ ثانيةً.
+    // نتركُه ونُنشئُ جديداً، وإلّا قيلَ لمن أُلغيَ طلبُه «طلبك جاهزٌ للتوصيل».
+    if (cur && cur.status === 'cancelled') {
+      // لا نلمسُ الملغى، والربطُ يُحدَّثُ للطلبِ الجديدِ أدناه
+    } else if (cur && cur.status === 'new') {
       await query(
         `UPDATE orders SET customer_name = $2, customer_phone = $3, items = $4, total = $5,
            city = $6, area = $7, address = $8, delivery_fee = $9
@@ -1383,12 +1387,13 @@ export async function convertToOrder(req, res, next) {
         'SELECT id, reference, status FROM orders WHERE id = $1 AND store_id = $2',
         [conv.order_id, conv.store_id]
       )).rows[0];
-      if (cur && cur.status !== 'new') {
+      // الملغى يُترَكُ ويُنشَأُ جديدٌ — إلغاءُ الطلبِ لا يمنعُ الزبونَ من الطلبِ ثانية
+      if (cur && cur.status !== 'new' && cur.status !== 'cancelled') {
         return res.status(409).json({
           error: `الطلب ${cur.reference} تأكّد ولم يعد يُعدَّل من هنا — عدّليه من صفحة الطلبات.`,
         });
       }
-      if (cur) {
+      if (cur && cur.status === 'new') {
         await query(
           `UPDATE orders SET customer_name = $2, customer_phone = $3, items = $4, total = $5,
              city = $6, area = $7, address = $8, notes = $9, delivery_fee = $10
@@ -1471,7 +1476,8 @@ export async function igOrderDraft(req, res, next) {
            FROM orders WHERE id = $1 AND store_id = $2`,
         [conv.order_id, conv.store_id]
       )).rows[0];
-      if (o) {
+      // طلبٌ مُلغىً: لا يُعرَضُ للتعديلِ بل تُقرأُ المحادثةُ من جديدٍ كأنّه لم يكن
+      if (o && o.status !== "cancelled") {
         const items = Array.isArray(o.items) ? o.items : [];
         return res.json({
           found: true,
