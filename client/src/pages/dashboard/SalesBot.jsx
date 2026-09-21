@@ -128,7 +128,10 @@ export default function SalesBot() {
         </button>
 
         <Field label={t('salesBot.channels.label')} tip={t('salesBot.channels.tip')}>
-          <div className="grid grid-cols-2 gap-2">
+          {/* ثلاثُ قنواتٍ لا اثنتان: شبكةُ العمودين كانت تُنزِلُ الثالثةَ وحدَها
+              بسطرٍ يتيمٍ ونصُّها أطولُها. عمودٌ واحدٌ على الجوّالِ فتتساوى الأزرارُ
+              ويتّسعُ كلُّ اسمٍ بلا قطع، وثلاثةُ أعمدةٍ على الشاشةِ الواسعة. */}
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             {[
               { key: 'site', label: t('salesBot.channels.site'), Icon: StoreIcon },
               { key: 'instagram', label: t('salesBot.channels.instagram'), Icon: InstagramIcon },
