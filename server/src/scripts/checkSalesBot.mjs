@@ -124,8 +124,12 @@ if (spSizes.length >= 2) {
   const o2 = g('النمرة ' + spSizes[0] + ' شيكل؟', 2);
   t('نمرةٌ مقرونةٌ بعملةٍ لا تُمَسُّ', o2.includes(String(spSizes[0])), o2);
 }
-const o3 = g('خلص بعطيكي ياها بـ1 شيكل', 2);
-t('رقمٌ تحتَ الأرضيّةِ يُرفَعُ إليها', o3.includes(String(spFloor)), o3);
+// تنازلٌ يُحتمَلُ أنّه سعرُ قطعةٍ فعلاً — لا رقمٌ تافهٌ كـ«١ شيكل»، فذاك
+// أجرةٌ أو عددٌ لا عرضُ سعرٍ، ورفعُه لسعرِ القطعةِ يصنعُ جملةً عبثيّة.
+const lowball = Math.round(spFloor * 0.7);
+const o3 = g('خلص بعطيكي ياها بـ' + lowball + ' شيكل', 2);
+t('تنازلٌ تحتَ الأرضيّةِ يُرفَعُ إليها (' + lowball + ' → ' + spFloor + ')',
+  o3.includes(String(spFloor)) && !o3.includes(String(lowball)), o3);
 const o4 = g('بعطيكي ياها بـ' + spFloor + ' شيكل', 1);
 t('خصمٌ بجولةِ التمسّكِ يُلغى', o4.includes(String(Number(sp.price))), o4);
 t('رقمٌ بلا عملةٍ لا يُمَسُّ', g('عندي 3 قطع بالمخزن', 2).includes('3 قطع'));
@@ -133,6 +137,23 @@ const off = (p, s) => sanitize({ reply: 'تمام', productIds: [sp.id], offerPr
   { rows, bot: hb, stage: s }).offer;
 t('العرضُ المنظَّمُ لا ينزلُ تحتَ الأرضيّة', off(1, 2).price === spFloor);
 t('العرضُ لا يتجاوزُ السعرَ المعروض', off(99999, 2).price === Number(sp.price));
+
+// الحارسُ نفسُه أفسدَ النمرَ مرّةً وأجرةَ التوصيلِ مرّة: كلاهما رقمٌ مشروعٌ
+// دونَ السعرِ المسموح. يُفحَصانِ معاً حتى لا يعودَ ثالثةً.
+const tiers = bot.delivery_tiers && typeof bot.delivery_tiers === 'object' ? bot.delivery_tiers : {};
+const fees = Object.values(tiers).map(Number).filter((x) => Number.isFinite(x) && x > 0);
+if (fees.length) {
+  const f = fees[0];
+  const keep = (txt) => g(txt, 2) === txt;
+  t('أجرةُ التوصيل (₪' + f + ') تبقى كما هي', keep('التوصيل عنا ' + f + ' شيكل'),
+    g('التوصيل عنا ' + f + ' شيكل', 2));
+  const line = 'سعرها ' + Number(sp.price) + ' شيكل والتوصيل ' + f + ' شيكل، الإجمالي ' + (Number(sp.price) + f) + ' شيكل';
+  t('سطرُ السعرِ والتوصيلِ والإجمالي يخرجُ سليماً', keep(line), g(line, 2));
+  t('كلُّ الشرائحِ تبقى', keep('التوصيل ' + fees.join(' شيكل و') + ' شيكل'),
+    g('التوصيل ' + fees.join(' شيكل و') + ' شيكل', 2));
+}
+t('ورقمٌ صغيرٌ لا يُرفَعُ لسعرِ القطعة', !g('التوصيل 25 شيكل', 2).includes(String(Number(sp.price))),
+  g('التوصيل 25 شيكل', 2));
 
 // ═════════════════════════ الطلب ═════════════════════════
 H('٥) رقمُ الجوّالِ الفلسطينيّ');

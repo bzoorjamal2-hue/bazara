@@ -517,21 +517,46 @@ export function sanitize(out, { rows, bot, stage }) {
 
   // حارسُ السعر: يمنعُ رقماً تحتَ أدنى سعرٍ مسموح.
   //
-  // كان يمسحُ **كلَّ** رقمٍ بالنصِّ ويستبدلُ ما وقعَ بين رُبعِ السعرِ والسعر. وقطعةٌ
-  // بمئةِ شيقلٍ نمرُها ٣٦ و٣٨ و٤٠ — وكلُّها داخلَ ذلك المدى. فخرجَ للزبون: «بتفضّل
-  // الحجم ١٠٠ ولا ١٠٠ ولا ١٠٠». البائعةُ كتبت النمرَ صحيحةً والحارسُ أفسدَها.
+  // وهو حارسٌ أفسدَ مرّتين ما جاءَ ليحرسَه، فلا يُوسَّعُ ثالثةً:
   //
-  // الآن لا يُلمَسُ إلّا رقمٌ **مقرونٌ بعملةٍ صراحةً** — فالنمرةُ رقمٌ مجرّدٌ لا
-  // عملةَ بجانبِه. ورقمٌ يساوي إحدى نمرِ القطعةِ لا يُمَسُّ ولو قُرِنَ بعملة.
+  // ١) كان يمسحُ **كلَّ** رقمٍ بالنصِّ ويستبدلُ ما وقعَ بين رُبعِ السعرِ والسعر.
+  //    وقطعةٌ بمئةِ شيقلٍ نمرُها ٣٦ و٣٨ و٤٠ — كلُّها داخلَ المدى. فخرجَ للزبون
+  //    «بتفضّل الحجم ١٠٠ ولا ١٠٠ ولا ١٠٠». فصارَ لا يُلمَسُ إلّا رقمٌ **مقرونٌ
+  //    بعملةٍ صراحةً**، والنمرةُ رقمٌ مجرّد.
+  //
+  // ٢) ثمّ أفسدَ أجرةَ التوصيل: «التوصيل ٣٠ شيكل» صارت «التوصيل ١٧٠ شيكل» —
+  //    أي أجرةُ توصيلٍ بثمنِ القطعة. فالأجرةُ مقرونةٌ بعملةٍ وهي دونَ أيِّ سعرٍ
+  //    مسموح، فوقعت في الفخِّ تماماً كالنمر. البائعةُ كتبت الرقمَ الصحيحَ في
+  //    الحالتين.
+  //
+  // فالقاعدةُ الآن: لا يُمَسُّ إلّا رقمٌ يُحتمَلُ **حقّاً** أنّه سعرُ قطعةٍ
+  // مخفَّض — مقرونٌ بعملة، وليس من الأرقامِ المعروفةِ المشروعة (نمرةٌ أو أجرةُ
+  // توصيلٍ أو حدُّ الشحنِ المجّانيّ)، وليس أصغرَ من أن يكونَ سعرَ القطعةِ أصلاً.
   const mentioned = ids.map((id) => byId.get(id)).filter(Boolean);
   if (mentioned.length && reply) {
     const lowest = Math.min(...mentioned.map((p) => allowedPrice(p, bot, stage)));
-    const sizeSet = new Set();
-    for (const p of mentioned) for (const sz of sizesOf(p)) sizeSet.add(String(Number(sz)));
+
+    // أرقامٌ لها معنىً مشروعٌ بردِّ بائعةِ ملابس: لا تُلمَسُ ولو قُرِنت بعملة.
+    const legit = new Set();
+    for (const p of mentioned) for (const sz of sizesOf(p)) legit.add(String(Number(sz)));
+    const tiers = bot?.delivery_tiers && typeof bot.delivery_tiers === 'object' ? bot.delivery_tiers : {};
+    for (const v of Object.values(tiers)) {
+      const f = Number(v);
+      if (Number.isFinite(f) && f > 0) legit.add(String(f));
+    }
+    const freeOver = Number(bot?.free_shipping_over) || 0;
+    if (freeOver > 0) legit.add(String(freeOver));
+
+    // وحدٌّ أدنى للشكّ: رقمٌ أصغرُ من خُمسَي أدنى سعرٍ مسموحٍ ليس تنازلاً عن
+    // السعر — هو أجرةٌ أو عددٌ أو رقمٌ آخر. واستبدالُه بالسعرِ يصنعُ جملةً
+    // عبثيّةً أسوأَ من الرقمِ نفسِه.
+    const suspectFrom = lowest * 0.4;
+
     reply = reply.replace(/(\d+(?:[.,]\d+)?)(\s*)(₪|شيكل|شيقل|ils)/gi, (m, num, sp, cur) => {
       const n = Number(String(num).replace(',', '.'));
       if (!Number.isFinite(n) || n >= lowest) return m;
-      if (sizeSet.has(String(n))) return m; // نمرةٌ لا سعر
+      if (legit.has(String(n))) return m;   // نمرةٌ أو أجرةُ توصيلٍ أو حدُّ شحن
+      if (n < suspectFrom) return m;        // أصغرُ من أن يكونَ سعرَ قطعة
       return `${lowest}${sp}${cur}`;
     });
   }
