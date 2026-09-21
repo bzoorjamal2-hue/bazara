@@ -360,7 +360,9 @@ function PricingCard({ s, set, products, setProducts, onError }) {
     }
   };
 
-  const withFloor = products.filter((p) => p.floorPrice != null).length;
+  // ما عليه مفاصلةٌ فعلاً: أكثرُ القطعِ بلا رقمٍ مكتوبٍ فيها وتُفاصَلُ بهامشِ
+  // المتجر، فعدُّ المكتوبِ وحدَه كان يقولُ للتاجرةِ «٠ قطعة» وهي كلُّها تُفاصَل.
+  const withFloor = products.filter((p) => p.effectiveFloor != null).length;
 
   return (
     <div className={CARD}>
@@ -396,6 +398,22 @@ function PricingCard({ s, set, products, setProducts, onError }) {
 
       {s.haggle && (
         <>
+          <Field label={t('salesBot.margin.label')} tip={t('salesBot.margin.tip')}>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                inputMode="decimal"
+                min="1"
+                max="500"
+                className="input w-28 text-center tabular-nums"
+                value={s.haggleMargin ?? 10}
+                onChange={(e) => set({ haggleMargin: e.target.value === '' ? '' : Number(e.target.value) })}
+                onBlur={(e) => set({ haggleMargin: Math.max(1, Math.min(500, Number(e.target.value) || 10)) })}
+              />
+              <span className="text-xs font-semibold text-stone-400">{t('salesBot.margin.unit')}</span>
+            </div>
+          </Field>
+
           <Field label={t('salesBot.steps.label')} tip={t('salesBot.steps.tip')}>
             <Select
               value={String(s.haggleSteps)}
@@ -446,9 +464,13 @@ function FloorRow({ p, onSave }) {
   const [v, setV] = useState(p.floorPrice != null ? String(p.floorPrice) : '');
   useEffect(() => { setV(p.floorPrice != null ? String(p.floorPrice) : ''); }, [p.floorPrice]);
 
-  // نسبة النزول القصوى — الرقم الذي تريد التاجرة رؤيته فعلاً قبل أن تقرّر
-  const cut = p.floorPrice != null && p.price > 0
-    ? Math.round(((p.price - p.floorPrice) / p.price) * 100)
+  // الأرضيّةُ العاملةُ الآنَ لا المكتوبةُ وحدَها: الخانةُ الفارغةُ لم تعدْ تعني
+  // «بلا مفاصلة» بل «بهامشِ المتجر»، فالتاجرةُ يجبُ أن ترى الرقمَ الذي ستنزلُ
+  // إليه بائعتُها فعلاً — وإلّا اكتشفَتْه من فاتورةِ زبونة.
+  const eff = p.effectiveFloor;
+  const auto = p.floorPrice == null && eff != null;
+  const cut = eff != null && p.price > 0
+    ? Math.round(((p.price - eff) / p.price) * 100)
     : null;
 
   return (
@@ -463,8 +485,14 @@ function FloorRow({ p, onSave }) {
         </p>
       </div>
       <div className="flex shrink-0 items-center gap-2">
-        {cut != null && (
-          <span className="rounded-full bg-gold-400/10 px-2 py-0.5 text-[10px] font-bold tabular-nums text-gold-200">−{cut}%</span>
+        {eff == null ? (
+          <span className="rounded-full bg-stone-500/15 px-2 py-0.5 text-[10px] font-bold text-stone-400">
+            {t('salesBot.floors.none')}
+          </span>
+        ) : (
+          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums ${auto ? 'bg-emerald-400/10 text-emerald-300' : 'bg-gold-400/10 text-gold-200'}`}>
+            ₪{eff}{cut != null ? ` · −${cut}%` : ''}
+          </span>
         )}
         <input
           type="number"
@@ -474,7 +502,7 @@ function FloorRow({ p, onSave }) {
           value={v}
           onChange={(e) => setV(e.target.value)}
           onBlur={() => onSave(p.id, v)}
-          placeholder={t('salesBot.floors.placeholder')}
+          placeholder={auto ? t('salesBot.floors.autoPlaceholder') : t('salesBot.floors.placeholder')}
         />
       </div>
     </div>

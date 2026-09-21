@@ -342,3 +342,5 @@ ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_test_only BOOLEAN NOT NULL DEFAU
 ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_test_accounts JSONB NOT NULL DEFAULT '[]'::jsonb;
 -- متى سُلّمت المحادثة للتاجرة — التسليم يسقط بعد ساعات أو حين تردّ هي
 ALTER TABLE ig_conversations ADD COLUMN IF NOT EXISTS bot_paused_at TIMESTAMPTZ;
+-- هامش المفاصلة بالشيكل: يُحسب وقت الردّ فتأخذه القطع الجديدة تلقائياً
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_haggle_margin NUMERIC(10,2) NOT NULL DEFAULT 10;

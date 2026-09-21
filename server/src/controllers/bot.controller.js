@@ -6,6 +6,7 @@
 import { query } from '../config/db.js';
 import {
   loadBot, agentReply, clearCatalog, quotaLeft, MONTHLY_QUOTA, allowedPrice, stockLine,
+  effectiveFloor, haggleMargin, DEFAULT_HAGGLE_MARGIN,
 } from '../utils/salesAgent.js';
 
 const MODES = ['always', 'first', 'offhours'];
@@ -28,6 +29,7 @@ function mapBot(b) {
     hours: b.bot_hours && typeof b.bot_hours === 'object' ? b.bot_hours : { from: '09:00', to: '21:00' },
     haggle: Boolean(b.bot_haggle),
     haggleSteps: Number(b.bot_haggle_steps) || 2,
+    haggleMargin: haggleMargin(b),
     signature: b.bot_signature || '',
     notes: b.bot_notes || '',
     promoProduct: b.bot_promo_product || '',
@@ -60,6 +62,9 @@ export async function getBotSettings(req, res, next) {
       name: p.name,
       price: Number(p.price),
       floorPrice: p.floor_price != null ? Number(p.floor_price) : null,
+      // الأرضيّةُ العاملةُ فعلاً الآن — وأكثرُ القطعِ بلا رقمٍ مكتوبٍ فيها، فلولا
+      // هذا لرأت التاجرةُ خانةً فارغةً وظنّت أنّ قطعتَها بلا مفاصلةٍ وهي تُفاصَل.
+      effectiveFloor: effectiveFloor(p, bot),
       // منتجاتُ المنصّةِ فيديو بلا صور، وcldThumb تأخذُ لقطةً من الفيديو —
       // فبلا هذا تبقى كلُّ مصغّراتِ القائمةِ مربّعاتٍ فارغة.
       image: (Array.isArray(p.images) ? p.images.filter(Boolean)[0] : '') || p.video_url || '',
@@ -99,7 +104,7 @@ export async function saveBotSettings(req, res, next) {
          bot_enabled = $2, bot_channels = $3, bot_mode = $4, bot_tone = $5, bot_dialect = $6,
          bot_hours = $7, bot_haggle = $8, bot_haggle_steps = $9, bot_signature = $10,
          bot_notes = $11, bot_promo_product = $12,
-         bot_test_only = $13, bot_test_accounts = $14
+         bot_test_only = $13, bot_test_accounts = $14, bot_haggle_margin = $15
        WHERE id = $1`,
       [
         store.id,
@@ -120,6 +125,9 @@ export async function saveBotSettings(req, res, next) {
         JSON.stringify((Array.isArray(b.testAccounts) ? b.testAccounts : [])
           .map((x) => String(x).trim().replace(/^@+/, '').toLowerCase())
           .filter(Boolean).slice(0, 10)),
+        // هامشٌ صفرٌ أو حرفٌ أو رقمٌ خياليّ: يعودُ للعشرةِ لا يُقبَلُ كما هو —
+        // هامشٌ تالفٌ يعني بائعةً تعطي نصفَ ثمنِ القطعةِ لمن قالَ «غالي».
+        Math.max(1, Math.min(500, Number(b.haggleMargin) || DEFAULT_HAGGLE_MARGIN)),
       ]
     );
     const bot = await loadBot(store.id);

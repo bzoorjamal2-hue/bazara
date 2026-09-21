@@ -51,7 +51,7 @@ const money = (n) => Math.round(Number(n) * 100) / 100;
 export const BOT_COLUMNS = `bot_enabled, bot_channels, bot_mode, bot_tone, bot_dialect,
   bot_hours, bot_haggle, bot_haggle_steps, bot_signature, bot_notes, bot_promo_product,
   bot_quota_used, bot_quota_month, bot_replies_total, bot_handoffs_total,
-  bot_test_only, bot_test_accounts, delivery_tiers, free_shipping_over`;
+  bot_test_only, bot_test_accounts, bot_haggle_margin, delivery_tiers, free_shipping_over`;
 
 export async function loadBot(storeId) {
   try {
@@ -205,18 +205,48 @@ function onSale(p) {
 
 // ───────────────────── سُلَّمُ المفاصلة ─────────────────────
 
-// أدنى سعرٍ يُسمَحُ بعرضِه عندَ هذه الدرجة. الأرضيّةُ (floor_price) خطٌّ لا يُعبَر
-// مهما بلغَ إلحاحُ الزبونة، والدرجاتُ إيقاعٌ فقط: بائعةٌ تنزلُ إلى آخرِ سعرِها من
-// أوّلِ «غالي» ليست بائعةً — هي خصمٌ دائمٌ مُعلَن.
+// هامشُ المفاصلةِ الافتراضيُّ للمنصّةِ كلِّها: عشرةُ شواقلَ ولا شيقلَ أكثر.
+// لا يُكتَبُ برقمٍ داخلَ كلِّ قطعةٍ — يُحسَبُ وقتَ الردّ. فالقطعُ التي ستُضافُ
+// غداً تأخذُه بلا أن يلمسَها أحد، وقطعةٌ يتغيّرُ سعرُها يبقى هامشُها صحيحاً
+// (أرضيّةٌ محفوظةٌ برقمٍ جامدٍ تصيرُ خطأً أوّلَ مرّةٍ يُعدَّلُ فيها السعر).
+export const DEFAULT_HAGGLE_MARGIN = 10;
+
+// أقلُّ تنازلٍ له معنى بالسوق. بائعٌ ينزلُ شيقلين ليس يفاصل — هو يستهزئ.
+const MIN_CONCESSION = 10;
+
+export function haggleMargin(bot) {
+  const m = Number(bot?.bot_haggle_margin);
+  return Number.isFinite(m) && m > 0 ? money(m) : DEFAULT_HAGGLE_MARGIN;
+}
+
+// الأرضيّةُ الفعليّةُ لهذه القطعةِ الآن: ما كتبَتْه التاجرةُ لها بعينِها إن كتبت،
+// وإلّا السعرُ ناقصَ هامشِ المتجر. و‎null تعني «لا مفاصلةَ على هذه القطعة» —
+// قطعةٌ ثمنُها كهامشِ المفاصلةِ أو أقلُّ لا مجالَ فيها للنزول.
+export function effectiveFloor(product, bot) {
+  const price = Number(product?.price);
+  if (!Number.isFinite(price) || price <= 0) return null;
+  const own = product?.floor_price != null ? Number(product.floor_price) : null;
+  if (own != null) return Number.isFinite(own) && own > 0 && own < price ? money(own) : null;
+  const margin = haggleMargin(bot);
+  return price > margin ? money(price - margin) : null;
+}
+
+// أدنى سعرٍ يُسمَحُ بعرضِه عندَ هذه الدرجة. الأرضيّةُ خطٌّ لا يُعبَر مهما بلغَ
+// إلحاحُ الزبونة، والدرجاتُ إيقاعٌ فقط: بائعةٌ تنزلُ إلى آخرِ سعرِها من أوّلِ
+// «غالي» ليست بائعةً — هي خصمٌ دائمٌ مُعلَن.
 export function allowedPrice(product, bot, stage) {
   const price = Number(product.price);
-  const floor = product.floor_price != null ? Number(product.floor_price) : null;
-  if (!bot?.bot_haggle || floor == null || !(floor > 0) || floor >= price) return money(price);
+  const floor = effectiveFloor(product, bot);
+  if (!bot?.bot_haggle || floor == null || floor >= price) return money(price);
   const steps = Math.max(1, Math.min(3, Number(bot.bot_haggle_steps) || 2));
   const s = Math.max(0, Math.min(steps, Number(stage) || 0));
   if (s === 0) return money(price);
   if (s >= steps) return money(floor);
   const cut = (price - floor) * (s / steps);
+  // التنازلُ الوسطيُّ التافهُ لا يُقدَّم: تتمسّكُ بسعرِها هذه الجولةَ كما يفعلُ
+  // بائعٌ حقيقيّ، وتُعطي الفرقَ كاملاً بالجولةِ التالية. بهامشِ عشرةٍ يعني هذا
+  // أنّها تفاصلُ أوّلاً ثمّ تنزلُ العشرةَ — لا أن تنزلَ خمسةً من أوّلِ كلمة.
+  if (cut < MIN_CONCESSION) return money(price);
   // تقريبٌ لأقربِ خمسةٍ (شكلُ السعرِ في السوق)، ثمّ حارسٌ ألّا ينزلَ تحتَ الأرضيّة
   const rounded = Math.round((price - cut) / 5) * 5;
   return money(Math.max(floor, Math.min(price, rounded)));
@@ -283,9 +313,17 @@ function buildSystem({ storeName, bot, rows, stage, promo, lang, customerName })
   const promoLine = promo
     ? `\nالقطعةُ التي تُروّجينَ لها اليوم: "${promo.name}" (id:${promo.id}). قدّميها أوّلاً ما لم تسألِ الزبونةُ عن غيرِها صراحةً.`
     : '';
-  const haggleLine = bot.bot_haggle
-    ? `\nالمفاصلة: مسموحة. لا تنزلي عن السعرِ المعروضِ إلّا إذا فاصلَتْكِ الزبونةُ فعلاً، ولا تعرضي أبداً رقماً أقلَّ من "أدنى سعرٍ مسموحٍ الآن" المكتوبِ بجانبِ القطعة. إذا لم يُكتَبْ للقطعةِ سطرُ أدنى سعرٍ فلا خصمَ عليها إطلاقاً — قوليها بلطفٍ واذكري قيمةَ القطعة.`
-    : '\nالمفاصلة: ممنوعة. السعرُ المكتوبُ هو السعر. إن ألحَّتْ فاعتذري بلطفٍ واذكري ما يستحقُّ به السعر.';
+  // هل لهذه الجولةِ تنازلٌ أصلاً؟ بجولةِ التمسّكِ لا يُكتَبُ لأيِّ قطعةٍ سطرُ
+  // «أدنى سعرٍ مسموح»، فلو تركناها على النصِّ العامِّ لأغلقت البابَ نهائيّاً
+  // ("ما في خصم أبداً") ثمّ أعطت عشرةً بالجولةِ التالية — وهذا تناقضٌ يُفقِدُها
+  // مصداقيّتَها. البائعةُ الحقيقيّةُ تتمسّكُ بسعرِها أوّلاً وتُبقي البابَ موارباً.
+  const conceding = bot.bot_haggle
+    && rows.some((p) => allowedPrice(p, bot, stage) < Number(p.price));
+  const haggleLine = !bot.bot_haggle
+    ? '\nالمفاصلة: ممنوعة. السعرُ المكتوبُ هو السعر. إن ألحَّتْ فاعتذري بلطفٍ واذكري ما يستحقُّ به السعر.'
+    : (conceding
+      ? `\nالمفاصلة: مسموحة. لا تنزلي عن السعرِ المعروضِ إلّا إذا فاصلَتْكِ الزبونةُ فعلاً، ولا تعرضي أبداً رقماً أقلَّ من "أدنى سعرٍ مسموحٍ الآن" المكتوبِ بجانبِ القطعة. إذا لم يُكتَبْ للقطعةِ سطرُ أدنى سعرٍ فلا خصمَ عليها إطلاقاً — قوليها بلطفٍ واذكري قيمةَ القطعة.`
+      : `\nالمفاصلة: مسموحة لكن **ليس بهذه الجولة**. تمسّكي بالسعرِ المكتوبِ الآنَ كما يفعلُ أيُّ بائعٍ: اذكري لماذا تستحقُّ القطعةُ ثمنَها (القماشُ، القصّة، الشغل) ولا تعرضي أيَّ رقمٍ أقلّ. ولا تقولي "ما في خصم أبداً" ولا "هذا آخرُ سعرٍ نهائيّاً" — اتركي البابَ مواربـاً بلا وعد.`);
   const notes = (bot.bot_notes || '').trim().slice(0, 600);
 
   // أجرةُ التوصيلِ من إعداداتِ المتجرِ نفسِها. بلا هذا السطرِ كانت البائعةُ تقولُ

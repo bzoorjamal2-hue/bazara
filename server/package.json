@@ -8,7 +8,8 @@
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
     "db:init": "node src/config/initDb.js",
-    "db:seed": "node src/seed.js"
+    "db:seed": "node src/seed.js",
+    "check:bot": "node src/scripts/checkSalesBot.mjs"
   },
   "engines": {
     "node": ">=18.0.0"
