@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import Select from './Select.jsx';
 import CitySearch, { placeLabelOf } from './CitySearch.jsx';
-import { BagIcon, TrashIcon, PlusIcon } from './icons.jsx';
+import { BagIcon, TrashIcon, PlusIcon, CheckIcon } from './icons.jsx';
 import { sizeLabel } from '../utils/sizes.js';
 import { isValidMobile, sanitizeMobileInput } from '../utils/phone.js';
 import { cldThumb, cldVideoPoster } from '../utils/cloudinary.js';
@@ -104,7 +104,7 @@ function PickedRow({ item, onChange, onRemove }) {
 
 // المكوّن الموحّد لإنشاء طلب: منتجات (بألوان/نمَر) + منطقة توصيل بسعر تلقائي + بيانات الزبون.
 // onSubmit يستقبل { items, customer } ويرمي خطأً عند الفشل (نعرضه هنا)؛ النجاح يتكفّل به الأب.
-export function OrderComposer({ defaultName = '', defaultPhone = '', hintText = '', onSubmit }) {
+export function OrderComposer({ defaultName = '', defaultPhone = '', hintText = '', draft = null, onSubmit }) {
   const { t } = useTranslation();
   const [products, setProducts] = useState(null);
   const [localities, setLocalities] = useState([]); // قائمة مسطّحة: كل مدينة/قرية بندٌ مستقل
@@ -120,6 +120,31 @@ export function OrderComposer({ defaultName = '', defaultPhone = '', hintText = 
       setLocalities(Array.isArray(r.data.localities) ? r.data.localities : []);
     }).catch(() => {});
   }, []);
+
+  // المسوّدةُ المقروءةُ من المحادثة: تُطبَّقُ مرّةً واحدةً وحين تصل، ولا تكتبُ فوقَ
+  // خانةٍ ملأتها التاجرةُ بنفسِها — قراءتُنا مساعِدةٌ لا قرار.
+  const applied = useRef(false);
+  useEffect(() => {
+    if (!draft?.found || applied.current || !products) return;
+    applied.current = true;
+    setF((prev) => ({
+      ...prev,
+      name: prev.name || draft.name || '',
+      phone: prev.phone || draft.phone || '',
+      city: prev.city || draft.city || '',
+      area: prev.area || draft.area || '',
+      address: prev.address || draft.address || '',
+      notes: prev.notes || draft.notes || '',
+      deliveryFee: prev.deliveryFee || (draft.deliveryFee ?? ''),
+    }));
+    const p = draft.productId ? (products || []).find((x) => String(x.id) === String(draft.productId)) : null;
+    if (p) {
+      setPicked((prev) => (prev.some((x) => x.id === p.id) ? prev : [...prev, {
+        id: p.id, name: p.name, price: Number(p.price) || 0,
+        qty: draft.qty || 1, size: draft.size || '', color: draft.color || '', product: p,
+      }]));
+    }
+  }, [draft, products]);
 
   const set = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }));
   const add = (p) => {
@@ -204,6 +229,15 @@ export function OrderComposer({ defaultName = '', defaultPhone = '', hintText = 
 
   return (
     <div className="space-y-3">
+      {/* ما قُرئ من المحادثة: تُخبَرُ التاجرةُ أنّ الخاناتِ مملوءةٌ سلفاً كي تراجعَها
+          لا كي تُفاجأَ بها — والمراجعةُ أسرعُ من الكتابةِ من الصفر. */}
+      {draft?.found && (draft.name || draft.phone || draft.city || draft.productId) && (
+        <p className="flex items-start gap-1.5 rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-2.5 py-1.5 text-[11px] font-semibold leading-relaxed text-emerald-300">
+          <CheckIcon className="mt-px h-3.5 w-3.5 shrink-0" />
+          {t('dashboard.instagram.draftFilled')}
+        </p>
+      )}
+
       {/* منتجاتٌ ذُكرت في المحادثة — ضغطةٌ واحدةٌ بدل بحثٍ عن اسمٍ قرأته للتوّ */}
       {hints.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5">
@@ -282,8 +316,12 @@ export function OrderComposer({ defaultName = '', defaultPhone = '', hintText = 
         <button onClick={submit} disabled={busy} className="btn-primary gap-1.5 !px-3 !py-1.5 text-xs disabled:opacity-50">
           {busy ? t('common.loading') : <><BagIcon className="h-4 w-4" /> {t('dashboard.instagram.createOrder')}</>}
         </button>
+        {/* الإجماليُّ مفصَّلاً: التاجرةُ تقولُ الرقمَ للزبونِ فتحتاجُ أن ترى ممّ تكوّن */}
         <span className="text-xs text-stone-400">
-          {t('dashboard.ordersSection.total')}: <span className="font-display text-sm font-bold text-gold-300">{t('common.currency')}{total.toFixed(2)}</span>
+          {t('common.currency')}{subtotal.toFixed(0)}
+          {' + '}{t('common.currency')}{(Number(f.deliveryFee) || 0).toFixed(0)} {t('dashboard.ordersSection.delivery')}
+          {' = '}
+          <span className="font-display text-sm font-bold text-gold-300">{t('common.currency')}{total.toFixed(2)}</span>
         </span>
       </div>
     </div>
@@ -293,13 +331,31 @@ export function OrderComposer({ defaultName = '', defaultPhone = '', hintText = 
 // ───────── نموذج تحويل المحادثة لطلب (يستعمل المكوّن الموحّد) ─────────
 export function ConvertForm({ convId, defaultName, defaultPhone = '', hintText = '', onDone }) {
   const { t } = useTranslation();
+  const [draft, setDraft] = useState(null);
+  const [reading, setReading] = useState(true);
+
+  // تُقرأُ المحادثةُ مرّةً عند فتحِ النموذج. فشلُها لا يمنعُ شيئاً — يبقى النموذجُ
+  // كما كان يدويّاً بالكامل.
+  useEffect(() => {
+    let alive = true;
+    api.get(`/instagram/conversations/${convId}/draft`)
+      .then((r) => { if (alive) setDraft(r.data); })
+      .catch(() => {})
+      .finally(() => { if (alive) setReading(false); });
+    return () => { alive = false; };
+  }, [convId]);
+
   return (
     <div className="space-y-3 border-b border-white/5 bg-gold-400/5 p-3">
-      <p className="text-xs font-semibold text-gold-200">{t('dashboard.instagram.convertTitle')}</p>
+      <p className="flex items-center gap-2 text-xs font-semibold text-gold-200">
+        {t('dashboard.instagram.convertTitle')}
+        {reading && <span className="font-normal text-stone-400">{t('dashboard.instagram.draftReading')}</span>}
+      </p>
       <OrderComposer
         defaultName={defaultName}
         defaultPhone={defaultPhone}
         hintText={hintText}
+        draft={draft}
         onSubmit={async (payload) => {
           const res = await api.post(`/instagram/conversations/${convId}/convert`, payload);
           try { window.dispatchEvent(new Event('bz:orders-changed')); } catch { /* تجاهل */ }

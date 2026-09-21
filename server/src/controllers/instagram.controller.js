@@ -3,7 +3,8 @@ import jwt from 'jsonwebtoken';
 import { query } from '../config/db.js';
 import { encrypt, decrypt } from '../config/opost.js';
 import { notifyUser } from '../utils/notify.js';
-import { feeForCity } from '../config/deliveryCities.js';
+import { feeForCity, flatInternalLocalities } from '../config/deliveryCities.js';
+import { extractOrderDraft } from '../utils/orderExtract.js';
 import {
   loadBot, botActiveNow, agentReply, countReply, MAX_BOT_REPLIES, testModeAllows,
 } from '../utils/salesAgent.js';
@@ -1059,4 +1060,39 @@ export async function convertToOrder(req, res, next) {
   } catch (err) {
     next(err);
   }
+}
+
+// GET /api/instagram/conversations/:id/draft — مسوّدةُ طلبٍ مقروءةٌ من المحادثة
+//
+// التاجرةُ كانت تقرأُ الاسمَ والرقمَ والعنوانَ برسائلِ الزبونِ ثمّ تعيدُ كتابتَها
+// بيدِها في نموذجِ التحويل — وهذا أكثرُ ما يُنفّرُ من تحويلِ المحادثاتِ إلى طلبات.
+// الآن تُقرأُ مرّةً وتُملأُ الخاناتُ، وتبقى كلُّها قابلةً للتعديلِ قبلَ الحفظ.
+export async function igOrderDraft(req, res, next) {
+  try {
+    const conv = await getOwnedConversation(req.user.id, req.params.id);
+    if (!conv) return res.status(404).json({ error: 'المحادثة غير موجودة.' });
+
+    const msgs = await query(
+      `SELECT direction, text FROM ig_messages
+       WHERE conversation_id = $1 AND text <> '' ORDER BY created_at DESC LIMIT 25`,
+      [conv.id]
+    );
+    const prods = await query(
+      `SELECT id, name, price, color, size, color_stock FROM products
+       WHERE store_id = $1 AND hidden_at IS NULL ORDER BY created_at DESC LIMIT 60`,
+      [conv.store_id]
+    );
+    const store = (await query(
+      'SELECT delivery_tiers, opost_connected FROM stores WHERE id = $1', [conv.store_id]
+    )).rows[0] || {};
+
+    const draft = await extractOrderDraft({
+      messages: msgs.rows.reverse(),
+      products: prods.rows,
+      localities: flatInternalLocalities(store.delivery_tiers),
+    });
+    // اسمُ حسابِ إنستغرام احتياطٌ أخير: ما كتبَه الزبونُ للطلبِ أولى منه
+    if (!draft.name) draft.name = conv.customer_name || '';
+    res.json(draft);
+  } catch (err) { next(err); }
 }

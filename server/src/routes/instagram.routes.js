@@ -10,6 +10,7 @@ import {
   listMessages,
   sendReply,
   convertToOrder,
+  igOrderDraft,
   igReact,
   igQuickReplies,
   igSaveQuickReplies,
@@ -40,6 +41,7 @@ router.post('/conversations/:id/reply', sendReply);
 router.post('/conversations/:id/react', igReact);
 router.get('/quick-replies', igQuickReplies);
 router.put('/quick-replies', igSaveQuickReplies);
+router.get('/conversations/:id/draft', igOrderDraft);
 router.post('/conversations/:id/convert', convertToOrder);
 
 export default router;
