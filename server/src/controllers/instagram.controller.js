@@ -241,7 +241,7 @@ async function processWebhook(body) {
       if (conv.rows[0].is_new || !avatar) {
         const token = decrypt(store.ig_access_token);
         if (token) {
-          const prof = await getSenderProfile(token, customerId, channel);
+          const prof = await getSenderProfile(token, customerId, channel, store.ig_page_id);
           if (prof.name || prof.username || prof.avatar) {
             avatar = prof.avatar ? await mirrorRemote(prof.avatar, 'ig/avatars') : avatar;
             who = prof.name || prof.username || who;

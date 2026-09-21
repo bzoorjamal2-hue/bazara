@@ -201,7 +201,35 @@ export async function sendAttachment(pageToken, recipientId, url, type = 'image'
 // حقلٌ واحدٌ غيرُ مدعومٍ يُسقطُ الطلبَ كلَّه عند Meta، وحقولُ الملفّ تختلفُ باختلافِ
 // الصلاحيّات الممنوحة — فلو سقط الطلبُ بالصورة أعدناه بالاسمِ وحدَه بدل أن نخسرَ
 // الاسمَ أيضاً ويبقى الزبونُ رقماً مجرّداً.
-export async function getSenderProfile(pageToken, senderId, channel = 'instagram') {
+// بابٌ ثانٍ لاسمِ زبونِ ماسنجر حين ترفضُ ميتا قراءةَ ملفِّه الشخصيّ.
+//
+// «ميتا بيزنس سويت» يعرضُ الاسمَ والصورةَ لأنّه منتَجُ ميتا نفسِها ولا يمرُّ
+// ببوّابةِ صلاحيّاتِ الأطرافِ الثالثة. ونحنُ طرفٌ ثالث: نداءُ `/{PSID}` يُرَدُّ
+// بـ«Unsupported get request» مهما كانت صلاحيّاتُنا معتمدة.
+//
+// لكنّ قائمةَ محادثاتِ الصفحةِ تُعطي أسماءَ المشاركينَ بصلاحيّاتٍ نملكُها فعلاً
+// (`pages_messaging` و`pages_read_engagement`) — فالاسمُ يُنتزَعُ من هناك.
+// والصورةُ لا تأتي بهذا الباب، فلا نَعِدُ بها ولا نخترعُ لها بديلاً.
+async function nameFromConversations(pageId, pageToken, psid) {
+  if (!pageId || !psid) return '';
+  try {
+    const d = await graph(`/${pageId}/conversations`, {
+      token: pageToken,
+      params: { platform: 'messenger', user_id: psid, fields: 'participants' },
+    });
+    for (const conv of d.data || []) {
+      for (const pt of conv.participants?.data || []) {
+        if (String(pt.id) === String(psid) && pt.name) return String(pt.name).trim();
+      }
+    }
+    return '';
+  } catch (e) {
+    console.error(`⚠️ اسمٌ من المحادثات ${psid}: ${e.body?.error?.message || e.message}`);
+    return '';
+  }
+}
+
+export async function getSenderProfile(pageToken, senderId, channel = 'instagram', pageId = '') {
   const ask = (fields) => graph(`/${senderId}`, { token: pageToken, params: { fields } });
   // لكلِّ قناةٍ حقولُها: مُرسِلُ إنستغرام له `username`، ومُرسِلُ ماسنجر له
   // `first_name`/`last_name` ولا `name` عنده ولا اسمَ حساب.
@@ -228,6 +256,15 @@ export async function getSenderProfile(pageToken, senderId, channel = 'instagram
   // بلا هذا السطرِ يبقى الزبونُ «مجهولاً» ولا أحدَ يعرفُ لماذا: كلُّ الأخطاءِ كانت
   // تُبلَعُ صامتة.
   console.error(`⚠️ ملفّ المُرسِل [${channel}] ${senderId}: ${why}`);
+
+  // رفضت ميتا الملفَّ الشخصيّ؟ نجرّبُ البابَ الثاني قبلَ أن نستسلمَ لـ«زبون».
+  if (channel === 'messenger') {
+    const name = await nameFromConversations(pageId, pageToken, senderId);
+    if (name) {
+      console.log(`✓ اسمٌ من محادثاتِ الصفحة ${senderId}: ${name}`);
+      return { name, username: '', avatar: '' };
+    }
+  }
   return { name: '', username: '', avatar: '' };
 }
 
