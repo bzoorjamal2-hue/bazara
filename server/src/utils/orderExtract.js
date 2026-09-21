@@ -109,33 +109,78 @@ function fallback(convo) {
   return { phone: m ? normalizePhone(m[0]) : '' };
 }
 
+// حدُّ الكلمة: هل يردُ هذا الاسمُ كلمةً مستقلّةً في النصّ؟ الاحتواءُ المجرّدُ
+// يقتطعُ كلمةً من داخلِ كلمة — و«جنين» تحوي «نين» وهي قريةٌ تابعةٌ للناصرة.
+const ARABIC_WORD = /[ء-يa-z0-9]/;
+function occursAsWord(hay, needle) {
+  const n = norm(needle);
+  if (!n || !hay) return false;
+  let from = 0;
+  for (;;) {
+    const i = hay.indexOf(n, from);
+    if (i === -1) return false;
+    const before = i === 0 ? '' : hay[i - 1];
+    const after = hay[i + n.length] || '';
+    if (!ARABIC_WORD.test(before) && !ARABIC_WORD.test(after)) return true;
+    from = i + 1;
+  }
+}
+
+// الناسُ لا تكتبُ اسمَ الجدولِ حرفيّاً: تكتبُ «رام الله» والجدولُ يقولُ «رام الله
+// والبيرة»، وتكتبُ «الطيبة» والجدولُ يقولُ «الطيبة (رام الله)». فلكلِّ مكانٍ
+// أسماؤُه المقبولة: الاسمُ كما هو، وبلا القوسِ، وما قبلَ الواوِ العاطفة.
+const aliasCache = new Map();
+function aliasesOf(name) {
+  const base = norm(name);
+  if (aliasCache.has(base)) return aliasCache.get(base);
+  const out = new Set([base]);
+  const noParen = base.replace(/\(.*?\)/g, ' ').replace(/\s+/g, ' ').trim();
+  if (noParen.length >= 3) out.add(noParen);
+  const beforeAnd = noParen.split(/\s+و(?=\S)/)[0].trim();
+  if (beforeAnd.length >= 4) out.add(beforeAnd);
+  const list = [...out];
+  aliasCache.set(base, list);
+  return list;
+}
+const matchesPlace = (hay, z) => aliasesOf(z.name).some((a) => a.length >= 3 && occursAsWord(hay, a));
+
 // البلدةُ تُطابَقُ على قائمةِ أماكنِ المتجرِ نفسِها (هي التي تحملُ الأجرة)، فلا
-// يخرجُ اسمٌ لا يعرفُه التوصيل. نفضّلُ الأطولَ تطابقاً: «بيت لحم» قبلَ «بيت».
+// يخرجُ اسمٌ لا يعرفُه التوصيل.
+//
+// وثلاثةُ أخطاءٍ وقعت هنا فعلاً، كلُّها من مطابقةٍ متساهلة:
+//
+// ١) `norm(z.name).includes(n)` كانت تجعلُ أيَّ شُظيّةٍ تلتقطُ قريةً عشوائيّة:
+//    «او» تُخرِجُ «قراوة بني حسان»، و«وف» تُخرِجُ «عرابة البطوف». حُذِفَ هذا
+//    الاتّجاهُ كلُّه — اسمُ المكانِ يردُ داخلَ ما كُتِبَ لا العكس.
+//
+// ٢) الاحتواءُ بلا حدودِ كلمة: «جنين» تحوي «نين»، وتفضيلُ القرى كان يُقدّمُها
+//    على «جنين» نفسِها فيصيرُ طلبُ جنينَ طلبَ الناصرة.
+//
+// ٣) والأخطر: اسمٌ لم يُذكَرْ بالمحادثةِ أصلاً. أعادَ النموذجُ «طولكرم - شوفة»
+//    لزبونٍ كتبَ «جنين - رابا» — و«شوفة» ليست في جدولِنا إطلاقاً. فما يختارُه
+//    النموذجُ يجبُ أن يظهرَ بنصِّ المحادثة، وإلّا أُهمِلَ وقرأنا النصَّ بأنفسِنا.
 function resolvePlace(place, text, localities) {
   const list = Array.isArray(localities) ? localities : [];
+  const t = norm(text || '');
+  // القريةُ تُقدَّمُ على المدينةِ حين تُذكَرانِ معاً: «جنين - رابا» تعني رابا،
+  // وهي ما يحتاجُه المندوبُ فعلاً. والأجرةُ واحدةٌ فلا خسارةَ في أيِّ الحالتين.
+  const best = (a, b) => {
+    const av = a.parent && a.parent !== a.name ? 1 : 0;
+    const bv = b.parent && b.parent !== b.name ? 1 : 0;
+    return (bv - av) || (norm(b.name).length - norm(a.name).length);
+  };
   const pick = (needle) => {
     const n = norm(needle);
-    if (!n) return null;
+    if (n.length < 3) return null;
     const exact = list.find((z) => norm(z.name) === n);
     if (exact) return exact;
-    return list
-      .filter((z) => norm(z.name).length >= 3 && (n.includes(norm(z.name)) || norm(z.name).includes(n)))
-      .sort((a, b) => norm(b.name).length - norm(a.name).length)[0] || null;
+    return list.filter((z) => matchesPlace(n, z)).sort(best)[0] || null;
   };
-  // ما استخرجَه النموذجُ أوّلاً، ثمّ بحثٌ في نصِّ المحادثةِ كلِّه
+
+  // ما استخرجَه النموذجُ أوّلاً — بشرطِ أن يكونَ من كلامِ الزبونِ لا من رأسِه
   let hit = pick(place);
-  if (!hit && text) {
-    const t = norm(text);
-    // القريةُ تُقدَّمُ على المدينةِ حين تُذكَرانِ معاً: «جنين - رابا» تعني رابا،
-    // وهي ما يحتاجُه المندوبُ فعلاً. والأجرةُ واحدةٌ فلا خسارةَ في أيِّ الحالتين.
-    hit = list
-      .filter((z) => norm(z.name).length >= 3 && t.includes(norm(z.name)))
-      .sort((a, b) => {
-        const av = a.parent && a.parent !== a.name ? 1 : 0;
-        const bv = b.parent && b.parent !== b.name ? 1 : 0;
-        return (bv - av) || (norm(b.name).length - norm(a.name).length);
-      })[0] || null;
-  }
+  if (hit && t && !matchesPlace(t, hit)) hit = null;
+  if (!hit && t) hit = list.filter((z) => matchesPlace(t, z)).sort(best)[0] || null;
   if (!hit) return null;
   return {
     city: hit.parent || hit.name,

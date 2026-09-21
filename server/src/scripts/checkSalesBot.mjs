@@ -13,7 +13,8 @@ import {
   normalizePhone, testModeAllows, botActiveNow, stockLine, sizesOf, colorsOf, MAX_HAGGLE_MARGIN,
   variantAvailable, haggleIntent, needsHuman, clearCatalog, photoFor,
 } from '../utils/salesAgent.js';
-import { feeForCity, cityOfVillage } from '../config/deliveryCities.js';
+import { feeForCity, cityOfVillage, flatInternalLocalities } from '../config/deliveryCities.js';
+import { extractOrderDraft } from '../utils/orderExtract.js';
 import { shouldResume } from '../controllers/instagram.controller.js';
 import { orderProfit } from '../controllers/order.controller.js';
 
@@ -225,6 +226,32 @@ t('«جنين» مدينةٌ لا قرية', cityOfVillage('جنين') === '');
 t('أجرةُ القريةِ = أجرةُ مدينتِها',
   feeForCity('رابا', st.delivery_tiers) === feeForCity('جنين', st.delivery_tiers));
 t('مدينةٌ فارغةٌ ⇒ صفر', feeForCity('', st.delivery_tiers) === 0);
+
+H('٧ب) العنوانُ يُقرأُ من كلامِ الزبونِ لا من رأسِ النموذج');
+{
+  const locs = flatInternalLocalities(st.delivery_tiers);
+  const read = async (txt) => extractOrderDraft({
+    messages: [{ direction: 'in', text: txt }], products: rows, localities: locs,
+  });
+  // العطبُ الذي وقعَ: زبونٌ كتبَ «جنين - رابا» فخرجَ «طولكرم - شوفة» — وشوفةُ
+  // ليست في جدولِ التوصيلِ أصلاً، أي أنّها من رأسِ النموذجِ لا من المحادثة.
+  const r = await read('اسمي : جمال عمر\n0592124988\nجنين - رابا - اول البلد مقابل سوبر ماركت الرهوة');
+  t('«جنين - رابا» تبقى جنين/رابا', r.city === 'جنين' && r.area === 'رابا', r.city + '/' + r.area);
+  t('وأجرتُها من جدولِ المتجر', String(r.deliveryFee) === String(feeForCity('جنين', st.delivery_tiers)), String(r.deliveryFee));
+  // «جنين» تحوي «نين» وهي قريةٌ تابعةٌ للناصرة: الاحتواءُ بلا حدودِ كلمةٍ كان
+  // يُحوّلُ طلبَ جنينَ إلى الناصرة.
+  const j = await read('اسمي سارة\n0599123456\nجنين البلد');
+  t('«جنين» لا تصيرُ «الناصرة - نين»', j.city === 'جنين' && j.area === '', j.city + '/' + j.area);
+  // والناسُ تكتبُ «رام الله» والجدولُ يقولُ «رام الله والبيرة»
+  const rm = await read('اسمي سارة\n0599123456\nرام الله');
+  t('«رام الله» تُعرَفُ رغمَ اسمِ الجدولِ الأطول', Boolean(rm.city), rm.city || '(فارغ)');
+  // ووصفُ الشارعِ لا يُنتِجُ قريةً عشوائيّة
+  const s2 = await read('اسمي سارة\n0599123456\nجنين مقابل سوبر ماركت الرهوة واول البلد');
+  t('وصفُ الشارعِ لا يخترعُ قرية', s2.city === 'جنين' && s2.area === '', s2.city + '/' + s2.area);
+  // وبلا مكانٍ مذكورٍ لا يُخترَعُ مكان
+  const e = await read('اسمي سارة\n0599123456\nبدي اوصي');
+  t('بلا مكانٍ مذكورٍ ⇒ لا مدينةَ ولا أجرة', !e.city && !e.area && !e.deliveryFee, e.city + '/' + e.area);
+}
 
 H('٨) طلبٌ حقيقيٌّ يُكتَبُ بالقاعدةِ ثمّ يُلغى');
 const order = chk(full);
