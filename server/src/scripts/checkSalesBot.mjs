@@ -15,7 +15,7 @@ import {
 } from '../utils/salesAgent.js';
 import { feeForCity, cityOfVillage, flatInternalLocalities } from '../config/deliveryCities.js';
 import { extractOrderDraft } from '../utils/orderExtract.js';
-import { shouldResume, isAuthError } from '../controllers/instagram.controller.js';
+import { shouldResume, isAuthError, attachmentKind } from '../controllers/instagram.controller.js';
 import { orderProfit } from '../controllers/order.controller.js';
 
 let ok = 0; let bad = 0;
@@ -412,6 +412,17 @@ H('١١) لا يُفصَلُ حسابُ إنستغرام إلّا لموتِ ا�
     t(name + (want ? ' ⇒ يفصل' : ' ⇒ لا يفصل'), isAuthError(e) === want);
   }
 }
+
+H('١٢) زرُّ اللايك ملصقٌ لا صورةَ منتج');
+// يصلُ بنوعِ image ومعه sticker_id. كنّا نجلبُه ونبعثُه للنموذجِ ليصفَه ويبحثَ
+// عن شبيهٍ له بالكتالوج — نداءُ رؤيةٍ كاملٌ على إبهام.
+t('إبهامُ ماسنجر (sticker_id بالرسالة) ⇒ ملصق',
+  attachmentKind({ sticker_id: 369239263222822 }, { type: 'image', payload: { url: 'x' } }) === 'sticker');
+t('ملصقٌ بـsticker_id داخلَ المرفق ⇒ ملصق',
+  attachmentKind({}, { type: 'image', payload: { url: 'x', sticker_id: 123 } }) === 'sticker');
+t('صورةٌ حقيقيّةٌ تبقى صورة', attachmentKind({}, { type: 'image', payload: { url: 'x' } }) === 'image');
+t('رسالةٌ صوتيّةٌ تبقى صوتاً', attachmentKind({}, { type: 'audio', payload: { url: 'x' } }) === 'audio');
+t('بلا مرفقٍ ⇒ لا نوع', attachmentKind({}, null) === '');
 
 H('١٠ب) صدى ميتا لا يجعلُ ردَّ البائعةِ يبدو ردَّ التاجرة');
 // السباقُ الذي أسكتَ البائعةَ بعدَ ردٍّ واحد: ميتا تُعيدُ ما نرسلُه كـecho،

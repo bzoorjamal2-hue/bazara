@@ -33,8 +33,16 @@ import {
 
 // سطرُ «آخر رسالة» في قائمة المحادثات يخلو من النصّ حين تكون الرسالةُ صورةً أو
 // صوتاً، فيقولُ نوعَها بدل «مرفق» مبهمة.
+// نوعُ المرفقِ كما نُصنّفُه نحن لا كما تُسمّيه ميتا. مُصدَّرةٌ ليفحصَها الاختبار:
+// الخطأُ هنا يُحوِّلُ إبهاماً إلى نداءِ رؤيةٍ كامل.
+export function attachmentKind(msg, att) {
+  if (msg?.sticker_id || att?.payload?.sticker_id) return 'sticker';
+  return att?.type || '';
+}
+
 const ATTACHMENT_LABEL = {
   image: '📷 صورة',
+  sticker: '👍 ملصق',
   video: '🎬 فيديو',
   audio: '🎤 رسالة صوتية',
   file: '📎 ملف',
@@ -183,7 +191,12 @@ async function processWebhook(body) {
       // النوعُ يقرّرُ كيف يُعرَض المرفق: صورةٌ تُعرَضُ صورةً وفيديو يُشغَّل. بلا حفظِه
       // يصيرُ كلُّ شيءٍ رابطاً مكتوباً عليه «مرفق».
       const att = msg.attachments?.[0] || null;
-      const attType = att?.type || '';
+      // زرُّ اللايك بالماسنجرِ ملصقٌ لا صورة: يصلُ بنوعِ `image` ومعه `sticker_id`.
+      // وكنّا نعاملُه صورةَ قطعةٍ فنجلبُه ونبعثُه للنموذجِ ليصفَه ويبحثَ عن شبيهٍ
+      // له بالكتالوج — نداءُ رؤيةٍ كاملٌ على إبهام، وردٌّ لا معنى له.
+      //
+      // وهو ليس بلا معنىً للزبون: إبهامٌ بعدَ سؤالٍ يعني «تمام». فنقرأُه كما يُقرَأ.
+      const attType = attachmentKind(msg, att);
       // ننسخُ المرفقَ عندنا فوراً: رابطُ Meta ينتهي بعد أيّام فتصيرُ محادثاتُ التاجرةِ
       // القديمةُ مربّعاتٍ مكسورة. النسخُ مرّةً واحدةً هنا يجعلُها تبقى.
       const attachment = att?.payload?.url ? await mirrorRemote(att.payload.url, 'ig/messages') : '';
@@ -498,7 +511,10 @@ async function maybeAutoReply({ store, convId, customerId, text, isNew, who, cha
   // لنصفِ ما يصلُ الدايركت. الآن تنظرُ وتسمع.
   const isImage = mediaType === 'image' && Boolean(mediaUrl);
   const isVoice = mediaType === 'audio' && Boolean(mediaUrl);
-  if (!text && !isImage && !isVoice) return;
+  // ملصقٌ لا صورة: لا يُجلَبُ ولا يُرسَلُ للرؤية. إبهامٌ بعدَ سؤالٍ يعني «تمام»،
+  // وتجاهلُه يتركُ الزبونَ بلا ردٍّ على شيءٍ قالَه فعلاً.
+  const isSticker = mediaType === 'sticker';
+  if (!text && !isImage && !isVoice && !isSticker) return;
   const bot = await loadBot(store.id);
   // القناةُ الحقيقيّةُ لا 'instagram' دائماً: تاجرةٌ فتحت الدايركت ولم تفتحِ
   // الماسنجر يجبُ أن يبقى ماسنجرُها صامتاً.
@@ -649,10 +665,12 @@ async function maybeAutoReply({ store, convId, customerId, text, isNew, who, cha
   );
   const messages = hist.rows.reverse()
     .map((m) => ({ role: m.direction === 'in' ? 'user' : 'assistant', content: m.text }));
-  const spoken = heard || text || (image ? 'بعتتلك صورة — شو رأيك فيها؟ في شي شبهها عندكم؟' : '');
+  const spoken = heard || text
+    || (image ? 'بعتتلك صورة — شو رأيك فيها؟ في شي شبهها عندكم؟' : '')
+    || (isSticker ? '(بعتلك ملصق إبهام 👍 — يعني موافق/تمام)' : '');
   if (!messages.length || messages[messages.length - 1].role !== 'user') {
     messages.push({ role: 'user', content: spoken });
-  } else if (heard || (image && !text)) {
+  } else if (heard || ((image || isSticker) && !text)) {
     // آخرُ رسالةٍ محفوظةٌ بلا نصّ (مرفقٌ وحدَه) — نضعُ مكانَها ما فهمناه
     messages[messages.length - 1] = { role: 'user', content: spoken };
   }
