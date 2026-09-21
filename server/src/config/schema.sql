@@ -340,3 +340,5 @@ ALTER TABLE stores ADD COLUMN IF NOT EXISTS ads_currency   VARCHAR(8)  NOT NULL 
 -- وضع التجربة: البائعة تردّ على حسابات إنستغرام المذكورة وحدها
 ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_test_only BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_test_accounts JSONB NOT NULL DEFAULT '[]'::jsonb;
+-- متى سُلّمت المحادثة للتاجرة — التسليم يسقط بعد ساعات أو حين تردّ هي
+ALTER TABLE ig_conversations ADD COLUMN IF NOT EXISTS bot_paused_at TIMESTAMPTZ;

@@ -677,6 +677,9 @@ END $$;`,
     // زبوناتٍ حقيقيّاتٍ قبل أن تثقَ بها التاجرةُ ولو مرّةً واحدة.
     "ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_test_only BOOLEAN NOT NULL DEFAULT false;",
     `ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_test_accounts JSONB NOT NULL DEFAULT '[]'::jsonb;`,
+    // متى سُلِّمت المحادثةُ للتاجرة. بلا هذا الوقتِ كان التسليمُ أبديّاً: تاجرةٌ لم
+    // تردَّ وزبونٌ عادَ بعدَ يومٍ بموضوعٍ جديدٍ فلا يجيبُه أحدٌ إطلاقاً.
+    "ALTER TABLE ig_conversations ADD COLUMN IF NOT EXISTS bot_paused_at TIMESTAMPTZ;",
     // ═══ مصنع الإعلانات ═══
     // حملةٌ محفوظةٌ بالطابور: نصوصُها وجمهورُها وميزانيتُها و**وصفةُ** صورتِها لا
     // الصورةُ نفسُها. الصورةُ تُرسَمُ بمتصفّحِ التاجرةِ متى شاءت — فلا بايتَ يُرفَعُ

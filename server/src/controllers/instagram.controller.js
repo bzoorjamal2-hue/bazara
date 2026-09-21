@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { query } from '../config/db.js';
 import { encrypt, decrypt } from '../config/opost.js';
 import { notifyUser } from '../utils/notify.js';
-import { feeForCity, flatInternalLocalities } from '../config/deliveryCities.js';
+import { feeForCity, flatInternalLocalities, cityOfVillage } from '../config/deliveryCities.js';
 import { extractOrderDraft } from '../utils/orderExtract.js';
 import { imageBlock, transcribe, canHear } from '../utils/mediaUnderstand.js';
 import {
@@ -254,9 +254,84 @@ async function processWebhook(body) {
 
 // ═════════════════════ البائعة الآلية ═════════════════════
 
+// تسجيلُ طلبٍ من محادثةٍ اكتملت شروطُها. يُنشَأُ بنفسِ شكلِ طلبِ الموقعِ حرفيّاً
+// (نفسُ الجدولِ ونفسُ الحالةِ ونفسُ صيغةِ البنود)، فيظهرُ في «طلباتي» ويدخلُ
+// الحسابَ والمخزونَ وشركةَ التوصيلِ كأيِّ طلبٍ آخر — لا كسجلٍّ جانبيٍّ للبائعة.
+//
+// والسعرُ يُقرأُ من القاعدةِ لا ممّا قالته البائعة، وأجرةُ التوصيلِ تُحسَبُ من
+// مدينةِ الزبونةِ بجدولِ المتجر. فحتى لو أخطأَ النموذجُ برقمٍ بالمحادثة، الطلبُ
+// المسجَّلُ صحيح.
+async function createChatOrder(store, conv, order, customerId) {
+  const p = (await query(
+    'SELECT id, name, price, cost, store_id FROM products WHERE id = $1 AND store_id = $2 AND hidden_at IS NULL',
+    [order.product.id, store.id]
+  )).rows[0];
+  if (!p) throw new Error('القطعة لم تعد متاحة.');
+
+  const unit = Number(p.price);
+  const subtotal = unit * order.qty;
+
+  // الزبونةُ تقولُ «رابا» لا «جنين — رابا». وطلبُ الموقعِ يخزّنُ المدينةَ الأمَّ
+  // بحقلِ المدينةِ والقريةَ بحقلِها، وعليه تبني شركةُ التوصيلِ إرسالَها. فنفصلُهما
+  // هنا بنفسِ المنطقِ تماماً، وإلّا خرجَ من المحادثةِ طلبٌ بمدينةٍ لا يعرفُها المندوب.
+  let cityName = String(order.city || '').trim();
+  let areaName = '';
+  const parent = cityOfVillage(cityName);
+  if (parent) { areaName = cityName; cityName = parent; }
+  const deliveryFee = feeForCity(cityName, store.delivery_tiers);
+  const freeOver = Number(store.free_shipping_over) || 0;
+  const fee = freeOver > 0 && subtotal >= freeOver ? 0 : deliveryFee;
+  const total = subtotal + fee;
+  const reference = 'BZ-' + crypto.randomBytes(5).toString('hex').toUpperCase();
+  const items = [{
+    id: p.id, name: p.name, price: unit, qty: order.qty,
+    size: order.size || '', color: order.color || '',
+    // لقطةُ التكلفةِ لحظةَ البيعِ — بدونها يُعرَضُ ربحُ هذا الطلبِ «تقديريّاً» وحدَه
+    // بين طلباتٍ ربحُها مؤكّد.
+    cost: p.cost != null ? Number(p.cost) : null,
+  }];
+
+  const ins = await query(
+    `INSERT INTO orders (store_id, customer_name, customer_email, customer_phone, items, total,
+       currency, status, reference, city, area, address, notes, delivery_fee)
+     VALUES ($1,$2,'',$3,$4,$5,'ILS','new',$6,$7,$8,$9,$10,$11) RETURNING id`,
+    [store.id, order.name, order.phone, JSON.stringify(items), total, reference,
+      cityName, areaName, order.address, 'طلب سجّلته البائعة الآلية من رسائل إنستغرام', fee]
+  );
+
+  await query('UPDATE ig_conversations SET order_id = $2 WHERE id = $1', [conv.id, ins.rows[0].id]);
+  notifyUser(store.user_id, {
+    type: 'order',
+    title: `🛍️ طلب جديد — ${order.name}`,
+    body: `${p.name}${order.color ? ' · ' + order.color : ''}${order.size ? ' · نمرة ' + order.size : ''} — ₪${total}`,
+    url: '/dashboard?tab=myOrders',
+    tag: `order-${ins.rows[0].id}`,
+  });
+
+  return {
+    reference,
+    total,
+    deliveryFee: fee,
+    itemLine: `${p.name}${order.color ? ' — ' + order.color : ''}${order.size ? ' — نمرة ' + order.size : ''}${order.qty > 1 ? ` — ${order.qty} قطع` : ''}`,
+  };
+}
+
 // كم دقيقةً نعتبرُ التاجرةَ فيها «على الشاشة» بعدَ ردِّها؟ ردُّها بيدِها يعني أنّها
 // موجودة، ومقاطعتُها بردٍّ آليٍّ في منتصفِ حديثِها أسوأُ من ألّا نردَّ أصلاً.
 const OWNER_PRESENT_MINUTES = 10;
+// بعدَها يسقطُ التسليمُ للتاجرةِ إن لم تردَّ: لا نتركُ الزبونَ بلا أحدٍ إلى الأبد.
+const PAUSE_HOURS = 6;
+
+// هل يسقطُ التسليمُ للتاجرةِ فيعودُ الردُّ الآليّ؟ مُصدَّرةٌ ليفحصَها الاختبارُ
+// بكلِّ حالاتِها: هذا القرارُ بالذاتِ هو ما تركَ زبوناً بلا أحدٍ يردُّ عليه.
+//   • ختمٌ فارغٌ = تسليمٌ قديمٌ سبقَ الترقية ⇒ يسقط (وإلّا بقيَ أبديّاً)
+//   • ردَّت التاجرةُ بعدَه ⇒ تولّت فانتهى دورُه
+//   • مضت ستُّ ساعاتٍ ولم يردَّ أحدٌ ⇒ الصمتُ أسوأُ من ردٍّ آليّ
+export function shouldResume({ pausedAt, ownerRepliedAfter = false, now = Date.now() }) {
+  if (!pausedAt) return true;
+  const hours = (now - new Date(pausedAt).getTime()) / 3600000;
+  return hours >= PAUSE_HOURS || ownerRepliedAfter === true;
+}
 
 // ردٌّ آليٌّ على رسالةٍ واردة. كلُّ حارسٍ هنا مكتوبٌ لأنّ ما بعدَه يذهبُ لزبونةٍ
 // حقيقيّةٍ باسمِ المتجر: لا رجعةَ في رسالةٍ أُرسِلت.
@@ -274,7 +349,7 @@ async function maybeAutoReply({ store, convId, customerId, text, isNew, who, med
   let conv;
   try {
     const r = await query(
-      `SELECT bot_paused, bot_replies, bot_stage, customer_username, customer_name
+      `SELECT id, bot_paused, bot_paused_at, bot_replies, bot_stage, customer_username, customer_name
        FROM ig_conversations WHERE id = $1`,
       [convId]
     );
@@ -283,7 +358,34 @@ async function maybeAutoReply({ store, convId, customerId, text, isNew, who, med
     if (err.code === '42703') return; // الأعمدةُ لم تصل بعد
     throw err;
   }
-  if (!conv || conv.bot_paused) return;
+  if (!conv) return;
+
+  // التسليمُ ليس أبديّاً. كان «محادثةٌ سُلِّمت لإنسانٍ تبقى له» — منطقيٌّ ساعتَه،
+  // وبالواقعِ تاجرةٌ لم تردَّ وزبونٌ عادَ بعدَ يومٍ بموضوعٍ جديد، فلا يجيبُه أحدٌ
+  // إطلاقاً. وصمتُ الجميعِ أسوأُ من ردٍّ آليٍّ أو من ردٍّ متأخّرٍ بشريّ.
+  //
+  // يسقطُ التسليمُ في حالتين: أن تردَّ التاجرةُ بعدَه (تولّت فانتهى دورُه — ويحميها
+  // بعدَها حارسُ العشرِ دقائق)، أو أن تمرَّ ستُّ ساعاتٍ ولم يردَّ أحد.
+  if (conv.bot_paused) {
+    const pausedAt = conv.bot_paused_at || null;
+    let ownerRepliedAfter = false;
+    if (pausedAt) {
+      // ردُّ التاجرةِ يصلُنا echo ويُخزَّنُ out بلا وسمِ ai — فنعرفُه أينما ردّت
+      const after = await query(
+        `SELECT 1 FROM ig_messages WHERE conversation_id = $1 AND direction = 'out'
+           AND ai = false AND created_at > $2 LIMIT 1`,
+        [convId, pausedAt]
+      ).catch(() => ({ rows: [] }));
+      ownerRepliedAfter = after.rows.length > 0;
+    }
+    if (!shouldResume({ pausedAt, ownerRepliedAfter })) return;
+    await query(
+      'UPDATE ig_conversations SET bot_paused = false, bot_paused_at = NULL, bot_replies = 0 WHERE id = $1',
+      [convId]
+    ).catch(() => {});
+    conv.bot_paused = false;
+    conv.bot_replies = 0;
+  }
 
   // وضعُ التجربة: لا تُكلَّمُ إلّا الحساباتُ المذكورةُ بالاسم. ويُفحَصُ قبلَ كلِّ
   // شيءٍ آخرَ ليبقى الحارسُ واحداً لا يُلتَفُّ عليه من أيِّ مسار.
@@ -304,7 +406,7 @@ async function maybeAutoReply({ store, convId, customerId, text, isNew, who, med
           );
         } catch { /* خارجَ النافذةِ أو توكنٌ ميّت: التسليمُ يبقى قائماً */ }
       }
-      await query('UPDATE ig_conversations SET bot_paused = true, last_at = now() WHERE id = $1', [convId]);
+      await query('UPDATE ig_conversations SET bot_paused = true, bot_paused_at = now(), last_at = now() WHERE id = $1', [convId]);
       notifyUser(store.user_id, {
         type: 'instagram',
         title: `🙋 ${who || 'زبون'} بانتظار ردّك`,
@@ -497,7 +599,8 @@ ${sign}` : withOrder;
   await query(
     `UPDATE ig_conversations
      SET last_message = $2, last_at = now(),
-         bot_replies = bot_replies + 1, bot_stage = $3, bot_paused = $4
+         bot_replies = bot_replies + 1, bot_stage = $3, bot_paused = $4,
+         bot_paused_at = CASE WHEN $4 THEN now() ELSE NULL END
      WHERE id = $1`,
     [convId, body.slice(0, 200), out.stage, out.handoff === true]
   );

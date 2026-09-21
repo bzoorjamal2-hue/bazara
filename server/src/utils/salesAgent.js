@@ -445,7 +445,9 @@ async function callGemini(system, messages) {
 // كلُّ ما يخرجُ من النموذجِ يمرُّ من هنا. الردُّ الذي يحملُ سعراً تحتَ المسموحِ
 // لا يُصحَّحُ بإعادةِ السؤال (ثانيتانِ أخرى وتكلفةٌ ثانية) بل يُستبدَلُ الرقمُ فيه
 // بالمسموح: الزبونةُ ترى عرضاً صحيحاً، والتاجرةُ لا تخسرُ شيقلاً.
-function sanitize(out, { rows, bot, stage }) {
+// مُصدَّرةٌ ليفحصَها الاختبارُ مباشرةً: هي الحارسُ الذي يقفُ بين كلامِ النموذجِ
+// والزبونةِ، وحارسٌ لا يُختبَرُ ليس حارساً.
+export function sanitize(out, { rows, bot, stage }) {
   const byId = new Map(rows.map((p) => [String(p.id), p]));
   let reply = westernDigits(typeof out.reply === 'string' ? out.reply : '').trim();
   const ids = (Array.isArray(out.productIds) ? out.productIds : [])
