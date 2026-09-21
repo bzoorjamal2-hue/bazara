@@ -412,8 +412,13 @@ export async function chatAssistant(req, res, next) {
   // بدك تشوفي؟» وأجابت «هاي» كانت تُقابَلُ بـ«أهلاً وسهلاً، أنا مساعِدة الأناقة»
   // وكأنّها دخلت للتوّ. وبعدَ أن ردَّت البائعةُ مرّةً، السياقُ هو من يفسّرُ لا
   // قائمةُ كلمات — فيمضي الكلامُ للمحرّكِ الذي يقرأُ المحادثةَ كلَّها.
+  //
+  // وهو للصفحةِ العامّةِ وحدَها. بصفحةِ متجرٍ شغّلَ بائعتَه، أوّلُ «مرحبا» كان
+  // يُقابَلُ بـ«أنا مساعِدة الأناقة» — صوتٌ غريبٌ عن المتجرِ يسبقُ بائعتَه إلى
+  // أوّلِ كلمة. فالمتجرُ يمضي للأسفلِ لتردَّ بائعتُه بلهجتِها، ومن لا بائعةَ له
+  // يأخذُ الردَّ الجاهزَ نفسَه بعدَ قليلٍ بلا توكنات.
   const opening = !messages.some((m) => m.role === 'assistant');
-  const chat = !image && opening && smalltalkType(lastUser);
+  const chat = !image && opening && marketplace && smalltalkType(lastUser);
   if (chat) return res.json({ reply: smalltalkReply(chat, lang), products: [] });
 
   try {
@@ -479,6 +484,13 @@ export async function chatAssistant(req, res, next) {
     const validIds = new Set(rows.map((p) => String(p.id)));
     // سياق المحرّك المجاني: آخر رسالتين للزبونة (يحافظ على الفئة عند متابعة بلون/مقاس)
     const recentUserText = messages.filter((m) => m.role === 'user').slice(-2).map((m) => m.content).join(' ');
+
+    // متجرٌ بلا بائعةٍ شغّالةٍ على الموقع: التحيّةُ تبقى ردّاً جاهزاً بلا توكنات،
+    // كما كانت تماماً — فقط بعدَ أن تُتاحَ الفرصةُ لبائعةِ المتجرِ أن تردَّ بنفسِها.
+    if (!botResult && !image && opening) {
+      const late = smalltalkType(lastUser);
+      if (late) return res.json({ reply: smalltalkReply(late, lang), products: [] });
+    }
 
     // اختيار المزوّد حسب المتوفّر، مع السقوط للقواعد عند أي فشل
     let result = botResult;
