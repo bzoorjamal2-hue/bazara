@@ -285,6 +285,11 @@ async function processWebhook(body) {
 //
 // فالكتابةُ هنا تُصرُّ على الوسمِ أيّاً كان الترتيب.
 async function recordBotMessage(convId, mid, text) {
+  // الختمُ أوّلاً ومهما جرى بعدَه: حارسُ «التاجرةُ على الشاشة» يقيسُ عليه، فلو
+  // سقطت كتابةُ الصفِّ (إعادةُ تشغيلٍ بين الإرسالِ والكتابة) بقيَ الحارسُ يعرفُ
+  // أنّ ما وصلَ بعدَ ثوانٍ هو صدانا لا ردُّ تاجرة.
+  await query('UPDATE ig_conversations SET bot_sent_at = now() WHERE id = $1', [convId])
+    .catch(() => {});
   if (mid) {
     await query(
       `INSERT INTO ig_messages (conversation_id, mid, direction, text, ai)
@@ -418,7 +423,7 @@ async function maybeAutoReply({ store, convId, customerId, text, isNew, who, cha
   let conv;
   try {
     const r = await query(
-      `SELECT id, bot_paused, bot_paused_at, bot_replies, bot_stage, customer_username, customer_name
+      `SELECT id, bot_paused, bot_paused_at, bot_sent_at, bot_replies, bot_stage, customer_username, customer_name
        FROM ig_conversations WHERE id = $1`,
       [convId]
     );
@@ -442,8 +447,10 @@ async function maybeAutoReply({ store, convId, customerId, text, isNew, who, cha
       // ردُّ التاجرةِ يصلُنا echo ويُخزَّنُ out بلا وسمِ ai — فنعرفُه أينما ردّت
       const after = await query(
         `SELECT 1 FROM ig_messages WHERE conversation_id = $1 AND direction = 'out'
-           AND ai = false AND created_at > $2 LIMIT 1`,
-        [convId, pausedAt]
+           AND ai = false AND created_at > $2
+           AND created_at > COALESCE($3::timestamptz, '-infinity'::timestamptz) + interval '20 seconds'
+         LIMIT 1`,
+        [convId, pausedAt, conv.bot_sent_at || null]
       ).catch(() => ({ rows: [] }));
       ownerRepliedAfter = after.rows.length > 0;
     }
@@ -458,7 +465,7 @@ async function maybeAutoReply({ store, convId, customerId, text, isNew, who, cha
 
   // وضعُ التجربة: لا تُكلَّمُ إلّا الحساباتُ المذكورةُ بالاسم. ويُفحَصُ قبلَ كلِّ
   // شيءٍ آخرَ ليبقى الحارسُ واحداً لا يُلتَفُّ عليه من أيِّ مسار.
-  if (!testModeAllows(bot, conv.customer_username)) return;
+  if (!testModeAllows(bot, conv.customer_username, conv.customer_name)) return;
   // بلغَت حدَّها: تُسلِّمُ **معلنةً** لا صامتة. الصمتُ هنا أسوأُ من الحدِّ نفسِه —
   // ظلَّ الزبونُ يسألُ ثمّ كتب «مالك بطّلت تردّي؟» ولا أحدَ يعلمُ أنّه ينتظر.
   if (Number(conv.bot_replies) >= MAX_BOT_REPLIES) {
@@ -483,13 +490,24 @@ async function maybeAutoReply({ store, convId, customerId, text, isNew, who, cha
     return;
   }
 
-  // هل ردّت التاجرةُ بيدِها قريباً؟ (ردُّها من تطبيقِ إنستغرام يصلُنا echo ويُخزَّنُ
-  // out بلا وسمِ ai — فالحارسُ يعملُ أينما ردّت.)
+  // هل ردّت التاجرةُ بيدِها قريباً؟ ردُّها من تطبيقِ إنستغرام يصلُنا echo ويُخزَّنُ
+  // out بلا وسمِ ai — فالحارسُ يعملُ أينما ردّت.
+  //
+  // لكنّ **صدى البائعةِ نفسِها** يصلُ بنفسِ الشكل. ووسمُ ai وحدَه لا يكفي حارساً:
+  // كلُّ ما يُسقِطُ كتابتَنا (سباقٌ مع الصدى، إعادةُ تشغيلٍ بين الإرسالِ والكتابة،
+  // صفٌّ قديمٌ كُتِبَ قبلَ الإصلاح) يتركُ ردَّ البائعةِ مكتوباً كأنّه ردُّ تاجرة —
+  // فتُسكِتُ البائعةُ نفسَها عشرَ دقائقَ بردِّها هي. وهذا ما وقعَ فعلاً مرّتين.
+  //
+  // فالحارسُ يقيسُ على وقتِ إرسالِنا: صدانا يعودُ خلالَ ثوانٍ، وردُّ إنسانٍ يكتبُ
+  // بيدِه يأتي بعدَها. ما وصلَ خلالَ العشرينَ ثانيةً التاليةَ لإرسالِنا ليس ردَّ
+  // تاجرة، مهما كان وسمُه — ولا حاجةَ لتصحيحِ الصفوفِ القديمةِ بعدَ اليوم.
   const recent = await query(
-    `SELECT 1 FROM ig_messages
-     WHERE conversation_id = $1 AND direction = 'out' AND ai = false
-       AND created_at > now() - interval '${OWNER_PRESENT_MINUTES} minutes' LIMIT 1`,
-    [convId]
+    `SELECT 1 FROM ig_messages m
+      WHERE m.conversation_id = $1 AND m.direction = 'out' AND m.ai = false
+        AND m.created_at > now() - interval '${OWNER_PRESENT_MINUTES} minutes'
+        AND m.created_at > COALESCE($2::timestamptz, '-infinity'::timestamptz) + interval '20 seconds'
+      LIMIT 1`,
+    [convId, conv.bot_sent_at || null]
   ).catch(() => ({ rows: [] }));
   if (recent.rows.length) return;
 

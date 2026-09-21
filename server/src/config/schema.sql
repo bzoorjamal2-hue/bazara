@@ -346,3 +346,5 @@ ALTER TABLE ig_conversations ADD COLUMN IF NOT EXISTS bot_paused_at TIMESTAMPTZ;
 ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_haggle_margin NUMERIC(10,2) NOT NULL DEFAULT 10;
 -- قناة المحادثة: دايركت إنستغرام أم ماسنجر الصفحة
 ALTER TABLE ig_conversations ADD COLUMN IF NOT EXISTS channel VARCHAR(16) NOT NULL DEFAULT 'instagram';
+-- متى أرسلت البائعة آخر رسالة — حارس «التاجرة على الشاشة» يقيس عليه
+ALTER TABLE ig_conversations ADD COLUMN IF NOT EXISTS bot_sent_at TIMESTAMPTZ;

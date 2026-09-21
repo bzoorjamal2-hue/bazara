@@ -70,11 +70,15 @@ const normUser = (s) => String(s || '').trim().replace(/^@+/, '').toLowerCase();
 
 // وضعُ التجربة: قائمةٌ فارغةٌ مع تشغيلِ الوضعِ تعني **لا أحد** — لا الجميع.
 // الفشلُ هنا يجبُ أن يكونَ إلى الصمتِ لا إلى الكلام.
-export function testModeAllows(bot, username) {
+// مُرسِلُ ماسنجر بلا اسمِ حسابٍ أصلاً — له اسمٌ معروضٌ فقط. فكان وضعُ التجربةِ
+// يمنعُ كلَّ رسائلِ فيسبوكَ بلا استثناء، ولا سبيلَ لتجربةِ القناةِ إلّا بإطفاءِ
+// الحارسِ عن زبائنِ المتجرِ الحقيقيّين. فصارَ يقبلُ الاسمَ المعروضَ أيضاً.
+export function testModeAllows(bot, username, displayName = '') {
   if (!bot?.bot_test_only) return true;
   const list = Array.isArray(bot.bot_test_accounts) ? bot.bot_test_accounts.map(normUser) : [];
-  const u = normUser(username);
-  return Boolean(u) && list.includes(u);
+  if (!list.length) return false;
+  const tries = [normUser(username), normUser(displayName)].filter(Boolean);
+  return tries.some((x) => list.includes(x));
 }
 
 function channels(bot) {
