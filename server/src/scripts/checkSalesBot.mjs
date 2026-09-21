@@ -341,6 +341,14 @@ t('اسمٌ غيرُ مذكورٍ يُمنَع', !testModeAllows({ bot_test_only
 t('الاسمُ المذكورُ يمرّ', testModeAllows({ bot_test_only: true, bot_test_accounts: ['jamal._fi'] }, 'jamal._fi'));
 t('فرقُ نقطةٍ واحدةٍ يُمنَع', !testModeAllows({ bot_test_only: true, bot_test_accounts: ['jamal_fi'] }, 'jamal._fi'));
 t('بلا اسمٍ يُمنَع', !testModeAllows({ bot_test_only: true, bot_test_accounts: ['jamal._fi'] }, ''));
+// مُرسِلُ ماسنجر يبقى بلا اسمِ حسابٍ ولا اسمٍ معروضٍ متى تعثّرَ جلبُ ملفِّه من
+// ميتا — وقد تعثّرَ فعلاً. معرّفُه الخامُ يصلُ مع الرسالةِ ولا يتعثّرُ أبداً.
+{
+  const only = { bot_test_only: true, bot_test_accounts: ['27820573167539272'] };
+  t('معرّفُ مُرسِلٍ مذكورٌ بالقائمةِ يمرُّ ولو بلا اسم', testModeAllows(only, '', '', '27820573167539272'));
+  t('ومعرّفٌ غيرُ مذكورٍ يُمنَع', !testModeAllows(only, '', '', '99999'));
+  t('وبلا معرّفٍ ولا اسمٍ يُمنَع', !testModeAllows(only, '', '', ''));
+}
 t('مُطفأةٌ ⇒ لا تردّ', !botActiveNow({ ...bot, bot_enabled: false }, 'instagram'));
 t('قناةٌ غيرُ مُفعَّلةٍ ⇒ لا تردّ', !botActiveNow({ ...bot, bot_enabled: true, bot_channels: ['site'], bot_mode: 'always' }, 'instagram'));
 t('بلا إعداداتٍ (null) ⇒ لا تردّ', !botActiveNow(null, 'instagram'));

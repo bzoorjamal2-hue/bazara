@@ -78,11 +78,15 @@ const normUser = (s) => String(s || '').trim().replace(/^@+/, '').toLowerCase();
 // مُرسِلُ ماسنجر بلا اسمِ حسابٍ أصلاً — له اسمٌ معروضٌ فقط. فكان وضعُ التجربةِ
 // يمنعُ كلَّ رسائلِ فيسبوكَ بلا استثناء، ولا سبيلَ لتجربةِ القناةِ إلّا بإطفاءِ
 // الحارسِ عن زبائنِ المتجرِ الحقيقيّين. فصارَ يقبلُ الاسمَ المعروضَ أيضاً.
-export function testModeAllows(bot, username, displayName = '') {
+// ويُقبَلُ معرّفُ المُرسِلِ الخام (PSID/IGSID) بالقائمةِ أيضاً. اسمُ الحسابِ
+// والاسمُ المعروضُ كلاهما يأتيانِ من نداءٍ لميتا قد يتعثّر — وحين يتعثّرُ يصيرُ
+// الزبونُ بلا هويّةٍ فيمنعُه الحارس، وهذا صحيحٌ لكنّه يجعلُ التجربةَ مستحيلة.
+// المعرّفُ يصلُ مع الرسالةِ نفسِها ولا يتعثّرُ أبداً، فهو البابُ الأكيد.
+export function testModeAllows(bot, username, displayName = '', senderId = '') {
   if (!bot?.bot_test_only) return true;
   const list = Array.isArray(bot.bot_test_accounts) ? bot.bot_test_accounts.map(normUser) : [];
   if (!list.length) return false;
-  const tries = [normUser(username), normUser(displayName)].filter(Boolean);
+  const tries = [normUser(username), normUser(displayName), normUser(senderId)].filter(Boolean);
   return tries.some((x) => list.includes(x));
 }
 

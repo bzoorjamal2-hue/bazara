@@ -535,7 +535,7 @@ async function maybeAutoReply({ store, convId, customerId, text, isNew, who, cha
 
   // وضعُ التجربة: لا تُكلَّمُ إلّا الحساباتُ المذكورةُ بالاسم. ويُفحَصُ قبلَ كلِّ
   // شيءٍ آخرَ ليبقى الحارسُ واحداً لا يُلتَفُّ عليه من أيِّ مسار.
-  if (!testModeAllows(bot, conv.customer_username, conv.customer_name)) return;
+  if (!testModeAllows(bot, conv.customer_username, conv.customer_name, customerId)) return;
   // بلغَت حدَّها: تُسلِّمُ **معلنةً** لا صامتة. الصمتُ هنا أسوأُ من الحدِّ نفسِه —
   // ظلَّ الزبونُ يسألُ ثمّ كتب «مالك بطّلت تردّي؟» ولا أحدَ يعلمُ أنّه ينتظر.
   if (Number(conv.bot_replies) >= MAX_BOT_REPLIES) {

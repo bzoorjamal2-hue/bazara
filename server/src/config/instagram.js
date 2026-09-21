@@ -183,18 +183,31 @@ export async function sendAttachment(pageToken, recipientId, url, type = 'image'
 // الاسمَ أيضاً ويبقى الزبونُ رقماً مجرّداً.
 export async function getSenderProfile(pageToken, senderId, channel = 'instagram') {
   const ask = (fields) => graph(`/${senderId}`, { token: pageToken, params: { fields } });
-  // مُرسِلُ ماسنجر ليس له username أصلاً، وطلبُه يُفشِلُ النداءَ كلَّه فيبقى الزبونُ
-  // بلا اسمٍ ولا صورة. لكلِّ قناةٍ حقولُها، والأوسعُ أوّلاً ثمّ الأضيق.
+  // لكلِّ قناةٍ حقولُها: مُرسِلُ إنستغرام له `username`، ومُرسِلُ ماسنجر له
+  // `first_name`/`last_name` ولا `name` عنده ولا اسمَ حساب.
   const tries = channel === 'messenger'
-    ? ['name,profile_pic', 'first_name,last_name,profile_pic', 'name']
+    ? ['first_name,last_name,profile_pic', 'name,profile_pic', 'first_name,last_name']
     : ['name,username,profile_pic', 'name,username', 'name'];
+
+  let why = 'لم يُجرَّبْ شيء';
   for (const fields of tries) {
     try {
       const d = await ask(fields);
-      const name = d.name || [d.first_name, d.last_name].filter(Boolean).join(' ');
-      return { name: name || '', username: d.username || '', avatar: d.profile_pic || '' };
-    } catch { /* الحقلُ التالي */ }
+      const name = (d.name || [d.first_name, d.last_name].filter(Boolean).join(' ')).trim();
+      const out = { name, username: d.username || '', avatar: d.profile_pic || '' };
+      // **نداءٌ ينجحُ فارغاً ليس نجاحاً.** طلبُ حقلٍ لا وجودَ له بهذه القناةِ لا
+      // تردُّ عليه ميتا بخطأٍ بل بـ`{id}` وحدَه. وكانت الدالّةُ ترجعُ عندها فوراً
+      // بأسماءٍ فارغةٍ ولا تُجرّبُ الحقولَ الصحيحةَ بعدَها أبداً — فبقيَ كلُّ زبونِ
+      // ماسنجرَ بلا اسمٍ ولا صورة، ومنعَه وضعُ التجربةِ لأنّه بلا هويّة.
+      if (out.name || out.username || out.avatar) return out;
+      why = `ردٌّ بلا حقول (${fields})`;
+    } catch (e) {
+      why = `${fields} → ${e.body?.error?.message || e.message}`;
+    }
   }
+  // بلا هذا السطرِ يبقى الزبونُ «مجهولاً» ولا أحدَ يعرفُ لماذا: كلُّ الأخطاءِ كانت
+  // تُبلَعُ صامتة.
+  console.error(`⚠️ ملفّ المُرسِل [${channel}] ${senderId}: ${why}`);
   return { name: '', username: '', avatar: '' };
 }
 
