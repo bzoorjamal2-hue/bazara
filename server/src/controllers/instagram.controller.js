@@ -440,6 +440,17 @@ async function createChatOrder(store, conv, order, customerId, { offer = null, b
     await query('UPDATE ig_conversations SET order_id = $2 WHERE id = $1', [conv.id, id]);
   }
 
+  // ميتا ترفضُ قراءةَ ملفِّ مُرسِلِ ماسنجر أحياناً («Unsupported get request»)
+  // فيبقى بالصندوقِ باسمِ «زبون» بلا اسمٍ ولا صورة — وهي ترفضُ القراءةَ لا
+  // الإرسال، فلا حيلةَ لنا عندَها. لكنّ الزبونَ قالَ اسمَه بنفسِه ليُسجَّلَ طلبُه،
+  // وهو أصدقُ من أيِّ اسمٍ نجلبُه: نكتبُه بالمحادثةِ إن كانت بلا اسم.
+  if (order.name && !conv.customer_name) {
+    await query(
+      "UPDATE ig_conversations SET customer_name = $2 WHERE id = $1 AND COALESCE(customer_name, '') = ''",
+      [conv.id, order.name]
+    ).catch(() => {});
+  }
+
   notifyUser(store.user_id, {
     type: 'order',
     title: `${edited ? '✏️ تعديل طلب' : '🛍️ طلب جديد'} — ${order.name}`,
