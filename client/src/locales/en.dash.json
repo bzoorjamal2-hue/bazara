@@ -148,7 +148,10 @@
       "aiReply": "Auto reply",
       "draftFilled": "We filled the fields from the chat — review and edit anything missing",
       "draftReading": "reading the chat…",
-      "orderTotal": "Order total"
+      "orderTotal": "Order total",
+      "editingOrder": "Editing order {{ref}} — changes save to the same order.",
+      "saveOrder": "Save changes",
+      "editOrderTitle": "Edit order"
     },
     "opost": {
       "title": "Optimus courier",

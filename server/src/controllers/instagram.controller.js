@@ -8,6 +8,7 @@ import { extractOrderDraft } from '../utils/orderExtract.js';
 import { imageBlock, transcribe, canHear } from '../utils/mediaUnderstand.js';
 import {
   loadBot, botActiveNow, agentReply, countReply, MAX_BOT_REPLIES, testModeAllows, variantAvailable,
+  effectiveFloor,
 } from '../utils/salesAgent.js';
 import {
   isInstagramConfigured,
@@ -323,7 +324,26 @@ async function recordBotMessage(convId, mid, text) {
 // والسعرُ يُقرأُ من القاعدةِ لا ممّا قالته البائعة، وأجرةُ التوصيلِ تُحسَبُ من
 // مدينةِ الزبونةِ بجدولِ المتجر. فحتى لو أخطأَ النموذجُ برقمٍ بالمحادثة، الطلبُ
 // المسجَّلُ صحيح.
-async function createChatOrder(store, conv, order, customerId) {
+// السعرُ الذي يُسجَّلُ فعلاً. الأصلُ سعرُ القاعدةِ لا ما قالته البائعة — لكنّ
+// المفاصلةَ اتّفاقٌ قالته باسمِ المتجرِ وقبلَه الزبون. أن نَعِدَ بـ١٧٠ ونسجّلَ ١٨٠
+// ليس «حرصاً على التاجرة» بل إخلافُ وعدٍ يكتشفُه الزبونُ لحظةَ الاستلام — وهذا ما
+// وقعَ فعلاً: «محنا اتفقنا على ٢٠٠».
+//
+// فيُقبَلُ السعرُ المتّفَقُ عليه بشرطَين: أن يكونَ لهذه القطعةِ بعينِها، وألّا ينزلَ
+// تحتَ أرضيّتِها. وما عدا ذلك يعودُ لسعرِ القاعدة.
+const money = (n) => Math.round(Number(n) * 100) / 100;
+
+function agreedUnit(product, offer, bot) {
+  const base = money(Number(product.price));
+  if (!offer || String(offer.productId || '') !== String(product.id)) return base;
+  const asked = money(Number(offer.price));
+  if (!Number.isFinite(asked) || asked <= 0 || asked > base) return base;
+  const floor = effectiveFloor(product, bot);
+  const least = floor == null ? base : floor;
+  return Math.max(least, asked);
+}
+
+async function createChatOrder(store, conv, order, customerId, { offer = null, bot = null, orderId = null } = {}) {
   // المخزونُ يُقرأُ من القاعدةِ هنا من جديد، لا من كتالوجِ البائعةِ المكشوف.
   // بين لحظةِ عرضِ النمرةِ ولحظةِ تسجيلِ الطلبِ دقائقُ كاملة: تكفي لتؤكّدَ التاجرةُ
   // طلباً آخرَ فيُخصَمَ آخرُ ما بقي، أو تحذفَ النمرةَ بيدِها. هذا آخرُ حاجزٍ قبلَ
@@ -340,7 +360,7 @@ async function createChatOrder(store, conv, order, customerId) {
     throw e;
   }
 
-  const unit = Number(p.price);
+  const unit = agreedUnit(p, offer, bot);
   const subtotal = unit * order.qty;
 
   // الزبونةُ تقولُ «رابا» لا «جنين — رابا». وطلبُ الموقعِ يخزّنُ المدينةَ الأمَّ
@@ -363,26 +383,64 @@ async function createChatOrder(store, conv, order, customerId) {
     cost: p.cost != null ? Number(p.cost) : null,
   }];
 
-  const ins = await query(
-    `INSERT INTO orders (store_id, customer_name, customer_email, customer_phone, items, total,
-       currency, status, reference, city, area, address, notes, delivery_fee)
-     VALUES ($1,$2,'',$3,$4,$5,'ILS','new',$6,$7,$8,$9,$10,$11) RETURNING id`,
-    [store.id, order.name, order.phone, JSON.stringify(items), total, reference,
-      cityName, areaName, order.address, 'طلب سجّلته البائعة الآلية من رسائل إنستغرام', fee]
-  );
+  // تعديلُ طلبٍ قائمٍ بدل إنشاءِ ثانٍ. الزبونُ يغيّرُ رأيَه بالنمرةِ أو اللونِ أو
+  // العنوانِ بعدَ التسجيلِ بدقيقة، وكانت البائعةُ إمّا تعتذرُ وتُحيلَه للتاجرةِ أو
+  // تُسجّلَ طلباً ثانياً للقطعةِ نفسِها. وكلاهما خطأ.
+  //
+  // والشرطُ أنّ الطلبَ ما زالَ `new`: بتأكيدِ التاجرةِ يُخصَمُ المخزونُ وقد يذهبُ
+  // للتوصيل، فتعديلُه بعدَها قرارُها هي لا قرارُ محادثة.
+  let id = null;
+  let ref = reference;
+  let edited = false;
+  if (orderId) {
+    const cur = (await query(
+      'SELECT id, reference, status FROM orders WHERE id = $1 AND store_id = $2',
+      [orderId, store.id]
+    )).rows[0];
+    if (cur && cur.status === 'new') {
+      await query(
+        `UPDATE orders SET customer_name = $2, customer_phone = $3, items = $4, total = $5,
+           city = $6, area = $7, address = $8, delivery_fee = $9
+         WHERE id = $1`,
+        [cur.id, order.name, order.phone, JSON.stringify(items), total,
+          cityName, areaName, order.address, fee]
+      );
+      id = cur.id;
+      ref = cur.reference;
+      edited = true;
+    } else if (cur) {
+      const e = new Error('الطلب تأكّد ولم يعد يُعدَّل من المحادثة.');
+      e.locked = true;
+      e.reference = cur.reference;
+      throw e;
+    }
+  }
 
-  await query('UPDATE ig_conversations SET order_id = $2 WHERE id = $1', [conv.id, ins.rows[0].id]);
+  if (!id) {
+    const ins = await query(
+      `INSERT INTO orders (store_id, customer_name, customer_email, customer_phone, items, total,
+         currency, status, reference, city, area, address, notes, delivery_fee)
+       VALUES ($1,$2,'',$3,$4,$5,'ILS','new',$6,$7,$8,$9,$10,$11) RETURNING id`,
+      [store.id, order.name, order.phone, JSON.stringify(items), total, reference,
+        cityName, areaName, order.address, 'طلب سجّلته البائعة الآلية من رسائل إنستغرام', fee]
+    );
+    id = ins.rows[0].id;
+    await query('UPDATE ig_conversations SET order_id = $2 WHERE id = $1', [conv.id, id]);
+  }
+
   notifyUser(store.user_id, {
     type: 'order',
-    title: `🛍️ طلب جديد — ${order.name}`,
+    title: `${edited ? '✏️ تعديل طلب' : '🛍️ طلب جديد'} — ${order.name}`,
     body: `${p.name}${order.color ? ' · ' + order.color : ''}${order.size ? ' · نمرة ' + order.size : ''} — ₪${total}`,
     url: '/dashboard?tab=myOrders',
-    tag: `order-${ins.rows[0].id}`,
+    tag: `order-${id}`,
   });
 
   return {
-    reference,
+    reference: ref,
     total,
+    unit,
+    edited,
     deliveryFee: fee,
     itemLine: `${p.name}${order.color ? ' — ' + order.color : ''}${order.size ? ' — نمرة ' + order.size : ''}${order.qty > 1 ? ` — ${order.qty} قطع` : ''}`,
   };
@@ -423,7 +481,7 @@ async function maybeAutoReply({ store, convId, customerId, text, isNew, who, cha
   let conv;
   try {
     const r = await query(
-      `SELECT id, bot_paused, bot_paused_at, bot_sent_at, bot_replies, bot_stage, customer_username, customer_name
+      `SELECT id, order_id, bot_paused, bot_paused_at, bot_sent_at, bot_replies, bot_stage, customer_username, customer_name
        FROM ig_conversations WHERE id = $1`,
       [convId]
     );
@@ -609,16 +667,28 @@ async function maybeAutoReply({ store, convId, customerId, text, isNew, who, cha
   let orderLine = '';
   if (out.order?.ready) {
     try {
-      const o = await createChatOrder(store, conv, out.order, customerId);
-      orderLine = `\n\nتمّ تسجيل طلبك ✅\nرقم الطلب: ${o.reference}\n`
-        + `${o.itemLine}\nالإجمالي: ₪${o.total} (منها ₪${o.deliveryFee} توصيل)\n`
-        + 'رح يتسجّل بالموقع تلقائياً ويروح مع شركة التوصيل، ويوصلك خلال يوم أو يومين.';
+      const o = await createChatOrder(store, conv, out.order, customerId, {
+        offer: out.offer, bot, orderId: conv.order_id || null,
+      });
+      const head = o.edited ? 'عدّلت طلبك ✅' : 'تمّ تسجيل طلبك ✅';
+      const tail = o.edited
+        ? 'رح يروح بالشكل الجديد مع شركة التوصيل.'
+        : 'رح يتسجّل بالموقع تلقائياً ويروح مع شركة التوصيل، ويوصلك خلال يوم أو يومين.';
+      orderLine = `\n\n${head}\nرقم الطلب: ${o.reference}\n`
+        + `${o.itemLine}\nالإجمالي: ₪${o.total} (منها ₪${o.deliveryFee} توصيل)\n${tail}`;
     } catch (e) {
       console.error('⚠️ طلب من المحادثة:', e.message);
+      // طلبٌ أكّدَتْه التاجرةُ وخرجَ للتوصيل: تعديلُه قرارُها هي. نقولُها بصراحةٍ
+      // ونُسلّمُ لها، لا نعتذرُ بجملةٍ غامضةٍ عن «مشكلةٍ صغيرة».
+      if (e.locked) {
+        orderLine = `\n\nطلبك ${e.reference} تأكّد وصار جاهز للتوصيل، فما بقدر أعدّله من هون.`
+          + ' خليني أخلي صاحبة المتجر تشوفه معك 🌷';
+        out.handoff = true;
       // نفادُ النمرةِ ليس عطلاً بل خبرٌ للزبونة: نقولُه بصراحةٍ ونكملُ معها بدل
       // أن نُلقيَ بها لتاجرةٍ قد لا تردُّ قبلَ ساعات.
-      if (e.soldOut) {
-        const what = [order.color, order.size && ('نمرة ' + order.size)].filter(Boolean).join(' ');
+      } else if (e.soldOut) {
+        const d = out.order || {};
+        const what = [d.color, d.size && ('نمرة ' + d.size)].filter(Boolean).join(' ');
         orderLine = `\n\nآسفة 🌷 ${what || 'هالخيار'} خلص من المخزن هلق قبل ما أسجّل طلبك. بتحبي أشوفلك لون أو نمرة تانية؟`;
       } else {
         orderLine = '\n\nصار في مشكلة صغيرة بتسجيل الطلب — صاحبة المتجر رح تكمّل معك حالاً 🌷';
@@ -1298,23 +1368,63 @@ export async function convertToOrder(req, res, next) {
 
     const deliveryFee = Math.max(0, Number(customer?.deliveryFee) || 0);
     const total = subtotal + deliveryFee;
-    const reference = 'BZ-' + crypto.randomBytes(5).toString('hex').toUpperCase();
+    let reference = 'BZ-' + crypto.randomBytes(5).toString('hex').toUpperCase();
 
-    const ins = await query(
-      `INSERT INTO orders (store_id, customer_name, customer_email, customer_phone, items, total, currency, status, reference, city, area, address, notes, delivery_fee)
-       VALUES ($1, $2, '', $3, $4, $5, 'ILS', 'new', $6, $7, $8, $9, $10, $11) RETURNING id`,
-      [conv.store_id, name, phone, JSON.stringify(orderItems), total, reference,
-        (customer?.city || '').trim(), (customer?.area || '').trim(), (customer?.address || '').trim(),
-        `طلب من رسائل إنستغرام${customer?.notes ? ' — ' + String(customer.notes).slice(0, 400) : ''}`, deliveryFee]
-    );
+    // المحادثةُ لها طلبٌ سلفاً؟ يُعدَّلُ لا يُستنسَخ. كانت الضغطةُ الثانيةُ تُنشئُ
+    // طلباً ثانياً للقطعةِ نفسِها — ولا بابَ للتاجرةِ لتصحيحَ خطأٍ برقمٍ أو عنوان.
+    // فصارَ نموذجُ التحويلِ نفسُه نموذجَ التعديل.
+    //
+    // وبعدَ تأكيدِ الطلبِ يُقفَل: التأكيدُ خصمَ المخزونَ وربّما أرسلَه، وتغييرُ ما
+    // خرجَ للتوصيلِ يجري من صفحةِ الطلباتِ لا من هنا.
+    let orderId = null;
+    let reused = false;
+    if (conv.order_id) {
+      const cur = (await query(
+        'SELECT id, reference, status FROM orders WHERE id = $1 AND store_id = $2',
+        [conv.order_id, conv.store_id]
+      )).rows[0];
+      if (cur && cur.status !== 'new') {
+        return res.status(409).json({
+          error: `الطلب ${cur.reference} تأكّد ولم يعد يُعدَّل من هنا — عدّليه من صفحة الطلبات.`,
+        });
+      }
+      if (cur) {
+        await query(
+          `UPDATE orders SET customer_name = $2, customer_phone = $3, items = $4, total = $5,
+             city = $6, area = $7, address = $8, notes = $9, delivery_fee = $10
+           WHERE id = $1`,
+          [cur.id, name, phone, JSON.stringify(orderItems), total,
+            (customer?.city || '').trim(), (customer?.area || '').trim(), (customer?.address || '').trim(),
+            `طلب من رسائل إنستغرام${customer?.notes ? ' — ' + String(customer.notes).slice(0, 400) : ''}`, deliveryFee]
+        );
+        orderId = cur.id;
+        reference = cur.reference;
+        reused = true;
+      }
+    }
 
-    // نربط المحادثة بالطلب (يظهر للتاجر أنها تحوّلت + يمنع تحويلها مرتين بالخطأ)
-    await query('UPDATE ig_conversations SET order_id = $2 WHERE id = $1', [conv.id, ins.rows[0].id]);
+    if (!orderId) {
+      const ins = await query(
+        `INSERT INTO orders (store_id, customer_name, customer_email, customer_phone, items, total, currency, status, reference, city, area, address, notes, delivery_fee)
+         VALUES ($1, $2, '', $3, $4, $5, 'ILS', 'new', $6, $7, $8, $9, $10, $11) RETURNING id`,
+        [conv.store_id, name, phone, JSON.stringify(orderItems), total, reference,
+          (customer?.city || '').trim(), (customer?.area || '').trim(), (customer?.address || '').trim(),
+          `طلب من رسائل إنستغرام${customer?.notes ? ' — ' + String(customer.notes).slice(0, 400) : ''}`, deliveryFee]
+      );
+      orderId = ins.rows[0].id;
+      // نربط المحادثة بالطلب (يظهر للتاجر أنها تحوّلت + يمنع تحويلها مرتين بالخطأ)
+      await query('UPDATE ig_conversations SET order_id = $2 WHERE id = $1', [conv.id, orderId]);
+    }
 
     // تأكيدٌ للزبون في محادثته: كان الطلبُ يُسجَّلُ عندنا ولا يعلمُ هو شيئاً، فيعودُ
     // يسألُ «وصلكم؟» بعد ساعة. الرسالةُ تُحفَظُ في المحادثةِ أيضاً لتراها التاجرةُ في
     // مكانها، وفشلُها لا يُسقطُ الطلب: قد تكون نافذةُ الأربعِ والعشرين ساعةً أُغلقت.
-    const confirm = `تمّ تسجيل طلبك ✅\nرقم الطلب: ${reference}\nالإجمالي: ₪${total}\nرح نتواصل معك لتأكيد التوصيل.`;
+    const confirm = reused
+      ? `عدّلنا طلبك ✅
+رقم الطلب: ${reference}
+الإجمالي: ₪${total}
+رح يروح بالشكل الجديد.`
+      : `تمّ تسجيل طلبك ✅\nرقم الطلب: ${reference}\nالإجمالي: ₪${total}\nرح نتواصل معك لتأكيد التوصيل.`;
     let confirmed = false;
     try {
       const token = decrypt(conv.ig_access_token);
@@ -1335,7 +1445,7 @@ export async function convertToOrder(req, res, next) {
       console.error('ig confirm (تم تجاهله):', e.message);
     }
 
-    res.status(201).json({ orderId: ins.rows[0].id, reference, total, confirmed });
+    res.status(reused ? 200 : 201).json({ orderId, reference, total, confirmed, edited: reused });
   } catch (err) {
     next(err);
   }
@@ -1350,6 +1460,40 @@ export async function igOrderDraft(req, res, next) {
   try {
     const conv = await getOwnedConversation(req.user.id, req.params.id);
     if (!conv) return res.status(404).json({ error: 'المحادثة غير موجودة.' });
+
+    // للمحادثةِ طلبٌ مسجَّلٌ سلفاً؟ فالنموذجُ نموذجُ **تعديل**، ويجبُ أن يُظهِرَ ما
+    // هو مسجَّلٌ فعلاً لا ما نُعيدُ قراءتَه من المحادثة — التاجرةُ تصحّحُ رقماً أو
+    // نمرةً، فلا يجوزُ أن تُفاجأَ بحقولٍ تختلفُ عمّا في الطلب.
+    if (conv.order_id) {
+      const o = (await query(
+        `SELECT id, reference, status, customer_name, customer_phone, items, city, area,
+                address, notes, delivery_fee
+           FROM orders WHERE id = $1 AND store_id = $2`,
+        [conv.order_id, conv.store_id]
+      )).rows[0];
+      if (o) {
+        const items = Array.isArray(o.items) ? o.items : [];
+        return res.json({
+          found: true,
+          editing: true,
+          orderId: o.id,
+          reference: o.reference,
+          locked: o.status !== 'new',
+          status: o.status,
+          name: o.customer_name || '',
+          phone: o.customer_phone || '',
+          city: o.city || '',
+          area: o.area || '',
+          address: o.address || '',
+          notes: /^طلب (من رسائل إنستغرام|سجّلته البائعة)/.test(String(o.notes || '')) ? '' : (o.notes || ''),
+          deliveryFee: o.delivery_fee != null ? String(o.delivery_fee) : '',
+          items: items.map((i) => ({
+            id: String(i.id), name: i.name, price: Number(i.price) || 0,
+            qty: Number(i.qty) || 1, size: i.size || '', color: i.color || '',
+          })),
+        });
+      }
+    }
 
     const msgs = await query(
       `SELECT direction, text FROM ig_messages

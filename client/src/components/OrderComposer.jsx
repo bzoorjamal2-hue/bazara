@@ -140,6 +140,17 @@ export function OrderComposer({ defaultName = '', defaultPhone = '', hintText = 
       notes: prev.notes || draft.notes || '',
       deliveryFee: prev.deliveryFee || (draft.deliveryFee ?? ''),
     }));
+    // طلبٌ قائمٌ يُعدَّل: بنودُه تأتي كما هي مسجَّلةٌ — بأسعارِها المتّفَقِ عليها
+    // لا بأسعارِ الكتالوج، وإلّا ضاعَ خصمُ المفاصلةِ بأوّلِ تصحيحِ رقمِ هاتف.
+    if (draft.editing && Array.isArray(draft.items) && draft.items.length) {
+      setPicked((prev) => (prev.length ? prev : draft.items.map((it) => ({
+        id: it.id, name: it.name, price: Number(it.price) || 0,
+        qty: it.qty || 1, size: it.size || '', color: it.color || '',
+        product: (products || []).find((x) => String(x.id) === String(it.id)) || null,
+      }))));
+      return;
+    }
+
     const p = draft.productId ? (products || []).find((x) => String(x.id) === String(draft.productId)) : null;
     if (p) {
       setPicked((prev) => (prev.some((x) => x.id === p.id) ? prev : [...prev, {
@@ -237,7 +248,7 @@ export function OrderComposer({ defaultName = '', defaultPhone = '', hintText = 
       {draft?.found && (draft.name || draft.phone || draft.city || draft.productId) && (
         <p className="bz-note-ok flex items-start gap-1.5 rounded-xl px-2.5 py-1.5 text-[11px] font-semibold leading-relaxed">
           <CheckIcon className="mt-px h-3.5 w-3.5 shrink-0" />
-          {t('dashboard.instagram.draftFilled')}
+          {draft.editing ? t('dashboard.instagram.editingOrder', { ref: draft.reference || '' }) : t('dashboard.instagram.draftFilled')}
         </p>
       )}
 
@@ -333,7 +344,7 @@ export function OrderComposer({ defaultName = '', defaultPhone = '', hintText = 
       </div>
 
       <button onClick={submit} disabled={busy} className="btn-primary w-full justify-center gap-1.5 !py-2.5 text-sm disabled:opacity-50">
-        {busy ? t('common.loading') : <><BagIcon className="h-4 w-4" /> {t('dashboard.instagram.createOrder')}</>}
+        {busy ? t('common.loading') : <><BagIcon className="h-4 w-4" /> {draft?.editing ? t('dashboard.instagram.saveOrder') : t('dashboard.instagram.createOrder')}</>}
       </button>
     </div>
   );
@@ -360,7 +371,7 @@ export function ConvertForm({ convId, defaultName, defaultPhone = '', hintText =
     <div className="space-y-3 border-b border-gold-400/20 bg-gold-400/5 p-3">
       <p className="flex items-center gap-2 text-sm font-bold text-stone-100">
         <BagIcon className="h-4 w-4 shrink-0 text-stone-400" />
-        {t('dashboard.instagram.convertTitle')}
+        {draft?.editing ? t('dashboard.instagram.editOrderTitle') : t('dashboard.instagram.convertTitle')}
         {reading && <span className="text-xs font-normal text-stone-400">{t('dashboard.instagram.draftReading')}</span>}
       </p>
       <OrderComposer

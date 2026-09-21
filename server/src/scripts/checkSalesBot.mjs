@@ -357,11 +357,18 @@ t('سُلِّمَت قبلَ ٥ ساعاتٍ ⇒ ما زالت لها', !shouldR
 t('مضت ٦ ساعاتٍ بلا ردٍّ ⇒ يُرفَع', shouldResume({ pausedAt: ago(6), now: NOW }));
 t('ردَّت التاجرةُ بعدَه ⇒ يُرفَعُ فوراً', shouldResume({ pausedAt: ago(0.02), ownerRepliedAfter: true, now: NOW }));
 t('«ردّت» بقيمةٍ غيرِ منطقيّةٍ لا تُصدَّق', !shouldResume({ pausedAt: ago(1), ownerRepliedAfter: 'نعم', now: NOW }));
-const stuck = (await query(
+// تسليمٌ جرى قبلَ قليلٍ ليس عُطلاً: المحادثةُ للتاجرةِ ستَّ ساعات، ثمّ تعودُ
+// البائعةُ وحدَها. العالقُ هو ما لن يعودَ أبداً — وذاك ما يُفحَص.
+const paused = (await query(
   'SELECT bot_paused_at FROM ig_conversations WHERE store_id = $1 AND bot_paused = true', [st.id]
 )).rows;
-t('لا محادثةَ عالقةٌ بلا مَن يردُّ عليها',
-  stuck.every((c) => shouldResume({ pausedAt: c.bot_paused_at })), stuck.length + ' موقوفة');
+const willResume = (c) => shouldResume({ pausedAt: c.bot_paused_at })
+  || (c.bot_paused_at && (Date.now() - new Date(c.bot_paused_at).getTime()) < 6 * 3600000);
+if (paused.length) {
+  console.log('    (' + paused.length + ' محادثةً مُسلَّمةً للتاجرةِ الآن — تعودُ تلقائيّاً)');
+}
+t('لا محادثةَ عالقةٌ بلا مَن يردُّ عليها أبداً',
+  paused.every(willResume), paused.length + ' موقوفة');
 
 H('١٠ب) صدى ميتا لا يجعلُ ردَّ البائعةِ يبدو ردَّ التاجرة');
 // السباقُ الذي أسكتَ البائعةَ بعدَ ردٍّ واحد: ميتا تُعيدُ ما نرسلُه كـecho،
