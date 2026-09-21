@@ -72,7 +72,10 @@ export default function SalesBot() {
     set({ channels: [...next] });
   };
 
-  const quotaPct = Math.min(100, Math.round((s.quotaUsed / Math.max(1, s.quotaTotal)) * 100));
+  // لا سقفَ للردودِ الذكيّة: العدّادُ يقيسُ ولا يقطع. فلا نُري التاجرةَ «متبقٍّ من»
+  // ولا شريطَ امتلاءٍ لحدٍّ لا وجودَ له — نُري ما استُعمِلَ هذا الشهرَ وكفى.
+  const capped = Number.isFinite(s.quotaTotal) && s.quotaTotal > 0;
+  const quotaPct = capped ? Math.min(100, Math.round((s.quotaUsed / s.quotaTotal) * 100)) : 0;
 
   return (
     <div className="space-y-4">
@@ -229,12 +232,14 @@ export default function SalesBot() {
               <SparkleIcon className="h-4 w-4" /> {t('salesBot.quota.label')} <Tip text={t('salesBot.quota.tip')} />
             </span>
             <span className="shrink-0 rounded-full bg-gold-400/10 px-2.5 py-1 text-[11px] font-bold tabular-nums text-gold-200">
-              {s.quotaLeft} / {s.quotaTotal}
+              {capped ? `${s.quotaLeft} / ${s.quotaTotal}` : t('salesBot.quota.used', { n: s.quotaUsed })}
             </span>
           </div>
-          <div className="mt-2 h-2 overflow-hidden rounded-full bg-black/30">
-            <div className="h-full rounded-full bg-gradient-to-r from-[#BAB9B7] to-[#999795] transition-all" style={{ width: `${quotaPct}%` }} />
-          </div>
+          {capped && (
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-black/30">
+              <div className="h-full rounded-full bg-gradient-to-r from-[#BAB9B7] to-[#999795] transition-all" style={{ width: `${quotaPct}%` }} />
+            </div>
+          )}
           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-stone-400">
             <span className="tabular-nums">{t('salesBot.stats.replies', { n: s.repliesTotal })}</span>
             <span className="tabular-nums">{t('salesBot.stats.handoffs', { n: s.handoffsTotal })}</span>

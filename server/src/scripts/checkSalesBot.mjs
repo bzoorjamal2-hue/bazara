@@ -10,6 +10,7 @@ import crypto from 'crypto';
 import { query, withTransaction } from '../config/db.js';
 import {
   loadBot, sanitize, allowedPrice, effectiveFloor, haggleMargin, DEFAULT_HAGGLE_MARGIN,
+  quotaLeft, MONTHLY_QUOTA,
   normalizePhone, testModeAllows, botActiveNow, stockLine, sizesOf, colorsOf, MAX_HAGGLE_MARGIN,
   variantAvailable, haggleIntent, needsHuman, clearCatalog, photoFor,
 } from '../utils/salesAgent.js';
@@ -412,6 +413,14 @@ H('١١) لا يُفصَلُ حسابُ إنستغرام إلّا لموتِ ا�
     t(name + (want ? ' ⇒ يفصل' : ' ⇒ لا يفصل'), isAuthError(e) === want);
   }
 }
+
+H('١٣) لا سقفَ للردودِ الذكيّة');
+// كانت ثلاثمئةً بالشهر. متجرٌ يدفعُ لإعلانٍ يجلبُ مئاتِ الرسائلِ يبلغُها بأيّام،
+// فتنقلبُ بائعتُه فجأةً لمحرّكِ القواعد: لا مفاصلةَ ولا إتمامَ طلبٍ وهو لا يدري.
+t('السقفُ غيرُ محدود', MONTHLY_QUOTA === Infinity);
+t('ولا ينفدُ بعدَ آلافِ الردود', quotaLeft({ ...bot, bot_quota_used: 99999 }) === Infinity);
+t('فيبقى الذكاءُ مسموحاً دائماً', quotaLeft({ ...bot, bot_quota_used: 99999 }) > 0);
+t('وبلا إعداداتٍ يبقى صفراً (fail-closed)', quotaLeft(null) === 0);
 
 H('١٢) زرُّ اللايك ملصقٌ لا صورةَ منتج');
 // يصلُ بنوعِ image ومعه sticker_id. كنّا نجلبُه ونبعثُه للنموذجِ ليصفَه ويبحثَ

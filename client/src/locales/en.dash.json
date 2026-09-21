@@ -1351,8 +1351,9 @@
       "to": "To"
     },
     "quota": {
-      "label": "Smart replies left this month",
-      "tip": "Smart replies have a monthly cap. When it runs out she does not go silent — she falls back to the free engine, answering stock and price straight from your inventory."
+      "label": "Smart replies this month",
+      "tip": "There is no cap on smart replies — she always works at full intelligence. The number is just so you can see how many happened this month.",
+      "used": "{{n}} smart replies"
     },
     "stats": {
       "replies": "Replied {{n}} times",
