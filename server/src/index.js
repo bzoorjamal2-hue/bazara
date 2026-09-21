@@ -33,6 +33,8 @@ import instagramRoutes from './routes/instagram.routes.js';
 import botRoutes from './routes/bot.routes.js';
 import adsRoutes from './routes/ads.routes.js';
 import { verifyWebhook, receiveWebhook, igLoginRedirect, igCallback, igChoose } from './controllers/instagram.controller.js';
+import { refreshPageFields } from './config/instagram.js';
+import { decrypt } from './config/opost.js';
 import { paytabsCallback } from './controllers/order.controller.js';
 import { subscriptionPaytabsCallback } from './controllers/subscription.controller.js';
 import { robots, sitemap, indexNowKey, shareProduct, shareStore, shareStory } from './controllers/seo.controller.js';
@@ -729,10 +731,31 @@ END $$;`,
   }
 }
 
+// كلُّ صفحةٍ مربوطةٍ تلحقُ بحقولِ الـwebhook الجديدة. الصفحاتُ المربوطةُ قبلَ
+// إضافةِ حقلٍ تبقى على اشتراكِها القديمَ إلى الأبد، والتاجرةُ لا تعرفُ أنّ عليها
+// إعادةَ الربط — فنُلحِقُها نحن مرّةً عندَ الإقلاع. ولا يُعاد الاشتراكُ إن كانت
+// حقولُها كاملةً أصلاً، فلا نداءَ بلا داعٍ ولا كلفةَ على حدِّ الاستدعاءات.
+async function refreshAllPageFields() {
+  const r = await pool.query(
+    "SELECT id, name, ig_page_id, ig_access_token FROM stores WHERE ig_connected = true AND ig_page_id <> ''"
+  ).catch(() => ({ rows: [] }));
+  for (const s of r.rows) {
+    try {
+      const token = decrypt(s.ig_access_token);
+      if (!token) continue;
+      const out = await refreshPageFields(s.ig_page_id, token);
+      if (out.updated) console.log(`✓ حقول webhook للصفحة ${s.ig_page_id} (${s.name}): ${out.fields.join(', ')}`);
+    } catch (e) {
+      console.error(`⚠️ حقول webhook للصفحة ${s.ig_page_id}:`, e.message);
+    }
+  }
+}
+
 function start() {
   app.listen(PORT, () => {
     console.log(`🚀 الخادم يعمل على المنفذ ${PORT}`);
   });
+  setTimeout(() => { refreshAllPageFields().catch(() => {}); }, 20 * 1000);
   // مزامنة خلفية لحالات الشحنات — احتياط عن الـ webhooks (هي المصدر الفوري الأساسي).
   // مهمّ لتوفير حوسبة Neon المجانية: كل تشغيلة توقظ القاعدة (Neon ينام بلا نشاط)، فكل
   // 10 دقائق كان يبقيها صاحية ~نصف الوقت ويستنزف الحد الشهري. رفعناها للافتراضي 30

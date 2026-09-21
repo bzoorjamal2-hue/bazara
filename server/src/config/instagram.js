@@ -108,12 +108,32 @@ export async function getManagedPages(userToken) {
 }
 
 // 3) اشتراك تطبيق بازارا برسائل هذه الصفحة — بدونه لا يصلنا أي webhook
+// طبقتانِ لا واحدة: التطبيقُ يشترِكُ بالحقولِ مرّةً في لوحةِ Meta، وكلُّ صفحةٍ
+// تشترِكُ بحقولِها هنا عندَ ربطِها. والحقلُ لا يصلُ إلّا إن كان مشتركاً بالطبقتين.
+//
+// وكان `message_echoes` ناقصاً هنا: فصدى ما ترسلُه الصفحةُ لا يصلُنا من أيِّ
+// متجر. وعليه يقومُ حارسُ «التاجرةُ على الشاشة» — فلولاه تُكمِلُ البائعةُ الكلامَ
+// فوقَ ردِّ التاجرةِ متى ردَّت من ماسنجرَ بيدِها، وهي لا تدري أنّها ردّت.
+const PAGE_FIELDS = 'messages,messaging_postbacks,message_echoes';
+
 export async function subscribePageMessages(pageId, pageToken) {
   return graph(`/${pageId}/subscribed_apps`, {
     method: 'POST',
     token: pageToken,
-    params: { subscribed_fields: 'messages,messaging_postbacks' },
+    params: { subscribed_fields: PAGE_FIELDS },
   });
+}
+
+// الصفحاتُ المربوطةُ قبلَ إضافةِ حقلٍ جديدٍ تبقى على اشتراكِها القديم. نُعيدُ
+// الاشتراكَ عندَ الإقلاعِ فتلحقُ بالحقولِ الجديدةِ بلا أن تُعيدَ التاجرةُ الربطَ
+// بنفسِها — وهي لا تعرفُ أصلاً أنّ عليها أن تفعل.
+export async function refreshPageFields(pageId, pageToken) {
+  const cur = await graph(`/${pageId}/subscribed_apps`, { token: pageToken }).catch(() => null);
+  const have = new Set((cur?.data?.[0]?.subscribed_fields) || []);
+  const need = PAGE_FIELDS.split(',');
+  if (need.every((f) => have.has(f))) return { updated: false, fields: [...have] };
+  await subscribePageMessages(pageId, pageToken);
+  return { updated: true, fields: need };
 }
 
 // إلغاء الاشتراك عند فصل المتجر (تنظيف — لا يفشل الفصل لو تعذّر)
