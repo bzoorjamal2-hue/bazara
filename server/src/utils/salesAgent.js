@@ -211,12 +211,18 @@ function onSale(p) {
 // (أرضيّةٌ محفوظةٌ برقمٍ جامدٍ تصيرُ خطأً أوّلَ مرّةٍ يُعدَّلُ فيها السعر).
 export const DEFAULT_HAGGLE_MARGIN = 10;
 
+// وهو سقفٌ لا هامشٌ فقط: لا تنزلُ بائعةٌ بهذه المنصّةِ أكثرَ من عشرةِ شواقلَ عن
+// سعرِ القطعة، ولو كتبت التاجرةُ أرضيّةً أبعدَ بيدِها. يُفرَضُ هنا لا عندَ الحفظِ
+// وحدَه: صفٌّ كُتِبَ قبلَ السقفِ أو من مسارٍ آخرَ يبقى محكوماً به.
+export const MAX_HAGGLE_MARGIN = 10;
+
 // أقلُّ تنازلٍ له معنى بالسوق. بائعٌ ينزلُ شيقلين ليس يفاصل — هو يستهزئ.
 const MIN_CONCESSION = 10;
 
 export function haggleMargin(bot) {
   const m = Number(bot?.bot_haggle_margin);
-  return Number.isFinite(m) && m > 0 ? money(m) : DEFAULT_HAGGLE_MARGIN;
+  const raw = Number.isFinite(m) && m > 0 ? m : DEFAULT_HAGGLE_MARGIN;
+  return money(Math.min(raw, MAX_HAGGLE_MARGIN));
 }
 
 // الأرضيّةُ الفعليّةُ لهذه القطعةِ الآن: ما كتبَتْه التاجرةُ لها بعينِها إن كتبت،
@@ -225,8 +231,14 @@ export function haggleMargin(bot) {
 export function effectiveFloor(product, bot) {
   const price = Number(product?.price);
   if (!Number.isFinite(price) || price <= 0) return null;
+  const cap = price - MAX_HAGGLE_MARGIN;   // أبعدُ ما يُسمَحُ بالنزولِ إليه إطلاقاً
   const own = product?.floor_price != null ? Number(product.floor_price) : null;
-  if (own != null) return Number.isFinite(own) && own > 0 && own < price ? money(own) : null;
+  if (own != null) {
+    if (!Number.isFinite(own) || !(own > 0) || own >= price) return null;
+    // أرضيّةٌ أبعدُ من السقفِ تُرفَعُ إليه لا تُلغى: التاجرةُ أرادت مفاصلةً على
+    // هذه القطعةِ فتبقى لها مفاصلةٌ — بحدِّ المنصّةِ لا بحدِّها.
+    return cap > 0 ? money(Math.max(own, cap)) : null;
+  }
   const margin = haggleMargin(bot);
   return price > margin ? money(price - margin) : null;
 }

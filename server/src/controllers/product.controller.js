@@ -3,6 +3,10 @@ import { productPath } from '../utils/media.js';
 import { pingIndexNow } from '../utils/indexnow.js';
 import { alertOwnerOnRestock } from './stockRequest.controller.js';
 import { normalizeCategory } from '../utils/category.js';
+// كتالوجُ البائعةِ الآليّةِ مكشوفٌ بذاكرةِ الخادمِ دقيقتين. دقيقتانِ تكفيانِ
+// لتبيعَ نمرةً حذفتْها التاجرةُ للتوّ — فنمسحُه متى لمسَت قطعةً، ولا ننتظرُ
+// انتهاءَ المهلة.
+import { clearCatalog } from '../utils/salesAgent.js';
 
 async function getUserStore(userId) {
   const r = await query('SELECT id, slug FROM stores WHERE user_id = $1', [userId]);
@@ -39,6 +43,7 @@ export async function createProduct(req, res, next) {
     );
 
     const product = result.rows[0];
+    clearCatalog(store.id);   // قطعةٌ جديدةٌ: تعرفُها البائعةُ من أوّلِ رسالة
     pingIndexNow([
       `${process.env.PUBLIC_SITE_URL}/store/${store.slug}`,
       `${process.env.PUBLIC_SITE_URL}${productPath(store.slug, product.id)}`,
@@ -69,6 +74,7 @@ export async function updateProduct(req, res, next) {
        RETURNING *`,
       [p.name, p.price, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, p.videoUrl, JSON.stringify(p.sizeStock), p.saleEndsAt, JSON.stringify(p.colorStock), JSON.stringify(p.colorImages), id, store.id, p.cost]
     );
+    clearCatalog(store.id);   // سعرٌ أو نمرةٌ أو لونٌ تغيّر: البائعةُ تقرأُه الآنَ لا بعدَ دقيقتين
     res.json({ product: mapOwnerProduct(result.rows[0]) });
     // تنبيه استباقي (بالخلفية): لو رجع متغيّرٌ تنتظره زبونة متوفّراً، نُشعر المالكة لتبلّغها
     alertOwnerOnRestock(id).catch(() => {});
@@ -87,6 +93,7 @@ export async function deleteProduct(req, res, next) {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'المنتج غير موجود أو لا تملك صلاحية حذفه.' });
     }
+    clearCatalog(store.id);   // قطعةٌ محذوفةٌ لا تُعرَضُ على زبونةٍ بعدَ حذفِها
     res.json({ message: 'تم حذف المنتج.', id });
   } catch (err) {
     next(err);

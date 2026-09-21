@@ -6,7 +6,7 @@
 import { query } from '../config/db.js';
 import {
   loadBot, agentReply, clearCatalog, quotaLeft, MONTHLY_QUOTA, allowedPrice, stockLine,
-  effectiveFloor, haggleMargin, DEFAULT_HAGGLE_MARGIN,
+  effectiveFloor, haggleMargin, DEFAULT_HAGGLE_MARGIN, MAX_HAGGLE_MARGIN,
 } from '../utils/salesAgent.js';
 
 const MODES = ['always', 'first', 'offhours'];
@@ -127,7 +127,7 @@ export async function saveBotSettings(req, res, next) {
           .filter(Boolean).slice(0, 10)),
         // هامشٌ صفرٌ أو حرفٌ أو رقمٌ خياليّ: يعودُ للعشرةِ لا يُقبَلُ كما هو —
         // هامشٌ تالفٌ يعني بائعةً تعطي نصفَ ثمنِ القطعةِ لمن قالَ «غالي».
-        Math.max(1, Math.min(500, Number(b.haggleMargin) || DEFAULT_HAGGLE_MARGIN)),
+        Math.max(1, Math.min(MAX_HAGGLE_MARGIN, Number(b.haggleMargin) || DEFAULT_HAGGLE_MARGIN)),
       ]
     );
     const bot = await loadBot(store.id);
@@ -152,6 +152,14 @@ export async function saveFloorPrice(req, res, next) {
     // ثمّ رؤيةِ بائعةٍ «تخصم» فترفعُ السعر.
     if (floor != null && floor >= Number(p.rows[0].price)) {
       return res.status(400).json({ error: 'سعر المفاصلة يجب أن يكون أقل من سعر القطعة.' });
+    }
+    // سقفُ المنصّة: عشرةُ شواقلَ ولا شيقلَ أكثر. يُقالُ برقمِه لا برفضٍ غامض،
+    // فتعرفُ التاجرةُ فوراً أقلَّ رقمٍ تقدرُ عليه بدل أن تجرّبَ أرقاماً.
+    const least = Number(p.rows[0].price) - MAX_HAGGLE_MARGIN;
+    if (floor != null && floor < least) {
+      return res.status(400).json({
+        error: `أقصى نزول مسموح ${MAX_HAGGLE_MARGIN} شيكل عن سعر القطعة — أقل سعر تقدري تحطّيه ₪${least}.`,
+      });
     }
     await query('UPDATE products SET floor_price = $2 WHERE id = $1', [id, floor]);
     clearCatalog(store.id); // كي تفاصلَ البائعةُ بالسعرِ الجديدِ فوراً لا بعدَ دقيقتين

@@ -10,7 +10,7 @@ import crypto from 'crypto';
 import { query, withTransaction } from '../config/db.js';
 import {
   loadBot, sanitize, allowedPrice, effectiveFloor, haggleMargin, DEFAULT_HAGGLE_MARGIN,
-  normalizePhone, testModeAllows, botActiveNow, stockLine, sizesOf, colorsOf,
+  normalizePhone, testModeAllows, botActiveNow, stockLine, sizesOf, colorsOf, MAX_HAGGLE_MARGIN,
   variantAvailable, haggleIntent, needsHuman, clearCatalog,
 } from '../utils/salesAgent.js';
 import { feeForCity, cityOfVillage } from '../config/deliveryCities.js';
@@ -74,8 +74,22 @@ t('سعرٌ يتغيّرُ (٣٢٠) يبقى هامشُه صحيحاً', effecti
 t('قطعةٌ ثمنُها كالهامشِ أو أقلّ ⇒ لا مفاصلة', effectiveFloor({ ...future, price: margin }, bot) === null);
 t('سعرٌ صفرٌ أو تالفٌ ⇒ لا مفاصلة',
   effectiveFloor({ ...future, price: 0 }, bot) === null && effectiveFloor({ ...future, price: 'x' }, bot) === null);
-t('أرضيّةٌ كتبَتْها التاجرةُ تتقدَّمُ على الهامش', effectiveFloor({ ...future, floor_price: 150 }, bot) === 150);
+// أرضيّةٌ **أضيقُ** من الهامش: هذا ما يبقى للتاجرةِ بعدَ السقف — أن تُقلِّلَ
+// نزولَ بائعتِها على قطعةٍ بعينِها، لا أن تزيدَه.
+t('أرضيّةٌ أضيقُ كتبَتْها التاجرةُ تتقدَّمُ على الهامش', effectiveFloor({ ...future, floor_price: 245 }, bot) === 245);
 t('أرضيّةٌ فوقَ السعرِ ⇒ لا مفاصلةَ (لا نخترعُ بديلاً)', effectiveFloor({ ...future, floor_price: 300 }, bot) === null);
+
+H('٢ب) سقفُ المنصّة: عشرةٌ ولا شيقلَ أكثرَ على أحد');
+t('السقفُ ' + MAX_HAGGLE_MARGIN, MAX_HAGGLE_MARGIN === 10);
+t('هامشُ متجرٍ فوقَ السقفِ يُقصَرُ إليه', haggleMargin({ bot_haggle_margin: 200 }) === MAX_HAGGLE_MARGIN);
+t('أرضيّةٌ يدويّةٌ أبعدُ من السقفِ تُرفَعُ إليه لا تُلغى',
+  effectiveFloor({ ...future, floor_price: 100 }, bot) === 250 - MAX_HAGGLE_MARGIN,
+  String(effectiveFloor({ ...future, floor_price: 100 }, bot)));
+t('أرضيّةٌ يدويّةٌ داخلَ السقفِ تُحترَمُ كما هي', effectiveFloor({ ...future, floor_price: 245 }, bot) === 245);
+t('ولا قطعةَ بالمتجرِ تنزلُ أكثرَ من السقف',
+  rows.every((x) => effectiveFloor(x, bot) == null || Number(x.price) - effectiveFloor(x, bot) <= MAX_HAGGLE_MARGIN));
+t('ولا درجةَ سُلَّمٍ تتجاوزُه مهما ألحَّ الزبون',
+  rows.every((x) => [0, 1, 2, 3, 9].every((sg) => Number(x.price) - allowedPrice(x, { ...bot, bot_haggle: true }, sg) <= MAX_HAGGLE_MARGIN)));
 
 H('٣) السُّلَّم: تتمسّكُ أوّلاً ثمّ تنزلُ الهامش');
 const hp = rows.find((p) => effectiveFloor(p, bot) != null) || rows[0];
@@ -90,9 +104,11 @@ t('ثاني «غالي»: تُعطي الهامشَ كاملاً', L[2] === floo
 t('إلحاحٌ بعدَها: تبقى عندَ الأرضيّة', L[3] === floor);
 t('لا درجةَ تنزلُ تحتَ الأرضيّة', L.every((x) => x >= floor), L.join(','));
 t('السُّلَّمُ لا يصعدُ أبداً', L.every((x, i) => i === 0 || x <= L[i - 1]));
+// قطعةٌ غاليةٌ كتبت لها التاجرةُ أرضيّةً بعيدة: السقفُ يحكمُ لا هي.
 const big = { id: 'y', name: 'غالية', price: 300, floor_price: 200 };
-t('هامشٌ كبيرٌ يُفاصَلُ تدريجيّاً (٣٠٠→٢٥٠→٢٠٠)',
-  allowedPrice(big, hb, 1) === 250 && allowedPrice(big, hb, 2) === 200);
+t('قطعةٌ غاليةٌ بأرضيّةٍ بعيدةٍ لا تنزلُ إلّا السقف',
+  allowedPrice(big, hb, 1) === 300 && allowedPrice(big, hb, 2) === 300 - MAX_HAGGLE_MARGIN,
+  allowedPrice(big, hb, 1) + '←' + allowedPrice(big, hb, 2));
 t('المفاصلةُ مُطفأةً ⇒ لا نزولَ بأيِّ درجة',
   [0, 1, 2, 3].every((s) => allowedPrice(hp, { ...hb, bot_haggle: false }, s) === price));
 
@@ -211,6 +227,30 @@ if (seen) {
 }
 
 // ═════════════════════════ الحُرّاس ═════════════════════════
+H('٨ب) الحارسُ الأخير: مخزونٌ يُقرأُ لحظةَ التسجيلِ لا من الكاش');
+// نُعطّلُ النمرةَ داخلَ معاملةٍ تُلغى، ونسألُ الحارسَ نفسَه الذي يقفُ بـcreateChatOrder
+try {
+  await withTransaction(async (q) => {
+    const before = (await q('SELECT color_stock, size_stock, stock FROM products WHERE id = $1', [pick.id])).rows[0];
+    t('قبلَ التصفير: المتغيّرُ متاح', variantAvailable(before, order.color, order.size));
+    if (order.color && before.color_stock && Object.keys(before.color_stock).length) {
+      await q(
+        `UPDATE products SET color_stock = jsonb_set(color_stock, ARRAY[$2::text, $3::text], '0'::jsonb) WHERE id = $1`,
+        [pick.id, order.color, order.size]
+      );
+    } else {
+      await q('UPDATE products SET stock = 0, size_stock = $2 WHERE id = $1', [pick.id, JSON.stringify({})]);
+    }
+    const after = (await q('SELECT color_stock, size_stock, stock FROM products WHERE id = $1', [pick.id])).rows[0];
+    t('بعدَ نفادِها: الحارسُ يرفضُ تسجيلَ الطلب', !variantAvailable(after, order.color, order.size));
+    t('ولونٌ آخرُ ما زالَ يُقبَل',
+      colorsOf(after).length === 0 || colorsOf(after).some((c) => sizesOf(after).some((z) => variantAvailable(after, c, z))));
+    throw new Error('__ROLLBACK__');
+  });
+} catch (e) { if (e.message !== '__ROLLBACK__') { console.log('  ✗ ' + e.message); bad += 1; } }
+const back = (await query('SELECT color_stock, size_stock, stock FROM products WHERE id = $1', [pick.id])).rows[0];
+t('ورجعَ المخزونُ كما كانَ بلا أثر', variantAvailable(back, order.color, order.size));
+
 H('٩) وضعُ التجربةِ والقنواتُ والدوام');
 t('قائمةٌ فارغةٌ والوضعُ مُفعَّل ⇒ لا أحدَ يمرّ', !testModeAllows({ bot_test_only: true, bot_test_accounts: [] }, 'anyone'));
 t('اسمٌ غيرُ مذكورٍ يُمنَع', !testModeAllows({ bot_test_only: true, bot_test_accounts: ['jamal._fi'] }, 'someone'));

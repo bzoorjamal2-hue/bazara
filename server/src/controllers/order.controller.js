@@ -10,6 +10,9 @@ import { clearAbandoned } from './abandoned.controller.js';
 import { sendMail, isMailConfigured } from '../utils/mail.js';
 import { newOrderEmail } from '../utils/emailTemplates.js';
 import { notifyUser } from '../utils/notify.js';
+// تأكيدُ الطلبِ يخصمُ المخزون، وكتالوجُ البائعةِ الآليّةِ مكشوفٌ دقيقتين —
+// فنمسحُه هنا كي لا تعرضَ نمرةً باعتْها التاجرةُ للتوّ.
+import { clearCatalog } from '../utils/salesAgent.js';
 import { feeForCity, cityOfVillage } from '../config/deliveryCities.js';
 import { variantInStock } from './stockRequest.controller.js';
 import { normalizeMobile, isValidMobile } from '../utils/phone.js';
@@ -551,6 +554,8 @@ export async function applyOrderStatus(storeId, id, status) {
       [status, stockApplied, id, storeId, status]
     );
   });
+  // تغيّرَ المخزونُ (خصماً أو إرجاعاً): كتالوجُ البائعةِ الآليّةِ بايتٌ قديمٌ الآن
+  if (shouldApply !== wasApplied) clearCatalog(storeId);
   // خُصم المخزون للتو؟ نفحص بالخلفية إن نفد منتج بالكامل ونُشعر المالك
   if (shouldApply && !wasApplied) notifySoldOut(storeId, order.items).catch(() => {});
   return { ok: true, status };

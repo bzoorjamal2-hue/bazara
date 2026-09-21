@@ -7,7 +7,7 @@ import { feeForCity, flatInternalLocalities, cityOfVillage } from '../config/del
 import { extractOrderDraft } from '../utils/orderExtract.js';
 import { imageBlock, transcribe, canHear } from '../utils/mediaUnderstand.js';
 import {
-  loadBot, botActiveNow, agentReply, countReply, MAX_BOT_REPLIES, testModeAllows,
+  loadBot, botActiveNow, agentReply, countReply, MAX_BOT_REPLIES, testModeAllows, variantAvailable,
 } from '../utils/salesAgent.js';
 import {
   isInstagramConfigured,
@@ -262,11 +262,21 @@ async function processWebhook(body) {
 // مدينةِ الزبونةِ بجدولِ المتجر. فحتى لو أخطأَ النموذجُ برقمٍ بالمحادثة، الطلبُ
 // المسجَّلُ صحيح.
 async function createChatOrder(store, conv, order, customerId) {
+  // المخزونُ يُقرأُ من القاعدةِ هنا من جديد، لا من كتالوجِ البائعةِ المكشوف.
+  // بين لحظةِ عرضِ النمرةِ ولحظةِ تسجيلِ الطلبِ دقائقُ كاملة: تكفي لتؤكّدَ التاجرةُ
+  // طلباً آخرَ فيُخصَمَ آخرُ ما بقي، أو تحذفَ النمرةَ بيدِها. هذا آخرُ حاجزٍ قبلَ
+  // أن يصيرَ الوعدُ طلباً مسجَّلاً — وما بعدَه زبونةٌ تنتظرُ قطعةً غيرَ موجودة.
   const p = (await query(
-    'SELECT id, name, price, cost, store_id FROM products WHERE id = $1 AND store_id = $2 AND hidden_at IS NULL',
+    `SELECT id, name, price, cost, stock, size_stock, color_stock, store_id
+       FROM products WHERE id = $1 AND store_id = $2 AND hidden_at IS NULL`,
     [order.product.id, store.id]
   )).rows[0];
   if (!p) throw new Error('القطعة لم تعد متاحة.');
+  if (!variantAvailable(p, order.color, order.size)) {
+    const e = new Error('نفدت');
+    e.soldOut = true;
+    throw e;
+  }
 
   const unit = Number(p.price);
   const subtotal = unit * order.qty;
@@ -535,8 +545,15 @@ async function maybeAutoReply({ store, convId, customerId, text, isNew, who, med
         + 'رح يتسجّل بالموقع تلقائياً ويروح مع شركة التوصيل، ويوصلك خلال يوم أو يومين.';
     } catch (e) {
       console.error('⚠️ طلب من المحادثة:', e.message);
-      orderLine = '\n\nصار في مشكلة صغيرة بتسجيل الطلب — صاحبة المتجر رح تكمّل معك حالاً 🌷';
-      out.handoff = true;
+      // نفادُ النمرةِ ليس عطلاً بل خبرٌ للزبونة: نقولُه بصراحةٍ ونكملُ معها بدل
+      // أن نُلقيَ بها لتاجرةٍ قد لا تردُّ قبلَ ساعات.
+      if (e.soldOut) {
+        const what = [order.color, order.size && ('نمرة ' + order.size)].filter(Boolean).join(' ');
+        orderLine = `\n\nآسفة 🌷 ${what || 'هالخيار'} خلص من المخزن هلق قبل ما أسجّل طلبك. بتحبي أشوفلك لون أو نمرة تانية؟`;
+      } else {
+        orderLine = '\n\nصار في مشكلة صغيرة بتسجيل الطلب — صاحبة المتجر رح تكمّل معك حالاً 🌷';
+        out.handoff = true;
+      }
     }
   }
 

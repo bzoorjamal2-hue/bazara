@@ -404,11 +404,11 @@ function PricingCard({ s, set, products, setProducts, onError }) {
                 type="number"
                 inputMode="decimal"
                 min="1"
-                max="500"
+                max="10"
                 className="input w-28 text-center tabular-nums"
                 value={s.haggleMargin ?? 10}
                 onChange={(e) => set({ haggleMargin: e.target.value === '' ? '' : Number(e.target.value) })}
-                onBlur={(e) => set({ haggleMargin: Math.max(1, Math.min(500, Number(e.target.value) || 10)) })}
+                onBlur={(e) => set({ haggleMargin: Math.max(1, Math.min(10, Number(e.target.value) || 10)) })}
               />
               <span className="text-xs font-semibold text-stone-400">{t('salesBot.margin.unit')}</span>
             </div>

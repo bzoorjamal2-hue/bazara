@@ -1441,7 +1441,7 @@
     },
     "margin": {
       "label": "Haggle margin",
-      "tip": "How many shekels the seller comes down when a customer haggles. It applies to every item — the ones you have now and the ones you add later — without setting a number on each. To give one item a different floor, type it in the table below and it takes precedence.",
+      "tip": "How many shekels the seller comes down when a customer haggles. It applies to every item — the ones you have now and the ones you add later — without setting a number on each. The platform maximum is 10 ILS. To make one item come down less, type its floor in the table below.",
       "unit": "ILS"
     }
   },
