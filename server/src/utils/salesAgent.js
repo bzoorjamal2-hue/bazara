@@ -18,11 +18,11 @@ const AI_CATALOG = 30;             // سقفُ القطعِ المُمرَّرة
 const AI_HISTORY = 8;              // آخرُ رسائلِ المحادثةِ المُمرَّرة
 const TOP_N = 4;                   // أقصى ما تعرضُه البائعةُ بردٍّ واحد
 export const MONTHLY_QUOTA = 300;  // ردودٌ ذكيّةٌ بالشهرِ لكلِّ متجر، وبعدَها القواعدُ المجّانيّة
-// ردودٌ آليّةٌ متتاليةٌ بلا بشرٍ ثمّ تسلّم. كانت ثلاثةً فوقفت البائعةُ في منتصفِ
-// محادثةِ بيعٍ سليمة — والزبونُ ظلَّ يسألُ ثمّ كتب «مالك بطّلت تردّي؟». خمسةُ
-// أسئلةٍ من زبونٍ مهتمٍّ أمرٌ طبيعيٌّ ومطلوب، وثمانيةٌ تكفي حواراً كاملاً وتبقى
-// حاجزاً أمامَ الحلقةِ التي لا تنتهي.
-export const MAX_BOT_REPLIES = 8;
+// ردودٌ آليّةٌ متتاليةٌ بلا بشر. لا حدَّ عمليّاً — محادثةُ بيعٍ قد تطولُ عشرينَ
+// رسالةً حتى يكتملَ الطلب، وقطعُها في منتصفِها يُضيّعُ البيعَ الذي جاءت لأجلِه.
+// السِتّونَ هنا حاجزُ جموحٍ لا حدُّ خدمة: حلقةٌ بين آليَّينِ تُوقَفُ، وحديثُ إنسانٍ
+// لا يبلغُها أبداً.
+export const MAX_BOT_REPLIES = 60;
 
 const catalogCache = new Map(); // storeId -> { rows, ts }
 
@@ -51,7 +51,7 @@ const money = (n) => Math.round(Number(n) * 100) / 100;
 export const BOT_COLUMNS = `bot_enabled, bot_channels, bot_mode, bot_tone, bot_dialect,
   bot_hours, bot_haggle, bot_haggle_steps, bot_signature, bot_notes, bot_promo_product,
   bot_quota_used, bot_quota_month, bot_replies_total, bot_handoffs_total,
-  bot_test_only, bot_test_accounts`;
+  bot_test_only, bot_test_accounts, delivery_tiers, free_shipping_over`;
 
 export async function loadBot(storeId) {
   try {
@@ -144,6 +144,45 @@ export function stockLine(p) {
   }
   if (p.stock === null || p.stock === undefined) return 'متوفّر';
   return Number(p.stock) > 0 ? `متوفّر (${Number(p.stock)})` : 'نفد';
+}
+
+// نمرُ القطعةِ المتوفّرةُ الآن — يقرأُها حارسُ السعرِ كي لا يحسبَ نمرةً سعراً،
+// ويقرأُها مدقّقُ الطلبِ كي لا يُسجَّلَ طلبٌ بنمرةٍ نفدت.
+export function sizesOf(p) {
+  const out = new Set();
+  const cs = p?.color_stock && typeof p.color_stock === 'object' ? p.color_stock : {};
+  const ss = p?.size_stock && typeof p.size_stock === 'object' ? p.size_stock : {};
+  for (const sizes of Object.values(cs)) {
+    for (const [sz, q] of Object.entries(sizes || {})) if (Number(q) > 0) out.add(String(sz));
+  }
+  for (const [sz, q] of Object.entries(ss)) if (Number(q) > 0) out.add(String(sz));
+  if (!out.size && p?.size) String(p.size).split(/[،,/]/).forEach((x) => x.trim() && out.add(x.trim()));
+  return [...out];
+}
+
+// ألوانُ القطعةِ التي بقيَ منها شيء
+export function colorsOf(p) {
+  const cs = p?.color_stock && typeof p.color_stock === 'object' ? p.color_stock : {};
+  const live = Object.entries(cs)
+    .filter(([, sizes]) => Object.values(sizes || {}).some((q) => Number(q) > 0))
+    .map(([c]) => c);
+  if (live.length) return live;
+  return p?.color ? String(p.color).split(/[،,/]/).map((x) => x.trim()).filter(Boolean) : [];
+}
+
+// هل النمرةُ واللونُ متوفّرانِ معاً بهذه القطعةِ الآن؟ هذا ما يقرّرُ قبولَ الطلب،
+// لا ما يظنُّه النموذجُ ولا ما تذكرُه الزبونة.
+export function variantAvailable(p, color, size) {
+  const cs = p?.color_stock && typeof p.color_stock === 'object' ? p.color_stock : {};
+  const ss = p?.size_stock && typeof p.size_stock === 'object' ? p.size_stock : {};
+  if (Object.keys(cs).length) {
+    const c = String(color || '').trim();
+    if (!c || !cs[c]) return false;
+    return Number(cs[c][String(size || '').trim()] || 0) > 0;
+  }
+  if (Object.keys(ss).length) return Number(ss[String(size || '').trim()] || 0) > 0;
+  if (p?.stock === null || p?.stock === undefined) return true;
+  return Number(p.stock) > 0;
 }
 
 // هل بقيَ من القطعةِ شيءٌ أصلاً؟ ما نفدَ كلُّه لا يُعرَضُ ابتداءً.
@@ -249,6 +288,19 @@ function buildSystem({ storeName, bot, rows, stage, promo, lang, customerName })
     : '\nالمفاصلة: ممنوعة. السعرُ المكتوبُ هو السعر. إن ألحَّتْ فاعتذري بلطفٍ واذكري ما يستحقُّ به السعر.';
   const notes = (bot.bot_notes || '').trim().slice(0, 600);
 
+  // أجرةُ التوصيلِ من إعداداتِ المتجرِ نفسِها. بلا هذا السطرِ كانت البائعةُ تقولُ
+  // «ما بقدر أقولّك السعر النهائي» لزبونٍ سألَ سؤالاً جوابُه مكتوبٌ عندنا — وهو
+  // آخرُ سؤالٍ قبلَ القرار، وأسوأُ مكانٍ يُترَكُ فيه بلا جواب.
+  const t = bot.delivery_tiers && typeof bot.delivery_tiers === 'object' ? bot.delivery_tiers : {};
+  const parts = [];
+  if (Number(t.wb) > 0) parts.push(`الضفة الغربية ${Number(t.wb)}₪`);
+  if (Number(t.quds) > 0) parts.push(`القدس ${Number(t.quds)}₪`);
+  if (Number(t.dakhel) > 0) parts.push(`الداخل ${Number(t.dakhel)}₪`);
+  const freeOver = Number(bot.free_shipping_over) || 0;
+  const deliveryLine = parts.length
+    ? `\n- أجرةُ التوصيل: ${parts.join(' · ')}${freeOver > 0 ? ` (مجّانيٌّ فوقَ ${freeOver}₪)` : ''}.`
+    : '';
+
   // الخطابُ كان مفروضاً بالمؤنّثِ دائماً، فخاطبَ رجلاً بـ«حبيبتي، كيفك انتِ».
   // المتجرُ نسائيٌّ نعم، لكنّ الرجالَ يشترونَ الهدايا — واسمُ المُرسِلِ يصلُنا من
   // ميتا، فلا عذرَ للافتراض.
@@ -268,7 +320,8 @@ ${address}
 قواعدُ لا تُكسَرُ أبداً:
 - لا تذكري قطعةً ليست في الكتالوجِ أدناه، ولا تخترعي لوناً ولا نمرةً ولا سعراً.
 - التوفّرُ مكتوبٌ بجانبِ كلِّ قطعةٍ ("التوفّر الآن") وهو من مخزنِ المتجرِ هذه اللحظة. إن سألتْ عن نمرةٍ مكتوبٍ أمامَها "نفدت" فقولي إنّها نفدت، واعرضي لوناً أو نمرةً موجودةً بدلَها. لا تقولي "بتفقّد" ولا "أكيد متوفّرة" — الرقمُ أمامَكِ.
-- لا تَعِدي بموعدِ توصيلٍ ولا بسياسةِ إرجاعٍ ولا بتوفيرِ قطعةٍ نفدت.
+- لا تَعِدي بسياسةِ إرجاعٍ ولا بتوفيرِ قطعةٍ نفدت.
+- أجرةُ التوصيلِ مكتوبةٌ لكِ تحت. اجمعيها على سعرِ القطعةِ حين تُسألينَ عن الإجمالي، ولا تخترعي رقماً ولا تقولي «ما بعرف».${deliveryLine}
 - عندَ الشكوى أو الإرجاعِ أو أيِّ أمرٍ يحتاجُ قراراً، لا تجاوبي: اضبطي handoff=true وقولي إنّ صاحبةَ المتجرِ ستردُّ بنفسِها بعدَ قليل.
 - أنهي ردَّكِ بخطوةٍ واحدةٍ واضحة: سؤالٌ عن اللونِ أو النمرة، أو "بحجزهالك؟".
 
@@ -277,6 +330,15 @@ ${address}
 - productIds: معرّفاتُ القطعِ التي تتكلّمينَ عنها فعلاً (${TOP_N} كحدٍّ أقصى، وفارغةٌ إن كان الردُّ تحيّةً أو جواباً عامّاً).
 - offerProductId/offerPrice: املئيهما فقط إن عرضتِ سعراً مخفَّضاً بردِّكِ هذا.
 - handoff: true إن وجبَ تسليمُ المحادثةِ لصاحبةِ المتجر.
+- order: مسوّدةُ الطلب — انظري «إتمامُ الطلب» أدناه.
+
+إتمامُ الطلب (هذه مهمّتُكِ الأهمّ):
+حين تقولُ الزبونةُ إنّها تريدُ أن تطلبَ، أكملي معها حتى النهايةِ ولا تُحيليها لأحد. تحتاجينَ سبعةَ أشياءَ لا أقلّ:
+القطعةَ، واللونَ، والنمرة، والعدد، والاسمَ الكامل، ورقمَ الهاتف، والعنوانَ (المدينةُ أو القريةُ + وصفٌ يصلُ به المندوب).
+- اطلبيها بلطفٍ وبرسالةٍ أو رسالتين لا بقائمةِ استمارة، وما نقصَ منها اسأليها عنه وحدَه.
+- املئي في order كلَّ ما عرفتِه حتى الآن (ولو ناقصاً)، واتركي ما لم تعرفيه فارغاً.
+- **لا تقولي أبداً إنّ الطلبَ سُجِّلَ أو أُرسِلَ أو صارَ له رقم.** التسجيلُ يجري عندنا بعدَ ردِّكِ، ونحن من يُخبرُها ويعطيها الرقم. قولي «بسجّلهولك هلق» لا «تمّ التسجيل».
+- إن طلبت نمرةً أو لوناً مكتوباً أمامَه «نفدت» فلا تأخذي الطلب: قولي إنّها نفدت واعرضي المتوفّر.
 ${notes ? `\nتعليماتٌ من صاحبةِ المتجرِ (تتقدَّمُ على ذوقِكِ لا على القواعدِ أعلاه):\n${notes}\n` : ''}
 كتالوجُ المتجرِ (المصدرُ الوحيدُ المسموح):
 ${rows.map((p) => catalogLine(p, bot, stage)).join('\n')}`;
@@ -292,6 +354,21 @@ const SCHEMA = {
     offerProductId: { type: 'string' },
     offerPrice: { type: 'number' },
     handoff: { type: 'boolean' },
+    // مسوّدةُ الطلب: يملؤُها النموذجُ ممّا قالته الزبونةُ فعلاً، حقلاً حقلاً، عبرَ
+    // الرسائل. والخادمُ وحدَه يقرّرُ متى اكتملت ومتى تصيرُ طلباً حقيقيّاً.
+    order: {
+      type: 'object',
+      properties: {
+        productId: { type: 'string' },
+        color: { type: 'string' },
+        size: { type: 'string' },
+        qty: { type: 'number' },
+        name: { type: 'string' },
+        phone: { type: 'string' },
+        city: { type: 'string' },
+        address: { type: 'string' },
+      },
+    },
   },
   required: ['reply', 'productIds'],
 };
@@ -366,22 +443,71 @@ function sanitize(out, { rows, bot, stage }) {
     offer = { productId: String(target.id), price: Math.max(allowed, Math.min(Number(target.price), asked)) };
   }
 
-  // حارسُ الأرقام: أيُّ رقمٍ بالنصِّ يقعُ تحتَ أدنى سعرٍ مسموحٍ لقطعةٍ مذكورةٍ
-  // بالردِّ يُرفَعُ إليه. نقصرُ الفحصَ على مدًى قريبٍ من سعرِ القطعةِ كي لا نلمسَ
-  // نمرةَ مقاسٍ (38) ولا عدداً («بقي قطعتان»).
+  // حارسُ السعر: يمنعُ رقماً تحتَ أدنى سعرٍ مسموح.
+  //
+  // كان يمسحُ **كلَّ** رقمٍ بالنصِّ ويستبدلُ ما وقعَ بين رُبعِ السعرِ والسعر. وقطعةٌ
+  // بمئةِ شيقلٍ نمرُها ٣٦ و٣٨ و٤٠ — وكلُّها داخلَ ذلك المدى. فخرجَ للزبون: «بتفضّل
+  // الحجم ١٠٠ ولا ١٠٠ ولا ١٠٠». البائعةُ كتبت النمرَ صحيحةً والحارسُ أفسدَها.
+  //
+  // الآن لا يُلمَسُ إلّا رقمٌ **مقرونٌ بعملةٍ صراحةً** — فالنمرةُ رقمٌ مجرّدٌ لا
+  // عملةَ بجانبِه. ورقمٌ يساوي إحدى نمرِ القطعةِ لا يُمَسُّ ولو قُرِنَ بعملة.
   const mentioned = ids.map((id) => byId.get(id)).filter(Boolean);
   if (mentioned.length && reply) {
     const lowest = Math.min(...mentioned.map((p) => allowedPrice(p, bot, stage)));
-    const ceiling = Math.max(...mentioned.map((p) => Number(p.price)));
-    reply = reply.replace(/\d+(?:[.,]\d+)?/g, (m) => {
-      const n = Number(String(m).replace(',', '.'));
-      if (!Number.isFinite(n)) return m;
-      if (n >= lowest || n <= ceiling * 0.25 || n > ceiling * 1.5) return m; // ليس سعراً، أو سعرٌ مقبول
-      return String(lowest);
+    const sizeSet = new Set();
+    for (const p of mentioned) for (const sz of sizesOf(p)) sizeSet.add(String(Number(sz)));
+    reply = reply.replace(/(\d+(?:[.,]\d+)?)(\s*)(₪|شيكل|شيقل|ils)/gi, (m, num, sp, cur) => {
+      const n = Number(String(num).replace(',', '.'));
+      if (!Number.isFinite(n) || n >= lowest) return m;
+      if (sizeSet.has(String(n))) return m; // نمرةٌ لا سعر
+      return `${lowest}${sp}${cur}`;
     });
   }
 
-  return { reply, ids, offer, handoff: out.handoff === true };
+  // مسوّدةُ الطلبِ كما جمعَها النموذج — تُدقَّقُ هنا لا تُصدَّق. القطعةُ من هذا
+  // المتجر، واللونُ والنمرةُ متوفّرانِ فعلاً الآن، والرقمُ رقمُ جوّالٍ حقيقيّ.
+  // وما نقصَ يُعادُ بـ missing كي تعرفَ الطبقةُ الأعلى أنّ الطلبَ لم يكتملْ بعد.
+  const draft = out.order && typeof out.order === 'object' ? out.order : {};
+  const prod = byId.get(String(draft.productId || '')) || byId.get(ids[0] || '') || null;
+  const phone = normalizePhone(draft.phone);
+  const order = {
+    product: prod,
+    color: String(draft.color || '').trim(),
+    size: String(draft.size || '').trim(),
+    qty: Math.max(1, Math.min(10, Number(draft.qty) || 1)),
+    name: String(draft.name || '').trim().slice(0, 100),
+    phone,
+    city: String(draft.city || '').trim().slice(0, 80),
+    address: String(draft.address || '').trim().slice(0, 300),
+  };
+  const missing = [];
+  if (!order.product) missing.push('product');
+  if (!order.name || order.name.split(/\s+/).length < 2) missing.push('name');
+  if (!order.phone) missing.push('phone');
+  if (!order.city) missing.push('city');
+  if (!order.address) missing.push('address');
+  if (order.product) {
+    if (colorsOf(order.product).length && !order.color) missing.push('color');
+    if (sizesOf(order.product).length && !order.size) missing.push('size');
+    if (!missing.includes('color') && !missing.includes('size')
+        && !variantAvailable(order.product, order.color, order.size)) missing.push('unavailable');
+  }
+  order.missing = missing;
+  order.ready = missing.length === 0;
+
+  return { reply, ids, offer, handoff: out.handoff === true, order };
+}
+
+// رقمُ الجوّالِ الفلسطينيُّ بأشكالِه: 059… · 0599… · ‎+97059… · ‎97259…
+// نردُّ فراغاً لما ليس رقماً، فلا يُسجَّلُ طلبٌ برقمٍ لا يُتَّصَلُ به.
+export function normalizePhone(raw) {
+  const d = westernDigits(String(raw || '')).replace(/\D/g, '');
+  if (!d) return '';
+  let s = d;
+  if (s.startsWith('00')) s = s.slice(2);
+  if (s.startsWith('970') || s.startsWith('972')) s = s.slice(3);
+  if (!s.startsWith('0')) s = `0${s}`;
+  return /^05\d{8}$/.test(s) ? s : '';
 }
 
 // ───────────────────── الطبقةُ المجّانيّة (بلا مفتاح) ─────────────────────
@@ -465,7 +591,8 @@ export async function agentReply({ store, bot, messages, stage = 0, customerName
       console.error('⚠️ البائعة الآلية — سقوطٌ للقواعد:', err.message);
     }
   }
-  return { ...freeReply({ rows, bot, stage: nextStage, lastUser, promo }), stage: nextStage, usedAi: false };
+  const free = freeReply({ rows, bot, stage: nextStage, lastUser, promo });
+  return { ...free, order: { ready: false, missing: [] }, stage: nextStage, usedAi: false };
 }
 
 // ───────────────────── الحصّةُ الشهريّة ─────────────────────

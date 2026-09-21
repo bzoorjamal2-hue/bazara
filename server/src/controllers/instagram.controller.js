@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { query } from '../config/db.js';
 import { encrypt, decrypt } from '../config/opost.js';
 import { notifyUser } from '../utils/notify.js';
+import { feeForCity } from '../config/deliveryCities.js';
 import {
   loadBot, botActiveNow, agentReply, countReply, MAX_BOT_REPLIES, testModeAllows,
 } from '../utils/salesAgent.js';
@@ -146,7 +147,8 @@ async function processWebhook(body) {
       const customerId = isEcho ? businessId : senderId;
 
       const sr = await query(
-        'SELECT id, user_id, name, slug, ig_access_token FROM stores WHERE ig_user_id = $1 AND ig_connected = true',
+        `SELECT id, user_id, name, slug, ig_access_token, delivery_tiers, free_shipping_over
+         FROM stores WHERE ig_user_id = $1 AND ig_connected = true`,
         [storeIgId]
       );
       const store = sr.rows[0];
@@ -266,6 +268,57 @@ function mediaPoster(prod) {
   return `${m[1]}so_0,f_jpg,q_auto,w_720,c_limit/${rest}.jpg`;
 }
 
+// تسجيلُ طلبٍ من محادثةٍ اكتملت شروطُها. يُنشَأُ بنفسِ شكلِ طلبِ الموقعِ حرفيّاً
+// (نفسُ الجدولِ ونفسُ الحالةِ ونفسُ صيغةِ البنود)، فيظهرُ في «طلباتي» ويدخلُ
+// الحسابَ والمخزونَ وشركةَ التوصيلِ كأيِّ طلبٍ آخر — لا كسجلٍّ جانبيٍّ للبائعة.
+//
+// والسعرُ يُقرأُ من القاعدةِ لا ممّا قالته البائعة، وأجرةُ التوصيلِ تُحسَبُ من
+// مدينةِ الزبونةِ بجدولِ المتجر. فحتى لو أخطأَ النموذجُ برقمٍ بالمحادثة، الطلبُ
+// المسجَّلُ صحيح.
+async function createChatOrder(store, conv, order, customerId) {
+  const p = (await query(
+    'SELECT id, name, price, store_id FROM products WHERE id = $1 AND store_id = $2 AND hidden_at IS NULL',
+    [order.product.id, store.id]
+  )).rows[0];
+  if (!p) throw new Error('القطعة لم تعد متاحة.');
+
+  const unit = Number(p.price);
+  const subtotal = unit * order.qty;
+  const deliveryFee = feeForCity(order.city, store.delivery_tiers);
+  const freeOver = Number(store.free_shipping_over) || 0;
+  const fee = freeOver > 0 && subtotal >= freeOver ? 0 : deliveryFee;
+  const total = subtotal + fee;
+  const reference = 'BZ-' + crypto.randomBytes(5).toString('hex').toUpperCase();
+  const items = [{
+    id: p.id, name: p.name, price: unit, qty: order.qty,
+    size: order.size || '', color: order.color || '',
+  }];
+
+  const ins = await query(
+    `INSERT INTO orders (store_id, customer_name, customer_email, customer_phone, items, total,
+       currency, status, reference, city, area, address, notes, delivery_fee)
+     VALUES ($1,$2,'',$3,$4,$5,'ILS','new',$6,$7,'',$8,$9,$10) RETURNING id`,
+    [store.id, order.name, order.phone, JSON.stringify(items), total, reference,
+      order.city, order.address, 'طلب سجّلته البائعة الآلية من رسائل إنستغرام', fee]
+  );
+
+  await query('UPDATE ig_conversations SET order_id = $2 WHERE id = $1', [conv.id, ins.rows[0].id]);
+  notifyUser(store.user_id, {
+    type: 'order',
+    title: `🛍️ طلب جديد — ${order.name}`,
+    body: `${p.name}${order.color ? ' · ' + order.color : ''}${order.size ? ' · نمرة ' + order.size : ''} — ₪${total}`,
+    url: '/dashboard?tab=myOrders',
+    tag: `order-${ins.rows[0].id}`,
+  });
+
+  return {
+    reference,
+    total,
+    deliveryFee: fee,
+    itemLine: `${p.name}${order.color ? ' — ' + order.color : ''}${order.size ? ' — نمرة ' + order.size : ''}${order.qty > 1 ? ` — ${order.qty} قطع` : ''}`,
+  };
+}
+
 // كم دقيقةً نعتبرُ التاجرةَ فيها «على الشاشة» بعدَ ردِّها؟ ردُّها بيدِها يعني أنّها
 // موجودة، ومقاطعتُها بردٍّ آليٍّ في منتصفِ حديثِها أسوأُ من ألّا نردَّ أصلاً.
 const OWNER_PRESENT_MINUTES = 10;
@@ -376,9 +429,26 @@ async function maybeAutoReply({ store, convId, customerId, text, isNew, who }) {
   // الإفصاح: سياسةُ المراسلةِ عندَ Meta تطلبُ أن تعرفَ الزبونةُ أنّها تكلّمُ آليّاً،
   // والتاجرةُ تختارُ صيغتَه. يُضافُ مرّةً واحدةً بأوّلِ ردٍّ آليٍّ بالمحادثةِ فقط —
   // تكرارُه بكلِّ رسالةٍ يجعلُ الحديثَ آليّاً أكثرَ ممّا هو.
+  // إتمامُ الطلب. **نحن من يُسجّلُ ونحن من يُخبر** — لا النموذج: النموذجُ ممنوعٌ
+  // بنصِّ النظامِ من قولِ «تمّ التسجيل»، فالرقمُ الذي تراه الزبونةُ رقمٌ موجودٌ في
+  // قاعدةِ البيانات، لا رقمٌ لطيفٌ اخترعَه نموذجٌ ليُرضيَها.
+  let orderLine = '';
+  if (out.order?.ready) {
+    try {
+      const o = await createChatOrder(store, conv, out.order, customerId);
+      orderLine = `\n\nتمّ تسجيل طلبك ✅\nرقم الطلب: ${o.reference}\n`
+        + `${o.itemLine}\nالإجمالي: ₪${o.total} (منها ₪${o.deliveryFee} توصيل)\n`
+        + 'رح يتسجّل بالموقع تلقائياً ويروح مع شركة التوصيل، ويوصلك خلال يوم أو يومين.';
+    } catch (e) {
+      console.error('⚠️ طلب من المحادثة:', e.message);
+      orderLine = '\n\nصار في مشكلة صغيرة بتسجيل الطلب — صاحبة المتجر رح تكمّل معك حالاً 🌷';
+      out.handoff = true;
+    }
+  }
+
   const sign = String(bot.bot_signature || '').trim();
-  const withLink = link ? `${out.reply}
-${link}` : out.reply;
+  const withLink = (link ? `${out.reply}
+${link}` : out.reply) + orderLine;
   const body = (sign && Number(conv.bot_replies) === 0) ? `${withLink}
 
 ${sign}` : withLink;
