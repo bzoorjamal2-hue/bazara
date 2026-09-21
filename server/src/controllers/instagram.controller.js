@@ -8,7 +8,7 @@ import { extractOrderDraft } from '../utils/orderExtract.js';
 import { imageBlock, transcribe, canHear } from '../utils/mediaUnderstand.js';
 import {
   loadBot, botActiveNow, agentReply, countReply, MAX_BOT_REPLIES, testModeAllows, variantAvailable,
-  effectiveFloor,
+  effectiveFloor, photoFor,
 } from '../utils/salesAgent.js';
 import {
   isInstagramConfigured,
@@ -810,7 +810,7 @@ async function runAutoReply({ store, convId, customerId, text, isNew, who, chann
   let prods = [];
   if (out.ids && out.ids.length) {
     const pr = await query(
-      `SELECT id, name, price FROM products
+      `SELECT id, name, price, images, image_url, video_url, color_images FROM products
        WHERE id = ANY($1::uuid[]) AND store_id = $2 AND hidden_at IS NULL`,
       [out.ids.slice(0, 3), store.id]
     ).catch(() => ({ rows: [] }));
@@ -891,15 +891,44 @@ ${sign}` : withOrder;
   // ولا تتكرّرُ قطعةٌ أُرسِلَ رابطُها قبلاً بهذه المحادثة: كان الرابطُ يُلحَقُ بكلِّ
   // ردٍّ فتُعيدُ إنستغرام رسمَ البطاقةِ نفسِها بعدَ كلِّ رسالة — نفسُ الصورةِ خمسَ
   // مرّاتٍ بمحادثةٍ واحدة.
+  //
+  // والصورةُ تُرسَلُ صورةً لا رابطاً. كانت البطاقةُ نصّاً فيه رابطٌ وحدَه، ونتّكلُ
+  // على إنستغرام أن ترسمَ منه معاينةً — وهي رسمت **مربّعاً رماديّاً فارغاً**: قطعُ
+  // المتجرِ فيديو، فلا صورةَ مشاركةٍ تلتقطُها المعاينة. والزبونةُ رأت عنواناً بلا
+  // صورةٍ ورابطاً مكرّراً تحتَه.
+  //
+  // الصورةُ المرفقةُ لا تتّكلُ على أحد: تظهرُ بالدايركت والماسنجر وبكلِّ تطبيقٍ
+  // وبالإشعار. ومتى وصلت الصورةُ فالرابطُ تحتَها زائد — الطلبُ يُكمَلُ بالمحادثةِ
+  // نفسِها. يبقى الرابطُ سنداً وحيداً حين لا نملكُ للقطعةِ صورةً أصلاً.
   for (const p of prods) {
     const url = linkOf(p);
-    if (!url) continue;
+    const shot = photoFor(p);
+    if (!url && !shot?.url) continue;
+    // ولا تتكرّرُ قطعةٌ أُرسِلَت قبلاً بهذه المحادثة. والمفتاحُ صارَ صورتَها كما
+    // هو رابطَها: مَن يفحصُ بالرابطِ وحدَه ثمّ يكفُّ عن إرسالِه يفقدُ الحارسَ صامتاً.
     const seen = await query(
-      `SELECT 1 FROM ig_messages WHERE conversation_id = $1 AND text LIKE $2 LIMIT 1`,
-      [convId, `%${p.id}%`]
+      `SELECT 1 FROM ig_messages WHERE conversation_id = $1
+         AND (text LIKE $2 OR (attachment_url <> '' AND attachment_url = $3)) LIMIT 1`,
+      [convId, `%${p.id}%`, shot?.url || '—']
     ).catch(() => ({ rows: [] }));
     if (seen.rows.length) continue;
-    const card = `${p.name} — ${Number(p.price)}₪\n${url}`;
+
+    let shown = false;
+    if (shot?.url) {
+      try {
+        await sendAttachment(token, customerId, shot.url, 'image');
+        shown = true;
+        await query(
+          `INSERT INTO ig_messages (conversation_id, mid, direction, text, attachment_url, attachment_type, ai)
+           VALUES ($1, NULL, 'out', '', $2, 'image', true)`,
+          [convId, shot.url]
+        ).catch(() => {});
+      } catch (e) {
+        // تعذّرت الصورة؟ يعودُ الرابطُ ركناً لا زينة
+        console.error('⚠️ صورة البطاقة:', e.message);
+      }
+    }
+    const card = shown || !url ? `${p.name} — ${Number(p.price)}₪` : `${p.name} — ${Number(p.price)}₪\n${url}`;
     try {
       const sent = await sendMessage(token, customerId, card);
       await recordBotMessage(convId, sent?.message_id || null, card);
@@ -926,11 +955,17 @@ ${sign}` : withOrder;
         let note = '';
         if (!out.photo.exact) {
           const c = String(out.photo.askedColor || '').trim();
+          // الرابطُ يُكتَبُ هنا بنفسِه لا يُشارُ إليه بـ«فوق»: البطاقةُ صارت صورةً
+          // بلا رابط، فإشارةٌ إلى رابطٍ غيرِ موجودٍ تُرسِلُ الزبونةَ تدوّرُ على لا شيء.
+          const pl = out.photo.productId
+            ? linkOf({ id: out.photo.productId })
+            : (prod ? linkOf(prod) : '');
+          const where = pl ? `\n${pl}` : '';
           note = out.photo.fromVideo
             ? (c
-              ? `هاي لقطة من فيديو القطعة — مش بالضرورة لون ${c}. الفيديو بيوريكي كل الألوان، افتحي رابط القطعة فوق 🌷`
-              : 'هاي لقطة من فيديو القطعة. الفيديو بيوريكي كل الألوان من رابط القطعة فوق 🌷')
-            : (c ? `هاي صورة القطعة — مش مخصّصة للون ${c}. رابط القطعة فوق فيه كل الصور 🌷` : '');
+              ? `هاي لقطة من فيديو القطعة — مش بالضرورة لون ${c}. الفيديو بيوريكي كل الألوان 🌷${where}`
+              : `هاي لقطة من فيديو القطعة. الفيديو بيوريكي كل الألوان 🌷${where}`)
+            : (c ? `هاي صورة القطعة — مش مخصّصة للون ${c}. هون كل الصور 🌷${where}` : '');
         }
         if (note) {
           const sentNote = await sendMessage(token, customerId, note);

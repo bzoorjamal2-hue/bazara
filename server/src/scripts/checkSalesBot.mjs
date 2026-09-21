@@ -17,7 +17,7 @@ import {
 import { feeForCity, cityOfVillage, flatInternalLocalities } from '../config/deliveryCities.js';
 import { extractOrderDraft } from '../utils/orderExtract.js';
 import { shouldResume, isAuthError, attachmentKind, burstDelay, adRefFrom } from '../controllers/instagram.controller.js';
-import { palestinize } from '../utils/palestinian.js';
+import { palestinize, stripEndearments } from '../utils/palestinian.js';
 import { smalltalkType } from '../controllers/assistant.controller.js';
 import { orderProfit } from '../controllers/order.controller.js';
 
@@ -534,9 +534,35 @@ H('١٤) اللهجةُ فلسطينيّةٌ لا خليطَ لهجات');
   t('الإنجليزيّةُ تمرُّ كما هي', same('Hi, do you have size 46?'));
   t('لهجةٌ مصريّةٌ اختارتها التاجرةُ تبقى مصريّة', palestinize('اللون ده حلو', 'eg') === 'اللون ده حلو');
 
+  // ومن محادثةٍ ثانيةٍ حقيقيّةٍ رآها صاحبُ المنصّة بعينِه
+  t('«هلا وغلا» نجديّةٌ ⇒ «هلا فيك»', fixed('هلا وغلا، شو أخبارك؟', 'هلا فيك', 'وغلا'));
+  t('«خدلي» مصريّةٌ ⇒ «احكيلي»', fixed('خدلي اسمها ورقمها', 'احكيلي', 'خدلي'));
+  t('«هلق» لبنانيّةٌ ⇒ «هلأ»', fixed('هلق بس بدي أعرف', 'هلأ', 'هلق'));
+  t('«بانتظارك» مكتوبةٌ ⇒ «بستنّاك»', fixed('بانتظارك بكرا', 'بستنّاك', 'بانتظارك'));
+
   // والنموذجُ نفسُه: هبوطٌ صامتٌ إلى هايكو يُعيدُ الخليطَ كلَّه من أوّلِه
   const model = process.env.ASSISTANT_MODEL || 'claude-sonnet-5';
   t('النموذجُ ليس هايكو', !/haiku/i.test(model), model);
+}
+
+// ═══ ١٤ب) ملابسُ لا مودّة ═══
+//
+// «تمام حبيبي، بستناك بكرا» لرجلٍ يسألُ عن فستانِ زوجتِه. تُلتقَطُ لها صورةُ شاشةٍ
+// وتدور، فتدفعُ الصفحةُ سمعتَها ثمنَ كلمةٍ لم يقصدْها أحد.
+H('١٤ب) ملابسُ لا مودّة');
+{
+  const e = stripEndearments;
+  t('«حبيبي» تُحذَفُ مع الرجال', !e('تمام حبيبي، خلص متفقين').includes('حبيبي'));
+  t('وتُحذَفُ مع الجميعِ بلا استثناء', !e('حبيبي بدك نمرة كم؟').includes('حبيبي'));
+  t('والفاصلةُ تبقى فلا يُبتَرُ الكلام', e('تمام حبيبي، خلص') === 'تمام، خلص', e('تمام حبيبي، خلص'));
+  t('«يا قلبي» تُحذَفُ كمان', e('يا قلبي شو بدك') === 'شو بدك');
+  t('**و«حبيبتي» تبقى للمرأة**', e('تمام حبيبتي، ولا يهمّك') === 'تمام حبيبتي، ولا يهمّك');
+  // ومصفاةٌ تُفسدُ المعنى أسوأُ من لا مصفاة: «روحي» فعلُ أمرٍ بالفلسطينيّة
+  t('«روحي عالرابط» فعلُ أمرٍ لا دلال', e('روحي عالرابط وشوفي الألوان') === 'روحي عالرابط وشوفي الألوان');
+  t('وكلامُ البيعِ لا يُمَسّ', e('الطقم موجود بنمرة 46') === 'الطقم موجود بنمرة 46');
+  t('والنصُّ يمنعُها كمان لا المصفاةُ وحدَها',
+    buildSystem({ storeName: st.name, bot, rows: rows.slice(0, 2), stage: 0, promo: null, lang: 'ar', customerName: '' })
+      .includes('ولا تقولي «حبيبي» أبداً'));
 }
 
 // ═══ ١٥) دفعةُ رسائلٍ واحدةٍ ⇒ ردٌّ واحد ═══
