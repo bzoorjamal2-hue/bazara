@@ -12,7 +12,7 @@ import {
 const MODES = ['always', 'first', 'offhours'];
 const TONES = ['warm', 'short', 'formal'];
 const DIALECTS = ['ps', 'sy', 'eg', 'gulf', 'msa'];
-const CHANNELS = ['site', 'instagram'];
+const CHANNELS = ['site', 'instagram', 'messenger'];
 
 async function getUserStore(userId) {
   const r = await query('SELECT id, name FROM stores WHERE user_id = $1', [userId]);

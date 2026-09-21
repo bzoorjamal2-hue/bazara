@@ -344,3 +344,5 @@ ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_test_accounts JSONB NOT NULL DEF
 ALTER TABLE ig_conversations ADD COLUMN IF NOT EXISTS bot_paused_at TIMESTAMPTZ;
 -- هامش المفاصلة بالشيكل: يُحسب وقت الردّ فتأخذه القطع الجديدة تلقائياً
 ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_haggle_margin NUMERIC(10,2) NOT NULL DEFAULT 10;
+-- قناة المحادثة: دايركت إنستغرام أم ماسنجر الصفحة
+ALTER TABLE ig_conversations ADD COLUMN IF NOT EXISTS channel VARCHAR(16) NOT NULL DEFAULT 'instagram';

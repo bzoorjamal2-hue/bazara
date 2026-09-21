@@ -181,19 +181,21 @@ export async function sendAttachment(pageToken, recipientId, url, type = 'image'
 // حقلٌ واحدٌ غيرُ مدعومٍ يُسقطُ الطلبَ كلَّه عند Meta، وحقولُ الملفّ تختلفُ باختلافِ
 // الصلاحيّات الممنوحة — فلو سقط الطلبُ بالصورة أعدناه بالاسمِ وحدَه بدل أن نخسرَ
 // الاسمَ أيضاً ويبقى الزبونُ رقماً مجرّداً.
-export async function getSenderProfile(pageToken, igsid) {
-  const ask = (fields) => graph(`/${igsid}`, { token: pageToken, params: { fields } });
-  let data = null;
-  try {
-    data = await ask('name,username,profile_pic');
-  } catch {
+export async function getSenderProfile(pageToken, senderId, channel = 'instagram') {
+  const ask = (fields) => graph(`/${senderId}`, { token: pageToken, params: { fields } });
+  // مُرسِلُ ماسنجر ليس له username أصلاً، وطلبُه يُفشِلُ النداءَ كلَّه فيبقى الزبونُ
+  // بلا اسمٍ ولا صورة. لكلِّ قناةٍ حقولُها، والأوسعُ أوّلاً ثمّ الأضيق.
+  const tries = channel === 'messenger'
+    ? ['name,profile_pic', 'first_name,last_name,profile_pic', 'name']
+    : ['name,username,profile_pic', 'name,username', 'name'];
+  for (const fields of tries) {
     try {
-      data = await ask('name,username');
-    } catch {
-      return { name: '', username: '', avatar: '' };
-    }
+      const d = await ask(fields);
+      const name = d.name || [d.first_name, d.last_name].filter(Boolean).join(' ');
+      return { name: name || '', username: d.username || '', avatar: d.profile_pic || '' };
+    } catch { /* الحقلُ التالي */ }
   }
-  return { name: data.name || '', username: data.username || '', avatar: data.profile_pic || '' };
+  return { name: '', username: '', avatar: '' };
 }
 
 // روابطُ Meta للمرفقاتِ وصورِ البروفايل موقّعةٌ وتنتهي صلاحيّتُها بعد أيّام، فما يُحفَظُ

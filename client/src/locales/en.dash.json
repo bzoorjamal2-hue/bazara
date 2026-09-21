@@ -1328,9 +1328,10 @@
     },
     "channels": {
       "label": "Where does she work?",
-      "tip": "Site assistant = the chat box on your store page. Instagram = the DMs that reach your dashboard. Pick one or both.",
+      "tip": "Where she replies. \"Store\" = the assistant on your storefront. \"Instagram\" = direct messages. \"Messenger & Facebook\" = your Page messages that reach you in Meta Business Suite.",
       "site": "Site assistant",
-      "instagram": "Instagram DMs"
+      "instagram": "Instagram DMs",
+      "messenger": "Messenger & Facebook"
     },
     "mode": {
       "label": "When does she reply?",
@@ -1437,7 +1438,8 @@
       "label": "Test mode",
       "hint": "She replies only to the accounts you list below and ignores everyone else. Keep it on until you trust her.",
       "placeholder": "Instagram username (without @)",
-      "empty": "The list is empty — she will reply to nobody. Add an account or switch test mode off."
+      "empty": "The list is empty — she will reply to nobody. Add an account or switch test mode off.",
+      "messengerNote": "Test mode only recognises Instagram usernames. Messenger senders have none, so Facebook messages stay unanswered until you turn test mode off."
     },
     "margin": {
       "label": "Haggle margin",

@@ -4,7 +4,7 @@ import api, { getErrorMessage } from '../../api/client.js';
 import Select from '../../components/Select.jsx';
 import { PageHead, SectionHead, Field, Tip } from '../../components/FormField.jsx';
 import {
-  SparkleIcon, InstagramIcon, StoreIcon, CheckIcon, WarnIcon, ClockIcon, TagIcon,
+  SparkleIcon, InstagramIcon, FacebookIcon, StoreIcon, CheckIcon, WarnIcon, ClockIcon, TagIcon,
   CashIcon, BoltIcon, SearchIcon, UserIcon, ShieldIcon, XIcon,
 } from '../../components/icons.jsx';
 import { cldThumb } from '../../utils/cloudinary.js';
@@ -129,6 +129,9 @@ export default function SalesBot() {
             {[
               { key: 'site', label: t('salesBot.channels.site'), Icon: StoreIcon },
               { key: 'instagram', label: t('salesBot.channels.instagram'), Icon: InstagramIcon },
+              // ماسنجر: نفسُ الصفحةِ ونفسُ التوكنِ ونفسُ الـwebhook — قناةٌ ثانيةٌ
+              // تصلُ منها الرسائلُ لصندوقِ ميتا بيزنس سويت نفسِه.
+              { key: 'messenger', label: t('salesBot.channels.messenger'), Icon: FacebookIcon },
             ].map((c) => {
               const on = chan.has(c.key);
               return (
@@ -146,6 +149,14 @@ export default function SalesBot() {
             })}
           </div>
         </Field>
+
+        {/* وضعُ التجربةِ قائمةُ أسماءِ إنستغرام، ومُرسِلُ ماسنجر بلا اسمِ حساب —
+            فيسقطُ بالحارسِ صامتاً. الصمتُ بلا تفسيرٍ يبدو عطلاً، فنقولُها هنا. */}
+        {s.testOnly && chan.has('messenger') && (
+          <p className="flex items-start gap-2 rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-2.5 text-xs font-semibold leading-relaxed text-amber-300">
+            <WarnIcon className="mt-px h-4 w-4 shrink-0" /> {t('salesBot.test.messengerNote')}
+          </p>
+        )}
 
         {/* وضعُ التجربة: يظهرُ حين تكونُ قناةُ إنستغرام مفتوحةً وحدَها — فهو حارسُها.
             مساعِدةُ الموقعِ بلا هويّةٍ للزائر، فلا معنى لقائمةِ أسماءٍ فيها. */}

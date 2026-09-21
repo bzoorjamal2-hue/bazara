@@ -132,7 +132,8 @@ async function processWebhook(body) {
           const seenAt = ev.read.watermark ? new Date(Number(ev.read.watermark)) : new Date();
           await query(
             `UPDATE ig_conversations c SET seen_at = $3
-             FROM stores s WHERE c.store_id = s.id AND s.ig_user_id = $1 AND c.ig_sender_id = $2`,
+             FROM stores s WHERE c.store_id = s.id AND c.ig_sender_id = $2
+               AND (s.ig_user_id = $1 OR s.ig_page_id = $1)`,
             [businessId, senderId, seenAt]
           );
         } else if (ev.reaction?.mid) {
@@ -148,9 +149,13 @@ async function processWebhook(body) {
       const storeIgId = isEcho ? senderId : businessId;
       const customerId = isEcho ? businessId : senderId;
 
+      // رسائلُ ماسنجر تصلُ بمعرّفِ **الصفحة** لا بمعرّفِ حسابِ إنستغرام. كان البحثُ
+      // بـig_user_id وحدَه، فكلُّ رسالةِ فيسبوكَ تسقطُ هنا بسطرِ «لا متجر لهذا الحساب»
+      // — وصلت، وسُجّلت بالسِّجلّ، ولم يرَها أحد.
       const sr = await query(
-        `SELECT id, user_id, name, slug, ig_access_token, delivery_tiers, free_shipping_over
-         FROM stores WHERE ig_user_id = $1 AND ig_connected = true`,
+        `SELECT id, user_id, name, slug, ig_access_token, ig_page_id, ig_user_id,
+                delivery_tiers, free_shipping_over
+         FROM stores WHERE (ig_user_id = $1 OR ig_page_id = $1) AND ig_connected = true`,
         [storeIgId]
       );
       const store = sr.rows[0];
@@ -160,6 +165,10 @@ async function processWebhook(body) {
         console.log('ig webhook: لا متجر لهذا الحساب', storeIgId);
         continue;
       }
+
+      // القناةُ تُعرَفُ من المعرّفِ الذي طابقَ لا من body.object وحدَه: ميتا تُرسلُ
+      // رسائلَ إنستغرام تحتَ object:'page' ببعضِ الإعدادات، فالمطابقةُ أصدق.
+      const channel = String(storeIgId) === String(store.ig_page_id || '') ? 'messenger' : 'instagram';
 
       const text = msg.text || '';
       // النوعُ يقرّرُ كيف يُعرَض المرفق: صورةٌ تُعرَضُ صورةً وفيديو يُشغَّل. بلا حفظِه
@@ -178,14 +187,15 @@ async function processWebhook(body) {
 
       // upsert المحادثة (صف واحد لكل زبون بهذا المتجر) — نرفع غير المقروء للوارد فقط
       const conv = await query(
-        `INSERT INTO ig_conversations (store_id, ig_sender_id, last_message, last_at, unread)
-         VALUES ($1, $2, $3, now(), $4)
+        `INSERT INTO ig_conversations (store_id, ig_sender_id, last_message, last_at, unread, channel)
+         VALUES ($1, $2, $3, now(), $4, $5)
          ON CONFLICT (store_id, ig_sender_id) DO UPDATE
            SET last_message = EXCLUDED.last_message,
                last_at = now(),
-               unread = ig_conversations.unread + $4
+               unread = ig_conversations.unread + $4,
+               channel = EXCLUDED.channel
          RETURNING id, customer_name, customer_username, customer_avatar, (xmax = 0) AS is_new`,
-        [store.id, customerId, preview, isEcho ? 0 : 1]
+        [store.id, customerId, preview, isEcho ? 0 : 1, channel]
       );
       const convId = conv.rows[0].id;
 
@@ -211,7 +221,7 @@ async function processWebhook(body) {
       if (conv.rows[0].is_new || !avatar) {
         const token = decrypt(store.ig_access_token);
         if (token) {
-          const prof = await getSenderProfile(token, customerId);
+          const prof = await getSenderProfile(token, customerId, channel);
           if (prof.name || prof.username || prof.avatar) {
             avatar = prof.avatar ? await mirrorRemote(prof.avatar, 'ig/avatars') : avatar;
             who = prof.name || prof.username || who;
@@ -230,7 +240,7 @@ async function processWebhook(body) {
       // بدل أن تتكدّس، والرابطُ يفتحُ محادثتَه هو لا قائمةَ المحادثات.
       notifyUser(store.user_id, {
         type: 'instagram',
-        title: who || 'رسالة إنستغرام',
+        title: who || (channel === 'messenger' ? 'رسالة ماسنجر' : 'رسالة إنستغرام'),
         body: preview.slice(0, 120),
         url: `/dashboard/instagram/${convId}`,
         tag: `ig-${convId}`,
@@ -242,7 +252,7 @@ async function processWebhook(body) {
       // عرفت برسالةِ زبونتِها على أيِّ حال. ولا ننتظرُها: الـwebhook ردَّ 200 من
       // زمان، وتأخيرُ الحلقةِ هنا يؤخّرُ باقي رسائلِ الدفعة.
       maybeAutoReply({
-        store, convId, customerId, text, isNew: conv.rows[0].is_new, who,
+        store, convId, customerId, text, isNew: conv.rows[0].is_new, who, channel,
         // رابطُ Meta الأصليُّ لا نسختُنا على كلاوديناري: هو طازجٌ الآنَ وقراءتُه
         // مجّانيّةٌ علينا، ونسختُنا تُكلّفُ من حصّةِ التسليمِ المحدودة.
         mediaUrl: att?.payload?.url || '', mediaType: attType,
@@ -345,14 +355,16 @@ export function shouldResume({ pausedAt, ownerRepliedAfter = false, now = Date.n
 
 // ردٌّ آليٌّ على رسالةٍ واردة. كلُّ حارسٍ هنا مكتوبٌ لأنّ ما بعدَه يذهبُ لزبونةٍ
 // حقيقيّةٍ باسمِ المتجر: لا رجعةَ في رسالةٍ أُرسِلت.
-async function maybeAutoReply({ store, convId, customerId, text, isNew, who, mediaUrl = '', mediaType = '' }) {
+async function maybeAutoReply({ store, convId, customerId, text, isNew, who, channel = 'instagram', mediaUrl = '', mediaType = '' }) {
   // صورةٌ أو صوتٌ بلا كلام لم يكن يُجابُ عليه أصلاً — كانت البائعةُ تُدير ظهرَها
   // لنصفِ ما يصلُ الدايركت. الآن تنظرُ وتسمع.
   const isImage = mediaType === 'image' && Boolean(mediaUrl);
   const isVoice = mediaType === 'audio' && Boolean(mediaUrl);
   if (!text && !isImage && !isVoice) return;
   const bot = await loadBot(store.id);
-  if (!botActiveNow(bot, 'instagram', { isFirstMessage: Boolean(isNew) })) return;
+  // القناةُ الحقيقيّةُ لا 'instagram' دائماً: تاجرةٌ فتحت الدايركت ولم تفتحِ
+  // الماسنجر يجبُ أن يبقى ماسنجرُها صامتاً.
+  if (!botActiveNow(bot, channel, { isFirstMessage: Boolean(isNew) })) return;
 
   // حالةُ المحادثةِ مقروءةٌ على حدةٍ لا ضمنَ upsert الرسالة: خادمٌ لم تصلْه
   // الترقيةُ بعدُ كان سيُسقطُ استقبالَ الرسائلِ كلَّه بعمودٍ مفقود.
@@ -966,7 +978,7 @@ export async function listConversations(req, res, next) {
     if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
     const r = await query(
       `SELECT id, ig_sender_id, customer_name, customer_username, customer_avatar,
-              last_message, last_at, unread, order_id
+              last_message, last_at, unread, order_id, channel
        FROM ig_conversations WHERE store_id = $1 ORDER BY last_at DESC LIMIT 100`,
       [store.id]
     );

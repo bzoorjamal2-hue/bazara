@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
-import { InstagramIcon, BagIcon, BackIcon, CheckIcon, PlusIcon } from '../../components/icons.jsx';
+import { InstagramIcon, FacebookIcon, BagIcon, BackIcon, CheckIcon, PlusIcon } from '../../components/icons.jsx';
 import { startFbLogin, igRedirectUri } from '../../utils/fbSdk.js';
 import { normalizeAr } from '../../utils/chat.js';
 import { PageHead } from '../../components/FormField.jsx';
@@ -282,6 +282,11 @@ function Inbox({ username, onDisconnected }) {
               <Avatar url={c.customer_avatar} name={c.customer_name || c.customer_username} />
               <span className="min-w-0 flex-1">
                 <span className="flex items-center gap-2">
+                  {/* من أينَ جاءت: الصندوقُ واحدٌ والقناتانِ اثنتان، والتاجرةُ تردُّ
+                      بنبرةٍ مختلفةٍ لزبونِ فيسبوكَ عن زبونةِ إنستغرام. */}
+                  {c.channel === 'messenger'
+                    ? <FacebookIcon className="h-3.5 w-3.5 shrink-0 text-sky-400" />
+                    : <InstagramIcon className="h-3.5 w-3.5 shrink-0 text-pink-400" />}
                   <span className="truncate font-semibold text-stone-100">{c.customer_name || (c.customer_username ? `@${c.customer_username}` : t('dashboard.instagram.customer'))}</span>
                   {c.order_id && <span className="shrink-0 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-300 ring-1 ring-emerald-500/25">{t('dashboard.instagram.hasOrder')}</span>}
                 </span>
