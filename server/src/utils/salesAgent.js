@@ -12,11 +12,16 @@
 //   3) ANTHROPIC_API_KEY → Claude (أرقى جودة).
 
 import { query } from '../config/db.js';
-import { palestinize, PS_SPEC } from './palestinian.js';
+import { palestinize, PS_SPEC, PS_VOICE } from './palestinian.js';
 
 const CATALOG_TTL = 2 * 60 * 1000; // كاشُ كتالوجِ البائعة (أقصرُ من كاشِ المساعِدة: المخزونُ يتغيّر)
 const AI_CATALOG = 30;             // سقفُ القطعِ المُمرَّرةِ للنموذج (توكناتٌ أقل)
-const AI_HISTORY = 8;              // آخرُ رسائلِ المحادثةِ المُمرَّرة
+// ذاكرةُ المحادثة. كانت ثمانياً — وهي بمحادثةٍ يكتبُ صاحبُها الفكرةَ على أربعِ
+// رسائلَ تعني **دورين اثنين**. فكانت البائعةُ تنسى الاسمَ الذي أعطتْها إيّاه
+// الزبونةُ قبلَ قليلٍ وتسألُ عنه ثانيةً، وتنسى السعرَ الذي اتّفقت عليه فتُنكرَه.
+// والنصُّ الثابتُ صارَ مخزَّناً عندَ المزوّدِ (cache)، فكلفةُ الرسائلِ الأطولِ
+// أقلُّ ممّا كانت عليه بثمانٍ قبلَ التخزين.
+const AI_HISTORY = 20;             // آخرُ رسائلِ المحادثةِ المُمرَّرة
 const TOP_N = 4;                   // أقصى ما تعرضُه البائعةُ بردٍّ واحد
 // ردودٌ ذكيّةٌ بالشهرِ لكلِّ متجر: **بلا سقف**.
 //
@@ -393,6 +398,9 @@ function catalogLine(p, bot, stageFor) {
 function buildSystem({ storeName, bot, rows, stage, promo, lang, customerName }) {
   const tone = TONES[bot.bot_tone] || TONES.warm;
   const dialect = lang === 'en' ? 'English, warm and natural.' : (DIALECTS[bot.bot_dialect] || DIALECTS.ps);
+  // الوصفُ يشرحُ اللهجة، والأمثلةُ تُسمِعُها. تُوضَعُ للفلسطينيّةِ وحدَها لأنّ صوتَها
+  // هو ما نملكُ منه نصّاً حقيقيّاً من تاجرةٍ حقيقيّة.
+  const voice = lang === 'en' || (bot.bot_dialect && bot.bot_dialect !== 'ps') ? '' : `\n\n${PS_VOICE}`;
   const promoLine = promo
     ? `\nالقطعةُ التي تُروّجينَ لها اليوم: "${promo.name}" (id:${promo.id}). قدّميها أوّلاً ما لم تسألِ الزبونةُ عن غيرِها صراحةً.`
     : '';
@@ -435,7 +443,7 @@ function buildSystem({ storeName, bot, rows, stage, promo, lang, customerName })
 ${address}
 
 أسلوبُكِ: ${tone}
-لغتُكِ: ${dialect}
+لغتُكِ: ${dialect}${voice}
 اكتبي كما يكتبُ الناسُ بالمحادثة: جملٌ قصيرة، بلا عناوينَ ولا نقاطٍ ولا تنسيق، وإيموجي واحدٌ على الأكثرِ بالردّ.${promoLine}${haggleLine}
 
 قواعدُ لا تُكسَرُ أبداً:
@@ -543,7 +551,15 @@ async function callClaude(system, messages) {
         // قروشٌ على المحادثة، والفرقُ عندَ الزبونةِ أن تشتريَ أو أن تضحكَ وتمشي.
         model: process.env.ASSISTANT_MODEL || 'claude-sonnet-5',
         max_tokens: 500,
-        system,
+        // نبرةٌ ثابتةٌ لا مزاجيّة: بائعةٌ تُجيبُ عن نفسِ السؤالِ بجوابٍ مختلفٍ كلَّ
+        // مرّةٍ تبدو غيرَ موثوقة، والحرارةُ الافتراضيّةُ (١) مكانُها الكتابةُ الحرّةُ
+        // لا محلٌّ يبيع.
+        temperature: 0.7,
+        // النصُّ الثابتُ (القواعدُ واللهجةُ والصوتُ والكتالوج) يُعادُ إرسالُه مع كلِّ
+        // رسالةٍ بالمحادثة، وهو أضعافُ حجمِ الرسالةِ نفسِها. تخزينُه عندَ المزوّدِ
+        // يجعلُ الرسالةَ الثانيةَ فصاعداً أرخصَ بكثيرٍ وأسرعَ — وهو ما يجعلُ ذاكرةً
+        // أطولَ وأمثلةً ووصفاً مفصّلاً للّهجةِ ممكنةً أصلاً بلا أن تنفجرَ الكلفة.
+        system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
         tools: [{ name: 'say', description: 'ردُّ البائعةِ على الزبونة.', input_schema: SCHEMA }],
         tool_choice: { type: 'tool', name: 'say' },
         // الصورةُ تُرفَقُ بالرسالةِ نفسِها قبلَ نصِّها — هكذا تقرأُها Claude

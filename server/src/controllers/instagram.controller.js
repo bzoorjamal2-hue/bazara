@@ -712,7 +712,7 @@ async function runAutoReply({ store, convId, customerId, text, isNew, who, chann
 
   const hist = await query(
     `SELECT direction, text FROM ig_messages
-     WHERE conversation_id = $1 AND text <> '' ORDER BY created_at DESC LIMIT 8`,
+     WHERE conversation_id = $1 AND text <> '' ORDER BY created_at DESC LIMIT 20`,
     [convId]
   );
   const messages = hist.rows.reverse()
