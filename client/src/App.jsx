@@ -73,6 +73,7 @@ const Track = lazy(() => retryImport(() => import('./pages/Track.jsx')));
 const PaymentCallback = lazy(() => retryImport(() => import('./pages/PaymentCallback.jsx')));
 const PrivacyPolicy = lazy(() => retryImport(() => import('./pages/PrivacyPolicy.jsx')));
 const TermsOfService = lazy(() => retryImport(() => import('./pages/TermsOfService.jsx')));
+const DataDeletion = lazy(() => retryImport(() => import('./pages/DataDeletion.jsx')));
 const NotFound = lazy(() => retryImport(() => import('./pages/NotFound.jsx')));
 // شاشةُ محادثةِ إنستغرام: صفحةٌ قائمةٌ بذاتها تغطّي الشاشةَ كما في تطبيقاتِ المحادثة،
 // لا لوحٌ ينفتحُ داخلَ تبويبِ اللوحة.
@@ -272,6 +273,8 @@ function AnimatedRoutes() {
           <Route path="/payment/callback" element={<PaymentCallback />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />
+          {/* عنوانٌ تطلبُه Meta قبلَ نشرِ التطبيق، ويضغطُه المستخدمُ من إعداداتِ فيسبوك */}
+          <Route path="/data-deletion" element={<DataDeletion />} />
           {/* معاينة نموذج المنتج أثناء التطوير فقط — لا يدخل بنسخة الإنتاج (يُحذف بالبناء) */}
           {import.meta.env.DEV && <Route path="/__dev/product-form" element={<DevProductForm />} />}
           <Route
