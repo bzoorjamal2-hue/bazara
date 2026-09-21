@@ -11,7 +11,7 @@ import { query, withTransaction } from '../config/db.js';
 import {
   loadBot, sanitize, allowedPrice, effectiveFloor, haggleMargin, DEFAULT_HAGGLE_MARGIN,
   normalizePhone, testModeAllows, botActiveNow, stockLine, sizesOf, colorsOf, MAX_HAGGLE_MARGIN,
-  variantAvailable, haggleIntent, needsHuman, clearCatalog,
+  variantAvailable, haggleIntent, needsHuman, clearCatalog, photoFor,
 } from '../utils/salesAgent.js';
 import { feeForCity, cityOfVillage } from '../config/deliveryCities.js';
 import { shouldResume } from '../controllers/instagram.controller.js';
@@ -35,7 +35,7 @@ if (!st) { console.log('✗ لا متجرَ للفحص. مرّرْ slug أو ف�
 const bot = await loadBot(st.id);
 const rows = (await query(
   `SELECT id, name, price, floor_price, cost, stock, size_stock, color_stock, size, color,
-          old_price, sale_ends_at, category, description
+          old_price, sale_ends_at, category, description, images, image_url, video_url, color_images
      FROM products WHERE store_id = $1 AND hidden_at IS NULL ORDER BY created_at DESC`,
   [st.id]
 )).rows;
@@ -156,6 +156,42 @@ t('ورقمٌ صغيرٌ لا يُرفَعُ لسعرِ القطعة', !g('ال�
   g('التوصيل 25 شيكل', 2));
 
 // ═════════════════════════ الطلب ═════════════════════════
+H('٤ب) صورةُ اللون — نُري ما نملكُ ونقولُ الحقيقةَ عمّا لا نملك');
+{
+  const withColors = rows.filter((x) => colorsOf(x).length);
+  const haveExact = rows.filter((x) => {
+    const ci = x.color_images && typeof x.color_images === 'object' ? x.color_images : {};
+    return Object.keys(ci).length > 0;
+  });
+  const haveAny = rows.filter((x) => photoFor(x, '')?.url);
+  console.log('    قطعٌ بألوان: ' + withColors.length + '/' + rows.length
+    + ' · لها صورُ ألوانٍ مرفوعة: ' + haveExact.length
+    + ' · نملكُ لها صورةً ما: ' + haveAny.length);
+  t('لكلِّ قطعةٍ شيءٌ نُريه (لقطةٌ على الأقلّ)', haveAny.length === rows.length,
+    (rows.length - haveAny.length) + ' بلا أيِّ وسيط');
+
+  const pc = withColors[0] || rows[0];
+  const c0 = colorsOf(pc)[0] || '';
+  const got = photoFor(pc, c0);
+  t('ما نُرسِلُه صورةٌ لا فيديو', String(got?.url || '').includes('f_jpg') && String(got?.url || '').endsWith('.jpg'),
+    String(got?.url || '').slice(-60));
+  t('ونسخةٌ خفيفةٌ لا الأصل', /w_720/.test(got?.url || ''));
+  const ciKeys = Object.keys(pc.color_images && typeof pc.color_images === 'object' ? pc.color_images : {});
+  t('exact يقولُ الحقيقةَ عن اللون', got?.exact === (ciKeys.length > 0 && ciKeys.some((k) => k === c0)));
+
+  // ولو رفعتِ التاجرةُ صورةَ لونٍ غداً: تُرسَلُ بعينِها بلا تعديلِ كود
+  const fake = { ...pc, color_images: { [c0]: ['https://res.cloudinary.com/x/image/upload/v1/a.jpg'] } };
+  t('صورةُ لونٍ مرفوعةٌ تُستعمَلُ فوراً', photoFor(fake, c0)?.exact === true);
+  t('ولونٌ بلا صورةٍ يرجعُ للقطةِ العامّةِ معلَناً', photoFor(fake, 'لونٌ لا وجودَ له')?.exact === false);
+
+  // الخادمُ يقرّر: معرّفٌ غريبٌ لا يمرّ
+  const askPhoto = (sp) => sanitize({ reply: 'تفضّلي', productIds: [pc.id], showPhoto: sp }, { rows, bot, stage: 0 }).photo;
+  t('معرّفُ قطعةٍ غريبٍ لا يُخرِجُ صورتَها',
+    askPhoto({ productId: '00000000-0000-0000-0000-000000000000', color: c0 })?.productId === String(pc.id));
+  t('بلا طلبٍ ⇒ لا صورةَ تُرسَل',
+    sanitize({ reply: 'أهلا', productIds: [pc.id] }, { rows, bot, stage: 0 }).photo === null);
+}
+
 H('٥) رقمُ الجوّالِ الفلسطينيّ');
 for (const [raw, want] of [['0592124988', '0592124988'], ['+970592124988', '0592124988'],
   ['00970592124988', '0592124988'], ['972592124988', '0592124988'], ['٠٥٩٢١٢٤٩٨٨', '0592124988'],

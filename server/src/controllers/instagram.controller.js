@@ -675,6 +675,45 @@ ${sign}` : withOrder;
     }
   }
 
+  // صورةٌ طلبتها الزبونةُ صراحةً. لا يُرسِلُها النموذجُ ولا يصفُها — نحن نقرأُ ما
+  // تملكُه القطعةُ فعلاً ونرسلُه، ونقولُ بصراحةٍ متى لم تكن صورةَ اللونِ المطلوب.
+  //
+  // فكلُّ قطعِ المنصّةِ اليومَ فيديو بلا صورِ ألوان، فأحسنُ ما نملكُ لقطةٌ من
+  // الفيديو — وهي لا تضمنُ اللون. أن نرسلَها صامتين يعني أن تطلبَ الزبونةُ
+  // الأخضرَ فترى الأحمرَ وتظنَّه الأخضر. الصدقُ هنا أرخصُ من طلبٍ مرتجَع.
+  if (out.photo?.url) {
+    const already = await query(
+      "SELECT 1 FROM ig_messages WHERE conversation_id = $1 AND attachment_url = $2 LIMIT 1",
+      [convId, out.photo.url]
+    ).catch(() => ({ rows: [] }));
+    if (!already.rows.length) {
+      try {
+        await sendAttachment(token, customerId, out.photo.url, 'image');
+        let note = '';
+        if (!out.photo.exact) {
+          const c = String(out.photo.askedColor || '').trim();
+          note = out.photo.fromVideo
+            ? (c
+              ? `هاي لقطة من فيديو القطعة — مش بالضرورة لون ${c}. الفيديو بيوريكي كل الألوان، افتحي رابط القطعة فوق 🌷`
+              : 'هاي لقطة من فيديو القطعة. الفيديو بيوريكي كل الألوان من رابط القطعة فوق 🌷')
+            : (c ? `هاي صورة القطعة — مش مخصّصة للون ${c}. رابط القطعة فوق فيه كل الصور 🌷` : '');
+        }
+        if (note) {
+          const sentNote = await sendMessage(token, customerId, note);
+          await recordBotMessage(convId, sentNote?.message_id || null, note);
+        }
+        await query(
+          `INSERT INTO ig_messages (conversation_id, mid, direction, text, attachment_url, attachment_type, ai)
+           VALUES ($1, NULL, 'out', '', $2, 'image', true)`,
+          [convId, out.photo.url]
+        ).catch(() => {});
+      } catch (e) {
+        // الصورةُ تعذّرت: الردُّ وصلَ ومعه الرابط، فلا تُترَكُ الزبونةُ بلا شيء
+        console.error('⚠️ صورة المنتج:', e.message);
+      }
+    }
+  }
+
   await query(
     `UPDATE ig_conversations
      SET last_message = $2, last_at = now(),

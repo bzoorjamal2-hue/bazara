@@ -117,7 +117,8 @@ async function loadCatalog(storeId) {
   if (hit && Date.now() - hit.ts < CATALOG_TTL) return hit.rows;
   const r = await query(
     `SELECT id, name, description, category, price, old_price, sale_ends_at, floor_price,
-            size, color, stock, size_stock, color_stock, featured
+            size, color, stock, size_stock, color_stock, featured,
+            images, image_url, video_url, color_images
      FROM products WHERE store_id = $1 AND hidden_at IS NULL
      ORDER BY featured DESC, created_at DESC LIMIT 60`,
     [storeId]
@@ -205,6 +206,47 @@ function onSale(p) {
   const old = p.old_price != null ? Number(p.old_price) : null;
   const ends = p.sale_ends_at ? new Date(p.sale_ends_at) : null;
   return Boolean(ends && ends > new Date() && old && old > Number(p.price));
+}
+
+// ───────────────────── وسائطُ القطعة ─────────────────────
+
+// لقطةٌ ساكنةٌ من رابطِ كلاوديناري. الفيديو يُرسَلُ كإطارٍ لا كفيديو: جلبُ الفيديو
+// مع كلِّ محادثةٍ يأكلُ حصّةَ الحسابِ المجّانيّ (٢٥ كريدت)، وقد تعطّلَ مرّةً
+// فاختفت صورُ الموقعِ كلُّها. الإطارُ مئةُ كيلوبايت، والفيديو يصلُ من الرابط.
+function poster(url) {
+  const u = String(url || '');
+  if (!u) return '';
+  if (/\/video\/upload\//.test(u)) {
+    const m = u.match(/^(https?:\/\/[^/]+\/[^/]+\/video\/upload\/)(.+)$/);
+    if (!m) return '';
+    const segs = m[2].split('/');
+    let vi = segs.findIndex((x) => /^v\d+$/.test(x));
+    if (vi === -1) vi = segs.length - 1;
+    const rest = segs.slice(vi).join('/').replace(/\.[a-z0-9]+(\?.*)?$/i, '');
+    return `${m[1]}so_0,f_jpg,q_auto,w_720,c_limit/${rest}.jpg`;
+  }
+  return u.includes('/upload/') ? u.replace('/upload/', '/upload/f_jpg,q_auto,w_720,c_limit/') : u;
+}
+
+// ما الذي نملكُ إراءَه لهذه القطعةِ بهذا اللون؟ تُرجِعُ { url, exact } — و**exact**
+// هي كلُّ الصدق: صورةُ اللونِ المطلوبِ بعينِه، أم لقطةٌ عامّةٌ لا تضمنُ اللون.
+// بلا هذا التمييزِ ترسلُ البائعةُ أخضرَ لمن طلبَ أحمرَ وتقولُ «تفضّلي الأحمر».
+export function photoFor(product, color = '') {
+  if (!product) return null;
+  const ci = product.color_images && typeof product.color_images === 'object' ? product.color_images : {};
+  const want = normalizeAr(String(color || ''));
+  if (want) {
+    for (const [k, v] of Object.entries(ci)) {
+      if (normalizeAr(k) !== want) continue;
+      const first = Array.isArray(v) ? v.filter(Boolean)[0] : v;
+      if (first) return { url: poster(first), exact: true, color: k };
+    }
+  }
+  const imgs = Array.isArray(product.images) ? product.images.filter(Boolean) : [];
+  const any = imgs[0] || product.image_url || '';
+  if (any) return { url: poster(any), exact: false, color: '' };
+  const v = poster(product.video_url);
+  return v ? { url: v, exact: false, color: '', fromVideo: true } : null;
 }
 
 // ───────────────────── سُلَّمُ المفاصلة ─────────────────────
@@ -385,6 +427,7 @@ ${address}
 - productIds: معرّفاتُ القطعِ التي تتكلّمينَ عنها فعلاً (${TOP_N} كحدٍّ أقصى، وفارغةٌ إن كان الردُّ تحيّةً أو جواباً عامّاً). إن طلبت الزبونةُ **تشكيلةً** أو «شو عندكم» أو «ابعثيلي أشوف» فضعي ثلاثَ قطعٍ لا واحدة، واذكريهنّ بالاسمِ في ردِّكِ. وإن سألت عن قطعةٍ بعينِها فضعيها وحدَها.
 - ولا تضعي معرّفَ قطعةٍ سبقَ أن أرسلتِها بهذه المحادثةِ إلّا إن سألت عنها الزبونةُ من جديد — يصلُها رابطُ كلِّ قطعةٍ مرّةً واحدة.
 - offerProductId/offerPrice: املئيهما فقط إن عرضتِ سعراً مخفَّضاً بردِّكِ هذا.
+- showPhoto: إن طلبت الزبونةُ أن **ترى** قطعةً أو لوناً ("بعتيلي صورة"، "بدي أشوف الأخضر"، "في صورة أوضح؟") فاملئي showPhoto بمعرّفِ القطعةِ واللونِ المطلوبِ إن ذكرته. نحن من يُرسلُ الصورةَ بعدَ ردِّكِ — فلا تَعِدي بصورةٍ بصيغةِ "رح أبعتلك" ولا تصفي صورةً لم ترَيْها، فقط أكملي كلامَكِ الطبيعيَّ واتركي الباقيَ لنا.
 - handoff: true إن وجبَ تسليمُ المحادثةِ لصاحبةِ المتجر.
 - order: مسوّدةُ الطلب — انظري «إتمامُ الطلب» أدناه.
 
@@ -410,6 +453,15 @@ const SCHEMA = {
     offerProductId: { type: 'string' },
     offerPrice: { type: 'number' },
     handoff: { type: 'boolean' },
+    // طلبُ عرضِ صورة: النموذجُ يقولُ ماذا تريدُ الزبونةُ أن ترى، والخادمُ يقرّرُ
+    // أيملكُ ذلك فعلاً أم لا. لا يُرسِلُ النموذجُ رابطاً ولا يصفُ صورةً لم يرَها.
+    showPhoto: {
+      type: 'object',
+      properties: {
+        productId: { type: 'string' },
+        color: { type: 'string' },
+      },
+    },
     // مسوّدةُ الطلب: يملؤُها النموذجُ ممّا قالته الزبونةُ فعلاً، حقلاً حقلاً، عبرَ
     // الرسائل. والخادمُ وحدَه يقرّرُ متى اكتملت ومتى تصيرُ طلباً حقيقيّاً.
     order: {
@@ -592,7 +644,22 @@ export function sanitize(out, { rows, bot, stage }) {
   order.missing = missing;
   order.ready = missing.length === 0;
 
-  return { reply, ids, offer, handoff: out.handoff === true, order };
+  // الصورةُ المطلوبة: من هذا المتجرِ وبلونٍ تملكُه القطعةُ فعلاً
+  let photo = null;
+  const wanted = out.showPhoto && typeof out.showPhoto === 'object' ? out.showPhoto : null;
+  if (wanted) {
+    const prod = byId.get(String(wanted.productId || '')) || byId.get(ids[0] || '') || null;
+    if (prod) {
+      const asked = String(wanted.color || '').trim();
+      const known = colorsOf(prod).find((c) => normalizeAr(c) === normalizeAr(asked));
+      const found = photoFor(prod, known || '');
+      if (found && found.url) {
+        photo = { productId: String(prod.id), name: prod.name, askedColor: known || asked, ...found };
+      }
+    }
+  }
+
+  return { reply, ids, offer, handoff: out.handoff === true, order, photo };
 }
 
 // رقمُ الجوّالِ الفلسطينيُّ بأشكالِه: 059… · 0599… · ‎+97059… · ‎97259…
