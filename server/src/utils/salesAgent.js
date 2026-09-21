@@ -12,7 +12,7 @@
 //   3) ANTHROPIC_API_KEY → Claude (أرقى جودة).
 
 import { query } from '../config/db.js';
-import { palestinize, stripEndearments, PS_SPEC, PS_VOICE } from './palestinian.js';
+import { palestinize, stripEndearments, genderFrom, PS_SPEC, PS_VOICE } from './palestinian.js';
 
 const CATALOG_TTL = 2 * 60 * 1000; // كاشُ كتالوجِ البائعة (أقصرُ من كاشِ المساعِدة: المخزونُ يتغيّر)
 const AI_CATALOG = 30;             // سقفُ القطعِ المُمرَّرةِ للنموذج (توكناتٌ أقل)
@@ -396,7 +396,7 @@ function catalogLine(p, bot, stageFor) {
 }
 
 // مُصدَّرةٌ ليفحصَها الاختبار: سياقٌ لا يصلُ النصَّ كأنّه لم يُلتقَطْ أصلاً.
-export function buildSystem({ storeName, bot, rows, stage, promo, lang, customerName, adRef, adPhotoSeen }) {
+export function buildSystem({ storeName, bot, rows, stage, promo, lang, customerName, adRef, adPhotoSeen, gender = "" }) {
   const tone = TONES[bot.bot_tone] || TONES.warm;
   const dialect = lang === 'en' ? 'English, warm and natural.' : (DIALECTS[bot.bot_dialect] || DIALECTS.ps);
   // الوصفُ يشرحُ اللهجة، والأمثلةُ تُسمِعُها. تُوضَعُ للفلسطينيّةِ وحدَها لأنّ صوتَها
@@ -508,7 +508,11 @@ ${address}
 - وإن ذكّرتْكِ الزبونةُ بسعرٍ اتّفقتِ معها عليه فعلاً في هذه المحادثة، فأثبتيه في offerPrice مع offerProductId ولا تُنكريه — الاتّفاقُ الذي قلتِه بنفسِكِ يُلزِمُكِ.
 ${notes ? `\nتعليماتٌ من صاحبةِ المتجرِ (تتقدَّمُ على ذوقِكِ لا على القواعدِ أعلاه):\n${notes}\n` : ''}
 كتالوجُ المتجرِ (المصدرُ الوحيدُ المسموح):
-${rows.map((p) => catalogLine(p, bot, stage)).join('\n')}`;
+${rows.map((p) => catalogLine(p, bot, stage)).join('\n')}${gender === 'm'
+  ? '\n\n⚠️ تنبيهٌ أخير: **من تكلّمينَه رجل** — قالَها بنفسِه («مرتي»، «خطيبتي»). كلُّ فعلٍ وضميرٍ بردِّكِ بالمذكّر: «شوف» لا «شوفي»، «بتفكّر» لا «بتفكّري»، «بدّك» لا «بدّكِ»، «حابب» لا «حابة». ولا كلمةَ دلالٍ معه إطلاقاً.'
+  : (gender === 'f'
+    ? '\n\n⚠️ تنبيهٌ أخير: **من تكلّمينَها امرأةٌ تشتري لنفسِها** — قالتْها بنفسِها. كلُّ فعلٍ وضميرٍ بردِّكِ بالمؤنّث، ولا تخلطي صيغتين بجملةٍ واحدة.'
+    : '')}`;
 }
 
 // ───────────────────── مزوّدو الذكاء ─────────────────────
@@ -835,7 +839,7 @@ export async function agentReply({ store, bot, messages, stage = 0, customerName
 
   if (canAi) {
     try {
-      const system = buildSystem({ storeName: store.name, bot, rows, stage: nextStage, promo, lang, customerName, adRef, adPhotoSeen });
+      const system = buildSystem({ storeName: store.name, bot, rows, stage: nextStage, promo, lang, customerName, adRef, adPhotoSeen, gender: genderFrom(messages) });
       const history = messages.slice(-AI_HISTORY).map((m) => ({ role: m.role, content: String(m.content).slice(0, 800) }));
       // الصورةُ تُلحَقُ بآخرِ رسالةٍ من الزبونةِ وحدَها: تاريخُ المحادثةِ نصٌّ،
       // والصورةُ هي ما وصلَ الآن.

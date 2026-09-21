@@ -17,7 +17,7 @@ import {
 import { feeForCity, cityOfVillage, flatInternalLocalities } from '../config/deliveryCities.js';
 import { extractOrderDraft } from '../utils/orderExtract.js';
 import { shouldResume, isAuthError, attachmentKind, burstDelay, adRefFrom } from '../controllers/instagram.controller.js';
-import { palestinize, stripEndearments } from '../utils/palestinian.js';
+import { palestinize, stripEndearments, genderFrom } from '../utils/palestinian.js';
 import { smalltalkType } from '../controllers/assistant.controller.js';
 import { orderProfit } from '../controllers/order.controller.js';
 
@@ -560,6 +560,22 @@ H('١٤ب) ملابسُ لا مودّة');
   // ومصفاةٌ تُفسدُ المعنى أسوأُ من لا مصفاة: «روحي» فعلُ أمرٍ بالفلسطينيّة
   t('«روحي عالرابط» فعلُ أمرٍ لا دلال', e('روحي عالرابط وشوفي الألوان') === 'روحي عالرابط وشوفي الألوان');
   t('وكلامُ البيعِ لا يُمَسّ', e('الطقم موجود بنمرة 46') === 'الطقم موجود بنمرة 46');
+  // ═ ومن تكلّمينَه: قرارٌ لا ترجيح ═
+  const G = (...said) => genderFrom(said.map((c) => ({ role: 'user', content: c })));
+  t('«بدي لمرتي اشي رسمي» ⇒ رجل', G('انا بدي لمرتي اشي رسمي') === 'm');
+  t('«خطيبتي» و«زوجتي» ⇒ رجل', G('هدية لخطيبتي') === 'm' && G('بدي لزوجتي فستان') === 'm');
+  t('«جوزي» و«مقاسي» ⇒ امرأة', G('جوزي بدو يشتريلي') === 'f' && G('مقاسي 40') === 'f');
+  t('«بدي لأمي» لا تدلُّ على أحد', G('بدي هدية لأمي') === '');
+  t('ولا تُقرَأُ من كلامِ البائعةِ نفسِها',
+    genderFrom([{ role: 'assistant', content: 'شو مقاس مرتك؟' }]) === '');
+  t('ودليلانِ متضادّانِ ⇒ صمتٌ لا تخمين', G('مرتي بلبس مقاس 40') === '');
+  const sysM = buildSystem({ storeName: st.name, bot, rows: rows.slice(0, 2), stage: 0, promo: null, lang: 'ar', customerName: '', gender: 'm' });
+  t('والقرارُ يصلُ النصَّ بالمذكّر', sysM.includes('من تكلّمينَه رجل') && sysM.includes('«حابب» لا «حابة»'));
+  // وآخرُ النصِّ أثقلُ من أوّلِه عندَ النموذج — فالتنبيهُ بعدَ الكتالوجِ لا قبلَه
+  t('ويُكتَبُ آخرَ النصِّ لا أوّلَه', sysM.lastIndexOf('من تكلّمينَه رجل') > sysM.lastIndexOf('كتالوجُ المتجرِ'));
+  t('وبلا دليلٍ لا تنبيهَ أصلاً',
+    !buildSystem({ storeName: st.name, bot, rows: rows.slice(0, 2), stage: 0, promo: null, lang: 'ar', customerName: '' }).includes('تنبيهٌ أخير'));
+
   t('والنصُّ يمنعُها كمان لا المصفاةُ وحدَها',
     buildSystem({ storeName: st.name, bot, rows: rows.slice(0, 2), stage: 0, promo: null, lang: 'ar', customerName: '' })
       .includes('ولا تقولي «حبيبي» أبداً'));
