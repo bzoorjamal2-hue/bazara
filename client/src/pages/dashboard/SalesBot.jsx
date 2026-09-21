@@ -540,8 +540,21 @@ function TryBox({ storeName, enabled }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const endRef = useRef(null);
+  const boxRef = useRef(null);
 
-  useEffect(() => { endRef.current?.scrollIntoView({ block: 'nearest' }); }, [chat, busy]);
+  // معاينةُ المحادثةِ تنزلُ لآخرِ رسالةٍ — **داخلَ صندوقِها وحدَه**.
+  //
+  // كان السطرُ `endRef.current?.scrollIntoView(...)`، وهو يمرّرُ كلَّ الأسلافِ
+  // لا الصندوقَ فقط — ومنهم الصفحةُ نفسُها. والصندوقُ بأسفلِ صفحةٍ طويلة، فكان
+  // مجرّدُ فتحِ التبويبِ يقذفُ التاجرةَ إلى آخرِ الصفحةِ قبلَ أن ترى إعداداً
+  // واحداً. وتمريرُ الصندوقِ بـscrollTop لا يلمسُ الصفحةَ إطلاقاً.
+  //
+  // ولا يجري أصلاً والمحادثةُ فارغة: أوّلُ فتحٍ لا شيءَ فيه ليُنزَلَ إليه.
+  useEffect(() => {
+    if (!chat.length) return;
+    const box = boxRef.current;
+    if (box) box.scrollTop = box.scrollHeight;
+  }, [chat, busy]);
 
   const send = async (preset) => {
     const body = String(preset ?? text).trim();
@@ -574,7 +587,7 @@ function TryBox({ storeName, enabled }) {
         </p>
       )}
 
-      <div className="max-h-[22rem] space-y-2 overflow-y-auto rounded-2xl border border-gold-400/15 bg-black/20 p-3">
+      <div ref={boxRef} className="max-h-[22rem] space-y-2 overflow-y-auto rounded-2xl border border-gold-400/15 bg-black/20 p-3">
         {chat.length === 0 && (
           <p className="py-6 text-center text-xs leading-relaxed text-stone-400">{t('salesBot.try.empty', { store: storeName })}</p>
         )}

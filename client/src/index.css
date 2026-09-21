@@ -162,6 +162,15 @@ table { max-width: 100%; }
 @media (prefers-reduced-motion: no-preference) {
   @keyframes bz-tab-pop { 0% { transform: scale(1); } 45% { transform: scale(1.22); } 100% { transform: scale(1); } }
   .animate-tab-pop { animation: bz-tab-pop 0.34s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+  /* دخولُ القسمِ الجديد. كان الانتقالُ بينَ أزرارِ الشريطِ قطعاً حادّاً: يختفي
+     محتوىً ويحلُّ آخرُ بالفريمِ نفسِه، فتُقرأُ الحركةُ ارتجاجاً لا تنقّلاً.
+     مئتانِ وعشرونَ مليّ ثانيةٍ برفعةِ ستِّ بكسلاتٍ تكفي ليصلَ الإحساسُ بأنّ
+     شيئاً جاءَ مكانَ شيء — أطولُ منها يصيرُ بطئاً يُنتظَر.
+     والحركةُ على الشفافيّةِ والإزاحةِ وحدَهما: كلتاهما على بطاقةِ الرسمِ فلا
+     تُعيدانِ تخطيطَ الصفحة، والقسمُ قد يكونُ جدولَ طلباتٍ طويلاً. */
+  @keyframes bz-page-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .bz-page-in { animation: bz-page-in 0.22s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
 }
 /* اسم المتجر الذهبي على السلايدر — تدرّج ذهبي دائم (غير متأثّر بالثيم) فوق الحجاب
    الداكن، مع بريق خفيف يمرّ عليه لإحساس فخم. */
@@ -4430,7 +4439,13 @@ html.dark .theme-pub .bz-oldprice { color: #8C857C; }
 .bz-tabbar button { color: #696764; }
 .bz-tabbar button > span:first-child { transition: background-color 0.2s ease, color 0.2s ease; }
 .bz-tabbar button.is-on { color: #0F0F0E; }
-.bz-tabbar button.is-on > span:first-child { background: #1F1E1D; color: #F9F9F8; }
+/* ‏--bz-knock: لونُ «الثقب» داخلَ الأيقونةِ الممتلئة، وهو **خلفيّةُ الحبّةِ نفسُها**.
+   كان مكتوباً ‎#fff‎ ثابتاً بالأيقونات (بابُ المتجرِ وسطورُ الإيصالِ ودائرةُ
+   الماسنجر)، والحبّةُ بالنهارِ غامقةٌ والأيقونةُ فاتحةٌ (‎#F9F9F8‎) — فصارَ
+   الأبيضُ على الفاتحِ فاختفت التفاصيلُ وبقيت كتلةٌ لا تُقرَأ. وبالليلِ الحبّةُ
+   فاتحةٌ والأيقونةُ غامقةٌ فظهرَ الأبيضُ سليماً؛ ولذلك بدا العطبُ نهاريّاً وحدَه.
+   فيلزمُ أن يساويَ هذا المتغيّرُ خلفيّةَ الحبّةِ حيثما أُعيدَ تعريفُها. */
+.bz-tabbar button.is-on > span:first-child { background: #1F1E1D; color: #F9F9F8; --bz-knock: #1F1E1D; }
 
 /* مساحةُ الإصبعِ لا مساحةُ الرسم. قِستُ الشريطَ على جوّالٍ ٣٧٥×٨١٢: ارتفاعُه
    ٥٨px لكنَّ الزرَّ لا يستجيبُ إلّا في ٤٠ منها — تسعةٌ ميّتةٌ فوقَه وتسعٌ تحته
@@ -4481,7 +4496,7 @@ html.dark .theme-pub .bz-tabbar {
 }
 html.dark .theme-pub .bz-tabbar button { color: #A79F95; }
 html.dark .theme-pub .bz-tabbar button.is-on { color: #F2F1EF; }
-html.dark .theme-pub .bz-tabbar button.is-on > span:first-child { background: #D6D2CB; color: #171615; }
+html.dark .theme-pub .bz-tabbar button.is-on > span:first-child { background: #D6D2CB; color: #171615; --bz-knock: #D6D2CB; }
 
 /* ═══════ شريط التنقّل: أسفلَ اللمس، وأعلى الفأرة ═══════
    العتبةُ ليست عرضاً وحده: آيباد برو أفقيّاً 1366px — أعرضُ من كثيرٍ من
@@ -4527,14 +4542,15 @@ html.dark .theme-pub .bz-tabbar button.is-on > span:first-child { background: #D
   }
   /* الحبّةُ تحيط بالبند كلّه لا بالأيقونة وحدها */
   .bz-tabbar button > span:first-child { background: transparent !important; padding: 0 !important; }
-  .bz-tabbar button.is-on { background: #1F1E1D; color: #F9F9F8; }
-  .bz-tabbar button.is-on > span:first-child { color: inherit; }
+  /* الحبّةُ هنا هي الزرُّ كلُّه، فالثقبُ يساوي خلفيّةَ الزرِّ لا خلفيّةَ span */
+  .bz-tabbar button.is-on { background: #1F1E1D; color: #F9F9F8; --bz-knock: #1F1E1D; }
+  .bz-tabbar button.is-on > span:first-child { color: inherit; background: transparent !important; }
   .bz-tabbar button svg { height: 1.15rem; width: 1.15rem; }
   @media (hover: hover) {
     .bz-tabbar button:not(.is-on):hover { background: rgba(23, 23, 23, 0.07); color: #0F0F0E; }
     html.dark .theme-pub .bz-tabbar button:not(.is-on):hover { background: rgba(239, 238, 236, 0.09); color: #F2F1EF; }
   }
-  html.dark .theme-pub .bz-tabbar button.is-on { background: #D6D2CB; color: #171615; }
+  html.dark .theme-pub .bz-tabbar button.is-on { background: #D6D2CB; color: #171615; --bz-knock: #D6D2CB; }
 }
 
 /* ═══════ عرضُ الصفحة: من حافةٍ لحافة ═══════

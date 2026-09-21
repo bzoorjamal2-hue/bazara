@@ -196,7 +196,10 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <div className="min-w-0">
+      {/* المفتاحُ هو القسم: تبديلُه يُعيدُ تركيبَ الحاوي فتعملُ حركةُ الدخولِ من
+          جديدٍ كلَّ مرّة. وبلا مفتاحٍ يبقى العنصرُ نفسَه فلا تُعادُ الحركةُ إلّا
+          أوّلَ مرّةٍ — وهذا ما يجعلُ التنقّلَ يبدو قاطعاً. */}
+      <div key={section} className="bz-page-in min-w-0">
         {section === 'overview' && !isAdmin && <Overview productsCount={productsCount} />}
         {section === 'analytics' && !isAdmin && <AnalyticsManager />}
         {section === 'finance' && !isAdmin && <FinanceManager />}

@@ -111,7 +111,7 @@ function OrdersIcon({ className = 'h-6 w-6', filled }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M5.5 2.8h13a1 1 0 0 1 1 1v17.4l-3-1.8-2.5 1.8-2.5-1.8-2.5 1.8-3-1.8V3.8a1 1 0 0 1 1-1Z" />
-      <path d="M9 8h6M9 12h6" stroke={filled ? '#fff' : 'currentColor'} />
+      <path d="M9 8h6M9 12h6" stroke={filled ? 'var(--bz-knock,#fff)' : 'currentColor'} />
     </svg>
   );
 }
@@ -119,8 +119,8 @@ function MessagesIcon({ className = 'h-6 w-6', filled }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <rect x="2.6" y="2.6" width="18.8" height="18.8" rx="5.6" />
-      <circle cx="12" cy="12" r="4.1" fill="none" stroke={filled ? '#fff' : 'currentColor'} />
-      <circle cx="17.2" cy="6.9" r="1.1" fill={filled ? '#fff' : 'currentColor'} stroke="none" />
+      <circle cx="12" cy="12" r="4.1" fill="none" stroke={filled ? 'var(--bz-knock,#fff)' : 'currentColor'} />
+      <circle cx="17.2" cy="6.9" r="1.1" fill={filled ? 'var(--bz-knock,#fff)' : 'currentColor'} stroke="none" />
     </svg>
   );
 }
@@ -131,8 +131,8 @@ function StoreGlyph({ className = 'h-6 w-6', filled }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M4.3 9.5 5.3 4.8A1.1 1.1 0 0 1 6.4 3.9H17.6A1.1 1.1 0 0 1 18.7 4.8L19.7 9.5A2.9 2.9 0 0 1 14.1 9.5A2.9 2.9 0 0 1 9.9 9.5A2.9 2.9 0 0 1 4.3 9.5Z" />
-      <path d="M5.9 11.4V18.7A1.4 1.4 0 0 0 7.3 20.1H16.7A1.4 1.4 0 0 0 18.1 18.7V11.4" stroke={filled ? '#fff' : 'currentColor'} />
-      <path d="M10 20.1V15.1A1 1 0 0 1 11 14.1H13A1 1 0 0 1 14 15.1V20.1" stroke={filled ? '#fff' : 'currentColor'} />
+      <path d="M5.9 11.4V18.7A1.4 1.4 0 0 0 7.3 20.1H16.7A1.4 1.4 0 0 0 18.1 18.7V11.4" stroke={filled ? 'var(--bz-knock,#fff)' : 'currentColor'} />
+      <path d="M10 20.1V15.1A1 1 0 0 1 11 14.1H13A1 1 0 0 1 14 15.1V20.1" stroke={filled ? 'var(--bz-knock,#fff)' : 'currentColor'} />
     </svg>
   );
 }
@@ -239,14 +239,34 @@ export default function BottomNav() {
       });
     };
     update();
+
+    // الخروجُ من التطبيقِ والعودةُ إليه: هذا هو الموضعُ الذي كان يعلقُ فيه.
+    //
+    // حين يذهبُ التطبيقُ للخلفيّةِ يجمّدُ النظامُ قياساتِ المنفذِ المرئيّ، وعندَ
+    // العودةِ يستعيدُ الشريطُ العلويَّ ارتفاعَه ويُعيدُ تخطيطَ الصفحة — **بلا أن
+    // يُطلِقَ resize ولا scroll على visualViewport**. فيبقى `vvInset` محسوباً على
+    // مقاسِ اللحظةِ التي غادرنا فيها، والشريطُ مرفوعٌ بمقدارِه إلى نصفِ الشاشة،
+    // ولا ينزلُ إلّا بأوّلِ تمريرٍ يوقظُ الحساب. فنوقظُه نحنُ عندَ العودة.
+    //
+    // والقياسُ يُعادُ مرّتين: فوراً، وبعدَ ٣٠٠ms — لأنّ استعادةَ شريطِ المتصفّحِ
+    // تستغرقُ إطاراتٍ، وقياسٌ يقعُ في منتصفِها يُثبّتُ رقماً خاطئاً مكانَ خاطئ.
+    const wake = () => { update(); setTimeout(update, 300); };
+    const onVisible = () => { if (document.visibilityState === 'visible') wake(); };
+
     vv.addEventListener('resize', update);
     vv.addEventListener('scroll', update);
     window.addEventListener('orientationchange', update);
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('pageshow', wake);   // العودةُ من ذاكرةِ الصفحاتِ (bfcache)
+    window.addEventListener('focus', wake);
     return () => {
       cancelAnimationFrame(raf);
       vv.removeEventListener('resize', update);
       vv.removeEventListener('scroll', update);
       window.removeEventListener('orientationchange', update);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('pageshow', wake);
+      window.removeEventListener('focus', wake);
     };
   }, []);
 
