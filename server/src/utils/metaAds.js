@@ -192,8 +192,15 @@ export async function createCreative(accountId, opts, token = ADS_DEV_TOKEN) {
   const body = {
     name: name.slice(0, 120),
     object_story_spec: { page_id: pageId, link_data: linkData },
-    degrees_of_freedom_spec: { creative_features_spec: { standard_enhancements: { enroll_status: 'OPT_OUT' } } },
   };
+  // كان هنا `degrees_of_freedom_spec.creative_features_spec.standard_enhancements`
+  // بـOPT_OUT — أي «لا تُعدّلي يا ميتا صورةَ التاجرةِ ولا نصَّها». وميتا ألغت الحقلَ
+  // وصارت ترفضُ التصميمَ كلَّه بسببِه:
+  //   «Including standard enhancements field in creative has been deprecated.
+  //    Please choose to set individual features instead.»
+  // فحُذِف. والبديلُ المذكورُ (إطفاءُ كلِّ ميزةٍ باسمِها) أسماؤُه تتغيّرُ عندَ ميتا
+  // واسمٌ واحدٌ مجهولٌ يُسقِطُ النداءَ كلَّه — فلا يُبنى على التخمين. والإطفاءُ متاحٌ
+  // للتاجرةِ من إعداداتِ حسابِها بـAds Manager، وهذا أضمنُ من حقلٍ يُلغى فجأة.
   // بلا هذا المعرّفِ لا يظهرُ الإعلانُ على إنستغرام بحسابِ التاجرةِ بل باسمِ الصفحة
   if (igId) body.object_story_spec.instagram_actor_id = igId;
 
@@ -263,10 +270,27 @@ export async function setCampaignStatus(campaignId, status, token = ADS_DEV_TOKE
 // حذفُ ما أُنشئَ حين يتعثّرُ المجرى بمنتصفِه. الحملةُ تُنشَأُ أوّلاً ثمّ المجموعةُ
 // ثمّ التصميمُ ثمّ الإعلان، فإن سقطَ أحدُها بقيَ ما قبلَه معلّقاً في حسابِ التاجرةِ
 // بلا أن تعرفَ به — حملاتٌ فارغةٌ تتراكمُ بعدَ كلِّ محاولةٍ فاشلة.
+// التراجعُ بعدَ تعثّر: يُحذَفُ ما أُنشئ بالعكسِ (الإعلانُ قبلَ المجموعةِ قبلَ الحملة).
+//
+// وكان يستعملُ فعلَ DELETE وحدَه، فردّت ميتا «The user does not have permission for
+// this action» على حملةٍ أنشأها التوكنُ نفسُه قبلَ ثوانٍ — فبقيت حملةٌ ومجموعةٌ
+// فارغتانِ بحسابِ التاجرة، وهو بالضبطِ ما جاءَ التراجعُ ليمنعَه.
+//
+// والطريقُ المضمونُ عندَ ميتا هو **تغييرُ الحالةِ إلى DELETED بـPOST** لا فعلُ
+// DELETE. فنبدأُ به، وDELETE يبقى محاولةً ثانيةً لما لا يقبلُ الحالة.
 async function rollback(ids, token) {
   for (const id of ids.filter(Boolean).reverse()) {
-    try { await graph(`/${id}`, { method: 'DELETE', token }); }
-    catch (e) { console.error('⚠️ تعذّر حذف', id, e.message); }
+    try {
+      await graph(`/${id}`, { method: 'POST', token, body: { status: 'DELETED' } });
+      continue;
+    } catch (e1) {
+      try {
+        await graph(`/${id}`, { method: 'DELETE', token });
+        continue;
+      } catch (e2) {
+        console.error('⚠️ تعذّر حذف', id, '—', e1.message, '/', e2.message);
+      }
+    }
   }
 }
 
