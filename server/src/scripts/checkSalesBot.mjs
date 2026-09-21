@@ -373,6 +373,11 @@ t('سُلِّمَت قبلَ دقيقةٍ ⇒ تبقى لها', !shouldResume({ 
 t('سُلِّمَت قبلَ ٥ ساعاتٍ ⇒ ما زالت لها', !shouldResume({ pausedAt: ago(5), now: NOW }));
 t('مضت ٦ ساعاتٍ بلا ردٍّ ⇒ يُرفَع', shouldResume({ pausedAt: ago(6), now: NOW }));
 t('ردَّت التاجرةُ بعدَه ⇒ يُرفَعُ فوراً', shouldResume({ pausedAt: ago(0.02), ownerRepliedAfter: true, now: NOW }));
+// وضعُ التجربة: التاجرةُ تُجرّبُ بنفسِها ولا أحدَ ينتظرُ ردّاً بشريّاً، فستُّ
+// ساعاتِ صمتٍ تُنهي كلَّ جلسةِ تجربةٍ عندَ أوّلِ تسليم.
+t('بالتجربة: يُرفَعُ بعدَ دقيقتين', shouldResume({ pausedAt: ago(0.05), testing: true, now: NOW }));
+t('وبالتجربةِ أيضاً لا يُرفَعُ قبلَها', !shouldResume({ pausedAt: ago(0.01), testing: true, now: NOW }));
+t('وبلا تجربةٍ تبقى الستُّ ساعات', !shouldResume({ pausedAt: ago(0.05), testing: false, now: NOW }));
 t('«ردّت» بقيمةٍ غيرِ منطقيّةٍ لا تُصدَّق', !shouldResume({ pausedAt: ago(1), ownerRepliedAfter: 'نعم', now: NOW }));
 // تسليمٌ جرى قبلَ قليلٍ ليس عُطلاً: المحادثةُ للتاجرةِ ستَّ ساعات، ثمّ تعودُ
 // البائعةُ وحدَها. العالقُ هو ما لن يعودَ أبداً — وذاك ما يُفحَص.

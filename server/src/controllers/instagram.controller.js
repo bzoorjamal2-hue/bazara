@@ -480,10 +480,15 @@ const PAUSE_HOURS = 6;
 //   • ختمٌ فارغٌ = تسليمٌ قديمٌ سبقَ الترقية ⇒ يسقط (وإلّا بقيَ أبديّاً)
 //   • ردَّت التاجرةُ بعدَه ⇒ تولّت فانتهى دورُه
 //   • مضت ستُّ ساعاتٍ ولم يردَّ أحدٌ ⇒ الصمتُ أسوأُ من ردٍّ آليّ
-export function shouldResume({ pausedAt, ownerRepliedAfter = false, now = Date.now() }) {
+// ووضعُ التجربةِ يُقصّرُ المهلةَ إلى دقيقتين. التاجرةُ حينَها تُجرّبُ بنفسِها، ولا
+// أحدَ ينتظرُ ردّاً بشريّاً — وستُّ ساعاتِ صمتٍ تعني أنّ كلَّ تسليمٍ يُنهي جلسةَ
+// التجربةِ كلَّها. تُطفأُ التجربةُ فتعودُ الستُّ ساعاتُ وحدَها.
+const PAUSE_HOURS_TEST = 2 / 60;
+
+export function shouldResume({ pausedAt, ownerRepliedAfter = false, now = Date.now(), testing = false }) {
   if (!pausedAt) return true;
   const hours = (now - new Date(pausedAt).getTime()) / 3600000;
-  return hours >= PAUSE_HOURS || ownerRepliedAfter === true;
+  return hours >= (testing ? PAUSE_HOURS_TEST : PAUSE_HOURS) || ownerRepliedAfter === true;
 }
 
 // ردٌّ آليٌّ على رسالةٍ واردة. كلُّ حارسٍ هنا مكتوبٌ لأنّ ما بعدَه يذهبُ لزبونةٍ
@@ -535,7 +540,7 @@ async function maybeAutoReply({ store, convId, customerId, text, isNew, who, cha
       ).catch(() => ({ rows: [] }));
       ownerRepliedAfter = after.rows.length > 0;
     }
-    if (!shouldResume({ pausedAt, ownerRepliedAfter })) return;
+    if (!shouldResume({ pausedAt, ownerRepliedAfter, testing: bot.bot_test_only === true })) return;
     await query(
       'UPDATE ig_conversations SET bot_paused = false, bot_paused_at = NULL, bot_replies = 0 WHERE id = $1',
       [convId]
