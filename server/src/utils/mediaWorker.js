@@ -53,7 +53,12 @@ const TONEMAP = 'zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap
 // أربعِ ثوانٍ، وبعدَ الإنقاصِ أوّلاً صارت جزءاً منها — وخادمُ Render أبطأُ من الحاسوبِ بكثير.
 async function transcode(src, out, hdr, fps) {
   const pre = fps > 30.5 ? 'fps=30,' : '';
-  const run = (vf) => ff(['-y', '-i', src, '-t', '180', '-vf', vf, '-fpsmax', '30',
+  // خيطٌ واحدٌ للفكِّ والفلترِ والترميز — ليس تفصيلاً: ffmpeg يفتحُ خيطاً لكلِّ نواةٍ يراها ولكلٍّ
+  // ذاكرتُه، وخادمُ Render يُري عشراتِ أنويةِ المضيفِ مع أنّ حصّتَنا ٥١٢ ميغا. فيديو 1080p من
+  // ١٤ ثانيةً قيسَ ٤٧٩ ميغا بستّ عشرةَ نواة ← انهارَ الخادمُ كلُّه (٢٣ أيلول)، وبخيطٍ واحدٍ ١٥٣.
+  // والسرعةُ لا تخسرُ شيئاً هناك: حصّةُ المعالجِ أصلاً جزءٌ من نواة.
+  const run = (vf) => ff(['-threads', '1', '-y', '-i', src, '-t', '180', '-vf', vf, '-fpsmax', '30',
+    '-threads', '1', '-filter_threads', '1',
     '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '26', '-profile:v', 'main', '-pix_fmt', 'yuv420p',
     '-c:a', 'aac', '-b:a', '96k', '-ac', '2', '-movflags', '+faststart', out]);
   if (!hdr) return run(`${pre}${SCALE}`);
@@ -74,7 +79,7 @@ export async function transcodeLocal(src, out, poster) {
   const fps = Number((probe.match(/([\d.]+) fps/) || [])[1]) || 30;
   await transcode(src, out, hdr, fps);
   // الغلافُ من الناتجِ لا من الأصل: مدوَّرٌ ومطابَقُ الألوانِ كما سيُرى
-  await ff(['-y', '-ss', '0.3', '-i', out, '-frames:v', '1', '-q:v', '4', poster]);
+  await ff(['-threads', '1', '-y', '-ss', '0.3', '-i', out, '-frames:v', '1', '-q:v', '4', poster]);
   return { hdr };
 }
 
@@ -146,11 +151,20 @@ export async function jobStatus(id) {
   return r.rows[0] || null;
 }
 
-/** عند الإقلاع: ما انقطعَ بإعادةِ تشغيلٍ يُستأنَف */
+/**
+ * عند الإقلاع: ما انقطعَ بإعادةِ تشغيلٍ يُستأنَف — مرّةً واحدة.
+ * مهمّةٌ «قيدَ المعالجة» عند الإقلاعِ إمّا قطعَها نشرٌ جديد، أو هي نفسُها أسقطَت الخادم (نفادُ ذاكرة).
+ * والثانيةُ لو استُؤنفَت بلا حدٍّ لأسقطَته ثانيةً وثالثةً والموقعُ كلُّه واقف. فنَسِمُها بـ«resumed»
+ * عند الاستئناف، ومن وُجدَت موسومةً وما زالت عالقةً فقد أسقطَته مرّتين: تُترَكُ خطأً.
+ */
 export async function resumePending() {
-  const r = await query("SELECT id, src_key FROM media_jobs WHERE status IN ('queued','processing') ORDER BY created_at")
+  await query(`UPDATE media_jobs SET status = 'error', error = 'أوقفَت الخادمَ مرّتين — لم تُستأنَف', updated_at = now()
+               WHERE status = 'processing' AND error = 'resumed'`).catch(() => {});
+  const r = await query(`UPDATE media_jobs SET error = 'resumed' WHERE status IN ('queued','processing')
+                         RETURNING id, src_key, created_at`)
     .catch(() => ({ rows: [] }));
   if (!r.rows.length) return;
+  r.rows.sort((a, b) => a.created_at - b.created_at);
   console.log(`↻ استئنافُ ${r.rows.length} فيديو قيدَ المعالجة`);
   queue.push(...r.rows);
   drain();
