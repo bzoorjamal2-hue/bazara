@@ -86,8 +86,19 @@ async function migrateImage(srcUrl) {
 async function migrateVideo(vpart) {
   const id = newId(), src = tmp(`${id}.mp4`), out = tmp(`${id}-720.mp4`), poster = tmp(`${id}-poster.jpg`);
   try {
-    // المصدرُ بدقّةٍ أعلى ممّا سنُخرج (١٢٨٠) وجودةٍ جيّدة — لا الأصلُ كاملاً: يكفي وينزلُ أخفّ
-    await download(`${CLD}/video/upload/f_mp4,vc_h264,q_auto:good,w_1280,c_limit/${vpart}.mp4`, src);
+    // المصدرُ بدقّةٍ أعلى ممّا سنُخرج (١٢٨٠) وجودةٍ جيّدة — يكفي وينزلُ أخفَّ من الأصل.
+    // لكنّ الفيديو الكبيرَ يُحضِّرُه كلاوديناري بالخلفيّةِ عند أوّلِ طلبٍ ويردُّ 423 — وقعَ هذا
+    // بالتشغيلِ الأوّل. عندها نأخذُ الأصلَ نفسَه بلا امتداد (بلا تحويلٍ فلا 423، ومعالجُنا يقرأُ
+    // HEVC/HDR)، ثمّ نعودُ للمحوَّلِ بعد انتظارٍ إن فشلَ الأصلُ أيضاً.
+    const derived = `${CLD}/video/upload/f_mp4,vc_h264,q_auto:good,w_1280,c_limit/${vpart}.mp4`;
+    const original = `${CLD}/video/upload/${vpart}`;
+    const tries = [derived, original, 'wait', derived, 'wait', derived];
+    let last;
+    for (const u of tries) {
+      if (u === 'wait') { await new Promise((r) => setTimeout(r, 30000)); continue; }
+      try { await download(u, src); last = null; break; } catch (e) { last = e; }
+    }
+    if (last) throw last;
     await transcodeLocal(src, out, poster);
     await putObject(`v/${id}/720.mp4`, fs.readFileSync(out), 'video/mp4');
     await putObject(`v/${id}/poster.jpg`, fs.readFileSync(poster), 'image/jpeg');
