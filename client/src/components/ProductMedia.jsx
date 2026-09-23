@@ -61,6 +61,38 @@ export function mediaRatio(product) {
   return anyImage ? '4 / 5' : '9 / 16';
 }
 
+/**
+ * النسبةُ الحقيقيّةُ لأوّلِ وسيطة (صورةِ الغلافِ أو لقطةِ الفيديو)، محصورةً بين ٩:١٦ و١:١.
+ * الإطارُ الثابتُ ٤:٥ كان يضعُ صورةَ الجوّالِ الطوليّة (٩:١٦ — أغلبُ صورِ التاجرات) «contain»
+ * بفراغٍ أبيضَ على الجنبين فتبدو القطعةُ صغيرةً ضائعة. نقيسُها مرّةً ونحفظُها للمنتج، فالزيارةُ
+ * التالية تُرسَمُ بالنسبةِ الصحيحةِ من أوّلِ إطار بلا قفزة. تُقاسُ الأولى وحدَها لا المعروضة،
+ * فاختيارُ لونٍ لا يغيّرُ الإطار (وهو ما يحميه mediaRatio أصلاً).
+ */
+const RATIO_KEY = 'bz_media_ratio';
+const readRatios = () => { try { return JSON.parse(localStorage.getItem(RATIO_KEY) || '{}'); } catch { return {}; } };
+function useNaturalRatio(product) {
+  const id = product?.id || '';
+  const [r, setR] = useState(() => (id ? readRatios()[id] || null : null));
+  useEffect(() => {
+    if (!id) return undefined;
+    const first = productMedia(product, '')[0];
+    const src = first?.type === 'video' ? cldVideoPoster(first.src) : first?.src;
+    if (!src || src === MEDIA_PH) return undefined;
+    let live = true;
+    const img = new Image();
+    img.onload = () => {
+      if (!live || !img.naturalWidth || !img.naturalHeight) return;
+      const v = Math.min(1, Math.max(9 / 16, img.naturalWidth / img.naturalHeight));
+      const n = Math.round(v * 1000) / 1000;
+      setR(n);
+      try { const all = readRatios(); all[id] = n; const ks = Object.keys(all); if (ks.length > 300) delete all[ks[0]]; localStorage.setItem(RATIO_KEY, JSON.stringify(all)); } catch { /* ممتلئ */ }
+    };
+    img.src = first.type === 'video' ? src : cldThumb(src, 400);
+    return () => { live = false; };
+  }, [id, product]);
+  return r;
+}
+
 function PlayBadge({ className = 'h-5 w-5' }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
@@ -105,7 +137,13 @@ export default function ProductMedia({
   const idx = Math.min(i, list.length - 1);
   const cur = list[idx] || list[0];
   const images = useMemo(() => list.filter((m) => m.type === 'image').map((m) => m.src), [list]);
-
+  const natural = useNaturalRatio(product);
+  // الإطارُ بنسبةِ الوسيطة، وعرضُه يضيقُ مع سقفِ الارتفاع — وإلا حصرَ max-height الارتفاعَ وبقيَ
+  // العرضُ كاملاً فعادت الأشرطةُ البيضاءُ على الجنبين
+  const cap = page ? 'min(74svh, 640px)' : 'min(52svh, 460px)';
+  const stageStyle = natural
+    ? { aspectRatio: String(natural), maxWidth: `min(100%, calc(${cap} * ${natural}))` }
+    : { aspectRatio: mediaRatio(product) };
 
   // الانتقالُ عن الفيديو يوقفه — كان يظلُّ يعملُ بصوتِه خلفَ صورةٍ ساكنة
   useEffect(() => {
@@ -158,7 +196,7 @@ export default function ProductMedia({
       <div
         ref={stageRef}
         className={`bz-stage ${page ? '' : 'bz-stage-sm'} group relative mx-auto flex w-full max-w-full items-center justify-center overflow-hidden rounded-2xl`}
-        style={{ aspectRatio: mediaRatio(product), touchAction: 'pan-y' }}
+        style={{ ...stageStyle, touchAction: 'pan-y' }}
         onTouchStart={(e) => {
           // اللمسُ على الفيديو للتحكّمِ به لا للسحبِ بين الوسائط
           if (e.target instanceof Element && e.target.closest('video')) { touch.current = null; return; }

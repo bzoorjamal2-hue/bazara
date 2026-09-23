@@ -6,6 +6,10 @@ import { VitePWA } from 'vite-plugin-pwa';
 // تلقائياً بدل أن تُعرض بشكلٍ قديمٍ للبيانات فتُسقط الصفحة.
 const BUILD_ID = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 8) || String(Date.now().toString(36));
 
+// وجهةُ الوكيل: الخادمُ المحلّيُّ افتراضاً، وAPI_PROXY لمعاينةِ الواجهةِ على بياناتِ الإنتاج بلا تشغيلِ
+// الخادمِ محلّياً (المحلّيُّ متّصلٌ بقاعدةِ الإنتاج ويشغّلُ مهامَّ خلفيّة) — والإنتاجُ لا يسمحُ بـCORS من localhost.
+const API_TARGET = process.env.API_PROXY || 'http://localhost:5000';
+
 export default defineConfig({
   define: { __BUILD_ID__: JSON.stringify(BUILD_ID) },
   plugins: [
@@ -78,7 +82,7 @@ export default defineConfig({
     // وكيل التطوير: يحوّل طلبات /api إلى الخادم المحلي لتفادي مشاكل CORS/الكوكيز
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: API_TARGET,
         changeOrigin: true,
       },
     },
@@ -90,7 +94,7 @@ export default defineConfig({
     port: 4173,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: API_TARGET,
         changeOrigin: true,
       },
     },
