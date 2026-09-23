@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import dotenv from 'dotenv';
+import { r2Enabled, putObject } from '../utils/r2.js';
 
 dotenv.config();
 
@@ -275,8 +276,29 @@ export async function getSenderProfile(pageToken, senderId, channel = 'instagram
 const CLD_CLOUD = process.env.CLOUDINARY_CLOUD || 'dkzrnu4cs';
 const CLD_PRESET = process.env.CLOUDINARY_PRESET || 'bazara_unsigned';
 
+// محرّكُ بازارا (R2) أوّلاً: نجلبُ المرفقَ بأنفسِنا ونخزّنُه باسمٍ عشوائيّ. سقفُ ٢٥ ميغا —
+// مرفقاتُ إنستغرام صورٌ ومقاطعُ صوتٍ قصيرة، وما فوقَ ذلك يبقى برابطِ ميتا.
+const MIRROR_EXT = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif',
+  'video/mp4': 'mp4', 'audio/mp4': 'm4a', 'audio/mpeg': 'mp3', 'audio/aac': 'aac', 'audio/wav': 'wav' };
+
+async function mirrorToR2(url, folder) {
+  const res = await fetch(url);
+  if (!res.ok) return url;
+  const type = String(res.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
+  const ext = MIRROR_EXT[type];
+  const size = Number(res.headers.get('content-length') || 0);
+  if (!ext || size > 25 * 1024 * 1024) return url;
+  const buf = Buffer.from(await res.arrayBuffer());
+  if (buf.length > 25 * 1024 * 1024) return url;
+  return putObject(`m/${folder}/${crypto.randomBytes(16).toString('hex')}.${ext}`, buf, type);
+}
+
 export async function mirrorRemote(url, folder = 'ig') {
-  if (!url || !CLD_CLOUD || !CLD_PRESET) return url;
+  if (!url) return url;
+  if (r2Enabled()) {
+    try { return await mirrorToR2(url, folder); } catch { return url; }
+  }
+  if (!CLD_CLOUD || !CLD_PRESET) return url;
   try {
     const form = new URLSearchParams({ file: url, upload_preset: CLD_PRESET, folder });
     const res = await fetch(`https://api.cloudinary.com/v1_1/${CLD_CLOUD}/auto/upload`, {

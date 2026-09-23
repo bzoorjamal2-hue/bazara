@@ -3,11 +3,33 @@ import { CLOUDINARY_CLOUD, CLOUDINARY_PRESET } from '../config/site.js';
 // هل الرفع المباشر مفعّل؟ (تمّت تهيئة Cloudinary)
 export const cloudinaryEnabled = Boolean(CLOUDINARY_CLOUD && CLOUDINARY_PRESET);
 
+/* ── محرّكُ بازارا (R2) ──
+   روابطُه بصيغةٍ ثابتةٍ تُشتقُّ منها المقاساتُ بلا طلبٍ ولا رصيد (utils/media.js يرفعُها،
+   server/src/controllers/media.controller.js يوقّعُها — والصيغةُ عقدٌ بين الثلاثة):
+     صورة  …/i/<id>/{32,480,960,1600}.{webp|jpg|png}  والمخزَّنُ بالقاعدةِ ‎1600
+     فيديو …/v/<id>/720.mp4  وغلافُه بجانبِه ‎poster.jpg
+   فكلُّ دالّةٍ هنا تسألُ المحرّكَ أوّلاً، ثمّ تمضي لكلاوديناري كما كانت. والصفحاتُ التي تستعملُها
+   (أربعةٌ وأربعون ملفّاً) لا تعرفُ الفرق. */
+const BZ_IMG = /^(https?:\/\/.+\/i\/[a-f0-9]{32}\/)(32|480|960|1600)\.(webp|jpg|png)$/;
+const BZ_VID = /^(https?:\/\/.+\/v\/[a-f0-9]{32}\/)720\.mp4$/;
+export const isBzVideo = (u) => BZ_VID.test(String(u || ''));
+function bzImg(url, w) {
+  const m = BZ_IMG.exec(String(url || ''));
+  if (!m) return '';
+  const pick = w <= 32 ? 32 : w <= 480 ? 480 : w <= 960 ? 960 : 1600; // أصغرُ مقاسٍ يغطّي المطلوب
+  return `${m[1]}${pick}.${m[3]}`;
+}
+function bzPoster(url) {
+  const m = BZ_VID.exec(String(url || ''));
+  return m ? `${m[1]}poster.jpg` : '';
+}
+const widthOf = (transform) => Number(/w_(\d+)/.exec(transform)?.[1]) || 1600;
+
 // صورة غلاف (أول لقطة) من فيديو Cloudinary — تظهر بكل الأجهزة بما فيها iOS.
 // نبنيها من قاعدة الفيديو النظيفة حتى لا تتضارب مع تحويلات الفيديو (f_mp4/vc_h264)
 // التي كانت تُنتج رابطاً معطوباً (صورة سوداء/علامة استفهام).
 export function cldVideoPoster(url, width = 500) {
-  return cldFrom(url, `f_auto,q_auto,w_${width},c_limit`) || '';
+  return bzPoster(url) || cldFrom(url, `f_auto,q_auto,w_${width},c_limit`) || '';
 }
 
 // يبني تحويلاً على مصدرٍ من كلاوديناري صورةً كان أو فيديو.
@@ -18,6 +40,8 @@ export function cldVideoPoster(url, width = 500) {
 // بلا نسخةٍ ضبابيّةٍ ولا اختيارِ مقاس. ومتجرٌ كلُّ بضاعتِه فيديو = ميغابايتٌ
 // من اللقطاتِ بالصفحةِ الواحدة.
 function cldFrom(url, transform) {
+  const bz = bzImg(url, widthOf(transform)) || bzPoster(url);
+  if (bz) return bz;
   if (typeof url !== 'string' || !url.includes('/upload/')) return '';
   if (url.includes('/video/upload/')) {
     const v = cldVideoParts(url);
@@ -152,6 +176,9 @@ export function cldOptimized(url, kind = 'image') {
 // صورة مصغّرة محسّنة للشبكات (بطاقات المنتجات) — تقلّل الحجم كثيراً وتسرّع التحميل.
 // width بالبكسل (الحد الأقصى)؛ المتصفّح يصغّرها للعرض المطلوب.
 export function cldThumb(url, width = 500) {
+  // فيديو المحرّكِ يُطلَبُ هنا صورةً (بطاقة، سلّة، قائمة) — غلافُه لا ملفُّ الـmp4
+  const bz = bzImg(url, width) || bzPoster(url);
+  if (bz) return bz;
   if (typeof url !== 'string' || !url.includes('/upload/')) return url;
   return cldFrom(url, `f_auto,q_auto,w_${width},c_limit,dpr_auto`) || url;
 }
@@ -160,6 +187,10 @@ export function cldThumb(url, width = 500) {
 // فبطاقة بعرض 180px على جوال تنزّل ~200px بدل 500px (توفير بيانات ملموس).
 // بلا dpr_auto عمداً — واصفات w تتكفّل بالكثافة، وجمعهما معاً يضاعف الحجم بلا داعٍ.
 export function cldSrcSet(url, widths = [200, 300, 400, 600, 800]) {
+  // المحرّكُ بثلاثةِ مقاساتٍ حقيقيّةٍ لا بخمسةٍ مولَّدة — والمتصفّحُ يختارُ منها بالطريقةِ نفسِها.
+  // والفيديو بلا srcset: غلافُه مقاسٌ واحدٌ يأتي بالـsrc.
+  if (BZ_IMG.test(String(url || ''))) return [480, 960, 1600].map((w) => `${bzImg(url, w)} ${w}w`).join(', ');
+  if (isBzVideo(url)) return undefined;
   if (typeof url !== 'string' || !url.includes('/upload/')) return undefined;
   const set = widths
     .map((w) => [cldFrom(url, `f_auto,q_auto,w_${w},c_limit`), w])
@@ -171,6 +202,10 @@ export function cldSrcSet(url, widths = [200, 300, 400, 600, 800]) {
 // نسخة ضئيلة ضبابية (LQIP) تُعرض خلف الصورة حتى تجهز — تصل خلال أجزاء من الثانية
 // (بضعة كيلوبايت) فترى الزبونة ملامح القطعة وألوانها فوراً بدل مربّع رمادي.
 export function cldBlur(url, width = 32) {
+  // المحرّك: مقاسُ ٣٢ يُولَّدُ عند الرفعِ لهذا بالذات. والفيديو بلا نسخةٍ ضئيلة — غلافُه كاملٌ
+  // ولا يصلحُ خلفيّةً خاطفة.
+  if (BZ_IMG.test(String(url || ''))) return bzImg(url, 32);
+  if (isBzVideo(url)) return undefined;
   if (typeof url !== 'string' || !url.includes('/upload/')) return undefined;
   return cldFrom(url, `f_auto,q_auto:low,w_${width},e_blur:600,c_limit`) || undefined;
 }
@@ -254,6 +289,9 @@ export async function uploadToCloudinary(file, resourceType = 'auto', onProgress
 // ‏c_lfill لا c_fill: الثانيةُ تُكبّرُ المصدرَ ليبلغَ العرضَ المطلوب، والتكبيرُ لا
 // يُضيفُ تفصيلاً بل يُذيبُه. الأولى تقصُّ للنسبةِ ولا تتجاوزُ دقّةَ الأصلِ أبداً.
 export function heroCrop(url, w, ar) {
+  // المحرّكُ لا يقصّ: المقاسُ الأقربُ والقصُّ بـobject-cover عند العرض (الصورةُ أو غلافُ الفيديو)
+  const bz = bzImg(url, w) || bzPoster(url);
+  if (bz) return bz;
   const s = String(url || '');
   const m = s.match(/^(https?:\/\/[^/]+\/[^/]+\/(image|video)\/upload\/)(.+)$/);
   if (!m) return '';

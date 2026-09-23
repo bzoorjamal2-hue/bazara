@@ -1,4 +1,5 @@
 import { query } from '../config/db.js';
+import { isOwnMediaUrl } from '../utils/r2.js';
 
 async function getUserStore(userId) {
   const r = await query('SELECT id FROM stores WHERE user_id = $1', [userId]);
@@ -9,7 +10,7 @@ async function getUserStore(userId) {
 export async function createStory(req, res, next) {
   const mediaUrl = String(req.body.mediaUrl || '').trim();
   const mediaType = req.body.mediaType === 'video' ? 'video' : 'image';
-  if (!/^https:\/\/res\.cloudinary\.com\//.test(mediaUrl)) {
+  if (!isOwnMediaUrl(mediaUrl)) {        // كلاوديناري القديم أو محرّكُ بازارا — لا روابطَ خارجيّة
     return res.status(400).json({ error: 'وسائط غير صالحة.' });
   }
   const caption = String(req.body.caption || '').trim().slice(0, 200);

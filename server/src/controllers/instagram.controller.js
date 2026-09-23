@@ -6,6 +6,7 @@ import { notifyUser } from '../utils/notify.js';
 import { feeForCity, flatInternalLocalities, cityOfVillage } from '../config/deliveryCities.js';
 import { extractOrderDraft } from '../utils/orderExtract.js';
 import { imageBlock, transcribe, canHear } from '../utils/mediaUnderstand.js';
+import { isOwnMediaUrl } from '../utils/r2.js';
 import {
   loadBot, botActiveNow, agentReply, countReply, MAX_BOT_REPLIES, testModeAllows, variantAvailable,
   effectiveFloor, photoFor,
@@ -1400,8 +1401,8 @@ export async function sendReply(req, res, next) {
   const replyToMid = String(req.body.replyToMid || '').trim();
   if (!text && !attachmentUrl) return res.status(400).json({ error: 'الرسالة فارغة.' });
   // الرابطَ تجلبُه خوادمُ Meta بنفسها، فقبولُ أيِّ عنوانٍ يجعلُ حقلَ الردِّ باباً
-  // نُملي منه على خادمِهم ما يطلب. نقصرُه على مستضيفِ صورِنا وحدَه.
-  if (attachmentUrl && !attachmentUrl.startsWith('https://res.cloudinary.com/')) {
+  // نُملي منه على خادمِهم ما يطلب. نقصرُه على مستضيفِ صورِنا وحدَه (كلاوديناري أو محرّكُنا).
+  if (attachmentUrl && !isOwnMediaUrl(attachmentUrl)) {
     return res.status(400).json({ error: 'رابط المرفق غير مقبول.' });
   }
   try {

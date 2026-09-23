@@ -245,7 +245,10 @@
     "dropHint": "Drag a video here or pick one from your device — MP4 or MOV, ideally under 15 seconds.",
     "chooseFile": "Choose a video from your device",
     "uploading": "Uploading...",
-    "notVideo": "The selected file is not a video."
+    "notVideo": "The selected file is not a video.",
+    "processing": "Preparing the video to play on every device — ready in a few minutes, and you can save now.",
+    "ready": "Video ready ✓",
+    "noUploader": "Uploading is unavailable right now. Paste a video link instead."
   },
   "home": {
     "heroTitle": "Your destination for",

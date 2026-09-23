@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { resizeImageFile } from '../utils/image.js';
-import { uploadToCloudinary, cldOptimized, cloudinaryEnabled } from '../utils/cloudinary.js';
+import { uploadMedia } from '../utils/media.js';
 import { LinkIcon, CameraIcon, TrashIcon, CheckIcon, ImageIcon } from './icons.jsx';
 import { isKind, droppedUrl } from '../utils/dropFile.js';
 
@@ -31,16 +31,10 @@ export default function ImageInput({ value, onChange, round = false, label, plac
     if (!isKind(file, 'image')) { setErr(t('image.notImage')); return; }
     setErr(''); setPct(0); setBusy(true);
     try {
-      if (cloudinaryEnabled) {
-        // رفع بجودة عالية إلى Cloudinary (بدون ضغط يقلّل الدقة)
-        const url = await uploadToCloudinary(file, 'image', setPct);
-        // الرابطُ يُخزَّنُ نظيفاً: التحويلُ شأنُ موضعِ العرضِ لا شأنُ التخزين.
-        // وكان يُخزَّنُ محوّلاً فتُبنى فوقَه سلسلةٌ بكلِّ عرض.
-        onChange(url);
-      } else {
-        const dataUrl = await resizeImageFile(file);
-        onChange(dataUrl);
-      }
+      // محرّكُ بازارا (أربعةُ مقاساتٍ تُصغَّرُ هنا بالمتصفّح) ← وإلّا كلاوديناري ← وإلّا صورةٌ مضمّنة.
+      // الرابطُ يُخزَّنُ نظيفاً: التحويلُ شأنُ موضعِ العرضِ لا شأنُ التخزين.
+      const url = await uploadMedia(file, 'image', setPct);
+      onChange(url || await resizeImageFile(file));
       setDone(true);
     } catch (er) {
       setErr(er.message);

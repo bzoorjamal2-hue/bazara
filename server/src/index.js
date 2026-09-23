@@ -32,6 +32,9 @@ import { goboxWebhook, syncAllGoboxStores } from './controllers/gobox.controller
 import instagramRoutes from './routes/instagram.routes.js';
 import botRoutes from './routes/bot.routes.js';
 import adsRoutes from './routes/ads.routes.js';
+import mediaRoutes from './routes/media.routes.js';
+import { resumePending } from './utils/mediaWorker.js';
+import { r2Enabled } from './utils/r2.js';
 import { verifyWebhook, receiveWebhook, igLoginRedirect, igCallback, igChoose } from './controllers/instagram.controller.js';
 import { refreshPageFields } from './config/instagram.js';
 import { decrypt } from './config/opost.js';
@@ -164,6 +167,7 @@ app.use('/api/gobox', goboxRoutes);
 app.use('/api/instagram', instagramRoutes);
 app.use('/api/bot', botRoutes);
 app.use('/api/ads', adsRoutes);
+app.use('/api/media', mediaRoutes);
 
 // مسارات SEO (على الجذر)
 app.get('/robots.txt', robots);
@@ -729,6 +733,17 @@ END $$;`,
     // الحسابُ الإعلانيُّ الذي ربطَتْه التاجرةُ وعملتُه — العملةُ تُقرأُ من ميتا لا تُفترَض
     "ALTER TABLE stores ADD COLUMN IF NOT EXISTS ads_account_id VARCHAR(40) NOT NULL DEFAULT '';",
     "ALTER TABLE stores ADD COLUMN IF NOT EXISTS ads_currency VARCHAR(8) NOT NULL DEFAULT '';",
+    // محرّكُ الوسائط: طابورُ معالجةِ الفيديو بالقاعدةِ لا بالذاكرة — إعادةُ تشغيلِ الخادمِ
+    // بمنتصفِ مهمّةٍ لا تُضيّعُها (utils/mediaWorker.js ← resumePending)
+    `CREATE TABLE IF NOT EXISTS media_jobs (
+      id VARCHAR(32) PRIMARY KEY,
+      src_key TEXT NOT NULL,
+      status VARCHAR(12) NOT NULL DEFAULT 'queued',
+      error TEXT,
+      user_id VARCHAR(64) NOT NULL DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );`,
   ];
   // كل جملة على حدة: فشل واحدة لا يمنع البقية
   for (const sql of steps) {
@@ -761,6 +776,8 @@ function start() {
     console.log(`🚀 الخادم يعمل على المنفذ ${PORT}`);
   });
   setTimeout(() => { refreshAllPageFields().catch(() => {}); }, 20 * 1000);
+  // فيديو كان قيدَ المعالجةِ حين أُعيدَ تشغيلُ الخادم — يُستأنَف (محرّكُ الوسائط)
+  if (r2Enabled()) setTimeout(() => { resumePending().catch(() => {}); }, 30 * 1000);
   // مزامنة خلفية لحالات الشحنات — احتياط عن الـ webhooks (هي المصدر الفوري الأساسي).
   // مهمّ لتوفير حوسبة Neon المجانية: كل تشغيلة توقظ القاعدة (Neon ينام بلا نشاط)، فكل
   // 10 دقائق كان يبقيها صاحية ~نصف الوقت ويستنزف الحد الشهري. رفعناها للافتراضي 30

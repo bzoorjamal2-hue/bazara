@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { uploadToCloudinary, cldOptimized, cldVideoMp4, cloudinaryEnabled } from '../utils/cloudinary.js';
+import { cldOptimized, cldVideoMp4, cloudinaryEnabled, isBzVideo } from '../utils/cloudinary.js';
+import { uploadMedia, waitVideoReady } from '../utils/media.js';
 import { LinkIcon, VideoIcon, TrashIcon, CheckIcon } from './icons.jsx';
 import { isKind, droppedUrl } from '../utils/dropFile.js';
 
@@ -15,6 +16,8 @@ export default function VideoInput({ value, onChange, label, hint = '' }) {
   const [drag, setDrag] = useState(false);
   const [done, setDone] = useState(false);
   const [urlMode, setUrlMode] = useState(!cloudinaryEnabled);
+  // فيديو المحرّكِ يُعالَجُ على الخادمِ بعد الرفع: 'processing' ثمّ 'ready' — والحفظُ لا ينتظرُه
+  const [stage, setStage] = useState('');
   // معاينة محلّية من الجهاز — تظهر فوراً بلا انتظار معالجة السحابة (يشغّلها المتصفّح مباشرة)
   const [localPreview, setLocalPreview] = useState('');
   const fileRef = useRef(null);
@@ -33,10 +36,18 @@ export default function VideoInput({ value, onChange, label, hint = '' }) {
     if (!isKind(file, 'video')) { setErr(t('video.notVideo')); return; }
     // نعرض الفيديو من الجهاز مباشرة — تظهر المعاينة قبل انتهاء الرفع وبلا اعتماد على التحويل السحابي
     setLocalPreview((prev) => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(file); });
-    setErr(''); setPct(0); setBusy(true);
+    setErr(''); setPct(0); setBusy(true); setStage('');
     try {
-      const link = await uploadToCloudinary(file, 'video', setPct);
-      onChange(cldOptimized(link, 'video'));
+      const link = await uploadMedia(file, 'video', setPct);
+      if (!link) throw new Error(t('video.noUploader'));
+      if (isBzVideo(link)) {
+        onChange(link);
+        // المعاينةُ المحلّيّةُ تبقى ظاهرةً ريثما يجهز — والتاجرةُ تحفظُ متى شاءت
+        setStage('processing');
+        waitVideoReady(link).then(() => setStage('ready')).catch((e) => { setStage(''); setErr(e.message); });
+      } else {
+        onChange(cldOptimized(link, 'video'));
+      }
       setDone(true);
     } catch (er) {
       setErr(er.message);
@@ -153,6 +164,8 @@ export default function VideoInput({ value, onChange, label, hint = '' }) {
         )}
 
         <p className="mt-1.5 text-[11px] leading-snug text-stone-400">{hint || t('video.dropHint')}</p>
+        {stage === 'processing' && <p className="mt-1 text-[11px] leading-snug text-gold-200">{t('video.processing')}</p>}
+        {stage === 'ready' && <p className="mt-1 text-[11px] font-semibold text-emerald-400">{t('video.ready')}</p>}
         {err && <p className="mt-1 text-xs text-red-300">{err}</p>}
       </div>
     </div>

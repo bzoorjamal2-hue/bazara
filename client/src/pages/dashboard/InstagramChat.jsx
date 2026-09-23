@@ -5,7 +5,8 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import { BackIcon, BagIcon, CameraIcon, ImageIcon, TrashIcon, XIcon, MicIcon, SparkleIcon } from '../../components/icons.jsx';
-import { uploadToCloudinary, cloudinaryEnabled, cldThumb, cldBlur, cldOptimized } from '../../utils/cloudinary.js';
+import { cloudinaryEnabled, cldThumb, cldBlur, cldOptimized } from '../../utils/cloudinary.js';
+import { uploadMedia } from '../../utils/media.js';
 import { Avatar, ConvertForm } from '../../components/OrderComposer.jsx';
 import { buildItems, guessKind, findMobile, cldAudioMp3, sameDay } from '../../utils/chat.js';
 
@@ -479,8 +480,9 @@ export default function InstagramChat() {
         const file = new File([new Blob(chunks, { type })], `voice.${ext}`, { type });
         setSending(true);
         try {
-          // Cloudinary يضعُ الصوتَ تحت نوعِ video — وهو مسارُه لكلِّ ما ليس صورة
-          const raw = await uploadToCloudinary(file, 'video', setProgress);
+          // إنستغرام لا تقبلُ webm: المحرّكُ يحوّلُه MP3 على الخادم، وكلاوديناري بتحويلِ الرابط (cldAudioMp3)
+          const raw = await uploadMedia(file, 'audio', setProgress);
+          if (!raw) throw new Error(t('video.noUploader'));
           const url = cldAudioMp3(raw);
           const stamp = Date.now();
           const optimistic = { id: 'tmp-aud-' + stamp, direction: 'out', text: '', attachment_url: url, attachment_type: 'audio', created_at: new Date().toISOString() };
@@ -517,7 +519,9 @@ export default function InstagramChat() {
     if (photo) {
       try {
         setProgress(1);
-        uploaded = await uploadToCloudinary(photo.file, 'image', setProgress);
+        // jpeg إجباريّ: ميتا تجلبُ المرفقَ بنفسها ولا تقبلُ WebP
+        uploaded = await uploadMedia(photo.file, 'image', setProgress, { jpeg: true });
+        if (!uploaded) throw new Error(t('video.noUploader'));
       } catch (e) {
         setError(getErrorMessage(e));
         setSending(false); setProgress(0);

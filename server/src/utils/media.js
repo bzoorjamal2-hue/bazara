@@ -5,6 +5,9 @@
 // صورةٌ بأيِّ رابطِ منتجٍ يُشارَك (وكلُّ منتجاتِ المنصّةِ فيديو). النسخةُ النظيفةُ
 // تُعيد JPEG بـ١١٢ كيلوبايت. (نفسُ منطقِ cldVideoPoster بالواجهة.)
 export function videoPoster(url, width = 1200) {
+  // محرّكُ بازارا: الغلافُ يُولَّدُ مع الفيديو عند المعالجة بجانبِه (…/v/<id>/poster.jpg)
+  const bz = String(url || '').match(/^(https?:\/\/.+\/v\/[a-f0-9]{32}\/)720\.mp4$/);
+  if (bz) return `${bz[1]}poster.jpg`;
   const m = String(url || '').match(/^(https?:\/\/[^/]+\/[^/]+\/video\/upload\/)(.+)$/);
   if (!m) return '';
   const segs = m[2].split('/');

@@ -2,7 +2,8 @@ import { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client.js';
-import { uploadToCloudinary, cldThumb } from '../utils/cloudinary.js';
+import { cldThumb } from '../utils/cloudinary.js';
+import { uploadMedia, waitVideoReady } from '../utils/media.js';
 import { getSeenSet, markSeen } from '../utils/storySeen.js';
 import { clearCachePrefixes } from '../utils/apiCache.js';
 import useScrollLock from '../hooks/useScrollLock.js';
@@ -47,7 +48,10 @@ export default function StoryBar({ store, stories, isOwner, onAdded, onDeleted, 
     const mediaType = file.type.startsWith('video') ? 'video' : 'image';
     setBusy(true); setProgress(0); setErr('');
     try {
-      const url = await uploadToCloudinary(file, mediaType, setProgress);
+      const url = await uploadMedia(file, mediaType, setProgress);
+      if (!url) throw new Error('no uploader');
+      // الستوري تُعرَضُ للزبوناتِ لحظةَ نشرِها — فيديو المحرّكِ ينتظرُ معالجتَه أوّلاً كي لا تُفتحَ فارغة
+      if (mediaType === 'video') await waitVideoReady(url);
       const { data } = await api.post('/stories', { mediaUrl: url, mediaType, caption: caption.trim(), productId: prod });
       clearCachePrefixes(['storepage:', 'home']); // الستوري الجديدة تظهر فوراً (الستوريات ضمن كاش صفحة المتجر)
       onAdded(data.story);
