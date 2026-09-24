@@ -6,6 +6,10 @@ import { Capacitor } from '@capacitor/core';
 // Business ولا يقبل الدخول العاديّ. المعرّف عامّ بطبعه.
 const APP_ID = import.meta.env.VITE_FB_LOGIN_APP_ID || '1070136699145310';
 const STATE_KEY = 'bz_fb_state';
+// مخفيّ حتى توافق ميتا على email وpublic_profile (قُدّمت المراجعة 24 أيلول 2026):
+// قبلها لا يدخل به إلّا أصحاب الأدوار، وكلّ زبونٍ آخر يرى «Feature unavailable».
+// بعد الموافقة: اجعلها true وحدها — لا شيء آخر يتغيّر.
+const FB_LOGIN_LIVE = false;
 
 function FbLogo() {
   return (
@@ -39,7 +43,7 @@ export default function FacebookButton({ onToken, disabled }) {
     if (token && expected && h.get('state') === expected) cb.current?.(token);
   }, []);
 
-  if (native) return null;
+  if (native || !FB_LOGIN_LIVE) return null;
 
   const click = () => {
     const state = crypto.getRandomValues(new Uint32Array(4)).join('');
