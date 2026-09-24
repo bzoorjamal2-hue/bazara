@@ -7,12 +7,13 @@ import { getErrorMessage } from '../api/client.js';
 import { CheckIcon, KeyIcon } from '../components/icons.jsx';
 import Seo from '../components/Seo.jsx';
 import GoogleButton from '../components/GoogleButton.jsx';
+import FacebookButton from '../components/FacebookButton.jsx';
 import AuthShell, { Field, MailIcon, LockIcon, EyeIcon, rise } from '../components/AuthShell.jsx';
 
 export default function Login() {
   const { t, i18n } = useTranslation();
   const rtl = i18n.language !== 'en';
-  const { login, loginWithCode, googleLogin } = useAuth();
+  const { login, loginWithCode, googleLogin, facebookLogin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const justRegistered = location.state?.registered;
@@ -63,13 +64,13 @@ export default function Login() {
     }
   };
 
-  // جوجل: حسابٌ قائمٌ يدخل فوراً، وجديدٌ يكمل اسم المتجر والجوال بصفحة التسجيل
-  const onGoogle = async (credential) => {
+  // جوجل/فيسبوك: حسابٌ قائمٌ يدخل فوراً، وجديدٌ يكمل اسم المتجر والجوال بصفحة التسجيل
+  const socialSignIn = (fn) => async (token) => {
     setError('');
     setBusy(true);
     try {
-      const data = await googleLogin(credential);
-      if (data?.needsSignup) { navigate('/register', { state: { google: data } }); return; }
+      const data = await fn(token);
+      if (data?.needsSignup) { navigate('/register', { state: { social: data } }); return; }
       if (data?.subscription && !data.subscription.active) navigate('/subscribe', { replace: true });
       else navigate('/dashboard', { replace: true });
     } catch (err) {
@@ -198,7 +199,10 @@ export default function Login() {
               <span>{rtl ? 'أو' : 'OR'}</span>
               <span className="h-px flex-1 bg-wine/15" />
             </div>
-            <GoogleButton onCredential={onGoogle} text="signin_with" />
+            <div className="space-y-3">
+              <GoogleButton onCredential={socialSignIn(googleLogin)} text="signin_with" />
+              <FacebookButton onToken={socialSignIn(facebookLogin)} disabled={busy} />
+            </div>
           </>
         )}
 

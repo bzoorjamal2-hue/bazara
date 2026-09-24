@@ -87,18 +87,20 @@ export function AuthProvider({ children }) {
     return await refresh();
   };
 
-  // جوجل: إمّا دخولٌ مباشر، أو needsSignup لحسابٍ جديد ينقصه اسم المتجر والجوال
-  const googleLogin = async (credential) => {
+  // جوجل/فيسبوك: إمّا دخولٌ مباشر، أو needsSignup لحسابٍ جديد ينقصه اسم المتجر والجوال
+  const socialLogin = async (path, body) => {
     loggedOut.current = false;
-    const { data } = await api.post('/auth/google', { credential });
+    const { data } = await api.post(path, body);
     if (data?.needsSignup) return data;
     if (data?.token) setAuthToken(data.token);
     return await refresh();
   };
+  const googleLogin = (credential) => socialLogin('/auth/google', { credential });
+  const facebookLogin = (accessToken) => socialLogin('/auth/facebook', { accessToken });
 
-  const googleRegister = async (payload) => {
+  const socialRegister = async (payload) => {
     loggedOut.current = false;
-    const { data } = await api.post('/auth/google/register', payload);
+    const { data } = await api.post('/auth/social/register', payload);
     if (data?.token) setAuthToken(data.token);
     return await refresh();
   };
@@ -140,7 +142,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, store, subscription, loading, loggingOut, login, loginWithCode, register, googleLogin, googleRegister, logout, refresh, updateProfile, setStore }}>
+    <AuthContext.Provider value={{ user, store, subscription, loading, loggingOut, login, loginWithCode, register, googleLogin, facebookLogin, socialRegister, logout, refresh, updateProfile, setStore }}>
       {children}
     </AuthContext.Provider>
   );

@@ -149,11 +149,19 @@ export async function loginWithCode(req, res, next) {
   }
 }
 
-// ===== الدخول بجوجل =====
-// الـClient ID ليس سرّاً (يظهر بكود الصفحة)، والتحقّق يحتاجه وحدَه: جوجل توقّع
-// التوكن ونحن نتأكّد أنّه صادرٌ لتطبيقنا نحن (aud) لا لتطبيقٍ آخر.
+// ===== الدخول بجوجل وفيسبوك =====
+// المعرّفان عامّان بطبعهما (يظهران بكود الصفحة)، والتحقّق لا يحتاج سرّاً: نسأل
+// المزوّد نفسه عن التوكن ونتأكّد أنّه صادرٌ لتطبيقنا نحن لا لتطبيقٍ آخر.
 const GOOGLE_CLIENT_ID =
   process.env.GOOGLE_CLIENT_ID || '413501449549-6dsq0efb225kvkt8i1huq0qub61e5jk8.apps.googleusercontent.com';
+// تطبيق ميتا المخصّص للدخول، منفصلٌ عمداً عن تطبيق إنستغرام (نوعه Business
+// ولا يقبل الدخول العاديّ إلّا مقروناً بصلاحيات صفحات).
+const FB_LOGIN_APP_ID = process.env.FB_LOGIN_APP_ID || '1070136699145310';
+const GRAPH = 'https://graph.facebook.com/v23.0';
+
+// التسجيل العاديّ يمرّر البريد بـnormalizeEmail (جيميل بلا نقاط)، فنطابقه
+// بنفس القاعدة وإلّا صار لصاحب الحساب حسابان.
+const normEmail = (e) => validator.normalizeEmail(e) || e.toLowerCase();
 
 async function verifyGoogleCredential(credential) {
   if (!credential || typeof credential !== 'string') return null;
@@ -163,79 +171,120 @@ async function verifyGoogleCredential(credential) {
   if (p.aud !== GOOGLE_CLIENT_ID) return null;
   if (!['accounts.google.com', 'https://accounts.google.com'].includes(p.iss)) return null;
   if (p.email_verified !== 'true' && p.email_verified !== true) return null;
-  // التسجيل العاديّ يمرّر البريد بـnormalizeEmail (جيميل بلا نقاط)، فنطابقه
-  // بنفس القاعدة وإلّا صار لصاحب الحساب حسابان.
-  const email = validator.normalizeEmail(p.email) || p.email.toLowerCase();
-  return { sub: String(p.sub), email, name: (p.name || '').slice(0, 100) };
+  return { id: String(p.sub), email: normEmail(p.email), name: (p.name || '').slice(0, 100) };
 }
 
-// توكنٌ قصير يحمل هويّة جوجل بين الخطوتين (زرّ جوجل ← اسم المتجر والجوال)،
-// كي لا نعيد التحقّق ولا نثق بما يرسله المتصفّح بالخطوة الثانية.
-const signGoogleSignup = (g) =>
-  // ‏gsub لا sub: حارسُ الجلسات يقرأ sub معرّفاً للمستخدم، فلا يُقبَل هذا التوكن جلسةً.
-  jwt.sign({ typ: 'google_signup', gsub: g.sub, email: g.email, name: g.name }, process.env.JWT_SECRET, { expiresIn: '30m' });
+// ‏/app بتوكن المستخدم يعيد التطبيقَ الذي صدر له التوكن: هكذا نرفض توكناً
+// أُخذ من تطبيقٍ آخر وجيء به إلينا. وفيسبوك لا تعيد إلّا بريداً مؤكَّداً.
+async function verifyFacebookToken(accessToken) {
+  if (!accessToken || typeof accessToken !== 'string') return null;
+  const t = encodeURIComponent(accessToken);
+  const a = await fetch(`${GRAPH}/app?access_token=${t}`);
+  if (!a.ok) return null;
+  if (String((await a.json()).id) !== FB_LOGIN_APP_ID) return null;
+  const m = await fetch(`${GRAPH}/me?fields=id,name,email&access_token=${t}`);
+  if (!m.ok) return null;
+  const p = await m.json();
+  if (!p.id) return null;
+  return { id: String(p.id), email: p.email ? normEmail(p.email) : '', name: (p.name || '').slice(0, 100) };
+}
+
+// عمود المعرّف لكلّ مزوّد — قائمةٌ مغلقة، فلا يدخل اسمُ عمودٍ من الطلب إلى SQL
+const PROVIDERS = {
+  google: { column: 'google_id', label: 'جوجل' },
+  facebook: { column: 'facebook_id', label: 'فيسبوك' },
+};
+
+// توكنٌ قصير يحمل الهويّة بين الخطوتين (الزرّ ← اسم المتجر والجوال)، كي لا
+// نثق بما يرسله المتصفّح بالخطوة الثانية.
+// ‏pid لا sub: حارسُ الجلسات يقرأ sub معرّفاً للمستخدم، فلا يُقبَل هذا التوكن جلسةً.
+const signSocialSignup = (provider, g) =>
+  jwt.sign({ typ: 'social_signup', provider, pid: g.id, email: g.email, name: g.name }, process.env.JWT_SECRET, {
+    expiresIn: '30m',
+  });
+
+async function socialLogin(provider, g, res) {
+  const { column } = PROVIDERS[provider];
+  const r = await query(
+    `SELECT id, name, email, ${column} AS pid, avatar_url, subscription_status, current_period_end FROM users WHERE ${column} = $1 OR email = $2 ORDER BY (${column} = $1) DESC NULLS LAST LIMIT 1`,
+    [g.id, g.email]
+  );
+  const user = r.rows[0];
+
+  // حسابٌ جديد: ينقصه اسم المتجر والجوال قبل الإنشاء
+  if (!user) {
+    return res.json({ needsSignup: true, provider, signupToken: signSocialSignup(provider, g), name: g.name, email: g.email });
+  }
+
+  // حسابٌ قائمٌ بالبريد نفسه: المزوّد أكّد ملكيّة البريد، فنربطه
+  if (!user.pid) await query(`UPDATE users SET ${column} = $1 WHERE id = $2`, [g.id, user.id]);
+
+  if (!isUserActive(user)) {
+    return res.status(403).json({
+      error: 'اشتراكك منتهٍ. سجّل الدخول بالبريد وكلمة المرور وأدخل كود التجديد الذي أرسلته لك الإدارة.',
+      code: 'SUBSCRIPTION_REQUIRED',
+    });
+  }
+
+  const token = signToken(user);
+  res.cookie('token', token, cookieOptions());
+  res.json({ token, user: { id: user.id, name: user.name, email: user.email, avatarUrl: user.avatar_url } });
+}
 
 export async function googleAuth(req, res, next) {
   try {
     const g = await verifyGoogleCredential(req.body.credential);
     if (!g) return res.status(401).json({ error: 'تعذّر التحقّق من حساب جوجل. حاول مرّة أخرى.' });
-
-    const r = await query(
-      'SELECT id, name, email, google_id, avatar_url, subscription_status, current_period_end FROM users WHERE google_id = $1 OR email = $2 ORDER BY (google_id = $1) DESC NULLS LAST LIMIT 1',
-      [g.sub, g.email]
-    );
-    const user = r.rows[0];
-
-    // حسابٌ جديد: ينقصه اسم المتجر والجوال قبل الإنشاء
-    if (!user) {
-      return res.json({ needsSignup: true, signupToken: signGoogleSignup(g), name: g.name, email: g.email });
-    }
-
-    // حسابٌ قائمٌ بالبريد نفسه: جوجل أكّدت ملكيّة البريد، فنربطه
-    if (!user.google_id) await query('UPDATE users SET google_id = $1 WHERE id = $2', [g.sub, user.id]);
-
-    if (!isUserActive(user)) {
-      return res.status(403).json({
-        error: 'اشتراكك منتهٍ. سجّل الدخول بالبريد وكلمة المرور وأدخل كود التجديد الذي أرسلته لك الإدارة.',
-        code: 'SUBSCRIPTION_REQUIRED',
-      });
-    }
-
-    const token = signToken(user);
-    res.cookie('token', token, cookieOptions());
-    res.json({ token, user: { id: user.id, name: user.name, email: user.email, avatarUrl: user.avatar_url } });
+    await socialLogin('google', g, res);
   } catch (err) {
     next(err);
   }
 }
 
-export async function googleRegister(req, res, next) {
+export async function facebookAuth(req, res, next) {
+  try {
+    const g = await verifyFacebookToken(req.body.accessToken);
+    if (!g) return res.status(401).json({ error: 'تعذّر التحقّق من حساب فيسبوك. حاول مرّة أخرى.' });
+    // حسابات فيسبوك المسجّلة بالجوال لا بريد لها، والبريد عندنا هو الحساب
+    if (!g.email) {
+      return res.status(400).json({
+        error: 'حساب فيسبوك هذا بلا بريد إلكتروني (أو لم تسمح بمشاركته). سجّل بجوجل أو بالبريد الإلكتروني.',
+      });
+    }
+    await socialLogin('facebook', g, res);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function socialRegister(req, res, next) {
   const { storeName, phone } = req.body;
   let g;
   try {
     g = jwt.verify(req.body.signupToken || '', process.env.JWT_SECRET);
-    if (g.typ !== 'google_signup') throw new Error('bad type');
+    if (g.typ !== 'social_signup' || !PROVIDERS[g.provider]) throw new Error('bad type');
   } catch {
-    return res.status(401).json({ error: 'انتهت مهلة التسجيل بجوجل. اضغط زرّ جوجل من جديد.' });
+    return res.status(401).json({ error: 'انتهت مهلة التسجيل. اضغط الزرّ من جديد.' });
   }
+  const { column, label } = PROVIDERS[g.provider];
 
   const name = (req.body.name || g.name || '').trim().slice(0, 100) || g.email.split('@')[0];
   const client = await pool.connect();
   try {
-    const existing = await client.query('SELECT id FROM users WHERE email = $1 OR google_id = $2', [g.email, g.gsub]);
+    const existing = await client.query(`SELECT id FROM users WHERE email = $1 OR ${column} = $2`, [g.email, g.pid]);
     if (existing.rows.length > 0) {
-      return res.status(409).json({ error: 'هذا الحساب مسجّل مسبقاً. سجّل الدخول بزرّ جوجل.' });
+      return res.status(409).json({ error: `هذا الحساب مسجّل مسبقاً. سجّل الدخول بزرّ ${label}.` });
     }
 
-    // لا كلمة مرور لصاحب حساب جوجل: نخزّن بصمةً لسرٍّ عشوائيٍّ لا يعرفه أحد،
+    // لا كلمة مرور لصاحب هذا الحساب: نخزّن بصمةً لسرٍّ عشوائيٍّ لا يعرفه أحد،
     // ومتى أرادها عيّنها من «نسيت كلمة المرور».
     const passwordHash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), SALT_ROUNDS);
     const slug = await generateUniqueStoreSlug(storeName);
 
     await client.query('BEGIN');
     const userResult = await client.query(
-      'INSERT INTO users (name, email, password_hash, subscriber_code, phone, google_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, name, email',
-      [name, g.email, passwordHash, generateSubscriberCode(), phone || '', g.gsub]
+      `INSERT INTO users (name, email, password_hash, subscriber_code, phone, ${column}) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, name, email`,
+      [name, g.email, passwordHash, generateSubscriberCode(), phone || '', g.pid]
     );
     const user = userResult.rows[0];
     await client.query('INSERT INTO stores (user_id, name, slug, phone, whatsapp) VALUES ($1, $2, $3, $4, $4)', [

@@ -32,9 +32,9 @@ export const registerRules = [
   body('phone').trim().matches(/^[+\d][\d\s-]{6,20}$/).withMessage('رقم هاتف غير صالح.'),
 ];
 
-// التسجيل بجوجل: الاسم والبريد من جوجل، وينقص ما يخصّ المتجر وحده
-export const googleRegisterRules = [
-  body('signupToken').notEmpty().withMessage('انتهت مهلة التسجيل بجوجل.'),
+// التسجيل بجوجل/فيسبوك: الاسم والبريد من المزوّد، وينقص ما يخصّ المتجر وحده
+export const socialRegisterRules = [
+  body('signupToken').notEmpty().withMessage('انتهت مهلة التسجيل.'),
   body('name').optional().trim().isLength({ max: 100 }),
   body('storeName').trim().isLength({ min: 2, max: 120 }).withMessage('اسم المتجر يجب أن يكون بين 2 و120 حرف.'),
   body('phone').trim().matches(/^[+\d][\d\s-]{6,20}$/).withMessage('رقم هاتف غير صالح.'),
