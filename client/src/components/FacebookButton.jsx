@@ -1,28 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Capacitor } from '@capacitor/core';
 
 // تطبيق ميتا المخصّص للدخول («Bazara Login») — غير تطبيق إنستغرام، ذاك نوعه
 // Business ولا يقبل الدخول العاديّ. المعرّف عامّ بطبعه.
 const APP_ID = import.meta.env.VITE_FB_LOGIN_APP_ID || '1070136699145310';
-
-let loader;
-function loadSdk() {
-  if (window.FB) return Promise.resolve();
-  loader ||= new Promise((resolve, reject) => {
-    window.fbAsyncInit = () => {
-      window.FB.init({ appId: APP_ID, cookie: false, xfbml: false, version: 'v23.0' });
-      resolve();
-    };
-    const s = document.createElement('script');
-    s.src = 'https://connect.facebook.net/en_US/sdk.js';
-    s.async = true;
-    s.crossOrigin = 'anonymous';
-    s.onerror = () => { loader = null; reject(new Error('fb sdk')); };
-    document.head.appendChild(s);
-  });
-  return loader;
-}
+const STATE_KEY = 'bz_fb_state';
 
 function FbLogo() {
   return (
@@ -32,37 +15,50 @@ function FbLogo() {
   );
 }
 
-// زرّ «المتابعة بفيسبوك». الـSDK يُحمَّل مسبقاً لأنّ FB.login يفتح نافذة، والمتصفّح
-// لا يسمح بها إلّا داخل الضغطة نفسها — أيّ انتظارٍ قبلها يجعلها تُحجَب.
+// زرّ «المتابعة بفيسبوك» بالتحويل لا بالنافذة المنبثقة: المتصفّحات داخل التطبيقات
+// (إنستغرام وواتساب على الآيفون) تحجب النوافذ، وأدوات تسجيل الشاشة لا تلتقطها.
+// نذهب إلى فيسبوك بالتبويب نفسه ونعود إلى الصفحة نفسها والتوكن في الـhash،
+// ومعه state عشوائيّ نطابقه كي لا يُدسّ علينا توكنٌ من رابطٍ مصنوع.
+// الصفحات التي نعود إليها مسجّلة عند ميتا (Valid OAuth Redirect URIs).
 // داخل التطبيق الأصليّ لا نظهره، كزرّ جوجل.
 export default function FacebookButton({ onToken, disabled }) {
   const { t } = useTranslation();
-  const [ready, setReady] = useState(false);
-  const [failed, setFailed] = useState(false);
   const native = Capacitor.isNativePlatform();
+  const cb = useRef(onToken);
+  cb.current = onToken;
 
+  // العودة من فيسبوك: ‎#access_token=…&state=…
   useEffect(() => {
-    if (native) return undefined;
-    let alive = true;
-    loadSdk().then(() => alive && setReady(true)).catch(() => alive && setFailed(true));
-    return () => { alive = false; };
-  }, [native]);
+    const h = new URLSearchParams(window.location.hash.slice(1));
+    if (!h.has('access_token') && !h.has('error')) return;
+    // نمسح الـhash فوراً: التوكن لا يبقى بالرابط ولا بالسجلّ
+    window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search);
+    let expected = '';
+    try { expected = sessionStorage.getItem(STATE_KEY) || ''; sessionStorage.removeItem(STATE_KEY); } catch { /* تصفّح خاص */ }
+    const token = h.get('access_token');
+    if (token && expected && h.get('state') === expected) cb.current?.(token);
+  }, []);
 
-  if (native || failed) return null;
+  if (native) return null;
 
   const click = () => {
-    if (!window.FB) return;
-    window.FB.login(
-      (r) => { if (r.authResponse?.accessToken) onToken(r.authResponse.accessToken); },
-      { scope: 'public_profile,email', auth_type: 'rerequest' }
-    );
+    const state = crypto.getRandomValues(new Uint32Array(4)).join('');
+    try { sessionStorage.setItem(STATE_KEY, state); } catch { /* تصفّح خاص */ }
+    const p = new URLSearchParams({
+      client_id: APP_ID,
+      redirect_uri: `${window.location.origin}${window.location.pathname}`,
+      response_type: 'token',
+      scope: 'public_profile,email',
+      state,
+    });
+    window.location.href = `https://www.facebook.com/v23.0/dialog/oauth?${p}`;
   };
 
   return (
     <button
       type="button"
       onClick={click}
-      disabled={!ready || disabled}
+      disabled={disabled}
       className="mx-auto flex h-10 w-full max-w-[400px] items-center justify-center gap-2.5 rounded-full bg-[#1877F2] px-5 text-sm font-medium text-white transition hover:bg-[#166FE5] disabled:opacity-60"
     >
       <FbLogo />
