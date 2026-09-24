@@ -6,10 +6,9 @@ import { Capacitor } from '@capacitor/core';
 // Business ولا يقبل الدخول العاديّ. المعرّف عامّ بطبعه.
 const APP_ID = import.meta.env.VITE_FB_LOGIN_APP_ID || '1070136699145310';
 const STATE_KEY = 'bz_fb_state';
-// مخفيّ حتى توافق ميتا على email وpublic_profile (قُدّمت المراجعة 24 أيلول 2026):
-// قبلها لا يدخل به إلّا أصحاب الأدوار، وكلّ زبونٍ آخر يرى «Feature unavailable».
-// بعد الموافقة: اجعلها true وحدها — لا شيء آخر يتغيّر.
-const FB_LOGIN_LIVE = false;
+// وافقت ميتا على email وpublic_profile في 25 أيلول 2026، فالزرّ ظاهرٌ للجميع.
+// ‏false تخفيه مجدّداً إن احتجنا (قبل القبول لا يدخل به إلّا أصحاب الأدوار).
+const FB_LOGIN_LIVE = true;
 
 function FbLogo() {
   return (
