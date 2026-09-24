@@ -87,6 +87,22 @@ export function AuthProvider({ children }) {
     return await refresh();
   };
 
+  // جوجل: إمّا دخولٌ مباشر، أو needsSignup لحسابٍ جديد ينقصه اسم المتجر والجوال
+  const googleLogin = async (credential) => {
+    loggedOut.current = false;
+    const { data } = await api.post('/auth/google', { credential });
+    if (data?.needsSignup) return data;
+    if (data?.token) setAuthToken(data.token);
+    return await refresh();
+  };
+
+  const googleRegister = async (payload) => {
+    loggedOut.current = false;
+    const { data } = await api.post('/auth/google/register', payload);
+    if (data?.token) setAuthToken(data.token);
+    return await refresh();
+  };
+
   const logout = async () => {
     // نُفرِغ محلياً أوّلاً فلا تعلّق الواجهة على خادمٍ نائم…
     loggedOut.current = true;
@@ -124,7 +140,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, store, subscription, loading, loggingOut, login, loginWithCode, register, logout, refresh, updateProfile, setStore }}>
+    <AuthContext.Provider value={{ user, store, subscription, loading, loggingOut, login, loginWithCode, register, googleLogin, googleRegister, logout, refresh, updateProfile, setStore }}>
       {children}
     </AuthContext.Provider>
   );

@@ -4,6 +4,8 @@ import {
   register,
   login,
   loginWithCode,
+  googleAuth,
+  googleRegister,
   logout,
   me,
   updateProfile,
@@ -20,6 +22,7 @@ import {
   registerRules,
   loginRules,
   loginWithCodeRules,
+  googleRegisterRules,
   profileRules,
   changePasswordRules,
   changeEmailRules,
@@ -42,6 +45,8 @@ const authLimiter = rateLimit({
 router.post('/register', authLimiter, registerRules, handleValidation, register);
 router.post('/login', authLimiter, loginRules, handleValidation, login);
 router.post('/login-with-code', authLimiter, loginWithCodeRules, handleValidation, loginWithCode);
+router.post('/google', authLimiter, googleAuth);
+router.post('/google/register', authLimiter, googleRegisterRules, handleValidation, googleRegister);
 router.post('/logout', logout);
 router.get('/me', requireAuth, me);
 router.put('/profile', requireAuth, profileRules, handleValidation, updateProfile);

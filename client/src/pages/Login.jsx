@@ -6,12 +6,13 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { getErrorMessage } from '../api/client.js';
 import { CheckIcon, KeyIcon } from '../components/icons.jsx';
 import Seo from '../components/Seo.jsx';
+import GoogleButton from '../components/GoogleButton.jsx';
 import AuthShell, { Field, MailIcon, LockIcon, EyeIcon, rise } from '../components/AuthShell.jsx';
 
 export default function Login() {
   const { t, i18n } = useTranslation();
   const rtl = i18n.language !== 'en';
-  const { login, loginWithCode } = useAuth();
+  const { login, loginWithCode, googleLogin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const justRegistered = location.state?.registered;
@@ -57,6 +58,22 @@ export default function Login() {
       } else {
         setError(getErrorMessage(err, t('errors.generic')));
       }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // جوجل: حسابٌ قائمٌ يدخل فوراً، وجديدٌ يكمل اسم المتجر والجوال بصفحة التسجيل
+  const onGoogle = async (credential) => {
+    setError('');
+    setBusy(true);
+    try {
+      const data = await googleLogin(credential);
+      if (data?.needsSignup) { navigate('/register', { state: { google: data } }); return; }
+      if (data?.subscription && !data.subscription.active) navigate('/subscribe', { replace: true });
+      else navigate('/dashboard', { replace: true });
+    } catch (err) {
+      setError(getErrorMessage(err, t('errors.generic')));
     } finally {
       setBusy(false);
     }
@@ -174,16 +191,21 @@ export default function Login() {
           </motion.button>
         </form>
 
-        <div className="mt-5 text-center">
+        {!needsCode && (
+          <>
+            <div className="my-5 flex items-center gap-3 text-xs text-stone-400">
+              <span className="h-px flex-1 bg-wine/15" />
+              <span>{rtl ? 'أو' : 'OR'}</span>
+              <span className="h-px flex-1 bg-wine/15" />
+            </div>
+            <GoogleButton onCredential={onGoogle} text="signin_with" />
+          </>
+        )}
+
+        <div className="my-5 text-center">
           <Link to="/forgot-password" className="text-sm font-medium text-wine/70 transition hover:text-wine">
             {t('auth.forgotLink')}
           </Link>
-        </div>
-
-        <div className="my-5 flex items-center gap-3 text-xs text-stone-400">
-          <span className="h-px flex-1 bg-wine/15" />
-          <span>{rtl ? 'أو' : 'OR'}</span>
-          <span className="h-px flex-1 bg-wine/15" />
         </div>
 
         <p className="pb-6 text-center text-sm text-stone-500">
