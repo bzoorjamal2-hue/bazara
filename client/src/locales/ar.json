@@ -77,7 +77,24 @@
     "adminRole": "مدير الموقع",
     "offers": "العروض",
     "myOrders": "الطلبات",
-    "messages": "الرسائل"
+    "messages": "الرسائل",
+    "menu": {
+      "renew": "جدّدي",
+      "newProduct": "منتج جديد",
+      "share": "شاركي متجرك",
+      "copied": "تم النسخ",
+      "viewStore": "عرض متجري",
+      "storeSettings": "إعدادات المتجر",
+      "profile": "حسابي والاشتراك",
+      "appearance": "المظهر",
+      "light": "نهاري",
+      "dark": "ليلي",
+      "language": "اللغة",
+      "site": "الموقع العام",
+      "adminPanel": "لوحة الإدارة",
+      "subscribers": "المشتركون",
+      "siteSettings": "إعدادات الموقع"
+    }
   },
   "offers": {
     "title": "العروض والتخفيضات",

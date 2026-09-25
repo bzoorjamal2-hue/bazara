@@ -77,7 +77,24 @@
     "adminRole": "Site admin",
     "offers": "Offers",
     "myOrders": "Orders",
-    "messages": "Messages"
+    "messages": "Messages",
+    "menu": {
+      "renew": "Renew",
+      "newProduct": "New product",
+      "share": "Share store",
+      "copied": "Copied",
+      "viewStore": "View my store",
+      "storeSettings": "Store settings",
+      "profile": "Account & plan",
+      "appearance": "Appearance",
+      "light": "Light",
+      "dark": "Dark",
+      "language": "Language",
+      "site": "Public site",
+      "adminPanel": "Admin panel",
+      "subscribers": "Subscribers",
+      "siteSettings": "Site settings"
+    }
   },
   "offers": {
     "title": "Offers & deals",

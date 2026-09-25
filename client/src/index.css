@@ -3349,6 +3349,65 @@ html.dark .theme-pub .bz-doc-meta { color: rgba(239, 238, 236, 0.62); }
 .bz-av { box-shadow: inset 0 0 0 1px rgba(235, 235, 235, 0.28); }
 .bz-rolechip { background: rgba(235, 235, 235, 0.14); color: #F9F9F8; }
 .bz-usermenu { box-shadow: 0 16px 40px -10px rgba(23, 23, 23, 0.45), inset 0 0 0 1px rgba(23, 23, 23, 0.12); }
+/* ── قائمة الحساب (Navbar/AccountMenu) ──
+   رأسٌ داكنٌ بلون الهويّة (#1F1E1D) يحمل التاجرةَ ومتجرَها واختصاراتِها، وجسمٌ فاتح.
+   الألوانُ هنا لا بأصنافِ tailwind المتفرّقة: الوضعُ الليليُّ يُعيدُ تعريفَها كلَّها معاً. */
+.bz-acct { background: #FFFFFF; color: #1F1E1D; }
+.bz-acct-head { background: #1F1E1D; color: #F9F9F8; }
+.bz-acct-mute { color: #7A7672; }
+.bz-acct-sep { height: 1px; margin-inline: 0.75rem; background: rgba(23, 23, 23, 0.08); }
+.bz-acct-row {
+  display: flex; width: 100%; align-items: center; gap: 0.7rem;
+  border-radius: 0.9rem; padding: 0.5rem 0.6rem; color: #1F1E1D;
+  transition: background-color 0.15s ease;
+}
+.bz-acct-row:hover, .bz-acct-row:focus-visible { background: rgba(23, 23, 23, 0.05); outline: none; }
+.bz-acct-row:active { background: rgba(23, 23, 23, 0.09); }
+.bz-acct-ico {
+  display: flex; height: 2.1rem; width: 2.1rem; flex-shrink: 0; align-items: center; justify-content: center;
+  border-radius: 0.75rem; background: #F1F0EE; color: #1F1E1D;
+}
+.bz-acct-chev { color: rgba(23, 23, 23, 0.3); }
+.bz-acct-badge {
+  min-width: 1.35rem; border-radius: 999px; background: #1F1E1D; color: #F9F9F8;
+  padding: 0.05rem 0.4rem; text-align: center; font-size: 10.5px; font-weight: 800;
+}
+.bz-acct-out { color: #B42318; }
+.bz-acct-out .bz-acct-ico { background: rgba(180, 35, 24, 0.08); color: #B42318; }
+.bz-acct-out:hover { background: rgba(180, 35, 24, 0.06); }
+.bz-acct-tile {
+  display: flex; min-width: 0; flex-direction: column; align-items: center; gap: 0.35rem;
+  border-radius: 0.95rem; padding: 0.65rem 0.25rem; background: rgba(249, 249, 248, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(249, 249, 248, 0.10); color: #F9F9F8;
+  transition: background-color 0.15s ease, transform 0.12s ease-out;
+}
+.bz-acct-tile:hover { background: rgba(249, 249, 248, 0.14); }
+.bz-acct-tile:active { transform: scale(0.95); }
+.bz-acct-dot {
+  position: absolute; top: -0.45rem; inset-inline-end: -0.7rem; min-width: 1.05rem; height: 1.05rem;
+  border-radius: 999px; background: #F9F9F8; color: #1F1E1D; padding: 0 0.25rem;
+  font-size: 9.5px; font-weight: 800; line-height: 1.05rem; text-align: center;
+}
+.bz-acct-seg { display: inline-flex; gap: 2px; border-radius: 999px; background: #F1F0EE; padding: 3px; }
+.bz-acct-seg button {
+  display: inline-flex; align-items: center; gap: 0.3rem; border-radius: 999px;
+  padding: 0.3rem 0.7rem; font-size: 12px; font-weight: 700; color: #7A7672;
+}
+.bz-acct-seg button.is-on { background: #1F1E1D; color: #F9F9F8; }
+html.dark .bz-acct { background: #1C1B1A; color: #EFEEEC; }
+html.dark .bz-acct-head { background: #121110; }
+html.dark .bz-acct-mute { color: #A39E97; }
+html.dark .bz-acct-sep { background: rgba(239, 238, 236, 0.08); }
+html.dark .bz-acct-row { color: #EFEEEC; }
+html.dark .bz-acct-row:hover, html.dark .bz-acct-row:focus-visible { background: rgba(239, 238, 236, 0.06); }
+html.dark .bz-acct-ico { background: rgba(239, 238, 236, 0.08); color: #EFEEEC; }
+html.dark .bz-acct-chev { color: rgba(239, 238, 236, 0.3); }
+html.dark .bz-acct-badge { background: #D6D2CB; color: #171615; }
+html.dark .bz-acct-out { color: #F97066; }
+html.dark .bz-acct-out .bz-acct-ico { background: rgba(249, 112, 102, 0.12); color: #F97066; }
+html.dark .bz-acct-seg { background: rgba(239, 238, 236, 0.08); }
+html.dark .bz-acct-seg button { color: #A39E97; }
+html.dark .bz-acct-seg button.is-on { background: #D6D2CB; color: #171615; }
 
 /* ═══════ الدرجُ الجانبيّ: لوحٌ عاجيٌّ كالموقع، لا لوحٌ أسودُ غريبٌ عنه ═══════
    كان الدرجانِ — درجُ بازارا ودرجُ المتجر — تدرّجاً بنّيّاً شبهَ أسود، وسطَ موقعٍ
