@@ -155,7 +155,7 @@ function PublicFooter({ bottomNav = false }) {
     api.get('/public/site-info')
       .then((r) => {
         // فئات المنصّة تصل مع معلومات الموقع — مصدر واحد يغذّي كل الواجهات
-        setPlatformCategories(r.data?.platformCategories, r.data?.liveDepartments);
+        setPlatformCategories(r.data?.platformCategories, r.data?.liveDepartments, r.data?.liveCategories);
         const s = { instagram: r.data?.instagram || '', facebook: r.data?.facebook || '' };
         setSocial(s);
         try { localStorage.setItem('bz_site_socials', JSON.stringify(s)); } catch { /* تجاهل */ }

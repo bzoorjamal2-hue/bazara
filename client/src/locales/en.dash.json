@@ -684,7 +684,10 @@
       "deptDesc_clothing": "Abayas, dresses, sets… sizes 36–48 with a bust/waist size guide.",
       "deptDesc_shoes": "Heels, sneakers, sandals… every size 35–46 with a foot-length guide.",
       "deptDesc_accessories": "Bags, watches, jewelry… one size.",
-      "deptLocked": "Has {{count}} products — stays on"
+      "deptLocked": "Has {{count}} products — stays on",
+      "catCount_one": "1 category",
+      "catCount_other": "{{count}} categories",
+      "addDeptCategory": "Add a {{dept}} category"
     },
     "product": {
       "cost": "Cost price",

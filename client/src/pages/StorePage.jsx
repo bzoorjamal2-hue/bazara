@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Link, useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useSearchParams, useNavigate, useLocation, useNavigationType } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -58,7 +58,7 @@ export default function StorePage() {
   const catKeys = usePlatformCatKeys();
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { store: myStore } = useAuth();
   const { ensureStore } = useCart();
   const isOwner = myStore?.slug === slug;
@@ -112,10 +112,14 @@ export default function StorePage() {
   // عرض صفحة التصنيفات (?cats=1) — وجهة زرّ "التصنيفات" بالشريط السفلي داخل المتجر،
   // فتظهر فئات المتجر كصفحة كاملة بهيدر/فوتر المتجر بدل صفحة بازارا العامة أو درج.
   const catsView = searchParams.get('cats') === '1';
-  const setCat = (c) => setSearchParams(c && c !== 'all' ? { cat: c } : {});
   // القسم (?dept=) — ملابس/أحذية/إكسسوارات. يظهر بالرابط فقط حين يخالف قسم
   // المتجر الرئيسيّ، فيبقى رابط المتجر ذي القسم الواحد نظيفاً كما كان.
   const deptParam = searchParams.get('dept') || '';
+  // لحظة تبديل القسم بالتبويب (لا عند الرجوع إليه): ما تحت التبويبات يدخل بتلاشٍ
+  // قصير بدل أن يُستبدل دفعةً واحدة — المؤشّر ينزلق والمحتوى يتبعه بالنعومة نفسها.
+  const location = useLocation();
+  const navType = useNavigationType();
+  const deptSwitched = navType !== 'POP' && Boolean(location.state?.keepScroll);
 
   useEffect(() => {
     const cached = getCache(`storepage:${slug}`);
@@ -218,6 +222,13 @@ export default function StorePage() {
     if (d !== deptInfo.main) sp.dept = d;
     setSearchParams(sp, { replace: true, state: { keepScroll: true } });
   };
+  // «كل المنتجات» من القائمة الجانبيّة يعيد لرئيسيّة المتجر على القسم المفتوح،
+  // لا على الملابس دائماً — كما تفعل أيقونة البيت بالمسار.
+  const setCat = (c) => {
+    if (c && c !== 'all') { setSearchParams({ cat: c }); return; }
+    const d = cat !== 'all' ? catDeptOf(cat) : dept;
+    setSearchParams(multiDept && d !== deptInfo.main ? { dept: d } : {});
+  };
   const setViewAll = (v) => setSearchParams(v ? { view: 'all', ...(multiDept && dept !== deptInfo.main ? { dept } : {}) } : (multiDept && dept !== deptInfo.main ? { dept } : {}));
 
   const filtered = useMemo(() => {
@@ -312,7 +323,8 @@ export default function StorePage() {
   const catNames = {};
   for (const c of catKeys) catNames[c] = (catMeta[c]?.name || '').trim();
   for (const cc of customCats) catNames[cc.key] = cc.name;
-  const catLabel = (c) => catNames[c] || t(`categories.${c}`);
+  // فئة المنصّة التي أضافها المدير اسمها عنده لا بملفّ الترجمة
+  const catLabel = (c) => catNames[c] || platformCatName(c, t, i18n.language);
   // صورة كل فئة: الأصلية تستخدم أيقونتها الثابتة (إلا لو غيّرتها المالكة)؛
   // المخصّصة تستخدم صورة المالكة وإلا أول صورة منتج فيها.
   const catImages = {};
@@ -646,7 +658,9 @@ export default function StorePage() {
             <section id="cats" className={`${multiDept ? 'mt-8' : 'bz-sec-gap'} scroll-mt-24`}>
               <SectionTitle eyebrow={multiDept ? t(`dept.${dept}`) : t('store.eyebrowCats')}>{t('store.browseByCategory')}</SectionTitle>
               {/* key بالقسم: الشبكة تبدأ من صفحتها الأولى عند تبديل القسم */}
-              <CategoryGrid key={dept} onSelect={pickCategory} active={cat} cats={homeCats} />
+              <div key={dept} className={deptSwitched ? 'animate-fade-in' : undefined}>
+                <CategoryGrid onSelect={pickCategory} active={cat} cats={homeCats} />
+              </div>
             </section>
           </Reveal>
 

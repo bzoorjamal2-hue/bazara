@@ -702,7 +702,14 @@
       "deptDesc_clothing": "عبايات وفساتين وأطقم… بمقاسات 36–48 ودليل مقاسات بالصدر والخصر.",
       "deptDesc_shoes": "كعب، رياضي، صنادل… بكل النمر من 35 إلى 46 ودليل بطول القدم.",
       "deptDesc_accessories": "شنط، ساعات، مجوهرات… مقاس واحد «ون سايز».",
-      "deptLocked": "فيه {{count}} منتج — يبقى مفعّلاً"
+      "deptLocked": "فيه {{count}} منتج — يبقى مفعّلاً",
+      "catCount_one": "فئة واحدة",
+      "catCount_two": "فئتان",
+      "catCount_few": "{{count}} فئات",
+      "catCount_many": "{{count}} فئة",
+      "catCount_other": "{{count}} فئة",
+      "catCount_zero": "لا فئات",
+      "addDeptCategory": "إضافة فئة {{dept}}"
     },
     "product": {
       "cost": "سعر التكلفة",

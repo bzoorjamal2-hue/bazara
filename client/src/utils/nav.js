@@ -13,9 +13,12 @@ export function goBack(navigate, fallback = '/') {
 // وجهتها هي نفس الصفحة السابقة بالتاريخ، نرجع فعلياً (navigate(-1)) بدل فتح
 // صفحة جديدة — فيستعيد المستخدم نفس موضع التمرير الذي كان عليه.
 const navStack = [];
-export function recordNav(key, path) {
+// replace: المدخل الحاليّ استُبدل (تبويب قسمٍ مثلاً) — نحدّث قمّة السجلّ بدل
+// أن نضيف فوقها مدخلاً لا وجود له بتاريخ المتصفّح فيضلّ الرجوع الذكي خطوة.
+export function recordNav(key, path, replace = false) {
   const i = navStack.findIndex((e) => e.key === key);
   if (i >= 0) navStack.length = i + 1; // رجوع/تقدّم لموضع موجود → قصّ ما بعده
+  else if (replace && navStack.length) navStack[navStack.length - 1] = { key, path };
   else navStack.push({ key, path });
   if (navStack.length > 80) navStack.shift();
 }

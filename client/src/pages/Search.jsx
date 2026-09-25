@@ -12,7 +12,7 @@ import { cldThumb } from '../utils/cloudinary.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { searchPath } from '../utils/links.js';
 import { goBack } from '../utils/nav.js';
-import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys } from '../utils/platformCategories.js';
+import { platformCatKeys, platformCatName, platformCatImage, usePublicCatKeys } from '../utils/platformCategories.js';
 
 // البحث الشامل عبر المنصّة (أسلوب المتاجر الكبرى): الاستعلام بالرابط (?q=)
 // فيعمل الرجوع والمشاركة، مع عمليات بحث سابقة محلية واقتراحات فئات عند اللاشيء.
@@ -30,8 +30,9 @@ const pushRecentSearch = (q) => {
 
 
 export default function Search() {
-  const catKeys = usePlatformCatKeys();
-  const { t } = useTranslation();
+  // فئاتُ الأقسامِ التي فيها قطعٌ فعلاً: لا اقتراحَ «أحذية» يفتحُ على لا شيء
+  const catKeys = usePublicCatKeys();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const q = (params.get('q') || '').trim();
@@ -200,7 +201,7 @@ export default function Search() {
             <div className="flex flex-wrap gap-2">
               {catKeys.map((c) => (
                 <Link key={c} to={catLink(c)} className="bz-pill">
-                  {t(`categories.${c}`)}
+                  {platformCatName(c, t, i18n.language)}
                 </Link>
               ))}
             </div>
@@ -241,7 +242,7 @@ export default function Search() {
               ) : results.stores.length === 0 && !busy && (
                 <StateCard icon={<SearchIcon className="h-7 w-7" />} title={t('searchPage.noResults', { q })}>
                   {catKeys.slice(0, 4).map((c) => (
-                    <Link key={c} to={catLink(c)} className="bz-pill">{t(`categories.${c}`)}</Link>
+                    <Link key={c} to={catLink(c)} className="bz-pill">{platformCatName(c, t, i18n.language)}</Link>
                   ))}
                 </StateCard>
               )}

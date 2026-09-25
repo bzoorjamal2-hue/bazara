@@ -23,7 +23,7 @@ import { DEPARTMENTS, normDept, storeDepts } from '../../utils/departments.js';
 import DeptIcon, { DeptsIcon } from '../../components/DeptIcon.jsx';
 import BankSelect from '../../components/BankSelect.jsx';
 import BANKS from '../../utils/banks.js';
-import { usePlatformCatKeys, catDept } from '../../utils/platformCategories.js';
+import { usePlatformCatKeys, catDept, platformCatImage, platformCatName } from '../../utils/platformCategories.js';
 import { copyText } from '../../utils/links.js';
 
 // أيقونتا إخفاء/إظهار (عين مشطوبة / عين) — للتحكم بظهور الفئة بالمتجر
@@ -181,7 +181,7 @@ function PayoutStatus({ status, t }) {
 }
 
 export default function StoreSettings() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const platformKeys = usePlatformCatKeys();
   // عدد منتجات المتجر بكلّ قسم: القسم الذي فيه قطعٌ يبقى مفعّلاً بإعدادات الأقسام
   const [deptUse, setDeptUse] = useState({});
@@ -352,6 +352,11 @@ export default function StoreSettings() {
   };
 
   if (!form) return <Spinner />;
+  // أقسام صفحة الفئات: المفعّلة، وما فيه منتجات أو فئاتٌ خاصّة ولو لم يُفعَّل (متجرٌ
+  // قديم حقله «ملابس» وحدها وقد أضاف أحذية) — لا تختفي فئةٌ قائمة من الإعدادات.
+  const catGroups = DEPARTMENTS.filter((d) => (form.departments || ['clothing']).includes(d)
+    || deptUse[d] > 0
+    || (form.customCategories || []).some((cc) => normDept(cc.dept) === d));
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
   const setVal = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -401,8 +406,20 @@ export default function StoreSettings() {
     setForm((f) => ({ ...f, categoryMeta: { ...f.categoryMeta, [cat]: { ...(f.categoryMeta?.[cat] || {}), [key]: val } } }));
 
   // الفئات الإضافية المخصّصة: [{key, name, image}]
-  const addCustomCat = () =>
-    setForm((f) => ({ ...f, customCategories: [...(f.customCategories || []), { key: 'c_' + Math.random().toString(36).slice(2, 9), name: '', image: '', dept: (f.departments || ['clothing'])[0] }] }));
+  const addCustomCat = (dept) =>
+    setForm((f) => ({ ...f, customCategories: [...(f.customCategories || []), { key: 'c_' + Math.random().toString(36).slice(2, 9), name: '', image: '', dept: dept || (f.departments || ['clothing'])[0] }] }));
+  // ترتيب فئةٍ خاصّة بين جاراتها بقسمها: السهم يبدّلها بالتي قبلها/بعدها من القسم نفسه
+  // (القائمة المحفوظة واحدة، وترتيبها داخل كلّ قسمٍ هو ترتيب ظهوره بالمتجر).
+  const moveCustomInDept = (idx, dir) =>
+    setForm((f) => {
+      const list = [...(f.customCategories || [])];
+      const d = normDept(list[idx]?.dept);
+      let to = idx + dir;
+      while (to >= 0 && to < list.length && normDept(list[to]?.dept) !== d) to += dir;
+      if (to < 0 || to >= list.length) return f;
+      [list[idx], list[to]] = [list[to], list[idx]];
+      return { ...f, customCategories: list };
+    });
   const setCustomCat = (idx, key, val) =>
     setForm((f) => ({ ...f, customCategories: f.customCategories.map((c, i) => (i === idx ? { ...c, [key]: val } : c)) }));
   const removeCustomCat = (idx) =>
@@ -930,114 +947,142 @@ export default function StoreSettings() {
         <div id="s-categories" className={CARD}>
           <SectionHead icon={<FolderIcon className="h-5 w-5" />} title={t('dashboard.store.categories')} desc={t('dashboard.store.categoriesHint')} done={doneMap['s-categories']} />
           <Folded open={openSec === 's-categories'} onToggle={() => setOpenSec((v) => (v === 's-categories' ? '' : 's-categories'))} label={t('dashboard.store.categories')}>
-          <div className="space-y-3">
-            {platformKeys.filter((c) => (form.departments || ['clothing']).includes(catDept(c))).map((c) => {
-              const meta = form.categoryMeta?.[c] || {};
-              const hidden = !!meta.hidden;
-              // الاسم الظاهر: اسم المالكة إن وُجد وإلا الافتراضي — يُعرَض مرّة واحدة بالعنوان
-              const displayName = (meta.name || '').trim() || t(`categories.${c}`);
-              // اللوقو الحالي: صورة المالكة إن رفعتها وإلا الأيقونة الثابتة
-              const logo = meta.image ? cldThumb(meta.image, 120) : `/categories/${c}.png?v=3`;
-              return (
-                <div key={c} className={`${SUBCARD} transition ${hidden ? 'opacity-60' : ''}`}>
-                  {/* العنوان: لوقو + اسم واحد + زر إخفاء/إظهار — بلا تكرار للاسم */}
-                  <div className="mb-2 flex items-center justify-between gap-2">
-                    <span className="flex min-w-0 items-center gap-2">
-                      <img src={logo} alt="" className="h-8 w-8 shrink-0 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                      <span className="truncate text-sm font-semibold text-gold-200">{displayName}</span>
-                      {/* شارة «مخفية»: خلفية ذهبية شفّافة تعمل على الأبيض نهاراً وعلى الداكن ليلاً
-                          (bg-black/40 كانت تصير رمادية داكنة بنصّ باهت بالوضع النهاري) */}
-                      {hidden && <span className="shrink-0 rounded-full bg-gold-400/15 px-2 py-0.5 text-[10px] font-semibold text-stone-400 ring-1 ring-gold-400/20">{t('dashboard.store.hiddenBadge')}</span>}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setCatMeta(c, 'hidden', !hidden)}
-                      className={`inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-xs transition ${hidden ? 'text-gold-200 hover:text-gold-100' : 'text-stone-400 hover:text-red-300'}`}
-                    >
-                      {hidden
-                        ? <><EyeGlyph className="h-3.5 w-3.5" /> {t('dashboard.store.showCategory')}</>
-                        : <><EyeOffGlyph className="h-3.5 w-3.5" /> {t('dashboard.store.hideCategory')}</>}
-                    </button>
-                  </div>
-                  {!hidden && (
-                    <>
-                      <ImageInput
-                        value={meta.image || ''} onChange={(v) => setCatMeta(c, 'image', v)}
-                        placeholderImg={`/categories/${c}.png?v=3`} contain hint={t('dashboard.store.categoryImageHint')}
-                      />
-                      <input
-                        type="text"
-                        maxLength={40}
-                        className="input mt-2"
-                        placeholder={t('dashboard.store.renameCategory')}
-                        value={meta.name || ''}
-                        onChange={(e) => setCatMeta(c, 'name', e.target.value)}
-                      />
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* فئات إضافية مخصّصة — حتى MAX_CUSTOM_CATS، وهو سقف الخادم نفسه:
-              لو سمحنا بأكثر لقُصّت الزائدة بصمتٍ بعد «تم الحفظ». */}
-          <div className="border-t border-gold-400/10 pt-4">
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <h3 className="font-display text-base font-bold text-stone-100">{t('dashboard.store.customCategories')}</h3>
-              {(form.customCategories || []).length < MAX_CUSTOM_CATS && (
-                <button type="button" onClick={addCustomCat} className="btn-ghost !py-1.5 text-sm">＋ {t('dashboard.store.addCategory')}</button>
-              )}
+          {/* الفئات مجمّعةً بأقسامها كواجهة المتجر: تحت «أحذية» فئات الأحذية كلّها —
+              العامّة وما أضافته التاجرة (صنادل، رياضيّة) — وزرّ إضافةٍ بقسمه. كانت قائمةً
+              واحدةً طويلة: سبعُ فئات ملابس، ثمّ العامّتان، ثمّ الفئات الخاصّة مدفونةً
+              بآخرها تحت عنوانٍ منفصل، فلا تجد التاجرة فئات أحذيتها. */}
+          {/* قفزٌ مباشرٌ إلى قسم: سبعُ بطاقات ملابس تسبق الأحذية، فلا تمرّري بحثاً عنها */}
+          {catGroups.length > 1 && (
+            <div className="mb-4 flex flex-wrap gap-2">
+              {catGroups.map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => document.getElementById(`s-cat-${d}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-gold-400/25 px-3 py-1.5 text-xs font-bold text-stone-200 transition hover:bg-gold-400/10"
+                >
+                  <DeptIcon dept={d} className="h-4 w-4" strokeWidth={1.7} /> {t(`dept.${d}`)}
+                </button>
+              ))}
             </div>
-            {(form.customCategories || []).length === 0 ? (
-              <button type="button" onClick={addCustomCat} className="flex w-full flex-col items-center gap-1.5 rounded-2xl border border-dashed border-gold-400/25 bg-black/15 p-5 text-center transition hover:border-gold-400/50 hover:bg-gold-400/5">
-                <FolderIcon className="h-6 w-6 text-gold-300" />
-                <span className="text-xs text-stone-400">{t('dashboard.store.noCustomCategories')}</span>
-              </button>
-            ) : (
-              <div className="space-y-3">
-                {form.customCategories.map((cc, idx) => (
-                  <div key={cc.key || idx} className={SUBCARD}>
-                    {/* الرأس: لوقو (إن وُجد) + الاسم، وأدوات الترتيب/النسخ/الحذف —
-                        نفس أدوات الشرايح، فترتيب القائمة هو ترتيب الظهور بالمتجر */}
-                    <div className="mb-2 flex items-center justify-between gap-2">
-                      <span className="flex min-w-0 items-center gap-2">
-                        {cc.image && <img src={cldThumb(cc.image, 120)} alt="" className="h-8 w-8 shrink-0 rounded object-contain" />}
-                        <span className="truncate text-xs font-semibold text-stone-500">{cc.name || t('dashboard.store.newCategory')}</span>
-                      </span>
-                      <RowTools
-                        index={idx} count={form.customCategories.length}
-                        onMove={(dir) => moveIn('customCategories', idx, dir)}
-                        onDuplicate={() => duplicateIn('customCategories', idx, MAX_CUSTOM_CATS, newCatKey)}
-                        onRemove={() => removeCustomCat(idx)}
-                      />
-                    </div>
-                    <input type="text" maxLength={40} className="input mb-2" placeholder={t('dashboard.store.categoryNameField')} value={cc.name} onChange={(e) => setCustomCat(idx, 'name', e.target.value)} />
-                    {/* قسم الفئة: يحدّد نمر منتجاتها (أحذية ٣٥–٤٦) ومكانها بتبويبات المتجر */}
-                    <div className="mb-2 flex flex-wrap items-center gap-1.5">
-                      <span className="me-1 text-[11px] font-semibold text-stone-400">{t('dashboard.store.categoryDept')}</span>
-                      {DEPARTMENTS.filter((d) => (form.departments || ['clothing']).includes(d) || normDept(cc.dept) === d).map((d) => {
-                        const on = normDept(cc.dept) === d;
-                        return (
-                          <button
-                            key={d}
-                            type="button"
-                            onClick={() => setCustomCat(idx, 'dept', d)}
-                            aria-pressed={on}
-                            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold transition ${on ? 'border-transparent' : 'border-gold-400/25 text-stone-300 hover:bg-white/5'}`}
-                            style={on ? { background: '#999795', color: '#1E1D1C' } : undefined}
-                          >
-                            <DeptIcon dept={d} className="h-3.5 w-3.5" strokeWidth={1.8} /> {t(`dept.${d}`)}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <ImageInput value={cc.image || ''} onChange={(v) => setCustomCat(idx, 'image', v)} contain hint={t('dashboard.store.categoryImageHint')} />
+          )}
+          {catGroups.map((d) => {
+            const builtins = platformKeys.filter((c) => catDept(c) === d);
+            const customs = (form.customCategories || []).map((cc, idx) => ({ cc, idx })).filter((x) => normDept(x.cc.dept) === d);
+            return (
+              <section key={d} id={`s-cat-${d}`} className={`scroll-mt-24 ${catGroups.length > 1 ? 'mb-6 last:mb-0' : ''}`}>
+                {catGroups.length > 1 && (
+                  <div className="mb-3 flex items-center gap-2.5 border-b border-gold-400/10 pb-2">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gold-400/10 text-gold-200">
+                      <DeptIcon dept={d} className="h-5 w-5" strokeWidth={1.6} />
+                    </span>
+                    <h3 className="font-display text-base font-bold text-stone-100">{t(`dept.${d}`)}</h3>
+                    <span className="ms-auto text-[11px] tabular-nums text-stone-400">{t('dashboard.store.catCount', { count: builtins.length + customs.length })}</span>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                )}
+                <div className="space-y-3">
+                  {builtins.map((c) => {
+                  const meta = form.categoryMeta?.[c] || {};
+                  const hidden = !!meta.hidden;
+                  // الاسم الظاهر: اسم المالكة إن وُجد وإلا الافتراضي — يُعرَض مرّة واحدة بالعنوان
+                  const displayName = (meta.name || '').trim() || platformCatName(c, t, i18n.language);
+                  // اللوقو الحالي: صورة المالكة إن رفعتها وإلا الأيقونة الثابتة — من المصدر
+                  // المشترك: فئتا الأحذية والإكسسوارات بلا رسمٍ مقصوص فتأخذان أيقونة قسمهما
+                  // (كان ‎/categories/shoes.png يُطلب فيفشل ويبقى مكانه فارغاً).
+                  const fixed = platformCatImage(c);
+                  const logo = meta.image ? cldThumb(meta.image, 120) : fixed;
+                  return (
+                    <div key={c} className={`${SUBCARD} transition ${hidden ? 'opacity-60' : ''}`}>
+                      {/* العنوان: لوقو + اسم واحد + زر إخفاء/إظهار — بلا تكرار للاسم */}
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <span className="flex min-w-0 items-center gap-2">
+                          {logo
+                            ? <img src={logo} alt="" className="h-8 w-8 shrink-0 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                            : <span className="grid h-8 w-8 shrink-0 place-items-center text-stone-300"><DeptIcon dept={catDept(c)} className="h-6 w-6" strokeWidth={1.4} /></span>}
+                          <span className="truncate text-sm font-semibold text-gold-200">{displayName}</span>
+                          {/* شارة «مخفية»: خلفية ذهبية شفّافة تعمل على الأبيض نهاراً وعلى الداكن ليلاً
+                              (bg-black/40 كانت تصير رمادية داكنة بنصّ باهت بالوضع النهاري) */}
+                          {hidden && <span className="shrink-0 rounded-full bg-gold-400/15 px-2 py-0.5 text-[10px] font-semibold text-stone-400 ring-1 ring-gold-400/20">{t('dashboard.store.hiddenBadge')}</span>}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setCatMeta(c, 'hidden', !hidden)}
+                          className={`inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-xs transition ${hidden ? 'text-gold-200 hover:text-gold-100' : 'text-stone-400 hover:text-red-300'}`}
+                        >
+                          {hidden
+                            ? <><EyeGlyph className="h-3.5 w-3.5" /> {t('dashboard.store.showCategory')}</>
+                            : <><EyeOffGlyph className="h-3.5 w-3.5" /> {t('dashboard.store.hideCategory')}</>}
+                        </button>
+                      </div>
+                      {!hidden && (
+                        <>
+                          <ImageInput
+                            value={meta.image || ''} onChange={(v) => setCatMeta(c, 'image', v)}
+                            placeholderImg={fixed} contain hint={t('dashboard.store.categoryImageHint')}
+                          />
+                          <input
+                            type="text"
+                            maxLength={40}
+                            className="input mt-2"
+                            placeholder={t('dashboard.store.renameCategory')}
+                            value={meta.name || ''}
+                            onChange={(e) => setCatMeta(c, 'name', e.target.value)}
+                          />
+                        </>
+                      )}
+                    </div>
+                  );
+                  })}
+                  {customs.map(({ cc, idx }, j) => (
+                    <div key={cc.key || idx} className={SUBCARD}>
+                      {/* الرأس: لوقو (إن وُجد) + الاسم، وأدوات الترتيب/النسخ/الحذف —
+                          نفس أدوات الشرايح، فترتيب القائمة هو ترتيب الظهور بالمتجر */}
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <span className="flex min-w-0 items-center gap-2">
+                          {cc.image && <img src={cldThumb(cc.image, 120)} alt="" className="h-8 w-8 shrink-0 rounded object-contain" />}
+                          <span className="truncate text-xs font-semibold text-stone-500">{cc.name || t('dashboard.store.newCategory')}</span>
+                        </span>
+                        <RowTools
+                          index={j} count={customs.length}
+                          onMove={(dir) => moveCustomInDept(idx, dir)}
+                          onDuplicate={() => duplicateIn('customCategories', idx, MAX_CUSTOM_CATS, newCatKey)}
+                          onRemove={() => removeCustomCat(idx)}
+                        />
+                      </div>
+                      <input type="text" maxLength={40} className="input mb-2" placeholder={t('dashboard.store.categoryNameField')} value={cc.name} onChange={(e) => setCustomCat(idx, 'name', e.target.value)} />
+                      {/* قسم الفئة: يحدّد نمر منتجاتها (أحذية ٣٥–٤٦) ومكانها بتبويبات المتجر */}
+                      <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                        <span className="me-1 text-[11px] font-semibold text-stone-400">{t('dashboard.store.categoryDept')}</span>
+                        {DEPARTMENTS.filter((d) => (form.departments || ['clothing']).includes(d) || normDept(cc.dept) === d).map((d) => {
+                          const on = normDept(cc.dept) === d;
+                          return (
+                            <button
+                              key={d}
+                              type="button"
+                              onClick={() => setCustomCat(idx, 'dept', d)}
+                              aria-pressed={on}
+                              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold transition ${on ? 'border-transparent' : 'border-gold-400/25 text-stone-300 hover:bg-white/5'}`}
+                              style={on ? { background: '#999795', color: '#1E1D1C' } : undefined}
+                            >
+                              <DeptIcon dept={d} className="h-3.5 w-3.5" strokeWidth={1.8} /> {t(`dept.${d}`)}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <ImageInput value={cc.image || ''} onChange={(v) => setCustomCat(idx, 'image', v)} contain hint={t('dashboard.store.categoryImageHint')} />
+                    </div>
+                  ))}
+                </div>
+                {/* إضافة فئةٍ بقسمها مباشرةً — حتى MAX_CUSTOM_CATS، سقف الخادم نفسه:
+                    لو سمحنا بأكثر لقُصّت الزائدة بصمتٍ بعد «تم الحفظ». */}
+                {(form.customCategories || []).length < MAX_CUSTOM_CATS && (
+                  <button type="button" onClick={() => addCustomCat(d)} className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-gold-400/25 bg-black/15 p-3 text-sm font-semibold text-stone-300 transition hover:border-gold-400/50 hover:bg-gold-400/5">
+                    <DeptIcon dept={d} className="h-4 w-4" strokeWidth={1.8} /> ＋ {t('dashboard.store.addDeptCategory', { dept: t(`dept.${d}`) })}
+                  </button>
+                )}
+              </section>
+            );
+          })}
           </Folded>
         </div>
 

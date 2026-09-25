@@ -136,7 +136,7 @@ function AnimatedRoutes() {
   useLayoutEffect(() => {
     const key = location.key;
     // نسجّل المسار لسجل "الرجوع الذكي" (أيقونات فتات الخبز ترجع بدل ما تفتح صفحة جديدة)
-    recordNav(key, location.pathname + location.search);
+    recordNav(key, location.pathname + location.search, navType === 'REPLACE');
     // أثناء قفل التمرير (درج/نافذة مفتوحة يثبّت body) يكون scrollY صفراً زائفاً — لا نحفظه
     const save = () => {
       if (document.body.style.position === 'fixed') return;
@@ -169,7 +169,11 @@ function AnimatedRoutes() {
   useLayoutEffect(() => {
     // تبديلٌ داخل الصفحة نفسها (تبويبات الأقسام) يغيّر الرابط ولا ينقل الزائر:
     // يبقى حيث هو بدل القفز للأعلى. يُطلَب صراحةً بحالة التنقّل keepScroll.
-    if (location.state?.keepScroll) return undefined;
+    //
+    // ولحظةَ التبديل وحدَها لا عند الرجوع: الحالة تبقى محفوظةً على مدخل التاريخ،
+    // فكان الرجوع إلى تبويب «أحذية» أو «إكسسوارات» (من فئةٍ أو قطعة) يتخطّى
+    // الاستعادة ويترك الزائرة أعلى الصفحة — والملابس، بلا تبديل، ترجع لمكانها.
+    if (location.state?.keepScroll && navType !== 'POP') return undefined;
     {
       // POP (رجوع): موضع مفتاح التاريخ. PUSH (تنقّل مباشر كتبويبات الشريط السفلي):
       // موضع آخر زيارة لنفس المسار — فالرئيسية ترجع لمكانها حتى بالتنقّل بالأزرار
