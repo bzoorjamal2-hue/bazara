@@ -302,7 +302,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
                       // لونان صريحان للنشط كنمر المقاسات: أصناف الذهب تنقلب بنّية نهاراً
                       style={on ? { background: '#999795', color: '#1E1D1C' } : undefined}
                     >
-                      <DeptIcon dept={d} className="h-6 w-6" strokeWidth={1.6} />
+                      <DeptIcon dept={d} className="h-8 w-8" strokeWidth={1.4} />
                       {t(`dept.${d}`)}
                     </button>
                   );

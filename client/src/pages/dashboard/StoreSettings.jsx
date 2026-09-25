@@ -20,7 +20,7 @@ import {
 import { cldThumb } from '../../utils/cloudinary.js';
 import { SIZE_CHART } from '../../utils/sizes.js';
 import { DEPARTMENTS, normDept, storeDepts } from '../../utils/departments.js';
-import DeptIcon from '../../components/DeptIcon.jsx';
+import DeptIcon, { DeptsIcon } from '../../components/DeptIcon.jsx';
 import BankSelect from '../../components/BankSelect.jsx';
 import BANKS from '../../utils/banks.js';
 import { usePlatformCatKeys, catDept } from '../../utils/platformCategories.js';
@@ -882,7 +882,7 @@ export default function StoreSettings() {
             يحدّد الأقسام الظاهرة بنموذج المنتج وفئاته. قسمٌ فيه منتجات لا يُطفأ:
             إطفاؤه كان سيُخفي اختيار قسم قطعٍ قائمة، والخادم يُبقيه مفعّلاً أصلاً. */}
         <div id="s-depts" className={CARD}>
-          <SectionHead icon={<DeptIcon dept="shoes" className="h-5 w-5" strokeWidth={1.7} />} title={t('dashboard.store.deptsTitle')} desc={t('dashboard.store.deptsHint')} done={doneMap['s-depts']} />
+          <SectionHead icon={<DeptsIcon className="h-5 w-5" />} title={t('dashboard.store.deptsTitle')} desc={t('dashboard.store.deptsHint')} done={doneMap['s-depts']} />
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
             {DEPARTMENTS.map((d) => {
               const on = (form.departments || []).includes(d);
@@ -905,8 +905,8 @@ export default function StoreSettings() {
                   }}
                   className={`flex items-start gap-3 rounded-2xl border p-3.5 text-start transition ${on ? 'border-emerald-400/40 bg-emerald-500/10' : 'border-gold-400/20 bg-black/20 hover:bg-white/5'} ${locked ? 'cursor-default' : ''}`}
                 >
-                  <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${on ? 'text-emerald-300' : 'text-stone-400'}`} style={{ background: on ? 'rgba(16,185,129,0.14)' : 'rgba(120,113,108,0.14)' }}>
-                    <DeptIcon dept={d} className="h-6 w-6" strokeWidth={1.6} />
+                  <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl ${on ? 'text-emerald-300' : 'text-stone-400'}`} style={{ background: on ? 'rgba(16,185,129,0.14)' : 'rgba(120,113,108,0.14)' }}>
+                    <DeptIcon dept={d} className="h-8 w-8" strokeWidth={1.4} />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center justify-between gap-2">
