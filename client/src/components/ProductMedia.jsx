@@ -54,7 +54,7 @@ const withFirstFrame = (src) => (src && !src.includes('#') ? `${src}#t=0.1` : sr
 
 // الصورةُ الممثِّلةُ لوسيطةٍ (لطيرانِ السلّة وبطاقاتِ المشاركة): لقطةُ الفيديو للفيديو
 export const mediaCover = (m, width) => (m?.type === 'video'
-  ? (width ? cldVideoPoster(m.src, width) : m.poster || '')
+  ? ((width && cldVideoPoster(m.src, width)) || m.poster || '')
   : m?.src || '');
 
 /**
