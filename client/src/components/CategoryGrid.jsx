@@ -31,7 +31,7 @@ function CategoryCard({ cat }) {
   const src = cat.image ? catImage(cat.image, 400) : cat.builtin ? platformCatImage(cat.key) : '';
   const srcPng = cat.image || !cat.builtin ? '' : platformCatImageFallback(cat.key);
   return (
-    <div className="transition duration-300 group-hover:-translate-y-1">
+    <div className="w-full transition duration-300 group-hover:-translate-y-1">
       {/* بلا أرضيّةٍ ولا إطار: شكلُ الرسمِ وحدَه يظهر. الرسومُ مقصوصةٌ على
           شفافيّةٍ أصلاً، فالإطارُ يحبسُها ويجعلُ منها أزراراً لا رسوماً.
           ويبقى ‎aspect-square ليتساوى مقاسُ الجميعِ بالصفّ.
@@ -89,7 +89,9 @@ function Arrow({ dir, rtl, onClick }) {
 // وتُعادُ حركةُ الدخول. وكان هذا يقعُ بكلِّ تغييرِ حالةٍ لا عند الأسهمِ وحدَها.
 function Item({ cat, active, onSelect }) {
   const isActive = active === cat.key;
-  const cls = `group block transition-all duration-300 hover:-translate-y-1.5 ${isActive ? 'ring-2 ring-wine ring-offset-2 ring-offset-cream rounded-2xl' : ''}`;
+  // ‏w-full: الزرّ بطبعه بعرض محتواه لا بعرض عموده — بسفاري (آيفون) كانت البلاطة
+  // تنكمش ما دامت صورتها لم تصل، فيظهر الاسم وحده بمنتصف الصفّ
+  const cls = `group block w-full transition-all duration-300 hover:-translate-y-1.5 ${isActive ? 'ring-2 ring-wine ring-offset-2 ring-offset-cream rounded-2xl' : ''}`;
   return onSelect ? (
     <button type="button" onClick={() => onSelect(isActive ? 'all' : cat.key)} className={cls}>
       <CategoryCard cat={cat} />

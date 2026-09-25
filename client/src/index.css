@@ -1406,14 +1406,14 @@ html.dark .theme-pub .text-indigo-700 { color: #a5b4fc; }
 
 /* ظهور تدريجي للأقسام عند التمرير (مكوّن Reveal) — فخامة حديثة: انزلاق لأعلى مع
    "ضبابية → وضوح" (focus-in) بمنحنى ease-out راقٍ يعطي إحساس افتتاحية أزياء. */
+/* أقصر وأخفّ: كانت ٠٫٧ ثانية مع ضبابيّة (أغلى ما ترسمه وحدة رسم الجوال) تبدأ بعد
+   دخول القسم — فيبدو الموقع يتأخّر. الآن انزلاقٌ قصير وتلاشٍ بـ٠٫٤ يبدأ قبل الوصول. */
 .bz-reveal {
   opacity: 0;
-  transform: translateY(26px);
-  filter: blur(6px);
-  transition: opacity .7s cubic-bezier(0.22, 0.61, 0.36, 1),
-              transform .7s cubic-bezier(0.22, 0.61, 0.36, 1),
-              filter .7s ease-out;
-  will-change: opacity, transform, filter;
+  transform: translateY(14px);
+  transition: opacity .4s cubic-bezier(0.22, 0.61, 0.36, 1),
+              transform .4s cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: opacity, transform;
 }
 .bz-reveal-in { opacity: 1; transform: none; filter: none; }
 @media (prefers-reduced-motion: reduce) {
@@ -1427,7 +1427,7 @@ html.dark .theme-pub .text-indigo-700 { color: #a5b4fc; }
    نفس اللغة البصرية ونفس الحركات، لكن بلا العمليات المكلفة على وحدة الرسم:
    ضبابية الدخول وطبقات الزجاج الشفّاف هي أغلى ما يُقطّع الملاحة على الأجهزة
    الضعيفة. الانزلاق والتلاشي (transform/opacity) يبقيان — وهما ما يصنع الإحساس. */
-.bz-lite .bz-reveal { filter: none; transition: opacity .45s ease-out, transform .45s ease-out; }
+.bz-lite .bz-reveal { transition: opacity .3s ease-out, transform .3s ease-out; }
 .bz-lite .glass,
 .bz-lite .glass-strong { backdrop-filter: none; -webkit-backdrop-filter: none; }
 .bz-lite .bz-hero-scrim { background: rgba(15, 15, 14, 0.5); }
@@ -2556,11 +2556,12 @@ body.bz-impersonating { padding-top: calc(44px + env(safe-area-inset-top, 0px));
 }
 @media (prefers-reduced-motion: reduce) { .bz-in { animation: none; } }
 
-/* ───────── الظهور عند التمرير ───────── */
+/* ───────── الظهور عند التمرير ─────────
+   تعريفٌ ثانٍ لـ‎.bz-reveal يغلب الأوّل بموضعه — القيم نفسها هناك، وتُغيَّران معاً. */
 .bz-reveal {
   opacity: 0;
-  transform: translateY(18px);
-  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translateY(14px);
+  transition: opacity .4s cubic-bezier(0.22, 0.61, 0.36, 1), transform .4s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 .bz-reveal-in { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
@@ -5933,6 +5934,11 @@ html.dark .theme-pub .bz-dt-btn[aria-selected="true"] .bz-dt-count { background:
 /* رأسُ القسمِ بصفحاتِ التصنيفات: الدائرةُ والعدّاد بالوضعين */
 /* صورة القسم بأزراره ورؤوسه: دائرةٌ فاتحة ثابتة بالوضعين — الرسوم رماديّةٌ دافئة
    تحتاج أرضاً فاتحة، ودائرةٌ فاتحة على الحبّة الداكنة النشطة تُقرأ «مختار» بوضوح */
+/* تبديل القسم: الشبكة الجديدة تدخل بتلاشٍ قصير (٠٫٢٢) — ‎animate-fade-in (٠٫٦) كان
+   يترك البلاطات باهتةً لحظةً طويلة بعد كلّ ضغطة */
+@keyframes bz-swap { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.bz-swap { animation: bz-swap .22s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+@media (prefers-reduced-motion: reduce) { .bz-swap { animation: none; } }
 .bz-dt-thumb { background: #F2F0ED; box-shadow: inset 0 0 0 1px rgba(31, 30, 29, 0.07); }
 html.dark .bz-dt-thumb { background: #EDEAE6; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12); }
 .bz-dh-dot { background: #1F1E1D; color: #F6F5F3; }

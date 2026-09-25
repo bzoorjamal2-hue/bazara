@@ -16,7 +16,8 @@ export default function Reveal({ children, delay = 0, className = '' }) {
       ([e]) => {
         if (e.isIntersecting) { setShown(true); io.disconnect(); }
       },
-      { rootMargin: '0px 0px -10% 0px', threshold: 0.08 },
+      // يبدأ قبل الوصول (كالبطاقات): القسم جاهزٌ حين يبلغه التمرير
+      { rootMargin: '0px 0px 25% 0px', threshold: 0 },
     );
     io.observe(el);
     // شبكة أمان: لو لم يُطلق المراقب لأي سبب (تبويب مخفي، حالة نادرة) نُظهر بعد مهلة
@@ -30,7 +31,7 @@ export default function Reveal({ children, delay = 0, className = '' }) {
   const [done, setDone] = useState(false);
   useEffect(() => {
     if (!shown) return undefined;
-    const id = setTimeout(() => setDone(true), 800);
+    const id = setTimeout(() => setDone(true), 500);
     return () => clearTimeout(id);
   }, [shown]);
 

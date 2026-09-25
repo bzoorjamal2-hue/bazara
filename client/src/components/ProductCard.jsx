@@ -197,8 +197,8 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
     <Link
       ref={inViewRef}
       to={productPath(product)}
-      className={`group relative block h-full transition-[opacity,transform] duration-500 ease-out ${inView ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0'} hover:!-translate-y-1.5 active:scale-[0.99]`}
-      style={{ transitionDelay: inView ? `${(index % 5) * 55}ms` : '0ms' }}
+      className={`group relative block h-full transition-[opacity,transform] duration-300 ease-out ${inView ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0'} hover:!-translate-y-1.5 active:scale-[0.99]`}
+      style={{ transitionDelay: inView ? `${(index % 5) * 30}ms` : '0ms' }}
       onMouseEnter={startHover}
       onMouseLeave={() => { endHover(); setSwatchColor(''); }}
       onTouchStart={startPress}
