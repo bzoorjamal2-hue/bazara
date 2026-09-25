@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CLOTHING_CATS, DEPT_BASE_CATS, deptOfCategory } from './departments.js';
+import { CLOTHING_CATS, SUB_CATS, deptOfCategory } from './departments.js';
 
 // فئات المنصّة.
 //
@@ -10,8 +10,9 @@ import { CLOTHING_CATS, DEPT_BASE_CATS, deptOfCategory } from './departments.js'
 // التصميم إضافيّ عمداً: إن لم يعرّف المدير شيئاً فالنتيجة هي القائمة المدمجة
 // نفسها بالضبط — فلا يتغيّر شيء حتى قبل نشر الترقية.
 
-// السبع للملابس ثمّ الفئة العامّة لكلّ قسمٍ آخر (أحذية، إكسسوارات)
-export const BUILTIN_CATS = [...CLOTHING_CATS, ...Object.keys(DEPT_BASE_CATS)];
+// السبع للملابس، ثمّ فئات الأحذية وعامّتها، ثمّ فئات الإكسسوارات وعامّتها — ترتيب
+// الخادم نفسه (server/src/utils/department.js)
+export const BUILTIN_CATS = [...CLOTHING_CATS, ...SUB_CATS.shoes, 'shoes', ...SUB_CATS.accessories, 'accessory'];
 
 const KEY = 'bz_platform_cats';
 const LIVE_KEY = 'bz_live_depts';
@@ -31,10 +32,10 @@ let liveCats = (() => {
   catch { return null; }
 })();
 
-// ما يعرّفه المدير: { extra: [{key,name,nameEn,image}], hidden: ['shirt', …] }
+// ما يعرّفه المدير: { extra: [{key,name,nameEn,image}], hidden: ['shirt', …], images: {heels: url} }
 let custom = (() => {
-  try { return JSON.parse(sessionStorage.getItem(KEY) || 'null') || { extra: [], hidden: [] }; }
-  catch { return { extra: [], hidden: [] }; }
+  try { return { images: {}, ...(JSON.parse(sessionStorage.getItem(KEY) || 'null') || { extra: [], hidden: [] }) }; }
+  catch { return { extra: [], hidden: [], images: {} }; }
 })();
 
 const listeners = new Set();
@@ -51,6 +52,7 @@ export function setPlatformCategories(next, live, cats) {
   custom = {
     extra: Array.isArray(next?.extra) ? next.extra.filter((c) => c && c.key) : [],
     hidden: Array.isArray(next?.hidden) ? next.hidden : [],
+    images: next?.images && typeof next.images === 'object' ? next.images : {},
   };
   try { sessionStorage.setItem(KEY, JSON.stringify(custom)); } catch { /* التخزين ممتلئ أو محظور */ }
   listeners.forEach((fn) => fn());
@@ -107,7 +109,9 @@ export function platformCatName(key, t, lang) {
 export function platformCatImage(key) {
   const found = custom.extra.find((c) => c.key === key);
   if (found?.image) return found.image;
-  // الفئتان العامّتان بلا رسمٍ مقصوص: مكانهما أيقونة القسم (DeptIcon)
+  // صورة المدير الرسميّة لفئةٍ مدمجة (فئات الأحذية والإكسسوارات غالباً) — هويّة الموقع
+  if (custom.images?.[key]) return custom.images[key];
+  // فئات الأحذية والإكسسوارات بلا رسمٍ مقصوص بعد: مكانها أيقونتها (CatIcon)
   return CLOTHING_CATS.includes(key) ? `/categories/${key}.webp?v=5` : '';
 }
 
@@ -115,8 +119,14 @@ export function platformCatImage(key) {
 // وغيابُ صورة الفئة يترك مربّعاً فارغاً بواجهة التسوّق.
 export function platformCatImageFallback(key) {
   const found = custom.extra.find((c) => c.key === key);
-  if (found?.image) return '';
+  if (found?.image || custom.images?.[key]) return '';
   return CLOTHING_CATS.includes(key) ? `/categories/${key}.png?v=5` : '';
+}
+
+// مفاتيح فئات المنصّة بقسمٍ ما (المدمجة غير المخفيّة ثمّ إضافات المدير) — خيارات
+// «تظهر بالموقع العام تحت» لفئات التاجرة
+export function platformKeysOfDept(dept) {
+  return platformCatKeys().filter((k) => catDept(k) === dept);
 }
 
 export function isBuiltinCat(key) {

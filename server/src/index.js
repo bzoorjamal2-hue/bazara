@@ -35,6 +35,7 @@ import adsRoutes from './routes/ads.routes.js';
 import mediaRoutes from './routes/media.routes.js';
 import { resumePending } from './utils/mediaWorker.js';
 import { r2Enabled } from './utils/r2.js';
+import { recomputeDepartments } from './utils/department.js';
 import { verifyWebhook, receiveWebhook, igLoginRedirect, igCallback, igChoose } from './controllers/instagram.controller.js';
 import { refreshPageFields } from './config/instagram.js';
 import { decrypt } from './config/opost.js';
@@ -580,6 +581,10 @@ END $$;`,
     "ALTER TABLE products ADD COLUMN IF NOT EXISTS department VARCHAR(20) NOT NULL DEFAULT 'clothing';",
     // أقسام المتجر المفعّلة — المتاجر القائمة كلّها ملابس، والجديدة تبدأ بالثلاثة
     "ALTER TABLE stores ADD COLUMN IF NOT EXISTS departments JSONB NOT NULL DEFAULT '[\"clothing\"]'::jsonb;",
+    // فئة المنصّة التي تقع تحتها القطعة (فئتها إن كانت فئة منصّة، وإلا ما رُبطت به
+    // فئة التاجرة) — بها تصل القطعة إلى فئات الموقع العام. تُملأ عند الإقلاع.
+    'ALTER TABLE products ADD COLUMN IF NOT EXISTS platform_category VARCHAR(40);',
+    'CREATE INDEX IF NOT EXISTS idx_products_platform_category ON products (platform_category);',
     // فئات المنصّة التي يعرّفها المدير: { extra: [{key,name,nameEn,image}], hidden: [] }
     "ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS platform_categories JSONB NOT NULL DEFAULT '{}'::jsonb;",
     // محتوى صفحة الواجهة الذي يحرّره المدير — الفارغ يعني «النصّ الأصلي»
@@ -838,6 +843,9 @@ if (process.env.NODE_ENV === 'production') {
   // فلا يبقى رفض غير ملتقَط يوقف العملية عند الإقلاع.
   ensureSchemaFile()
     .then(ensureColumns)
+    // قسم كلّ قطعة وفئة المنصّة التي تقع تحتها — يملأ العمود الجديد ويصحّح ما تغيّر
+    // (يمرّ على أزواج متجر/فئة المتمايزة لا على المنتجات، ويكتب ما تغيّر فقط)
+    .then(() => recomputeDepartments())
     .catch((e) => console.error('⚠️ الترقيات:', e?.message))
     .then(ensureAccounting)
     .finally(start);

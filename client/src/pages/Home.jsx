@@ -28,7 +28,7 @@ import useInViewOnce from '../hooks/useInViewOnce.js';
 import ScrollProgress from '../components/ScrollProgress.jsx';
 import StoriesRow from '../components/StoriesRow.jsx';
 import { BAZARA_WHATSAPP } from '../config/site.js';
-import { usePlatformCatKeys, usePublicCatKeys, useLiveDepartments, platformCatKeys, storeOnlyCats, catDept, platformCatName, isLiveCat } from '../utils/platformCategories.js';
+import { usePlatformCatKeys, usePublicCatKeys, useLiveDepartments, platformCatKeys, storeOnlyCats, catDept, platformCatName } from '../utils/platformCategories.js';
 import { normDept } from '../utils/departments.js';
 import DeptTabs from '../components/DeptTabs.jsx';
 import { phGlyph } from '../utils/imageFallback.js';
@@ -47,22 +47,16 @@ export default function Home() {
   // الفئات المخصّصة المجمّعة من كل المتاجر (يعيدها /public/home) — نستعملها
   // لعرض منتجاتها داخل الرئيسية عند اختيار فئة، لا لعرضها بصفّ الفئات.
   const customCats = storeOnlyCats(data?.customCategories, platformKeys);
-  // فئاتُ التاجراتِ تعودُ إلى الصفّ بجانبِ السبعِ المدمجة.
-  //
-  // كنّا أخرجناها حين كانت الرسومُ المدمجةُ نمطاً واحداً، فتقعُ بجانبِها صورةٌ
-  // فوتوغرافيّةٌ أو لقطةُ جوّالٍ فينكسرُ الصفّ. والسبعُ اليومَ صورُ قطعٍ حقيقيّةٍ
-  // مقصوصةٌ على شفافيّة — فالمسافةُ بينها وبين صورةِ تاجرةٍ صارت أقصرَ بكثير،
-  // والشبكةُ تعرضُ الجميعَ بـ‎object-contain بمربّعٍ واحدٍ فتتساوى المقاسات.
+  // فئات المنصّة وحدها، بشكلها الثابت — هويّة الموقع. فئات التاجرات (بأسمائها
+  // وصورها) لمتاجرهنّ: كانت تدخل الصفّ هنا بصورةٍ من متجرٍ ما («أطقم بلاطين»
+  // بصورة متجرها) فيتغيّر وجه الرئيسية كلّما أضافت تاجرةٌ فئة. قطعها تصل هنا
+  // تحت فئة المنصّة التي رُبطت بها (products.platform_category).
   //
   // وكلّ فئةٍ بقسمها: الشبكة تعرض قسماً واحداً تحت تبويباته. الأقسام التي لا
   // قطع فيها بعد لا تظهر (publicCatKeys وliveDepts) — لا تبويب «أحذية» فارغ.
   const publicKeys = usePublicCatKeys();
   const liveDepts = useLiveDepartments();
-  const gridCats = [
-    ...publicKeys.map((k) => ({ key: k, builtin: true, dept: catDept(k) })),
-    ...customCats.map((cc) => ({ key: cc.key, name: cc.name, image: cc.image, builtin: false, dept: normDept(cc.dept) }))
-      .filter((c) => liveDepts.includes(c.dept) && isLiveCat(c.key)),
-  ];
+  const gridCats = publicKeys.map((k) => ({ key: k, builtin: true, dept: catDept(k) }));
   const homeDepts = liveDepts.filter((d) => gridCats.some((c) => c.dept === d));
   // القسم المختار بالرابط (?dept=) لا بحالةٍ بالذاكرة، كفئات الملابس تماماً: من
   // تبويب «أحذية» إلى قطعةٍ أو فئة ثمّ رجوع → تعودين إلى الأحذية وموضعكِ عليها،

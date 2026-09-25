@@ -8,7 +8,7 @@ import { normalizeTiers, villagesByCity, flatInternalLocalities, mapExternalLoca
 import { fetchCities, fetchAreas, cachedLocalities, fetchAllLocalities } from '../config/opost.js';
 import { ensureToken } from './opost.controller.js';
 import { categoryAliases } from '../utils/category.js';
-import { BUILTIN_CATS, normDept, normDepts } from '../utils/department.js';
+import { BUILTIN_CATS, normDept, normDepts, withPlatformLinks } from '../utils/department.js';
 import { paidOnline, codAmount } from '../utils/cod.js';
 
 // أعمدة المنتج + بيانات المتجر + تجميع التقييمات. نربط users لفلترة المشتركين الفعّالين.
@@ -56,7 +56,7 @@ function mapStorePublic(s) {
     taglineEn: s.tagline_en || '',
     welcomeOffer: s.welcome_offer || '',
     categoryMeta: s.category_meta && typeof s.category_meta === 'object' ? s.category_meta : {},
-    customCategories: Array.isArray(s.custom_categories) ? s.custom_categories : [],
+    customCategories: withPlatformLinks(s.custom_categories),
     departments: normDepts(s.departments),
     collections: Array.isArray(s.collections) ? s.collections : [],
     sectionLayout: ['mixed', 'grid', 'rail'].includes(s.section_layout) ? s.section_layout : 'mixed',
@@ -548,16 +548,18 @@ export async function getByCategory(req, res, next) {
       );
       return res.json({ category: cat, products: rc.rows.map(mapProduct) });
     }
+    // فئة منصّة: قطعها بفئتها نفسها، وقطع فئات التاجرات المربوطة بها (platform_category)
+    // — «كعب سهرة» بمتجرٍ و«كعب عالي» بآخر يصلان معاً إلى «كعب عالي» بالموقع العام.
     let r;
     if (storeSlug) {
       r = await query(
-        `${PRODUCT_SELECT} WHERE p.category = ANY($1::text[]) AND s.slug = $2 AND ${active} ORDER BY p.featured DESC, p.created_at DESC LIMIT 60`,
-        [categoryAliases(cat), storeSlug]
+        `${PRODUCT_SELECT} WHERE (p.category = ANY($1::text[]) OR p.platform_category = $3) AND s.slug = $2 AND ${active} ORDER BY p.featured DESC, p.created_at DESC LIMIT 60`,
+        [categoryAliases(cat), storeSlug, cat]
       );
     } else {
       r = await query(
-        `${PRODUCT_SELECT} WHERE p.category = ANY($1::text[]) AND ${active} ORDER BY p.featured DESC, p.created_at DESC LIMIT 60`,
-        [categoryAliases(cat)]
+        `${PRODUCT_SELECT} WHERE (p.category = ANY($1::text[]) OR p.platform_category = $2) AND ${active} ORDER BY p.featured DESC, p.created_at DESC LIMIT 60`,
+        [categoryAliases(cat), cat]
       );
     }
     res.json({ category: cat, products: r.rows.map(mapProduct) });

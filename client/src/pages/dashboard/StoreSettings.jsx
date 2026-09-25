@@ -23,7 +23,7 @@ import { DEPARTMENTS, normDept, storeDepts } from '../../utils/departments.js';
 import DeptIcon, { DeptsIcon } from '../../components/DeptIcon.jsx';
 import BankSelect from '../../components/BankSelect.jsx';
 import BANKS from '../../utils/banks.js';
-import { usePlatformCatKeys, catDept, platformCatImage, platformCatName } from '../../utils/platformCategories.js';
+import { usePlatformCatKeys, catDept, platformCatImage, platformCatName, platformKeysOfDept } from '../../utils/platformCategories.js';
 import { copyText } from '../../utils/links.js';
 
 // أيقونتا إخفاء/إظهار (عين مشطوبة / عين) — للتحكم بظهور الفئة بالمتجر
@@ -185,11 +185,18 @@ export default function StoreSettings() {
   const platformKeys = usePlatformCatKeys();
   // عدد منتجات المتجر بكلّ قسم: القسم الذي فيه قطعٌ يبقى مفعّلاً بإعدادات الأقسام
   const [deptUse, setDeptUse] = useState({});
+  // وعدد منتجات كلّ فئة: فئة المنصّة تظهر بإعدادات المتجر حين تبيع التاجرة تحتها فقط
+  const [catUse, setCatUse] = useState({});
   useEffect(() => {
     api.get('/products').then((r) => {
       const c = {};
-      for (const p of r.data.products || []) { const d = normDept(p.department); c[d] = (c[d] || 0) + 1; }
+      const k = {};
+      for (const p of r.data.products || []) {
+        const d = normDept(p.department); c[d] = (c[d] || 0) + 1;
+        k[p.category] = (k[p.category] || 0) + 1;
+      }
       setDeptUse(c);
+      setCatUse(k);
     }).catch(() => { /* العدّاد زينة: الخادم يحمي الأقسام المستعملة على كلّ حال */ });
   }, []);
   const { refresh, store: authStore } = useAuth();
@@ -322,10 +329,15 @@ export default function StoreSettings() {
       // نُرسل وقت انتهاء الفلاش كـ ISO مطلق (UTC) — datetime-local محلي، فنحوّله
       // بالمتصفح كي لا يختلف عن توقيت الخادم (Render بتوقيت UTC عادةً)
       const payload = { ...form, flashEndsAt: form.flashEndsAt ? new Date(form.flashEndsAt).toISOString() : '' };
-      await api.put('/stores/me', payload);
+      const res = await api.put('/stores/me', payload);
       await refresh();
       clearCachePrefixes(['home', 'storepage:']); // الإعدادات الجديدة (شعار/بانر/فلاش) تظهر فوراً
-      savedRef.current = JSON.stringify(form);
+      // الخادم يكمل ربط الفئات بفئات المنصّة (المستنتج من الاسم حين تُترك «تلقائي»):
+      // نعرض ما حُفظ فعلاً فترى التاجرة أين ستظهر فئتها
+      const saved = res.data?.store?.customCategories;
+      const next = Array.isArray(saved) ? { ...form, customCategories: saved } : form;
+      if (next !== form) setForm(next);
+      savedRef.current = JSON.stringify(next);
       clearDraft(`store-settings:${authStore?.id || ''}`); // حُفظ فعلاً — لا داعي لمسودّة بعده
       setMsg(t('dashboard.store.saved'));
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -967,7 +979,11 @@ export default function StoreSettings() {
             </div>
           )}
           {catGroups.map((d) => {
-            const builtins = platformKeys.filter((c) => catDept(c) === d);
+            // لا فئة إلزاميّة: فئة المنصّة هنا حين فيها منتجات أو رفعت لها التاجرة صورة —
+            // لا سبع بطاقاتٍ لكلّ متجرٍ ولو لم يبع عبايةً واحدة. (الاسم وحده لا يكفي: متاجر
+            // حفظت الأسماء الافتراضيّة نفسها من النموذج القديم.)
+            const builtins = platformKeys.filter((c) => catDept(c) === d
+              && (catUse[c] > 0 || form.categoryMeta?.[c]?.image));
             const customs = (form.customCategories || []).map((cc, idx) => ({ cc, idx })).filter((x) => normDept(x.cc.dept) === d);
             return (
               <section key={d} id={`s-cat-${d}`} className={`scroll-mt-24 ${catGroups.length > 1 ? 'mb-6 last:mb-0' : ''}`}>
@@ -1059,7 +1075,7 @@ export default function StoreSettings() {
                             <button
                               key={d}
                               type="button"
-                              onClick={() => setCustomCat(idx, 'dept', d)}
+                              onClick={() => { setCustomCat(idx, 'dept', d); setCustomCat(idx, 'platform', ''); }}
                               aria-pressed={on}
                               className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold transition ${on ? 'border-transparent' : 'border-gold-400/25 text-stone-300 hover:bg-white/5'}`}
                               style={on ? { background: '#999795', color: '#1E1D1C' } : undefined}
@@ -1069,6 +1085,21 @@ export default function StoreSettings() {
                           );
                         })}
                       </div>
+                      {/* مكانها بالموقع العام: الرئيسية وصفحة التصنيفات تعرضان فئات المنصّة
+                          الثابتة وحدها، وقطع هذه الفئة تظهر تحت ما تختاره هنا */}
+                      <label className="mb-2 block">
+                        <span className="mb-1 block text-[11px] font-semibold text-stone-400">{t('dashboard.store.categoryPlatform')}</span>
+                        <select
+                          className="input"
+                          value={cc.platform || ''}
+                          onChange={(e) => setCustomCat(idx, 'platform', e.target.value)}
+                        >
+                          <option value="">{t('dashboard.store.categoryPlatformAuto')}</option>
+                          {platformKeysOfDept(normDept(cc.dept)).map((k) => (
+                            <option key={k} value={k}>{platformCatName(k, t, i18n.language)}</option>
+                          ))}
+                        </select>
+                      </label>
                       <ImageInput value={cc.image || ''} onChange={(v) => setCustomCat(idx, 'image', v)} contain hint={t('dashboard.store.categoryImageHint')} />
                     </div>
                   ))}

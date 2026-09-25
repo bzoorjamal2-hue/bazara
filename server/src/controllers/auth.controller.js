@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import validator from 'validator';
-import { NEW_STORE_DEPTS, normDepts } from '../utils/department.js';
+import { NEW_STORE_DEPTS, normDepts, withPlatformLinks } from '../utils/department.js';
 import pool, { query } from '../config/db.js';
 import { generateUniqueStoreSlug } from '../utils/slug.js';
 import { generateSubscriberCode, isUserActive, daysRemaining, isAdminEmail, planPeriodEnd } from '../utils/subscription.js';
@@ -370,7 +370,7 @@ export async function me(req, res, next) {
             // كان الرأسُ يبحثُ عن بانرٍ لا يصلُه أبداً فيبقى لوحاً داكناً عامّاً.
             panelImage: row.store_panel_image || '',
             banners: Array.isArray(row.store_banners) ? row.store_banners : [],
-            customCategories: Array.isArray(row.store_custom_categories) ? row.store_custom_categories : [],
+            customCategories: withPlatformLinks(row.store_custom_categories),
             departments: normDepts(row.store_departments),
             // زرُّ الرسائلِ بالشريطِ السفليِّ يظهرُ لمن ربطت إنستغرام وحدَها، لا
             // لكلِّ تاجرةٍ بيومِ إطلاقٍ نتذكّرُ تبديلَه. والحقلُ يركبُ الحمولةَ

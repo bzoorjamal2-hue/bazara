@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { cldThumb } from '../utils/cloudinary.js';
 import { usePublicCatKeys, platformCatImage, platformCatImageFallback, catImage, catDept, platformCatName } from '../utils/platformCategories.js';
-import DeptIcon from './DeptIcon.jsx';
+import CatIcon from './CatIcon.jsx';
 
 // لا قائمةَ مكتوبةً هنا: الاحتياطيّ يُبنى من مفاتيح المنصّة الحيّة، وإلا لم تظهر
 // الفئة التي يضيفها المدير في أي شبكةٍ لم تُمرَّر إليها cats صراحةً.
@@ -53,7 +53,7 @@ function CategoryCard({ cat }) {
           />
         ) : (
           // فئة بلا صورة (مخصّصة، أو عامّة لقسم الأحذية/الإكسسوارات) → أيقونة قسمها
-          <DeptIcon dept={cat.dept || catDept(cat.key)} className="relative h-1/2 w-1/2 text-wine/70 transition-transform duration-500 group-hover:scale-105" strokeWidth={1.1} />
+          <CatIcon cat={cat.platform || cat.key} dept={cat.dept || catDept(cat.key)} className="relative h-1/2 w-1/2 text-wine/70 transition-transform duration-500 group-hover:scale-105" strokeWidth={1.1} />
         )}
       </div>
       <div className="pt-2.5 text-center">

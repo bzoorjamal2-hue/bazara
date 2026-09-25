@@ -6,7 +6,7 @@ import { toHostedUrl } from '../utils/hostImage.js';
 import { normalizeTiers, flatInternalLocalities, mapExternalLocalities } from '../config/deliveryCities.js';
 import { cachedLocalities, fetchAllLocalities } from '../config/opost.js';
 import { ensureToken } from './opost.controller.js';
-import { BUILTIN_CATS as CATEGORY_KEYS, normDept, normDepts, sanitizeDepartments, recomputeDepartments } from '../utils/department.js';
+import { BUILTIN_CATS as CATEGORY_KEYS, normDept, normDepts, sanitizeDepartments, recomputeDepartments, platformOfCustom, withPlatformLinks, loadPlatformExtra } from '../utils/department.js';
 
 // تخطيطُ الأقسامِ الثلاثة: متناوبٌ (شبكةٌ ثمّ رفّان) أو شبكاتٌ كلُّها أو أرففٌ كلُّها
 const LAYOUTS = ['mixed', 'grid', 'rail'];
@@ -39,7 +39,8 @@ function mapStore(s) {
     taglineEn: s.tagline_en || '',
     welcomeOffer: s.welcome_offer || '',
     categoryMeta: s.category_meta && typeof s.category_meta === 'object' ? s.category_meta : {},
-    customCategories: Array.isArray(s.custom_categories) ? s.custom_categories : [],
+    // كلّ فئةٍ خاصّة بربطها بفئة المنصّة (المستنتج من اسمها إن لم تختره التاجرة)
+    customCategories: withPlatformLinks(s.custom_categories),
     departments: normDepts(s.departments),
     collections: Array.isArray(s.collections) ? s.collections : [],
     sectionLayout: LAYOUTS.includes(s.section_layout) ? s.section_layout : 'mixed',
@@ -81,8 +82,10 @@ function sanitizeCustomCategories(raw) {
     if (seen.has(key)) continue;
     seen.add(key);
     const image = typeof c?.image === 'string' ? c.image.trim().slice(0, 2000) : '';
-    // القسم يحدّد مقاسات منتجات الفئة ومكانها بواجهة المتجر
-    out.push({ key, name, image, dept: normDept(c?.dept) });
+    // القسم يحدّد مقاسات منتجات الفئة ومكانها بواجهة المتجر، وplatform فئة الموقع
+    // العام التي تصل إليها قطعها (يُتحقَّق منه عند الحفظ — انظر updateMyStore)
+    const platform = typeof c?.platform === 'string' ? c.platform.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 40) : '';
+    out.push({ key, name, image, dept: normDept(c?.dept), platform });
   }
   return out;
 }
@@ -235,7 +238,10 @@ export async function updateMyStore(req, res, next) {
     ? String(req.body.panelImage).slice(0, 500) : '';
   const welcomeOffer = String(req.body.welcomeOffer || '').slice(0, 300);
   const categoryMeta = sanitizeCategoryMeta(req.body.categoryMeta);
-  const customCategories = sanitizeCustomCategories(req.body.customCategories);
+  // الربط بفئة المنصّة: اختيار التاجرة إن كان فئةً من قسمها، وإلا المستنتج من الاسم
+  const platformExtra = await loadPlatformExtra().catch(() => []);
+  const customCategories = sanitizeCustomCategories(req.body.customCategories)
+    .map((c) => ({ ...c, platform: platformOfCustom(c, platformExtra) || '' }));
   const collections = sanitizeStoreCollections(req.body.collections);
   // بكسلات التمويل: معرّفات فقط (أرقام/حروف/شرطات) — تُحقن كسكربتات رسمية بالواجهة
   const pixelId = (v, max = 40) => String(v || '').trim().replace(/[^\w-]/g, '').slice(0, max);

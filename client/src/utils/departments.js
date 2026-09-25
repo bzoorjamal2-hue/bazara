@@ -13,6 +13,21 @@ export const CLOTHING_CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacke
 // ‏accessory لا accessories: الثانية قيمةٌ قديمة يحوّلها الخادم إلى hijab.
 export const DEPT_BASE_CATS = { shoes: 'shoes', accessory: 'accessories' };
 
+// فئات المنصّة الثابتة للأحذية والإكسسوارات — نظير السبع للملابس (والخادم نفسه
+// بـutils/department.js). هي هويّة الموقع العام، وفئات التاجرات تُربط بها.
+export const SUB_CATS = {
+  shoes: ['heels', 'sneakers', 'sandals', 'boots', 'flats'],
+  accessories: ['bags', 'watches', 'jewelry', 'sunglasses'],
+};
+
+// قسم فئةٍ مدمجة (null لغيرها)
+export function builtinDept(key) {
+  if (CLOTHING_CATS.includes(key)) return 'clothing';
+  if (DEPT_BASE_CATS[key]) return DEPT_BASE_CATS[key];
+  for (const [d, keys] of Object.entries(SUB_CATS)) if (keys.includes(key)) return d;
+  return null;
+}
+
 export const normDept = (v) => (DEPARTMENTS.includes(v) ? v : 'clothing');
 
 export const deptOfProduct = (p) => normDept(p?.department);
@@ -48,8 +63,8 @@ export function storeDepts(store) {
 
 // قسم فئة: المدمجة معروفة، والمضافة تحمل قسمها (المنصّة قبل المتجر كالخادم)
 export function deptOfCategory(key, { platformExtra = [], storeCustom = [] } = {}) {
-  if (CLOTHING_CATS.includes(key)) return 'clothing';
-  if (DEPT_BASE_CATS[key]) return DEPT_BASE_CATS[key];
+  const bd = builtinDept(key);
+  if (bd) return bd;
   const pe = (platformExtra || []).find((c) => c?.key === key);
   if (pe) return normDept(pe.dept);
   const sc = (storeCustom || []).find((c) => c?.key === key);
