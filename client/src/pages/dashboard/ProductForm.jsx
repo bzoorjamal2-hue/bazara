@@ -9,7 +9,7 @@ import VideoInput from '../../components/VideoInput.jsx';
 import Select from '../../components/Select.jsx';
 import { usePlatformCatKeys, platformCatName, storeOnlyCats, catDept } from '../../utils/platformCategories.js';
 import { DEPARTMENTS, normDept, storeDepts } from '../../utils/departments.js';
-import DeptIcon from '../../components/DeptIcon.jsx';
+import { DeptThumb } from '../../components/DeptTabs.jsx';
 import useScrollLock from '../../hooks/useScrollLock.js';
 import { XIcon, ClockIcon, PaletteIcon, CameraIcon, StarIcon, EditIcon, TagIcon, CashIcon, TrashIcon } from '../../components/icons.jsx';
 import { Field, DateInput, Tip } from '../../components/FormField.jsx';
@@ -303,7 +303,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
                       // لونان صريحان للنشط كنمر المقاسات: أصناف الذهب تنقلب بنّية نهاراً
                       style={on ? { background: '#999795', color: '#1E1D1C' } : undefined}
                     >
-                      <DeptIcon dept={d} className="h-8 w-8" strokeWidth={1.4} />
+                      <DeptThumb dept={d} className="h-11 w-11" />
                       {t(`dept.${d}`)}
                     </button>
                   );

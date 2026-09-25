@@ -22,7 +22,7 @@ import { productThumb } from '../utils/recentlyViewed.js';
 import { norm } from '../utils/match.js';
 import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys, storeOnlyCats, catDept, storeBuiltinKeys, byPlatformOrder } from '../utils/platformCategories.js';
 import { normDept, presentDepts } from '../utils/departments.js';
-import DeptIcon from './DeptIcon.jsx';
+import { DeptThumb } from './DeptTabs.jsx';
 
 
 
@@ -339,7 +339,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
                   <div key={d} className={groups.length > 1 ? 'pb-1' : ''}>
                     {groups.length > 1 && (
                       <p className="flex items-center gap-2 px-3 pb-1 pt-3 text-[11px] font-extrabold uppercase tracking-[0.18em] text-cream/55">
-                        <DeptIcon dept={d} className="h-4 w-4" /> {t(`dept.${d}`)}
+                        <DeptThumb dept={d} className="h-6 w-6" /> {t(`dept.${d}`)}
                       </p>
                     )}
                     {ordered.filter((e) => e.dept === d).map((e) => (
