@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { InstallIcon } from './icons.jsx';
+import modalRoot from '../utils/modalRoot.js';
 
 const isStandalone = () =>
   (typeof window !== 'undefined' &&
@@ -76,7 +78,7 @@ export default function InstallApp() {
       </div>
 
       {/* نافذة الإرشادات (آيفون / كمبيوتر) */}
-      {help && (
+      {help && createPortal(
         <div className="fixed inset-0 z-[90] flex items-center justify-center p-4" onClick={() => setHelp(null)}>
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           <div className="animate-fade-up relative w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
@@ -121,7 +123,8 @@ export default function InstallApp() {
               {t('common.ok') || 'تمام'}
             </button>
           </div>
-        </div>
+        </div>,
+        modalRoot(),
       )}
     </section>
   );

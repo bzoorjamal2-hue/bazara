@@ -170,7 +170,7 @@ table { max-width: 100%; }
      والحركةُ على الشفافيّةِ والإزاحةِ وحدَهما: كلتاهما على بطاقةِ الرسمِ فلا
      تُعيدانِ تخطيطَ الصفحة، والقسمُ قد يكونُ جدولَ طلباتٍ طويلاً. */
   @keyframes bz-page-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-  .bz-page-in { animation: bz-page-in 0.22s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+  .bz-page-in { animation: bz-page-in 0.22s cubic-bezier(0.22, 0.61, 0.36, 1) backwards; }
 }
 /* اسم المتجر الذهبي على السلايدر — تدرّج ذهبي دائم (غير متأثّر بالثيم) فوق الحجاب
    الداكن، مع بريق خفيف يمرّ عليه لإحساس فخم. */
@@ -5962,7 +5962,9 @@ html.dark .theme-pub .bz-dt-btn[aria-selected="true"] .bz-dt-count { background:
 /* تبديل القسم: الشبكة الجديدة تدخل بتلاشٍ قصير (٠٫٢٢) — ‎animate-fade-in (٠٫٦) كان
    يترك البلاطات باهتةً لحظةً طويلة بعد كلّ ضغطة */
 @keyframes bz-swap { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-.bz-swap { animation: bz-swap .22s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+/* backwards لا both: بعد انتهاء الحركة لا يبقى على الغلاف تحويلٌ (transform) — وإلّا
+   صار «الإطار» لكلّ نافذةٍ ثابتةٍ (fixed) بداخله، فتنزاح النافذة عن الشاشة */
+.bz-swap { animation: bz-swap .22s cubic-bezier(0.22, 0.61, 0.36, 1) backwards; }
 @media (prefers-reduced-motion: reduce) { .bz-swap { animation: none; } }
 /* زرّ «المتابعة بجوجل» الثابت (GoogleButton): على ألوان جوجل الرسميّة للزرّ المحدّد —
    أبيض بحدٍّ رماديّ نهاراً، وداكنٌ ليلاً. المرور على الغلاف (group) لأنّ زرّ جوجل

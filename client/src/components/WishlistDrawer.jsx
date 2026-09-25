@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { productPath } from '../utils/links.js';
@@ -10,6 +11,7 @@ import { HeartIcon, CartIcon, XIcon, ForwardIcon } from './icons.jsx';
 import { cldThumb } from '../utils/cloudinary.js';
 import Strike from './Strike.jsx';
 import { phGlyph } from '../utils/imageFallback.js';
+import modalRoot from '../utils/modalRoot.js';
 
 const PH = phGlyph(120, 120, '👗');
 
@@ -34,7 +36,7 @@ export default function WishlistDrawer() {
   };
   const goFull = () => { close(); navigate('/wishlist'); };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[85] flex justify-end bg-black/60 p-3 backdrop-blur-sm sm:p-4" onClick={close}>
       <aside
         onClick={(e) => e.stopPropagation()}
@@ -92,6 +94,7 @@ export default function WishlistDrawer() {
           </motion.div>
         )}
       </aside>
-    </div>
+    </div>,
+    modalRoot(),
   );
 }

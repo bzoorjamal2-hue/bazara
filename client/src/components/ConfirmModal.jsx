@@ -1,5 +1,7 @@
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import useScrollLock from '../hooks/useScrollLock.js';
+import modalRoot from '../utils/modalRoot.js';
 import { WarnIcon } from './icons.jsx';
 
 // نافذة تأكيد أنيقة (بديلة عن window.confirm) — تُغلق بالضغط خارجها (يُلغي)
@@ -18,8 +20,9 @@ export default function ConfirmModal({
   useScrollLock(open);
   if (!open) return null;
 
-  return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
+  // تُرسم خارج الصفحة (modalRoot): فتتوسّط الشاشة دائماً أينما كان التمرير
+  return createPortal(
+    <div role="dialog" aria-modal="true" className="fixed inset-0 z-[90] flex items-center justify-center overscroll-contain p-4" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !busy && onCancel?.()} />
       <div className="animate-fade-up relative w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-2xl">
         <div className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full ${danger ? 'bg-red-50 text-red-500' : 'bg-wine/10 text-wine'}`}>
@@ -56,6 +59,7 @@ export default function ConfirmModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    modalRoot(),
   );
 }
