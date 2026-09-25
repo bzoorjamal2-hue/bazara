@@ -23,6 +23,22 @@ export const BUILTIN_CATS = [...CLOTHING_CATS, ...Object.keys(DEPT_BASE_CATS)];
 
 export const normDept = (v) => (DEPARTMENTS.includes(v) ? v : 'clothing');
 
+// الأقسام التي فعّلتها التاجرة لمتجرها (stores.departments). القديم ملابس وحدها.
+export function normDepts(v) {
+  const set = new Set(Array.isArray(v) ? v : []);
+  const out = DEPARTMENTS.filter((d) => set.has(d));
+  return out.length ? out : ['clothing'];
+}
+
+// ما تُرسله الإعدادات، مع إبقاء كلّ قسمٍ فيه منتجات مفعّلاً: إطفاؤه كان سيخفي
+// اختيار قسم منتجاتٍ قائمة عند تعديلها، والمتجر يعرضها على كلّ حال.
+export function sanitizeDepartments(raw, mustKeep = []) {
+  return normDepts([...(Array.isArray(raw) ? raw : []), ...mustKeep]);
+}
+
+// متجرٌ جديد يبدأ بالأقسام الثلاثة، ويطفئ ما لا يبيعه من الإعدادات
+export const NEW_STORE_DEPTS = JSON.stringify(DEPARTMENTS);
+
 export function departmentOf(category, { storeCustom = [], platformExtra = [] } = {}) {
   if (CLOTHING_CATS.includes(category)) return 'clothing';
   if (DEPT_BASE_CATS[category]) return DEPT_BASE_CATS[category];

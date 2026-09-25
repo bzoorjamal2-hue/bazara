@@ -25,7 +25,7 @@ import Reveal from '../components/Reveal.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { cldThumb, cldVideoPoster, cldVideoCrop, heroVideoShape, heroVideoAllowed, heroCrop } from '../utils/cloudinary.js';
 import { sizeLabel, sizesInProducts } from '../utils/sizes.js';
-import { presentDepts, deptOfProduct, normDept } from '../utils/departments.js';
+import { presentDepts, deptOfProduct, normDept, storeDepts } from '../utils/departments.js';
 import DeptTabs, { DeptHeading } from '../components/DeptTabs.jsx';
 import DeptIcon from '../components/DeptIcon.jsx';
 import { getMySize } from '../utils/mySize.js';
@@ -346,7 +346,7 @@ export default function StorePage() {
   // شبكة فئات الرئيسية: ما فيه قطعٌ من القسم المختار. كانت السبع تظهر بكلّ
   // متجرٍ ولو لم يبع إلّا الأحذية فتفتح على لا شيء. متجرٌ بلا قطعٍ بعد يرى
   // الشبكة كاملةً كما كان، فالفراغ هناك طبيعيّ.
-  const homeCats = (data.products.length ? visibleCats : gridCats).filter((c) => !multiDept || c.dept === dept);
+  const homeCats = (data.products.length ? visibleCats : gridCats.filter((c) => storeDepts(store).includes(c.dept))).filter((c) => !multiDept || c.dept === dept);
 
   const searching = q.trim().length > 0;
   // أحدث المنتجات (لقسم "جديدنا")

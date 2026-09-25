@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import validator from 'validator';
+import { NEW_STORE_DEPTS, normDepts } from '../utils/department.js';
 import pool, { query } from '../config/db.js';
 import { generateUniqueStoreSlug } from '../utils/slug.js';
 import { generateSubscriberCode, isUserActive, daysRemaining, isAdminEmail, planPeriodEnd } from '../utils/subscription.js';
@@ -57,11 +58,12 @@ export async function register(req, res, next) {
     const user = userResult.rows[0];
 
     // نعبّي رقم واتساب/هاتف المتجر تلقائياً برقم التسجيل (يقدر يغيّره لاحقاً)
-    await client.query('INSERT INTO stores (user_id, name, slug, phone, whatsapp) VALUES ($1, $2, $3, $4, $4)', [
+    await client.query('INSERT INTO stores (user_id, name, slug, phone, whatsapp, departments) VALUES ($1, $2, $3, $4, $4, $5::jsonb)', [
       user.id,
       storeName,
       slug,
       phone || '',
+      NEW_STORE_DEPTS,
     ]);
     await client.query('COMMIT');
 
@@ -287,11 +289,12 @@ export async function socialRegister(req, res, next) {
       [name, g.email, passwordHash, generateSubscriberCode(), phone || '', g.pid]
     );
     const user = userResult.rows[0];
-    await client.query('INSERT INTO stores (user_id, name, slug, phone, whatsapp) VALUES ($1, $2, $3, $4, $4)', [
+    await client.query('INSERT INTO stores (user_id, name, slug, phone, whatsapp, departments) VALUES ($1, $2, $3, $4, $4, $5::jsonb)', [
       user.id,
       storeName,
       slug,
       phone || '',
+      NEW_STORE_DEPTS,
     ]);
     await client.query('COMMIT');
 
@@ -329,6 +332,7 @@ export async function me(req, res, next) {
               s.id AS store_id, s.name AS store_name, s.slug AS store_slug,
               s.description AS store_description, s.logo_url AS store_logo_url,
               s.custom_categories AS store_custom_categories,
+              s.departments AS store_departments,
               s.banners AS store_banners, s.panel_image AS store_panel_image,
               s.ig_connected AS store_ig_connected
        FROM users u
@@ -367,6 +371,7 @@ export async function me(req, res, next) {
             panelImage: row.store_panel_image || '',
             banners: Array.isArray(row.store_banners) ? row.store_banners : [],
             customCategories: Array.isArray(row.store_custom_categories) ? row.store_custom_categories : [],
+            departments: normDepts(row.store_departments),
             // زرُّ الرسائلِ بالشريطِ السفليِّ يظهرُ لمن ربطت إنستغرام وحدَها، لا
             // لكلِّ تاجرةٍ بيومِ إطلاقٍ نتذكّرُ تبديلَه. والحقلُ يركبُ الحمولةَ
             // التي تُحمَّلُ مرّةً عند الدخول — لا طلبَ جديدٌ بكلِّ فتحةِ صفحة.

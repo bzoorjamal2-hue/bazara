@@ -118,7 +118,7 @@ export async function generateAd(req, res, next) {
 
     const id = String(req.body.productId || '');
     const p = await query(
-      `SELECT id, name, description, category, price, old_price, sale_ends_at,
+      `SELECT id, name, description, category, department, price, old_price, sale_ends_at,
               size, color, stock, size_stock, color_stock, images
        FROM products WHERE id = $1 AND store_id = $2 AND hidden_at IS NULL`,
       [id, store.id]

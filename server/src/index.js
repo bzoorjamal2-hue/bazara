@@ -578,6 +578,8 @@ END $$;`,
     // قسم المنتج (ملابس/أحذية/إكسسوارات) مشتقٌّ من فئته — انظر utils/department.js.
     // كلّ ما سبق هذا العمود ملابس، فالافتراض يصحّ للقديم بلا ترحيل.
     "ALTER TABLE products ADD COLUMN IF NOT EXISTS department VARCHAR(20) NOT NULL DEFAULT 'clothing';",
+    // أقسام المتجر المفعّلة — المتاجر القائمة كلّها ملابس، والجديدة تبدأ بالثلاثة
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS departments JSONB NOT NULL DEFAULT '[\"clothing\"]'::jsonb;",
     // فئات المنصّة التي يعرّفها المدير: { extra: [{key,name,nameEn,image}], hidden: [] }
     "ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS platform_categories JSONB NOT NULL DEFAULT '{}'::jsonb;",
     // محتوى صفحة الواجهة الذي يحرّره المدير — الفارغ يعني «النصّ الأصلي»

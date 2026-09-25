@@ -1,7 +1,7 @@
 {
   "app": {
     "name": "Bazara",
-    "tagline": "Your destination for luxury fashion"
+    "tagline": "Fashion, shoes & accessories"
   },
   "assistant": {
     "fab": "Style assistant",
@@ -173,7 +173,7 @@
   },
   "searchPage": {
     "title": "Search",
-    "placeholder": "Search for a dress, abaya, store…",
+    "placeholder": "Search for a dress, shoes, a bag, a store…",
     "recent": "Recent searches",
     "clear": "Clear all",
     "stores": "Stores",
@@ -882,10 +882,10 @@
   "landing": {
     "wordmark": "ELEGANCE",
     "seoTitle": "Bazara — the Palestinian fashion marketplace",
-    "seoDesc": "Open your online store in minutes, or browse fashion from Palestinian merchants. Delivery across Palestine, cash on delivery.",
-    "badge": "Palestinian platform · Fashion & modest wear",
+    "seoDesc": "Open your online store in minutes, or browse fashion, shoes and accessories from Palestinian merchants. Delivery across Palestine, cash on delivery.",
+    "badge": "Palestinian platform · Fashion · Shoes · Accessories",
     "title": "Your online store starts today",
-    "subtitle": "A Palestinian fashion platform: open your store in minutes — no technical skills, no setup fee — or browse what merchants are showing today.",
+    "subtitle": "A Palestinian platform for fashion, shoes and accessories: open your store in minutes — no technical skills, no setup fee — or browse what merchants are showing today.",
     "chip1": "Delivery across Palestine",
     "chip2": "Cash on delivery",
     "chip3": "Easy exchange",
@@ -962,7 +962,7 @@
     "navAbout": "About us",
     "navContact": "Contact",
     "aboutTitle": "About us",
-    "aboutText": "Bazara is a Palestinian platform bringing fashion and modest-wear stores together in one place. We build it for owners who sell through Instagram and lose track of the messages: a store with its own link, orders in order, shipping wired in and numbers you understand — no technical skills, no setup fees.",
+    "aboutText": "Bazara is a Palestinian platform bringing fashion, modest-wear, shoe and accessory stores together in one place. We build it for owners who sell through Instagram and lose track of the messages: a store with its own link, orders in order, shipping wired in and numbers you understand — no technical skills, no setup fees.",
     "contactTitle": "Contact us",
     "linksTitle": "Quick links",
     "whatsapp": "WhatsApp",

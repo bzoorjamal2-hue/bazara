@@ -19,11 +19,11 @@ import {
 } from '../../components/icons.jsx';
 import { cldThumb } from '../../utils/cloudinary.js';
 import { SIZE_CHART } from '../../utils/sizes.js';
-import { DEPARTMENTS, normDept } from '../../utils/departments.js';
+import { DEPARTMENTS, normDept, storeDepts } from '../../utils/departments.js';
 import DeptIcon from '../../components/DeptIcon.jsx';
 import BankSelect from '../../components/BankSelect.jsx';
 import BANKS from '../../utils/banks.js';
-import { usePlatformCatKeys } from '../../utils/platformCategories.js';
+import { usePlatformCatKeys, catDept } from '../../utils/platformCategories.js';
 import { copyText } from '../../utils/links.js';
 
 // أيقونتا إخفاء/إظهار (عين مشطوبة / عين) — للتحكم بظهور الفئة بالمتجر
@@ -79,6 +79,7 @@ const SECTIONS = [
   ['s-zones', 'zones', (f) => Number(f.deliveryTiers?.wb) > 0],
   ['s-flash', 'flashTitle', (f) => Number(f.flashPercent) > 0 && Boolean(f.flashEndsAt)],
   ['s-ads', 'adsTitle', (f) => Boolean(f.fbPixel || f.tiktokPixel || f.gaId)],
+  ['s-depts', 'deptsTitle', (f) => (f.departments || []).length > 0],
   ['s-categories', 'categories', (f) => Object.values(f.categoryMeta || {}).some((m) => m?.image || m?.name) || (f.customCategories || []).length > 0],
   ['s-collections', 'collections', (f) => (f.collections || []).some((c) => String(c?.title || '').trim())],
   ['s-marketing', 'marketing', (f) => Boolean(String(f.welcomeOffer || '').trim())],
@@ -182,6 +183,15 @@ function PayoutStatus({ status, t }) {
 export default function StoreSettings() {
   const { t } = useTranslation();
   const platformKeys = usePlatformCatKeys();
+  // عدد منتجات المتجر بكلّ قسم: القسم الذي فيه قطعٌ يبقى مفعّلاً بإعدادات الأقسام
+  const [deptUse, setDeptUse] = useState({});
+  useEffect(() => {
+    api.get('/products').then((r) => {
+      const c = {};
+      for (const p of r.data.products || []) { const d = normDept(p.department); c[d] = (c[d] || 0) + 1; }
+      setDeptUse(c);
+    }).catch(() => { /* العدّاد زينة: الخادم يحمي الأقسام المستعملة على كلّ حال */ });
+  }, []);
   const { refresh, store: authStore } = useAuth();
   const [form, setForm] = useState(null);
   // قسمٌ واحدٌ مفتوحٌ من الثلاثةِ الطويلة — وكلُّها مطويّةٌ عندَ الفتح
@@ -220,6 +230,7 @@ export default function StoreSettings() {
           welcomeOffer: s.welcomeOffer || '',
           categoryMeta: s.categoryMeta && typeof s.categoryMeta === 'object' ? s.categoryMeta : {},
           customCategories: Array.isArray(s.customCategories) ? s.customCategories : [],
+          departments: storeDepts(s),
           collections: Array.isArray(s.collections) ? s.collections : [],
           fbPixel: s.fbPixel || '',
           tiktokPixel: s.tiktokPixel || '',
@@ -391,7 +402,7 @@ export default function StoreSettings() {
 
   // الفئات الإضافية المخصّصة: [{key, name, image}]
   const addCustomCat = () =>
-    setForm((f) => ({ ...f, customCategories: [...(f.customCategories || []), { key: 'c_' + Math.random().toString(36).slice(2, 9), name: '', image: '', dept: 'clothing' }] }));
+    setForm((f) => ({ ...f, customCategories: [...(f.customCategories || []), { key: 'c_' + Math.random().toString(36).slice(2, 9), name: '', image: '', dept: (f.departments || ['clothing'])[0] }] }));
   const setCustomCat = (idx, key, val) =>
     setForm((f) => ({ ...f, customCategories: f.customCategories.map((c, i) => (i === idx ? { ...c, [key]: val } : c)) }));
   const removeCustomCat = (idx) =>
@@ -866,12 +877,61 @@ export default function StoreSettings() {
           </div>
         </div>
 
+
+        {/* أقسام المتجر — ما تبيعه التاجرة: ملابس، أحذية، إكسسوارات، أو أيّ مزيج.
+            يحدّد الأقسام الظاهرة بنموذج المنتج وفئاته. قسمٌ فيه منتجات لا يُطفأ:
+            إطفاؤه كان سيُخفي اختيار قسم قطعٍ قائمة، والخادم يُبقيه مفعّلاً أصلاً. */}
+        <div id="s-depts" className={CARD}>
+          <SectionHead icon={<DeptIcon dept="shoes" className="h-5 w-5" strokeWidth={1.7} />} title={t('dashboard.store.deptsTitle')} desc={t('dashboard.store.deptsHint')} done={doneMap['s-depts']} />
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+            {DEPARTMENTS.map((d) => {
+              const on = (form.departments || []).includes(d);
+              const used = deptUse[d] || 0;
+              const locked = on && (used > 0 || (form.departments || []).length === 1);
+              return (
+                <button
+                  key={d}
+                  type="button"
+                  role="switch"
+                  aria-checked={on}
+                  aria-disabled={locked}
+                  onClick={() => {
+                    if (locked) return;
+                    setForm((f) => {
+                      const cur = new Set(f.departments || []);
+                      if (cur.has(d)) cur.delete(d); else cur.add(d);
+                      return { ...f, departments: DEPARTMENTS.filter((x) => cur.has(x)) };
+                    });
+                  }}
+                  className={`flex items-start gap-3 rounded-2xl border p-3.5 text-start transition ${on ? 'border-emerald-400/40 bg-emerald-500/10' : 'border-gold-400/20 bg-black/20 hover:bg-white/5'} ${locked ? 'cursor-default' : ''}`}
+                >
+                  <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${on ? 'text-emerald-300' : 'text-stone-400'}`} style={{ background: on ? 'rgba(16,185,129,0.14)' : 'rgba(120,113,108,0.14)' }}>
+                    <DeptIcon dept={d} className="h-6 w-6" strokeWidth={1.6} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-extrabold text-stone-100">{t(`dept.${d}`)}</span>
+                      <span className={`relative h-6 w-10 shrink-0 rounded-full transition ${on ? 'bg-emerald-500' : 'bg-stone-500/50'} ${locked ? 'opacity-70' : ''}`}>
+                        <span className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all ${on ? 'start-5' : 'start-1'}`} />
+                      </span>
+                    </span>
+                    <span className="mt-1 block text-[11px] leading-snug text-stone-400">{t(`dashboard.store.deptDesc_${d}`)}</span>
+                    {used > 0 && (
+                      <span className="mt-1.5 block text-[10px] font-semibold text-stone-300">{t('dashboard.store.deptLocked', { count: used })}</span>
+                    )}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* تخصيص الفئات — صورة واقعية + اسم لكل فئة */}
         <div id="s-categories" className={CARD}>
           <SectionHead icon={<FolderIcon className="h-5 w-5" />} title={t('dashboard.store.categories')} desc={t('dashboard.store.categoriesHint')} done={doneMap['s-categories']} />
           <Folded open={openSec === 's-categories'} onToggle={() => setOpenSec((v) => (v === 's-categories' ? '' : 's-categories'))} label={t('dashboard.store.categories')}>
           <div className="space-y-3">
-            {platformKeys.map((c) => {
+            {platformKeys.filter((c) => (form.departments || ['clothing']).includes(catDept(c))).map((c) => {
               const meta = form.categoryMeta?.[c] || {};
               const hidden = !!meta.hidden;
               // الاسم الظاهر: اسم المالكة إن وُجد وإلا الافتراضي — يُعرَض مرّة واحدة بالعنوان
@@ -956,7 +1016,7 @@ export default function StoreSettings() {
                     {/* قسم الفئة: يحدّد نمر منتجاتها (أحذية ٣٥–٤٦) ومكانها بتبويبات المتجر */}
                     <div className="mb-2 flex flex-wrap items-center gap-1.5">
                       <span className="me-1 text-[11px] font-semibold text-stone-400">{t('dashboard.store.categoryDept')}</span>
-                      {DEPARTMENTS.map((d) => {
+                      {DEPARTMENTS.filter((d) => (form.departments || ['clothing']).includes(d) || normDept(cc.dept) === d).map((d) => {
                         const on = normDept(cc.dept) === d;
                         return (
                           <button

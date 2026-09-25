@@ -77,10 +77,15 @@ const AUDIENCE = {
   jacket: { ageMin: 18, ageMax: 40, interests: ['جاكيتات', 'موضة شتوية'] },
   trench: { ageMin: 22, ageMax: 45, interests: ['معاطف', 'موضة شتوية'] },
   shirt: { ageMin: 18, ageMax: 40, interests: ['بلوزات', 'ملابس عمل', 'ستايل يومي'] },
+  // الفئتان العامّتان لقسمَي الأحذية والإكسسوارات — ولكلّ فئةٍ خاصّةٍ فيهما
+  shoes: { ageMin: 18, ageMax: 45, interests: ['أحذية نسائية', 'كعب عالي', 'موضة'] },
+  accessory: { ageMin: 18, ageMax: 45, interests: ['حقائب نسائية', 'إكسسوارات', 'مجوهرات'] },
 };
 
-export function suggestAudience(category) {
-  const base = AUDIENCE[category] || { ageMin: 18, ageMax: 45, interests: ['أزياء نسائية', 'تسوّق أونلاين'] };
+export function suggestAudience(category, department = 'clothing') {
+  // فئةٌ خاصّة («كعب عالي» عند متجرٍ واحد) تأخذ جمهور قسمها
+  const key = AUDIENCE[category] ? category : department === 'shoes' ? 'shoes' : department === 'accessories' ? 'accessory' : category;
+  const base = AUDIENCE[key] || { ageMin: 18, ageMax: 45, interests: ['أزياء نسائية', 'تسوّق أونلاين'] };
   return { ...base, genders: 'female', locations: ['الضفة الغربية', 'القدس'] };
 }
 
@@ -93,7 +98,7 @@ function fallbackCopies(p, store, goal) {
   const colorLine = colors.length ? `متوفّرة بـ${colors.slice(0, 3).join(' و')}` : '';
   const sizeLine = sizes.length ? `النمر: ${sizes.join('، ')}` : '';
   const priceLine = sale ? `السعر ${Number(p.price)}₪ بدل ${sale.old}₪` : `السعر ${Number(p.price)}₪`;
-  const tags = ['#أزياء_نسائية', '#فلسطين', `#${String(store.name || '').replace(/\s+/g, '_')}`, '#تسوق_اونلاين'];
+  const tags = [p.department === 'shoes' ? '#أحذية_نسائية' : p.department === 'accessories' ? '#إكسسوارات' : '#أزياء_نسائية', '#فلسطين', `#${String(store.name || '').replace(/\s+/g, '_')}`, '#تسوق_اونلاين'];
 
   return [
     {
@@ -308,7 +313,7 @@ export async function writeAd({ product, store, goal = 'sales', tone = 'warm', d
   return {
     copies,
     usedAi,
-    audience: suggestAudience(product.category),
+    audience: suggestAudience(product.category, product.department),
     ...suggestBudget(product.price),
     facts: { colors, sizes, sale: saleInfo(product), price: Number(product.price) },
   };

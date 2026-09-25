@@ -6,7 +6,7 @@ import { toHostedUrl } from '../utils/hostImage.js';
 import { normalizeTiers, flatInternalLocalities, mapExternalLocalities } from '../config/deliveryCities.js';
 import { cachedLocalities, fetchAllLocalities } from '../config/opost.js';
 import { ensureToken } from './opost.controller.js';
-import { BUILTIN_CATS as CATEGORY_KEYS, normDept, recomputeDepartments } from '../utils/department.js';
+import { BUILTIN_CATS as CATEGORY_KEYS, normDept, normDepts, sanitizeDepartments, recomputeDepartments } from '../utils/department.js';
 
 // تخطيطُ الأقسامِ الثلاثة: متناوبٌ (شبكةٌ ثمّ رفّان) أو شبكاتٌ كلُّها أو أرففٌ كلُّها
 const LAYOUTS = ['mixed', 'grid', 'rail'];
@@ -40,6 +40,7 @@ function mapStore(s) {
     welcomeOffer: s.welcome_offer || '',
     categoryMeta: s.category_meta && typeof s.category_meta === 'object' ? s.category_meta : {},
     customCategories: Array.isArray(s.custom_categories) ? s.custom_categories : [],
+    departments: normDepts(s.departments),
     collections: Array.isArray(s.collections) ? s.collections : [],
     sectionLayout: LAYOUTS.includes(s.section_layout) ? s.section_layout : 'mixed',
     panelImage: s.panel_image || '',
@@ -282,6 +283,14 @@ export async function updateMyStore(req, res, next) {
 
     // حماية: لو دخل الشعار كصورة base64 ثقيلة، نرفعه تلقائياً لـ Cloudinary ونخزّن الرابط الخفيف
     const hostedLogo = await toHostedUrl(logoUrl || '');
+
+    // الأقسام المفعّلة (ملابس/أحذية/إكسسوارات). حفظٌ مستقلّ لا يمسّ الاستعلام الكبير
+    // أدناه، ولا يُلمَس إن لم يُرسَل الحقل (حفظ الشعار وحده مثلاً يرسل النموذج كاملاً).
+    if (req.body.departments !== undefined) {
+      const used = await query('SELECT DISTINCT department FROM products WHERE store_id = $1', [store.id]);
+      const departments = sanitizeDepartments(req.body.departments, used.rows.map((r) => r.department));
+      await query('UPDATE stores SET departments = $1::jsonb WHERE id = $2', [JSON.stringify(departments), store.id]);
+    }
 
     const updated = await query(
       `UPDATE stores SET

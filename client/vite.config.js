@@ -21,7 +21,7 @@ export default defineConfig({
       manifest: {
         name: 'Bazara Store',
         short_name: 'Bazara',
-        description: 'Bazara — وجهتك للأزياء الفاخرة',
+        description: 'Bazara — أزياء وأحذية وإكسسوارات',
         lang: 'ar',
         dir: 'rtl',
         start_url: '/',

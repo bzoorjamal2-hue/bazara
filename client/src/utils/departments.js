@@ -17,6 +17,13 @@ export const normDept = (v) => (DEPARTMENTS.includes(v) ? v : 'clothing');
 
 export const deptOfProduct = (p) => normDept(p?.department);
 
+// أقسام المتجر المفعّلة (stores.departments) — القديم بلا حقلٍ ملابس وحدها
+export function storeDepts(store) {
+  const set = new Set(Array.isArray(store?.departments) ? store.departments : []);
+  const out = DEPARTMENTS.filter((d) => set.has(d));
+  return out.length ? out : ['clothing'];
+}
+
 // قسم فئة: المدمجة معروفة، والمضافة تحمل قسمها (المنصّة قبل المتجر كالخادم)
 export function deptOfCategory(key, { platformExtra = [], storeCustom = [] } = {}) {
   if (CLOTHING_CATS.includes(key)) return 'clothing';

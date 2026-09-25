@@ -678,7 +678,13 @@
       "collWideNeedsImage": "Add an image to this collection first — a band is a full-width image above all else.",
       "collDesc": "Line under the title",
       "collDescPlaceholder": "Quiet cuts, fabrics that last",
-      "categoryDept": "Department:"
+      "categoryDept": "Department:",
+      "deptsTitle": "Your store departments",
+      "deptsHint": "Turn on what you sell: clothing, shoes, accessories — or any mix. Only enabled departments appear when adding a product and in your store categories.",
+      "deptDesc_clothing": "Abayas, dresses, sets… sizes 36–48 with a bust/waist size guide.",
+      "deptDesc_shoes": "Heels, sneakers, sandals… every size 35–46 with a foot-length guide.",
+      "deptDesc_accessories": "Bags, watches, jewelry… one size.",
+      "deptLocked": "Has {{count}} products — stays on"
     },
     "product": {
       "cost": "Cost price",
@@ -1139,7 +1145,7 @@
       "heroTitle": "Hero",
       "heroHint": "Headline, description and background — the most important screen on the site.",
       "badge": "Small badge",
-      "badgeTip": "A short line above the headline, e.g. 'Palestinian platform · Fashion'.",
+      "badgeTip": "A short line above the headline, e.g. 'Palestinian platform · Fashion · Shoes · Accessories'.",
       "headline": "Headline",
       "headlineTip": "As short and clear as possible. Long lines get read less.",
       "sub": "Description",

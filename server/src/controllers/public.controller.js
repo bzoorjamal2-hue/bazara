@@ -8,7 +8,7 @@ import { normalizeTiers, villagesByCity, flatInternalLocalities, mapExternalLoca
 import { fetchCities, fetchAreas, cachedLocalities, fetchAllLocalities } from '../config/opost.js';
 import { ensureToken } from './opost.controller.js';
 import { categoryAliases } from '../utils/category.js';
-import { BUILTIN_CATS, normDept } from '../utils/department.js';
+import { BUILTIN_CATS, normDept, normDepts } from '../utils/department.js';
 import { paidOnline, codAmount } from '../utils/cod.js';
 
 // أعمدة المنتج + بيانات المتجر + تجميع التقييمات. نربط users لفلترة المشتركين الفعّالين.
@@ -57,6 +57,7 @@ function mapStorePublic(s) {
     welcomeOffer: s.welcome_offer || '',
     categoryMeta: s.category_meta && typeof s.category_meta === 'object' ? s.category_meta : {},
     customCategories: Array.isArray(s.custom_categories) ? s.custom_categories : [],
+    departments: normDepts(s.departments),
     collections: Array.isArray(s.collections) ? s.collections : [],
     sectionLayout: ['mixed', 'grid', 'rail'].includes(s.section_layout) ? s.section_layout : 'mixed',
     ownerPhone: s.owner_phone || '', // رقم المالك من التسجيل (احتياطي للواتساب)

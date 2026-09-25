@@ -8,7 +8,7 @@ import ImageInput from '../../components/ImageInput.jsx';
 import VideoInput from '../../components/VideoInput.jsx';
 import Select from '../../components/Select.jsx';
 import { usePlatformCatKeys, platformCatName, storeOnlyCats, catDept } from '../../utils/platformCategories.js';
-import { DEPARTMENTS, normDept } from '../../utils/departments.js';
+import { DEPARTMENTS, normDept, storeDepts } from '../../utils/departments.js';
 import DeptIcon from '../../components/DeptIcon.jsx';
 import useScrollLock from '../../hooks/useScrollLock.js';
 import { XIcon, ClockIcon, PaletteIcon, CameraIcon, StarIcon, EditIcon, TagIcon, CashIcon, TrashIcon } from '../../components/icons.jsx';
@@ -55,8 +55,14 @@ export default function ProductForm({ initial, onClose, onSaved }) {
     ...storeOnlyCats(storeCustom, platformKeys).map((cc) => ({ value: cc.key, label: cc.name, dept: normDept(cc.dept) })),
   ];
   const firstCatOf = (d) => allCats.find((c) => c.dept === d)?.value || EMPTY.category;
+  // الأقسام التي فعّلتها التاجرة من إعدادات المتجر — متجر أحذية لا يرى «ملابس»
+  const enabled = storeDepts(store);
   // منتجٌ جديد يبدأ بقسم آخر منتجٍ أضافته: متجر الأحذية لا يختار «أحذية» بكلّ مرّة
-  const lastDept = (() => { try { return normDept(localStorage.getItem('bz_pf_dept')); } catch { return 'clothing'; } })();
+  const lastDept = (() => {
+    let d = 'clothing';
+    try { d = normDept(localStorage.getItem('bz_pf_dept')); } catch { /* تجاهل */ }
+    return enabled.includes(d) ? d : enabled[0];
+  })();
   const [form, setForm] = useState(
     initial
       ? {
@@ -77,6 +83,8 @@ export default function ProductForm({ initial, onClose, onSaved }) {
   // القسم مشتقٌّ من الفئة لا حالةٌ مستقلّة: مسودّةٌ مستعادةٌ أو فئةٌ مختارة تحمله معها
   const dept = catDept(form.category, storeCustom);
   const categoryOptions = allCats.filter((c) => c.dept === dept);
+  // منتجٌ قائم بقسمٍ أُطفئ لاحقاً يبقى قسمه ظاهراً عند تعديله
+  const shownDepts = DEPARTMENTS.filter((d) => enabled.includes(d) || d === dept);
   const deptSizes = sizesForDept(dept);
   // تبديل القسم: أوّل فئةٍ فيه، وتُسقَط النمر التي لا تخصّه (٤٤ فستانٍ ليست ٤٤ حذاء)
   const pickDept = (d) => {
@@ -276,10 +284,12 @@ export default function ProductForm({ initial, onClose, onSaved }) {
             <Field label={t('dashboard.product.name')} tip={t('dashboard.product.nameTip')} required max={80} value={form.name}>
               <input type="text" required maxLength={80} className="input" value={form.name} onChange={set('name')} />
             </Field>
-            {/* القسم أوّلاً: يحدّد الفئات المعروضة تحته والنمر بقسم المخزون */}
+            {/* القسم أوّلاً: يحدّد الفئات المعروضة تحته والنمر بقسم المخزون.
+                متجرٌ بقسمٍ واحد لا يرى الاختيار أصلاً — لا شيء يُختار. */}
+            {shownDepts.length > 1 && (
             <Field label={t('dashboard.product.dept')} tip={t('dashboard.product.deptTip')} required>
-              <div className="grid grid-cols-3 gap-2" role="radiogroup">
-                {DEPARTMENTS.map((d) => {
+              <div className={`grid gap-2 ${shownDepts.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`} role="radiogroup">
+                {shownDepts.map((d) => {
                   const on = d === dept;
                   return (
                     <button
@@ -302,6 +312,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
                 <p className="mt-2 text-[11px] leading-relaxed text-stone-400">{t(`dashboard.product.deptHint_${dept}`)}</p>
               )}
             </Field>
+            )}
             <Field label={t('dashboard.product.category')} tip={t('dashboard.product.categoryTip')} required>
               <Select
                 value={form.category}

@@ -21,7 +21,7 @@ import { cldThumb } from '../utils/cloudinary.js';
 import { productThumb } from '../utils/recentlyViewed.js';
 import { norm } from '../utils/match.js';
 import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys, storeOnlyCats, catDept } from '../utils/platformCategories.js';
-import { normDept, presentDepts } from '../utils/departments.js';
+import { normDept, presentDepts, storeDepts } from '../utils/departments.js';
 import DeptIcon from './DeptIcon.jsx';
 
 
@@ -328,7 +328,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
                       ? <img src={cldThumb(cc.image, 80)} alt="" className="h-9 w-9 shrink-0 rounded object-contain" />
                       : <CatThumb cat={cc.key} dept={normDept(cc.dept)} className="h-9 w-9 text-cream/70" />,
                   })),
-                ].filter((e) => products.length === 0 || counts[e.key]);
+                ].filter((e) => (products.length === 0 ? storeDepts(store).includes(e.dept) : counts[e.key]));
                 const groups = presentDepts(entries, (e) => e.dept);
                 return groups.map((d) => (
                   <div key={d} className={groups.length > 1 ? 'pb-1' : ''}>
