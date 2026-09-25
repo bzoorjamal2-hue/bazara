@@ -32,10 +32,17 @@ export function r2Enabled() {
 export const publicUrl = (key) => `${cfg().publicBase}/${key}`;
 
 /** هل الرابطُ من وسائطِنا (R2 أو كلاوديناري القديم)؟ — للتحقّقِ قبلَ حفظِ رابطٍ أو تمريرِه لميتا */
+// النطاق الخاصّ للمحرّك (media.bazarastore.site) يخدم الملفّات نفسها التي يخدمها
+// عنوان ‎r2.dev — والواجهة صارت تعرض الأوّل وتعيده عند الحفظ، فيُقبَل الاثنان.
+const MEDIA_ALIASES = (process.env.MEDIA_ALIAS_BASES || 'https://media.bazarastore.site')
+  .split(',').map((b) => b.trim().replace(/\/+$/, '')).filter(Boolean);
+
 export function isOwnMediaUrl(url) {
   const u = String(url || '');
   const base = cfg().publicBase;
-  return u.startsWith('https://res.cloudinary.com/') || Boolean(base && u.startsWith(`${base}/`));
+  return u.startsWith('https://res.cloudinary.com/')
+    || Boolean(base && u.startsWith(`${base}/`))
+    || MEDIA_ALIASES.some((b) => u.startsWith(`${b}/`));
 }
 
 const hmac = (k, s) => crypto.createHmac('sha256', k).update(s).digest();

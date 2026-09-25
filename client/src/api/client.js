@@ -112,6 +112,21 @@ const mayRetry = (cfg, err) => {
 };
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// وسائط المحرّك (R2) من نطاق بازارا لا من عنوان التطوير ‎r2.dev: الأخير بلا كاش ولا
+// شبكة توزيع، والنطاق الخاصّ يمرّ بـCloudflare. الروابط المخزّنة بالقاعدة قديمةٌ
+// بالعنوان الأوّل، فتُبدَّل بكلّ ردٍّ قبل أن تصل أيّ صفحة — ورفعٌ جديد يعود بالنطاق
+// الجديد فيُحفظ به. الملفّ نفسه بالعنوانين، فلا ينكسر رابطٌ قديم بأيّ مكان.
+const R2_DEV = /https:\/\/pub-e7f9781956244ed5bf7e307bcb9cae3a\.r2\.dev\//g;
+const MEDIA_BASE = 'https://media.bazarastore.site/';
+function rewriteMedia(data) {
+  if (!data || typeof data !== 'object') return data;
+  try {
+    const s = JSON.stringify(data);
+    return s.includes('r2.dev/') ? JSON.parse(s.replace(R2_DEV, MEDIA_BASE)) : data;
+  } catch { return data; }
+}
+api.interceptors.response.use((res) => { res.data = rewriteMedia(res.data); return res; });
+
 api.interceptors.response.use(
   (res) => {
     markServerUp();
