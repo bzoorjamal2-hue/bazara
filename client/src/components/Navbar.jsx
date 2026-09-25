@@ -14,6 +14,7 @@ import ThemeToggle from './ThemeToggle.jsx';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { switchLanguage } from '../i18n.js';
 import { storeUrl, copyText } from '../utils/links.js';
+import modalRoot from '../utils/modalRoot.js';
 import NavBell from './NavBell.jsx';
 import CloseButton from './CloseButton.jsx';
 import DashDrawerNav from './DashDrawerNav.jsx';
@@ -123,6 +124,25 @@ function AccountMenu({ user, store, subscription, isAdmin, newOrders = 0, onClos
   const link = store?.slug ? storeUrl(store.slug) : '';
   const lang = i18n.language === 'en' ? 'en' : 'ar';
 
+  // جوّال ← شيتٌ من أسفل الشاشة بعرضها (كتطبيقاتِ إنستغرام وشوبيفاي وزارا): الإبهامُ
+  // يصلُه، ويُسحَبُ للأسفلِ ليُغلَق. حاسوب ← قائمةٌ مدمجةٌ تحتَ الأفاتار مباشرةً بسهمٍ
+  // يشيرُ إليه (كأمازون وآبل وجوجل) — كانت عريضةً عائمةً بلا سهمٍ فبدت منفصلةً عن زرّها.
+  const [sheet] = useState(() => typeof window !== 'undefined' && window.matchMedia?.('(max-width: 639px)').matches);
+  useScrollLock(sheet);
+  const [drag, setDrag] = useState(0);
+  const dragFrom = useRef(null);
+  // السحبُ يُغلقُ فقط والشيتُ بأعلاه: على شاشةٍ قصيرةٍ يُمرَّرُ داخلَه أوّلاً
+  const onTouchStart = (e) => { dragFrom.current = (boxRef.current?.scrollTop || 0) > 0 ? null : e.touches[0].clientY; };
+  const onTouchMove = (e) => {
+    if (dragFrom.current == null) return;
+    setDrag(Math.max(0, e.touches[0].clientY - dragFrom.current));
+  };
+  const onTouchEnd = () => {
+    if (dragFrom.current == null) return;
+    dragFrom.current = null;
+    if (drag > 90) onClose(); else setDrag(0);
+  };
+
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
@@ -142,13 +162,11 @@ function AccountMenu({ user, store, subscription, isAdmin, newOrders = 0, onClos
   const sun = <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4" /></svg>;
   const moon = <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" /></svg>;
 
-  return (
+  const body = (
     <>
-      {/* خلفية شفافة تُغلق القائمة بالضغط خارجها */}
-      <div className="fixed inset-0 z-[55]" onClick={onClose} />
-      <div ref={boxRef} role="menu" aria-label={t('nav.account')} className="bz-usermenu bz-acct absolute end-0 top-[calc(100%+10px)] z-[60] w-[19rem] max-w-[calc(100vw-1.5rem)] origin-top-end animate-pop overflow-hidden rounded-[1.35rem]">
         {/* الرأس: الهويّة والمتجر والاشتراك */}
-        <div className="bz-acct-head px-4 pb-3.5 pt-4">
+        <div className={`bz-acct-head px-4 pb-3.5 ${sheet ? 'pt-2' : 'pt-4'}`}>
+          {sheet && <span className="mx-auto mb-3 block h-1 w-10 rounded-full bg-white/25" aria-hidden="true" />}
           <div className="flex items-center gap-3">
             <span className="shrink-0 rounded-full p-[2px] ring-2 ring-white/15"><Avatar user={user} store={isAdmin ? null : store} size="h-12 w-12" /></span>
             <div className="min-w-0 flex-1">
@@ -216,6 +234,38 @@ function AccountMenu({ user, store, subscription, isAdmin, newOrders = 0, onClos
             <span className="flex-1 text-start text-[13.5px] font-bold">{t('nav.logout')}</span>
           </button>
         </div>
+    </>
+  );
+
+  if (sheet) {
+    return createPortal(
+      <div className="fixed inset-0 z-[96]" role="presentation">
+        <div className="absolute inset-0 bg-black/45 animate-fade-in" onClick={onClose} style={{ opacity: drag ? Math.max(0.2, 1 - drag / 300) : undefined }} />
+        <div
+          ref={boxRef}
+          role="menu"
+          aria-label={t('nav.account')}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+          className="bz-acct bz-acct-sheet absolute inset-x-0 bottom-0 max-h-[88svh] overflow-y-auto overscroll-contain rounded-t-[1.6rem] animate-sheet"
+          style={{ transform: drag ? `translateY(${drag}px)` : undefined, transition: drag ? 'none' : 'transform 0.2s ease-out', paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
+        >
+          {body}
+        </div>
+      </div>,
+      modalRoot(),
+    );
+  }
+
+  return (
+    <>
+      {/* خلفية شفافة تُغلق القائمة بالضغط خارجها */}
+      <div className="fixed inset-0 z-[55]" onClick={onClose} />
+      {/* سهمٌ يشيرُ إلى الأفاتار: القائمةُ تخرجُ من زرِّها لا تطفو بجانبه */}
+      <span className="bz-acct-caret absolute end-[13px] top-[calc(100%+3px)] z-[61] h-3 w-3 rotate-45" aria-hidden="true" />
+      <div ref={boxRef} role="menu" aria-label={t('nav.account')} className="bz-usermenu bz-acct absolute end-0 top-[calc(100%+8px)] z-[60] w-[17rem] origin-top-end animate-pop overflow-hidden rounded-2xl">
+        {body}
       </div>
     </>
   );
@@ -451,11 +501,14 @@ export default function Navbar() {
             {/* الحساب: أفاتار شخصي بقائمة منبثقة (للمسجّل) أو رابط دخول (للزائر) */}
             {user ? (
               <div className="relative">
+                {/* ‏bz-acct-btn.is-open: الزرُّ يبدو مضغوطاً ما دامت قائمتُه مفتوحة — حلقةٌ بلونِ
+                    الهويّة وانكماشٌ خفيف — فيُعرَفُ مصدرُ القائمة (كأفاتار جوجل وأمازون) */}
                 <button
                   onClick={() => setAcctOpen((o) => !o)}
-                  className="flex items-center justify-center rounded-full ring-2 ring-transparent transition hover:ring-wine/20"
+                  className={`bz-acct-btn flex items-center justify-center rounded-full ${acctOpen ? 'is-open' : ''}`}
                   title={t('nav.account')}
                   aria-label={t('nav.account')}
+                  aria-haspopup="menu"
                   aria-expanded={acctOpen}
                 >
                   <Avatar user={user} store={subscription?.isAdmin ? null : store} size="h-9 w-9" />
