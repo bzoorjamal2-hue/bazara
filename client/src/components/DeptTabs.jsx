@@ -1,7 +1,7 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import DeptIcon from './DeptIcon.jsx';
-import { platformCatImage } from '../utils/platformCategories.js';
+import { platformCatImage, platformCatKeys, catDept } from '../utils/platformCategories.js';
 
 // تبويبات الأقسام (ملابس · أحذية · إكسسوارات) — تظهر فقط حين يجمع المكان أكثر
 // من قسم؛ متجرٌ بقسمٍ واحد (وهو الأغلب) لا يرى شيئاً ويبقى كما كان.
@@ -61,6 +61,24 @@ export default function DeptTabs({ depts, value, onChange, counts = null, classN
     ro.observe(wrap.current);
     return () => ro.disconnect();
   }, [value, depts.length]);
+
+  // رسوم فئات الأقسام الأخرى تُجلب بوقت الفراغ، قبل أن تُضغط تبويباتها: التبديل
+  // يعرض شبكةً جاهزة بصورها لا بلاطاتٍ تنتظر الشبكة (والتخزين المسبق يكفي بعدها)
+  const deptKey = (depts || []).join(',');
+  useEffect(() => {
+    if (!depts || depts.length < 2) return undefined;
+    const run = () => {
+      for (const k of platformCatKeys()) {
+        if (!depts.includes(catDept(k))) continue;
+        const src = platformCatImage(k);
+        if (src) { const im = new Image(); im.decoding = 'async'; im.src = src; }
+      }
+    };
+    const ric = window.requestIdleCallback;
+    const id = ric ? ric(run, { timeout: 2500 }) : setTimeout(run, 900);
+    return () => { if (ric && window.cancelIdleCallback) window.cancelIdleCallback(id); else clearTimeout(id); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deptKey]);
 
   if (!depts || depts.length < 2) return null;
 

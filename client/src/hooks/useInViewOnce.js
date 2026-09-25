@@ -20,7 +20,9 @@ function ensureObserver() {
         }
       }
     },
-    { rootMargin: '0px 0px -8% 0px', threshold: 0.06 },
+    // يبدأ قبل وصول البطاقة للشاشة بثلث ارتفاعها: حين تصلها الإصبع تكون ظاهرةً
+    // (كإنستغرام) لا تنتظر أن تدخل ثمّ تتلاشى. كانت تنتظر دخول ٨٪ منها.
+    { rootMargin: '0px 0px 35% 0px', threshold: 0 },
   );
   return io;
 }

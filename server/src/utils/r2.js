@@ -85,10 +85,15 @@ export function signQuery({ method, host, region, path, accessKey, secret, expir
 }
 
 /** رفعٌ من الخادم (مخرجاتُ معالجةِ الفيديو، شعاراتٌ مضمّنة، نسخُ مرفقاتِ ميتا) */
+// كلّ مفتاحٍ بالمحرّك معرّفٌ عشوائيّ لا يُعاد استعماله (i/<id>/…، v/<id>/…): ما يُكتب
+// لا يتغيّر أبداً، فيُخزَّن بالمتصفّح سنةً بلا سؤال. كانت الملفّات بلا ترويسة كاش
+// إطلاقاً، فكلّ فتحٍ للمتجر يعيد السؤال عن كلّ غلاف فيديو.
+const IMMUTABLE = 'public, max-age=31536000, immutable';
+
 export async function putObject(key, body, contentType) {
   const size = body.length;
-  const url = presign('PUT', key, { headers: { 'content-length': size, 'content-type': contentType } });
-  const res = await fetch(url, { method: 'PUT', body, headers: { 'Content-Type': contentType, 'Content-Length': String(size) } });
+  const url = presign('PUT', key, { headers: { 'content-length': size, 'content-type': contentType, 'cache-control': IMMUTABLE } });
+  const res = await fetch(url, { method: 'PUT', body, headers: { 'Content-Type': contentType, 'Content-Length': String(size), 'Cache-Control': IMMUTABLE } });
   if (!res.ok) throw new Error(`R2 PUT ${res.status}: ${(await res.text()).slice(0, 200)}`);
   return publicUrl(key);
 }

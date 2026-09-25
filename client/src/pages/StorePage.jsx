@@ -30,7 +30,7 @@ import DeptTabs, { DeptHeading } from '../components/DeptTabs.jsx';
 import CatIcon from '../components/CatIcon.jsx';
 import { getMySize } from '../utils/mySize.js';
 import { productColors, colorToCss } from '../utils/colorDot.js';
-import { getCache, setCache } from '../utils/apiCache.js';
+import { getCache, setCache, getStale } from '../utils/apiCache.js';
 import { saveRef } from '../utils/referral.js';
 import { initPixels, trackPixel } from '../utils/pixels.js';
 import { norm } from '../utils/match.js';
@@ -62,7 +62,9 @@ export default function StorePage() {
   const { store: myStore } = useAuth();
   const { ensureStore } = useCart();
   const isOwner = myStore?.slug === slug;
-  const [data, setData] = useState(() => getCache(`storepage:${slug}`) || null);
+  // آخر نسخةٍ محفوظة للمتجر تُعرض فوراً ولو قديمة (حتى أسبوع)، والجلب يجري فوراً
+  // حين لا تكون طازجة فيستبدلها — المتجر يفتح بمحتواه لا بهياكل تحميل
+  const [data, setData] = useState(() => getCache(`storepage:${slug}`) || getStale(`storepage:${slug}`) || null);
   const [error, setError] = useState('');
   // بكسلات تمويل المتجر: تُحقن مرة واحدة عند توفّر بيانات المتجر (PageView تلقائي)
   useEffect(() => { if (data?.store) initPixels(data.store); }, [data?.store]);
@@ -125,7 +127,7 @@ export default function StorePage() {
     const cached = getCache(`storepage:${slug}`);
     // لا نُعيد ضبط البيانات إن كانت مُحمّلة أصلاً لهذا المتجر (مُهيّأة من useState عند
     // الرجوع) — كان setData بمرجع جديد يُعيد رسم الصفحة الثقيلة كاملةً بلا داعٍ = تعليق.
-    setData((prev) => (prev && prev.store?.slug === slug ? prev : (cached || null)));
+    setData((prev) => (prev && prev.store?.slug === slug ? prev : (cached || getStale(`storepage:${slug}`) || null)));
     setError('');
     if (cached) ensureStore(cached.store.slug);
     const load = () => api
@@ -666,7 +668,7 @@ export default function StorePage() {
             <section id="cats" className={`${multiDept ? 'mt-8' : 'bz-sec-gap'} scroll-mt-24`}>
               <SectionTitle eyebrow={multiDept ? t(`dept.${dept}`) : t('store.eyebrowCats')}>{t('store.browseByCategory')}</SectionTitle>
               {/* key بالقسم: الشبكة تبدأ من صفحتها الأولى عند تبديل القسم */}
-              <div key={dept} className={deptSwitched ? 'animate-fade-in' : undefined}>
+              <div key={dept} className={deptSwitched ? 'bz-swap' : undefined}>
                 <CategoryGrid onSelect={pickCategory} active={cat} cats={homeCats} />
               </div>
             </section>

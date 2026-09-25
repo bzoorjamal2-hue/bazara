@@ -13,7 +13,7 @@ import CollectionsRow from '../components/CollectionsRow.jsx';
 import OffersBar from '../components/OffersBar.jsx';
 import { getRecent, productThumb } from '../utils/recentlyViewed.js';
 import { productPath } from '../utils/links.js';
-import { getCache, setCache } from '../utils/apiCache.js';
+import { getCache, setCache, getStale } from '../utils/apiCache.js';
 import { cldThumb, cldVideoCrop, heroVideoShape, heroVideoAllowed, heroCrop } from '../utils/cloudinary.js';
 import { ForwardIcon, BoltIcon, FireIcon, SparkleIcon } from '../components/icons.jsx';
 import CategoryGrid from '../components/CategoryGrid.jsx';
@@ -37,8 +37,10 @@ export default function Home() {
   const { t, i18n } = useTranslation();
   const platformKeys = usePlatformCatKeys();
   const rtl = i18n.language !== 'en';
-  const [data, setData] = useState(() => getCache('home') || null);
-  const [loading, setLoading] = useState(() => !getCache('home'));
+  // آخر نسخةٍ محفوظة تُعرض فوراً ولو تجاوزت خمس دقائق (كإنستغرام): الجلب أدناه يجري
+  // دائماً ويستبدلها بثانيته. كانت الرئيسية تفتح على هياكل تحميل حتى يردّ الخادم.
+  const [data, setData] = useState(() => getCache('home') || getStale('home') || null);
+  const [loading, setLoading] = useState(() => !(getCache('home') || getStale('home')));
   const recent = getRecent();
   // الفئة المختارة جزء من رابط الرئيسية (?cat=) — فالضغط على فئة يبقيكِ بالرئيسية
   // (بازارا) ويعرض منتجاتها بمكانها بدل الانتقال لصفحة منفصلة تُخرجك من الرئيسية.
@@ -187,7 +189,7 @@ export default function Home() {
             {/* الأقسام: ملابس · أحذية · إكسسوارات — تظهر حين يُفتح بالمنصّة قسمٌ ثانٍ */}
             <DeptTabs className="-mt-2 mb-6" depts={homeDepts} value={shownDept} onChange={setHomeDept} />
             {/* key بالقسم: الشبكة تبدأ من صفحتها الأولى عند تبديل القسم */}
-            <div key={shownDept} className={deptSwitched ? 'animate-fade-in' : undefined}>
+            <div key={shownDept} className={deptSwitched ? 'bz-swap' : undefined}>
               <CategoryGrid onSelect={pickCat} active={cat} cats={homeCats} />
             </div>
           </div>
