@@ -23,7 +23,7 @@ import { DEPARTMENTS, normDept, storeDepts } from '../../utils/departments.js';
 import DeptIcon, { DeptsIcon } from '../../components/DeptIcon.jsx';
 import BankSelect from '../../components/BankSelect.jsx';
 import BANKS from '../../utils/banks.js';
-import { usePlatformCatKeys, catDept, platformCatImage, platformCatName, platformKeysOfDept } from '../../utils/platformCategories.js';
+import { usePlatformCatKeys, catDept, platformCatImage, platformCatName, platformKeysOfDept, storeBuiltinKeys } from '../../utils/platformCategories.js';
 import { copyText } from '../../utils/links.js';
 
 // أيقونتا إخفاء/إظهار (عين مشطوبة / عين) — للتحكم بظهور الفئة بالمتجر
@@ -979,11 +979,10 @@ export default function StoreSettings() {
             </div>
           )}
           {catGroups.map((d) => {
-            // لا فئة إلزاميّة: فئة المنصّة هنا حين فيها منتجات أو رفعت لها التاجرة صورة —
-            // لا سبع بطاقاتٍ لكلّ متجرٍ ولو لم يبع عبايةً واحدة. (الاسم وحده لا يكفي: متاجر
-            // حفظت الأسماء الافتراضيّة نفسها من النموذج القديم.)
-            const builtins = platformKeys.filter((c) => catDept(c) === d
-              && (catUse[c] > 0 || form.categoryMeta?.[c]?.image));
+            // الأساسيّة لكلّ قسمٍ مفعّل — بالقاعدة نفسها لواجهة المتجر (storeBuiltinKeys)،
+            // والمخفيّة معها هنا كي تُظهرها التاجرة من جديد. تفعيل القسم أعلاه يُظهر
+            // فئاته فوراً برسومها.
+            const builtins = storeBuiltinKeys(form, platformKeys, catUse, { includeHidden: true }).filter((c) => catDept(c) === d);
             const customs = (form.customCategories || []).map((cc, idx) => ({ cc, idx })).filter((x) => normDept(x.cc.dept) === d);
             return (
               <section key={d} id={`s-cat-${d}`} className={`scroll-mt-24 ${catGroups.length > 1 ? 'mb-6 last:mb-0' : ''}`}>

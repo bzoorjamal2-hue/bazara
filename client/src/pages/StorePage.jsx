@@ -25,7 +25,7 @@ import Reveal from '../components/Reveal.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { cldThumb, cldVideoPoster, cldVideoCrop, heroVideoShape, heroVideoAllowed, heroCrop } from '../utils/cloudinary.js';
 import { sizeLabel, sizesInProducts } from '../utils/sizes.js';
-import { presentDepts, deptOfProduct, normDept } from '../utils/departments.js';
+import { presentDepts, deptOfProduct, normDept, storeDepts, DEPARTMENTS } from '../utils/departments.js';
 import DeptTabs, { DeptHeading } from '../components/DeptTabs.jsx';
 import CatIcon from '../components/CatIcon.jsx';
 import { getMySize } from '../utils/mySize.js';
@@ -35,7 +35,7 @@ import { saveRef } from '../utils/referral.js';
 import { initPixels, trackPixel } from '../utils/pixels.js';
 import { norm } from '../utils/match.js';
 import Countdown from '../components/Countdown.jsx';
-import { platformCatKeys, platformCatName, platformCatImage, catImage, usePlatformCatKeys, storeOnlyCats, catDept } from '../utils/platformCategories.js';
+import { platformCatKeys, platformCatName, platformCatImage, catImage, usePlatformCatKeys, storeOnlyCats, catDept, storeBuiltinKeys, byPlatformOrder } from '../utils/platformCategories.js';
 
 const PAGE_SIZE = 8;
 
@@ -197,8 +197,11 @@ export default function StorePage() {
   const deptInfo = useMemo(() => {
     const counts = {};
     for (const p of data?.products || []) { const d = deptOfProduct(p); counts[d] = (counts[d] || 0) + 1; }
-    const list = presentDepts(data?.products || []);
-    const main = [...list].sort((a, b) => counts[b] - counts[a])[0] || 'clothing';
+    // الأقسام المفعّلة بإعدادات المتجر وما فيه قطعٌ فعلاً: القسم المفعّل يظهر تبويباً
+    // بفئاته الأساسيّة ولو لم تُضف له قطعةٌ بعد
+    const present = new Set([...presentDepts(data?.products || []), ...(data?.store ? storeDepts(data.store) : [])]);
+    const list = DEPARTMENTS.filter((d) => present.has(d));
+    const main = [...list].sort((a, b) => (counts[b] || 0) - (counts[a] || 0))[0] || 'clothing';
     return { list, counts, main };
   }, [data]);
   const multiDept = deptInfo.list.length > 1;
@@ -329,36 +332,41 @@ export default function StorePage() {
   // المخصّصة تستخدم صورة المالكة وإلا أول صورة منتج فيها.
   const catImages = {};
   for (const c of catKeys) { if (catMeta[c]?.image) catImages[c] = catMeta[c].image; }
-  for (const cc of customCats) { if (cc.image) catImages[cc.key] = cc.image; }
+  // فئة التاجرة: صورتها، وإلا رسم فئة المنصّة المربوطة بها («صنادل» ← رسم الصنادل)
+  // فتبقى الشبكة سلسلةً واحدة، وإلا (فئة ملابس خاصّة بلا ربط) أوّل صورة منتجٍ فيها
+  for (const cc of customCats) {
+    const img = cc.image || (cc.platform ? platformCatImage(cc.platform) : '');
+    if (img) catImages[cc.key] = img;
+  }
   for (const p of data.products) {
     if (catKeys.includes(p.category) || catImages[p.category]) continue; // الأصلية لها أيقونتها الثابتة
     const im = p.imageUrl || (p.images && p.images[0]) || (p.videoUrl && cldVideoPoster(p.videoUrl));
     if (im) catImages[p.category] = im;
   }
-  // قائمة الفئات للشبكة: الأصلية الخمس + المخصّصة
-  const gridCats = [
-    // نستثني الفئات الأصلية التي أخفتها المالكة من إعدادات المتجر
-    ...catKeys.filter((k) => !catMeta[k]?.hidden).map((k) => ({ key: k, name: catNames[k], image: catImages[k], builtin: true, dept: catDeptOf(k) })),
-    ...customCats.map((cc) => ({ key: cc.key, name: cc.name, image: catImages[cc.key], builtin: false, dept: normDept(cc.dept), platform: cc.platform || '' })),
-  ];
   // عدّاد كل فئة وما فيها من عروض. البطاقة بلا رقم لا تقول إن كانت تخفي
-  // أربعين قطعة أم اثنتين، والفئة الفارغة كانت تُعرض ثم تفتح على لا شيء.
+  // أربعين قطعة أم اثنتين.
   //
   // حسابٌ عادي لا useMemo عمداً: هذا الموضع يقع بعد `if (!data) return` أعلاه،
   // فخطّافٌ هنا يُستدعى في رسمةٍ ولا يُستدعى في أخرى — ويسقط التطبيق كلّه بشاشة
   // فارغة عند أول انتقال. المرور مرّةً على المنتجات أرخص من أي تذكير.
   const catCounts = {};
+  const catTotals = {};
   for (const pr of data.products || []) {
     const k = pr.category || 'other';
     if (!catCounts[k]) catCounts[k] = { total: 0, sale: 0 };
     catCounts[k].total += 1;
+    catTotals[k] = catCounts[k].total;
     if (pr.oldPrice && pr.oldPrice > pr.price) catCounts[k].sale += 1;
   }
-  const visibleCats = gridCats.filter((c) => (catCounts[c.key]?.total || 0) > 0);
-  // شبكة فئات الرئيسية: ما فيه قطعٌ من القسم المختار. لا فئة إلزاميّة: فئات
-  // المنصّة تظهر بالمتجر حين تبيع التاجرة تحتها فقط، والباقي فئاتها هي بأسمائها
-  // وصورها. متجرٌ بلا قطعٍ بعد يرى فئاته الخاصّة وحدها (لا السبع).
-  const homeCats = (data.products.length ? visibleCats : gridCats.filter((c) => !c.builtin)).filter((c) => !multiDept || c.dept === dept);
+  // فئات المتجر: الأساسيّة لأقسامه المفعّلة برسومها (storeBuiltinKeys — ما أخفته
+  // التاجرة أو استبدلته بفئتها لا يظهر)، ثمّ فئاتها هي بأسمائها وصورها
+  const gridCats = byPlatformOrder([
+    ...storeBuiltinKeys(store, catKeys, catTotals).map((k) => ({ key: k, name: catNames[k], image: catImages[k], builtin: true, dept: catDeptOf(k) })),
+    ...customCats.map((cc) => ({ key: cc.key, name: cc.name, image: catImages[cc.key], builtin: false, dept: normDept(cc.dept), platform: cc.platform || '' })),
+  ], (c) => (c.builtin ? c.key : c.platform), catKeys);
+  const visibleCats = gridCats;
+  // شبكة فئات الرئيسية: فئات القسم المختار
+  const homeCats = gridCats.filter((c) => !multiDept || c.dept === dept);
 
   const searching = q.trim().length > 0;
   // أحدث المنتجات (لقسم "جديدنا")

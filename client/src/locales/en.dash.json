@@ -1249,7 +1249,7 @@
     },
     "sendResetShort": "Send reset code",
     "builtinCatImages": "Shoe & accessory category images",
-    "builtinCatImagesTip": "The official image of each category on the public site (home and categories page). Best as a cut-out item on a transparent background, matching the clothing categories. Without one, the category's icon shows."
+    "builtinCatImagesTip": "The official image of each category on the public site (home and categories page). Each category already has a fixed image from the category series; an upload here replaces it. Best as a cut-out item on a transparent background in the same style."
   },
   "finance": {
     "title": "Profit & expenses",

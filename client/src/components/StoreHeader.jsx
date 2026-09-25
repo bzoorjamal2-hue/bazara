@@ -20,7 +20,7 @@ import StoreFollowButton from './StoreFollowButton.jsx';
 import { cldThumb } from '../utils/cloudinary.js';
 import { productThumb } from '../utils/recentlyViewed.js';
 import { norm } from '../utils/match.js';
-import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys, storeOnlyCats, catDept } from '../utils/platformCategories.js';
+import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys, storeOnlyCats, catDept, storeBuiltinKeys, byPlatformOrder } from '../utils/platformCategories.js';
 import { normDept, presentDepts } from '../utils/departments.js';
 import DeptIcon from './DeptIcon.jsx';
 
@@ -307,17 +307,20 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
                 {t('store.allProducts')}
               </button>
               <div className="my-2 h-px bg-cream/15" />
-              {/* الفئات مجمّعةً بأقسامها (ملابس · أحذية · إكسسوارات) — ولا فئة فارغة:
-                  كانت السبع تظهر بكلّ متجر ولو لم يبع إلّا الأحذية، فتفتح على لا شيء. */}
+              {/* الفئات مجمّعةً بأقسامها (ملابس · أحذية · إكسسوارات): الأساسيّة لكلّ قسمٍ
+                  مفعّل بالمتجر، ثمّ فئات التاجرة */}
               {(() => {
                 const counts = {};
                 for (const p of products) counts[p.category] = (counts[p.category] || 0) + 1;
                 const entries = [
-                  ...catKeys.filter((c) => !store.categoryMeta?.[c]?.hidden).map((c) => ({
+                  // الأساسيّة لأقسام المتجر المفعّلة، بالقاعدة نفسها لشبكة المتجر
+                  ...storeBuiltinKeys(store, catKeys, counts).map((c) => ({
                     key: c,
                     name: store.categoryMeta?.[c]?.name?.trim() || platformCatName(c, t, i18n.language),
                     dept: catDept(c, store.customCategories),
-                    thumb: <CatThumb cat={c} className="h-9 w-9" />,
+                    thumb: store.categoryMeta?.[c]?.image
+                      ? <img src={cldThumb(store.categoryMeta[c].image, 80)} alt="" className="h-9 w-9 shrink-0 rounded object-contain" />
+                      : <CatThumb cat={c} className="h-9 w-9" />,
                   })),
                   ...storeOnlyCats(store.customCategories, catKeys).map((cc) => ({
                     key: cc.key,
@@ -327,10 +330,11 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
                       ? <img src={cldThumb(cc.image, 80)} alt="" className="h-9 w-9 shrink-0 rounded object-contain" />
                       : <CatThumb cat={cc.key} dept={normDept(cc.dept)} icon={cc.platform} className="h-9 w-9 text-cream/70" />,
                     builtin: false,
+                    platform: cc.platform || '',
                   })),
-                  // لا فئة إلزاميّة: ما فيه قطع، ومتجرٌ بلا قطعٍ بعد يرى فئاته الخاصّة وحدها
-                ].filter((e) => (products.length === 0 ? e.builtin === false : counts[e.key]));
-                const groups = presentDepts(entries, (e) => e.dept);
+                ];
+                const ordered = byPlatformOrder(entries, (e) => (e.builtin === false ? e.platform : e.key), catKeys);
+                const groups = presentDepts(ordered, (e) => e.dept);
                 return groups.map((d) => (
                   <div key={d} className={groups.length > 1 ? 'pb-1' : ''}>
                     {groups.length > 1 && (
@@ -338,7 +342,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
                         <DeptIcon dept={d} className="h-4 w-4" /> {t(`dept.${d}`)}
                       </p>
                     )}
-                    {entries.filter((e) => e.dept === d).map((e) => (
+                    {ordered.filter((e) => e.dept === d).map((e) => (
                       <button
                         key={e.key}
                         onClick={() => pick(e.key)}

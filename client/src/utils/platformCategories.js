@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CLOTHING_CATS, SUB_CATS, deptOfCategory } from './departments.js';
+import { CLOTHING_CATS, SUB_CATS, DEPT_BASE_CATS, deptOfCategory, storeDepts } from './departments.js';
 
 // فئات المنصّة.
 //
@@ -109,10 +109,13 @@ export function platformCatName(key, t, lang) {
 export function platformCatImage(key) {
   const found = custom.extra.find((c) => c.key === key);
   if (found?.image) return found.image;
-  // صورة المدير الرسميّة لفئةٍ مدمجة (فئات الأحذية والإكسسوارات غالباً) — هويّة الموقع
+  // صورةٌ يرفعها المدير لفئةٍ مدمجة تسبق الثابتة — هويّة الموقع بيده
   if (custom.images?.[key]) return custom.images[key];
-  // فئات الأحذية والإكسسوارات بلا رسمٍ مقصوص بعد: مكانها أيقونتها (CatIcon)
-  return CLOTHING_CATS.includes(key) ? `/categories/${key}.webp?v=5` : '';
+  if (CLOTHING_CATS.includes(key)) return `/categories/${key}.webp?v=5`;
+  // فئات الأحذية والإكسسوارات: رسومٌ من السلسلة نفسها (اللون والمادّة والإضاءة) بمربّع
+  // السبع وهامشها. العامّتان (shoes، accessory) بلا رسم: مكانهما أيقونة القسم.
+  if (SUB_CATS.shoes.includes(key) || SUB_CATS.accessories.includes(key)) return `/categories/${key}.webp?v=1`;
+  return '';
 }
 
 // نسخةُ PNG احتياطاً: WebP مدعومٌ منذ سفاري ١٤ (٢٠٢٠)، لكنّ الاحتياط رخيص
@@ -127,6 +130,40 @@ export function platformCatImageFallback(key) {
 // «تظهر بالموقع العام تحت» لفئات التاجرة
 export function platformKeysOfDept(dept) {
   return platformCatKeys().filter((k) => catDept(k) === dept);
+}
+
+// فئات المنصّة الأساسيّة التي يعرضها متجر.
+//
+// تفعيل قسمٍ بإعدادات المتجر يُظهر فئاته الأساسيّة كلّها برسومها — هي أساس كلّ
+// متجرٍ بالأقسام الثلاثة — وتبقى للتاجرة: تُخفي ما لا تبيعه، أو تغيّر صورته
+// واسمه، وتضيف فئاتها تحت عنوان القسم. وثلاث حالاتٍ لا تُعرض فيها فئةٌ أساسيّة
+// ما لم تكن فيها قطع:
+// - قسمها غير مفعّل بالمتجر
+// - أخفتها التاجرة (includeHidden للإعدادات: هناك تُظهرها من جديد)
+// - فئةٌ للتاجرة مربوطةٌ بها تحلّ محلّها: «كعب عالي» التي صنعتها بصورتها بدل
+//   أساسيّةٍ بالاسم نفسه — لا فئتان متطابقتان بالمتجر
+// والعامّتان (أحذية، إكسسوارات) لا تظهران إلّا بقطعهما: الفئات الفرعيّة تغطّي القسم.
+export function storeBuiltinKeys(store, keys = platformCatKeys(), counts = {}, { includeHidden = false } = {}) {
+  const enabled = storeDepts(store);
+  const meta = store?.categoryMeta || {};
+  const custom = Array.isArray(store?.customCategories) ? store.customCategories : [];
+  const replaced = new Set(custom.map((c) => c?.platform).filter(Boolean));
+  const generic = Object.keys(DEPT_BASE_CATS);
+  return keys.filter((k) => {
+    if (!includeHidden && meta[k]?.hidden) return false;
+    if ((counts[k] || 0) > 0) return true;
+    if (!enabled.includes(catDept(k, custom))) return false;
+    if (generic.includes(k) || replaced.has(k)) return false;
+    return true;
+  });
+}
+
+// ترتيب فئات متجرٍ بترتيب المنصّة: فئة التاجرة المربوطة تأخذ مكان الأساسيّة التي
+// تحلّ محلّها («كعب عالي» الخاصّة أوّل الأحذية لا بعد البوت)، وغير المربوطة آخراً.
+// ‏getRef: مفتاح المنصّة للعنصر (مفتاحه للأساسيّة، وربطه لفئة التاجرة).
+export function byPlatformOrder(list, getRef, keys = platformCatKeys()) {
+  const rank = (x) => { const i = keys.indexOf(getRef(x)); return i < 0 ? keys.length : i; };
+  return list.map((x, i) => [x, i]).sort((a, b) => (rank(a[0]) - rank(b[0])) || (a[1] - b[1])).map(([x]) => x);
 }
 
 export function isBuiltinCat(key) {
