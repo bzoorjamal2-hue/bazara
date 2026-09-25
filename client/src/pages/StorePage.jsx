@@ -170,11 +170,15 @@ export default function StorePage() {
 
   // نُصفّر "عرض المزيد" عند تغيّر أي فلتر — لكن نتجاهل التشغيل الأول (التركيب) كي لا
   // نمسح الصفحة المُستعادة من الجلسة عند الرجوع للمتجر (وإلا لا يُستعاد موضع التمرير).
-  const firstFilterRun = useRef(true);
+  // نقارنُ بالفلاترِ السابقةِ لا بعلامةِ «أوّلُ تشغيل»: الصفحةُ تبقى حيّةً مخفيّة (App.jsx)
+  // ومؤثّراتُها تُعادُ حين تظهر — فكانت العلامةُ تُصفّرُ الصفحاتِ بكلِّ عودةٍ للمتجر.
+  const filterKey = JSON.stringify([cat, q, sort, sizesSel, colorsSel, offersOnly, stockOnly]);
+  const prevFilterKey = useRef(filterKey);
   useEffect(() => {
-    if (firstFilterRun.current) { firstFilterRun.current = false; return; }
+    if (prevFilterKey.current === filterKey) return;
+    prevFilterKey.current = filterKey;
     setPage(1);
-  }, [cat, q, sort, sizesSel, colorsSel, offersOnly, stockOnly]);
+  }, [filterKey]);
   useEffect(() => { setStories(data?.stories || []); }, [data]); // مزامنة الستوريات
   // دخول عبر رابط العروض (?offers=1) يُفعّل فلتر الخصومات تلقائياً
   useEffect(() => { if (offersView) setOffersOnly(true); }, [offersView]);

@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useLayoutEffect, useState } from 'react';
+import { Activity, Suspense, lazy, memo, useEffect, useLayoutEffect, useState } from 'react';
 import { Routes, Route, useLocation, useNavigationType, Navigate } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
 import { recordNav } from './utils/nav.js';
@@ -118,11 +118,6 @@ if (typeof history !== 'undefined' && 'scrollRestoration' in history) {
 function AnimatedRoutes() {
   const location = useLocation();
   const navType = useNavigationType(); // POP عند الرجوع/التقدّم
-  // صفحة التتبّع بنطاق متجر (?store=) تعرض فوتر المتجر بأسفلها؛ نجعل غلاف المسار يملأ
-  // ارتفاع الشاشة (flex عمودي) كي يُدفع الفوتر للأسفل بدل ما يطفو لأعلى مع فراغ تحته.
-  const fillStore = /^\/store\/[^/]+\/track$/.test(location.pathname)
-    || (location.pathname === '/track' && Boolean(new URLSearchParams(location.search).get('store')));
-
   // نحفظ موضع التمرير الحالي باستمرار لمفتاح هذه الصفحة، ونلتقطه أيضاً لحظة المغادرة
   // (في التنظيف) كي يبقى الموضع مضموناً حتى لو لم يُطلق حدث تمرير قبل الانتقال — هذا
   // يمنع "الرجوع لأعلى الصفحة" عند تكرار التنقّل.
@@ -263,69 +258,132 @@ function AnimatedRoutes() {
   // تبويبُ الشريطِ السفليّ (state.bzTab) كذلك بلا تلاشٍ: التبويبُ يتبدّلُ ولا «يصل».
   // عند الرجوع (POP) لا تلاشي إطلاقاً — الصفحة السابقة تظهر فوراً على موضعها المحفوظ؛
   // كان التلاشي + قفزة التمرير بنفس اللحظة يعطيان إحساس "تعليق" عند كل رجوع.
+  // ── الصفحاتُ تبقى حيّةً بالذاكرة (كتبويباتِ إنستغرام) ──
+  // كانت كلُّ صفحةٍ تُهدَمُ عند مغادرتِها وتُبنى من الصفر عند العودة: الشجرةُ كلُّها
+  // والبطاقاتُ والصورُ والقياسات — فالرجوعُ للرئيسيّةِ من الشريطِ السفليّ ينتظرُ بناءَها
+  // كأوّلِ مرّة. الآن آخرُ الصفحاتِ التي زرتِها (القوائمُ: الرئيسيّة، العروض، التصنيفات،
+  // المتجرُ وتبويباتُه، اللوحة…) تبقى مبنيّةً مخفيّةً بـ‎<Activity>‎ من React 19:
+  // حالتُها وصورُها وموضعُ تمريرِها محفوظة، ومؤثّراتُها موقوفةٌ وهي مخفيّة (لا مستمعاتٌ
+  // ولا مؤقّتاتٌ ولا فيديو)، فالعودةُ إليها إظهارٌ لا بناء — فوريّةٌ فعلاً.
+  // صفحةُ المنتجِ والريلز والدخولُ وأمثالُها عابرةٌ كما كانت: تُهدَمُ عند المغادرة.
+  const cur = screenKey(location) || `t:${location.pathname}`;
+  const [screens, setScreens] = useState(() => [{ key: cur, loc: location, fade: false }]);
+  const [shownLoc, setShownLoc] = useState(location);
+  if (shownLoc !== location) {
+    // اشتقاقُ الحالةِ من الموقعِ أثناءَ الرسم (نمطٌ يدعمُه React): تُعادُ الرسمةُ فوراً
+    // بالقائمةِ الجديدةِ قبلَ أيِّ رسمٍ على الشاشة
+    setShownLoc(location);
+    const fade = navType !== 'POP' && !location.state?.bzTab;
+    setScreens((prev) => {
+      const had = prev.find((x) => x.key === cur);
+      // الصفحاتُ العابرةُ الأخرى تُهدَم؛ والمُعادُ إظهارُها بلا حركةِ دخول (تعودُ كما تُركت)
+      const rest = prev.filter((x) => x.key !== cur && !x.key.startsWith('t:')).map((x) => (x.fade ? { ...x, fade: false } : x));
+      // العنوانُ نفسُه → الموقعُ القديمُ نفسُه: الشاشةُ المحفوظةُ تُظهَرُ كما هي بلا إعادةِ رسم
+      const same = had && had.loc.pathname === location.pathname && had.loc.search === location.search;
+      const next = [...rest, { key: cur, loc: same ? had.loc : location, fade: had ? false : fade }];
+      // سقفٌ للذاكرة: الأقدمُ استعمالاً يُهدَمُ أوّلاً
+      while (next.filter((x) => !x.key.startsWith('t:')).length > KEEP_MAX) next.splice(next.findIndex((x) => !x.key.startsWith('t:')), 1);
+      return next;
+    });
+  }
+
+  return screens.map((sc) => {
+    const on = sc.key === cur;
+    const fill = /^\/store\/[^/]+\/track$/.test(sc.loc.pathname)
+      || (sc.loc.pathname === '/track' && Boolean(new URLSearchParams(sc.loc.search).get('store')));
+    const cls = `${fill ? 'flex flex-1 flex-col min-h-0 ' : ''}${on && sc.fade ? 'route-fade' : ''}`.trim() || undefined;
+    return (
+      <Activity key={sc.key} mode={on ? 'visible' : 'hidden'}>
+        <div className={cls}>
+          <Suspense fallback={<Spinner full />}><Screen loc={sc.loc} /></Suspense>
+        </div>
+      </Activity>
+    );
+  });
+}
+
+// مفتاحُ «الشاشة» التي تبقى حيّة، أو null لصفحةٍ عابرة. المتجرُ ثلاثُ شاشات (رئيسيّتُه،
+// تصنيفاتُه، عروضُه) — تبويباتُ الشريطِ السفليّ داخلَه — وما عدا ذلك من معاملاتِه
+// (الفئة، القسم، البحث) تغييرٌ داخلَ الشاشةِ نفسِها كما كان.
+const KEEP_MAX = 8;
+const KEEP_PATHS = new Set(['/shop', '/offers', '/categories', '/wishlist', '/search', '/dashboard']);
+function screenKey(loc) {
+  const p = loc.pathname.replace(/\/+$/, '') || '/';
+  if (KEEP_PATHS.has(p)) return p;
+  if (/^\/category\/[^/]+$/.test(p) || /^\/store\/[^/]+\/search$/.test(p)) return p;
+  const m = /^\/store\/([^/]+)$/.exec(p);
+  if (m) {
+    const sp = new URLSearchParams(loc.search);
+    return `store:${m[1]}:${sp.get('cats') === '1' ? 'cats' : sp.get('offers') === '1' ? 'offers' : 'home'}`;
+  }
+  return null;
+}
+
+// ‏memo: الشاشاتُ المخفيّةُ لا تُعادُ رسمتُها مع كلِّ تنقّل — موقعُها ثابتٌ ما دامت مخفيّة
+const Screen = memo(function Screen({ loc }) {
+  return pageRoutes(loc);
+});
+
+function pageRoutes(loc) {
   return (
-    <Suspense fallback={<Spinner full />}>
-      <div key={location.pathname} className={`${fillStore ? 'flex flex-1 flex-col min-h-0 ' : ''}${navType === 'POP' || location.state?.bzTab ? '' : 'route-fade'}`.trim() || undefined}>
-        <Routes location={location}>
-          <Route path="/" element={<Root />} />
-          <Route path="/shop" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset" element={<ResetPassword />} />
-          <Route path="/wishlist" element={<Wishlist />} />
-          <Route path="/search" element={<Search />} />
-          <Route path="/offers" element={<Offers />} />
-          <Route path="/reels" element={<Reels />} />
-          <Route path="/track" element={<Track />} />
-          <Route path="/payment/callback" element={<PaymentCallback />} />
-          <Route path="/privacy" element={<PrivacyPolicy />} />
-          <Route path="/terms" element={<TermsOfService />} />
-          {/* عنوانٌ تطلبُه Meta قبلَ نشرِ التطبيق، ويضغطُه المستخدمُ من إعداداتِ فيسبوك */}
-          <Route path="/data-deletion" element={<DataDeletion />} />
-          {/* معاينة نموذج المنتج أثناء التطوير فقط — لا يدخل بنسخة الإنتاج (يُحذف بالبناء) */}
-          {import.meta.env.DEV && <Route path="/__dev/product-form" element={<DevProductForm />} />}
-          <Route
-            path="/dashboard"
-            element={
-              <RequireSubscription>
-                <Dashboard />
-              </RequireSubscription>
-            }
-          />
-          <Route
-            path="/dashboard/instagram/:id"
-            element={
-              <RequireSubscription>
-                <InstagramChat />
-              </RequireSubscription>
-            }
-          />
-          <Route
-            path="/subscribe"
-            element={
-              <ProtectedRoute>
-                <Subscribe />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/store/:slug" element={<StorePage />} />
-          <Route path="/store/:slug/reels" element={<Reels />} />
-          {/* تتبّعُ الطلبِ والبحثُ داخلَ متجرٍ: باسمِ المتجرِ بالمسار. الشكلُ القديمُ
-              (?store=) يبقى عاملاً وتُحوّلُه الصفحةُ إلى المسارِ الكامل. */}
-          <Route path="/store/:slug/track" element={<Track />} />
-          <Route path="/store/:slug/search" element={<Search />} />
-          <Route path="/category/:cat" element={<CategoryPage />} />
-          <Route path="/categories" element={<Categories />} />
-          {/* رابطُ المنتجِ يحملُ اسمَ متجرِه. المسارُ القديمُ (/product/:id) يبقى
-              للروابطِ المنشورةِ سلفاً، وصفحةُ المنتجِ تُحوّلُه إلى المسارِ الكاملِ
-              بمجرّدِ معرفةِ المتجر. */}
-          <Route path="/store/:slug/product/:id" element={<ProductDetails />} />
-          <Route path="/product/:id" element={<ProductDetails />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </div>
-    </Suspense>
+    <Routes location={loc}>
+      <Route path="/" element={<Root />} />
+      <Route path="/shop" element={<Home />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset" element={<ResetPassword />} />
+      <Route path="/wishlist" element={<Wishlist />} />
+      <Route path="/search" element={<Search />} />
+      <Route path="/offers" element={<Offers />} />
+      <Route path="/reels" element={<Reels />} />
+      <Route path="/track" element={<Track />} />
+      <Route path="/payment/callback" element={<PaymentCallback />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<TermsOfService />} />
+      {/* عنوانٌ تطلبُه Meta قبلَ نشرِ التطبيق، ويضغطُه المستخدمُ من إعداداتِ فيسبوك */}
+      <Route path="/data-deletion" element={<DataDeletion />} />
+      {/* معاينة نموذج المنتج أثناء التطوير فقط — لا يدخل بنسخة الإنتاج (يُحذف بالبناء) */}
+      {import.meta.env.DEV && <Route path="/__dev/product-form" element={<DevProductForm />} />}
+      <Route
+        path="/dashboard"
+        element={
+          <RequireSubscription>
+            <Dashboard />
+          </RequireSubscription>
+        }
+      />
+      <Route
+        path="/dashboard/instagram/:id"
+        element={
+          <RequireSubscription>
+            <InstagramChat />
+          </RequireSubscription>
+        }
+      />
+      <Route
+        path="/subscribe"
+        element={
+          <ProtectedRoute>
+            <Subscribe />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="/store/:slug" element={<StorePage />} />
+      <Route path="/store/:slug/reels" element={<Reels />} />
+      {/* تتبّعُ الطلبِ والبحثُ داخلَ متجرٍ: باسمِ المتجرِ بالمسار. الشكلُ القديمُ
+          (?store=) يبقى عاملاً وتُحوّلُه الصفحةُ إلى المسارِ الكامل. */}
+      <Route path="/store/:slug/track" element={<Track />} />
+      <Route path="/store/:slug/search" element={<Search />} />
+      <Route path="/category/:cat" element={<CategoryPage />} />
+      <Route path="/categories" element={<Categories />} />
+      {/* رابطُ المنتجِ يحملُ اسمَ متجرِه. المسارُ القديمُ (/product/:id) يبقى
+          للروابطِ المنشورةِ سلفاً، وصفحةُ المنتجِ تُحوّلُه إلى المسارِ الكاملِ
+          بمجرّدِ معرفةِ المتجر. */}
+      <Route path="/store/:slug/product/:id" element={<ProductDetails />} />
+      <Route path="/product/:id" element={<ProductDetails />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 }
 

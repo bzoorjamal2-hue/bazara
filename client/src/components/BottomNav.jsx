@@ -129,6 +129,22 @@ function MessagesIcon({ className = 'h-6 w-6', filled }) {
 // مظلّةٌ وجسمٌ وباب. رسمتُه أوّلاً بمظلّةٍ وجسمٍ بلا باب فلم يُقرَأ — ورفعُ
 // الأسماءِ من تحتِ الأيقوناتِ يعني أنّ الأيقونةَ وحدَها تشرح، فلا احتمالَ لغموض.
 function StoreGlyph({ className = 'h-6 w-6', filled }) {
+  // الممتلئةُ رسمٌ مستقلّ: كانت هي الخطّيّةَ نفسَها بتعبئة، وجدرانُها وبابُها خطوطٌ بلونِ
+  // الحبّة (--bz-knock) فوقَ التعبئة — فتقصُّ المبنى من جانبيه وتشوّهُ الباب («التظليلُ
+  // خربان» بصورةِ «متجري»). الآن: مظلّةٌ ممتلئة، فاصلٌ رفيع، ومبنىً ممتلئٌ ببابٍ مفرَّغ.
+  if (filled) {
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+        <path
+          d="M4.3 9.5 5.3 4.8A1.1 1.1 0 0 1 6.4 3.9H17.6A1.1 1.1 0 0 1 18.7 4.8L19.7 9.5A2.9 2.9 0 0 1 14.1 9.5A2.9 2.9 0 0 1 9.9 9.5A2.9 2.9 0 0 1 4.3 9.5Z"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinejoin="round"
+        />
+        <path d="M5.1 13.4Q7.4 14.2 9.2 13.2Q12 14.6 14.8 13.2Q16.6 14.2 18.9 13.4V18.9A2 2 0 0 1 16.9 20.9H14.1V16.4A1.3 1.3 0 0 0 12.8 15.1H11.2A1.3 1.3 0 0 0 9.9 16.4V20.9H7.1A2 2 0 0 1 5.1 18.9Z" />
+      </svg>
+    );
+  }
   return (
     <svg viewBox="0 0 24 24" className={className} fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M4.3 9.5 5.3 4.8A1.1 1.1 0 0 1 6.4 3.9H17.6A1.1 1.1 0 0 1 18.7 4.8L19.7 9.5A2.9 2.9 0 0 1 14.1 9.5A2.9 2.9 0 0 1 9.9 9.5A2.9 2.9 0 0 1 4.3 9.5Z" />

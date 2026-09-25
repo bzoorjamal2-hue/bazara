@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { Activity, useState, useRef, useEffect } from 'react';
 import NotificationsBell from '../components/NotificationsBell.jsx';
 import { Link, useSearchParams } from 'react-router-dom';
 import api from '../api/client.js';
@@ -98,6 +98,12 @@ export default function Dashboard() {
   const raw = params.get('tab') || remembered || defaultTab;
   // المدير لا يصل لأقسام البيع حتى عبر الرابط
   const section = allowed.includes(raw) ? raw : defaultTab;
+  const [visited, setVisited] = useState([section]);
+  const [freshSec, setFreshSec] = useState(section);
+  if (visited[visited.length - 1] !== section) {
+    setFreshSec(visited.includes(section) ? '' : section);
+    setVisited((v) => [...v.filter((x) => x !== section), section].slice(-5));
+  }
 
   // نُثبّت القسم بالرابط كي يتطابق إبراز القائمة الجانبية واستعادة موضع التمرير
   useEffect(() => {
@@ -196,35 +202,39 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* المفتاحُ هو القسم: تبديلُه يُعيدُ تركيبَ الحاوي فتعملُ حركةُ الدخولِ من
-          جديدٍ كلَّ مرّة. وبلا مفتاحٍ يبقى العنصرُ نفسَه فلا تُعادُ الحركةُ إلّا
-          أوّلَ مرّةٍ — وهذا ما يجعلُ التنقّلَ يبدو قاطعاً. */}
-      <div key={section} className="bz-page-in min-w-0">
-        {section === 'overview' && !isAdmin && <Overview productsCount={productsCount} />}
-        {section === 'analytics' && !isAdmin && <AnalyticsManager />}
-        {section === 'finance' && !isAdmin && <FinanceManager />}
-        {section === 'profile' && <Profile />}
-        {section === 'storeSettings' && !isAdmin && <StoreSettings />}
-        {section === 'myProducts' && !isAdmin && <ProductsManager onCount={setProductsCount} />}
-        {section === 'instagram' && !isAdmin && <InstagramInbox />}
-        {section === 'myOrders' && !isAdmin && <OrdersManager />}
-        {section === 'coupons' && !isAdmin && <CouponsManager />}
-        {section === 'referrals' && !isAdmin && <ReferralsManager />}
-        {section === 'campaign' && !isAdmin && <CampaignManager />}
-        {section === 'salesBot' && !isAdmin && <SalesBot />}
-        {section === 'adStudio' && !isAdmin && <AdStudio />}
-        {section === 'stockRequests' && !isAdmin && <StockRequestsManager />}
-        {section === 'adminOverview' && isAdmin && <AdminOverview />}
-        {section === 'subscribers' && isAdmin && <SubscribersManager />}
-        {section === 'admin' && isAdmin && <AdminRequests />}
-        {section === 'adminLog' && isAdmin && <AdminLog />}
-        {section === 'payouts' && isAdmin && <PayoutsManager />}
-        {section === 'adminSettings' && isAdmin && <AdminSettings />}
-        {section === 'landing' && isAdmin && <LandingEditor />}
-        {section === 'siteSliders' && isAdmin && <SiteSliders />}
-        {section === 'newsletter' && isAdmin && <NewsletterManager />}
-        {section === 'broadcast' && isAdmin && <BroadcastManager />}
-      </div>
+      {/* الأقسامُ التي فتحتِها تبقى حيّةً مخفيّةً (‎<Activity>‎) — العودةُ إلى «الطلبات» أو
+          «حسابي» إظهارٌ فوريٌّ بحالتِها وموضعِها لا بناءٌ وجلبٌ من جديد. حركةُ الدخولِ لأوّلِ
+          فتحٍ فقط؛ والأقدمُ استعمالاً يُهدَمُ بعد خمسة. */}
+      {visited.map((sec) => (
+        <Activity key={sec} mode={sec === section ? 'visible' : 'hidden'}>
+          <div className={`min-w-0 ${sec === freshSec ? 'bz-page-in' : ''}`}>
+            {sec === 'overview' && !isAdmin && <Overview productsCount={productsCount} />}
+            {sec === 'analytics' && !isAdmin && <AnalyticsManager />}
+            {sec === 'finance' && !isAdmin && <FinanceManager />}
+            {sec === 'profile' && <Profile />}
+            {sec === 'storeSettings' && !isAdmin && <StoreSettings />}
+            {sec === 'myProducts' && !isAdmin && <ProductsManager onCount={setProductsCount} />}
+            {sec === 'instagram' && !isAdmin && <InstagramInbox />}
+            {sec === 'myOrders' && !isAdmin && <OrdersManager />}
+            {sec === 'coupons' && !isAdmin && <CouponsManager />}
+            {sec === 'referrals' && !isAdmin && <ReferralsManager />}
+            {sec === 'campaign' && !isAdmin && <CampaignManager />}
+            {sec === 'salesBot' && !isAdmin && <SalesBot />}
+            {sec === 'adStudio' && !isAdmin && <AdStudio />}
+            {sec === 'stockRequests' && !isAdmin && <StockRequestsManager />}
+            {sec === 'adminOverview' && isAdmin && <AdminOverview />}
+            {sec === 'subscribers' && isAdmin && <SubscribersManager />}
+            {sec === 'admin' && isAdmin && <AdminRequests />}
+            {sec === 'adminLog' && isAdmin && <AdminLog />}
+            {sec === 'payouts' && isAdmin && <PayoutsManager />}
+            {sec === 'adminSettings' && isAdmin && <AdminSettings />}
+            {sec === 'landing' && isAdmin && <LandingEditor />}
+            {sec === 'siteSliders' && isAdmin && <SiteSliders />}
+            {sec === 'newsletter' && isAdmin && <NewsletterManager />}
+            {sec === 'broadcast' && isAdmin && <BroadcastManager />}
+          </div>
+        </Activity>
+      ))}
     </div>
   );
 }
