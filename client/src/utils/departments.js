@@ -17,6 +17,28 @@ export const normDept = (v) => (DEPARTMENTS.includes(v) ? v : 'clothing');
 
 export const deptOfProduct = (p) => normDept(p?.department);
 
+// «ون سايز» خيارٌ واحد لا اختيار: حين لا تحمل القطعة (أو لونها المختار) غيرَه
+// ومتوفّراً، يُختار تلقائياً — كانت الزبونة تضغط زرّاً وحيداً لتُكمل الطلب.
+// ودليل المقاسات لا معنى له لشنطةٍ أو لقطعةٍ بمقاسٍ واحد، فيُخفى.
+export function onlyOneSize(product, color) {
+  const cs = product?.colorStock && typeof product.colorStock === 'object' ? product.colorStock : {};
+  if (Object.keys(cs).length) {
+    if (!color) return false;
+    const sz = cs[color] || {};
+    return Object.keys(sz).length === 1 && 'one' in sz && sz.one !== 0;
+  }
+  const sizes = String(product?.size || '').split(',').map((s) => s.trim()).filter(Boolean);
+  const ss = product?.sizeStock && typeof product.sizeStock === 'object' ? product.sizeStock : {};
+  return sizes.length === 1 && sizes[0] === 'one' && ss.one !== 0;
+}
+export function allOneSize(product) {
+  const cs = product?.colorStock && typeof product.colorStock === 'object' ? product.colorStock : {};
+  const all = Object.keys(cs).length
+    ? Object.values(cs).flatMap((sz) => Object.keys(sz || {}))
+    : String(product?.size || '').split(',').map((s) => s.trim()).filter(Boolean);
+  return all.length > 0 && all.every((s) => s === 'one');
+}
+
 // أقسام المتجر المفعّلة (stores.departments) — القديم بلا حقلٍ ملابس وحدها
 export function storeDepts(store) {
   const set = new Set(Array.isArray(store?.departments) ? store.departments : []);

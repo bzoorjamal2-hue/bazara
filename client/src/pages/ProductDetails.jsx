@@ -11,7 +11,7 @@ import StoreHeader from '../components/StoreHeader.jsx';
 import StoreFooter from '../components/StoreFooter.jsx';
 import Strike from '../components/Strike.jsx';
 import { getMySize, setMySize } from '../utils/mySize.js';
-import { deptOfProduct } from '../utils/departments.js';
+import { deptOfProduct, onlyOneSize, allOneSize } from '../utils/departments.js';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import { pushRecent, getRecent, removeRecent } from '../utils/recentlyViewed.js';
@@ -64,6 +64,11 @@ export default function ProductDetails() {
     if (list.includes(c)) setSelColor(c);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product?.id]);
+  // مقاسٌ وحيد («ون سايز») يُختار تلقائياً — انظر onlyOneSize
+  useEffect(() => {
+    if (product && onlyOneSize(product, selColor)) setSelSize('one');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product?.id, selColor]);
   const [descExp, setDescExp] = useState(false); // طيّ الوصف الطويل بـ«اقرأ المزيد»
   // مقاسها المعتاد بقسم هذا المنتج — نميّزه فقط (بلا اختيار تلقائي). نمرة حذائها
   // غير مقاس فستانها، فلكلّ قسمٍ ذاكرته.
@@ -508,6 +513,7 @@ export default function ProductDetails() {
             <div ref={colors.length ? null : pickRef} data-pick-zone className="mt-5">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <p className="text-sm font-semibold text-stone-300">{t('product.selectSize')}</p>
+                {pDept !== 'accessories' && !allOneSize(product) && (
                 <button
                   type="button"
                   onClick={() => setSizeGuide(true)}
@@ -518,6 +524,7 @@ export default function ProductDetails() {
                   </svg>
                   {t('product.sizeGuide')}
                 </button>
+                )}
               </div>
               {hasColorStock && !selColor ? (
                 <p className="flex items-center gap-1.5 rounded-xl bg-wine/5 px-3 py-2 text-sm font-medium text-wine/70"><HandIcon className="h-4 w-4 shrink-0" /> {t('product.pickColorFirst')}</p>

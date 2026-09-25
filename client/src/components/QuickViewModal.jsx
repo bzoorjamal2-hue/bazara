@@ -11,7 +11,7 @@ import useScrollLock from '../hooks/useScrollLock.js';
 import { sizeLabel } from '../utils/sizes.js';
 import Strike from './Strike.jsx';
 import { getMySize, setMySize } from '../utils/mySize.js';
-import { deptOfProduct } from '../utils/departments.js';
+import { deptOfProduct, onlyOneSize, allOneSize } from '../utils/departments.js';
 import ColorSwatches from './ColorSwatches.jsx';
 import ProductMedia from './ProductMedia.jsx';
 import { productPath } from '../utils/links.js';
@@ -49,6 +49,8 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
   const [sizeGuide, setSizeGuide] = useState(false);
   const pDept = deptOfProduct(product);
   const [mySize] = useState(() => getMySize(pDept)); // نميّز مقاسها المعتاد بقسم القطعة كبقية الأسطح
+  // مقاسٌ وحيد («ون سايز») يُختار تلقائياً — انظر onlyOneSize
+  useEffect(() => { if (onlyOneSize(product, color)) setSize('one'); }, [product, color]);
   // النمر المتاحة وكميتها حسب اللون المختار (عند المخزون لكل لون)
   const sizeStock = product.sizeStock && typeof product.sizeStock === 'object' ? product.sizeStock : {};
   const availSizes = hasColorStock ? (color ? Object.keys(colorStock[color] || {}) : []) : sizes;
@@ -161,6 +163,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
             <div className="mt-4">
               <div className="mb-1.5 flex items-center justify-between gap-2">
                 <p className="text-sm font-semibold text-stone-700">{t('store.sizeLabel')}</p>
+                {pDept !== 'accessories' && !allOneSize(product) && (
                 <button
                   type="button"
                   onClick={() => setSizeGuide(true)}
@@ -171,6 +174,7 @@ export default function QuickViewModal({ product, whatsapp = '', onClose }) {
                   </svg>
                   {t('product.sizeGuide')}
                 </button>
+                )}
               </div>
               {hasColorStock && !color ? (
                 <p className="flex items-center gap-1.5 rounded-xl bg-wine/5 px-3 py-2 text-sm font-medium text-wine/70"><HandIcon className="h-4 w-4 shrink-0" /> {t('product.pickColorFirst')}</p>
