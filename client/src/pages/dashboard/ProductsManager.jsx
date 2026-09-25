@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { phGlyph } from '../../utils/imageFallback.js';
 import useSessionState from '../../hooks/useSessionState.js';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { productUrl, shareLink } from '../../utils/links.js';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
@@ -42,6 +43,16 @@ export default function ProductsManager({ onCount }) {
   // مسودّة الحقول (useDraft داخل النموذج) يرجع كما تركه تماماً. يُنسى عند
   // الإغلاق المتعمّد أو بعد الحفظ.
   const [modal, setModal] = useSessionState('products:modal', null);
+  // ‏?new=1 (من «إضافة منتج» بقائمة الحساب): يفتح نموذجَ منتجٍ جديدٍ فوراً، ثمّ يُمسَحُ
+  // المعامل كي لا يعود النموذجُ مع الرجوع أو التحديث
+  const [params, setParams] = useSearchParams();
+  useEffect(() => {
+    if (params.get('new') !== '1') return;
+    setModal({});
+    const sp = new URLSearchParams(params);
+    sp.delete('new');
+    setParams(sp, { replace: true });
+  }, [params]); // eslint-disable-line react-hooks/exhaustive-deps
   const [confirmDel, setConfirmDel] = useState(null); // المنتج المراد حذفه
   const [delBusy, setDelBusy] = useState(false);
   const [stockFilter, setStockFilter] = useSessionState('products:stock', 'all'); // all | low | out — متابعة سريعة للمخزون

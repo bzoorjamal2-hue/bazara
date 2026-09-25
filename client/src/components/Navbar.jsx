@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -9,8 +9,11 @@ import { useWishlist } from '../context/WishlistContext.jsx';
 import LanguageSwitcher from './LanguageSwitcher.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import useHideOnScroll from '../hooks/useHideOnScroll.js';
-import { CartIcon, HeartIcon, MenuIcon, UserIcon, SearchIcon, MailIcon, InstagramIcon, GridIcon, StoreIcon, BagIcon, ReceiptIcon, UsersIcon, TicketIcon, ChartIcon, BellIcon, MegaphoneIcon, GearIcon, CashIcon , HomeIcon, SparkleIcon, PaletteIcon } from './icons.jsx';
+import { CartIcon, HeartIcon, MenuIcon, UserIcon, SearchIcon, MailIcon, InstagramIcon, GridIcon, StoreIcon, BagIcon, ReceiptIcon, UsersIcon, TicketIcon, ChartIcon, BellIcon, MegaphoneIcon, GearIcon, CashIcon , HomeIcon, SparkleIcon, PaletteIcon, PlusIcon, ShareIcon, CheckIcon } from './icons.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
+import { useTheme } from '../context/ThemeContext.jsx';
+import { switchLanguage } from '../i18n.js';
+import { storeUrl, copyText } from '../utils/links.js';
 import NavBell from './NavBell.jsx';
 import CloseButton from './CloseButton.jsx';
 import DashDrawerNav from './DashDrawerNav.jsx';
@@ -42,57 +45,175 @@ function Avatar({ user, store, size = 'h-8 w-8' }) {
   );
 }
 
-// صفّ رابط داخل قائمة الحساب — بلاطة أيقونة ملوّنة أنيقة
-function MenuRow({ to, onClick, Icon, label, danger }) {
+// صفّ رابطٍ بقائمة الحساب: بلاطةُ أيقونةٍ + اسم + سهمٌ خفيف
+function MenuRow({ to, onClick, Icon, label, hint, badge = 0 }) {
   return (
-    <Link to={to} onClick={onClick} className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-[13px] font-medium transition ${danger ? 'text-red-600 hover:bg-red-500/10' : 'text-wine hover:bg-wine/5'}`}>
-      <Icon className={`h-[17px] w-[17px] shrink-0 ${danger ? '' : 'text-wine/60'}`} /> {label}
+    <Link to={to} onClick={onClick} role="menuitem" className="bz-acct-row">
+      <span className="bz-acct-ico"><Icon className="h-[18px] w-[18px]" /></span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[13.5px] font-semibold">{label}</span>
+        {hint && <span className="bz-acct-mute block truncate text-[11px]">{hint}</span>}
+      </span>
+      {badge > 0 && <span className="bz-acct-badge">{badge > 99 ? '99+' : badge}</span>}
+      <svg viewBox="0 0 24 24" className="bz-acct-chev h-4 w-4 shrink-0 rtl:rotate-180" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
     </Link>
   );
 }
 
-// قائمة الحساب المنبثقة من الأفاتار — مدمجة وأنيقة: هوية مصغّرة + حالة + روابط + خروج
-function AccountMenu({ user, store, subscription, isAdmin, onClose, onLogout }) {
-  const { t } = useTranslation();
+// زرّا اختيارٍ متجاوران (المظهر، اللغة) — الخيارُ الحاليُّ ظاهرٌ بدل زرٍّ يُقلَبُ بلا دلالة
+function Segmented({ label, value, options, onChange }) {
+  return (
+    <div className="flex items-center justify-between gap-3 px-2.5 py-1.5">
+      <span className="bz-acct-mute text-[12px] font-semibold">{label}</span>
+      <div className="bz-acct-seg" role="radiogroup" aria-label={label}>
+        {options.map((o) => (
+          <button
+            key={o.value}
+            type="button"
+            role="radio"
+            aria-checked={value === o.value}
+            onClick={() => value !== o.value && onChange(o.value)}
+            className={value === o.value ? 'is-on' : ''}
+          >
+            {o.icon}{o.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// اختصارٌ سريعٌ برأس القائمة (منتج جديد، الطلبات، مشاركة المتجر)
+function QuickTile({ to, onClick, Icon, label, badge = 0 }) {
+  const body = (
+    <>
+      <span className="relative">
+        <Icon className="h-5 w-5" />
+        {badge > 0 && <span className="bz-acct-dot">{badge > 9 ? '9+' : badge}</span>}
+      </span>
+      <span className="truncate text-[11.5px] font-semibold">{label}</span>
+    </>
+  );
+  return to
+    ? <Link to={to} onClick={onClick} role="menuitem" className="bz-acct-tile">{body}</Link>
+    : <button type="button" onClick={onClick} role="menuitem" className="bz-acct-tile">{body}</button>;
+}
+
+// قائمة الحساب من الأفاتار — مركزُ التاجرةِ السريع لا قائمةُ روابطَ فقط:
+// هويّتُها ومتجرُها وحالةُ اشتراكِها (مع «جدّدي» حين يقترب الانتهاء)، ثمّ ثلاثةُ اختصاراتٍ
+// لأكثرِ ما تفعلُه يوميّاً (منتجٌ جديد، الطلباتُ بعدّادِ الجديد، مشاركةُ رابطِ المتجر)،
+// ثمّ صفحاتُها، ثمّ تفضيلاتُها (المظهر واللغة) بمكانٍ واحد، والخروجُ آخراً.
+// تُغلَقُ بالضغطِ خارجها وبـEsc، وبالتنقّل.
+function AccountMenu({ user, store, subscription, isAdmin, newOrders = 0, onClose, onLogout }) {
+  const { t, i18n } = useTranslation();
+  const { dark, toggle } = useTheme();
+  const [copied, setCopied] = useState(false);
+  const boxRef = useRef(null);
   const active = subscription?.active;
   const days = subscription?.daysRemaining;
+  const soon = active && days != null && days <= 5;
   const pill = isAdmin
     ? { cls: 'bz-rolechip', text: t('nav.adminRole') }
     : active
-      ? days != null && days <= 5
-        ? { cls: 'bg-orange-400/15 text-orange-500', text: t('subscription.daysLeft', { count: days }) }
-        : { cls: 'bg-emerald-500/15 text-emerald-600', text: t('subscription.active') }
-      : { cls: 'bg-red-500/15 text-red-600', text: t('subscription.expired') };
+      ? soon
+        ? { cls: 'bg-orange-400/20 text-orange-300', text: t('subscription.daysLeft', { count: days }) }
+        : { cls: 'bg-emerald-500/20 text-emerald-300', text: t('subscription.active') }
+      : { cls: 'bg-red-500/20 text-red-300', text: t('subscription.expired') };
+  const renew = !isAdmin && (!active || soon);
+  const link = store?.slug ? storeUrl(store.slug) : '';
+  const lang = i18n.language === 'en' ? 'en' : 'ar';
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    boxRef.current?.querySelector('a, button')?.focus({ preventScroll: true });
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const share = async () => {
+    if (!link) return;
+    if (navigator.share) {
+      try { await navigator.share({ title: store?.name || 'Bazara', url: link }); } catch { /* أُلغيت */ }
+      return;
+    }
+    if (await copyText(link)) { setCopied(true); setTimeout(() => setCopied(false), 1800); }
+  };
+
+  const sun = <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4" /></svg>;
+  const moon = <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" /></svg>;
 
   return (
     <>
       {/* خلفية شفافة تُغلق القائمة بالضغط خارجها */}
       <div className="fixed inset-0 z-[55]" onClick={onClose} />
-      <div className="bz-usermenu absolute end-0 top-[calc(100%+8px)] z-[60] w-[13rem] max-w-[72vw] origin-top-end animate-pop overflow-hidden rounded-2xl bg-white text-wine">
-        {/* رأس فخم بتدرّج خمري + لمعة ذهبية */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-wine to-wine-dark px-3 py-3 text-cream">
-          <div className="relative flex items-center gap-2.5">
-            <span className="shrink-0 rounded-full p-[2px]"><Avatar user={user} store={isAdmin ? null : store} size="h-9 w-9" /></span>
+      <div ref={boxRef} role="menu" aria-label={t('nav.account')} className="bz-usermenu bz-acct absolute end-0 top-[calc(100%+10px)] z-[60] w-[19rem] max-w-[calc(100vw-1.5rem)] origin-top-end animate-pop overflow-hidden rounded-[1.35rem]">
+        {/* الرأس: الهويّة والمتجر والاشتراك */}
+        <div className="bz-acct-head px-4 pb-3.5 pt-4">
+          <div className="flex items-center gap-3">
+            <span className="shrink-0 rounded-full p-[2px] ring-2 ring-white/15"><Avatar user={user} store={isAdmin ? null : store} size="h-12 w-12" /></span>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[13px] font-bold leading-tight text-cream">{user.name}</p>
-              <span className={`mt-1 inline-flex items-center gap-1 rounded-full px-1.5 py-px text-[10px] font-bold ${pill.cls}`}>
-                <span className="h-1 w-1 rounded-full bg-current" /> {pill.text}
-              </span>
+              <p className="truncate text-[15px] font-bold leading-tight">{user.name}</p>
+              {!isAdmin && store?.name && (
+                <p className="mt-0.5 truncate text-[12px] text-white/60" dir="auto">{store.name} · <span dir="ltr">@{store.slug}</span></p>
+              )}
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10.5px] font-bold ${pill.cls}`}>
+                  <span className="h-1.5 w-1.5 rounded-full bg-current" /> {pill.text}
+                </span>
+                {renew && (
+                  <Link to="/subscribe" onClick={onClose} className="rounded-full bg-white px-2.5 py-0.5 text-[10.5px] font-bold text-[#1F1E1D]">{t('nav.menu.renew')}</Link>
+                )}
+              </div>
             </div>
           </div>
+          {!isAdmin && store?.slug && (
+            <div className="mt-3.5 grid grid-cols-3 gap-2">
+              <QuickTile to="/dashboard?tab=myProducts&new=1" onClick={onClose} Icon={PlusIcon} label={t('nav.menu.newProduct')} />
+              <QuickTile to="/dashboard?tab=myOrders" onClick={onClose} Icon={ReceiptIcon} label={t('nav.myOrders')} badge={newOrders} />
+              <QuickTile onClick={share} Icon={copied ? CheckIcon : ShareIcon} label={copied ? t('nav.menu.copied') : t('nav.menu.share')} />
+            </div>
+          )}
         </div>
-        <div className="h-px bg-wine/10" />
 
         <div className="p-1.5">
-          {!isAdmin && store?.slug && <MenuRow to={`/store/${store.slug}`} onClick={onClose} Icon={StoreIcon} label={t('nav.openStore')} />}
-          {isAdmin && <MenuRow to="/shop" onClick={onClose} Icon={StoreIcon} label={t('nav.home')} />}
-          <MenuRow to="/dashboard" onClick={onClose} Icon={GridIcon} label={t('dashboard.title')} />
-          <div className="my-1 h-px bg-wine/10" />
-          <button
-            onClick={() => { onClose(); onLogout(); }}
-            className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-[13px] font-bold text-red-600 transition hover:bg-red-500/10"
-          >
-            <LogoutIcon className="h-[17px] w-[17px] shrink-0" /> {t('nav.logout')}
+          {isAdmin ? (
+            <>
+              <MenuRow to="/shop" onClick={onClose} Icon={HomeIcon} label={t('nav.menu.site')} />
+              <MenuRow to="/dashboard" onClick={onClose} Icon={GridIcon} label={t('nav.menu.adminPanel')} />
+              <MenuRow to="/dashboard?tab=subscribers" onClick={onClose} Icon={UsersIcon} label={t('nav.menu.subscribers')} />
+              <MenuRow to="/dashboard?tab=adminSettings" onClick={onClose} Icon={GearIcon} label={t('nav.menu.siteSettings')} />
+            </>
+          ) : (
+            <>
+              {store?.slug && <MenuRow to={`/store/${store.slug}`} onClick={onClose} Icon={StoreIcon} label={t('nav.menu.viewStore')} hint={link.replace(/^https?:\/\//, '')} />}
+              <MenuRow to="/dashboard" onClick={onClose} Icon={GridIcon} label={t('dashboard.title')} />
+              <MenuRow to="/dashboard?tab=storeSettings" onClick={onClose} Icon={GearIcon} label={t('nav.menu.storeSettings')} />
+              <MenuRow to="/dashboard?tab=profile" onClick={onClose} Icon={UserIcon} label={t('nav.menu.profile')} />
+            </>
+          )}
+        </div>
+
+        <div className="bz-acct-sep" />
+        <div className="py-1.5">
+          <Segmented
+            label={t('nav.menu.appearance')}
+            value={dark ? 'dark' : 'light'}
+            onChange={toggle}
+            options={[{ value: 'light', label: t('nav.menu.light'), icon: sun }, { value: 'dark', label: t('nav.menu.dark'), icon: moon }]}
+          />
+          <Segmented
+            label={t('nav.menu.language')}
+            value={lang}
+            onChange={(v) => switchLanguage(v)}
+            options={[{ value: 'ar', label: 'عربي' }, { value: 'en', label: 'EN' }]}
+          />
+        </div>
+
+        <div className="bz-acct-sep" />
+        <div className="p-1.5">
+          <button type="button" role="menuitem" onClick={() => { onClose(); onLogout(); }} className="bz-acct-row bz-acct-out">
+            <span className="bz-acct-ico"><LogoutIcon className="h-[18px] w-[18px]" /></span>
+            <span className="flex-1 text-start text-[13.5px] font-bold">{t('nav.logout')}</span>
           </button>
         </div>
       </div>
@@ -345,6 +466,7 @@ export default function Navbar() {
                     store={store}
                     subscription={subscription}
                     isAdmin={isAdmin}
+                    newOrders={newOrders}
                     onClose={() => setAcctOpen(false)}
                     onLogout={handleLogout}
                   />
