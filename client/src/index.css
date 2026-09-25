@@ -5964,6 +5964,13 @@ html.dark .theme-pub .bz-dt-btn[aria-selected="true"] .bz-dt-count { background:
 @keyframes bz-swap { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .bz-swap { animation: bz-swap .22s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
 @media (prefers-reduced-motion: reduce) { .bz-swap { animation: none; } }
+/* زرّ «المتابعة بجوجل» الثابت (GoogleButton): على ألوان جوجل الرسميّة للزرّ المحدّد —
+   أبيض بحدٍّ رماديّ نهاراً، وداكنٌ ليلاً. المرور على الغلاف (group) لأنّ زرّ جوجل
+   الشفّاف فوقه هو الذي يلتقط المؤشّر. */
+.bz-gbtn { background: #fff; color: #1F1F1F; box-shadow: inset 0 0 0 1px #747775; }
+.group:hover .bz-gbtn { background: #F7F8F8; }
+html.dark .bz-gbtn { background: #131314; color: #E3E3E3; box-shadow: inset 0 0 0 1px #8E918F; }
+html.dark .group:hover .bz-gbtn { background: #1E1F20; }
 .bz-dt-thumb { background: #F2F0ED; box-shadow: inset 0 0 0 1px rgba(31, 30, 29, 0.07); }
 html.dark .bz-dt-thumb { background: #EDEAE6; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12); }
 .bz-dh-dot { background: #1F1E1D; color: #F6F5F3; }
