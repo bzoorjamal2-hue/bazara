@@ -29,6 +29,7 @@ import { presentDepts, deptOfProduct, normDept, storeDepts, DEPARTMENTS } from '
 import DeptTabs, { DeptHeading } from '../components/DeptTabs.jsx';
 import CatIcon from '../components/CatIcon.jsx';
 import { getMySize } from '../utils/mySize.js';
+import { onVideoMeta, onImageLoad } from '../utils/heroFit.js';
 import { productColors, colorToCss } from '../utils/colorDot.js';
 import { getCache, setCache, getStale } from '../utils/apiCache.js';
 import { saveRef } from '../utils/referral.js';
@@ -1305,15 +1306,22 @@ function HeroSlider({ store }) {
                         alt=""
                         aria-hidden="true"
                         decoding="async"
+                        onLoad={onImageLoad}
                         style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))' }}
-                        className="bz-kenburns absolute inset-0 z-0 h-full w-full object-cover"
+                        className="bz-kenburns bz-hero-media absolute inset-0 z-0 h-full w-full object-cover"
                       />
                     </picture>
+                  )}
+                  {isImage && (
+                    // النسخة الضبابيّة للجانبين — تظهر حين تُعرض الصورة كاملةً (heroFit)
+                    <img src={heroCrop(s.bgValue, 900, '4:5') || cldThumb(s.bgValue, 1440)} alt="" aria-hidden="true" decoding="async" style={{ zIndex: -1 }} className="bz-hero-back bz-hero-back-only absolute inset-0 h-full w-full object-cover" />
                   )}
                   {isVideo && (
                     <>
                       {/* صورة أول لقطة دائمة خلف الفيديو → لا سواد أبداً */}
-                      <img src={posterImg} alt="" aria-hidden="true" loading={idx === 0 ? 'eager' : 'lazy'} style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))' }} className="bz-kenburns absolute inset-0 z-0 h-full w-full object-cover" />
+                      <img src={posterImg} alt="" aria-hidden="true" loading={idx === 0 ? 'eager' : 'lazy'} onLoad={onImageLoad} style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))' }} className="bz-kenburns bz-hero-back absolute inset-0 z-0 h-full w-full object-cover" />
+                      {/* لقطةٌ حادّةٌ كاملةٌ بالوسط حين يُعرض الفيديو كاملاً — قبل أن يبدأ لا تبقى ضبابيّةٌ وحدها */}
+                      <img src={posterImg} alt="" aria-hidden="true" decoding="async" style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))' }} className="bz-hero-front-only absolute inset-0 z-0 h-full w-full object-contain" />
                       {/* الفيديو للشريحةِ الظاهرةِ وحدَها. كان لكلِّ شريحةٍ عنصرُها، فتنتهي الصفحةُ
                           بأربعةِ فيديوهاتٍ بالذاكرة. قِستُ فتحةَ صفحةِ متجرٍ واحدة: ٢٫٦ ميغابايت
                           فيديو نزلت، واثنانِ منها مخزَّنانِ بالكامل (٣١ ثانيةً و١٤) — لأنّ السلايدرَ
@@ -1333,9 +1341,10 @@ function HeroSlider({ store }) {
                         preload={idx === 0 ? 'auto' : 'metadata'}
                         onEnded={(e) => { e.currentTarget.currentTime = 0; e.currentTarget.play().catch(() => {}); }}
                         onPause={(e) => { if (!document.hidden && iRef.current === idx && visRef.current) e.currentTarget.play().catch(() => {}); }}
+                        onLoadedMetadata={onVideoMeta}
                         onCanPlay={(e) => { e.currentTarget.style.opacity = '1'; }}
                         style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))', opacity: 0, transition: 'opacity .35s ease' }}
-                        className="bz-kenburns absolute inset-0 z-[1] h-full w-full object-cover"
+                        className="bz-kenburns bz-hero-media absolute inset-0 z-[1] h-full w-full object-cover"
                       />
                       )}
                     </>
