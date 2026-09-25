@@ -109,10 +109,13 @@ export function platformCatName(key, t, lang) {
 export function platformCatImage(key) {
   const found = custom.extra.find((c) => c.key === key);
   if (found?.image) return found.image;
-  // صورة المدير الرسميّة لفئةٍ مدمجة (فئات الأحذية والإكسسوارات غالباً) — هويّة الموقع
+  // صورةٌ يرفعها المدير لفئةٍ مدمجة تسبق الثابتة — هويّة الموقع بيده
   if (custom.images?.[key]) return custom.images[key];
-  // فئات الأحذية والإكسسوارات بلا رسمٍ مقصوص بعد: مكانها أيقونتها (CatIcon)
-  return CLOTHING_CATS.includes(key) ? `/categories/${key}.webp?v=5` : '';
+  if (CLOTHING_CATS.includes(key)) return `/categories/${key}.webp?v=5`;
+  // فئات الأحذية والإكسسوارات: رسومٌ من السلسلة نفسها (اللون والمادّة والإضاءة) بمربّع
+  // السبع وهامشها. العامّتان (shoes، accessory) بلا رسم: مكانهما أيقونة القسم.
+  if (SUB_CATS.shoes.includes(key) || SUB_CATS.accessories.includes(key)) return `/categories/${key}.webp?v=1`;
+  return '';
 }
 
 // نسخةُ PNG احتياطاً: WebP مدعومٌ منذ سفاري ١٤ (٢٠٢٠)، لكنّ الاحتياط رخيص
