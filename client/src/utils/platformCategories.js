@@ -132,17 +132,19 @@ export function platformKeysOfDept(dept) {
   return platformCatKeys().filter((k) => catDept(k) === dept);
 }
 
-// فئات المنصّة الأساسيّة التي يعرضها متجر.
+// فئات المنصّة الأساسيّة لمتجر.
 //
-// تفعيل قسمٍ بإعدادات المتجر يُظهر فئاته الأساسيّة كلّها برسومها — هي أساس كلّ
-// متجرٍ بالأقسام الثلاثة — وتبقى للتاجرة: تُخفي ما لا تبيعه، أو تغيّر صورته
-// واسمه، وتضيف فئاتها تحت عنوان القسم. وثلاث حالاتٍ لا تُعرض فيها فئةٌ أساسيّة
-// ما لم تكن فيها قطع:
-// - قسمها غير مفعّل بالمتجر
-// - أخفتها التاجرة (includeHidden للإعدادات: هناك تُظهرها من جديد)
+// تفعيلُ قسمٍ بإعدادات المتجر يُعطي التاجرةَ فئاتِه الثابتةَ كلَّها برسومها — هي أساسُ
+// كلِّ متجرٍ بالأقسام الثلاثة — تراها بإعداداتِها وبنموذجِ المنتج، فتُخفي ما لا تبيعُه أو
+// تغيّرُ صورتَه واسمَه، وتضيفُ فئاتِها هي تحت عنوان القسم.
+// أمّا واجهةُ المتجر (الزبائن) فلا تُظهرُ فئةً ثابتةً إلّا وفيها قطع: فئةٌ فارغةٌ تفتحُها
+// الزبونةُ فلا تجدُ شيئاً تُقرأُ متجراً ناقصاً. أوّلُ منتجٍ يُضافُ لها يُظهرُها.
+// ‏includeHidden للإعدادات: هناك تظهرُ الثابتةُ كلُّها (والمخفيّةُ معها كي تُظهرَها من جديد).
+// ولا تُعرضُ بالإعدادات:
+// - فئاتُ قسمٍ غيرِ مفعّل (ما لم تكن فيها قطع)
 // - فئةٌ للتاجرة مربوطةٌ بها تحلّ محلّها: «كعب عالي» التي صنعتها بصورتها بدل
 //   أساسيّةٍ بالاسم نفسه — لا فئتان متطابقتان بالمتجر
-// والعامّتان (أحذية، إكسسوارات) لا تظهران إلّا بقطعهما: الفئات الفرعيّة تغطّي القسم.
+// - العامّتان (أحذية، إكسسوارات): الفئات الفرعيّة تغطّي القسم.
 export function storeBuiltinKeys(store, keys = platformCatKeys(), counts = {}, { includeHidden = false } = {}) {
   const enabled = storeDepts(store);
   const meta = store?.categoryMeta || {};
@@ -150,7 +152,7 @@ export function storeBuiltinKeys(store, keys = platformCatKeys(), counts = {}, {
   const replaced = new Set(custom.map((c) => c?.platform).filter(Boolean));
   const generic = Object.keys(DEPT_BASE_CATS);
   return keys.filter((k) => {
-    if (!includeHidden && meta[k]?.hidden) return false;
+    if (!includeHidden) return !meta[k]?.hidden && (counts[k] || 0) > 0;
     if ((counts[k] || 0) > 0) return true;
     if (!enabled.includes(catDept(k, custom))) return false;
     if (generic.includes(k) || replaced.has(k)) return false;

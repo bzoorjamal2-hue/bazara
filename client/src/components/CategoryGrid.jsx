@@ -66,7 +66,7 @@ function CategoryCard({ cat }) {
   );
 }
 
-function Arrow({ dir, rtl, onClick }) {
+function Arrow({ dir, rtl, onClick, disabled = false }) {
   const RIGHT = 'M9 6l6 6-6 6'; // chevron ›
   const LEFT = 'M15 6l-6 6 6 6'; // chevron ‹
   // السابق نحو البداية، التالي نحو النهاية — يتبع اتجاه اللغة
@@ -75,9 +75,10 @@ function Arrow({ dir, rtl, onClick }) {
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       aria-label={dir === 'next' ? 'next' : 'prev'}
       // mb-6 يرفع السهم ليتوسّط مع الصورة (يعوّض ارتفاع اسم الفئة أسفل البطاقة)
-      className="mb-6 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-wine/20 bg-white text-wine shadow-sm transition hover:bg-wine hover:text-cream"
+      className="mb-6 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-wine/20 bg-white text-wine shadow-sm transition hover:bg-wine hover:text-cream disabled:pointer-events-none disabled:opacity-30"
     >
       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d={path} />
@@ -106,8 +107,15 @@ function Item({ cat, active, onSelect }) {
   );
 }
 
-// شبكة/كاروسيل الفئات — تظهر بعدد متجاوب مع الشاشة، مع أسهم ونقاط عند الحاجة.
-// cats: قائمة كائنات {key, name, image, builtin}. إن لم تُمرَّر، نبني من الفئات الأصلية الخمس.
+// صفُّ الفئات — كلُّ الفئاتِ مرسومةٌ دائماً بصفٍّ واحدٍ يُسحَبُ بالإصبع (كقصصِ إنستغرام).
+//
+// كان كاروسيلاً بصفحات: الصفحةُ تنزاحُ كاملةً بضغطةِ السهم، وآخرُ صفحةٍ تحملُ ما تبقّى
+// — فقسمُ الأحذية (خمسُ فئاتٍ، اثنتانِ بالصفحة) كانت صفحتُه الأخيرةُ فئةً وحيدةً بمنتصفِ
+// فراغ: تنزلقُ الفئاتُ خارجَ الشاشةِ وتحلُّ محلَّها واحدة، فيُقرأُ الانتقالُ قطعاً واختفاءً.
+// الآن البلاطةُ بمقاسٍ ثابتٍ ومكانٍ ثابت، والجوّالُ يُظهرُ طرفَ التالية ليدلَّ على المزيد،
+// والسحبُ تمريرٌ أصليٌّ للمتصفّح (بالقصورِ الذاتيّ والتثبيتِ على البلاطة) لا حركةٌ مكتوبة.
+// الأسهمُ للحاسوبِ تُمرِّرُ بمقدارِ ما يظهر.
+// cats: قائمة كائنات {key, name, image, builtin}. إن لم تُمرَّر، نبني من الفئات الأصلية.
 export default function CategoryGrid({ onSelect, active, images = {}, names = {}, cats }) {
   const { i18n } = useTranslation();
   const platformKeys = usePublicCatKeys();
@@ -116,7 +124,6 @@ export default function CategoryGrid({ onSelect, active, images = {}, names = {}
     ? cats
     : platformKeys.map((k) => ({ key: k, name: names[k], image: images[k], builtin: true }));
   const [perPage, setPerPage] = useState(getPerPage());
-  const [page, setPage] = useState(0);
 
   useEffect(() => {
     const onResize = () => setPerPage(getPerPage());
@@ -124,95 +131,57 @@ export default function CategoryGrid({ onSelect, active, images = {}, names = {}
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  const pages = Math.ceil(list.length / perPage);
-  useEffect(() => { setPage((p) => Math.min(p, pages - 1)); }, [pages]);
+  const overflow = list.length > perPage;
+  // الجوّالُ يُظهرُ اثنتينِ وطرفَ الثالثة؛ الأوسعُ يُظهرُ عددَه كاملاً والأسهمُ تكمل
+  const visible = overflow && perPage <= 2 ? perPage + 0.45 : perPage;
+  const basis = `calc((100% - ${Math.ceil(visible) - 1} * var(--bz-cat-gap)) / ${visible})`;
 
-  const hasNav = list.length > perPage;
-  const go = (d) => setPage((p) => (p + d + pages) % pages);
-
-  // صفحاتٌ غيرُ متداخلةٍ تُرسَمُ كلُّها معاً على شريطٍ واحدٍ يُزاح — لا شريحةٌ
-  // تُقتَطعُ بكلِّ ضغطة. كانت ‎slice تبدّلُ البطاقاتِ المعروضةَ ومفاتيحُها تختلف،
-  // فتُستبدَلُ عُقَدُ الـDOM وتُطلَبُ صورُ الصفحةِ الجديدةِ من جديد: تختفي
-  // البلاطاتُ لحظةً ثمّ تقفزُ ظاهرةً — وهو القطعُ والتعليق. الآن تُبنى مرّةً
-  // وتبقى، والانتقالُ تحويلٌ واحدٌ على وحدةِ الرسمِ بلا تخطيطٍ ولا طلبِ شبكة.
-  const chunks = Array.from({ length: pages }, (_, p) => list.slice(p * perPage, (p + 1) * perPage));
-
-  // عرضُ النافذةِ بالبكسل — عليه تُبنى الإزاحة. النسبةُ المئويّةُ مرجعُها هنا
-  // ملتبس: الشريطُ عرضُه عرضُ نافذةٍ واحدةٍ وأبناؤُه يفيضون خارجَه.
-  const frameRef = useRef(null);
-  const [frameW, setFrameW] = useState(0);
+  const scRef = useRef(null);
+  const [edge, setEdge] = useState({ start: true, end: !overflow });
   useEffect(() => {
-    const el = frameRef.current;
+    const el = scRef.current;
     if (!el) return undefined;
-    const read = () => setFrameW(el.clientWidth);
+    let raf = 0;
+    const read = () => {
+      raf = 0;
+      const max = el.scrollWidth - el.clientWidth;
+      const x = Math.abs(el.scrollLeft); // بالعربيّة scrollLeft سالبٌ من الصفر
+      setEdge((e) => {
+        const n = { start: x < 4, end: x > max - 4 };
+        return n.start === e.start && n.end === e.end ? e : n;
+      });
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(read); };
     read();
-    if (typeof ResizeObserver === 'undefined') {
-      window.addEventListener('resize', read);
-      return () => window.removeEventListener('resize', read);
-    }
-    const ro = new ResizeObserver(read);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => { el.removeEventListener('scroll', onScroll); if (raf) cancelAnimationFrame(raf); };
+  }, [list.length, perPage]);
+
+  // «التالي» نحو نهايةِ القائمة: يساراً بالعربيّة، يميناً بالإنجليزيّة
+  const go = (d) => {
+    const el = scRef.current;
+    if (!el) return;
+    el.scrollBy({ left: d * (rtl ? -1 : 1) * el.clientWidth * 0.9, behavior: 'smooth' });
+  };
 
   return (
-    <div>
-      <div className="bz-catrow flex items-center gap-2 sm:gap-3">
-        {hasNav && <Arrow dir="prev" rtl={rtl} onClick={() => go(-1)} />}
-        {/* ‎py-2 ‎-my-2: القَصُّ أفقيٌّ مطلوب، أمّا رأسيّاً فرفعةُ البلاطةِ عند
-            المرورِ (‎-translate-y-1.5) وحلقةُ الفئةِ النشطةِ يخرجانِ عن الصندوقِ
-            فيُبتَرانِ من فوق. الحشوةُ تفتحُ لهما مجالاً داخلَ حدِّ القَصّ،
-            والهامشُ السالبُ يسحبُ المقدارَ نفسَه فلا يزدادُ ارتفاعُ الصفّ. */}
-        <div ref={frameRef} className="-my-2 min-w-0 flex-1 overflow-hidden py-2">
-          {/* اتّجاهُ الحركةِ يتبعُ اللغةَ كسلايدرِ الهيرو: العربيّةُ ‎row-reverse
-              فالأولى يميناً والتاليةُ إلى يسارِها، والإنجليزيّةُ ‎row والعكس. */}
-          <div
-            className={`flex ${rtl ? 'flex-row-reverse' : ''}`}
-            style={{
-              transform: `translate3d(${(rtl ? 1 : -1) * page * frameW}px, 0, 0)`,
-              direction: 'ltr',
-              transition: 'transform 420ms cubic-bezier(0.22, 0.61, 0.36, 1)',
-              willChange: 'transform',
-            }}
-          >
-            {chunks.map((chunk, p) => (
-              /* صفٌّ مرنٌ لا شبكةٌ بأعمدةٍ ثابتة: الشبكةُ كانت تحجزُ خمسةَ أعمدةٍ دائماً،
-                 فآخرُ صفحةٍ تحملُ قطعتَينِ من سبعٍ تتركُ ثلاثةَ أعمدةٍ فارغةٍ على جانبٍ
-                 واحدٍ — يبدو القسمُ مكسوراً لا منتهياً. المرونةُ تُبقي مقاسَ البلاطةِ
-                 كما هو وتوسّطُ الصفَّ الناقص. */
-              <div
-                key={p}
-                dir={rtl ? 'rtl' : 'ltr'}
-                className="flex w-full shrink-0 justify-center gap-3 sm:gap-4"
-              >
-                {chunk.map((cat) => (
-                  <div
-                    key={cat.key}
-                    className="min-w-0"
-                    style={{ flex: `0 0 calc((100% - ${perPage - 1} * var(--bz-cat-gap)) / ${perPage})` }}
-                  >
-                    <Item cat={cat} active={active} onSelect={onSelect} />
-                  </div>
-                ))}
-              </div>
-            ))}
+    <div className="bz-catrow flex items-center gap-2 sm:gap-3">
+      {overflow && perPage > 2 && <Arrow dir="prev" rtl={rtl} onClick={() => go(-1)} disabled={edge.start} />}
+      {/* ‎py-2 ‎-my-2 و‎px-1 ‎-mx-1: رفعةُ البلاطةِ عند المرورِ وحلقةُ الفئةِ النشطةِ
+          يخرجانِ عن الصندوق، وحدُّ التمريرِ يقصُّهما. الحشوةُ تفتحُ لهما مجالاً
+          والهامشُ السالبُ يسحبُ المقدارَ نفسَه فلا يتغيّرُ مقاسُ الصفّ. */}
+      <div
+        ref={scRef}
+        dir={rtl ? 'rtl' : 'ltr'}
+        className={`bz-catscroll -mx-1 -my-2 flex min-w-0 flex-1 gap-3 px-1 py-2 sm:gap-4 ${overflow ? 'snap-x snap-mandatory overflow-x-auto overscroll-x-contain' : 'justify-center overflow-hidden'}`}
+      >
+        {list.map((cat) => (
+          <div key={cat.key} className="min-w-0 snap-start" style={{ flex: `0 0 ${basis}` }}>
+            <Item cat={cat} active={active} onSelect={onSelect} />
           </div>
-        </div>
-        {hasNav && <Arrow dir="next" rtl={rtl} onClick={() => go(1)} />}
+        ))}
       </div>
-
-      {pages > 1 && (
-        <div className="mt-4 flex justify-center gap-1.5">
-          {Array.from({ length: pages }).map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setPage(i)}
-              aria-label={`page ${i + 1}`}
-              className={`h-1.5 rounded-full transition-all ${i === page ? 'w-5 bg-wine' : 'w-1.5 bg-wine/25'}`}
-            />
-          ))}
-        </div>
-      )}
+      {overflow && perPage > 2 && <Arrow dir="next" rtl={rtl} onClick={() => go(1)} disabled={edge.end} />}
     </div>
   );
 }
