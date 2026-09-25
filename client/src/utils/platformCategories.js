@@ -15,12 +15,20 @@ export const BUILTIN_CATS = [...CLOTHING_CATS, ...Object.keys(DEPT_BASE_CATS)];
 
 const KEY = 'bz_platform_cats';
 const LIVE_KEY = 'bz_live_depts';
+const LIVE_CATS_KEY = 'bz_live_cats';
 
 // الأقسام التي فيها قطعٌ معروضة (يحسبها الخادم مع /site-info). قسمٌ فارغ لا يظهر
 // بواجهة المنصّة: لا تبويب «أحذية» يفتح على لا شيء، ولا فئة «أحذية» بالقائمة.
 let liveDepts = (() => {
   try { const v = JSON.parse(sessionStorage.getItem(LIVE_KEY) || 'null'); return Array.isArray(v) && v.length ? v : ['clothing']; }
   catch { return ['clothing']; }
+})();
+
+// الفئات التي فيها قطعٌ معروضة (من /site-info كذلك). null = لم تصل بعد → لا
+// نُخفي شيئاً، فأوّل رسمةٍ قبل الشبكة تبقى كما كانت.
+let liveCats = (() => {
+  try { const v = JSON.parse(sessionStorage.getItem(LIVE_CATS_KEY) || 'null'); return Array.isArray(v) ? new Set(v) : null; }
+  catch { return null; }
 })();
 
 // ما يعرّفه المدير: { extra: [{key,name,nameEn,image}], hidden: ['shirt', …] }
@@ -31,7 +39,11 @@ let custom = (() => {
 
 const listeners = new Set();
 
-export function setPlatformCategories(next, live) {
+export function setPlatformCategories(next, live, cats) {
+  if (Array.isArray(cats)) {
+    liveCats = new Set(cats);
+    try { sessionStorage.setItem(LIVE_CATS_KEY, JSON.stringify(cats)); } catch { /* تجاهل */ }
+  }
   if (Array.isArray(live) && live.length) {
     liveDepts = live;
     try { sessionStorage.setItem(LIVE_KEY, JSON.stringify(live)); } catch { /* تجاهل */ }
@@ -63,6 +75,11 @@ export function catDept(key, storeCustom = []) {
   return deptOfCategory(key, { platformExtra: custom.extra, storeCustom });
 }
 
+// فئةٌ فيها قطع؟ القاعدة نفسها بواجهة المتجر: لا فئة فارغة تفتح على لا شيء
+export function isLiveCat(key) {
+  return !liveCats || liveCats.has(key);
+}
+
 export function liveDepartments() {
   return liveDepts;
 }
@@ -71,7 +88,7 @@ export function liveDepartments() {
 // platformCatKeys كاملةً — التاجرة تضيف أوّل حذاءٍ لقسمٍ لم يُفتح بعد.
 export function publicCatKeys() {
   const live = new Set(liveDepts);
-  return platformCatKeys().filter((k) => live.has(catDept(k)));
+  return platformCatKeys().filter((k) => live.has(catDept(k)) && isLiveCat(k));
 }
 
 // اسم الفئة المعروض: المدمجة تُترجَم بالمفتاح، والمضافة باسمها كما كتبه المدير

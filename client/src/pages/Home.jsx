@@ -28,7 +28,7 @@ import useInViewOnce from '../hooks/useInViewOnce.js';
 import ScrollProgress from '../components/ScrollProgress.jsx';
 import StoriesRow from '../components/StoriesRow.jsx';
 import { BAZARA_WHATSAPP } from '../config/site.js';
-import { usePlatformCatKeys, usePublicCatKeys, useLiveDepartments, platformCatKeys, storeOnlyCats, catDept, platformCatName } from '../utils/platformCategories.js';
+import { usePlatformCatKeys, usePublicCatKeys, useLiveDepartments, platformCatKeys, storeOnlyCats, catDept, platformCatName, isLiveCat } from '../utils/platformCategories.js';
 import { normDept } from '../utils/departments.js';
 import DeptTabs from '../components/DeptTabs.jsx';
 import { phGlyph } from '../utils/imageFallback.js';
@@ -61,7 +61,7 @@ export default function Home() {
   const gridCats = [
     ...publicKeys.map((k) => ({ key: k, builtin: true, dept: catDept(k) })),
     ...customCats.map((cc) => ({ key: cc.key, name: cc.name, image: cc.image, builtin: false, dept: normDept(cc.dept) }))
-      .filter((c) => liveDepts.includes(c.dept)),
+      .filter((c) => liveDepts.includes(c.dept) && isLiveCat(c.key)),
   ];
   const homeDepts = liveDepts.filter((d) => gridCats.some((c) => c.dept === d));
   // القسم المختار بالرابط (?dept=) لا بحالةٍ بالذاكرة، كفئات الملابس تماماً: من

@@ -4,6 +4,7 @@ import { clearPublicCache } from '../middleware/cache.js';
 import { logAdmin } from '../utils/adminLog.js';
 import { activeStoreSql } from '../utils/subscription.js';
 import { BUILTIN_CATS, normDept, recomputeDepartments } from '../utils/department.js';
+import { normalizeCategory } from '../utils/category.js';
 
 // إعدادات الموقع العامة (صف واحد id=1) — يتحكّم بها المدير العام.
 async function readSettings() {
@@ -315,6 +316,7 @@ export async function getSiteInfo(_req, res, next) {
     let stats = { stores: 0, products: 0, orders: 0 };
     // الأقسام التي فيها قطعٌ معروضة فعلاً: قسمٌ فارغ لا يظهر تبويباً ولا بقائمة
     let liveDepartments = ['clothing'];
+    let liveCategories = null; // null = غير معروف → لا نُخفي شيئاً
     try {
       const active = activeStoreSql('u');
       const r = await query(
@@ -327,14 +329,18 @@ export async function getSiteInfo(_req, res, next) {
       );
       stats = { stores: r.rows[0].stores, products: r.rows[0].products, orders: r.rows[0].orders };
       const d = await query(
-        `SELECT DISTINCT p.department FROM products p JOIN stores s ON s.id = p.store_id
+        `SELECT DISTINCT p.department, p.category FROM products p JOIN stores s ON s.id = p.store_id
            JOIN users u ON u.id = s.user_id WHERE ${active} AND p.hidden_at IS NULL`
       );
       const live = new Set(d.rows.map((x) => x.department));
       liveDepartments = ['clothing', 'shoes', 'accessories'].filter((k) => k === 'clothing' || live.has(k));
+      // الفئات التي فيها قطعٌ معروضة: فئةٌ فارغة لا تظهر بواجهة المنصّة، كما لا تظهر
+      // بواجهة المتجر. كانت «أحذية» العامّة تُعرض وكلّ أحذية المتاجر بفئاتها الخاصّة
+      // (صنادل، رياضيّة) — فتفتح على لا شيء.
+      liveCategories = [...new Set(d.rows.map((x) => normalizeCategory(x.category)).filter(Boolean))];
     } catch { /* الأرقام زينة: غيابها لا يُسقط الصفحة */ }
     res.set('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=600');
-    res.json({ instagram: s.instagram, facebook: s.facebook, platformCategories: s.platformCategories, landing: s.landing, stats, liveDepartments });
+    res.json({ instagram: s.instagram, facebook: s.facebook, platformCategories: s.platformCategories, landing: s.landing, stats, liveDepartments, liveCategories });
   } catch (err) {
     next(err);
   }

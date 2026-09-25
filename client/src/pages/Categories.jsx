@@ -7,7 +7,7 @@ import { GridIcon } from '../components/icons.jsx';
 import api from '../api/client.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { cldThumb } from '../utils/cloudinary.js';
-import { platformCatKeys, platformCatName, platformCatImage, platformCatImageFallback, usePublicCatKeys, useLiveDepartments, storeOnlyCats, catDept } from '../utils/platformCategories.js';
+import { platformCatKeys, platformCatName, platformCatImage, platformCatImageFallback, usePublicCatKeys, useLiveDepartments, storeOnlyCats, catDept, isLiveCat } from '../utils/platformCategories.js';
 import { normDept, presentDepts } from '../utils/departments.js';
 import { DeptHeading } from '../components/DeptTabs.jsx';
 import DeptIcon from '../components/DeptIcon.jsx';
@@ -28,7 +28,7 @@ export default function Categories() {
   const items = [
     ...catKeys.map((c) => ({ key: c, name: platformCatName(c, t, i18n.language), to: `/category/${c}`, img: platformCatImage(c), fallback: platformCatImageFallback(c), dept: catDept(c) })),
     ...storeOnlyCats(custom, catKeys).map((c) => ({ key: c.key, name: c.name, to: `/category/${c.key}`, img: c.image || '', dept: normDept(c.dept) })),
-  ].filter((it) => liveDepts.includes(it.dept));
+  ].filter((it) => liveDepts.includes(it.dept) && isLiveCat(it.key));
   // الأقسام متتاليةً برؤوسها حين يجمع الموقع أكثر من قسم؛ وإلّا شبكةٌ واحدة كما كانت
   const groups = presentDepts(items, (it) => it.dept);
 

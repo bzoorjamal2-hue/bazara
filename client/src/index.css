@@ -3397,13 +3397,21 @@ html.dark .bz-drawer {
 .bz-drawer .text-cream { color: var(--dw-ink); }
 .bz-drawer .text-cream\/90,
 .bz-drawer .text-cream\/85 { color: var(--dw-ink-90); }
+/* ‎/75 و‎/55 و‎/50: أيقونات الفئات ورؤوس الأقسام (ملابس · أحذية · إكسسوارات)
+   بالقائمة الجانبيّة — كانت بلا تعيين فتبقى عاجيّةً على بياض اللوح: فراغٌ
+   مكان اسم القسم بين فئات الأحذية والإكسسوارات. */
 .bz-drawer .text-cream\/80,
+.bz-drawer .text-cream\/75,
 .bz-drawer .text-cream\/70,
 .bz-drawer .text-cream\/65,
-.bz-drawer .text-cream\/60 { color: var(--dw-ink-70); }
+.bz-drawer .text-cream\/60,
+.bz-drawer .text-cream\/55,
+.bz-drawer .text-cream\/50 { color: var(--dw-ink-70); }
 .bz-drawer .text-cream\/45,
+.bz-drawer .text-cream\/35,
 .bz-drawer .text-cream\/40,
 .bz-drawer .text-cream\/25 { color: var(--dw-ink-30); }
+.bz-drawer .bg-cream\/5,
 .bz-drawer .bg-cream\/10,
 .bz-drawer .bg-cream\/12,
 .bz-drawer .bg-cream\/\[0\.08\],
