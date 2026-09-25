@@ -634,7 +634,7 @@
       "welcomePlaceholder": "e.g. 10% off your first order with code WELCOME10",
       "welcomeHint": "Shows once to a visitor on their first entry to your store. Leave empty to hide.",
       "categories": "Customize categories",
-      "categoriesHint": "Create your store's categories with your own names and images. Each category's items appear on the public site under one of its fixed categories, which you choose.",
+      "categoriesHint": "Create your store's categories with your own names and images. Each category's items appear on the public site under one of its fixed categories, which you choose. All fixed categories of your enabled departments are listed here; shoppers only see one in your store once you add products to it.",
       "categoryNamePlaceholder": "Category name (default: {{name}})",
       "renameCategory": "Display name (optional)",
       "hideCategory": "Hide",

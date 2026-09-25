@@ -5150,6 +5150,9 @@ html.dark .theme-pub .bz-pmedia::after { box-shadow: inset 0 0 0 1px rgba(239, 2
    يغيّرُها عندَ ‎640px — فلو بقيت مكتوبةً بموضعَين تفارقَ الاثنان. */
 .bz-catrow { --bz-cat-gap: 0.75rem; }
 @media (min-width: 640px) { .bz-catrow { --bz-cat-gap: 1rem; } }
+/* صفُّ الفئات يُسحَبُ بالإصبع بلا شريطِ تمريرٍ ظاهر */
+.bz-catscroll { scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.bz-catscroll::-webkit-scrollbar { display: none; }
 
 /* ═══════ الرفُّ: الشبكةُ نفسُها تُسحَبُ جانباً ═══════
    ثلاثُ شبكاتٍ كاملةٍ بصفحةِ المتجرِ (جديدنا · الأكثرُ مبيعاً · تخفيضات) تحملُ

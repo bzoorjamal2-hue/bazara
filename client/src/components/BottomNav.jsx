@@ -326,6 +326,9 @@ export default function BottomNav() {
   // نُضيءُ التبويبَ المضغوطَ قبلَ أن يتغيّرَ المسار: الإصبعُ يرى أثرَه بالفريمِ
   // التالي بدل أن ينتظرَ الصفحة. وتُمسَحُ الإضاءةُ ساعةَ يصلُ المسارُ الجديد.
   const [pendingKey, setPendingKey] = useState('');
+  const tapped = useRef(false);
+  const tapTimer = useRef(0);
+  useEffect(() => () => clearTimeout(tapTimer.current), []);
   useEffect(() => { setPendingKey(''); }, [pathname, search]);
   // إضاءةُ التبويبِ وحدَها لا تكفي حين تطولُ الصفحةُ الجديدة: التبويبُ يضيءُ
   // والشاشةُ لا تتغيّر، فيُقرأُ ذلك عطلاً لا انتظاراً. فنرفعُ خيطاً علويّاً
@@ -343,7 +346,12 @@ export default function BottomNav() {
     // بدل أن يكتفي بالتمرير لأعلى لتطابق المسار وحده.
     // و«?dept=» وحده (تبويب أحذية/إكسسوارات بالرئيسية) هو الرئيسية نفسها: تمريرٌ
     // لأعلى وتبقى على القسم، كما بالملابس — لا قفزٌ إلى تبويب الملابس.
-    if (pathname + search === to || (pathname === to && /^\?dept=[a-z]+$/.test(search))) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+    if (pathname + search === to || (pathname === to && /^\?dept=[a-z]+$/.test(search))) {
+      // لا انتقال: تُمسَحُ الإضاءةُ المسبَقة — وإلا بقيَ خيطُ «جارٍ» عالقاً أعلى الشاشة
+      setPendingKey('');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     // كان هذا داخلَ ‎startTransition ليمنعَ وميضَ مؤشّرِ التحميل. وثمنُه أنّ
     // الصفحةَ القديمةَ تبقى معروضةً حتى تجهزَ الجديدة: على جهازٍ متوسّطٍ تمرُّ
     // ثانيةٌ لا يتغيّرُ فيها شيءٌ بعدَ الضغطة — فتُقرأُ عطلاً. وقِستُ الوجهَينِ
@@ -493,10 +501,22 @@ export default function BottomNav() {
             /* الإضاءةُ الاستباقيّةُ للبنودِ التي تنقلُ وحدَها: السلّةُ تفتحُ درجاً
                ولا يتغيّرُ المسار، فلو أضأناها لبقيت مضاءةً بعدَ إغلاقِ الدرج —
                لا شيءَ يمسحُها. و‎warmTo هو علامةُ «هذا البندُ ينقل». */
-            onClick={() => { if (warmTo) setPendingKey(key); onClick(); }}
+            onClick={() => { tapped.current = true; if (warmTo) setPendingKey(key); onClick(); }}
             // ‏pointerdown يسبقُ الضغطةَ بنحوِ مئةِ مليّ ثانيةٍ على اللمس: نبدأُ
-            // تنزيلَ حزمةِ الصفحةِ فيها، فتصلُ الضغطةُ والحزمةُ جاهزةٌ أو قاربت.
-            onPointerDown={() => warmTo && warm(warmTo)}
+            // تنزيلَ حزمةِ الصفحةِ فيها، ونُضيءُ الخانةَ فيها أيضاً. كانت الإضاءةُ
+            // تُضبَطُ مع الانتقالِ بالتحديثِ نفسِه، فلا تُرسَمُ إلا بعدَ أن تُبنى
+            // الصفحةُ الجديدةُ كلُّها — فيبقى الزرُّ ميّتاً تحتَ الإصبعِ طوالَ ذلك.
+            // الآن تضيءُ لحظةَ اللمس (كإنستغرام) والصفحةُ تلحق.
+            onPointerDown={() => {
+              if (!warmTo) return;
+              warm(warmTo);
+              tapped.current = false;
+              setPendingKey(key);
+              // لمسةٌ انسحبَ منها الإصبعُ بلا ضغطة: تُطفأُ الإضاءة
+              clearTimeout(tapTimer.current);
+              tapTimer.current = setTimeout(() => { if (!tapped.current) setPendingKey((k) => (k === key ? '' : k)); }, 700);
+            }}
+            onPointerCancel={() => setPendingKey((k) => (k === key ? '' : k))}
             data-cart-target={key === 'cart' ? '' : undefined}
             /* الاسمُ يبقى للفأرةِ وللقارئِ الصوتيّ. وبلا نصٍّ ظاهرٍ يصيرُ الزرُّ
                بلا اسمٍ مقروء، فنكتبُه سمةً — أيقونةٌ عاريةٌ بلا aria-label زرٌّ

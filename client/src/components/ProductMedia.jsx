@@ -36,11 +36,21 @@ export function productMedia(product, color = '') {
   const imgs = colorImgs.length ? colorImgs : generalImages(product);
   const list = imgs.map((src) => ({ type: 'image', src }));
   if (product.videoUrl) {
-    list.push({ type: 'video', src: product.videoUrl, poster: cldVideoPoster(product.videoUrl) });
+    list.push({ type: 'video', src: product.videoUrl, poster: videoPoster(product) });
   }
   if (!list.length) list.push({ type: 'image', src: MEDIA_PH });
   return list;
 }
+
+// غلافُ الفيديو: لقطتُه من محرّكِنا أو كلاوديناري، وإلا فصورةُ المنتجِ الأولى.
+// فيديو من رابطٍ خارجيٍّ (بلا لقطةٍ جاهزة) كان يظهرُ رماديّاً فارغاً على الآيفون:
+// سفاري لا يرسمُ أوّلَ إطارٍ قبلَ التشغيلِ حين لا يكونُ للفيديو غلاف.
+export function videoPoster(product) {
+  return cldVideoPoster(product?.videoUrl || '') || generalImages(product)[0] || '';
+}
+
+// بلا غلاف: ‎#t=0.1 يجعلُ سفاري يُحمِّلُ أوّلَ إطارٍ ويرسمُه بدلَ المستطيلِ الرماديّ
+const withFirstFrame = (src) => (src && !src.includes('#') ? `${src}#t=0.1` : src);
 
 // الصورةُ الممثِّلةُ لوسيطةٍ (لطيرانِ السلّة وبطاقاتِ المشاركة): لقطةُ الفيديو للفيديو
 export const mediaCover = (m, width) => (m?.type === 'video'
@@ -216,8 +226,8 @@ export default function ProductMedia({
         {product?.videoUrl && (
           <video
             ref={videoRef}
-            src={cldVideoMp4(product.videoUrl)}
-            poster={cldVideoPoster(product.videoUrl)}
+            src={videoPoster(product) ? cldVideoMp4(product.videoUrl) : withFirstFrame(cldVideoMp4(product.videoUrl))}
+            poster={videoPoster(product) || undefined}
             controls
             playsInline
             preload="metadata"
@@ -276,9 +286,10 @@ export default function ProductMedia({
         )}
       </div>
 
-      {/* المصغّرات — الفيديو منها بعلامةِ تشغيلٍ على لقطته */}
+      {/* المصغّرات — الفيديو منها بعلامةِ تشغيلٍ على لقطته. حشوةُ الشريطِ (p-1) تفسحُ
+          لحلقةِ المختارة: الحلقةُ خارجَ حدودِ المصغّرة، وشريطُ التمريرِ كان يقصُّها */}
       {many && (
-        <div ref={thumbsRef} className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div ref={thumbsRef} className="-mx-1 mt-2 flex gap-2 overflow-x-auto p-1 pb-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {list.map((m, k) => (
             <button
               key={`${m.type}-${m.src}-${k}`}
@@ -288,14 +299,26 @@ export default function ProductMedia({
               aria-current={k === idx}
               className={`bz-thumb relative h-16 w-16 shrink-0 overflow-hidden rounded-xl transition duration-300 ${k === idx ? 'bz-thumb-on' : 'opacity-60 hover:opacity-100'}`}
             >
-              <img
-                src={m.type === 'video' ? m.poster : cldThumb(m.src, 160)}
-                alt=""
-                loading="lazy"
-                decoding="async"
-                className="h-full w-full object-cover"
-                onError={(e) => { e.currentTarget.src = MEDIA_PH; }}
-              />
+              {m.type === 'video' && !m.poster ? (
+                // فيديو بلا غلاف: أوّلُ إطارٍ منه مصغّرةً (صامتاً، لا يُشغَّل)
+                <video
+                  src={withFirstFrame(m.src)}
+                  muted
+                  playsInline
+                  preload="metadata"
+                  tabIndex={-1}
+                  className="pointer-events-none h-full w-full object-cover"
+                />
+              ) : (
+                <img
+                  src={m.type === 'video' ? m.poster : cldThumb(m.src, 160)}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="h-full w-full object-cover"
+                  onError={(e) => { e.currentTarget.src = MEDIA_PH; }}
+                />
+              )}
               {m.type === 'video' && (
                 <span className="absolute inset-0 flex items-center justify-center bg-black/30 text-white">
                   <PlayBadge className="h-5 w-5 drop-shadow" />
