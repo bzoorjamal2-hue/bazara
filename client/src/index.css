@@ -5931,6 +5931,10 @@ html.dark .theme-pub .bz-dt-btn[aria-selected="true"] { color: #1F1E1D; }
 html.dark .theme-pub .bz-dt-count { background: rgba(239, 238, 236, 0.12); color: rgba(239, 238, 236, 0.72); }
 html.dark .theme-pub .bz-dt-btn[aria-selected="true"] .bz-dt-count { background: rgba(31, 30, 29, 0.14); color: #1F1E1D; }
 /* رأسُ القسمِ بصفحاتِ التصنيفات: الدائرةُ والعدّاد بالوضعين */
+/* صورة القسم بأزراره ورؤوسه: دائرةٌ فاتحة ثابتة بالوضعين — الرسوم رماديّةٌ دافئة
+   تحتاج أرضاً فاتحة، ودائرةٌ فاتحة على الحبّة الداكنة النشطة تُقرأ «مختار» بوضوح */
+.bz-dt-thumb { background: #F2F0ED; box-shadow: inset 0 0 0 1px rgba(31, 30, 29, 0.07); }
+html.dark .bz-dt-thumb { background: #EDEAE6; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12); }
 .bz-dh-dot { background: #1F1E1D; color: #F6F5F3; }
 .bz-dh-count { color: rgba(31, 30, 29, 0.6); }
 html.dark .theme-pub .bz-dh-dot { background: #E4E2DE; color: #1F1E1D; }

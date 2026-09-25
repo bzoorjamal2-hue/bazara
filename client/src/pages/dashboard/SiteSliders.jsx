@@ -10,10 +10,11 @@ import ImageInput from '../../components/ImageInput.jsx';
 import { ImageIcon, GridIcon } from '../../components/icons.jsx';
 import { PageHead, SectionHead, Field, RowTools, Tip } from '../../components/FormField.jsx';
 import { BUILTIN_CATS } from '../../utils/platformCategories.js';
+import { platformCatImage } from '../../utils/platformCategories.js';
+import { DeptThumb } from '../../components/DeptTabs.jsx';
 import { CLOTHING_CATS, deptOfCategory } from '../../utils/departments.js';
 import CatIcon from '../../components/CatIcon.jsx';
 import { DEPARTMENTS, normDept } from '../../utils/departments.js';
-import DeptIcon from '../../components/DeptIcon.jsx';
 
 // الشرائح الافتراضية الموجودة حالياً بالصفحة الرئيسية — تظهر للمدير ليعدّلها/يحذفها
 const DEFAULT_SITE_SLIDES = [
@@ -111,7 +112,9 @@ export default function SiteSliders() {
             {BUILTIN_CATS.filter((k) => !CLOTHING_CATS.includes(k)).map((k) => (
               <div key={k} className="rounded-2xl border border-gold-400/15 bg-black/15 p-3">
                 <p className="mb-2 flex items-center gap-2 text-sm font-bold text-stone-100">
-                  <CatIcon cat={k} dept={deptOfCategory(k)} className="h-5 w-5" /> {t(`categories.${k}`, k)}
+                  {platformCatImage(k)
+                    ? <img src={platformCatImage(k)} alt="" className="h-9 w-9 shrink-0 rounded-full bg-[#F2F0ED] object-contain p-0.5" />
+                    : <CatIcon cat={k} dept={deptOfCategory(k)} className="h-5 w-5" />} {t(`categories.${k}`, k)}
                 </p>
                 <ImageInput
                   value={platCats.images?.[k] || ''}
@@ -173,7 +176,7 @@ export default function SiteSliders() {
                             className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold transition ${on ? 'border-transparent' : 'border-gold-400/25 text-stone-300 hover:bg-white/5'}`}
                             style={on ? { background: '#999795', color: '#1E1D1C' } : undefined}
                           >
-                            <DeptIcon dept={d} className="h-3.5 w-3.5" strokeWidth={1.8} /> {t(`dept.${d}`)}
+                            <DeptThumb dept={d} className="h-5 w-5" /> {t(`dept.${d}`)}
                           </button>
                         );
                       })}

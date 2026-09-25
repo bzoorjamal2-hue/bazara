@@ -20,7 +20,7 @@ import { cldThumb } from '../utils/cloudinary.js';
 import { panelImage } from '../utils/panelImage.js';
 import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys, usePublicCatKeys, catDept } from '../utils/platformCategories.js';
 import { presentDepts } from '../utils/departments.js';
-import DeptIcon from './DeptIcon.jsx';
+import { DeptThumb } from './DeptTabs.jsx';
 
 // هوية الحساب أينما ظهرت (زرّ الشريط · القائمة المنبثقة · القائمة الجانبية):
 // صورة الحساب إن وُجدت، وإلا شعار المتجر (للمشترك لا للمدير)، وإلا أول حرف الاسم.
@@ -482,7 +482,7 @@ export default function Navbar() {
                   <div key={d}>
                     {groups.length > 1 && (
                       <p className="flex items-center gap-2 px-3 pb-1 pt-3 text-[11px] font-extrabold uppercase tracking-[0.18em] text-cream/55">
-                        <DeptIcon dept={d} className="h-4 w-4" /> {t(`dept.${d}`)}
+                        <DeptThumb dept={d} className="h-6 w-6" /> {t(`dept.${d}`)}
                       </p>
                     )}
                     {publicKeys.filter((c) => catDept(c) === d).map((c) => (

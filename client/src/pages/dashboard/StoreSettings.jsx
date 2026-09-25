@@ -21,6 +21,7 @@ import { cldThumb } from '../../utils/cloudinary.js';
 import { SIZE_CHART } from '../../utils/sizes.js';
 import { DEPARTMENTS, normDept, storeDepts } from '../../utils/departments.js';
 import DeptIcon, { DeptsIcon } from '../../components/DeptIcon.jsx';
+import { DeptThumb } from '../../components/DeptTabs.jsx';
 import BankSelect from '../../components/BankSelect.jsx';
 import BANKS from '../../utils/banks.js';
 import { usePlatformCatKeys, catDept, platformCatImage, platformCatName, platformKeysOfDept, storeBuiltinKeys } from '../../utils/platformCategories.js';
@@ -934,9 +935,7 @@ export default function StoreSettings() {
                   }}
                   className={`flex items-start gap-3 rounded-2xl border p-3.5 text-start transition ${on ? 'border-emerald-400/40 bg-emerald-500/10' : 'border-gold-400/20 bg-black/20 hover:bg-white/5'} ${locked ? 'cursor-default' : ''}`}
                 >
-                  <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl ${on ? 'text-emerald-300' : 'text-stone-400'}`} style={{ background: on ? 'rgba(16,185,129,0.14)' : 'rgba(120,113,108,0.14)' }}>
-                    <DeptIcon dept={d} className="h-8 w-8" strokeWidth={1.4} />
-                  </span>
+                  <DeptThumb dept={d} className={`h-12 w-12 transition ${on ? '' : 'opacity-50 grayscale'}`} />
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center justify-between gap-2">
                       <span className="text-sm font-extrabold text-stone-100">{t(`dept.${d}`)}</span>
@@ -973,7 +972,7 @@ export default function StoreSettings() {
                   onClick={() => document.getElementById(`s-cat-${d}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
                   className="inline-flex items-center gap-1.5 rounded-full border border-gold-400/25 px-3 py-1.5 text-xs font-bold text-stone-200 transition hover:bg-gold-400/10"
                 >
-                  <DeptIcon dept={d} className="h-4 w-4" strokeWidth={1.7} /> {t(`dept.${d}`)}
+                  <DeptThumb dept={d} className="h-6 w-6" /> {t(`dept.${d}`)}
                 </button>
               ))}
             </div>
@@ -988,9 +987,7 @@ export default function StoreSettings() {
               <section key={d} id={`s-cat-${d}`} className={`scroll-mt-24 ${catGroups.length > 1 ? 'mb-6 last:mb-0' : ''}`}>
                 {catGroups.length > 1 && (
                   <div className="mb-3 flex items-center gap-2.5 border-b border-gold-400/10 pb-2">
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gold-400/10 text-gold-200">
-                      <DeptIcon dept={d} className="h-5 w-5" strokeWidth={1.6} />
-                    </span>
+                    <DeptThumb dept={d} className="h-10 w-10" />
                     <h3 className="font-display text-base font-bold text-stone-100">{t(`dept.${d}`)}</h3>
                     <span className="ms-auto text-[11px] tabular-nums text-stone-400">{t('dashboard.store.catCount', { count: builtins.length + customs.length })}</span>
                   </div>
@@ -1079,7 +1076,7 @@ export default function StoreSettings() {
                               className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold transition ${on ? 'border-transparent' : 'border-gold-400/25 text-stone-300 hover:bg-white/5'}`}
                               style={on ? { background: '#999795', color: '#1E1D1C' } : undefined}
                             >
-                              <DeptIcon dept={d} className="h-3.5 w-3.5" strokeWidth={1.8} /> {t(`dept.${d}`)}
+                              <DeptThumb dept={d} className="h-5 w-5" /> {t(`dept.${d}`)}
                             </button>
                           );
                         })}
@@ -1107,7 +1104,7 @@ export default function StoreSettings() {
                     لو سمحنا بأكثر لقُصّت الزائدة بصمتٍ بعد «تم الحفظ». */}
                 {(form.customCategories || []).length < MAX_CUSTOM_CATS && (
                   <button type="button" onClick={() => addCustomCat(d)} className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-gold-400/25 bg-black/15 p-3 text-sm font-semibold text-stone-300 transition hover:border-gold-400/50 hover:bg-gold-400/5">
-                    <DeptIcon dept={d} className="h-4 w-4" strokeWidth={1.8} /> ＋ {t('dashboard.store.addDeptCategory', { dept: t(`dept.${d}`) })}
+                    <DeptThumb dept={d} className="h-7 w-7" /> ＋ {t('dashboard.store.addDeptCategory', { dept: t(`dept.${d}`) })}
                   </button>
                 )}
               </section>
