@@ -21,7 +21,7 @@ export default function CatThumb({ cat, dept, className = 'h-8 w-8' }) {
   }
   return (
     <img
-      src={`/categories/${cat}.png?v=3`}
+      src={platformCatImage(cat)}
       alt=""
       aria-hidden="true"
       loading="lazy"

@@ -16,7 +16,7 @@ export function DeptHeading({ dept, count = 0 }) {
   return (
     <div className="mb-4 flex items-center gap-3">
       <span className="bz-dh-dot flex h-10 w-10 shrink-0 items-center justify-center rounded-full shadow-[0_6px_18px_-10px_rgba(0,0,0,0.5)]">
-        <DeptIcon dept={dept} className="h-5 w-5" strokeWidth={1.7} />
+        <DeptIcon dept={dept} filled className="h-5 w-5" />
       </span>
       <h2 className="font-display text-xl font-bold text-wine">{t(`dept.${dept}`)}</h2>
       <span aria-hidden className="h-px flex-1 bg-wine/15" />
@@ -51,12 +51,12 @@ export default function DeptTabs({ depts, value, onChange, counts = null, classN
         ref={wrap}
         role="tablist"
         aria-label={t('dept.tabsLabel')}
-        className="bz-depttabs relative inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-full border p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="bz-depttabs relative inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-full p-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {pill && (
           <span
             aria-hidden
-            className="bz-dt-pill absolute inset-y-1 rounded-full shadow-[0_6px_18px_-8px_rgba(0,0,0,0.45)]"
+            className="bz-dt-pill absolute inset-y-1.5 rounded-full shadow-[0_6px_18px_-8px_rgba(0,0,0,0.45)]"
             style={{ left: pill.left, width: pill.width, transition: 'left 380ms cubic-bezier(0.22,0.61,0.36,1), width 380ms cubic-bezier(0.22,0.61,0.36,1)' }}
           />
         )}
@@ -70,9 +70,9 @@ export default function DeptTabs({ depts, value, onChange, counts = null, classN
               role="tab"
               aria-selected={on}
               onClick={() => onChange(d)}
-              className="bz-dt-btn relative z-[1] flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-bold transition-colors duration-300 sm:gap-2 sm:px-5"
+              className="bz-dt-btn relative z-[1] flex shrink-0 items-center gap-2 rounded-full px-4 py-2.5 text-sm font-extrabold transition-colors duration-300 sm:gap-2 sm:px-5"
             >
-              <DeptIcon dept={d} className="h-[18px] w-[18px] shrink-0" strokeWidth={1.7} />
+              <DeptIcon dept={d} filled={on} className="h-[19px] w-[19px] shrink-0" strokeWidth={1.7} />
               <span className="whitespace-nowrap">{t(`dept.${d}`)}</span>
               {counts && counts[d] > 0 && (
                 <span className="bz-dt-count hidden rounded-full px-1.5 text-[10px] font-extrabold tabular-nums sm:inline">

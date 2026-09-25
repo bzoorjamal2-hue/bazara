@@ -1,46 +1,45 @@
-// أيقونات الأقسام الثلاثة: خطٌّ بسمك أيقونات الواجهة، وتحته تعبئةٌ خفيفة من اللون
-// نفسه (currentColor بشفافية) تعطي الشكل عمقاً — فتبقى أنيقةً صغيرةً بالتبويب
-// وممتلئةً كبيرةً ببلاطة الفئة، وتأخذ لون ما حولها نهاراً وليلاً بلا لونٍ مثبَّت.
-// اختيرت كلٌّ منها من ثلاث رسماتٍ قورنت بالحجمين وعلى الخلفيتين.
-const FILL = { fill: 'currentColor', fillOpacity: 0.16, stroke: 'none' };
-
-const PATHS = {
-  // فستانٌ معلّقٌ على علّاقة: حمّالتان، وخصرٌ مشدود، وتنّورةٌ تتّسع
-  clothing: (
-    <>
-      <path {...FILL} d="M8.2 12.6h7.6l2.3 7.2c.2.6-.3 1.2-.9 1.2H6.8c-.6 0-1.1-.6-.9-1.2l2.3-7.2Z" />
-      <path d="M12 5.6V4.9a1.25 1.25 0 1 0-1.25-1.25" />
-      <path d="M9.4 7 12 5.6 14.6 7" />
-      <path d="M9.4 7l.7 2.9-1.9 2.7-2.3 7.2c-.2.6.3 1.2.9 1.2h10.4c.6 0 1.1-.6.9-1.2l-2.3-7.2-1.9-2.7.7-2.9" />
-      <path d="M9.4 7c.8.8 1.6 1.2 2.6 1.2s1.8-.4 2.6-1.2" />
-      <path d="M8.2 12.6h7.6" />
-    </>
-  ),
-  // حذاءُ كعبٍ عالٍ: مقدّمةٌ منخفضة تصعد إلى الكعب، وكعبٌ رفيع، ولمعةٌ على الظهر
-  shoes: (
-    <>
-      <path {...FILL} d="M3 16.8c0-.8.6-1.4 1.4-1.4 3.4 0 6.3-1.6 8.3-4.3l1.9-2.6c.6-.8 1.8-1 2.6-.4l.3.2c1.9 1.4 3 3.6 3 6v.7H13.6c-2.6 0-5 1-6.9 2.8L6 18.4c-.3.3-.7.4-1.1.4H4.4c-.8 0-1.4-.6-1.4-1.4v-.6Z" />
-      <path d="M3 16.8c0-.8.6-1.4 1.4-1.4 3.4 0 6.3-1.6 8.3-4.3l1.9-2.6c.6-.8 1.8-1 2.6-.4l.3.2c1.9 1.4 3 3.6 3 6v.7H13.6c-2.6 0-5 1-6.9 2.8L6 18.4c-.3.3-.7.4-1.1.4H4.4c-.8 0-1.4-.6-1.4-1.4v-.6Z" />
-      <path d="M18.9 15l-.5 6.5" />
-      <path d="M16.9 9.6c1.1.7 1.8 1.9 1.9 3.2" strokeOpacity={0.5} />
-    </>
-  ),
-  // حقيبة يدٍ بغطاءٍ وقفلٍ ومقبضٍ مقوّس
-  accessories: (
-    <>
-      <path {...FILL} d="M4.6 10.3 12 14.1l7.4-3.8-.8 9.3c-.1.8-.8 1.4-1.6 1.4H7c-.8 0-1.5-.6-1.6-1.4l-.8-9.3Z" />
-      <path d="M4.6 10.3c0-1 .8-1.7 1.7-1.7h11.4c1 0 1.7.8 1.7 1.7l-.8 9.3c-.1.8-.8 1.4-1.6 1.4H7c-.8 0-1.5-.6-1.6-1.4l-.8-9.3Z" />
-      <path d="M4.7 10.4 12 14.1l7.3-3.7" />
-      <rect x="10.9" y="13.4" width="2.2" height="2.2" rx=".5" />
-      <path d="M8.5 8.6V7.3a3.5 3.5 0 0 1 7 0v1.3" />
-    </>
-  ),
+// أيقونات الأقسام الثلاثة بلغة أيقونات الشريط السفليّ: خطّيّةٌ في حالتها العاديّة،
+// ومصمتةٌ (filled) حين تكون نشطة — فيقرأ الزائر «أنا هنا» من شكل الأيقونة لا من
+// لونها وحده. تُرسَم بـcurrentColor فتأخذ لون ما حولها نهاراً وليلاً.
+// الأشكال سيلويتات لا رسومٌ مفصّلة: تبقى مقروءةً بعشرين بكسلاً داخل حبّة.
+const SHAPES = {
+  // فستانٌ بصدرٍ محدّد وحمّالتين، وخصرٌ مشدود يفصله عن تنّورةٍ تتّسع
+  clothing: {
+    paths: [
+      'M9 2.6c.5 1.5 1.5 2.3 3 2.3s2.5-.8 3-2.3l1.3.6c-.3 1.8-.9 3.4-1.9 4.6l1.2 2.6H8.4l1.2-2.6c-1-1.2-1.6-2.8-1.9-4.6L9 2.6Z',
+      'M8.9 11.6h6.2l4.2 8.3c.3.7-.2 1.5-.9 1.5H5.6c-.7 0-1.2-.8-.9-1.5l4.2-8.3Z',
+    ],
+  },
+  // حذاءُ كعبٍ عالٍ: مقدّمةٌ مدبّبة، وقوسٌ مفتوحٌ تحت القدم، وكعبٌ رفيع
+  shoes: {
+    paths: [
+      'M2.6 17.6c0-1 .8-1.6 1.8-1.5 3.2.3 5.9-1 7.9-3.4l2.1-2.6c.8-1 2.2-1.2 3.2-.5l.8.6c1.5 1.1 2.4 2.8 2.4 4.7v.4h-1.2l-.4 6.2h-1.1l-.2-5.9c-2.6.3-5 1.3-7.1 2.9l-.6.5c-.4.3-.9.5-1.4.5H4.1c-.8 0-1.5-.7-1.5-1.5v-.4Z',
+    ],
+  },
+  // حقيبة يدٍ بقفلٍ صغير ومقبضٍ مقوّس
+  accessories: {
+    paths: [
+      'M5.4 9.4h13.2c.8 0 1.4.6 1.5 1.4l.9 8.8c.1.9-.6 1.6-1.5 1.6H4.5c-.9 0-1.6-.7-1.5-1.6l.9-8.8c.1-.8.7-1.4 1.5-1.4Z M10.8 12.6h2.4v1.7a.5.5 0 0 1-.5.5h-1.4a.5.5 0 0 1-.5-.5v-1.7Z',
+    ],
+    handle: 'M8.6 9.4V7.9a3.4 3.4 0 0 1 6.8 0v1.5',
+  },
 };
 
-export default function DeptIcon({ dept = 'clothing', className = 'h-5 w-5', strokeWidth = 1.5 }) {
+export default function DeptIcon({ dept = 'clothing', filled = false, className = 'h-5 w-5', strokeWidth = 1.6 }) {
+  const s = SHAPES[dept] || SHAPES.clothing;
   return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      {PATHS[dept] || PATHS.clothing}
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill={filled ? 'currentColor' : 'none'}
+      stroke={filled ? 'none' : 'currentColor'}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {s.paths.map((d) => <path key={d} d={d} fillRule="evenodd" />)}
+      {s.handle && <path d={s.handle} fill="none" stroke="currentColor" strokeWidth={filled ? 1.8 : strokeWidth} strokeLinecap="round" />}
     </svg>
   );
 }
@@ -50,8 +49,7 @@ export default function DeptIcon({ dept = 'clothing', className = 'h-5 w-5', str
 export function DeptsIcon({ className = 'h-5 w-5', strokeWidth = 1.6 }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path {...FILL} d="m12 3.5 8.5 4.3L12 12 3.5 7.8 12 3.5Z" />
-      <path d="m12 3.5 8.5 4.3L12 12 3.5 7.8 12 3.5Z" />
+      <path d="m12 3.5 8.5 4.3L12 12 3.5 7.8 12 3.5Z" fill="currentColor" fillOpacity={0.16} />
       <path d="m3.5 12 8.5 4.3 8.5-4.3" />
       <path d="m3.5 16.2 8.5 4.3 8.5-4.3" />
     </svg>

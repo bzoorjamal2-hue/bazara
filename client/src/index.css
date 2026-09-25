@@ -5908,14 +5908,14 @@ html.dark .bz-pre h1, html.dark .bz-pre h2, html.dark .bz-pre a { color: #F6F5F3
    ألوانٌ صريحةٌ للوضعين: أصنافُ ‎text-wine/75 وbg-wine/[0.04] بلا مقابلٍ ليليّ،
    فكانت التبويباتُ غيرُ النشطةِ حبراً غامقاً على خلفيّةٍ غامقة لا تُرى. ليلاً
    تنقلبُ الحبّةُ فاتحةً بنصٍّ غامق — عكسُ النهارِ تماماً لا نسخةٌ باهتةٌ منه. */
-.bz-depttabs { border-color: rgba(31, 30, 29, 0.14); background: rgba(31, 30, 29, 0.04); }
+.bz-depttabs { background: #fff; box-shadow: 0 14px 34px -16px rgba(31, 30, 29, 0.45), 0 0 0 1px rgba(31, 30, 29, 0.06); }
 .bz-dt-pill { background: #1F1E1D; }
-.bz-dt-btn { color: rgba(31, 30, 29, 0.72); }
+.bz-dt-btn { color: #6E6A64; }
 @media (hover: hover) { .bz-dt-btn:hover { color: #1F1E1D; } }
 .bz-dt-btn[aria-selected="true"] { color: #F6F5F3; }
 .bz-dt-count { background: rgba(31, 30, 29, 0.09); color: rgba(31, 30, 29, 0.7); }
 .bz-dt-btn[aria-selected="true"] .bz-dt-count { background: rgba(246, 245, 243, 0.2); color: #F6F5F3; }
-html.dark .theme-pub .bz-depttabs { border-color: rgba(239, 238, 236, 0.2); background: rgba(239, 238, 236, 0.05); }
+html.dark .theme-pub .bz-depttabs { background: #232120; box-shadow: 0 14px 34px -16px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(239, 238, 236, 0.1); }
 html.dark .theme-pub .bz-dt-pill { background: #E4E2DE; }
 html.dark .theme-pub .bz-dt-btn { color: rgba(239, 238, 236, 0.72); }
 @media (hover: hover) { html.dark .theme-pub .bz-dt-btn:hover { color: #EFEEEC; } }
