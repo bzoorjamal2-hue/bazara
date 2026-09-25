@@ -10,6 +10,8 @@ import CatThumb from '../components/CatThumb.jsx';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { cldThumb } from '../utils/cloudinary.js';
 import { smartNav } from '../utils/nav.js';
+import { platformCatName } from '../utils/platformCategories.js';
+import { normDept } from '../utils/departments.js';
 
 // لوقو بيت أنيق (زر العودة للصفحة الرئيسية)
 function HomeGlyph({ className = 'h-[18px] w-[18px]' }) {
@@ -47,7 +49,7 @@ function Crumb({ className = 'h-4 w-4' }) {
 export default function CategoryPage() {
   const { cat } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   // صفحة عامة (بازارا) خالصة: تعرض منتجات هذه الفئة من كل المتاجر بلا أي تخصيص بمتجر
   // مشترك — حتى لو كان صاحب متجر مسجّلاً دخوله (هويّته لا تتسرّب للصفحة العامة).
   const homeTo = '/shop';
@@ -62,7 +64,7 @@ export default function CategoryPage() {
       .catch(() => { /* الأصلية تكفي */ });
   }, []);
   const info = custom.find((c) => c.key === cat);
-  const label = info ? info.name : t(`categories.${cat}`);
+  const label = info ? info.name : platformCatName(cat, t, i18n.language);
 
   useEffect(() => {
     const cached = getCache(cacheKey);
@@ -105,7 +107,8 @@ export default function CategoryPage() {
         <Crumb />
         <span className="flex items-center gap-2 rounded-full bg-wine/10 px-2.5 py-1 font-display text-base font-bold text-wine">
           {info ? (
-            info.image ? <img src={cldThumb(info.image, 96)} alt="" className="h-7 w-7 shrink-0 rounded object-contain" /> : null
+            // فئة تاجرةٍ بلا صورة (حذاءٌ أو شنطةٌ غالباً) تأخذ أيقونة قسمها لا فراغاً
+            info.image ? <img src={cldThumb(info.image, 96)} alt="" className="h-7 w-7 shrink-0 rounded object-contain" /> : <CatThumb cat={cat} dept={normDept(info.dept)} className="h-7 w-7" />
           ) : (
             <CatThumb cat={cat} className="h-7 w-7" />
           )}

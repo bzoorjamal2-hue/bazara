@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate, useLocation, useNavigationType } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import Seo from '../components/Seo.jsx';
@@ -44,10 +44,6 @@ export default function Home() {
   // (بازارا) ويعرض منتجاتها بمكانها بدل الانتقال لصفحة منفصلة تُخرجك من الرئيسية.
   const [searchParams, setSearchParams] = useSearchParams();
   const cat = searchParams.get('cat') || '';
-  const pickCat = (c) => {
-    setSearchParams(c && c !== 'all' ? { cat: c } : {});
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
   // الفئات المخصّصة المجمّعة من كل المتاجر (يعيدها /public/home) — نستعملها
   // لعرض منتجاتها داخل الرئيسية عند اختيار فئة، لا لعرضها بصفّ الفئات.
   const customCats = storeOnlyCats(data?.customCategories, platformKeys);
@@ -68,9 +64,30 @@ export default function Home() {
       .filter((c) => liveDepts.includes(c.dept)),
   ];
   const homeDepts = liveDepts.filter((d) => gridCats.some((c) => c.dept === d));
-  const [homeDept, setHomeDept] = useState('clothing');
-  const shownDept = homeDepts.includes(homeDept) ? homeDept : homeDepts[0] || 'clothing';
+  // القسم المختار بالرابط (?dept=) لا بحالةٍ بالذاكرة، كفئات الملابس تماماً: من
+  // تبويب «أحذية» إلى قطعةٍ أو فئة ثمّ رجوع → تعودين إلى الأحذية وموضعكِ عليها،
+  // لا إلى الملابس وأعلى الصفحة. الافتراضيّ (الملابس) لا يظهر بالرابط.
+  const baseDept = homeDepts.includes('clothing') ? 'clothing' : homeDepts[0] || 'clothing';
+  const deptParam = searchParams.get('dept') || '';
+  const shownDept = homeDepts.includes(deptParam) ? deptParam : baseDept;
   const homeCats = homeDepts.length > 1 ? gridCats.filter((c) => c.dept === shownDept) : gridCats;
+  const setHomeDept = (d) => {
+    setSearchParams(d !== baseDept ? { dept: d } : {}, { replace: true, state: { keepScroll: true } });
+  };
+  // لحظة التبديل وحدها (لا الرجوع): الشبكة تدخل بتلاشٍ يتبع انزلاق المؤشّر
+  const location = useLocation();
+  const navType = useNavigationType();
+  const deptSwitched = navType !== 'POP' && Boolean(location.state?.keepScroll);
+  // العودة من فئةٍ إلى الرئيسية تعيدكِ إلى قسمها: من «أحذية» إلى تبويب الأحذية
+  const pickCat = (c) => {
+    if (c && c !== 'all') setSearchParams({ cat: c });
+    else {
+      const info = customCats.find((x) => x.key === cat);
+      const d = cat ? (info ? normDept(info.dept) : catDept(cat)) : shownDept;
+      setSearchParams(homeDepts.includes(d) && d !== baseDept ? { dept: d } : {});
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // "مقترحات لكِ": نتعلّم الفئة الأكثر مشاهدة من تصفّحها ونجلب منتجاتها (تخصيص محلي بلا حساب)
   const [forYou, setForYou] = useState(() => getCache('forYou') || []);
@@ -176,7 +193,9 @@ export default function Home() {
             {/* الأقسام: ملابس · أحذية · إكسسوارات — تظهر حين يُفتح بالمنصّة قسمٌ ثانٍ */}
             <DeptTabs className="-mt-2 mb-6" depts={homeDepts} value={shownDept} onChange={setHomeDept} />
             {/* key بالقسم: الشبكة تبدأ من صفحتها الأولى عند تبديل القسم */}
-            <CategoryGrid key={shownDept} onSelect={pickCat} active={cat} cats={homeCats} />
+            <div key={shownDept} className={deptSwitched ? 'animate-fade-in' : undefined}>
+              <CategoryGrid onSelect={pickCat} active={cat} cats={homeCats} />
+            </div>
           </div>
         </section>
       </Reveal>

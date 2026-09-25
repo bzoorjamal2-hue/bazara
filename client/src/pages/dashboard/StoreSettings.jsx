@@ -23,7 +23,7 @@ import { DEPARTMENTS, normDept, storeDepts } from '../../utils/departments.js';
 import DeptIcon, { DeptsIcon } from '../../components/DeptIcon.jsx';
 import BankSelect from '../../components/BankSelect.jsx';
 import BANKS from '../../utils/banks.js';
-import { usePlatformCatKeys, catDept } from '../../utils/platformCategories.js';
+import { usePlatformCatKeys, catDept, platformCatImage } from '../../utils/platformCategories.js';
 import { copyText } from '../../utils/links.js';
 
 // أيقونتا إخفاء/إظهار (عين مشطوبة / عين) — للتحكم بظهور الفئة بالمتجر
@@ -936,14 +936,19 @@ export default function StoreSettings() {
               const hidden = !!meta.hidden;
               // الاسم الظاهر: اسم المالكة إن وُجد وإلا الافتراضي — يُعرَض مرّة واحدة بالعنوان
               const displayName = (meta.name || '').trim() || t(`categories.${c}`);
-              // اللوقو الحالي: صورة المالكة إن رفعتها وإلا الأيقونة الثابتة
-              const logo = meta.image ? cldThumb(meta.image, 120) : `/categories/${c}.png?v=3`;
+              // اللوقو الحالي: صورة المالكة إن رفعتها وإلا الأيقونة الثابتة — من المصدر
+              // المشترك: فئتا الأحذية والإكسسوارات بلا رسمٍ مقصوص فتأخذان أيقونة قسمهما
+              // (كان ‎/categories/shoes.png يُطلب فيفشل ويبقى مكانه فارغاً).
+              const fixed = platformCatImage(c);
+              const logo = meta.image ? cldThumb(meta.image, 120) : fixed;
               return (
                 <div key={c} className={`${SUBCARD} transition ${hidden ? 'opacity-60' : ''}`}>
                   {/* العنوان: لوقو + اسم واحد + زر إخفاء/إظهار — بلا تكرار للاسم */}
                   <div className="mb-2 flex items-center justify-between gap-2">
                     <span className="flex min-w-0 items-center gap-2">
-                      <img src={logo} alt="" className="h-8 w-8 shrink-0 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                      {logo
+                        ? <img src={logo} alt="" className="h-8 w-8 shrink-0 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                        : <span className="grid h-8 w-8 shrink-0 place-items-center text-stone-300"><DeptIcon dept={catDept(c)} className="h-6 w-6" strokeWidth={1.4} /></span>}
                       <span className="truncate text-sm font-semibold text-gold-200">{displayName}</span>
                       {/* شارة «مخفية»: خلفية ذهبية شفّافة تعمل على الأبيض نهاراً وعلى الداكن ليلاً
                           (bg-black/40 كانت تصير رمادية داكنة بنصّ باهت بالوضع النهاري) */}
@@ -963,7 +968,7 @@ export default function StoreSettings() {
                     <>
                       <ImageInput
                         value={meta.image || ''} onChange={(v) => setCatMeta(c, 'image', v)}
-                        placeholderImg={`/categories/${c}.png?v=3`} contain hint={t('dashboard.store.categoryImageHint')}
+                        placeholderImg={fixed} contain hint={t('dashboard.store.categoryImageHint')}
                       />
                       <input
                         type="text"
