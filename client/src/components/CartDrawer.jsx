@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -21,6 +22,7 @@ import { trackPixel } from '../utils/pixels.js';
 import { isValidMobile, normalizePhone, sanitizeMobileInput } from '../utils/phone.js';
 import { printReceipt, saveReceiptImage } from '../utils/receipt.js';
 import { phGlyph } from '../utils/imageFallback.js';
+import modalRoot from '../utils/modalRoot.js';
 
 // بيانات الزبون المحفوظة محلياً — تعبّئ شاشة الإتمام تلقائياً بالطلبات القادمة
 const CUSTOMER_KEY = 'bz_customer_v1';
@@ -466,7 +468,7 @@ export default function CartDrawer() {
     }
   };
 
-  return (
+  return createPortal(
     // z-[95]: فوق صفحة الريلز (z-90) — الإضافة/الشراء من الريل كانت تفتح السلة خلفها فلا تُرى
     <div className="fixed inset-0 z-[95] flex justify-end bg-black/60 p-3 backdrop-blur-sm sm:p-4" onClick={close}>
       <aside
@@ -1151,6 +1153,7 @@ export default function CartDrawer() {
           </AnimatePresence>
         )}
       </aside>
-    </div>
+    </div>,
+    modalRoot(),
   );
 }

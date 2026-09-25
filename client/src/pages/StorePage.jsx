@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams, useSearchParams, useNavigate, useLocation, useNavigationType } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -37,6 +38,7 @@ import { initPixels, trackPixel } from '../utils/pixels.js';
 import { norm } from '../utils/match.js';
 import Countdown from '../components/Countdown.jsx';
 import { platformCatKeys, platformCatName, platformCatImage, catImage, usePlatformCatKeys, storeOnlyCats, catDept, storeBuiltinKeys, byPlatformOrder } from '../utils/platformCategories.js';
+import modalRoot from '../utils/modalRoot.js';
 
 const PAGE_SIZE = 8;
 
@@ -774,7 +776,7 @@ function WelcomePopup({ store }) {
   }, [store?.welcomeOffer, store?.slug]);
 
   if (!open) return null;
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[90] flex items-center justify-center p-4" onClick={() => setOpen(false)}>
       <div className="absolute inset-0 bg-black/55 animate-fade-up" />
       <div onClick={(e) => e.stopPropagation()} className="animate-pop relative w-full max-w-sm overflow-hidden rounded-3xl bg-white p-6 text-center shadow-2xl">
@@ -789,7 +791,8 @@ function WelcomePopup({ store }) {
           {t('store.welcomeCta')}
         </button>
       </div>
-    </div>
+    </div>,
+    modalRoot(),
   );
 }
 
@@ -926,7 +929,7 @@ function ProductSection({ title, products, wa, ranked = false, eyebrow = null, b
 function FilterSheet({ title, onClose, onReset, onApply, children }) {
   const { t } = useTranslation();
   useScrollLock(true); // مفتوحة دائماً عند التركيب — تجمّد الخلفية
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[80] flex items-end">
       {/* الخلفية تُغلق النافذة بالضغط خارجها */}
       <div className="absolute inset-0 bg-black/40 animate-fade-up" onClick={onClose} />
@@ -941,7 +944,8 @@ function FilterSheet({ title, onClose, onReset, onApply, children }) {
           {t('store.apply')}
         </button>
       </div>
-    </div>
+    </div>,
+    modalRoot(),
   );
 }
 
