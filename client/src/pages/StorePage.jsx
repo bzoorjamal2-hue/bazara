@@ -39,6 +39,7 @@ import { norm } from '../utils/match.js';
 import Countdown from '../components/Countdown.jsx';
 import { platformCatKeys, platformCatName, platformCatImage, catImage, usePlatformCatKeys, storeOnlyCats, catDept, storeBuiltinKeys, byPlatformOrder } from '../utils/platformCategories.js';
 import modalRoot from '../utils/modalRoot.js';
+import useHeroStill from '../utils/heroSeen.js';
 
 const PAGE_SIZE = 8;
 
@@ -1082,6 +1083,7 @@ function HeroSlider({ store }) {
   const slides = [{ fixed: true }, ...banners];
   const len = slides.length;
   const [i, setI] = useState(0);
+  const heroStill = useHeroStill(`store:${store?.slug || ''}`, i);
   const [drag, setDrag] = useState(0); // إزاحة السحب الحيّة (px) — يتبع الإصبع
   const containerRef = useRef(null);
   const draggingRef = useRef(false);
@@ -1240,7 +1242,7 @@ function HeroSlider({ store }) {
           فكان «يضل واقف». يبقى الإيقاف أثناء السحب باللمس فقط. */}
       <div
         ref={containerRef}
-        className="bz-homehero relative overflow-hidden"
+        className={`bz-homehero relative overflow-hidden ${heroStill ? 'bz-hero-still' : ''}`}
         style={{ touchAction: 'pan-y' }}
       >
         {/* اتّجاهُ الحركةِ يتبعُ اللغة — كهيرو الصفحةِ الرئيسيّةِ تماماً:

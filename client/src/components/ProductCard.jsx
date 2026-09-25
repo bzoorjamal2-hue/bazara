@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -34,13 +34,24 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
   const { add, setOpen } = useCart();
   const { has, toggle } = useWishlist();
   const imgRef = useRef(null);
-  const [inViewRef, inView] = useInViewOnce(); // دخول سينمائي عند التمرير للبطاقة
+  const [inViewRef, inView, inViewNow] = useInViewOnce(); // دخول سينمائي عند التمرير للبطاقة
   const lastSwatchImg = useRef(''); // آخر صورة لون معروضة — تبقى أثناء تلاشي الخروج
   const [quickOpen, setQuickOpen] = useState(false);
   const [mySize] = useState(() => getMySize(deptOfProduct(product))); // نميّز مقاسها المعتاد (بقسم القطعة) بالشريط السريع
   // ظهور ناعم للصورة: هيكل لامع ريثما تُحمّل ثم تتلاشى للداخل (بلا "طفرة")
   const [imgLoaded, setImgLoaded] = useState(false);
-  useEffect(() => { if (imgRef.current?.complete) setImgLoaded(true); }, []);
+  // صورةٌ جاهزةٌ (من ذاكرةِ المتصفّح) تظهرُ فوراً بلا تلاشٍ: العودةُ لتبويبٍ رأيتِه كانت
+  // تُعيدُ تلاشيَ كلِّ صورةٍ ٧٠٠ms كأنّها تُحمَّلُ من جديد. التلاشي للصورِ الآتيةِ من الشبكة.
+  const [imgInstant, setImgInstant] = useState(false);
+  const mountAt = useRef(0);
+  useLayoutEffect(() => {
+    mountAt.current = performance.now();
+    if (imgRef.current?.complete && imgRef.current.naturalWidth) { setImgInstant(true); setImgLoaded(true); }
+  }, []);
+  const onImgLoad = () => {
+    if (performance.now() - mountAt.current < 250) setImgInstant(true);
+    setImgLoaded(true);
+  };
   const [hovering, setHovering] = useState(false); // كمبيوتر: معاينة فيديو عند مرور الماوس
   const [showVideo, setShowVideo] = useState(false); // جوال: ضغطة مطوّلة → فيديو بالصوت
   const [swatchColor, setSwatchColor] = useState(''); // اللون الذي تُعرض صورته على البطاقة (تمرير/لمس نقطة لون)
@@ -198,7 +209,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
       ref={inViewRef}
       to={productPath(product)}
       className={`group relative block h-full transition-[opacity,transform] duration-300 ease-out ${inView ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0'} hover:!-translate-y-1.5 active:scale-[0.99]`}
-      style={{ transitionDelay: inView ? `${(index % 5) * 30}ms` : '0ms' }}
+      style={inViewNow ? { transition: 'none' } : { transitionDelay: inView ? `${(index % 5) * 30}ms` : '0ms' }}
       onMouseEnter={startHover}
       onMouseLeave={() => { endHover(); setSwatchColor(''); }}
       onTouchStart={startPress}
@@ -227,10 +238,10 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
           alt={product.name}
           loading="lazy"
           decoding="async"
-          onLoad={() => setImgLoaded(true)}
+          onLoad={onImgLoad}
           // مهم: نفرّغ srcset أيضاً — لو تُرك لبقي يتغلّب على src فلا تظهر الصورة البديلة
           onError={(e) => { e.currentTarget.srcset = ''; e.currentTarget.src = PLACEHOLDER; setImgLoaded(true); }}
-          className={`h-full w-full object-cover transition-[transform,opacity] duration-700 ease-out group-hover:scale-105 ${outOfStock ? 'opacity-50' : imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+          className={`h-full w-full object-cover ${imgInstant ? 'transition-transform' : 'transition-[transform,opacity]'} duration-700 ease-out group-hover:scale-105 ${outOfStock ? 'opacity-50' : imgLoaded ? 'opacity-100' : 'opacity-0'}`}
         />
         {/* طبقة صورة اللون فوق الأصلية — تلاشٍ ناعم للدخول والخروج عند تمرير/لمس نقطة لون */}
         {lastSwatchImg.current && (

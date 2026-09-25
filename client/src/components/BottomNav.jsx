@@ -91,7 +91,8 @@ function OffersIcon({ className = 'h-6 w-6', filled }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M20.5 13.3 13.3 20.5a1.5 1.5 0 0 1-2.1 0l-7.7-7.7V4.5a1 1 0 0 1 1-1h8.3l7.7 7.7a1.5 1.5 0 0 1 0 2.1Z" />
-      <circle cx="7.5" cy="7.5" r="1.3" fill={filled ? 'none' : 'currentColor'} />
+      {/* ثقبُ البطاقة: بلونِ الحبّةِ حين تمتلئ (--bz-knock) — كان «لا تعبئة» فيذوبُ بالامتلاء */}
+      <circle cx="7.5" cy="7.5" r="1.4" fill={filled ? 'var(--bz-knock, #fff)' : 'currentColor'} stroke={filled ? 'none' : undefined} />
     </svg>
   );
 }
@@ -360,7 +361,8 @@ export default function BottomNav() {
     // لأنّ الجلبَ المسبَقَ عندَ ملامسةِ الإصبعِ يُنزِلُ الحزمةَ قبلَ الضغطة،
     // فلا يُبلَغُ حدُّ ‎Suspense أصلاً. فالانتقالُ عاجلٌ الآن: الشاشةُ تتبدّلُ
     // ساعةَ يتبدّلُ المسار.
-    navigate(to);
+    // ‏bzTab: انتقالُ تبويبٍ — الصفحةُ تحلُّ فوراً بلا تلاشٍ (App.jsx)، كتبويباتِ إنستغرام
+    navigate(to, { state: { bzTab: true } });
   };
   // الجلبُ المسبَقُ عندَ ملامسةِ الإصبعِ لا عندَ رفعِها — انظر utils/prefetchRoute.js
   const warm = (to) => prefetchRoute(routeKeyOf(to));
@@ -522,12 +524,12 @@ export default function BottomNav() {
                بلا اسمٍ مقروء، فنكتبُه سمةً — أيقونةٌ عاريةٌ بلا aria-label زرٌّ
                أخرسُ عندَ من يسمعُ الصفحةَ ولا يراها. */
             aria-label={label}
-            className={`${active ? 'is-on ' : ''}relative flex min-w-0 flex-1 flex-col items-center text-[10px] font-medium leading-tight transition ${dt ? 'gap-1 py-1' : 'py-3'} ${
+            className={`${active ? 'is-on ' : ''}relative flex min-w-0 flex-1 flex-col items-center text-[10px] font-medium leading-tight ${dt ? 'gap-1 py-1' : 'py-3'} ${
               active ? 'text-wine' : 'text-stone-400'
             }`}
           >
             {/* تظليل التبويب الفعّال: حبّة خمرية حول الأيقونة ليعرف المستخدم مكانه */}
-            <span className={`relative flex items-center justify-center rounded-2xl px-3.5 py-1 transition-all duration-200 active:scale-90 ${active ? 'bg-wine text-cream shadow-sm' : ''}`}>
+            <span className={`relative flex items-center justify-center rounded-2xl px-3.5 py-1 ${active ? 'bg-wine text-cream shadow-sm' : ''}`}>
               {/* نطّة صغيرة للأيقونة لحظة تفعيل التبويب — إحساس أصلي كإنستغرام */}
               <Icon className={`h-6 w-6 transition-transform duration-300 ${active ? 'animate-tab-pop' : ''}`} filled={active} />
               {badge > 0 && (
