@@ -353,7 +353,9 @@
     "emailHint2": "Order alerts and your password-reset code go here — make sure it is right.",
     "nameHint": "Your own name, not the store name.",
     "namePh": "e.g. Nour Ahmad",
-    "storeHint2": "Shown to your customers and becomes part of your store link. You can change it later."
+    "storeHint2": "Shown to your customers and becomes part of your store link. You can change it later.",
+    "continueGoogle": "Continue with Google",
+    "googleUnavailable": "Couldn't reach Google right now. Try signing in with your email, or open the site in your phone's browser (Chrome or Safari)."
   },
   "product": {
     "new": "NEW",
