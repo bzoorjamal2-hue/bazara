@@ -634,7 +634,7 @@
       "welcomePlaceholder": "e.g. 10% off your first order with code WELCOME10",
       "welcomeHint": "Shows once to a visitor on their first entry to your store. Leave empty to hide.",
       "categories": "Customize categories",
-      "categoriesHint": "Control all your store categories: change each category's photo and name, or hide any category that doesn't fit your store with the hide button. Leave the photo empty to use the default logo shown.",
+      "categoriesHint": "Create your store's categories with your own names and images. Each category's items appear on the public site under one of its fixed categories, which you choose.",
       "categoryNamePlaceholder": "Category name (default: {{name}})",
       "renameCategory": "Display name (optional)",
       "hideCategory": "Hide",
@@ -687,7 +687,9 @@
       "deptLocked": "Has {{count}} products — stays on",
       "catCount_one": "1 category",
       "catCount_other": "{{count}} categories",
-      "addDeptCategory": "Add a {{dept}} category"
+      "addDeptCategory": "Add a {{dept}} category",
+      "categoryPlatform": "Shown on the public site under",
+      "categoryPlatformAuto": "Automatic, from the category name"
     },
     "product": {
       "cost": "Cost price",
@@ -1245,7 +1247,9 @@
       "noBank": "No bank details yet ({{count}})",
       "empty": "No stores yet."
     },
-    "sendResetShort": "Send reset code"
+    "sendResetShort": "Send reset code",
+    "builtinCatImages": "Shoe & accessory category images",
+    "builtinCatImagesTip": "The official image of each category on the public site (home and categories page). Best as a cut-out item on a transparent background, matching the clothing categories. Without one, the category's icon shows."
   },
   "finance": {
     "title": "Profit & expenses",

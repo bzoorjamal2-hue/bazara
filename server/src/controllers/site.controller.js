@@ -185,7 +185,15 @@ const sanitizePlatformCats = (v) => {
   const hidden = (Array.isArray(v?.hidden) ? v.hidden : [])
     .map((k) => String(k).trim().toLowerCase())
     .filter((k) => BUILTIN_CATS.includes(k));
-  return { extra: extra.filter((c) => c.name), hidden };
+  // الصورة الرسميّة لفئةٍ مدمجة (فئات الأحذية والإكسسوارات بلا رسمٍ ثابت) — هويّة
+  // الموقع العام يضعها المدير، لا تاجرة
+  const images = {};
+  const imgIn = v?.images && typeof v.images === 'object' ? v.images : {};
+  for (const k of BUILTIN_CATS) {
+    const u = String(imgIn[k] ?? '').trim();
+    if (/^https?:\/\//i.test(u)) images[k] = u.slice(0, 500);
+  }
+  return { extra: extra.filter((c) => c.name), hidden, images };
 };
 
 const sanitizeCollections = (list) => {
@@ -329,7 +337,7 @@ export async function getSiteInfo(_req, res, next) {
       );
       stats = { stores: r.rows[0].stores, products: r.rows[0].products, orders: r.rows[0].orders };
       const d = await query(
-        `SELECT DISTINCT p.department, p.category FROM products p JOIN stores s ON s.id = p.store_id
+        `SELECT DISTINCT p.department, COALESCE(p.platform_category, p.category) AS category FROM products p JOIN stores s ON s.id = p.store_id
            JOIN users u ON u.id = s.user_id WHERE ${active} AND p.hidden_at IS NULL`
       );
       const live = new Set(d.rows.map((x) => x.department));

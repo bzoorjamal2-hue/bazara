@@ -36,7 +36,9 @@ export function pushRecent(product) {
       imageUrl: productThumb(product),
       videoUrl: product.videoUrl || '', // ليظهر مؤشّر التشغيل في شريط "شاهدت مؤخراً"
       storeSlug: product.storeSlug || '',
-      category: product.category || '', // لريل "مقترحات لكِ" — نتعلّم ذوقها من فئات ما تشاهده
+      // لريل "مقترحات لكِ" — نتعلّم ذوقها من فئات ما تشاهده. فئة المنصّة أوّلاً: قطعةٌ
+      // بفئة تاجرةٍ خاصّة («كعب سهرة») تُحسب لـ«كعب عالي» فتُقترح من كلّ المتاجر.
+      category: product.platformCategory || product.category || '',
     };
     const list = getRecent().filter((p) => p.id !== product.id);
     list.unshift(item);

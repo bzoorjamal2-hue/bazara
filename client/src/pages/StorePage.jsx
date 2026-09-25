@@ -25,9 +25,9 @@ import Reveal from '../components/Reveal.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { cldThumb, cldVideoPoster, cldVideoCrop, heroVideoShape, heroVideoAllowed, heroCrop } from '../utils/cloudinary.js';
 import { sizeLabel, sizesInProducts } from '../utils/sizes.js';
-import { presentDepts, deptOfProduct, normDept, storeDepts } from '../utils/departments.js';
+import { presentDepts, deptOfProduct, normDept } from '../utils/departments.js';
 import DeptTabs, { DeptHeading } from '../components/DeptTabs.jsx';
-import DeptIcon from '../components/DeptIcon.jsx';
+import CatIcon from '../components/CatIcon.jsx';
 import { getMySize } from '../utils/mySize.js';
 import { productColors, colorToCss } from '../utils/colorDot.js';
 import { getCache, setCache } from '../utils/apiCache.js';
@@ -339,7 +339,7 @@ export default function StorePage() {
   const gridCats = [
     // نستثني الفئات الأصلية التي أخفتها المالكة من إعدادات المتجر
     ...catKeys.filter((k) => !catMeta[k]?.hidden).map((k) => ({ key: k, name: catNames[k], image: catImages[k], builtin: true, dept: catDeptOf(k) })),
-    ...customCats.map((cc) => ({ key: cc.key, name: cc.name, image: catImages[cc.key], builtin: false, dept: normDept(cc.dept) })),
+    ...customCats.map((cc) => ({ key: cc.key, name: cc.name, image: catImages[cc.key], builtin: false, dept: normDept(cc.dept), platform: cc.platform || '' })),
   ];
   // عدّاد كل فئة وما فيها من عروض. البطاقة بلا رقم لا تقول إن كانت تخفي
   // أربعين قطعة أم اثنتين، والفئة الفارغة كانت تُعرض ثم تفتح على لا شيء.
@@ -355,10 +355,10 @@ export default function StorePage() {
     if (pr.oldPrice && pr.oldPrice > pr.price) catCounts[k].sale += 1;
   }
   const visibleCats = gridCats.filter((c) => (catCounts[c.key]?.total || 0) > 0);
-  // شبكة فئات الرئيسية: ما فيه قطعٌ من القسم المختار. كانت السبع تظهر بكلّ
-  // متجرٍ ولو لم يبع إلّا الأحذية فتفتح على لا شيء. متجرٌ بلا قطعٍ بعد يرى
-  // الشبكة كاملةً كما كان، فالفراغ هناك طبيعيّ.
-  const homeCats = (data.products.length ? visibleCats : gridCats.filter((c) => storeDepts(store).includes(c.dept))).filter((c) => !multiDept || c.dept === dept);
+  // شبكة فئات الرئيسية: ما فيه قطعٌ من القسم المختار. لا فئة إلزاميّة: فئات
+  // المنصّة تظهر بالمتجر حين تبيع التاجرة تحتها فقط، والباقي فئاتها هي بأسمائها
+  // وصورها. متجرٌ بلا قطعٍ بعد يرى فئاته الخاصّة وحدها (لا السبع).
+  const homeCats = (data.products.length ? visibleCats : gridCats.filter((c) => !c.builtin)).filter((c) => !multiDept || c.dept === dept);
 
   const searching = q.trim().length > 0;
   // أحدث المنتجات (لقسم "جديدنا")
@@ -490,7 +490,7 @@ export default function StorePage() {
                         className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
                       />
                     ) : (
-                      <DeptIcon dept={c.dept} className="h-1/2 w-1/2 text-wine/60" strokeWidth={1.2} />
+                      <CatIcon cat={c.platform || c.key} dept={c.dept} className="h-1/2 w-1/2 text-wine/60" strokeWidth={1.2} />
                     )}
                   </div>
                   <span className="mt-2 font-display text-sm font-bold text-wine">{catLabel(c.key)}</span>
@@ -653,7 +653,7 @@ export default function StorePage() {
             </div>
           )}
 
-          <Reveal>
+          {homeCats.length > 0 && <Reveal>
             {/* مرساة زرّ «تسوّقي الآن» بالسلايدر — scroll-mt يترك مساحةً للرأس اللاصق */}
             <section id="cats" className={`${multiDept ? 'mt-8' : 'bz-sec-gap'} scroll-mt-24`}>
               <SectionTitle eyebrow={multiDept ? t(`dept.${dept}`) : t('store.eyebrowCats')}>{t('store.browseByCategory')}</SectionTitle>
@@ -662,7 +662,7 @@ export default function StorePage() {
                 <CategoryGrid onSelect={pickCategory} active={cat} cats={homeCats} />
               </div>
             </section>
-          </Reveal>
+          </Reveal>}
 
           {/* مجموعات المتجر التحريرية (تسوّقي حسب المناسبة) — تحرّرها المالكة، وتفتح
               بحث هذا المتجر بكلمتها. تُخفى إن لم تُضف مجموعات */}

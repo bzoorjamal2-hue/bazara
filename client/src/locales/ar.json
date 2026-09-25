@@ -232,7 +232,16 @@
     "trench": "ترنش كوت",
     "jacket": "جاكيت جوخ",
     "shirt": "قمصان",
+    "heels": "كعب عالي",
+    "sneakers": "أحذية رياضية",
+    "sandals": "صنادل",
+    "boots": "بوت",
+    "flats": "أحذية مسطّحة",
     "shoes": "أحذية",
+    "bags": "شنط",
+    "watches": "ساعات",
+    "jewelry": "مجوهرات",
+    "sunglasses": "نظارات",
     "accessory": "إكسسوارات"
   },
   "image": {

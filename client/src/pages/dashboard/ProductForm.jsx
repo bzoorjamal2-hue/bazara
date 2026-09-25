@@ -51,8 +51,9 @@ export default function ProductForm({ initial, onClose, onSaved }) {
   // كلٌّ بقسمها. القائمة تعرض قسماً واحداً: التاجرة تختار «أحذية» أوّلاً ثمّ فئتها.
   const storeCustom = store?.customCategories || [];
   const allCats = [
-    ...platformKeys.map((c) => ({ value: c, label: platformCatName(c, t, i18n.language), dept: catDept(c, storeCustom) })),
+    // فئات التاجرة أوّلاً — هي متجرها بأسمائها — ثمّ فئات المنصّة الثابتة
     ...storeOnlyCats(storeCustom, platformKeys).map((cc) => ({ value: cc.key, label: cc.name, dept: normDept(cc.dept) })),
+    ...platformKeys.map((c) => ({ value: c, label: platformCatName(c, t, i18n.language), dept: catDept(c, storeCustom) })),
   ];
   const firstCatOf = (d) => allCats.find((c) => c.dept === d)?.value || EMPTY.category;
   // الأقسام التي فعّلتها التاجرة من إعدادات المتجر — متجر أحذية لا يرى «ملابس»

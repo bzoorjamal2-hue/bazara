@@ -226,7 +226,16 @@
     "trench": "Trench coats",
     "jacket": "Wool jackets",
     "shirt": "Shirts",
+    "heels": "Heels",
+    "sneakers": "Sneakers",
+    "sandals": "Sandals",
+    "boots": "Boots",
+    "flats": "Flats",
     "shoes": "Shoes",
+    "bags": "Bags",
+    "watches": "Watches",
+    "jewelry": "Jewelry",
+    "sunglasses": "Sunglasses",
     "accessory": "Accessories"
   },
   "image": {

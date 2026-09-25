@@ -10,6 +10,8 @@ import ImageInput from '../../components/ImageInput.jsx';
 import { ImageIcon, GridIcon } from '../../components/icons.jsx';
 import { PageHead, SectionHead, Field, RowTools, Tip } from '../../components/FormField.jsx';
 import { BUILTIN_CATS } from '../../utils/platformCategories.js';
+import { CLOTHING_CATS, deptOfCategory } from '../../utils/departments.js';
+import CatIcon from '../../components/CatIcon.jsx';
 import { DEPARTMENTS, normDept } from '../../utils/departments.js';
 import DeptIcon from '../../components/DeptIcon.jsx';
 
@@ -26,7 +28,7 @@ export default function SiteSliders() {
   const [banners, setBanners] = useState(null);
   const [lb, setLb] = useState({ image: '', title: '', titleEn: '', productIds: [] });
   const [collections, setCollections] = useState([]);
-  const [platCats, setPlatCats] = useState({ extra: [], hidden: [] });
+  const [platCats, setPlatCats] = useState({ extra: [], hidden: [], images: {} });
   // حسابا المنصّة انتقلا إلى «إعدادات المنصّة» — مكانهما الطبيعيّ. نحتفظ بهما
   // هنا قراءةً وإرسالاً فقط كي لا يمسحهما حفظُ الشرائح.
   const [instagram, setInstagram] = useState('');
@@ -37,7 +39,7 @@ export default function SiteSliders() {
 
   useEffect(() => {
     api.get('/site/banners')
-      .then((r) => { setBanners(r.data.banners?.length ? r.data.banners : DEFAULT_SITE_SLIDES); setLb({ image: '', title: '', titleEn: '', productIds: [], ...(r.data.lookbook || {}) }); setCollections(Array.isArray(r.data.collections) ? r.data.collections : []); setPlatCats({ extra: r.data.platformCategories?.extra || [], hidden: r.data.platformCategories?.hidden || [] }); setInstagram(r.data.instagram || ''); setFacebook(r.data.facebook || ''); })
+      .then((r) => { setBanners(r.data.banners?.length ? r.data.banners : DEFAULT_SITE_SLIDES); setLb({ image: '', title: '', titleEn: '', productIds: [], ...(r.data.lookbook || {}) }); setCollections(Array.isArray(r.data.collections) ? r.data.collections : []); setPlatCats({ extra: r.data.platformCategories?.extra || [], hidden: r.data.platformCategories?.hidden || [], images: r.data.platformCategories?.images || {} }); setInstagram(r.data.instagram || ''); setFacebook(r.data.facebook || ''); })
       .catch((e) => setError(getErrorMessage(e)));
   }, []);
 
@@ -95,6 +97,29 @@ export default function SiteSliders() {
                 </button>
               );
             })}
+          </div>
+        </div>
+
+        {/* الصورة الرسميّة لفئات الأحذية والإكسسوارات: فئات الملابس السبع برسمٍ ثابتٍ
+            مقصوص، وهذه بأيقونةٍ إلى أن تُرفع لها صورةٌ هنا — فيبقى شكل الرئيسية واحداً
+            للأقسام الثلاثة، ولا تغيّره فئات التاجرات. */}
+        <div>
+          <p className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-stone-300">
+            {t('admin.builtinCatImages')} <Tip text={t('admin.builtinCatImagesTip')} />
+          </p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {BUILTIN_CATS.filter((k) => !CLOTHING_CATS.includes(k)).map((k) => (
+              <div key={k} className="rounded-2xl border border-gold-400/15 bg-black/15 p-3">
+                <p className="mb-2 flex items-center gap-2 text-sm font-bold text-stone-100">
+                  <CatIcon cat={k} dept={deptOfCategory(k)} className="h-5 w-5" /> {t(`categories.${k}`, k)}
+                </p>
+                <ImageInput
+                  value={platCats.images?.[k] || ''}
+                  onChange={(v) => setPlatCats((p2) => ({ ...p2, images: { ...(p2.images || {}), [k]: v } }))}
+                  contain
+                />
+              </div>
+            ))}
           </div>
         </div>
 

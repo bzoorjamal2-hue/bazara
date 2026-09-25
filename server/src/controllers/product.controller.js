@@ -3,7 +3,7 @@ import { productPath } from '../utils/media.js';
 import { pingIndexNow } from '../utils/indexnow.js';
 import { alertOwnerOnRestock } from './stockRequest.controller.js';
 import { normalizeCategory } from '../utils/category.js';
-import { departmentOf, loadPlatformExtra, normDept } from '../utils/department.js';
+import { departmentOf, platformCategoryOf, loadPlatformExtra, normDept } from '../utils/department.js';
 // كتالوجُ البائعةِ الآليّةِ مكشوفٌ بذاكرةِ الخادمِ دقيقتين. دقيقتانِ تكفيانِ
 // لتبيعَ نمرةً حذفتْها التاجرةُ للتوّ — فنمسحُه متى لمسَت قطعةً، ولا ننتظرُ
 // انتهاءَ المهلة.
@@ -14,9 +14,10 @@ async function getUserStore(userId) {
   return r.rows[0] || null;
 }
 
-// قسم المنتج من فئته، بفئات المنصّة وفئات هذا المتجر
-async function deptFor(store, category) {
-  return departmentOf(category, { storeCustom: store.custom_categories, platformExtra: await loadPlatformExtra() });
+// قسم المنتج وفئة المنصّة التي يقع تحتها — من فئته، بفئات المنصّة وفئات هذا المتجر
+async function catInfoFor(store, category) {
+  const ctx = { storeCustom: store.custom_categories, platformExtra: await loadPlatformExtra() };
+  return { dept: departmentOf(category, ctx), plat: platformCategoryOf(category, ctx) };
 }
 
 export async function listMyProducts(req, res, next) {
@@ -40,12 +41,13 @@ export async function createProduct(req, res, next) {
     const store = await getUserStore(req.user.id);
     if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
 
+    const ci = await catInfoFor(store, p.category);
     const result = await query(
       `INSERT INTO products
-         (store_id, name, price, cost, old_price, description, size, color, category, image_url, images, stock, featured, video_url, size_stock, sale_ends_at, color_stock, color_images, department)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+         (store_id, name, price, cost, old_price, description, size, color, category, image_url, images, stock, featured, video_url, size_stock, sale_ends_at, color_stock, color_images, department, platform_category)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
        RETURNING *`,
-      [store.id, p.name, p.price, p.cost, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, p.videoUrl, JSON.stringify(p.sizeStock), p.saleEndsAt, JSON.stringify(p.colorStock), JSON.stringify(p.colorImages), await deptFor(store, p.category)]
+      [store.id, p.name, p.price, p.cost, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, p.videoUrl, JSON.stringify(p.sizeStock), p.saleEndsAt, JSON.stringify(p.colorStock), JSON.stringify(p.colorImages), ci.dept, ci.plat]
     );
 
     const product = result.rows[0];
@@ -72,13 +74,14 @@ export async function updateProduct(req, res, next) {
       return res.status(404).json({ error: 'المنتج غير موجود أو لا تملك صلاحية تعديله.' });
     }
 
+    const ci = await catInfoFor(store, p.category);
     const result = await query(
       `UPDATE products SET
          name=$1, price=$2, cost=$19, old_price=$3, description=$4, size=$5, color=$6,
-         category=$7, image_url=$8, images=$9, stock=$10, featured=$11, video_url=$12, size_stock=$13, sale_ends_at=$14, color_stock=$15, color_images=$16, department=$20, updated_at=now()
+         category=$7, image_url=$8, images=$9, stock=$10, featured=$11, video_url=$12, size_stock=$13, sale_ends_at=$14, color_stock=$15, color_images=$16, department=$20, platform_category=$21, updated_at=now()
        WHERE id=$17 AND store_id=$18
        RETURNING *`,
-      [p.name, p.price, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, p.videoUrl, JSON.stringify(p.sizeStock), p.saleEndsAt, JSON.stringify(p.colorStock), JSON.stringify(p.colorImages), id, store.id, p.cost, await deptFor(store, p.category)]
+      [p.name, p.price, p.oldPrice, p.description, p.size, p.color, p.category, p.imageUrl, p.images, p.stock, p.featured, p.videoUrl, JSON.stringify(p.sizeStock), p.saleEndsAt, JSON.stringify(p.colorStock), JSON.stringify(p.colorImages), id, store.id, p.cost, ci.dept, ci.plat]
     );
     clearCatalog(store.id);   // سعرٌ أو نمرةٌ أو لونٌ تغيّر: البائعةُ تقرأُه الآنَ لا بعدَ دقيقتين
     res.json({ product: mapOwnerProduct(result.rows[0]) });
@@ -241,6 +244,8 @@ export function mapProduct(p) {
     category,
     categoryName,
     department: normDept(p.department),
+    // فئة المنصّة التي تقع تحتها القطعة (رابط «فئة» بالموقع العام، و«مقترحات لكِ»)
+    platformCategory: p.platform_category || '',
     imageUrl: p.image_url,
     images: p.images || [],
     videoUrl: p.video_url || '',

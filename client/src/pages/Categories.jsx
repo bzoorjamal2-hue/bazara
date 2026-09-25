@@ -1,34 +1,23 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Seo from '../components/Seo.jsx';
 import { PageTitle } from '../components/PageUI.jsx';
 import { GridIcon } from '../components/icons.jsx';
-import api from '../api/client.js';
-import { getCache, setCache } from '../utils/apiCache.js';
 import { cldThumb } from '../utils/cloudinary.js';
-import { platformCatKeys, platformCatName, platformCatImage, platformCatImageFallback, usePublicCatKeys, useLiveDepartments, storeOnlyCats, catDept, isLiveCat } from '../utils/platformCategories.js';
-import { normDept, presentDepts } from '../utils/departments.js';
+import { platformCatName, platformCatImage, platformCatImageFallback, usePublicCatKeys, useLiveDepartments, catDept, isLiveCat } from '../utils/platformCategories.js';
+import { presentDepts } from '../utils/departments.js';
 import { DeptHeading } from '../components/DeptTabs.jsx';
-import DeptIcon from '../components/DeptIcon.jsx';
+import CatIcon from '../components/CatIcon.jsx';
 
-// صفحة تصنيفات الموقع العام (بازارا) — فئات بازارا الأصلية + الفئات المخصّصة المجمّعة من
-// كل المتاجر (يعيدها /public/categories). أي فئة يضيفها أي متجر تظهر هنا تلقائياً بنفس
-// شكل الفئات الأصلية. لا تعتمد على متجر صاحب الحساب المسجّل (الصفحة تبقى بازارا خالصة).
+// صفحة تصنيفات الموقع العام (بازارا) — فئات المنصّة الثابتة وحدها، مجمّعةً بأقسامها،
+// وما فيه قطعٌ منها فقط. لا تعتمد على متجر صاحب الحساب المسجّل (الصفحة تبقى بازارا خالصة).
 export default function Categories() {
   const catKeys = usePublicCatKeys();
   const liveDepts = useLiveDepartments();
   const { t, i18n } = useTranslation();
-  const [custom, setCustom] = useState(() => getCache('publicCats') || []);
-  useEffect(() => {
-    api.get('/public/categories')
-      .then((r) => { const c = r.data.customCategories || []; setCustom(c); setCache('publicCats', c); })
-      .catch(() => { /* الفئات المخصّصة اختيارية — الأصلية تكفي */ });
-  }, []);
-  const items = [
-    ...catKeys.map((c) => ({ key: c, name: platformCatName(c, t, i18n.language), to: `/category/${c}`, img: platformCatImage(c), fallback: platformCatImageFallback(c), dept: catDept(c) })),
-    ...storeOnlyCats(custom, catKeys).map((c) => ({ key: c.key, name: c.name, to: `/category/${c.key}`, img: c.image || '', dept: normDept(c.dept) })),
-  ].filter((it) => liveDepts.includes(it.dept) && isLiveCat(it.key));
+  const items = catKeys
+    .map((c) => ({ key: c, name: platformCatName(c, t, i18n.language), to: `/category/${c}`, img: platformCatImage(c), fallback: platformCatImageFallback(c), dept: catDept(c) }))
+    .filter((it) => liveDepts.includes(it.dept) && isLiveCat(it.key));
   // الأقسام متتاليةً برؤوسها حين يجمع الموقع أكثر من قسم؛ وإلّا شبكةٌ واحدة كما كانت
   const groups = presentDepts(items, (it) => it.dept);
 
@@ -63,7 +52,7 @@ export default function Categories() {
                   }}
                 />
               ) : (
-                <DeptIcon dept={it.dept} className="bz-field-ico h-1/2 w-1/2" strokeWidth={1.2} />
+                <CatIcon cat={it.key} dept={it.dept} className="bz-field-ico h-1/2 w-1/2" strokeWidth={1.2} />
               )}
             </div>
             <span className="bz-card-name mt-2 text-sm font-bold">{it.name}</span>
