@@ -843,11 +843,14 @@ if (process.env.NODE_ENV === 'production') {
   // فلا يبقى رفض غير ملتقَط يوقف العملية عند الإقلاع.
   ensureSchemaFile()
     .then(ensureColumns)
-    // قسم كلّ قطعة وفئة المنصّة التي تقع تحتها — يملأ العمود الجديد ويصحّح ما تغيّر
-    // (يمرّ على أزواج متجر/فئة المتمايزة لا على المنتجات، ويكتب ما تغيّر فقط)
-    .then(() => recomputeDepartments())
     .catch((e) => console.error('⚠️ الترقيات:', e?.message))
     .then(ensureAccounting)
+    // قسم كلّ قطعة وفئة المنصّة التي تقع تحتها — يملأ العمود ويصحّح ما تغيّر (يمرّ
+    // على أزواج متجر/فئة المتمايزة لا على المنتجات، ويكتب ما تغيّر فقط). بعد
+    // ensureAccounting لا قبلها: فيها يُنشأ عمود platform_category، وكان الحساب
+    // يسبقه بأوّل إقلاع فيفشل بصمت ويبقى العمود فارغاً.
+    .then(() => recomputeDepartments())
+    .catch((e) => console.error('⚠️ حساب أقسام المنتجات:', e?.message))
     .finally(start);
 } else {
   start();
