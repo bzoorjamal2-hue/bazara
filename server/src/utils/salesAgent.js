@@ -140,7 +140,7 @@ async function loadCatalog(storeId) {
   const hit = catalogCache.get(key);
   if (hit && Date.now() - hit.ts < CATALOG_TTL) return hit.rows;
   const r = await query(
-    `SELECT id, name, description, category, price, old_price, sale_ends_at, floor_price,
+    `SELECT id, name, description, category, department, price, old_price, sale_ends_at, floor_price,
             size, color, stock, size_stock, color_stock, featured,
             images, image_url, video_url, color_images
      FROM products WHERE store_id = $1 AND hidden_at IS NULL
@@ -401,6 +401,10 @@ const DIALECTS = {
 function catalogLine(p, bot, stageFor) {
   const price = Number(p.price);
   const parts = [`id:${p.id}`, `الاسم:${p.name}`, `الفئة:${p.category}`];
+  // قسمٌ غير الملابس يُقال صراحةً: نمرةُ الحذاءِ ٣٩ غيرُ مقاسِ الفستانِ ٣٨، ومفتاحُ
+  // الفئةِ وحدَه (c_ab12) لا يقولُ للبائعةِ ما القطعة
+  if (p.department === 'shoes') parts.push('القسم:أحذية (النمرة نمرة قدم)');
+  else if (p.department === 'accessories') parts.push('القسم:إكسسوارات');
   parts.push(onSale(p) ? `السعر:${price} (كان ${Number(p.old_price)} — عرض)` : `السعر:${price}`);
   // السعرُ المسموحُ عرضُه الآنَ وحدَه يُمرَّر — لا الأرضيّة. لو تسرَّبَ سطرُ النظامِ
   // كلُّه إلى الزبونةِ (وهذا يحدث) فأسوأُ ما يُكشَفُ هو عرضٌ نحن راضونَ به أصلاً،

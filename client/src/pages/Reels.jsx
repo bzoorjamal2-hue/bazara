@@ -15,6 +15,7 @@ import Seo from '../components/Seo.jsx';
 import Strike from '../components/Strike.jsx';
 import { sizeLabel } from '../utils/sizes.js';
 import { getMySize, setMySize } from '../utils/mySize.js';
+import { deptOfProduct } from '../utils/departments.js';
 import { goBack } from '../utils/nav.js';
 
 const MUTE_KEY = 'bz_reels_muted';
@@ -354,7 +355,7 @@ function ReelPlayer({ product: p, muted, t, onUnmute, onEnded, isLast, showHint,
   const [pickMode, setPickMode] = useState('add'); // 'add' | 'buy'
   const [selSize, setSelSize] = useState('');
   const [selColor, setSelColor] = useState('');
-  const [mySize] = useState(getMySize);
+  const [mySize] = useState(() => getMySize(deptOfProduct(p)));
   const vidRef = videoRef; // مرجع مرفوع من الأب — كي يفتحه زر الصوت داخل الإيماءة
   const hlsRef = useRef(null); // مشغّل hls.js (أندرويد/كروم) — iOS يشغّل HLS أصلياً
   const [useMp4, setUseMp4] = useState(false); // فشل HLS؟ → احتياط MP4 نظيف
@@ -855,7 +856,7 @@ function ReelPlayer({ product: p, muted, t, onUnmute, onEnded, isLast, showHint,
                     const q = hasCS ? colorStock[selColor]?.[s] : sizeStock[s];
                     const on = selSize === s;
                     return (
-                      <button key={s} onClick={() => { setSelSize(s); setMySize(s); }}
+                      <button key={s} onClick={() => { setSelSize(s); setMySize(s, deptOfProduct(p)); }}
                         title={!on && mySize === s ? t('product.mySize') : undefined}
                         className={`flex min-w-11 flex-col items-center rounded-xl border px-3.5 py-1.5 transition ${on ? 'border-wine bg-wine text-cream' : 'border-wine/30 text-wine hover:bg-wine/10'} ${!on && mySize === s ? 'ring-2 ring-gold-400/70 ring-offset-1' : ''}`}>
                         <span className="text-sm font-semibold leading-none">{sizeLabel(s, t)}</span>

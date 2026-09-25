@@ -8,6 +8,7 @@ import { normalizeTiers, villagesByCity, flatInternalLocalities, mapExternalLoca
 import { fetchCities, fetchAreas, cachedLocalities, fetchAllLocalities } from '../config/opost.js';
 import { ensureToken } from './opost.controller.js';
 import { categoryAliases } from '../utils/category.js';
+import { BUILTIN_CATS, normDept } from '../utils/department.js';
 import { paidOnline, codAmount } from '../utils/cod.js';
 
 // أعمدة المنتج + بيانات المتجر + تجميع التقييمات. نربط users لفلترة المشتركين الفعّالين.
@@ -99,7 +100,7 @@ async function aggregateCustomCategories() {
   for (const row of r.rows) {
     const arr = Array.isArray(row.custom_categories) ? row.custom_categories : [];
     for (const c of arr) {
-      if (c && c.key && !map.has(c.key)) map.set(c.key, { key: c.key, name: c.name || c.key, image: c.image || '' });
+      if (c && c.key && !map.has(c.key)) map.set(c.key, { key: c.key, name: c.name || c.key, image: c.image || '', dept: normDept(c.dept) });
     }
   }
   return [...map.values()];
@@ -516,7 +517,7 @@ export async function getByCategory(req, res, next) {
   // المدمجة + ما عرّفه المدير: بلا هذا تُرفض فئة المنصّة الجديدة كأنها غير صالحة
   const settings = await query('SELECT platform_categories FROM site_settings WHERE id = 1');
   const platformExtra = (settings.rows[0]?.platform_categories?.extra || []).map((c) => c.key);
-  const builtin = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt', ...platformExtra];
+  const builtin = [...BUILTIN_CATS, ...platformExtra];
   try {
     const active = activeStoreSql('u');
     // فئة مخصّصة (غير الأصلية):

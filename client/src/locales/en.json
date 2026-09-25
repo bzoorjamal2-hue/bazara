@@ -225,7 +225,9 @@
     "hijab": "Hijabs",
     "trench": "Trench coats",
     "jacket": "Wool jackets",
-    "shirt": "Shirts"
+    "shirt": "Shirts",
+    "shoes": "Shoes",
+    "accessory": "Accessories"
   },
   "image": {
     "change": "Change image",
@@ -432,7 +434,20 @@
     "reviewAdded": "Thanks for your review!",
     "zoom": "Zoom image",
     "videoThumb": "Product video",
-    "copyManually": "Copy the link:"
+    "copyManually": "Copy the link:",
+    "shoeGuide": "Shoe size guide",
+    "shoeGuideIntro": "EU sizes; foot lengths are approximate and may vary slightly between models.",
+    "shoeSizeCol": "Size",
+    "footLengthCol": "Foot length",
+    "findMyShoeSize": "Find your size",
+    "findMyShoeSizeHint": "Enter your foot length in cm and we’ll suggest the best size from this shoe’s sizes.",
+    "yourFootLength": "Your foot length (cm)",
+    "enterFootLength": "Enter your foot length in cm (e.g. 24.5).",
+    "footTooLong": "Your foot is longer than the largest size available for this shoe.",
+    "howMeasureFoot": "How to measure your foot",
+    "measureFoot1": "Stand barefoot on paper and mark your heel and your longest toe.",
+    "measureFoot2": "Measure the distance between the two marks — that’s your foot length.",
+    "measureFoot3": "Measure late in the day (feet swell a little); if you’re between sizes, go up."
   },
   "store": {
     "products": "Products",
@@ -1032,5 +1047,12 @@
     "paidLine": "Paid by card",
     "dueLine": "Paid to the courier on delivery",
     "dueNote": "The delivery fee is paid in cash to the courier when the order arrives."
+  },
+  "dept": {
+    "clothing": "Clothing",
+    "shoes": "Shoes",
+    "accessories": "Accessories",
+    "shopBy": "Shop by department",
+    "tabsLabel": "Departments"
   }
 }

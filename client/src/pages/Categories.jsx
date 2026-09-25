@@ -7,13 +7,17 @@ import { GridIcon } from '../components/icons.jsx';
 import api from '../api/client.js';
 import { getCache, setCache } from '../utils/apiCache.js';
 import { cldThumb } from '../utils/cloudinary.js';
-import { platformCatKeys, platformCatName, platformCatImage, platformCatImageFallback, usePlatformCatKeys, storeOnlyCats } from '../utils/platformCategories.js';
+import { platformCatKeys, platformCatName, platformCatImage, platformCatImageFallback, usePublicCatKeys, useLiveDepartments, storeOnlyCats, catDept } from '../utils/platformCategories.js';
+import { normDept, presentDepts } from '../utils/departments.js';
+import { DeptHeading } from '../components/DeptTabs.jsx';
+import DeptIcon from '../components/DeptIcon.jsx';
 
 // صفحة تصنيفات الموقع العام (بازارا) — فئات بازارا الأصلية + الفئات المخصّصة المجمّعة من
 // كل المتاجر (يعيدها /public/categories). أي فئة يضيفها أي متجر تظهر هنا تلقائياً بنفس
 // شكل الفئات الأصلية. لا تعتمد على متجر صاحب الحساب المسجّل (الصفحة تبقى بازارا خالصة).
 export default function Categories() {
-  const catKeys = usePlatformCatKeys();
+  const catKeys = usePublicCatKeys();
+  const liveDepts = useLiveDepartments();
   const { t, i18n } = useTranslation();
   const [custom, setCustom] = useState(() => getCache('publicCats') || []);
   useEffect(() => {
@@ -22,18 +26,23 @@ export default function Categories() {
       .catch(() => { /* الفئات المخصّصة اختيارية — الأصلية تكفي */ });
   }, []);
   const items = [
-    ...catKeys.map((c) => ({ key: c, name: platformCatName(c, t, i18n.language), to: `/category/${c}`, img: platformCatImage(c), fallback: platformCatImageFallback(c) })),
-    ...storeOnlyCats(custom, catKeys).map((c) => ({ key: c.key, name: c.name, to: `/category/${c.key}`, img: c.image || '' })),
-  ];
+    ...catKeys.map((c) => ({ key: c, name: platformCatName(c, t, i18n.language), to: `/category/${c}`, img: platformCatImage(c), fallback: platformCatImageFallback(c), dept: catDept(c) })),
+    ...storeOnlyCats(custom, catKeys).map((c) => ({ key: c.key, name: c.name, to: `/category/${c.key}`, img: c.image || '', dept: normDept(c.dept) })),
+  ].filter((it) => liveDepts.includes(it.dept));
+  // الأقسام متتاليةً برؤوسها حين يجمع الموقع أكثر من قسم؛ وإلّا شبكةٌ واحدة كما كانت
+  const groups = presentDepts(items, (it) => it.dept);
 
   return (
     <>
       <Seo title={t('nav.categories')} />
       <PageTitle icon={<GridIcon className="h-6 w-6" />} title={t('nav.categories')} />
 
+      {groups.map((d) => (
+      <section key={d} className={groups.length > 1 ? 'mb-10' : ''}>
+      {groups.length > 1 && <DeptHeading dept={d} />}
       {/* بطاقةٌ واحدة هادئة كبطاقات المتاجر بالرئيسية — بلا خيطٍ علويّ ولا هالة */}
       <div className="bz-cards">
-        {items.map((it, i) => (
+        {items.filter((it) => it.dept === d).map((it, i) => (
           <Link
             key={it.key}
             to={it.to}
@@ -54,10 +63,7 @@ export default function Categories() {
                   }}
                 />
               ) : (
-                <svg viewBox="0 0 24 24" className="bz-field-ico h-1/2 w-1/2" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M9 4a3 3 0 0 0 6 0" />
-                  <path d="M12 4 4.5 9v3l3-1.5V20h9V10.5l3 1.5V9L12 4Z" />
-                </svg>
+                <DeptIcon dept={it.dept} className="bz-field-ico h-1/2 w-1/2" strokeWidth={1.2} />
               )}
             </div>
             <span className="bz-card-name mt-2 text-sm font-bold">{it.name}</span>
@@ -67,6 +73,8 @@ export default function Categories() {
           </Link>
         ))}
       </div>
+      </section>
+      ))}
     </>
   );
 }

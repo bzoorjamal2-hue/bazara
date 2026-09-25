@@ -1,6 +1,24 @@
-// أيقونة فئة صغيرة تستعمل صورة الفئة (/categories/{cat}.jpg) — بلا إطار/خلفية،
+import DeptIcon from './DeptIcon.jsx';
+import { CLOTHING_CATS } from '../utils/departments.js';
+import { catDept, platformCatImage } from '../utils/platformCategories.js';
+
+// أيقونة فئة صغيرة تستعمل صورة الفئة (/categories/{cat}.png) — بلا إطار/خلفية،
 // يظهر شكل الأيقونة فقط (الصور بلا خلفية).
-export default function CatThumb({ cat, className = 'h-8 w-8' }) {
+//
+// فئةٌ بلا رسمٍ مقصوص (الفئتان العامّتان للأحذية والإكسسوارات، وما تضيفه
+// التاجرة بلا صورة) تأخذ أيقونة قسمها بدل صورةٍ مكسورةٍ تُخفى فيبقى فراغ.
+// ‏dept يُمرَّر لفئات المتجر الخاصّة: قسمها عند المتجر لا عند المنصّة.
+export default function CatThumb({ cat, dept, className = 'h-8 w-8' }) {
+  if (!CLOTHING_CATS.includes(cat)) {
+    // فئة منصّةٍ أضافها المدير بصورتها
+    const img = platformCatImage(cat);
+    if (img) return <img src={img} alt="" aria-hidden="true" loading="lazy" className={`${className} shrink-0 object-contain`} />;
+    return (
+      <span className={`${className} flex shrink-0 items-center justify-center`} aria-hidden="true">
+        <DeptIcon dept={dept || catDept(cat)} className="h-[70%] w-[70%]" strokeWidth={1.5} />
+      </span>
+    );
+  }
   return (
     <img
       src={`/categories/${cat}.png?v=3`}

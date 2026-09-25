@@ -28,7 +28,9 @@ import useInViewOnce from '../hooks/useInViewOnce.js';
 import ScrollProgress from '../components/ScrollProgress.jsx';
 import StoriesRow from '../components/StoriesRow.jsx';
 import { BAZARA_WHATSAPP } from '../config/site.js';
-import { usePlatformCatKeys, platformCatKeys, storeOnlyCats } from '../utils/platformCategories.js';
+import { usePlatformCatKeys, usePublicCatKeys, useLiveDepartments, platformCatKeys, storeOnlyCats, catDept, platformCatName } from '../utils/platformCategories.js';
+import { normDept } from '../utils/departments.js';
+import DeptTabs from '../components/DeptTabs.jsx';
 import { phGlyph } from '../utils/imageFallback.js';
 
 export default function Home() {
@@ -55,10 +57,20 @@ export default function Home() {
   // فوتوغرافيّةٌ أو لقطةُ جوّالٍ فينكسرُ الصفّ. والسبعُ اليومَ صورُ قطعٍ حقيقيّةٍ
   // مقصوصةٌ على شفافيّة — فالمسافةُ بينها وبين صورةِ تاجرةٍ صارت أقصرَ بكثير،
   // والشبكةُ تعرضُ الجميعَ بـ‎object-contain بمربّعٍ واحدٍ فتتساوى المقاسات.
+  //
+  // وكلّ فئةٍ بقسمها: الشبكة تعرض قسماً واحداً تحت تبويباته. الأقسام التي لا
+  // قطع فيها بعد لا تظهر (publicCatKeys وliveDepts) — لا تبويب «أحذية» فارغ.
+  const publicKeys = usePublicCatKeys();
+  const liveDepts = useLiveDepartments();
   const gridCats = [
-    ...platformKeys.map((k) => ({ key: k, builtin: true })),
-    ...customCats.map((cc) => ({ key: cc.key, name: cc.name, image: cc.image, builtin: false })),
+    ...publicKeys.map((k) => ({ key: k, builtin: true, dept: catDept(k) })),
+    ...customCats.map((cc) => ({ key: cc.key, name: cc.name, image: cc.image, builtin: false, dept: normDept(cc.dept) }))
+      .filter((c) => liveDepts.includes(c.dept)),
   ];
+  const homeDepts = liveDepts.filter((d) => gridCats.some((c) => c.dept === d));
+  const [homeDept, setHomeDept] = useState('clothing');
+  const shownDept = homeDepts.includes(homeDept) ? homeDept : homeDepts[0] || 'clothing';
+  const homeCats = homeDepts.length > 1 ? gridCats.filter((c) => c.dept === shownDept) : gridCats;
 
   // "مقترحات لكِ": نتعلّم الفئة الأكثر مشاهدة من تصفّحها ونجلب منتجاتها (تخصيص محلي بلا حساب)
   const [forYou, setForYou] = useState(() => getCache('forYou') || []);
@@ -161,7 +173,10 @@ export default function Home() {
         <section className="bz-band bz-sec-gap">
           <div className="bz-inner">
             <SectionTitle eyebrow={t('home.eyebrowCats')}>{t('home.browseByCategory')}</SectionTitle>
-            <CategoryGrid onSelect={pickCat} active={cat} cats={gridCats} />
+            {/* الأقسام: ملابس · أحذية · إكسسوارات — تظهر حين يُفتح بالمنصّة قسمٌ ثانٍ */}
+            <DeptTabs className="-mt-2 mb-6" depts={homeDepts} value={shownDept} onChange={setHomeDept} />
+            {/* key بالقسم: الشبكة تبدأ من صفحتها الأولى عند تبديل القسم */}
+            <CategoryGrid key={shownDept} onSelect={pickCat} active={cat} cats={homeCats} />
           </div>
         </section>
       </Reveal>
@@ -357,11 +372,11 @@ function Crumb({ className = 'h-4 w-4' }) {
 // عرض فئة داخل الرئيسية العامة (بازارا) — يبقيكِ بالرئيسية بلا انتقال لصفحة منفصلة.
 // نفس شبكة/فلاتر صفحة الفئة، ومنتجات الفئة من كل المتاجر (بازارا خالصة).
 function HomeCategoryView({ cat, onHome, custom = [] }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   // فئة مخصّصة؟ نأخذ اسمها وصورتها من القائمة المجمّعة (وإلا فئة أصلية باسمها المترجَم)
   const info = custom.find((c) => c.key === cat);
-  const label = info ? info.name : t(`categories.${cat}`);
+  const label = info ? info.name : platformCatName(cat, t, i18n.language);
   const cacheKey = `cat:${cat}`;
   const [products, setProducts] = useState(() => getCache(cacheKey) || null);
   const [error, setError] = useState('');
@@ -404,7 +419,7 @@ function HomeCategoryView({ cat, onHome, custom = [] }) {
         <Crumb />
         <span className="flex items-center gap-2 rounded-full bg-wine/10 px-2.5 py-1 font-display text-base font-bold text-wine">
           {info ? (
-            info.image ? <img src={cldThumb(info.image, 96)} alt="" className="h-7 w-7 shrink-0 rounded object-contain" /> : null
+            info.image ? <img src={cldThumb(info.image, 96)} alt="" className="h-7 w-7 shrink-0 rounded object-contain" /> : <CatThumb cat={cat} dept={normDept(info.dept)} className="h-7 w-7" />
           ) : (
             <CatThumb cat={cat} className="h-7 w-7" />
           )}

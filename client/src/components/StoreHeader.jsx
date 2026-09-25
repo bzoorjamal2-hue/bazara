@@ -20,7 +20,9 @@ import StoreFollowButton from './StoreFollowButton.jsx';
 import { cldThumb } from '../utils/cloudinary.js';
 import { productThumb } from '../utils/recentlyViewed.js';
 import { norm } from '../utils/match.js';
-import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys, storeOnlyCats } from '../utils/platformCategories.js';
+import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys, storeOnlyCats, catDept } from '../utils/platformCategories.js';
+import { normDept, presentDepts } from '../utils/departments.js';
+import DeptIcon from './DeptIcon.jsx';
 
 
 
@@ -305,35 +307,50 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
                 {t('store.allProducts')}
               </button>
               <div className="my-2 h-px bg-cream/15" />
-              {catKeys.filter((c) => !store.categoryMeta?.[c]?.hidden).map((c) => (
-                <button
-                  key={c}
-                  onClick={() => pick(c)}
-                  className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-base transition hover:bg-cream/10 ${cat === c ? 'font-bold text-cream' : 'text-cream/85'}`}
-                >
-                  <CatThumb cat={c} className="h-9 w-9" />
-                  {store.categoryMeta?.[c]?.name?.trim() || t(`categories.${c}`)}
-                </button>
-              ))}
-              {/* الفئات المخصّصة الجديدة — تظهر بالدرج تماماً مثل الأصلية */}
-              {storeOnlyCats(store.customCategories, catKeys).map((cc) => (
-                <button
-                  key={cc.key}
-                  onClick={() => pick(cc.key)}
-                  className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-base transition hover:bg-cream/10 ${cat === cc.key ? 'font-bold text-cream' : 'text-cream/85'}`}
-                >
-                  {cc.image ? (
-                    <img src={cldThumb(cc.image, 80)} alt="" className="h-9 w-9 shrink-0 rounded object-contain" />
-                  ) : (
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center">
-                      <svg viewBox="0 0 24 24" className="h-6 w-6 text-cream/70" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <path d="M9 4a3 3 0 0 0 6 0" /><path d="M12 4 4.5 9v3l3-1.5V20h9V10.5l3 1.5V9L12 4Z" />
-                      </svg>
-                    </span>
-                  )}
-                  {cc.name}
-                </button>
-              ))}
+              {/* الفئات مجمّعةً بأقسامها (ملابس · أحذية · إكسسوارات) — ولا فئة فارغة:
+                  كانت السبع تظهر بكلّ متجر ولو لم يبع إلّا الأحذية، فتفتح على لا شيء.
+                  متجرٌ بلا منتجات بعد يرى القائمة كاملةً كما كان. */}
+              {(() => {
+                const counts = {};
+                for (const p of products) counts[p.category] = (counts[p.category] || 0) + 1;
+                const entries = [
+                  ...catKeys.filter((c) => !store.categoryMeta?.[c]?.hidden).map((c) => ({
+                    key: c,
+                    name: store.categoryMeta?.[c]?.name?.trim() || platformCatName(c, t, i18n.language),
+                    dept: catDept(c, store.customCategories),
+                    thumb: <CatThumb cat={c} className="h-9 w-9" />,
+                  })),
+                  ...storeOnlyCats(store.customCategories, catKeys).map((cc) => ({
+                    key: cc.key,
+                    name: cc.name,
+                    dept: normDept(cc.dept),
+                    thumb: cc.image
+                      ? <img src={cldThumb(cc.image, 80)} alt="" className="h-9 w-9 shrink-0 rounded object-contain" />
+                      : <CatThumb cat={cc.key} dept={normDept(cc.dept)} className="h-9 w-9 text-cream/70" />,
+                  })),
+                ].filter((e) => products.length === 0 || counts[e.key]);
+                const groups = presentDepts(entries, (e) => e.dept);
+                return groups.map((d) => (
+                  <div key={d} className={groups.length > 1 ? 'pb-1' : ''}>
+                    {groups.length > 1 && (
+                      <p className="flex items-center gap-2 px-3 pb-1 pt-3 text-[11px] font-extrabold uppercase tracking-[0.18em] text-cream/55">
+                        <DeptIcon dept={d} className="h-4 w-4" /> {t(`dept.${d}`)}
+                      </p>
+                    )}
+                    {entries.filter((e) => e.dept === d).map((e) => (
+                      <button
+                        key={e.key}
+                        onClick={() => pick(e.key)}
+                        className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-base transition hover:bg-cream/10 ${cat === e.key ? 'font-bold text-cream' : 'text-cream/85'}`}
+                      >
+                        {e.thumb}
+                        <span className="min-w-0 flex-1 truncate">{e.name}</span>
+                        {counts[e.key] > 0 && <span className="shrink-0 text-xs tabular-nums text-cream/45">{counts[e.key]}</span>}
+                      </button>
+                    ))}
+                  </div>
+                ));
+              })()}
               <div className="my-2 h-px bg-cream/15" />
               {/* تتبّع الطلب — بنطاق المتجر كي تبقى صفحته بهوية المتجر لا الموقع العام */}
               <Link

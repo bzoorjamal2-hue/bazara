@@ -575,6 +575,9 @@ END $$;`,
     // الدخول بجوجل: ‏sub ثابتٌ لصاحب الحساب حتى لو غيّر بريده عند جوجل
     'ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(64) UNIQUE;',
     'ALTER TABLE users ADD COLUMN IF NOT EXISTS facebook_id VARCHAR(64) UNIQUE;',
+    // قسم المنتج (ملابس/أحذية/إكسسوارات) مشتقٌّ من فئته — انظر utils/department.js.
+    // كلّ ما سبق هذا العمود ملابس، فالافتراض يصحّ للقديم بلا ترحيل.
+    "ALTER TABLE products ADD COLUMN IF NOT EXISTS department VARCHAR(20) NOT NULL DEFAULT 'clothing';",
     // فئات المنصّة التي يعرّفها المدير: { extra: [{key,name,nameEn,image}], hidden: [] }
     "ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS platform_categories JSONB NOT NULL DEFAULT '{}'::jsonb;",
     // محتوى صفحة الواجهة الذي يحرّره المدير — الفارغ يعني «النصّ الأصلي»

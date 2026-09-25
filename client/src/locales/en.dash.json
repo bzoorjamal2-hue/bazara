@@ -619,7 +619,7 @@
       "gaId": "Google Analytics",
       "gaIdHint": "Measurement ID from GA4 settings (starts with G-).",
       "sizeChart": "Size guide",
-      "sizeChartHint": "Enter bust/waist/hips (cm) per size. Leave empty to use the standard chart automatically.",
+      "sizeChartHint": "Enter bust/waist/hips (cm) per size. Leave empty to use the standard chart automatically. (Clothing only — shoes get a foot-length size chart automatically.)",
       "returnPolicy": "Returns & exchange policy",
       "returnPolicyHint": "Shown to shoppers on the product page to reassure them. Leave empty to use a default text.",
       "marketing": "Marketing",
@@ -677,7 +677,8 @@
       "collWideTip": "Instead of a small tile in the row, it becomes a full-width image with the title and a button — it breaks up the run of similar sections. The number of bands on the page is however many you tick here.",
       "collWideNeedsImage": "Add an image to this collection first — a band is a full-width image above all else.",
       "collDesc": "Line under the title",
-      "collDescPlaceholder": "Quiet cuts, fabrics that last"
+      "collDescPlaceholder": "Quiet cuts, fabrics that last",
+      "categoryDept": "Department:"
     },
     "product": {
       "cost": "Cost price",
@@ -768,7 +769,11 @@
       "colorTotal_one": "1 piece",
       "colorTotal_other": "{{count}} pieces",
       "qtyMissing_one": "1 size has no quantity — the colour will not save until it is filled",
-      "qtyMissing_other": "{{count}} sizes have no quantity — the colour will not save until they are filled"
+      "qtyMissing_other": "{{count}} sizes have no quantity — the colour will not save until they are filled",
+      "dept": "Department",
+      "deptTip": "Clothing, shoes or accessories. The department sets which categories appear below, the sizes available for the item, and where it shows in your store’s tabs.",
+      "deptHint_shoes": "Shoe sizes 35–46 appear when you add colors below. You can add finer categories (heels, sneakers, sandals) from Store settings → Categories.",
+      "deptHint_accessories": "Accessories are one size. You can add finer categories (bags, watches, jewelry) from Store settings → Categories."
     },
     "heroNewOrders_one": "1 new order",
     "heroNewOrders_other": "{{count}} new orders",

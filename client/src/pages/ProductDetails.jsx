@@ -11,6 +11,7 @@ import StoreHeader from '../components/StoreHeader.jsx';
 import StoreFooter from '../components/StoreFooter.jsx';
 import Strike from '../components/Strike.jsx';
 import { getMySize, setMySize } from '../utils/mySize.js';
+import { deptOfProduct } from '../utils/departments.js';
 import { useCart } from '../context/CartContext.jsx';
 import { useWishlist } from '../context/WishlistContext.jsx';
 import { pushRecent, getRecent, removeRecent } from '../utils/recentlyViewed.js';
@@ -64,7 +65,10 @@ export default function ProductDetails() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product?.id]);
   const [descExp, setDescExp] = useState(false); // طيّ الوصف الطويل بـ«اقرأ المزيد»
-  const [mySize] = useState(getMySize); // مقاسها المعتاد — نميّزه فقط (بلا اختيار تلقائي)
+  // مقاسها المعتاد بقسم هذا المنتج — نميّزه فقط (بلا اختيار تلقائي). نمرة حذائها
+  // غير مقاس فستانها، فلكلّ قسمٍ ذاكرته.
+  const pDept = deptOfProduct(product);
+  const mySize = getMySize(pDept);
 
   const [sizeGuide, setSizeGuide] = useState(false);
   const [notifyPhone, setNotifyPhone] = useState('');
@@ -532,7 +536,7 @@ export default function ProductDetails() {
                           type="button"
                           disabled={soldOut}
                           title={usual ? t('product.mySize') : undefined}
-                          onClick={() => { setSelSize(s); setMySize(s); setPickErr(''); }}
+                          onClick={() => { setSelSize(s); setMySize(s, pDept); setPickErr(''); }}
                           className={`relative flex min-w-[3.75rem] flex-col items-center rounded-xl border px-3 py-1.5 text-center transition ${
                             on ? 'bz-pick-on' : 'border-wine/30 text-wine hover:bg-wine/10'
                           } ${soldOut ? 'cursor-not-allowed border-stone-300/50 bg-transparent text-stone-400 opacity-60' : ''} ${usual ? 'bz-usual' : ''}`}
@@ -674,6 +678,7 @@ export default function ProductDetails() {
         <SizeGuideModal
           sizes={hasColorStock ? [...new Set(Object.values(colorStock).flatMap((sz) => Object.keys(sz)))] : sizes}
           chart={product.storeSizeChart}
+          dept={pDept}
           onClose={() => setSizeGuide(false)}
         />
       )}

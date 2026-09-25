@@ -24,7 +24,10 @@ import CloseButton from '../components/CloseButton.jsx';
 import Reveal from '../components/Reveal.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import { cldThumb, cldVideoPoster, cldVideoCrop, heroVideoShape, heroVideoAllowed, heroCrop } from '../utils/cloudinary.js';
-import { SIZES, sizeLabel } from '../utils/sizes.js';
+import { sizeLabel, sizesInProducts } from '../utils/sizes.js';
+import { presentDepts, deptOfProduct, normDept } from '../utils/departments.js';
+import DeptTabs, { DeptHeading } from '../components/DeptTabs.jsx';
+import DeptIcon from '../components/DeptIcon.jsx';
 import { getMySize } from '../utils/mySize.js';
 import { productColors, colorToCss } from '../utils/colorDot.js';
 import { getCache, setCache } from '../utils/apiCache.js';
@@ -32,7 +35,7 @@ import { saveRef } from '../utils/referral.js';
 import { initPixels, trackPixel } from '../utils/pixels.js';
 import { norm } from '../utils/match.js';
 import Countdown from '../components/Countdown.jsx';
-import { platformCatKeys, platformCatName, platformCatImage, catImage, usePlatformCatKeys, storeOnlyCats } from '../utils/platformCategories.js';
+import { platformCatKeys, platformCatName, platformCatImage, catImage, usePlatformCatKeys, storeOnlyCats, catDept } from '../utils/platformCategories.js';
 
 const PAGE_SIZE = 8;
 
@@ -83,7 +86,6 @@ export default function StorePage() {
   const [colorsSel, setColorsSel] = useState(() => (Array.isArray(savedF.colorsSel) ? savedF.colorsSel : [])); // ألوان مختارة (متعدّد)
   const [offersOnly, setOffersOnly] = useState(Boolean(savedF.offersOnly));
   const [stockOnly, setStockOnly] = useState(Boolean(savedF.stockOnly)); // إخفاء القطع المنتهية
-  const [mySize] = useState(getMySize); // مقاسها المعتاد — اختصار فلترة بضغطة
   const [openSheet, setOpenSheet] = useState(null); // 'sort' | 'size' | 'color' | 'offers'
   const [page, setPage] = useState(savedF.page || 1);
   const [shareOpen, setShareOpen] = useState(false); // نافذة شاركي واربحي
@@ -111,7 +113,9 @@ export default function StorePage() {
   // فتظهر فئات المتجر كصفحة كاملة بهيدر/فوتر المتجر بدل صفحة بازارا العامة أو درج.
   const catsView = searchParams.get('cats') === '1';
   const setCat = (c) => setSearchParams(c && c !== 'all' ? { cat: c } : {});
-  const setViewAll = (v) => setSearchParams(v ? { view: 'all' } : {});
+  // القسم (?dept=) — ملابس/أحذية/إكسسوارات. يظهر بالرابط فقط حين يخالف قسم
+  // المتجر الرئيسيّ، فيبقى رابط المتجر ذي القسم الواحد نظيفاً كما كان.
+  const deptParam = searchParams.get('dept') || '';
 
   useEffect(() => {
     const cached = getCache(`storepage:${slug}`);
@@ -184,6 +188,38 @@ export default function StorePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
+  // أقسام هذا المتجر وعدد قطع كلٍّ منها. الافتراضيّ أكبرها: متجر أحذيةٍ فيه
+  // فستانان يُفتح على الأحذية لا على الفستانين.
+  const deptInfo = useMemo(() => {
+    const counts = {};
+    for (const p of data?.products || []) { const d = deptOfProduct(p); counts[d] = (counts[d] || 0) + 1; }
+    const list = presentDepts(data?.products || []);
+    const main = [...list].sort((a, b) => counts[b] - counts[a])[0] || 'clothing';
+    return { list, counts, main };
+  }, [data]);
+  const multiDept = deptInfo.list.length > 1;
+  const dept = multiDept && deptInfo.list.includes(deptParam) ? deptParam : deptInfo.main;
+  // قسم فئةٍ بهذا المتجر: فئاته الخاصّة تحمل قسمها
+  const catDeptOf = (k) => catDept(k, data?.store?.customCategories);
+  // نطاق الشبكة المعروضة: فئةٌ مختارة، أو قسمٌ بعرض الكل، أو المتجر كلّه.
+  // منه تُشتقّ نمر فلتر المقاس و«مقاسي» — نمر الأحذية بشبكة الأحذية وحدها.
+  const scopeDept = cat !== 'all' ? catDeptOf(cat) : multiDept && viewAll ? dept : deptInfo.main;
+  const scopeProducts = useMemo(() => {
+    const all = data?.products || [];
+    if (cat !== 'all') return all.filter((p) => p.category === cat);
+    if (multiDept && viewAll) return all.filter((p) => deptOfProduct(p) === dept);
+    return all;
+  }, [data, cat, multiDept, viewAll, dept]);
+  const mySize = getMySize(scopeDept); // مقاسها المعتاد بهذا القسم — اختصار فلترة بضغطة
+  const setDept = (d) => {
+    setSizesSel([]); // نمر الفستان لا تنتقل إلى الأحذية
+    const sp = {};
+    if (viewAll) sp.view = 'all';
+    if (d !== deptInfo.main) sp.dept = d;
+    setSearchParams(sp, { replace: true, state: { keepScroll: true } });
+  };
+  const setViewAll = (v) => setSearchParams(v ? { view: 'all', ...(multiDept && dept !== deptInfo.main ? { dept } : {}) } : (multiDept && dept !== deptInfo.main ? { dept } : {}));
+
   const filtered = useMemo(() => {
     if (!data) return [];
     // بحث ذكي: تطبيع عربي (الهمزات/التاء المربوطة/أل التعريف) + يشمل الوصف —
@@ -192,13 +228,15 @@ export default function StorePage() {
     let list = data.products.filter((p) => {
       const matchQ = !nq || norm(p.name).includes(nq) || (p.description && norm(p.description).includes(nq));
       const matchCat = cat === 'all' || p.category === cat;
+      // عرض الكلّ بمتجرٍ متعدّد الأقسام يعرض القسم المختار وحده
+      const matchDept = !(multiDept && viewAll && cat === 'all') || deptOfProduct(p) === dept;
       // مقاسات المنتج قد تكون متعدّدة (مفصولة بفواصل)
       const prodSizes = (p.size || '').split(',').map((s) => s.trim()).filter(Boolean);
       const matchSize = sizesSel.length === 0 || sizesSel.some((s) => prodSizes.includes(s));
       const matchColor = colorsSel.length === 0 || productColors(p).some((c) => colorsSel.includes(c));
       const matchOffers = !offersOnly || (p.oldPrice && p.oldPrice > p.price);
       const matchStock = !stockOnly || !isSoldOut(p);
-      return matchQ && matchCat && matchSize && matchColor && matchOffers && matchStock;
+      return matchQ && matchCat && matchDept && matchSize && matchColor && matchOffers && matchStock;
     });
     const cmp = {
       newest: (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
@@ -210,7 +248,7 @@ export default function StorePage() {
     // المتوفّر أولاً دائماً، ثم الفرز المختار داخل كل مجموعة (المنتهي لأسفل)
     list = [...list].sort((a, b) => (isSoldOut(a) - isSoldOut(b)) || (cmp ? cmp(a, b) : 0));
     return list;
-  }, [data, q, cat, sizesSel, colorsSel, offersOnly, stockOnly, sort]);
+  }, [data, q, cat, sizesSel, colorsSel, offersOnly, stockOnly, sort, multiDept, viewAll, dept]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   // تراكمي مع «عرض المزيد» (لا قصّ صفحة واحدة) — القطع السابقة تبقى ظاهرة بمكانها
@@ -228,8 +266,8 @@ export default function StorePage() {
   // هل يوفّر هذا المتجر مقاسها المعتاد؟ عندها نعرض اختصار «مقاسي» بشريط الفلاتر
   const storeHasMySize = useMemo(() => {
     if (!mySize) return false;
-    return (data?.products || []).some((p) => String(p.size || '').split(/[,،/|]/).map((s) => s.trim()).includes(mySize));
-  }, [data, mySize]);
+    return scopeProducts.some((p) => String(p.size || '').split(/[,،/|]/).map((s) => s.trim()).includes(mySize));
+  }, [scopeProducts, mySize]);
 
   // متجر غير موجود/رابط خاطئ: بطاقة بمخرج واضح بدل نص عارٍ
   if (error) {
@@ -256,13 +294,15 @@ export default function StorePage() {
   const wa = store.whatsapp || store.ownerPhone || '';
   // "الأكثر مبيعاً" الحقيقي: ترتيب بعدّاد المبيعات الفعلي (يزيد مع كل طلب مؤكّد)،
   // والمنتجات المميّزة تكمّل القائمة عند قلّة المبيعات (متجر جديد مثلاً)
+  // قطع القسم المختار: أقسام الرئيسية كلّها (الجديد، الأكثر مبيعاً، العروض) منه
+  const deptProducts = multiDept ? data.products.filter((p) => deptOfProduct(p) === dept) : data.products;
   const bestSellers = (() => {
-    const sold = [...data.products].filter((p) => (p.soldCount || 0) > 0).sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0));
-    const fill = data.products.filter((p) => p.featured && !(p.soldCount > 0));
+    const sold = [...deptProducts].filter((p) => (p.soldCount || 0) > 0).sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0));
+    const fill = deptProducts.filter((p) => p.featured && !(p.soldCount > 0));
     return [...sold, ...fill].slice(0, 8);
   })();
   // قسم التخفيضات: المنتجات المخفّضة فعلاً (سعر قديم أعلى) — الأعلى نسبة خصم أولاً
-  const onSale = [...data.products]
+  const onSale = [...deptProducts]
     .filter((p) => p.oldPrice && p.oldPrice > p.price)
     .sort((a, b) => (1 - b.price / b.oldPrice) - (1 - a.price / a.oldPrice))
     .slice(0, 8);
@@ -286,8 +326,8 @@ export default function StorePage() {
   // قائمة الفئات للشبكة: الأصلية الخمس + المخصّصة
   const gridCats = [
     // نستثني الفئات الأصلية التي أخفتها المالكة من إعدادات المتجر
-    ...catKeys.filter((k) => !catMeta[k]?.hidden).map((k) => ({ key: k, name: catNames[k], image: catImages[k], builtin: true })),
-    ...customCats.map((cc) => ({ key: cc.key, name: cc.name, image: catImages[cc.key], builtin: false })),
+    ...catKeys.filter((k) => !catMeta[k]?.hidden).map((k) => ({ key: k, name: catNames[k], image: catImages[k], builtin: true, dept: catDeptOf(k) })),
+    ...customCats.map((cc) => ({ key: cc.key, name: cc.name, image: catImages[cc.key], builtin: false, dept: normDept(cc.dept) })),
   ];
   // عدّاد كل فئة وما فيها من عروض. البطاقة بلا رقم لا تقول إن كانت تخفي
   // أربعين قطعة أم اثنتين، والفئة الفارغة كانت تُعرض ثم تفتح على لا شيء.
@@ -303,12 +343,24 @@ export default function StorePage() {
     if (pr.oldPrice && pr.oldPrice > pr.price) catCounts[k].sale += 1;
   }
   const visibleCats = gridCats.filter((c) => (catCounts[c.key]?.total || 0) > 0);
+  // شبكة فئات الرئيسية: ما فيه قطعٌ من القسم المختار. كانت السبع تظهر بكلّ
+  // متجرٍ ولو لم يبع إلّا الأحذية فتفتح على لا شيء. متجرٌ بلا قطعٍ بعد يرى
+  // الشبكة كاملةً كما كان، فالفراغ هناك طبيعيّ.
+  const homeCats = (data.products.length ? visibleCats : gridCats).filter((c) => !multiDept || c.dept === dept);
 
   const searching = q.trim().length > 0;
   // أحدث المنتجات (لقسم "جديدنا")
-  const newest = [...data.products].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 8);
+  const newest = [...deptProducts].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 8);
   // تحديث الرابط بنداء واحد (سجلّ تاريخ واحد) — حتى يرجع زرّ الرجوع خطوة واحدة بالضبط
-  const pickCategory = (c) => { setSearchParams(c && c !== 'all' ? { cat: c } : {}); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  // العودة من فئةٍ إلى الرئيسية تعيدكِ إلى قسمها: من «كعب عالي» إلى تبويب الأحذية
+  const pickCategory = (c) => {
+    if (c && c !== 'all') setSearchParams({ cat: c });
+    else {
+      const d = cat !== 'all' ? catDeptOf(cat) : dept;
+      setSearchParams(multiDept && d !== deptInfo.main ? { dept: d } : {});
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   const clearSearch = () => { setQ(''); setSearchParams({}); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
   // بيانات Schema.org للمتجر → Google يعرضه كمتجر (اسم/شعار/تواصل/روابط) بنتائج البحث
@@ -333,7 +385,7 @@ export default function StorePage() {
       <Seo
         title={seoName}
         description={store.description
-          || `${seoName}: تسوّقي فساتين وأطقم وعبايات — توصيل لكل فلسطين والدفع عند الاستلام.`}
+          || `${seoName}: تسوّقي ${deptInfo.list.map((d) => ({ clothing: 'فساتين وأطقم وعبايات', shoes: 'أحذية', accessories: 'إكسسوارات' })[d]).join(' و') || 'فساتين وأطقم وعبايات'} — توصيل لكل فلسطين والدفع عند الاستلام.`}
         image={store.logoUrl}
         jsonLd={storeLd}
       />
@@ -388,8 +440,11 @@ export default function StorePage() {
           )}
           {/* بطاقات فاخرة (صورة + اسم + "تسوّقي الآن") — نفس تصميم بطاقات التصنيفات
               الموحّد بكل الحسابات، لكن الضغط يفتح فئة هذا المتجر (لا يخرج للعام) */}
+          {presentDepts(visibleCats, (c) => c.dept).map((d) => (
+          <section key={d} className={multiDept ? 'mb-10' : ''}>
+          {multiDept && <DeptHeading dept={d} count={deptInfo.counts[d]} />}
           <div className="bz-cards">
-            {visibleCats.map((c, i) => {
+            {visibleCats.filter((c) => c.dept === d).map((c, i) => {
               // المصدرُ المشترَكُ لا مسارٌ مكتوبٌ بيد: كان ‎.png?v=3 هنا فبقيت
               // صفحاتُ المتاجرِ على الرسومِ القديمةِ بعدَ تبديلِ السبعِ كلِّها.
               const src = c.image ? catImage(c.image, 400) : c.builtin ? platformCatImage(c.key) : '';
@@ -423,10 +478,7 @@ export default function StorePage() {
                         className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
                       />
                     ) : (
-                      <svg viewBox="0 0 24 24" className="h-1/2 w-1/2 text-wine/60" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <path d="M9 4a3 3 0 0 0 6 0" />
-                        <path d="M12 4 4.5 9v3l3-1.5V20h9V10.5l3 1.5V9L12 4Z" />
-                      </svg>
+                      <DeptIcon dept={c.dept} className="h-1/2 w-1/2 text-wine/60" strokeWidth={1.2} />
                     )}
                   </div>
                   <span className="mt-2 font-display text-sm font-bold text-wine">{catLabel(c.key)}</span>
@@ -438,6 +490,8 @@ export default function StorePage() {
               );
             })}
           </div>
+          </section>
+          ))}
         </>
       ) : searching || cat !== 'all' || viewAll || offersView ? (
         /* عرض الشبكة: نتائج بحث / فئة / كل المنتجات / عروض المتجر */
@@ -485,11 +539,14 @@ export default function StorePage() {
               </button>
               <Crumb />
               <span className="flex items-center gap-2 rounded-full bg-wine/10 px-2.5 py-1 font-display text-base font-bold text-wine">
-                <CatThumb cat={cat} className="h-7 w-7" />
+                <CatThumb cat={cat} dept={catDeptOf(cat)} className="h-7 w-7" />
                 {catLabel(cat)}
               </span>
             </nav>
           )}
+
+          {/* تبويبات الأقسام بعرض الكلّ — كلّ قسمٍ بقطعه ونمره */}
+          {viewAll && !searching && <DeptTabs className="mb-4" depts={deptInfo.list} value={dept} onChange={setDept} counts={deptInfo.counts} />}
 
           {/* شرائط الفلترة */}
           {data.products.length > 0 && (
@@ -505,7 +562,7 @@ export default function StorePage() {
                     {t('filters.mySize', { size: sizeLabel(mySize, t) })}
                   </Chip>
                 )}
-                <Chip onClick={() => setOpenSheet('size')} active={sizesSel.length > 0}>{t('store.sizeLabel')}{sizesSel.length ? ` (${sizesSel.length})` : ''}</Chip>
+                {scopeDept !== 'accessories' && <Chip onClick={() => setOpenSheet('size')} active={sizesSel.length > 0}>{t('store.sizeLabel')}{sizesSel.length ? ` (${sizesSel.length})` : ''}</Chip>}
                 {storeColors.length >= 2 && (
                   <Chip onClick={() => setOpenSheet('color')} active={colorsSel.length > 0}>{t('store.colorLabel')}{colorsSel.length ? ` (${colorsSel.length})` : ''}</Chip>
                 )}
@@ -575,11 +632,21 @@ export default function StorePage() {
             </div>
           )}
 
+          {/* الأقسام: ما تحتها كلّه (الفئات، الجديد، الأكثر مبيعاً، العروض) من القسم
+              المختار. لا تظهر بمتجرٍ بقسمٍ واحد — وهو الأغلب. */}
+          {multiDept && (
+            <div className="mt-7 flex flex-col items-center gap-2">
+              <p className="bz-sec-eyebrow !mb-0">{t('dept.shopBy')}</p>
+              <DeptTabs depts={deptInfo.list} value={dept} onChange={setDept} counts={deptInfo.counts} />
+            </div>
+          )}
+
           <Reveal>
             {/* مرساة زرّ «تسوّقي الآن» بالسلايدر — scroll-mt يترك مساحةً للرأس اللاصق */}
-            <section id="cats" className="bz-sec-gap scroll-mt-24">
-              <SectionTitle eyebrow={t('store.eyebrowCats')}>{t('store.browseByCategory')}</SectionTitle>
-              <CategoryGrid onSelect={pickCategory} active={cat} cats={gridCats} />
+            <section id="cats" className={`${multiDept ? 'mt-8' : 'bz-sec-gap'} scroll-mt-24`}>
+              <SectionTitle eyebrow={multiDept ? t(`dept.${dept}`) : t('store.eyebrowCats')}>{t('store.browseByCategory')}</SectionTitle>
+              {/* key بالقسم: الشبكة تبدأ من صفحتها الأولى عند تبديل القسم */}
+              <CategoryGrid key={dept} onSelect={pickCategory} active={cat} cats={homeCats} />
             </section>
           </Reveal>
 
@@ -640,7 +707,7 @@ export default function StorePage() {
         <SortSheet value={sort} onClose={() => setOpenSheet(null)} onApply={(v) => { setSort(v); setOpenSheet(null); }} />
       )}
       {openSheet === 'size' && (
-        <SizeSheet sizes={SIZES} value={sizesSel} onClose={() => setOpenSheet(null)} onApply={(v) => { setSizesSel(v); setOpenSheet(null); }} />
+        <SizeSheet sizes={sizesInProducts(scopeProducts)} value={sizesSel} onClose={() => setOpenSheet(null)} onApply={(v) => { setSizesSel(v); setOpenSheet(null); }} />
       )}
       {openSheet === 'color' && (
         <ColorSheet colors={storeColors} value={colorsSel} onClose={() => setOpenSheet(null)} onApply={(v) => { setColorsSel(v); setOpenSheet(null); }} />

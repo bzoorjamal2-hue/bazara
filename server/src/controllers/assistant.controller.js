@@ -21,7 +21,7 @@ const CATALOG_TTL = 3 * 60 * 1000; // كاش الكتالوج لكل متجر (�
 const catalogCache = new Map(); // slug -> { rows, ts }
 
 const CATALOG_SELECT = `
-  SELECT p.id, p.name, p.description, p.category, p.price, p.old_price, p.sale_ends_at,
+  SELECT p.id, p.name, p.description, p.category, p.department, p.price, p.old_price, p.sale_ends_at,
          p.size, p.color, p.stock, p.featured,
          s.slug AS store_slug, s.name AS store_name
   FROM products p
@@ -49,7 +49,10 @@ function normalizeAr(s) {
 function hasArabic(s) { return /[؀-ۿ]/.test(String(s || '')); }
 
 // ───────────────────── محرّك القواعد (الطبقة المجانية) ─────────────────────
-const BUILTIN = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
+
+// فئة المطابقة: قطعةٌ بقسم الأحذية أو الإكسسوارات تُطابَق بفئة قسمها العامّة مهما
+// كانت فئتها عند التاجرة («كعب عالي» فئةٌ خاصّة بمتجرٍ واحد لا تعرفها الكلمات)
+const effCat = (p) => (p.department === 'shoes' ? 'shoes' : p.department === 'accessories' ? 'accessory' : p.category);
 
 // مرادفات الفئات (عربي/إنجليزي) → مفتاح الفئة
 const CAT_WORDS = {
@@ -60,17 +63,22 @@ const CAT_WORDS = {
   trench: ['ترنش', 'معطف', 'كوت', 'بالطو', 'trench', 'coat'],
   jacket: ['جاكيت', 'جاكت', 'جكيت', 'بليزر', 'jacket', 'blazer'],
   shirt: ['قميص', 'بلوزه', 'توب', 'shirt', 'blouse', 'top'],
+  // الفئتان العامّتان لقسمَي الأحذية والإكسسوارات
+  shoes: ['حذاء', 'احذيه', 'جزمه', 'كندره', 'صباط', 'كعب', 'صندل', 'شبشب', 'بوت', 'بوط', 'سنيكرز', 'shoe', 'shoes', 'heels', 'sandal', 'sandals', 'boots', 'sneakers'],
+  accessory: ['اكسسوار', 'اكسسوارات', 'شنطه', 'حقيبه', 'جزدان', 'ساعه', 'عقد', 'خاتم', 'اسواره', 'حلق', 'نظاره', 'حزام', 'accessory', 'accessories', 'bag', 'handbag', 'watch', 'necklace', 'ring', 'bracelet', 'earrings', 'sunglasses', 'belt'],
 };
 
 // أكملي الإطلالة: كل فئة → فئات تنسّق معها (لاقتراح إطلالة كاملة بدل قطعة واحدة)
 const COMPLEMENT = {
-  dress: ['jacket', 'hijab'],
-  abaya: ['hijab'],
+  dress: ['jacket', 'hijab', 'shoes', 'accessory'],
+  abaya: ['hijab', 'shoes', 'accessory'],
   set: ['jacket', 'hijab'],
   trench: ['dress', 'shirt'],
   jacket: ['dress', 'shirt'],
   shirt: ['jacket', 'trench'],
   hijab: ['abaya', 'dress'],
+  shoes: ['dress', 'accessory'],
+  accessory: ['dress', 'shoes'],
 };
 
 // مناسبات → فئات مرجّحة
@@ -168,7 +176,7 @@ export function ruleBasedRecommend(rows, lastUserMsg, lang) {
 
   const scored = rows.map((p) => {
     let score = 0;
-    const cat = p.category;
+    const cat = effCat(p);
     if (wantedCats.has(cat)) score += 6;
     if (occasionCats.has(cat)) score += 3;
 
@@ -198,7 +206,7 @@ export function ruleBasedRecommend(rows, lastUserMsg, lang) {
     const col = normalizeAr(`${p.color} ${p.name} ${p.description || ''}`);
     return wantedColors.some((c) => col.includes(c) || COLOR_WORDS[c].some((w) => col.includes(normalizeAr(w))));
   };
-  const itemCat = (p) => wantedCats.has(p.category);
+  const itemCat = (p) => wantedCats.has(effCat(p));
 
   const askedColor = wantedColors.length > 0;
   const askedCat = wantedCats.size > 0;
@@ -227,7 +235,7 @@ export function ruleBasedRecommend(rows, lastUserMsg, lang) {
     const compCats = COMPLEMENT[[...wantedCats][0]] || [];
     const already = new Set(mainPicks.map((s) => String(s.p.id)));
     const comps = scored
-      .filter((s) => compCats.includes(s.p.category) && s.p.stock !== 0 && !already.has(String(s.p.id)))
+      .filter((s) => compCats.includes(effCat(s.p)) && s.p.stock !== 0 && !already.has(String(s.p.id)))
       .sort((a, b) => (b.p.featured - a.p.featured) || (b.score - a.score))
       .slice(0, 2);
     if (comps.length) {

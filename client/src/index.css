@@ -5903,3 +5903,27 @@ html.dark .theme-pub .bz-fold { color: #D6D2CB; border-color: rgba(239, 238, 236
 .bz-pre img { max-width: 100%; height: auto; border-radius: 0.75rem; margin-top: 0.75rem; }
 html.dark .bz-pre { color: #A8A29B; }
 html.dark .bz-pre h1, html.dark .bz-pre h2, html.dark .bz-pre a { color: #F6F5F3; }
+
+/* ===== تبويبات الأقسام (ملابس · أحذية · إكسسوارات) — DeptTabs.jsx =====
+   ألوانٌ صريحةٌ للوضعين: أصنافُ ‎text-wine/75 وbg-wine/[0.04] بلا مقابلٍ ليليّ،
+   فكانت التبويباتُ غيرُ النشطةِ حبراً غامقاً على خلفيّةٍ غامقة لا تُرى. ليلاً
+   تنقلبُ الحبّةُ فاتحةً بنصٍّ غامق — عكسُ النهارِ تماماً لا نسخةٌ باهتةٌ منه. */
+.bz-depttabs { border-color: rgba(31, 30, 29, 0.14); background: rgba(31, 30, 29, 0.04); }
+.bz-dt-pill { background: #1F1E1D; }
+.bz-dt-btn { color: rgba(31, 30, 29, 0.72); }
+@media (hover: hover) { .bz-dt-btn:hover { color: #1F1E1D; } }
+.bz-dt-btn[aria-selected="true"] { color: #F6F5F3; }
+.bz-dt-count { background: rgba(31, 30, 29, 0.09); color: rgba(31, 30, 29, 0.7); }
+.bz-dt-btn[aria-selected="true"] .bz-dt-count { background: rgba(246, 245, 243, 0.2); color: #F6F5F3; }
+html.dark .theme-pub .bz-depttabs { border-color: rgba(239, 238, 236, 0.2); background: rgba(239, 238, 236, 0.05); }
+html.dark .theme-pub .bz-dt-pill { background: #E4E2DE; }
+html.dark .theme-pub .bz-dt-btn { color: rgba(239, 238, 236, 0.72); }
+@media (hover: hover) { html.dark .theme-pub .bz-dt-btn:hover { color: #EFEEEC; } }
+html.dark .theme-pub .bz-dt-btn[aria-selected="true"] { color: #1F1E1D; }
+html.dark .theme-pub .bz-dt-count { background: rgba(239, 238, 236, 0.12); color: rgba(239, 238, 236, 0.72); }
+html.dark .theme-pub .bz-dt-btn[aria-selected="true"] .bz-dt-count { background: rgba(31, 30, 29, 0.14); color: #1F1E1D; }
+/* رأسُ القسمِ بصفحاتِ التصنيفات: الدائرةُ والعدّاد بالوضعين */
+.bz-dh-dot { background: #1F1E1D; color: #F6F5F3; }
+.bz-dh-count { color: rgba(31, 30, 29, 0.6); }
+html.dark .theme-pub .bz-dh-dot { background: #E4E2DE; color: #1F1E1D; }
+html.dark .theme-pub .bz-dh-count { color: rgba(239, 238, 236, 0.6); }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { CLOTHING_CATS, DEPT_BASE_CATS, deptOfCategory } from './departments.js';
 
 // فئات المنصّة.
 //
@@ -9,9 +10,18 @@ import { useEffect, useState } from 'react';
 // التصميم إضافيّ عمداً: إن لم يعرّف المدير شيئاً فالنتيجة هي القائمة المدمجة
 // نفسها بالضبط — فلا يتغيّر شيء حتى قبل نشر الترقية.
 
-export const BUILTIN_CATS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
+// السبع للملابس ثمّ الفئة العامّة لكلّ قسمٍ آخر (أحذية، إكسسوارات)
+export const BUILTIN_CATS = [...CLOTHING_CATS, ...Object.keys(DEPT_BASE_CATS)];
 
 const KEY = 'bz_platform_cats';
+const LIVE_KEY = 'bz_live_depts';
+
+// الأقسام التي فيها قطعٌ معروضة (يحسبها الخادم مع /site-info). قسمٌ فارغ لا يظهر
+// بواجهة المنصّة: لا تبويب «أحذية» يفتح على لا شيء، ولا فئة «أحذية» بالقائمة.
+let liveDepts = (() => {
+  try { const v = JSON.parse(sessionStorage.getItem(LIVE_KEY) || 'null'); return Array.isArray(v) && v.length ? v : ['clothing']; }
+  catch { return ['clothing']; }
+})();
 
 // ما يعرّفه المدير: { extra: [{key,name,nameEn,image}], hidden: ['shirt', …] }
 let custom = (() => {
@@ -21,7 +31,11 @@ let custom = (() => {
 
 const listeners = new Set();
 
-export function setPlatformCategories(next) {
+export function setPlatformCategories(next, live) {
+  if (Array.isArray(live) && live.length) {
+    liveDepts = live;
+    try { sessionStorage.setItem(LIVE_KEY, JSON.stringify(live)); } catch { /* تجاهل */ }
+  }
   custom = {
     extra: Array.isArray(next?.extra) ? next.extra.filter((c) => c && c.key) : [],
     hidden: Array.isArray(next?.hidden) ? next.hidden : [],
@@ -44,6 +58,22 @@ export function platformCatKeys() {
   ];
 }
 
+// قسم الفئة: فئات المنصّة من هنا، وفئات المتجر تُمرَّر (storeCustom)
+export function catDept(key, storeCustom = []) {
+  return deptOfCategory(key, { platformExtra: custom.extra, storeCustom });
+}
+
+export function liveDepartments() {
+  return liveDepts;
+}
+
+// فئات المنصّة للواجهة العامّة: ما في قسمٍ فيه قطع. نموذج المنتج يستعمل
+// platformCatKeys كاملةً — التاجرة تضيف أوّل حذاءٍ لقسمٍ لم يُفتح بعد.
+export function publicCatKeys() {
+  const live = new Set(liveDepts);
+  return platformCatKeys().filter((k) => live.has(catDept(k)));
+}
+
 // اسم الفئة المعروض: المدمجة تُترجَم بالمفتاح، والمضافة باسمها كما كتبه المدير
 export function platformCatName(key, t, lang) {
   const found = custom.extra.find((c) => c.key === key);
@@ -60,7 +90,8 @@ export function platformCatName(key, t, lang) {
 export function platformCatImage(key) {
   const found = custom.extra.find((c) => c.key === key);
   if (found?.image) return found.image;
-  return BUILTIN_CATS.includes(key) ? `/categories/${key}.webp?v=5` : '';
+  // الفئتان العامّتان بلا رسمٍ مقصوص: مكانهما أيقونة القسم (DeptIcon)
+  return CLOTHING_CATS.includes(key) ? `/categories/${key}.webp?v=5` : '';
 }
 
 // نسخةُ PNG احتياطاً: WebP مدعومٌ منذ سفاري ١٤ (٢٠٢٠)، لكنّ الاحتياط رخيص
@@ -68,7 +99,7 @@ export function platformCatImage(key) {
 export function platformCatImageFallback(key) {
   const found = custom.extra.find((c) => c.key === key);
   if (found?.image) return '';
-  return BUILTIN_CATS.includes(key) ? `/categories/${key}.png?v=5` : '';
+  return CLOTHING_CATS.includes(key) ? `/categories/${key}.png?v=5` : '';
 }
 
 export function isBuiltinCat(key) {
@@ -80,6 +111,18 @@ export function usePlatformCatKeys() {
   const [keys, setKeys] = useState(platformCatKeys);
   useEffect(() => onPlatformCategoriesChange(() => setKeys(platformCatKeys())), []);
   return keys;
+}
+
+export function usePublicCatKeys() {
+  const [keys, setKeys] = useState(publicCatKeys);
+  useEffect(() => onPlatformCategoriesChange(() => setKeys(publicCatKeys())), []);
+  return keys;
+}
+
+export function useLiveDepartments() {
+  const [d, setD] = useState(liveDepartments);
+  useEffect(() => onPlatformCategoriesChange(() => setD(liveDepartments())), []);
+  return d;
 }
 
 // فئات المتجر الخاصّة، مطروحاً منها ما صار فئةَ منصّة.

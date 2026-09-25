@@ -19,6 +19,8 @@ import {
 } from '../../components/icons.jsx';
 import { cldThumb } from '../../utils/cloudinary.js';
 import { SIZE_CHART } from '../../utils/sizes.js';
+import { DEPARTMENTS, normDept } from '../../utils/departments.js';
+import DeptIcon from '../../components/DeptIcon.jsx';
 import BankSelect from '../../components/BankSelect.jsx';
 import BANKS from '../../utils/banks.js';
 import { usePlatformCatKeys } from '../../utils/platformCategories.js';
@@ -389,7 +391,7 @@ export default function StoreSettings() {
 
   // الفئات الإضافية المخصّصة: [{key, name, image}]
   const addCustomCat = () =>
-    setForm((f) => ({ ...f, customCategories: [...(f.customCategories || []), { key: 'c_' + Math.random().toString(36).slice(2, 9), name: '', image: '' }] }));
+    setForm((f) => ({ ...f, customCategories: [...(f.customCategories || []), { key: 'c_' + Math.random().toString(36).slice(2, 9), name: '', image: '', dept: 'clothing' }] }));
   const setCustomCat = (idx, key, val) =>
     setForm((f) => ({ ...f, customCategories: f.customCategories.map((c, i) => (i === idx ? { ...c, [key]: val } : c)) }));
   const removeCustomCat = (idx) =>
@@ -951,6 +953,25 @@ export default function StoreSettings() {
                       />
                     </div>
                     <input type="text" maxLength={40} className="input mb-2" placeholder={t('dashboard.store.categoryNameField')} value={cc.name} onChange={(e) => setCustomCat(idx, 'name', e.target.value)} />
+                    {/* قسم الفئة: يحدّد نمر منتجاتها (أحذية ٣٥–٤٦) ومكانها بتبويبات المتجر */}
+                    <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                      <span className="me-1 text-[11px] font-semibold text-stone-400">{t('dashboard.store.categoryDept')}</span>
+                      {DEPARTMENTS.map((d) => {
+                        const on = normDept(cc.dept) === d;
+                        return (
+                          <button
+                            key={d}
+                            type="button"
+                            onClick={() => setCustomCat(idx, 'dept', d)}
+                            aria-pressed={on}
+                            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold transition ${on ? 'border-transparent' : 'border-gold-400/25 text-stone-300 hover:bg-white/5'}`}
+                            style={on ? { background: '#999795', color: '#1E1D1C' } : undefined}
+                          >
+                            <DeptIcon dept={d} className="h-3.5 w-3.5" strokeWidth={1.8} /> {t(`dept.${d}`)}
+                          </button>
+                        );
+                      })}
+                    </div>
                     <ImageInput value={cc.image || ''} onChange={(v) => setCustomCat(idx, 'image', v)} contain hint={t('dashboard.store.categoryImageHint')} />
                   </div>
                 ))}

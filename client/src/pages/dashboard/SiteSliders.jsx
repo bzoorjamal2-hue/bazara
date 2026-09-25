@@ -10,6 +10,8 @@ import ImageInput from '../../components/ImageInput.jsx';
 import { ImageIcon, GridIcon } from '../../components/icons.jsx';
 import { PageHead, SectionHead, Field, RowTools, Tip } from '../../components/FormField.jsx';
 import { BUILTIN_CATS } from '../../utils/platformCategories.js';
+import { DEPARTMENTS, normDept } from '../../utils/departments.js';
+import DeptIcon from '../../components/DeptIcon.jsx';
 
 // الشرائح الافتراضية الموجودة حالياً بالصفحة الرئيسية — تظهر للمدير ليعدّلها/يحذفها
 const DEFAULT_SITE_SLIDES = [
@@ -132,6 +134,25 @@ export default function SiteSliders() {
                   />
                 </Field>
                 <Field label={t('admin.catImage')} tip={t('admin.catImageTip')}>
+                  {/* قسم فئة المنصّة: منتجاتها بكلّ المتاجر تنتقل معه */}
+                  <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                      <span className="me-1 text-[11px] font-semibold text-stone-400">{t('dashboard.store.categoryDept')}</span>
+                      {DEPARTMENTS.map((d) => {
+                        const on = normDept(c.dept) === d;
+                        return (
+                          <button
+                            key={d}
+                            type="button"
+                            onClick={() => setPlatCats((p2) => ({ ...p2, extra: p2.extra.map((x, j) => (j === i ? { ...x, dept: d } : x)) }))}
+                            aria-pressed={on}
+                            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold transition ${on ? 'border-transparent' : 'border-gold-400/25 text-stone-300 hover:bg-white/5'}`}
+                            style={on ? { background: '#999795', color: '#1E1D1C' } : undefined}
+                          >
+                            <DeptIcon dept={d} className="h-3.5 w-3.5" strokeWidth={1.8} /> {t(`dept.${d}`)}
+                          </button>
+                        );
+                      })}
+                    </div>
                   <ImageInput value={c.image || ''} onChange={(v) => setPlatCats((p2) => ({ ...p2, extra: p2.extra.map((x, j) => (j === i ? { ...x, image: v } : x)) }))} />
                 </Field>
               </div>
@@ -140,7 +161,7 @@ export default function SiteSliders() {
         )}
 
         {platCats.extra.length < 12 && (
-          <button type="button" onClick={() => setPlatCats((p2) => ({ ...p2, extra: [...p2.extra, { key: '', name: '', nameEn: '', image: '' }] }))} className="btn-ghost w-full text-sm">
+          <button type="button" onClick={() => setPlatCats((p2) => ({ ...p2, extra: [...p2.extra, { key: '', name: '', nameEn: '', image: '', dept: 'clothing' }] }))} className="btn-ghost w-full text-sm">
             ＋ {t('admin.addCat')}
           </button>
         )}

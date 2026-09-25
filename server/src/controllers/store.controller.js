@@ -6,6 +6,7 @@ import { toHostedUrl } from '../utils/hostImage.js';
 import { normalizeTiers, flatInternalLocalities, mapExternalLocalities } from '../config/deliveryCities.js';
 import { cachedLocalities, fetchAllLocalities } from '../config/opost.js';
 import { ensureToken } from './opost.controller.js';
+import { BUILTIN_CATS as CATEGORY_KEYS, normDept, recomputeDepartments } from '../utils/department.js';
 
 // تخطيطُ الأقسامِ الثلاثة: متناوبٌ (شبكةٌ ثمّ رفّان) أو شبكاتٌ كلُّها أو أرففٌ كلُّها
 const LAYOUTS = ['mixed', 'grid', 'rail'];
@@ -65,7 +66,6 @@ function mapStore(s) {
 const CHART_SIZES = ['36', '38', '40', '42', '44', '46', '48'];
 
 // الفئات الثابتة بالنظام (قابلة للتخصيص بصورة/اسم لكل متجر)
-const CATEGORY_KEYS = ['abaya', 'set', 'dress', 'hijab', 'trench', 'jacket', 'shirt'];
 
 // تنقية الفئات الإضافية المخصّصة: [{key, name, image}] — اسم مطلوب، مفتاح آمن وفريد
 function sanitizeCustomCategories(raw) {
@@ -80,7 +80,8 @@ function sanitizeCustomCategories(raw) {
     if (seen.has(key)) continue;
     seen.add(key);
     const image = typeof c?.image === 'string' ? c.image.trim().slice(0, 2000) : '';
-    out.push({ key, name, image });
+    // القسم يحدّد مقاسات منتجات الفئة ومكانها بواجهة المتجر
+    out.push({ key, name, image, dept: normDept(c?.dept) });
   }
   return out;
 }
@@ -362,6 +363,8 @@ export async function updateMyStore(req, res, next) {
     );
 
     const s = updated.rows[0];
+    // قسم فئةٍ تغيّر (ملابس ← أحذية مثلاً): منتجاتها تنتقل معها الآن لا عند تعديلها
+    await recomputeDepartments(store.id);
     pingIndexNow(`${process.env.PUBLIC_SITE_URL}/store/${s.slug}`);
     res.json({ store: mapStore(s) });
   } catch (err) {

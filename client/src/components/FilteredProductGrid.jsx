@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next';
 import ProductCard from './ProductCard.jsx';
 import Select from './Select.jsx';
 import { productColors, colorToCss } from '../utils/colorDot.js';
-import { SIZES, sizeLabel } from '../utils/sizes.js';
+import { sizeLabel, sizesInProducts } from '../utils/sizes.js';
+import { presentDepts } from '../utils/departments.js';
 import { getMySize } from '../utils/mySize.js';
 
 // مقاسات المنتج المتاحة: من مخزون الألوان ثم مخزون النمر ثم الحقل النصّي
@@ -52,7 +53,10 @@ export default function FilteredProductGrid({ products, whatsapp, defaultSort = 
   const [pmin, setPmin] = useState(saved.pmin ?? '');
   const [pmax, setPmax] = useState(saved.pmax ?? '');
   const [open, setOpen] = useState(false);
-  const [mySize] = useState(getMySize); // مقاسها المعتاد — لاختصار الفلترة بضغطة
+  // مقاسها المعتاد بقسم هذه الشبكة (فئة أحذية ← نمرة حذائها) — لاختصار الفلترة بضغطة.
+  // شبكةٌ تخلط الأقسام (بحث) تبقى على مقاس الملابس.
+  const gridDepts = presentDepts(products || []);
+  const mySize = getMySize(gridDepts.length === 1 ? gridDepts[0] : 'clothing');
   useEffect(() => {
     try { sessionStorage.setItem(memKey, JSON.stringify({ sort, selColors, selSizes, saleOnly, stockOnly, pmin, pmax })); } catch { /* تجاهل */ }
   }, [memKey, sort, selColors, selSizes, saleOnly, stockOnly, pmin, pmax]);
@@ -73,8 +77,10 @@ export default function FilteredProductGrid({ products, whatsapp, defaultSort = 
       if (pr > max) max = pr;
     }
     const colors = [...colorMap.entries()].map(([name, css]) => ({ name, css }));
+    // ترتيبٌ يعرف نمر الأحذية أيضاً (كانت تقع بآخر القائمة بلا ترتيب)
+    const known = sizesInProducts(products);
     const sizes = [...sizeSet].sort((a, b) => {
-      const ia = SIZES.indexOf(a); const ib = SIZES.indexOf(b);
+      const ia = known.indexOf(a); const ib = known.indexOf(b);
       return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
     });
     return { colors, sizes, anySale, anySoldOut, min: min === Infinity ? 0 : Math.floor(min), max: max === -Infinity ? 0 : Math.ceil(max) };

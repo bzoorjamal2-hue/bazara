@@ -18,7 +18,9 @@ import { isStandalone } from '../utils/pwa.js';
 import CatThumb from './CatThumb.jsx';
 import { cldThumb } from '../utils/cloudinary.js';
 import { panelImage } from '../utils/panelImage.js';
-import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys } from '../utils/platformCategories.js';
+import { platformCatKeys, platformCatName, platformCatImage, usePlatformCatKeys, usePublicCatKeys, catDept } from '../utils/platformCategories.js';
+import { presentDepts } from '../utils/departments.js';
+import DeptIcon from './DeptIcon.jsx';
 
 // هوية الحساب أينما ظهرت (زرّ الشريط · القائمة المنبثقة · القائمة الجانبية):
 // صورة الحساب إن وُجدت، وإلا شعار المتجر (للمشترك لا للمدير)، وإلا أول حرف الاسم.
@@ -112,6 +114,7 @@ function LogoutIcon({ className = 'h-5 w-5' }) {
 
 export default function Navbar() {
   const catKeys = usePlatformCatKeys();
+  const publicKeys = usePublicCatKeys();
   const { t, i18n } = useTranslation();
   const ltr = i18n.language !== 'ar';
   const { user, store, subscription, logout } = useAuth();
@@ -472,11 +475,24 @@ export default function Navbar() {
             <nav className="mt-4 min-h-0 flex-1 space-y-1 overflow-y-auto">
               <Link to="/shop" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-base text-cream/90 transition hover:bg-cream/10 hover:text-cream"><GridIcon className="h-5 w-5 text-cream/80" /> {t('nav.home')}</Link>
               <div className="my-2 h-px bg-cream/15" />
-              {catKeys.map((c) => (
-                <Link key={c} to={`/category/${c}`} onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-base text-cream/85 transition hover:bg-cream/10 hover:text-cream">
-                  <CatThumb cat={c} className="h-8 w-8" /> {t(`categories.${c}`)}
-                </Link>
-              ))}
+              {/* فئات المنصّة مجمّعةً بأقسامها — ولا قسم بلا قطع (publicCatKeys) */}
+              {(() => {
+                const groups = presentDepts(publicKeys, (c) => catDept(c));
+                return groups.map((d) => (
+                  <div key={d}>
+                    {groups.length > 1 && (
+                      <p className="flex items-center gap-2 px-3 pb-1 pt-3 text-[11px] font-extrabold uppercase tracking-[0.18em] text-cream/55">
+                        <DeptIcon dept={d} className="h-4 w-4" /> {t(`dept.${d}`)}
+                      </p>
+                    )}
+                    {publicKeys.filter((c) => catDept(c) === d).map((c) => (
+                      <Link key={c} to={`/category/${c}`} onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-base text-cream/85 transition hover:bg-cream/10 hover:text-cream">
+                        <CatThumb cat={c} className="h-8 w-8 text-cream/75" /> {platformCatName(c, t, i18n.language)}
+                      </Link>
+                    ))}
+                  </div>
+                ));
+              })()}
               <div className="my-2 h-px bg-cream/15" />
               <button onClick={() => { setMenuOpen(false); setWishOpen(true); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-start text-base text-cream/90 transition hover:bg-cream/10 hover:text-cream"><HeartIcon className="h-5 w-5 text-cream/80" /> {t('nav.wishlist')}</button>
             </nav>

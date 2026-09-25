@@ -7,11 +7,13 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import ImageInput from '../../components/ImageInput.jsx';
 import VideoInput from '../../components/VideoInput.jsx';
 import Select from '../../components/Select.jsx';
-import { usePlatformCatKeys, platformCatName, storeOnlyCats } from '../../utils/platformCategories.js';
+import { usePlatformCatKeys, platformCatName, storeOnlyCats, catDept } from '../../utils/platformCategories.js';
+import { DEPARTMENTS, normDept } from '../../utils/departments.js';
+import DeptIcon from '../../components/DeptIcon.jsx';
 import useScrollLock from '../../hooks/useScrollLock.js';
 import { XIcon, ClockIcon, PaletteIcon, CameraIcon, StarIcon, EditIcon, TagIcon, CashIcon, TrashIcon } from '../../components/icons.jsx';
 import { Field, DateInput, Tip } from '../../components/FormField.jsx';
-import { SIZES, sizeLabel } from '../../utils/sizes.js';
+import { sizesForDept, sizeLabel } from '../../utils/sizes.js';
 import { colorToCss, COLOR_SUGGESTIONS } from '../../utils/colorDot.js';
 
 // فئات المنصّة من مصدرها الموحّد لا مكتوبةً هنا: كانت السبع مكرّرةً بهذا الملف،
@@ -45,11 +47,16 @@ export default function ProductForm({ initial, onClose, onSaved }) {
   const platformKeys = usePlatformCatKeys();
   const { store } = useAuth();
   const isEdit = Boolean(initial?.id);
-  // خيارات الفئة: فئات المنصّة (المدمجة + ما يضيفه المدير) ثم فئات المتجر الخاصّة
-  const categoryOptions = [
-    ...platformKeys.map((c) => ({ value: c, label: platformCatName(c, t, i18n.language) })),
-    ...storeOnlyCats(store?.customCategories, platformKeys).map((cc) => ({ value: cc.key, label: cc.name })),
+  // خيارات الفئة: فئات المنصّة (المدمجة + ما يضيفه المدير) ثم فئات المتجر الخاصّة،
+  // كلٌّ بقسمها. القائمة تعرض قسماً واحداً: التاجرة تختار «أحذية» أوّلاً ثمّ فئتها.
+  const storeCustom = store?.customCategories || [];
+  const allCats = [
+    ...platformKeys.map((c) => ({ value: c, label: platformCatName(c, t, i18n.language), dept: catDept(c, storeCustom) })),
+    ...storeOnlyCats(storeCustom, platformKeys).map((cc) => ({ value: cc.key, label: cc.name, dept: normDept(cc.dept) })),
   ];
+  const firstCatOf = (d) => allCats.find((c) => c.dept === d)?.value || EMPTY.category;
+  // منتجٌ جديد يبدأ بقسم آخر منتجٍ أضافته: متجر الأحذية لا يختار «أحذية» بكلّ مرّة
+  const lastDept = (() => { try { return normDept(localStorage.getItem('bz_pf_dept')); } catch { return 'clothing'; } })();
   const [form, setForm] = useState(
     initial
       ? {
@@ -65,8 +72,25 @@ export default function ProductForm({ initial, onClose, onSaved }) {
           colorImages: initial.colorImages && typeof initial.colorImages === 'object' ? initial.colorImages : {},
           saleEndsAt: toDateInput(initial.saleEndsAt),
         }
-      : EMPTY
+      : { ...EMPTY, category: firstCatOf(lastDept) }
   );
+  // القسم مشتقٌّ من الفئة لا حالةٌ مستقلّة: مسودّةٌ مستعادةٌ أو فئةٌ مختارة تحمله معها
+  const dept = catDept(form.category, storeCustom);
+  const categoryOptions = allCats.filter((c) => c.dept === dept);
+  const deptSizes = sizesForDept(dept);
+  // تبديل القسم: أوّل فئةٍ فيه، وتُسقَط النمر التي لا تخصّه (٤٤ فستانٍ ليست ٤٤ حذاء)
+  const pickDept = (d) => {
+    if (d === dept) return;
+    try { localStorage.setItem('bz_pf_dept', d); } catch { /* تجاهل */ }
+    const keep = new Set(sizesForDept(d));
+    setForm((f) => {
+      const colorStock = {};
+      for (const [c, sizes] of Object.entries(f.colorStock || {})) {
+        colorStock[c] = Object.fromEntries(Object.entries(sizes || {}).filter(([s]) => keep.has(s)));
+      }
+      return { ...f, category: firstCatOf(d), colorStock };
+    });
+  };
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   // مسودّة المنتج: يكتب نصف البيانات، يخرج ليتأكّد من شي، فيرجع ويلاقيها كما تركها.
@@ -252,6 +276,32 @@ export default function ProductForm({ initial, onClose, onSaved }) {
             <Field label={t('dashboard.product.name')} tip={t('dashboard.product.nameTip')} required max={80} value={form.name}>
               <input type="text" required maxLength={80} className="input" value={form.name} onChange={set('name')} />
             </Field>
+            {/* القسم أوّلاً: يحدّد الفئات المعروضة تحته والنمر بقسم المخزون */}
+            <Field label={t('dashboard.product.dept')} tip={t('dashboard.product.deptTip')} required>
+              <div className="grid grid-cols-3 gap-2" role="radiogroup">
+                {DEPARTMENTS.map((d) => {
+                  const on = d === dept;
+                  return (
+                    <button
+                      key={d}
+                      type="button"
+                      role="radio"
+                      aria-checked={on}
+                      onClick={() => pickDept(d)}
+                      className={`flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-xs font-bold transition ${on ? 'border-transparent' : 'border-gold-400/25 text-stone-300 hover:bg-white/5'}`}
+                      // لونان صريحان للنشط كنمر المقاسات: أصناف الذهب تنقلب بنّية نهاراً
+                      style={on ? { background: '#999795', color: '#1E1D1C' } : undefined}
+                    >
+                      <DeptIcon dept={d} className="h-6 w-6" strokeWidth={1.6} />
+                      {t(`dept.${d}`)}
+                    </button>
+                  );
+                })}
+              </div>
+              {dept !== 'clothing' && (
+                <p className="mt-2 text-[11px] leading-relaxed text-stone-400">{t(`dashboard.product.deptHint_${dept}`)}</p>
+              )}
+            </Field>
             <Field label={t('dashboard.product.category')} tip={t('dashboard.product.categoryTip')} required>
               <Select
                 value={form.category}
@@ -427,7 +477,7 @@ export default function ProductForm({ initial, onClose, onSaved }) {
                           <div>
                             <p className="mb-1.5 text-[11px] font-semibold text-stone-400">{t('dashboard.product.pickSizes')}</p>
                             <div className="flex flex-wrap gap-1.5">
-                              {SIZES.map((sz) => {
+                              {deptSizes.map((sz) => {
                                 const on = sz in sizes;
                                 return (
                                   <button

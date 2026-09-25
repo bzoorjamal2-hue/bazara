@@ -11,6 +11,7 @@ import { HeartIcon, CartIcon, XIcon, StarIcon, FireIcon } from './icons.jsx';
 import { cldVideoPoster, cldThumb, cldSrcSet, cldBlur, cldVideoMp4, cldVideoPreview } from '../utils/cloudinary.js';
 import { sizeLabel } from '../utils/sizes.js';
 import { getMySize, setMySize } from '../utils/mySize.js';
+import { deptOfProduct } from '../utils/departments.js';
 import { flyToCart } from '../utils/flyToCart.js';
 import { productColorDots } from '../utils/colorDot.js';
 import QuickViewModal from './QuickViewModal.jsx';
@@ -36,7 +37,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
   const [inViewRef, inView] = useInViewOnce(); // دخول سينمائي عند التمرير للبطاقة
   const lastSwatchImg = useRef(''); // آخر صورة لون معروضة — تبقى أثناء تلاشي الخروج
   const [quickOpen, setQuickOpen] = useState(false);
-  const [mySize] = useState(getMySize); // نميّز مقاسها المعتاد بالشريط السريع
+  const [mySize] = useState(() => getMySize(deptOfProduct(product))); // نميّز مقاسها المعتاد (بقسم القطعة) بالشريط السريع
   // ظهور ناعم للصورة: هيكل لامع ريثما تُحمّل ثم تتلاشى للداخل (بلا "طفرة")
   const [imgLoaded, setImgLoaded] = useState(false);
   useEffect(() => { if (imgRef.current?.complete) setImgLoaded(true); }, []);
@@ -128,7 +129,7 @@ export default function ProductCard({ product, index = 0, whatsapp = '', priceDr
     e.preventDefault();
     e.stopPropagation();
     flyToCart(imgRef.current, activeCover);
-    setMySize(s); // نتذكّره كبقية أماكن الاختيار (صفحة المنتج/النظرة السريعة/الريلز)
+    setMySize(s, deptOfProduct(product)); // نتذكّره كبقية أماكن الاختيار (صفحة المنتج/النظرة السريعة/الريلز)
     add({ ...product, whatsapp, size: s, color: '' });
     setOpen(true);
   };

@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { cldThumb } from '../utils/cloudinary.js';
-import { usePlatformCatKeys, platformCatImage, platformCatImageFallback, catImage } from '../utils/platformCategories.js';
+import { usePublicCatKeys, platformCatImage, platformCatImageFallback, catImage, catDept, platformCatName } from '../utils/platformCategories.js';
+import DeptIcon from './DeptIcon.jsx';
 
 // لا قائمةَ مكتوبةً هنا: الاحتياطيّ يُبنى من مفاتيح المنصّة الحيّة، وإلا لم تظهر
 // الفئة التي يضيفها المدير في أي شبكةٍ لم تُمرَّر إليها cats صراحةً.
@@ -21,8 +22,8 @@ function getPerPage() {
 // بطاقة فئة عصرية: صورة (صورة المالكة الحقيقية إن وُجدت، وإلا أيقونة) بزوايا دائرية
 // ناعمة بلا إطار بنّي، والاسم بالأسفل مباشرة. تدعم الفئات الأصلية والمخصّصة.
 function CategoryCard({ cat }) {
-  const { t } = useTranslation();
-  const label = cat.name || (cat.builtin ? t(`categories.${cat.key}`) : cat.key);
+  const { t, i18n } = useTranslation();
+  const label = cat.name || (cat.builtin ? platformCatName(cat.key, t, i18n.language) : cat.key);
   // صورة المالكة المخصّصة تُحسَّن بحجم أصغر وصيغة تلقائية لظهور أسرع؛ والأيقونة الثابتة كما هي
   // ‏WebP لا PNG: النسختانِ بالمجلّدِ نفسِه، والـWebP عُشرُ الحجمِ بالشكلِ نفسِه.
   // كان المسارُ مكتوباً هنا بيدٍ صريحةٍ ‎(.png) فيتجاوزُ مُنتقيَ الصيغةِ المشترَك.
@@ -51,11 +52,8 @@ function CategoryCard({ cat }) {
             className="relative h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          // فئة مخصّصة بلا صورة → أيقونة ملبس خطّية أنيقة بلون خمري
-          <svg viewBox="0 0 24 24" className="relative h-1/2 w-1/2 text-wine/70" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M9 4a3 3 0 0 0 6 0" />
-            <path d="M12 4 4.5 9v3l3-1.5V20h9V10.5l3 1.5V9L12 4Z" />
-          </svg>
+          // فئة بلا صورة (مخصّصة، أو عامّة لقسم الأحذية/الإكسسوارات) → أيقونة قسمها
+          <DeptIcon dept={cat.dept || catDept(cat.key)} className="relative h-1/2 w-1/2 text-wine/70 transition-transform duration-500 group-hover:scale-105" strokeWidth={1.1} />
         )}
       </div>
       <div className="pt-2.5 text-center">
@@ -107,7 +105,7 @@ function Item({ cat, active, onSelect }) {
 // cats: قائمة كائنات {key, name, image, builtin}. إن لم تُمرَّر، نبني من الفئات الأصلية الخمس.
 export default function CategoryGrid({ onSelect, active, images = {}, names = {}, cats }) {
   const { i18n } = useTranslation();
-  const platformKeys = usePlatformCatKeys();
+  const platformKeys = usePublicCatKeys();
   const rtl = i18n.language !== 'en';
   const list = cats && cats.length
     ? cats
