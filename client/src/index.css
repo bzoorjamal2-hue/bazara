@@ -5030,6 +5030,11 @@ html.dark .theme-pub .bz-sec-eyebrow { color: #8C857C; }
    لأنّ الصفحةَ لا تتجاوزُ سقفَها. والشاشةُ العريضةُ تبقى فراغَينِ بجانبَيها. */
 main.bz-page { max-width: 1680px; margin-inline: auto; }
 .bz-ann, .pub-footer { width: 100vw; margin-inline: calc(50% - 50vw) !important; }
+/* هيدر المتجر بعرض الشاشة كالهيرو تحته: كان bz-bleed يمدّه بمقدار الحشوة وحدها،
+   فعلى شاشةٍ أعرض من الحاوية (١٦٨٠) يقف قبل الحافّتين ويبدو الهيرو أعرض منه.
+   الأرضيّة تمسّ الحافّتين، والمحتوى يبقى على خطّ محتوى الصفحة نفسه. */
+.bz-headbleed { width: 100vw; margin-inline: calc(50% - 50vw) !important; }
+.bz-headbleed > .bz-page { padding-inline: max(var(--bz-gut), calc((100vw - 1680px) / 2 + var(--bz-gut))); }
 
 /* أزرارُ بطاقةِ المنتج (مفضّلة/نظرةٌ سريعة/سلّة): على الحواسيبِ تظهرُ عندَ المرورِ
    فتبقى الصورةُ نظيفةً حتى تُطلَب، وعلى اللمسِ تبقى ظاهرةً (لا مرورَ هناك). */

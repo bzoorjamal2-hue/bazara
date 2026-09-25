@@ -1,7 +1,7 @@
 {
   "name": "clothing-store-server",
   "version": "1.0.0",
-  "description": "Secure full-stack e-commerce clothing store API",
+  "description": "Secure multi-store e-commerce API for clothing, shoes and accessories",
   "type": "module",
   "main": "src/index.js",
   "scripts": {

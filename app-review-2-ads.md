@@ -41,8 +41,8 @@ Login for Business config: `967328979728469`
 ### ads_management
 
 ```
-Bazara is a multi-store fashion marketplace used by small clothing businesses in
-Palestine. Each store owner manages her own products, orders and Instagram
+Bazara is a multi-store marketplace used by small clothing, shoe and accessory
+businesses in Palestine. Each store owner manages her own products, orders and Instagram
 messages inside the Bazara dashboard.
 
 The "Ad Studio" tab lets a store owner turn one of her own products into a paid
