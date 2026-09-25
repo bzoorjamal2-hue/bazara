@@ -114,7 +114,7 @@ export default function StoreHeader({ store, q, setQ, cat, setCat, products = []
   return (
     <header
       /* bz-bleed: يخرج من حشوة main ليمسّ الحافّتين — كان -mx-4 مربوطاً بحشوةٍ ثابتة صارت متغيّرة */
-      className={`bz-stickyhead bz-bleed sticky top-0 z-50 -mt-5 mb-5 ${noAnim ? '' : 'transition-transform duration-300 ease-out motion-reduce:transition-none'}`}
+      className={`bz-stickyhead bz-headbleed sticky top-0 z-50 -mt-5 mb-5 ${noAnim ? '' : 'transition-transform duration-300 ease-out motion-reduce:transition-none'}`}
       style={{
         transform: hidden ? 'translateY(-100%)' : 'translateZ(0)',
       }}
