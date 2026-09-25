@@ -33,6 +33,7 @@ import { normDept } from '../utils/departments.js';
 import { onVideoMeta, onImageLoad } from '../utils/heroFit.js';
 import DeptTabs from '../components/DeptTabs.jsx';
 import { phGlyph } from '../utils/imageFallback.js';
+import useHeroStill from '../utils/heroSeen.js';
 
 export default function Home() {
   const { t, i18n } = useTranslation();
@@ -487,6 +488,7 @@ function HomeHero({ banners = [] }) {
       ];
   const len = slides.length;
   const [i, setI] = useState(0);
+  const heroStill = useHeroStill('shop', i);
   const [drag, setDrag] = useState(0); // إزاحة السحب الحيّة (px) — يتبع الإصبع
   const containerRef = useRef(null);
   const draggingRef = useRef(false);
@@ -636,7 +638,7 @@ function HomeHero({ banners = [] }) {
     <section className="relative">
       <div
         ref={containerRef}
-        className="bz-homehero overflow-hidden"
+        className={`bz-homehero overflow-hidden ${heroStill ? 'bz-hero-still' : ''}`}
         style={{ touchAction: 'pan-y' }}
       >
         {/* اتّجاهُ الحركةِ يتبعُ اللغةَ كترتيبِ صفحاتِ الكتابِ العربيّ:
@@ -893,13 +895,13 @@ function FeaturedStoreCard({ s, products = [], rtl }) {
 
 function StoreCard({ s, index = 0, rtl }) {
   const { t } = useTranslation();
-  const [ref, inView] = useInViewOnce();
+  const [ref, inView, inViewNow] = useInViewOnce();
   return (
     <Link
       ref={ref}
       to={`/store/${s.slug}`}
       className={`bz-storecard group relative flex flex-col items-center overflow-hidden rounded-2xl p-5 text-center transition-[opacity,transform,box-shadow] duration-500 ease-out hover:!-translate-y-1.5 ${inView ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0'} ${s.featured ? 'bz-storecard-top' : ''}`}
-      style={{ transitionDelay: inView ? `${(index % 5) * 55}ms` : '0ms' }}
+      style={inViewNow ? { transition: 'none' } : { transitionDelay: inView ? `${(index % 5) * 55}ms` : '0ms' }}
     >
       {s.featured && (
         <span className="absolute end-2 top-2 z-[2] inline-flex items-center gap-1 rounded-full bg-gold-400 px-2.5 py-1 text-[10px] font-extrabold text-ink-950 shadow-sm">

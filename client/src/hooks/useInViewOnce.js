@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 // «ظهر مرة واحدة» — مراقب تقاطع مشترك (Singleton) لكل عناصر الموقع: بدل إنشاء
 // IntersectionObserver لكل بطاقة (مكلف مع عشرات البطاقات)، نستخدم مراقباً واحداً
@@ -30,6 +30,14 @@ function ensureObserver() {
 export default function useInViewOnce() {
   const ref = useRef(null);
   const [shown, setShown] = useState(false);
+  // على الشاشةِ لحظةَ فتحِ الصفحة → حاضرٌ من أوّلِ رسمٍ بلا حركة (instant). كانت البطاقاتُ
+  // الظاهرةُ تُرسَمُ مخفيّةً ثمّ تتلاشى للظهورِ بتتابع — فكلُّ تبويبٍ «يصلُ» بعد فتحِه.
+  // ‏useLayoutEffect يقرّرُ قبلَ الرسمِ على الشاشة، والمستدعي يُسقطُ الانتقالَ بـinstant.
+  const [instant, setInstant] = useState(false);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (el && el.getBoundingClientRect().top < window.innerHeight * 0.96) { setInstant(true); setShown(true); }
+  }, []);
 
   useEffect(() => {
     const el = ref.current;
@@ -45,5 +53,5 @@ export default function useInViewOnce() {
     return () => { obs.unobserve(el); cbs.delete(el); };
   }, []);
 
-  return [ref, shown];
+  return [ref, shown, instant];
 }

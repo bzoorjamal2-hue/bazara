@@ -260,11 +260,12 @@ function AnimatedRoutes() {
 
   // انتقال فوري بلا انتظار: الصفحة الجديدة تظهر مباشرة بحركة تلاشٍ سريعة عبر CSS
   // خالص (بدل framer-motion الذي كان يضيف شغل جافاسكربت مع كل تنقّل = جزء من التعليق).
+  // تبويبُ الشريطِ السفليّ (state.bzTab) كذلك بلا تلاشٍ: التبويبُ يتبدّلُ ولا «يصل».
   // عند الرجوع (POP) لا تلاشي إطلاقاً — الصفحة السابقة تظهر فوراً على موضعها المحفوظ؛
   // كان التلاشي + قفزة التمرير بنفس اللحظة يعطيان إحساس "تعليق" عند كل رجوع.
   return (
     <Suspense fallback={<Spinner full />}>
-      <div key={location.pathname} className={`${fillStore ? 'flex flex-1 flex-col min-h-0 ' : ''}${navType === 'POP' ? '' : 'route-fade'}`.trim() || undefined}>
+      <div key={location.pathname} className={`${fillStore ? 'flex flex-1 flex-col min-h-0 ' : ''}${navType === 'POP' || location.state?.bzTab ? '' : 'route-fade'}`.trim() || undefined}>
         <Routes location={location}>
           <Route path="/" element={<Root />} />
           <Route path="/shop" element={<Home />} />

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 // ظهور تدريجي عند دخول العنصر للشاشة (fade + slide up) — لمسة فخامة حديثة.
 // خفيف: IntersectionObserver واحد لكل عنصر، يُفصل فور الظهور (مرّة واحدة، بلا تكلفة
@@ -6,11 +6,19 @@ import { useEffect, useRef, useState } from 'react';
 export default function Reveal({ children, delay = 0, className = '' }) {
   const ref = useRef(null);
   const [shown, setShown] = useState(false);
+  // ما كان على الشاشةِ لحظةَ فتحِ الصفحةِ يُرسَمُ حاضراً بلا حركة: كان يُرسَمُ مخفيّاً ثمّ
+  // يظهرُ بتلاشٍ ٤٠٠ms بعدَ أوّلِ رسمة — فكلُّ تبويبٍ تفتحينه «يصلُ» ببطءٍ بدل أن يكونَ هناك.
+  // ‏useLayoutEffect يقرّرُ قبلَ أوّلِ رسمٍ على الشاشة، فلا ومضةَ ولا حركة.
+  const [now, setNow] = useState(false);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (el && el.getBoundingClientRect().top < window.innerHeight) { setNow(true); setShown(true); }
+  }, []);
 
   useEffect(() => {
     const el = ref.current;
     if (!el || typeof IntersectionObserver === 'undefined') { setShown(true); return undefined; }
-    // ظهور فوري إن كان العنصر ضمن الشاشة أصلاً وقت التركيب (فوق الطية) — لا ننتظر تمريراً
     if (el.getBoundingClientRect().top < window.innerHeight) { setShown(true); return undefined; }
     const io = new IntersectionObserver(
       ([e]) => {
@@ -38,8 +46,8 @@ export default function Reveal({ children, delay = 0, className = '' }) {
   return (
     <div
       ref={ref}
-      className={`bz-reveal ${shown ? 'bz-reveal-in' : ''} ${done ? 'bz-reveal-done' : ''} ${className}`}
-      style={delay ? { transitionDelay: `${delay}ms` } : undefined}
+      className={`bz-reveal ${shown ? 'bz-reveal-in' : ''} ${done || now ? 'bz-reveal-done' : ''} ${className}`}
+      style={now ? { transition: 'none' } : delay ? { transitionDelay: `${delay}ms` } : undefined}
     >
       {children}
     </div>
