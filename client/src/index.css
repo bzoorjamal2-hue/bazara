@@ -811,9 +811,10 @@ html.dark .bz-buy {
    فيظهر حقلٌ أسود على بطاقةٍ بيضاء. نلوّنه بصنفٍ مخصّص بالوضعين. */
 .bz-sheet { background: #ffffff; color: #1F1E1D; }
 .bz-sheet .bz-sheet-input {
-  width: 100%; border-radius: 0.75rem; padding: 0.7rem 1rem; transition: all .15s;
+  width: 100%; border-radius: 0.75rem; padding-block: 0.7rem; transition: all .15s;
   background: #ffffff; border: 1px solid rgba(23, 23, 23, 0.18); color: #1F1E1D;
 }
+:where(.bz-sheet .bz-sheet-input) { padding-inline: 1rem; } /* كـbz-field: pe-14 تغلب */
 .bz-sheet .bz-sheet-input::placeholder { color: #989693; }
 .bz-sheet .bz-sheet-input:focus { outline: none; border-color: rgba(23, 23, 23, 0.5); box-shadow: 0 0 0 3px rgba(23, 23, 23, 0.14); }
 .bz-sheet .bz-sheet-muted { color: #888683; }
@@ -3611,13 +3612,17 @@ html.dark .theme-pub .bz-docpage { background: #141313; }
   width: 100%;
   border-radius: 999px;
   background: #fff;
-  padding: 0.8rem 1rem;
+  padding-block: 0.8rem;
   font-size: 16px;          /* أقلّ من 16 يجعل سفاري يُقرّب الصفحة عند اللمس */
   color: #1F1E1D;
   box-shadow: inset 0 0 0 1px rgba(23, 23, 23, 0.16);
   outline: none;
   transition: box-shadow 0.2s ease;
 }
+/* الحشوة الجانبيّة بـ:where (وزنٌ صفر): هذا الملف يأتي بعد أدوات تايلويند، فكانت
+   ‎padding تلغي ps-11/pe-11 التي تحجز مكان أيقونة البحث — فيقع النصّ تحتها
+   (لقطة جمال: «فستان بازرار» فوق العدسة). الآن الأدوات تغلب، والافتراضيّ ١rem. */
+:where(.bz-field) { padding-inline: 1rem; }
 .bz-field::placeholder { color: #949290; }
 .bz-field:focus { box-shadow: inset 0 0 0 1.5px rgba(23, 23, 23, 0.45); }
 
@@ -4569,7 +4574,11 @@ html.dark .theme-pub .bz-tabbar button.is-on > span:first-child { background: #D
    صار السقفُ حشوةً تكبر مع الشاشة بدل أن تحبسها: 1rem على 320px و3rem فوق
    1400px. الحدُّ الأدنى يحمي النصَّ من ملامسة الحافة، والأعلى يمنع الحشوةَ
    من التهام الشاشات الضخمة. */
-:root { --bz-gut: clamp(1rem, 2.2vw, 3rem); }
+:root { --bz-gut: clamp(1rem, 2.2vw, 3rem); --bz-maxw: 2400px; }
+/* ‏--bz-maxw: عرض المحتوى الأقصى. كان ١٦٨٠ (والأشرطة ١٤٠٠)، فعلى شاشة ٢٥٦٠ يبقى
+   ربعها فارغاً على الجانبين، والشبكة المبنيّة لسبعة وثمانية أعمدة (٢٠٠٠، ٢٤٠٠)
+   لا تبلغها أبداً. الآن تمتدّ الصفحة حتى ٢٤٠٠ والبطاقة تبقى بحجمها — الشبكة تكسب
+   أعمدة. نصوص الهيرو والأشرطة التحريريّة تبقى ١٤٠٠: السطر الطويل لا يُقرأ. */
 .bz-page { width: 100%; padding-inline: var(--bz-gut); }
 /* عنصرٌ يمسّ الحافّتين داخل صفحةٍ محشوّة (هيرو، شريطٌ ملوّن) */
 .bz-bleed { margin-inline: calc(var(--bz-gut) * -1); }
@@ -5028,13 +5037,13 @@ html.dark .theme-pub .bz-sec-eyebrow { color: #8C857C; }
 /* سقفُ الصفحة: كان ‎1400 بكسلاً، وشبكةُ البطاقاتِ تحتَه مكتوبةٌ لتبلغَ ستّةَ
    أعمدةٍ عند ‎1600 وسبعةً عند ‎2000 وثمانيةً عند ‎2400 — قواعدُ لا تعملُ أبداً
    لأنّ الصفحةَ لا تتجاوزُ سقفَها. والشاشةُ العريضةُ تبقى فراغَينِ بجانبَيها. */
-main.bz-page { max-width: 1680px; margin-inline: auto; }
+main.bz-page { max-width: var(--bz-maxw); margin-inline: auto; }
 .bz-ann, .pub-footer { width: 100vw; margin-inline: calc(50% - 50vw) !important; }
 /* هيدر المتجر بعرض الشاشة كالهيرو تحته: كان bz-bleed يمدّه بمقدار الحشوة وحدها،
    فعلى شاشةٍ أعرض من الحاوية (١٦٨٠) يقف قبل الحافّتين ويبدو الهيرو أعرض منه.
    الأرضيّة تمسّ الحافّتين، والمحتوى يبقى على خطّ محتوى الصفحة نفسه. */
 .bz-headbleed { width: 100vw; margin-inline: calc(50% - 50vw) !important; }
-.bz-headbleed > .bz-page { padding-inline: max(var(--bz-gut), calc((100vw - 1680px) / 2 + var(--bz-gut))); }
+.bz-headbleed > .bz-page { padding-inline: max(var(--bz-gut), calc((100vw - var(--bz-maxw)) / 2 + var(--bz-gut))); }
 
 /* أزرارُ بطاقةِ المنتج (مفضّلة/نظرةٌ سريعة/سلّة): على الحواسيبِ تظهرُ عندَ المرورِ
    فتبقى الصورةُ نظيفةً حتى تُطلَب، وعلى اللمسِ تبقى ظاهرةً (لا مرورَ هناك). */
@@ -5062,7 +5071,7 @@ html.dark .theme-pub .bz-band { background: #161514; }
 /* داخلَ الشريطِ لا نحتاجُ الفاصلَ العلويَّ — الحشوةُ تكفي */
 .bz-band.bz-sec-gap { margin-top: 4.5rem; }
 @media (min-width: 640px) { .bz-band.bz-sec-gap { margin-top: 5.5rem; } }
-.bz-band > .bz-inner { margin-inline: auto; max-width: 1400px; }
+.bz-band > .bz-inner { margin-inline: auto; max-width: calc(var(--bz-maxw) - 2 * var(--bz-gut)); }
 
 /* ═══════ بطاقةُ المنتجِ — الطبقةُ البصريّة ═══════
    هي العنصرُ الذي يتكرّرُ بالعشراتِ على كلِّ صفحةٍ (الرئيسيّةُ والمتجرُ والبحثُ
@@ -5184,7 +5193,7 @@ html.dark .theme-pub .bz-pmedia::after { box-shadow: inset 0 0 0 1px rgba(239, 2
 @media (min-width: 640px) { .bz-band-ink { padding-block: 5.5rem; } }
 .bz-band-ink.bz-sec-gap { margin-top: 4.5rem; }
 @media (min-width: 640px) { .bz-band-ink.bz-sec-gap { margin-top: 5.5rem; } }
-.bz-band-ink > .bz-inner { margin-inline: auto; max-width: 1400px; }
+.bz-band-ink > .bz-inner { margin-inline: auto; max-width: calc(var(--bz-maxw) - 2 * var(--bz-gut)); }
 /* النصُّ داخلَه يقلبُ لونَه بالوضعَين — الشريطُ حبريٌّ ليلاً ونهاراً */
 .bz-band-ink .bz-title,
 html.dark .theme-pub .bz-band-ink .bz-title { color: #F6F5F3; }
@@ -5229,6 +5238,17 @@ html.dark .theme-pub .bz-featstore {
    بقيّةُ الصفحة، فخرجَ شريطاً رفيعاً تُقَصُّ فيه العارضةُ عند الخصرِ ولا يظهرُ
    من الفستانِ ما يُغري بالضغط — وصورةُ الإطلالةِ هي الإعلانُ كلُّه.
    وتبقى سدسُ الشاشةِ لما تحتَها فيُعرَفُ أنّ للصفحةِ بقيّة. */
+/* وسيطٌ يحتاج تكبيراً مغبّشاً ليملأ الصندوق (utils/heroFit.js): يُعرض كاملاً بدقّته،
+   ونسخته الضبابيّة تملأ الجانبين. بلا حركة «كِن بيرنز» — التكبير البطيء يعيد الغبش. */
+.bz-hero-back-only, .bz-hero-front-only { display: none; }
+.bz-homehero-slide[data-fit="contain"] .bz-hero-back-only,
+.bz-homehero-slide[data-fit="contain"] .bz-hero-front-only { display: block; }
+.bz-homehero-slide[data-fit="contain"] .bz-hero-media { object-fit: contain; animation: none; transform: none; }
+.bz-homehero-slide[data-fit="contain"] .bz-hero-back {
+  filter: blur(26px) brightness(calc((1 - var(--bz-dim, 0.5) * 0.7) * 0.8)) !important;
+  transform: scale(1.12);
+  animation: none;
+}
 .bz-homehero-slide {
   position: relative;
   isolation: isolate;

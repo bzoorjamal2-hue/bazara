@@ -30,6 +30,7 @@ import StoriesRow from '../components/StoriesRow.jsx';
 import { BAZARA_WHATSAPP } from '../config/site.js';
 import { usePlatformCatKeys, usePublicCatKeys, useLiveDepartments, platformCatKeys, storeOnlyCats, catDept, platformCatName } from '../utils/platformCategories.js';
 import { normDept } from '../utils/departments.js';
+import { onVideoMeta, onImageLoad } from '../utils/heroFit.js';
 import DeptTabs from '../components/DeptTabs.jsx';
 import { phGlyph } from '../utils/imageFallback.js';
 
@@ -695,12 +696,17 @@ function HomeHero({ banners = [] }) {
                       <picture>
                         <source media="(min-width: 1024px)" srcSet={heroCrop(s.bgValue, 1440, '16:9')} />
                         <source media="(min-width: 640px)" srcSet={heroCrop(s.bgValue, 1280, '16:10')} />
-                        <img src={heroCrop(s.bgValue, 900, '4:5') || cldThumb(s.bgValue, 1440)} alt="" loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))' }} className="absolute inset-0 -z-10 h-full w-full object-cover" />
+                        <img src={heroCrop(s.bgValue, 900, '4:5') || cldThumb(s.bgValue, 1440)} alt="" loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" onLoad={onImageLoad} style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))' }} className="bz-hero-media absolute inset-0 -z-10 h-full w-full object-cover" />
                       </picture>
+                    )}
+                    {isImage && (
+                      // النسخة الضبابيّة للجانبين حين تُعرض الصورة كاملةً (heroFit)
+                      <img src={heroCrop(s.bgValue, 900, '4:5') || cldThumb(s.bgValue, 1440)} alt="" aria-hidden decoding="async" className="bz-hero-back bz-hero-back-only absolute inset-0 -z-20 h-full w-full object-cover" />
                     )}
                     {isVideo && (
                       <>
-                        <img src={vPoster} alt="" aria-hidden loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))', zIndex: -2 }} className="absolute inset-0 h-full w-full object-cover" />
+                        <img src={vPoster} alt="" aria-hidden loading={idx === 0 ? 'eager' : 'lazy'} fetchpriority={idx === 0 ? 'high' : 'auto'} decoding="async" onLoad={onImageLoad} style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))', zIndex: -2 }} className="bz-hero-back absolute inset-0 h-full w-full object-cover" />
+                        <img src={vPoster} alt="" aria-hidden decoding="async" style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))', zIndex: -2 }} className="bz-hero-front-only absolute inset-0 h-full w-full object-contain" />
                         {/* للشريحةِ الظاهرةِ وحدَها — انظر شرحَ صفحةِ المتجر */}
                         {idx === i && motionOk && (
                         <video
@@ -713,9 +719,10 @@ function HomeHero({ banners = [] }) {
                           preload="metadata"
                           onEnded={(e) => { e.currentTarget.currentTime = 0; e.currentTarget.play().catch(() => {}); }}
                           onPause={(e) => { if (!document.hidden && iRef.current === idx && visRef.current) e.currentTarget.play().catch(() => {}); }}
+                          onLoadedMetadata={onVideoMeta}
                           onCanPlay={(e) => { e.currentTarget.style.opacity = '1'; }}
                           style={{ filter: 'brightness(calc(1 - var(--bz-dim, 0.5) * 0.7))', opacity: 0, transition: 'opacity .35s ease', zIndex: -1 }}
-                          className="absolute inset-0 h-full w-full object-cover"
+                          className="bz-hero-media absolute inset-0 h-full w-full object-cover"
                         />
                         )}
                       </>
