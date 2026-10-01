@@ -581,7 +581,26 @@ const SCHEMA = {
   required: ['reply', 'productIds'],
 };
 
+// التخزينُ عندَ المزوّد (cache): النصُّ الثابتُ — التعليماتُ والكتالوج، آلافُ
+// التوكنات — كان يُدفَعُ كاملاً مع كلِّ رسالة. مُخزَّناً يُقرَأُ بعُشرِ سعرِه
+// ما دامت الرسائلُ متقاربةً (أقلَّ من خمسِ دقائق)، وهي كذلك بأيِّ محادثةِ بيع.
+// سقطَ مرّةً لأنّه أُضيفَ مع `temperature` (والنموذجُ يرفضُها)، لا لعيبٍ فيه.
+// ومع ذلك: إن رُفِضَ النداءُ المُخزَّنُ بـ400 يُعادُ فوراً بلا تخزين — فلا تسقطُ
+// البائعةُ للقواعدِ بسببِه أبداً، والسطرُ بالسجلِّ يكشفُه.
+let cacheOff = false;
+
 async function callClaude(system, messages) {
+  try {
+    return await callClaudeOnce(system, messages, !cacheOff);
+  } catch (err) {
+    if (cacheOff || !/^claude 400/.test(err.message)) throw err;
+    console.error('⚠️ البائعة الآلية — رُفِضَ التخزين، نكملُ بدونه:', err.message);
+    cacheOff = true;
+    return callClaudeOnce(system, messages, false);
+  }
+}
+
+async function callClaudeOnce(system, messages, useCache) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 15000);
   try {
@@ -603,7 +622,7 @@ async function callClaude(system, messages) {
         // **بصمت** — كلُّ الزبائنِ يأخذونَ نفسَ سردِ المخزونِ الجافِّ ولا أحدَ يعلم.
         // فالسقوطُ الصامتُ للقواعدِ أخطرُ من العطلِ الصريح، ولا يُضافُ للنداءِ حقلٌ
         // إلّا وحدَه ومُجرَّباً على الإنتاجِ قبلَ غيرِه. وحارسُ الصمتِ صارَ أدناه.
-        system,
+        system: useCache ? [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }] : system,
         tools: [{ name: 'say', description: 'ردُّ البائعةِ على الزبونة.', input_schema: SCHEMA }],
         tool_choice: { type: 'tool', name: 'say' },
         // الصورةُ تُرفَقُ بالرسالةِ نفسِها قبلَ نصِّها — هكذا تقرأُها Claude
@@ -620,6 +639,8 @@ async function callClaude(system, messages) {
     });
     if (!r.ok) throw new Error(`claude ${r.status}: ${(await r.text().catch(() => '')).slice(0, 200)}`);
     const data = await r.json();
+    const u = data.usage || {};
+    console.log(`🤖 البائعة: دخل ${u.input_tokens || 0} · من التخزين ${u.cache_read_input_tokens || 0} · كُتب للتخزين ${u.cache_creation_input_tokens || 0} · خرج ${u.output_tokens || 0}`);
     const tool = Array.isArray(data.content) ? data.content.find((b) => b.type === 'tool_use') : null;
     return tool?.input || {};
   } finally { clearTimeout(timer); }
