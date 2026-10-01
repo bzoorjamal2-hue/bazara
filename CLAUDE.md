@@ -13,6 +13,7 @@
 ## معلومات المشروع
 - الموقع الأساسي: `bazarastore.site` — الواجهة على **Cloudflare Pages** (مشروع `bazara`، رابطه التجريبي `bazara.pages.dev`، بيبني من مجلّد `client` بأمر `npm run build`)، والخادم `api.bazarastore.site` على Render، والصور `media.bazarastore.site` على Cloudflare R2.
 - ما كان بـ`vercel.json` صار بـ`client/functions/_middleware.js` و`client/public/_routes.json` و`client/public/_headers`، ومنطق صفحة محرّك البحث والخريطة مشترك بـ`client/edge/`.
+- الخادم على Render خطّة **Starter** (فرانكفورت). قاعدة البيانات على **Neon** مشروع `clothing-store` (فرانكفورت، خطّة Launch، الفرع `production` محمي، رجوع للورا ٧ أيّام، لقطات يومية ٠٠:٠٠ UTC تبقى ١٤ يوم + أسبوعية ٥ أسابيع + شهرية، تنبيه مصاريف عند ٢٠$). مشروع `aurex` على Neon مش تبع بازارا.
 - **خطّة الرجوع لفيرسل (احتياط):** إذا صار عطل بكلاودفلير بيجز، بنرجّع الدومين لفيرسل من كلاودفلير ← DNS: سجل `A` للاسم `@` بالقيمة `216.198.79.1` (عنوان فيرسل القديم)، وبنشيل الدومين من Custom domains بمشروع Pages. مشروع فيرسل لسا موجود وشغّال كاحتياط.
 - الدومين الفلسطيني: `bazara.com.ps` (من domain.ps)، مربوط بـ Cloudflare ومحوَّل بقاعدة تحويل (301) إلى `bazarastore.site` — مش هو الدومين الأساسي.
 - الإيميل الرسمي `info@bazarastore.site` محوَّل عبر Cloudflare Email Routing.
