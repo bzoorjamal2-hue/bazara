@@ -21,8 +21,8 @@ const fallback = `<?xml version="1.0" encoding="UTF-8"?>
 `;
 
 async function run() {
-  // محلياً (ليس على Vercel) أو إن لم يتوفر fetch: اكتب الاحتياطي فوراً دون انتظار الشبكة.
-  if (!process.env.VERCEL || typeof fetch === 'undefined') {
+  // محلياً (لا Vercel ولا Cloudflare Pages) أو إن لم يتوفر fetch: اكتب الاحتياطي فوراً دون انتظار الشبكة.
+  if (!(process.env.VERCEL || process.env.CF_PAGES) || typeof fetch === 'undefined') {
     writeFileSync(OUT, fallback);
     console.log('sitemap: wrote homepage fallback (local build)');
     return;
