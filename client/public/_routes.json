@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "include": ["/api/*", "/share/*", "/store/*", "/product/*", "/sitemap.xml"],
+  "exclude": []
+}
