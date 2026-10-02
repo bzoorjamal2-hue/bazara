@@ -18,6 +18,8 @@
 // ولماذا على الحافّةِ لا على خادمِ Render؟ لأنّ الخطّةَ المجانيّةَ تُنيمُ Render،
 // فزيارةُ زاحفٍ وهو نائمٌ مهلةٌ فاشلة — أسوأُ من قشرةٍ فارغةٍ تصلُ بسرعة.
 
+import { storeSeo } from './store-seo.js';
+
 const API = 'https://api.bazarastore.site/api';
 const SITE = 'https://bazarastore.site';
 
@@ -80,10 +82,14 @@ function inject(shell, { title, desc, image, url, ld, body }) {
   return out;
 }
 
+// روابطُ الوسائطِ القديمةُ بالقاعدةِ على ‎r2.dev تُبدَّلُ بنطاقِ بازارا — كما يفعلُ
+// التطبيقُ بكلِّ ردٍّ ‏(src/api/client.js)، فيرى الزاحفُ الصورةَ نفسَها بالرابطِ نفسِه.
+const R2_DEV = /https:\/\/pub-e7f9781956244ed5bf7e307bcb9cae3a\.r2\.dev\//g;
+
 async function get(path) {
   const r = await fetch(`${API}${path}`, { headers: { accept: 'application/json' } });
   if (!r.ok) throw new Error(`api ${r.status}`);
-  return r.json();
+  return JSON.parse((await r.text()).replace(R2_DEV, 'https://media.bazarastore.site/'));
 }
 
 const HTML_HEADERS = {
@@ -147,27 +153,15 @@ export async function renderSeo(pathname, shell) {
         }) };
     }
 
-    // صفحةُ المتجر
-    const storeUrl = `${SITE}/store/${store.slug}`;
-    const logo = img(store.logoUrl, 1200);
-    const desc = String(store.description || '').replace(/\s+/g, ' ').trim().slice(0, 300)
-      || `${name}: تسوّقي فساتين وأطقم وعبايات — توصيل لكل فلسطين والدفع عند الاستلام.`;
+    // صفحةُ المتجر — البياناتُ نفسُها التي يضعُها التطبيقُ ‏(store-seo.js)
+    const seo = storeSeo({ ...store, logoUrl: img(store.logoUrl, 1200) }, SITE);
+    const desc = seo.desc;
     return { status: 200, headers: HTML_HEADERS, body: inject(shell, {
-        title: name,
+        title: `${name} — Bazara`,
         desc,
-        image: logo,
-        url: storeUrl,
-        ld: {
-          '@context': 'https://schema.org',
-          '@type': 'Store',
-          name,
-          url: storeUrl,
-          ...(logo ? { image: logo, logo } : {}),
-          ...(store.description ? { description: desc } : {}),
-          ...(store.whatsapp || store.phone ? { telephone: String(store.whatsapp || store.phone) } : {}),
-          address: { '@type': 'PostalAddress', addressCountry: 'PS' },
-          parentOrganization: { '@type': 'Organization', name: 'Bazara', url: SITE },
-        },
+        image: seo.ld.logo || '',
+        url: seo.url,
+        ld: seo.ld,
         body: [
           `<h1>${esc(name)}</h1>`,
           `<p>${esc(desc)}</p>`,

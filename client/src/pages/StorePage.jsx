@@ -5,7 +5,8 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
-import { plainName } from '../utils/plainName.js';
+import { storeSeo } from '../../edge/store-seo.js';
+import { SITE_URL } from '../config/site.js';
 import Seo from '../components/Seo.jsx';
 import { StateCard, Act, Act2 } from '../components/PageUI.jsx';
 import { StorePageSkeleton } from '../components/Skeleton.jsx';
@@ -393,20 +394,11 @@ export default function StorePage() {
   };
   const clearSearch = () => { setQ(''); setSearchParams({}); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
-  // بيانات Schema.org للمتجر → Google يعرضه كمتجر (اسم/شعار/تواصل/روابط) بنتائج البحث
-  // الاسمُ بحروفٍ يقرؤُها محرّكُ البحثِ لا بالزخرفةِ المعروضة — «𝓗𝓪𝓫𝓸𝓸𝓼𝓱»
-  // حروفٌ أخرى بنظرِ يونيكود، فلا يطابقُها من يبحثُ عن «Haboosh».
-  const seoName = plainName(store.name);
-  const storeLd = {
-    '@context': 'https://schema.org/',
-    '@type': 'Store',
-    name: seoName,
-    ...(store.description ? { description: store.description } : {}),
-    ...(store.logoUrl ? { image: store.logoUrl, logo: store.logoUrl } : {}),
-    ...(typeof window !== 'undefined' ? { url: window.location.href } : {}),
-    ...(store.instagram ? { sameAs: [store.instagram].filter(Boolean) } : {}),
-    ...(wa ? { telephone: wa } : {}),
-  };
+  // بيانات Schema.org للمتجر → Google يعرضه كمتجر (اسم/شعار/تواصل/حسابات) بنتائج
+  // البحث. المصدرُ نفسُه الذي تضعُه الحافّةُ بالصفحةِ المُجهَّزة ‏(edge/store-seo.js)،
+  // فلا يرى جوجل نسختين مختلفتين للمتجرِ نفسِه.
+  const seo = storeSeo({ ...store, departments: deptInfo.list }, SITE_URL);
+  const seoName = seo.name;
 
   return (
     <>
@@ -414,10 +406,10 @@ export default function StorePage() {
           ممكنٍ لمحرّكِ البحث — لا يقولُ شيئاً ويتكرّرُ على كلِّ المتاجر. */}
       <Seo
         title={seoName}
-        description={store.description
-          || `${seoName}: تسوّقي ${deptInfo.list.map((d) => ({ clothing: 'فساتين وأطقم وعبايات', shoes: 'أحذية', accessories: 'إكسسوارات' })[d]).join(' و') || 'فساتين وأطقم وعبايات'} — توصيل لكل فلسطين والدفع عند الاستلام.`}
+        description={seo.desc}
+        url={seo.url}
         image={store.logoUrl}
-        jsonLd={storeLd}
+        jsonLd={seo.ld}
       />
 
       {/* الهيدر الخاص بالمتجر: قائمة + اسم + بحث + ستوري على الشعار */}
