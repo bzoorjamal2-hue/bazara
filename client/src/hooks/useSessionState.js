@@ -16,6 +16,18 @@ export function clearSessionState(key) {
   try { sessionStorage.removeItem(PREFIX + key); } catch { /* تصفّح خاص */ }
 }
 
+// مسحُ كلِّ ما حفظه هذا الخُطّاف — عند الخروج أو تبدّل الحساب. البحثُ والتصفيةُ
+// تخصُّ صاحبَها: حسابٌ يدخلُ بعده على نفسِ المتصفّح لا يرثُ كلمةَ بحثِ غيره.
+export function clearAllSessionState() {
+  try {
+    for (let i = sessionStorage.length - 1; i >= 0; i--) {
+      const k = sessionStorage.key(i);
+      // ‎bz_dash_tab: آخرُ قسمٍ فُتح باللوحة — حسابٌ آخرُ يبدأ من رئيسيّةِ لوحتِه لا من قسمِ غيره
+      if (k && (k.startsWith(PREFIX) || k === 'bz_dash_tab')) sessionStorage.removeItem(k);
+    }
+  } catch { /* تصفّح خاص */ }
+}
+
 export default function useSessionState(key, initial) {
   const [value, setValue] = useState(() => {
     try {

@@ -12,6 +12,7 @@ import Splash from './components/Splash.jsx';
 import { isStandalone } from './utils/pwa.js';
 import { ensureDash } from './i18n.js';
 import { useAuth } from './context/AuthContext.jsx';
+import { clearAllSessionState } from './hooks/useSessionState.js';
 
 // حارس قطع الكود المفقودة بعد النشر — يُركَّب مرّة عند تحميل الوحدة
 installChunkGuard();
@@ -117,6 +118,7 @@ if (typeof history !== 'undefined' && 'scrollRestoration' in history) {
 // انتقالات ناعمة بين الصفحات + استعادة موضع التمرير عند الرجوع، والتمرير لأعلى عند صفحة جديدة
 function AnimatedRoutes() {
   const location = useLocation();
+  const auth = useAuth();
   const navType = useNavigationType(); // POP عند الرجوع/التقدّم
   // نحفظ موضع التمرير الحالي باستمرار لمفتاح هذه الصفحة، ونلتقطه أيضاً لحظة المغادرة
   // (في التنظيف) كي يبقى الموضع مضموناً حتى لو لم يُطلق حدث تمرير قبل الانتقال — هذا
@@ -269,7 +271,25 @@ function AnimatedRoutes() {
   const cur = screenKey(location) || `t:${location.pathname}`;
   const [screens, setScreens] = useState(() => [{ key: cur, loc: location, fade: false }]);
   const [shownLoc, setShownLoc] = useState(location);
-  if (shownLoc !== location) {
+  // الصفحاتُ المحفوظةُ تخصُّ الحسابَ الذي فتحها. كانت تنجو من الخروجِ والدخولِ بحسابٍ
+  // آخر: لوحةُ متجرٍ بمنتجاتِه وكلمةِ بحثِه تُعادُ كما هي لصاحبِ متجرٍ غيره على نفسِ
+  // المتصفّح. فإذا تبدّل الحسابُ (أو خرج) تُهدَمُ كلُّها وتُبنى الحاليّةُ من جديد،
+  // ويُمسَحُ معها ما حفظته من بحثٍ وتصفية — قبلَ أن تقرأه الشاشةُ الجديدة.
+  // (من «لا أحد» إلى حسابٍ ليس تبدّلاً: هو إقلاعُ الصفحةِ أو دخولٌ بعد خروجٍ مُسِح عنده
+  // كلُّ شيءٍ أصلاً — فلا نمسحُ تصفياتِ صاحبِها عند كلِّ تحديثٍ للصفحة.)
+  const uid = auth.user?.id || '';
+  const [shownUid, setShownUid] = useState(uid);
+  // جيلُ الشاشات: يزيدُ عند كلِّ تبدّلِ حساب، فيدخلُ مفتاحَ كلِّ شاشة — وإلّا أبقى React
+  // اللوحةَ القديمةَ نفسَها إن كانت هي المعروضةَ لحظةَ التبدّل (المفتاحُ نفسُه).
+  const [gen, setGen] = useState(0);
+  const switched = shownUid !== uid && shownUid !== '';
+  if (shownUid !== uid) setShownUid(uid);
+  if (switched) {
+    setGen((g) => g + 1);
+    clearAllSessionState();
+    setScreens([{ key: cur, loc: location, fade: false }]);
+    setShownLoc(location);
+  } else if (shownLoc !== location) {
     // اشتقاقُ الحالةِ من الموقعِ أثناءَ الرسم (نمطٌ يدعمُه React): تُعادُ الرسمةُ فوراً
     // بالقائمةِ الجديدةِ قبلَ أيِّ رسمٍ على الشاشة
     setShownLoc(location);
@@ -293,7 +313,7 @@ function AnimatedRoutes() {
       || (sc.loc.pathname === '/track' && Boolean(new URLSearchParams(sc.loc.search).get('store')));
     const cls = `${fill ? 'flex flex-1 flex-col min-h-0 ' : ''}${on && sc.fade ? 'route-fade' : ''}`.trim() || undefined;
     return (
-      <Activity key={sc.key} mode={on ? 'visible' : 'hidden'}>
+      <Activity key={`${gen}:${sc.key}`} mode={on ? 'visible' : 'hidden'}>
         <div className={cls}>
           <Suspense fallback={<Spinner full />}><Screen loc={sc.loc} /></Suspense>
         </div>
