@@ -175,7 +175,7 @@ export async function checkout(req, res, next) {
   try {
     const ids = items.map((i) => i.id);
     const r = await query(
-      'SELECT id, name, price, cost, store_id FROM products WHERE id = ANY($1::uuid[])',
+      'SELECT id, name, price, cost, store_id FROM products WHERE id = ANY($1::uuid[]) AND hidden_at IS NULL',
       [ids]
     );
     if (r.rows.length === 0) return res.status(400).json({ error: 'منتجات غير صالحة.' });
@@ -340,7 +340,8 @@ export async function createCodOrder(req, res, next) {
   try {
     // نحسب الإجمالي من قاعدة البيانات (لا نثق بأسعار العميل) ونتأكد أن المنتجات من متجر واحد
     const ids = items.map((i) => i.id);
-    const r = await query('SELECT id, name, price, cost, store_id FROM products WHERE id = ANY($1::uuid[])', [ids]);
+    // المخفيّةُ عن الزبائن لا تُطلَب ولو بقيت بسلّةٍ قديمة — تسقطُ كالمحذوفة
+    const r = await query('SELECT id, name, price, cost, store_id FROM products WHERE id = ANY($1::uuid[]) AND hidden_at IS NULL', [ids]);
     if (r.rows.length === 0) return res.status(400).json({ error: 'منتجات غير صالحة.' });
 
     const storeId = r.rows[0].store_id;

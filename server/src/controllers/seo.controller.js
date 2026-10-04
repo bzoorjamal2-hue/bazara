@@ -28,7 +28,7 @@ export async function sitemap(_req, res, next) {
       `SELECT s.slug, s.updated_at FROM stores s JOIN users u ON u.id = s.user_id WHERE ${active} ORDER BY s.updated_at DESC`
     );
     const products = await query(
-      `SELECT p.id, p.updated_at, s.slug FROM products p JOIN stores s ON s.id = p.store_id JOIN users u ON u.id = s.user_id WHERE ${active} ORDER BY p.updated_at DESC`
+      `SELECT p.id, p.updated_at, s.slug FROM products p JOIN stores s ON s.id = p.store_id JOIN users u ON u.id = s.user_id WHERE ${active} AND p.hidden_at IS NULL ORDER BY p.updated_at DESC`
     );
 
     const urls = [];
@@ -122,7 +122,7 @@ export async function shareProduct(req, res, next) {
     const r = await query(
       `SELECT p.name, p.description, p.price, p.image_url, p.images, p.video_url, s.name AS store_name, s.slug
        FROM products p JOIN stores s ON s.id = p.store_id JOIN users u ON u.id = s.user_id
-       WHERE p.id = $1 AND ${active}`,
+       WHERE p.id = $1 AND p.hidden_at IS NULL AND ${active}`,
       [id]
     );
     const p = r.rows[0];

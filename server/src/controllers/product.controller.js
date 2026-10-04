@@ -8,6 +8,7 @@ import { departmentOf, platformCategoryOf, loadPlatformExtra, normDept } from '.
 // لتبيعَ نمرةً حذفتْها التاجرةُ للتوّ — فنمسحُه متى لمسَت قطعةً، ولا ننتظرُ
 // انتهاءَ المهلة.
 import { clearCatalog } from '../utils/salesAgent.js';
+import { clearPublicCache } from '../middleware/cache.js';
 
 async function getUserStore(userId) {
   const r = await query('SELECT id, slug, custom_categories FROM stores WHERE user_id = $1', [userId]);
@@ -87,6 +88,41 @@ export async function updateProduct(req, res, next) {
     res.json({ product: mapOwnerProduct(result.rows[0]) });
     // تنبيه استباقي (بالخلفية): لو رجع متغيّرٌ تنتظره زبونة متوفّراً، نُشعر المالكة لتبلّغها
     alertOwnerOnRestock(id).catch(() => {});
+  } catch (err) {
+    next(err);
+  }
+}
+
+// إخفاءُ قطعةٍ عن الزبائن أو إظهارُها — تبقى بلوحتها كما هي (صورُها ومخزونُها
+// وتعديلُها)، لكنّها تغيبُ عن المتجرِ والبحثِ والفئاتِ والبائعةِ الآليّةِ وخريطةِ
+// الموقعِ ولا يُطلَبُ منها شيء. لقطعةٍ موسميّة، أو نفدت مؤقّتاً، أو للتصوير فقط.
+// يستعملُ عمودَ الإخفاءِ الإداريّ نفسَه لأنّ كلَّ استعلامٍ عامٍّ يحترمُه أصلاً؛
+// والفرقُ أنّ إخفاءَ التاجرةِ بلا سبب، وإخفاءُ الإدارةِ لا يُرفَعُ من هنا.
+export async function setProductVisibility(req, res, next) {
+  const { id } = req.params;
+  const hide = req.body?.hidden === true;
+  try {
+    const store = await getUserStore(req.user.id);
+    if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
+
+    const cur = await query('SELECT hidden_at, hidden_reason FROM products WHERE id = $1 AND store_id = $2', [id, store.id]);
+    const row = cur.rows[0];
+    if (!row) return res.status(404).json({ error: 'المنتج غير موجود أو لا تملك صلاحية تعديله.' });
+    if (row.hidden_at && String(row.hidden_reason || '').trim()) {
+      return res.status(403).json({ error: 'هذا المنتج مخفيّ من إدارة بازارا، ولا يمكن إظهاره من هنا.' });
+    }
+
+    const result = await query(
+      hide
+        ? `UPDATE products SET hidden_at = COALESCE(hidden_at, now()), hidden_reason = '', hidden_by = $3
+             WHERE id = $1 AND store_id = $2 RETURNING *`
+        : `UPDATE products SET hidden_at = NULL, hidden_reason = '', hidden_by = NULL
+             WHERE id = $1 AND store_id = $2 RETURNING *`,
+      hide ? [id, store.id, req.user.id] : [id, store.id]
+    );
+    clearCatalog(store.id);   // البائعةُ لا تعرضُ قطعةً أُخفيت، وتعرفُ التي ظهرت فوراً
+    clearPublicCache();       // ولا ينتظرُ المتجرُ نصفَ دقيقةٍ ليُسقِطَها أو يُعيدَها
+    res.json({ product: mapOwnerProduct(result.rows[0]) });
   } catch (err) {
     next(err);
   }
@@ -205,8 +241,18 @@ function sanitizeColorImages(raw) {
 // مُهيّئ خاص بالمالك: mapProduct مشترك مع الواجهات العامة (الرئيسية وصفحة المتجر
 // والمساعد)، فلا يجوز أن يحمل سعر التكلفة — وإلا رآه الزبون بردّ الـAPI. نضيفه هنا
 // فقط بمسارات المالك الثلاثة.
+// المخفيّ نوعان: أخفته التاجرةُ بنفسها (بلا سبب) فتُظهره متى شاءت، أو أخفته
+// الإدارةُ (والسببُ عندها إلزاميّ) فلا تملكُ هي إظهاره — يُعرَضُ لها السببُ فقط.
 export function mapOwnerProduct(p) {
-  return { ...mapProduct(p), cost: p.cost != null ? Number(p.cost) : null };
+  const hidden = Boolean(p.hidden_at);
+  const byAdmin = hidden && Boolean(String(p.hidden_reason || '').trim());
+  return {
+    ...mapProduct(p),
+    cost: p.cost != null ? Number(p.cost) : null,
+    hidden,
+    hiddenByAdmin: byAdmin,
+    ...(byAdmin ? { hiddenReason: p.hidden_reason } : {}),
+  };
 }
 
 export function mapProduct(p) {

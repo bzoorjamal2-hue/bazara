@@ -331,7 +331,7 @@ export async function getSiteInfo(_req, res, next) {
         `SELECT
            (SELECT COUNT(*)::int FROM stores s JOIN users u ON u.id = s.user_id WHERE ${active}) AS stores,
            (SELECT COUNT(*)::int FROM products p JOIN stores s ON s.id = p.store_id
-              JOIN users u ON u.id = s.user_id WHERE ${active}) AS products,
+              JOIN users u ON u.id = s.user_id WHERE ${active} AND p.hidden_at IS NULL) AS products,
            (SELECT COUNT(*)::int FROM orders o JOIN stores s ON s.id = o.store_id
               JOIN users u ON u.id = s.user_id WHERE ${active}) AS orders`
       );
