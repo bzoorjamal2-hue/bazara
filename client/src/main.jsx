@@ -44,16 +44,33 @@ import { NotificationsProvider } from './context/NotificationsContext.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 
 // تسجيل الـ Service Worker مع فحص تحديث تلقائي — حتى يلتقط التطبيق المثبّت
-// أحدث نسخة بعد كل نشر. autoUpdate يطبّق التحديث ويعيد التحميل عند توفّرها.
+// أحدث نسخة بعد كل نشر.
 //
-// بعد الإقلاع لا أثناءه: التسجيل يبدأ تخزين ٧٤ ملفاً (٢٫٧ ميغا) مسبقاً، وكان
+// بعد الإقلاع لا أثناءه: التسجيل يبدأ تخزين الملفّات مسبقاً (~٣ ميغا)، وكان
 // immediate يطلقها بالمسار الحرج فتزاحم صورةَ الهيرو والخطوطَ والحزمة على
 // عرضٍ محدود — أي أنّ ما يخدم الزيارة القادمة كان يؤخّر الزيارة الحالية.
-// التخزين المسبق يبقى كما هو (وهو ما يجعل التطبيق يعمل بشبكةٍ ضعيفة)، لكنّه
-// ينتظر أن تُرسم الصفحة.
+//
+// ومتى تُطبَّقُ النسخةُ الجديدة؟ كانت (autoUpdate) تُطبَّقُ لحظةَ جهوزِها وتُعيدُ تحميلَ
+// الصفحةِ والتاجرةُ في منتصفِ طلبٍ أو محادثة — وبعد بعضِ النشراتِ تُمسَحُ الخزائنُ كلُّها
+// فيُعادُ تنزيلُ كلِّ شيءٍ من الشبكة. صارت تنتظرُ لحظةً لا يراها أحد:
+//   • التطبيقُ غاب عن الشاشة (خروجٌ للرئيسيّة، قفلُ الهاتف، تبديلُ تطبيق)؛
+//   • أو اكتُشفت في الثواني الأولى بعد الفتح — قبل أن يبدأ الاستعمالُ فعلاً.
+// وحتّى ذلك تبقى النسخةُ القديمةُ تُخدَمُ كاملةً من الجهاز، فلا قطعةَ مفقودةً ولا انهيار.
+const FRESH_MS = 4000;
 function startServiceWorker() {
-  registerSW({
+  let pending = false;
+  let applied = false;
+  const apply = () => {
+    if (!pending || applied) return;
+    applied = true;
+    updateSW(true); // يفعّلُ النسخةَ المنتظرةَ ويعيدُ التحميلَ حين تتسلّمُ الصفحة
+  };
+  const updateSW = registerSW({
     immediate: true,
+    onNeedRefresh() {
+      pending = true;
+      if (document.hidden || performance.now() < FRESH_MS) apply();
+    },
     onRegisteredSW(_swUrl, r) {
       if (!r) return;
       const check = () => { r.update().catch(() => {}); };
@@ -64,6 +81,9 @@ function startServiceWorker() {
       document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
     },
   });
+  // الغيابُ عن الشاشةِ هو لحظةُ التطبيق: لا أحدَ يرى إعادةَ التحميل
+  document.addEventListener('visibilitychange', () => { if (document.hidden) apply(); });
+  window.addEventListener('pagehide', apply);
 }
 if (document.readyState === 'complete') startServiceWorker();
 else window.addEventListener('load', () => setTimeout(startServiceWorker, 1200));
