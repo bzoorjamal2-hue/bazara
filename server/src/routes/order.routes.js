@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { checkout, createCodOrder, updateOrderStatus, verify, listMyOrders, getStats, getNewOrdersCount, setCustomerWa } from '../controllers/order.controller.js';
+import { checkout, createCodOrder, updateOrderStatus, verify, listMyOrders, getStats, getNewOrdersCount, setCustomerWa, getCustomer } from '../controllers/order.controller.js';
 import { listAbandoned, deleteAbandoned } from '../controllers/abandoned.controller.js';
 import { requireAuth } from '../middleware/auth.js';
 
@@ -31,6 +31,7 @@ router.post('/cod', checkoutLimiter, createCodOrder); // طلب الدفع عن�
 router.get('/verify/:reference', verifyLimiter, verify);
 router.get('/mine', requireAuth, listMyOrders);
 router.put('/whatsapp', requireAuth, setCustomerWa); // رقم واتساب الزبون المؤكّد — للمشترك
+router.get('/customer', requireAuth, getCustomer); // ملفّ زبونة برقمها — للمشترك
 router.get('/abandoned', requireAuth, listAbandoned); // الطلبات غير المكتملة — للمشترك
 router.delete('/abandoned/:id', requireAuth, deleteAbandoned);
 router.get('/stats', requireAuth, getStats); // إحصائيات المتجر — للمشترك

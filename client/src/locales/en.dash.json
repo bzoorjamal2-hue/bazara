@@ -183,7 +183,15 @@
       "tab_unread": "Unread",
       "tab_waiting": "Awaiting reply",
       "tab_orders": "With order",
-      "noMatch": "No conversations here."
+      "noMatch": "No conversations here.",
+      "sendProduct": "Send a product",
+      "noProducts": "No matching products",
+      "sale": "Sale",
+      "custBack": "Returning 🔁",
+      "custKnown": "Known customer",
+      "custStats": "{{count}} previous orders",
+      "custSpent": "spent ₪{{total}}",
+      "custAll": "All her orders"
     },
     "opost": {
       "title": "Optimus courier",

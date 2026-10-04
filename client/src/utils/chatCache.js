@@ -8,6 +8,7 @@
 
 let status = null;
 let convs = null;
+let products = null;
 const chats = new Map();
 const MAX_CHATS = 15;
 
@@ -23,6 +24,10 @@ export function markConvRead(id) {
   if (!convs) return;
   convs = convs.map((c) => (String(c.id) === String(id) && c.unread ? { ...c, unread: 0 } : c));
 }
+
+// منتجاتُ المتجرِ لقائمةِ «أرسلي منتجاً» — تُجلَبُ مرّةً للجلسةِ لا مع كلِّ فتحةِ قائمة
+export const getProducts = () => products;
+export const setProducts = (list) => { products = Array.isArray(list) ? list : null; };
 
 export const getChat = (id) => chats.get(String(id)) || null;
 
@@ -43,5 +48,6 @@ export function setChat(id, data) {
 export function clearChatCache() {
   status = null;
   convs = null;
+  products = null;
   chats.clear();
 }

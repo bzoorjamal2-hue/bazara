@@ -7,6 +7,9 @@ import { feeForCity, flatInternalLocalities, cityOfVillage } from '../config/del
 import { extractOrderDraft } from '../utils/orderExtract.js';
 import { imageBlock, transcribe, canHear } from '../utils/mediaUnderstand.js';
 import { isOwnMediaUrl } from '../utils/r2.js';
+import { metaReadyImage } from '../utils/metaImage.js';
+import { productPath } from '../utils/media.js';
+import { mapProduct } from './product.controller.js';
 import {
   loadBot, botActiveNow, agentReply, countReply, MAX_BOT_REPLIES, testModeAllows, variantAvailable,
   effectiveFloor, photoFor,
@@ -339,11 +342,19 @@ async function processWebhook(body) {
         }
       }
 
+      // التاجرةُ فاتحةٌ هذه المحادثةَ الآن (نبضةُ تحديثٍ في آخرِ أربعين ثانية): الرسالةُ
+      // تظهرُ أمامَها خلالَ ثوانٍ، والإشعارُ فوقَها إزعاجٌ لا خبر — ويُبقي الجرسَ أحمرَ
+      // على ما قرأته. الصمتُ هنا وحده؛ البائعةُ الآليّةُ وما بعدها يمضيان كما هما.
+      const live = await query(
+        "SELECT viewing_at > now() - interval '40 seconds' AS is_live FROM ig_conversations WHERE id = $1",
+        [convId]
+      ).then((x) => Boolean(x.rows[0]?.is_live)).catch(() => false);
+
       // الإشعارُ كما في تطبيقات المحادثة: اسمُ المُرسِلِ عنواناً ونصُّ رسالتِه تحته
       // وصورتُه أيقونةً — لا «رسالة إنستغرام جديدة» التي لا تقولُ ممّن ولا فيمَ.
       // وtag باسم المحادثة يجعلُ رسائلَ الشخصِ الواحدِ تستبدلُ بعضَها في شريطِ الهاتف
       // بدل أن تتكدّس، والرابطُ يفتحُ محادثتَه هو لا قائمةَ المحادثات.
-      notifyUser(store.user_id, {
+      if (!live) notifyUser(store.user_id, {
         type: 'instagram',
         title: who || (channel === 'messenger' ? 'رسالة ماسنجر' : 'رسالة إنستغرام'),
         body: preview.slice(0, 120),
@@ -1423,11 +1434,22 @@ export async function listMessages(req, res, next) {
       hasMore = rows.length > PAGE;
       rows = rows.slice(0, PAGE).reverse();
     }
+    let orderPhone = '';
+    if (conv.order_id && !before) {
+      const op = await query('SELECT customer_phone FROM orders WHERE id = $1 AND store_id = $2', [conv.order_id, conv.store_id]).catch(() => ({ rows: [] }));
+      orderPhone = op.rows[0]?.customer_phone || '';
+    }
     // فتحُ المحادثةِ يقرأُ إشعارَها أيضاً، والعددُ الجديدُ يعودُ مع الردِّ فيُطفئُ الجرسَ
     // والشارةَ فوراً. null = لم يكن هناك ما يُقرأ (أغلبُ نبضاتِ التحديث).
     let badge = null;
     if (!before) {
-      await query('UPDATE ig_conversations SET unread = 0 WHERE id = $1', [conv.id]);
+      // viewing_at: «التاجرةُ على هذه المحادثةِ الآن» — يتجدّدُ مع كلِّ نبضةِ تحديث، ومنه
+      // يعرفُ الـwebhook ألّا يبعثَ إشعاراً برسالةٍ تراها أمامَها (انظر processWebhook).
+      await query('UPDATE ig_conversations SET unread = 0, viewing_at = now() WHERE id = $1', [conv.id])
+        .catch(async (e) => {
+          if (e.code !== '42703') throw e; // الترقيةُ لم تصلْ بعد
+          await query('UPDATE ig_conversations SET unread = 0 WHERE id = $1', [conv.id]);
+        });
       badge = await markReadByTag(req.user.id, `ig-${conv.id}`, `/dashboard/instagram/${conv.id}`);
     }
     res.json({
@@ -1438,6 +1460,8 @@ export async function listMessages(req, res, next) {
         customer_avatar: conv.customer_avatar,
         seen_at: conv.seen_at,
         order_id: conv.order_id,
+        // رقمُ الزبونةِ من طلبِها المحوَّلِ من المحادثة — منه يُبنى ملفُّها برأسِ المحادثة
+        order_phone: orderPhone,
         channel: conv.channel || 'instagram',
       },
       messages: rows,
@@ -1540,6 +1564,54 @@ export async function igTyping(req, res, next) {
     const token = decrypt(conv.ig_access_token);
     res.status(204).end();
     if (token) sendTyping(token, conv.ig_sender_id, req.body?.on !== false).catch(() => {});
+  } catch (err) {
+    next(err);
+  }
+}
+
+// POST /api/instagram/product-card — { productId } → { image, text }
+// «أرسلي منتجاً» من داخلِ المحادثة: كانت التاجرةُ تخرجُ إلى متجرِها وتنسخُ الرابطَ
+// وتعودُ لتلصقَه، والزبونةُ تستلمُ رابطاً عارياً بلا صورة. نُجهّزُ هنا البطاقة: صورةٌ
+// تقبلُها ميتا (انظر utils/metaImage.js) وسطرٌ بالاسمِ والسعرِ والرابط — والواجهةُ
+// تبعثُهما من طابورِ الإرسالِ نفسِه فيظهرانِ فوراً بحالتِهما.
+export async function igProductCard(req, res, next) {
+  try {
+    const id = String(req.body?.productId || '');
+    if (!/^[0-9a-f-]{36}$/i.test(id)) return res.status(400).json({ error: 'منتج غير صالح.' });
+    const r = await query(
+      `SELECT p.*, s.slug AS store_slug FROM products p JOIN stores s ON s.id = p.store_id
+       WHERE p.id = $1 AND s.user_id = $2 AND p.hidden_at IS NULL`,
+      [id, req.user.id]
+    );
+    const row = r.rows[0];
+    if (!row) return res.status(404).json({ error: 'المنتج غير موجود.' });
+    const p = mapProduct(row);
+    const raw = p.imageUrl || p.images?.[0] || p.videoUrl || '';
+    let image = '';
+    try { image = await metaReadyImage(raw); } catch (e) { console.error('product-card image:', e.message); }
+    if (image && !isOwnMediaUrl(image)) image = '';
+    const site = (process.env.PUBLIC_SITE_URL || 'https://bazarastore.site').replace(/\/$/, '');
+    const money = (n) => `₪${Number(n).toFixed(Number(n) % 1 ? 2 : 0)}`;
+    const onSale = p.oldPrice && Number(p.oldPrice) > Number(p.price);
+    const text = [
+      `✨ ${p.name}`,
+      onSale ? `💰 ${money(p.price)} بدل ${money(p.oldPrice)}` : `💰 ${money(p.price)}`,
+      `🔗 ${site}${productPath(row.store_slug, row.id)}`,
+    ].join('\n');
+    res.json({ image, text });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// POST /api/instagram/conversations/:id/leave — التاجرةُ خرجت من المحادثة (أو أخفت
+// التطبيق): تعودُ إشعاراتُها فوراً بدل انتظارِ انقضاءِ الأربعين ثانية.
+export async function igLeave(req, res, next) {
+  try {
+    const conv = await getOwnedConversation(req.user.id, req.params.id);
+    if (!conv) return res.status(404).json({ error: 'المحادثة غير موجودة.' });
+    await query('UPDATE ig_conversations SET viewing_at = NULL WHERE id = $1', [conv.id]).catch(() => {});
+    res.status(204).end();
   } catch (err) {
     next(err);
   }

@@ -25,6 +25,16 @@ const TYPES = {
 };
 const typeOf = (k) => TYPES[k] || TYPES.general;
 
+// تبويباتُ الجرس: كانت قائمةً واحدةً مخلوطة — طلبٌ بين رسالتين بين تنبيهِ مخزون — فتضيعُ
+// الرسالةُ المستعجلةُ تحت عشرين طلباً. كلُّ تبويبٍ يجمعُ أنواعاً تُعالَجُ بنفسِ الطريقة،
+// ولا يظهرُ إلّا إن كان فيه شيء.
+const CATS = [
+  { key: 'orders', types: ['order', 'abandoned', 'shipping'] },
+  { key: 'messages', types: ['instagram'] },
+  { key: 'stock', types: ['stock', 'stockRequest'] },
+];
+const catOf = (type) => CATS.find((c) => c.types.includes(type))?.key || 'other';
+
 // «قبل ٣ دقائق» بلا مكتبة تواريخ — الدقّة المطلوبة هنا خشنة عمداً
 function ago(iso, t) {
   const ms = Date.now() - new Date(iso).getTime();
@@ -55,6 +65,7 @@ export default function NotificationsBell() {
   const { unread, items, loading, hasMore, load, loadMore, markRead, clearAll } = useNotifications();
   const [open, setOpen] = useState(false);
   const [onlyUnread, setOnlyUnread] = useState(false);
+  const [cat, setCat] = useState('all');
   const prevUnread = useRef(unread);
   const [pulse, setPulse] = useState(false);
 
@@ -81,9 +92,24 @@ export default function NotificationsBell() {
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
+  // عددُ كلِّ تبويبٍ وغيرُ المقروءِ فيه — من المحمَّلِ فعلاً
+  const catStats = useMemo(() => {
+    const out = {};
+    for (const n of items) {
+      const k = catOf(n.type);
+      out[k] ||= { total: 0, unread: 0 };
+      out[k].total += 1;
+      if (!n.read) out[k].unread += 1;
+    }
+    return out;
+  }, [items]);
+  const cats = CATS.filter((c) => catStats[c.key]?.total);
+  // تبويبٌ فرغَ (قُرئ أو حُذف ما فيه) لا يُترَكُ مختاراً فارغاً
+  const activeCat = cat === 'all' || catStats[cat]?.total ? cat : 'all';
+
   const shown = useMemo(
-    () => (onlyUnread ? items.filter((n) => !n.read) : items),
-    [items, onlyUnread]
+    () => items.filter((n) => (!onlyUnread || !n.read) && (activeCat === 'all' || catOf(n.type) === activeCat)),
+    [items, onlyUnread, activeCat]
   );
 
   // التجميع للعرض فقط — ترتيب الخادم (الأحدث أولاً) يبقى كما هو
@@ -167,6 +193,26 @@ export default function NotificationsBell() {
                   </button>
                 )}
               </div>
+              {cats.length > 1 && (
+                <div className="bz-notif-cats -mx-4 mt-2.5 flex gap-1.5 overflow-x-auto px-4" role="tablist" aria-label={t('notifications.title')}>
+                  {[{ key: 'all' }, ...cats].map((c) => {
+                    const on = activeCat === c.key;
+                    const u = c.key === 'all' ? 0 : catStats[c.key]?.unread || 0;
+                    return (
+                      <button
+                        key={c.key}
+                        role="tab"
+                        aria-selected={on}
+                        onClick={() => setCat(c.key)}
+                        className={`bz-notif-cat app-tap shrink-0 ${on ? 'bz-notif-cat-on' : ''}`}
+                      >
+                        {t(`notifications.cat.${c.key}`)}
+                        {u > 0 && <span className="bz-seg-count">{u > 99 ? '99+' : u}</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">

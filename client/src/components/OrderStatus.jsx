@@ -26,8 +26,22 @@ export function StatusBadge({ status }) {
   );
 }
 
-export default function OrderStatus({ status, onChange, saving = false, locked = null }) {
-  const { t } = useTranslation();
+// وقتُ بلوغِ المرحلةِ بكلمةٍ قصيرة: الساعةُ لليوم، «أمس»، وإلّا اليومُ والشهر
+function stepTime(iso, t, lang) {
+  if (!iso) return '';
+  const at = new Date(iso);
+  if (Number.isNaN(at.getTime())) return '';
+  const now = new Date();
+  const day = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const diff = Math.round((day(now) - day(at)) / 86400000);
+  if (diff === 0) return at.toLocaleTimeString(lang, { hour: 'numeric', minute: '2-digit' });
+  if (diff === 1) return t('dashboard.ordersSection.yesterday');
+  return at.toLocaleDateString(lang, { day: 'numeric', month: 'short' });
+}
+
+export default function OrderStatus({ status, onChange, saving = false, locked = null, statusAt = {}, createdAt = null }) {
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language === 'ar' ? 'ar' : 'en';
   const [askCancel, setAskCancel] = useState(false);
   const cur = STEPS.includes(status) || status === 'cancelled' ? status : 'new';
   const idx = STEPS.indexOf(cur);
@@ -88,6 +102,12 @@ export default function OrderStatus({ status, onChange, saving = false, locked =
               <span className={`mt-1.5 text-center text-[10.5px] leading-tight ${here ? 'bz-ost-here-label font-extrabold' : done ? 'bz-ost-sub font-semibold' : 'bz-ost-sub'}`}>
                 {t(`dashboard.ordersSection.${s}`)}
               </span>
+              {/* متى بلغَها: ما مضى والحاليّةُ فقط — والجديدُ وقتُ وصولِ الطلبِ نفسِه */}
+              {i <= idx && (s === 'new' ? createdAt : statusAt?.[s]) && (
+                <span className="bz-ost-sub mt-0.5 text-center text-[9.5px] tabular-nums leading-none" dir="auto">
+                  {stepTime(s === 'new' ? createdAt : statusAt[s], t, lang)}
+                </span>
+              )}
             </li>
           );
         })}

@@ -13,6 +13,8 @@ import {
   igOrderDraft,
   igReact,
   igTyping,
+  igProductCard,
+  igLeave,
   igQuickReplies,
   igSaveQuickReplies,
 } from '../controllers/instagram.controller.js';
@@ -41,6 +43,8 @@ router.get('/conversations/:id/messages', listMessages);
 router.post('/conversations/:id/reply', sendReply);
 router.post('/conversations/:id/react', igReact);
 router.post('/conversations/:id/typing', igTyping);
+router.post('/conversations/:id/leave', igLeave);
+router.post('/product-card', igProductCard);
 router.get('/quick-replies', igQuickReplies);
 router.put('/quick-replies', igSaveQuickReplies);
 router.get('/conversations/:id/draft', igOrderDraft);
