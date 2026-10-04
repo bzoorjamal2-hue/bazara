@@ -8,7 +8,7 @@ import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import ProductForm from './ProductForm.jsx';
 import ConfirmModal from '../../components/ConfirmModal.jsx';
-import { StarIcon, LinkIcon, BagIcon, SearchIcon, EditIcon, CopyIcon, TrashIcon, CheckIcon, XIcon } from '../../components/icons.jsx';
+import { StarIcon, LinkIcon, BagIcon, SearchIcon, EditIcon, CopyIcon, TrashIcon, CheckIcon, XIcon, EyeIcon, EyeOffIcon } from '../../components/icons.jsx';
 import { cldVideoPoster } from '../../utils/cloudinary.js';
 import { clearCachePrefixes } from '../../utils/apiCache.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -96,6 +96,22 @@ export default function ProductsManager({ onCount }) {
     }
   };
 
+  // إخفاءُ قطعةٍ عن الزبائن أو إظهارُها — تبقى هنا بصورِها ومخزونِها، وتغيبُ عن
+  // المتجرِ والبحثِ والبائعةِ ولا تُطلَب. تتبدّلُ فوراً بالقائمة ثمّ يؤكّدُها الخادم.
+  const toggleHidden = async (p) => {
+    const next = !p.hidden;
+    setProducts((list) => list.map((x) => (x.id === p.id ? { ...x, hidden: next } : x)));
+    try {
+      const { data } = await api.patch(`/products/${p.id}/visibility`, { hidden: next });
+      setProducts((list) => list.map((x) => (x.id === p.id ? data.product : x)));
+      flash(t(next ? 'dashboard.product.hiddenDone' : 'dashboard.product.shownDone'));
+      purgePublicCaches();
+    } catch (err) {
+      setProducts((list) => list.map((x) => (x.id === p.id ? p : x)));
+      setError(getErrorMessage(err, t('errors.generic')));
+    }
+  };
+
   // رابطُ المنتجِ الحاملُ اسمَ المتجر — هو نفسُه رابطُ صفحتِه، وزواحفُ واتساب
   // تُحوَّلُ عليه لصفحةِ المعاينةِ فتظهرُ الصورةُ والسعر. يُبنى على الدومينِ الرسميِّ
   // لا على ما يصادفُ أن يكونَ بشريطِ العنوان، وإن تعذّرَ النسخُ عُرِضَ ليُنسَخَ يدوياً
@@ -127,13 +143,14 @@ export default function ProductsManager({ onCount }) {
   // الذي تقوم عليه الشارات، فما تراه هنا يطابق ما تراه الزبونة تماماً.
   const lowList = useMemo(() => (products || []).filter((p) => { const r = remainingOf(p); return r != null && r > 0 && r <= 5; }), [products]);
   const outList = useMemo(() => (products || []).filter((p) => remainingOf(p) === 0), [products]);
+  const hiddenList = useMemo(() => (products || []).filter((p) => p.hidden), [products]);
 
   // الفئات الموجودة فعلياً بقطعك — لا نعرض فئة فارغة للتصفية
   const cats = useMemo(() => [...new Set((products || []).map((p) => p.category).filter(Boolean))], [products]);
 
   const shown = useMemo(() => {
     if (!products) return [];
-    let base = stockFilter === 'low' ? lowList : stockFilter === 'out' ? outList : products;
+    let base = stockFilter === 'low' ? lowList : stockFilter === 'out' ? outList : stockFilter === 'hidden' ? hiddenList : products;
     if (cat !== 'all') base = base.filter((p) => p.category === cat);
     const needle = q.trim().toLowerCase();
     if (needle) base = base.filter((p) => `${p.name} ${catLabel(p.category)}`.toLowerCase().includes(needle));
@@ -146,20 +163,25 @@ export default function ProductsManager({ onCount }) {
     // newest = ترتيب الخادم الأصلي (المميّزة ثم الأحدث) فلا نُعيد ترتيبه
     return arr;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [products, stockFilter, q, cat, sort, lowList, outList, store]);
+  }, [products, stockFilter, q, cat, sort, lowList, outList, hiddenList, store]);
 
   if (products === null) return <Spinner />;
 
   // صورة مصغّرة: تعرض مشهد الفيديو إذا ما في صورة
   const Thumb = ({ p, size }) => {
     const img = p.imageUrl || (p.images && p.images[0]) || (p.videoUrl && cldVideoPoster(p.videoUrl));
-    return <img src={img || PH} alt="" className={`${size} shrink-0 rounded-xl object-cover ring-1 ring-gold-400/20`} />;
+    return <img src={img || PH} alt="" className={`${size} shrink-0 rounded-xl object-cover ring-1 ring-gold-400/20 ${p.hidden ? 'opacity-40 grayscale' : ''}`} />;
   };
 
   const Badges = ({ p }) => {
     const rem = remainingOf(p);
     return (
       <span className="ms-2 inline-flex gap-1 align-middle">
+        {p.hidden && (
+          <span className="badge inline-flex items-center gap-1 bg-stone-500/25 text-stone-200" title={p.hiddenByAdmin ? p.hiddenReason : t('dashboard.product.hiddenTip')}>
+            <EyeOffIcon className="h-3 w-3" />{t(p.hiddenByAdmin ? 'dashboard.product.hiddenByAdmin' : 'dashboard.product.hidden')}
+          </span>
+        )}
         {p.featured && <span className="badge inline-flex items-center bg-gold-400/20 text-gold-200"><StarIcon className="h-3 w-3" /></span>}
         {p.oldPrice > p.price && <span className="badge bg-red-500/80 text-white">%</span>}
         {rem === 0 && <span className="badge bg-red-500/20 text-red-300">{t('product.outOfStock')}</span>}
@@ -195,6 +217,17 @@ export default function ProductsManager({ onCount }) {
     const btn = 'grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-gold-400/20 text-stone-400 transition';
     return (
       <div className="flex shrink-0 items-center gap-1.5">
+        {!p.hiddenByAdmin && (
+          <button
+            onClick={() => toggleHidden(p)}
+            title={t(p.hidden ? 'dashboard.product.show' : 'dashboard.product.hide')}
+            aria-label={t(p.hidden ? 'dashboard.product.show' : 'dashboard.product.hide')}
+            aria-pressed={p.hidden}
+            className={`${btn} ${p.hidden ? 'border-gold-400/50 text-gold-200' : ''} hover:border-gold-400/50 hover:text-gold-200`}
+          >
+            {p.hidden ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+          </button>
+        )}
         <button onClick={() => shareProduct(p)} title={t('product.shareProduct')} aria-label={t('product.shareProduct')} className={`${btn} hover:border-gold-400/50 hover:text-gold-200`}>
           <LinkIcon className="h-4 w-4" />
         </button>
@@ -285,11 +318,12 @@ export default function ProductsManager({ onCount }) {
             </div>
 
             {/* شرائح المخزون */}
-            {(lowList.length > 0 || outList.length > 0) && (
+            {(lowList.length > 0 || outList.length > 0 || hiddenList.length > 0) && (
               <div className="flex flex-wrap items-center gap-2">
                 <Chip value="all" label={t('common.all')} count={products.length} tone="bg-wine/10 text-wine ring-wine/20" />
                 {lowList.length > 0 && <Chip value="low" label={t('dashboard.product.lowStock')} count={lowList.length} tone="bg-amber-500/15 text-amber-300 ring-amber-500/25" />}
                 {outList.length > 0 && <Chip value="out" label={t('product.outOfStock')} count={outList.length} tone="bg-red-500/15 text-red-300 ring-red-500/25" />}
+                {hiddenList.length > 0 && <Chip value="hidden" label={t('dashboard.product.hiddenFilter')} count={hiddenList.length} tone="bg-stone-500/15 text-stone-300 ring-stone-500/25" />}
               </div>
             )}
 
