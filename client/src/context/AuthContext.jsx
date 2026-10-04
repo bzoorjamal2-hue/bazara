@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import api, { setAuthToken, clearAuthToken, clearReadCache } from '../api/client.js';
 import { readAuthCache, writeAuthCache, clearAuthCache } from '../utils/authCache.js';
+import { clearAllSessionState } from '../hooks/useSessionState.js';
 
 const AuthContext = createContext(null);
 
@@ -120,6 +121,7 @@ export function AuthProvider({ children }) {
         if (k && k.startsWith(pre)) sessionStorage.removeItem(k);
       }
     } catch { /* تصفّح خاص */ }
+    clearAllSessionState(); // والبحثُ والتصفياتُ المحفوظة كذلك
     setUser(null);
     setStore(null);
     setSubscription(null);
