@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import api, { setAuthToken, clearAuthToken, clearReadCache } from '../api/client.js';
 import { readAuthCache, writeAuthCache, clearAuthCache } from '../utils/authCache.js';
+import { clearChatCache } from '../utils/chatCache.js';
 import { clearAllSessionState } from '../hooks/useSessionState.js';
 
 const AuthContext = createContext(null);
@@ -67,6 +68,15 @@ export function AuthProvider({ children }) {
     writeAuthCache(user ? { user, store, subscription } : null);
   }, [user, store, subscription]);
 
+  // محادثاتُ إنستغرامَ المحفوظةُ في الذاكرةِ تخصُّ حساباً بعينه: تبدّلَ الحسابُ
+  // (خروجٌ ثمّ دخولٌ آخر، أو دخولٌ فوقَ جلسةٍ قائمة) فتُفرَّغُ قبل أن تُرسَم.
+  const chatOwner = useRef(null);
+  useEffect(() => {
+    const uid = user?.id || null;
+    if (chatOwner.current && chatOwner.current !== uid) clearChatCache();
+    if (uid) chatOwner.current = uid;
+  }, [user?.id]);
+
   const login = async (email, password) => {
     loggedOut.current = false;
     const { data } = await api.post('/auth/login', { email, password });
@@ -122,6 +132,14 @@ export function AuthProvider({ children }) {
       }
     } catch { /* تصفّح خاص */ }
     clearAllSessionState(); // والبحثُ والتصفياتُ المحفوظة كذلك
+    // ومحادثاتُ إنستغرامَ المحفوظةُ في الذاكرة، ومسودّاتُ الردودِ غيرِ المرسلة
+    clearChatCache();
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('bz-ig-draft:')) localStorage.removeItem(k);
+      }
+    } catch { /* تصفّح خاص */ }
     setUser(null);
     setStore(null);
     setSubscription(null);
