@@ -926,7 +926,10 @@
       "waAskTitle": "انفتحت محادثة الزبون؟",
       "waAskYes": "آه، احفظ الرقم ✓",
       "waAskTry": "لا، جرّب {{code}}",
-      "waAskNone": "لا، ما عنده واتس"
+      "waAskNone": "لا، ما عنده واتس",
+      "custBack": "🔁 {{count}} طلبات",
+      "custNew": "✨ أوّل طلب",
+      "custFilter": "اعرض كلّ طلبات هالزبونة"
     },
     "addProduct": "إضافة منتج جديد",
     "product": {
@@ -942,6 +945,7 @@
     "all": "الكل",
     "unread": "غير المقروء",
     "markAll": "تعليم الكل",
+    "cat": {"all": "الكل", "orders": "طلبات", "messages": "رسائل", "stock": "مخزون"},
     "clearAll": "حذف الكل",
     "more": "عرض المزيد",
     "today": "اليوم",

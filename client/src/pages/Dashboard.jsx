@@ -1,4 +1,6 @@
-import { Activity, useState, useRef, useEffect } from 'react';
+import { Activity, Suspense, lazy, useState, useRef, useEffect } from 'react';
+import { retryImport } from '../utils/chunkReload.js';
+import Spinner from '../components/Spinner.jsx';
 import NotificationsBell from '../components/NotificationsBell.jsx';
 import { Link, useSearchParams } from 'react-router-dom';
 import api from '../api/client.js';
@@ -15,30 +17,62 @@ import {
 } from '../components/icons.jsx';
 import SubscriptionBanner from '../components/SubscriptionBanner.jsx';
 import { SectionHead, Tip, PageHead } from '../components/FormField.jsx';
-import Profile from './dashboard/Profile.jsx';
-import StoreSettings from './dashboard/StoreSettings.jsx';
-import ProductsManager from './dashboard/ProductsManager.jsx';
-import OrdersManager from './dashboard/OrdersManager.jsx';
-import CouponsManager from './dashboard/CouponsManager.jsx';
-import ReferralsManager from './dashboard/ReferralsManager.jsx';
-import AnalyticsManager from './dashboard/AnalyticsManager.jsx';
-import AdminOverview from './dashboard/AdminOverview.jsx';
-import BroadcastManager from './dashboard/BroadcastManager.jsx';
 import CountUp from '../components/CountUp.jsx';
-import StockRequestsManager from './dashboard/StockRequestsManager.jsx';
-import AdminRequests from './dashboard/AdminRequests.jsx';
-import AdminLog from './dashboard/AdminLog.jsx';
-import AdminSettings from './dashboard/AdminSettings.jsx';
-import SubscribersManager from './dashboard/SubscribersManager.jsx';
-import SiteSliders from './dashboard/SiteSliders.jsx';
-import LandingEditor from './dashboard/LandingEditor.jsx';
-import NewsletterManager from './dashboard/NewsletterManager.jsx';
-import InstagramInbox from './dashboard/InstagramInbox.jsx';
-import CampaignManager from './dashboard/CampaignManager.jsx';
-import SalesBot from './dashboard/SalesBot.jsx';
-import AdStudio from './dashboard/AdStudio.jsx';
-import FinanceManager from './dashboard/FinanceManager.jsx';
-import PayoutsManager from './dashboard/PayoutsManager.jsx';
+
+// ═════ الأقسامُ تُحمَّلُ عند فتحِها ═════
+// كانت كلُّها مستوردةً هنا فتصيرُ قطعةً واحدةً (‎٤٢٨ ك.ب.) تُنزَّلُ وتُحلَّلُ قبل أوّلِ رسمةٍ
+// للوحة — صاحبةُ متجرٍ تفتحُ «الطلبات» تدفعُ ثمنَ مصنعِ الإعلاناتِ والمحاسبةِ ولوحاتِ
+// المدير. صار كلُّ قسمٍ قطعتَه، والأكثرُ استعمالاً تُجلَبُ بالخلفيّةِ بعد الرسم (أدناه)
+// فيبقى التنقّلُ إليها فوريّاً.
+const load = {
+  Profile: () => import('./dashboard/Profile.jsx'),
+  StoreSettings: () => import('./dashboard/StoreSettings.jsx'),
+  ProductsManager: () => import('./dashboard/ProductsManager.jsx'),
+  OrdersManager: () => import('./dashboard/OrdersManager.jsx'),
+  CouponsManager: () => import('./dashboard/CouponsManager.jsx'),
+  ReferralsManager: () => import('./dashboard/ReferralsManager.jsx'),
+  AnalyticsManager: () => import('./dashboard/AnalyticsManager.jsx'),
+  AdminOverview: () => import('./dashboard/AdminOverview.jsx'),
+  BroadcastManager: () => import('./dashboard/BroadcastManager.jsx'),
+  StockRequestsManager: () => import('./dashboard/StockRequestsManager.jsx'),
+  AdminRequests: () => import('./dashboard/AdminRequests.jsx'),
+  AdminLog: () => import('./dashboard/AdminLog.jsx'),
+  AdminSettings: () => import('./dashboard/AdminSettings.jsx'),
+  SubscribersManager: () => import('./dashboard/SubscribersManager.jsx'),
+  SiteSliders: () => import('./dashboard/SiteSliders.jsx'),
+  LandingEditor: () => import('./dashboard/LandingEditor.jsx'),
+  NewsletterManager: () => import('./dashboard/NewsletterManager.jsx'),
+  InstagramInbox: () => import('./dashboard/InstagramInbox.jsx'),
+  CampaignManager: () => import('./dashboard/CampaignManager.jsx'),
+  SalesBot: () => import('./dashboard/SalesBot.jsx'),
+  AdStudio: () => import('./dashboard/AdStudio.jsx'),
+  FinanceManager: () => import('./dashboard/FinanceManager.jsx'),
+  PayoutsManager: () => import('./dashboard/PayoutsManager.jsx'),
+};
+const Profile = lazy(() => retryImport(load.Profile));
+const StoreSettings = lazy(() => retryImport(load.StoreSettings));
+const ProductsManager = lazy(() => retryImport(load.ProductsManager));
+const OrdersManager = lazy(() => retryImport(load.OrdersManager));
+const CouponsManager = lazy(() => retryImport(load.CouponsManager));
+const ReferralsManager = lazy(() => retryImport(load.ReferralsManager));
+const AnalyticsManager = lazy(() => retryImport(load.AnalyticsManager));
+const AdminOverview = lazy(() => retryImport(load.AdminOverview));
+const BroadcastManager = lazy(() => retryImport(load.BroadcastManager));
+const StockRequestsManager = lazy(() => retryImport(load.StockRequestsManager));
+const AdminRequests = lazy(() => retryImport(load.AdminRequests));
+const AdminLog = lazy(() => retryImport(load.AdminLog));
+const AdminSettings = lazy(() => retryImport(load.AdminSettings));
+const SubscribersManager = lazy(() => retryImport(load.SubscribersManager));
+const SiteSliders = lazy(() => retryImport(load.SiteSliders));
+const LandingEditor = lazy(() => retryImport(load.LandingEditor));
+const NewsletterManager = lazy(() => retryImport(load.NewsletterManager));
+const InstagramInbox = lazy(() => retryImport(load.InstagramInbox));
+const CampaignManager = lazy(() => retryImport(load.CampaignManager));
+const SalesBot = lazy(() => retryImport(load.SalesBot));
+const AdStudio = lazy(() => retryImport(load.AdStudio));
+const FinanceManager = lazy(() => retryImport(load.FinanceManager));
+const PayoutsManager = lazy(() => retryImport(load.PayoutsManager));
+
 
 // أقسام البائع (المشترك العادي) — الاستخدام اليومي أولاً (الطلبات/المنتجات)
 const SECTIONS = [
@@ -82,6 +116,18 @@ export default function Dashboard() {
   const [productsCount, setProductsCount] = useState(null);
   const [newOrders, setNewOrders] = useState(0);
   const isAdmin = subscription?.isAdmin;
+
+  // الأقسامُ اليوميّةُ تُجلَبُ بالخلفيّةِ بعد أوّلِ رسمة، فيبقى فتحُها فوريّاً كما كان
+  // ولا تدفعُ الرسمةُ الأولى ثمنَها. الباقي يُجلَبُ عند فتحِه فقط.
+  useEffect(() => {
+    const keys = isAdmin
+      ? ['AdminOverview', 'SubscribersManager', 'AdminRequests', 'Profile']
+      : ['OrdersManager', 'ProductsManager', 'InstagramInbox', 'StoreSettings', 'Profile'];
+    const run = () => keys.forEach((k) => { load[k]().catch(() => {}); });
+    const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 1500));
+    const h = idle(run, { timeout: 4000 });
+    return () => { (window.cancelIdleCallback || clearTimeout)(h); };
+  }, [isAdmin]);
 
   // عدّاد الطلبات الجديدة في الرأس: أهمّ ما تفتح المالكة اللوحة لأجله، وكان
   // لا يظهر إلا بعد فتح تبويب الطلبات. طلبٌ خفيف مستقلّ عن إحصاءات النظرة.
@@ -208,6 +254,7 @@ export default function Dashboard() {
       {visited.map((sec) => (
         <Activity key={sec} mode={sec === section ? 'visible' : 'hidden'}>
           <div className={`min-w-0 ${sec === freshSec ? 'bz-page-in' : ''}`}>
+            <Suspense fallback={<div className="flex justify-center py-16"><Spinner /></div>}>
             {sec === 'overview' && !isAdmin && <Overview productsCount={productsCount} />}
             {sec === 'analytics' && !isAdmin && <AnalyticsManager />}
             {sec === 'finance' && !isAdmin && <FinanceManager />}
@@ -232,6 +279,7 @@ export default function Dashboard() {
             {sec === 'siteSliders' && isAdmin && <SiteSliders />}
             {sec === 'newsletter' && isAdmin && <NewsletterManager />}
             {sec === 'broadcast' && isAdmin && <BroadcastManager />}
+            </Suspense>
           </div>
         </Activity>
       ))}

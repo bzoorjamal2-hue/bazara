@@ -918,6 +918,65 @@ export async function paytabsCallback(req, res) {
   }
 }
 
+// إحصاءُ الزبائن بمفتاحِ الرقمِ المحلّيّ (آخرُ تسعِ خانات): «0591234567» و«+970591234567»
+// زبونةٌ واحدة. المبيعاتُ ما تأكّد وما بعده، كما في كلِّ إحصاءاتِ المتجر.
+const SOLD = "status IN ('confirmed','shipped','delivered')";
+async function customerStats(storeId, keys) {
+  const list = [...new Set(keys.filter(Boolean))];
+  if (!list.length) return {};
+  try {
+    const r = await query(
+      `SELECT RIGHT(regexp_replace(customer_phone, '\\D', '', 'g'), 9) AS k,
+              COUNT(*)::int AS orders,
+              COUNT(*) FILTER (WHERE ${SOLD})::int AS done,
+              COUNT(*) FILTER (WHERE status = 'cancelled')::int AS cancelled,
+              COALESCE(SUM(total) FILTER (WHERE ${SOLD}), 0)::float AS spent,
+              MIN(created_at) AS first_at
+         FROM orders
+        WHERE store_id = $1 AND RIGHT(regexp_replace(customer_phone, '\\D', '', 'g'), 9) = ANY($2)
+        GROUP BY 1`,
+      [storeId, list]
+    );
+    return Object.fromEntries(r.rows.map((x) => [x.k, {
+      orders: x.orders, done: x.done, cancelled: x.cancelled, spent: Number(x.spent), firstAt: x.first_at,
+    }]));
+  } catch (e) {
+    console.error('customerStats:', e.message);
+    return {};
+  }
+}
+
+// GET /api/orders/customer?phone= — ملفُّ زبونةٍ واحدة مع آخرِ طلباتِها (لرأسِ المحادثة)
+export async function getCustomer(req, res, next) {
+  try {
+    const store = await getUserStore(req.user.id);
+    if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
+    const key = phoneKey(req.query.phone);
+    if (!key) return res.json({ customer: null });
+    const stats = (await customerStats(store.id, [key]))[key];
+    if (!stats) return res.json({ customer: null });
+    const recent = await query(
+      `SELECT id, reference, status, total, created_at, customer_name
+         FROM orders
+        WHERE store_id = $1 AND RIGHT(regexp_replace(customer_phone, '\\D', '', 'g'), 9) = $2
+        ORDER BY created_at DESC LIMIT 5`,
+      [store.id, key]
+    );
+    res.json({
+      customer: {
+        ...stats,
+        phone: key,
+        name: recent.rows[0]?.customer_name || '',
+        recent: recent.rows.map((o) => ({
+          id: o.id, reference: o.reference || '', status: o.status, total: Number(o.total), createdAt: o.created_at,
+        })),
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 // PUT /api/orders/whatsapp — { phone, wa }: حفظُ رقمِ واتساب الزبونِ الذي انفتحت
 // عليه المحادثةُ فعلاً. wa فارغٌ يمحو المحفوظَ (لتعادَ التجربة).
 export async function setCustomerWa(req, res, next) {
@@ -944,7 +1003,7 @@ export async function listMyOrders(req, res, next) {
     const r = await query(
       `SELECT id, reference, customer_name, customer_phone, items, total, currency, status, created_at,
               city, area, address, notes, delivery_fee, coupon_code, discount, payment_method,
-              opost_tracking, opost_status, eps_barcode, eps_status, gobox_barcode, gobox_status
+              opost_tracking, opost_status, eps_barcode, eps_status, gobox_barcode, gobox_status, status_at
        FROM orders WHERE store_id = $1 ORDER BY created_at DESC LIMIT 200`,
       [store.id]
     );
@@ -952,8 +1011,12 @@ export async function listMyOrders(req, res, next) {
     const costMap = await storeCostMap(store.id);
     // أرقامُ واتساب التي أكّدتها التاجرةُ لزبائنِها (انظر utils/waBook.js)
     const waBook = await loadWaBook(store.id);
+    // ملفُّ كلِّ زبونةٍ في القائمة: كم طلبت من هذا المتجرِ وكم صرفت — عبر كلِّ طلباتِها
+    // لا المئتين المعروضةِ وحدَها. فتعرفُ التاجرةُ الزبونةَ الراجعةَ من أوّلِ نظرة.
+    const customers = await customerStats(store.id, r.rows.map((o) => phoneKey(o.customer_phone)));
     res.json({
       waBook,
+      customers,
       orders: r.rows.map((o) => ({
         id: o.id,
         // رقم الطلب القصير (BZ-XXXX) هو ما يراه الزبون ويتتبّع به — لم يكن يُرسَل
@@ -962,6 +1025,7 @@ export async function listMyOrders(req, res, next) {
         customerName: o.customer_name,
         customerPhone: o.customer_phone,
         customerWa: waBook[phoneKey(o.customer_phone)] || '',
+        customerKey: phoneKey(o.customer_phone),
         items: o.items,
         total: Number(o.total),
         deliveryFee: Number(o.delivery_fee || 0),
@@ -987,6 +1051,8 @@ export async function listMyOrders(req, res, next) {
         goboxTracking: o.gobox_barcode || '',
         goboxStatus: o.gobox_status || '',
         createdAt: o.created_at,
+        // متى بلغَ الطلبُ كلَّ مرحلة { confirmed: وقت, shipped: وقت, … } — تحتَ شريطِ المراحل
+        statusAt: o.status_at && typeof o.status_at === 'object' ? o.status_at : {},
         // الربح: دقيق للطلبات الجديدة (لقطة تكلفة)، تقديري للقديمة، وفارغ إن نقصت تكلفة قطعة
         ...(() => {
           const p = orderProfit({ items: o.items, total: Number(o.total), deliveryFee: Number(o.delivery_fee || 0) }, costMap);

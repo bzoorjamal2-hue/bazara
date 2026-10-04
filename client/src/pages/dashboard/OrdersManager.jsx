@@ -56,6 +56,8 @@ export default function OrdersManager() {
   // نفتحُ الأرجحَ ونسألُ «انفتحت المحادثة؟»؛ «لا» تفتحُ الأخرى، و«آه» تحفظُ الرقمَ
   // للزبونِ عند الخادم — فكلُّ طلبٍ له بعدها يُفتَحُ بالرقمِ الصحيحِ بلا سؤال.
   const [waBook, setWaBook] = useState({});
+  // ملفُّ كلِّ زبونة (كم طلبت وكم صرفت) بمفتاحِ رقمِها — من الخادم مع القائمة
+  const [customers, setCustomers] = useState({});
   const [waAsk, setWaAsk] = useState(null); // { id, nums, idx }
   const waOf = (phone) => {
     if (!phone) return { nums: [], sure: true, saved: false };
@@ -68,6 +70,37 @@ export default function OrdersManager() {
     if (info.sure) return;
     setWaAsk({ id: o.id, nums: info.nums, idx: 0 });
   };
+  // سؤالُ «انفتحت محادثة الزبون؟» — نفسُه للطلبِ وللسلّةِ المتروكة
+  const waAskCard = (phone) => (
+    <div className="bz-waask rounded-xl p-3">
+      <p className="flex items-center gap-1.5 text-[12.5px] font-bold">
+        <WhatsAppIcon className="h-4 w-4 shrink-0 text-[#1da851]" />
+        {t('dashboard.ordersSection.waAskTitle')}
+        <span dir="ltr" className="bz-waask-num ms-auto rounded-md px-1.5 py-0.5 text-[11px] font-semibold">+{waAsk.nums[waAsk.idx]}</span>
+      </p>
+      <div className="mt-2.5 grid grid-cols-2 gap-2">
+        <button onClick={() => confirmWa(phone, waAsk.nums[waAsk.idx])} className="bz-waask-yes min-h-[40px] rounded-lg px-2 text-xs font-bold">
+          {t('dashboard.ordersSection.waAskYes')}
+        </button>
+        {waAsk.idx + 1 < waAsk.nums.length ? (
+          <a
+            href={`https://wa.me/${waAsk.nums[waAsk.idx + 1]}`}
+            target="_blank"
+            rel="noreferrer"
+            onClick={() => setWaAsk((a) => ({ ...a, idx: a.idx + 1 }))}
+            className="bz-waask-no flex min-h-[40px] items-center justify-center rounded-lg px-2 text-center text-xs font-bold"
+          >
+            {t('dashboard.ordersSection.waAskTry', { code: `\u2066+${waAsk.nums[waAsk.idx + 1].slice(0, 3)}\u2069` })}
+          </a>
+        ) : (
+          <button onClick={() => setWaAsk(null)} className="bz-waask-no min-h-[40px] rounded-lg px-2 text-xs font-bold">
+            {t('dashboard.ordersSection.waAskNone')}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
   const confirmWa = async (phone, wa) => {
     const key = phoneKey(phone);
     if (!key) return;
@@ -118,6 +151,7 @@ export default function OrdersManager() {
       const list = r.data.orders;
       setOrders(list);
       setWaBook(r.data.waBook || {});
+      setCustomers(r.data.customers || {});
       if (store?.id) setCache(`myorders:${store.id}`, list);
       // مزامنة حالة الشحنات المُرسلة (أوبتيموس/EPS/gobox) مع حالتها الحيّة هناك
       const patch = await syncCourierStatuses(list);
@@ -150,7 +184,8 @@ export default function OrdersManager() {
     if (!before || prev === status) return;
     setSavingId(id);
     setError('');
-    setOrders((list) => list.map((o) => (o.id === id ? { ...o, status } : o))); // تفاؤلي
+    // تفاؤلي — ومعه وقتُ بلوغِ المرحلةِ فيظهرُ تحتَها فوراً كما سيحفظُه الخادم
+    setOrders((list) => list.map((o) => (o.id === id ? { ...o, status, statusAt: { ...(o.statusAt || {}), [status]: new Date().toISOString() } } : o)));
     try {
       await api.patch(`/orders/${id}/status`, { status });
       pingOrdersChanged(); // الشارة تنقص فوراً عند التأكيد/الشحن
@@ -678,10 +713,12 @@ export default function OrdersManager() {
             {abandoned.map((a) => {
               const itemsTxt = (a.items || []).map((it) => `• ${it.name}${it.size ? ` (${it.size})` : ''}${it.color ? ` - ${it.color}` : ''} ×${it.qty}`).join('\n');
               const msg = t('dashboard.abandoned.waMsg', { name: a.name || '', store: store?.name || '', items: itemsTxt, total: Number(a.total || 0).toFixed(2) });
-              const nums = waOf(a.phone).nums;
+              const waInfo = waOf(a.phone);
+              const nums = waInfo.nums;
               const pieces = (a.items || []).reduce((s, i) => s + (Number(i.qty) || 1), 0);
               return (
-                <div key={a.id} className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-gold-400/15 bg-black/20 p-3">
+                <div key={a.id} className="space-y-2 rounded-2xl border border-gold-400/15 bg-black/20 p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-stone-100">
                       {a.name || a.phone} {a.phone && <a href={`tel:${String(a.phone).replace(/\s/g, '')}`} dir="ltr" className="ms-1 text-xs font-normal text-stone-400 underline-offset-2 hover:text-gold-200 hover:underline">{a.phone}</a>}
@@ -692,17 +729,19 @@ export default function OrdersManager() {
                   </div>
                   <div className="flex items-center gap-1.5">
                     {nums[0] && (
-                      <a href={`https://wa.me/${nums[0]}?text=${encodeURIComponent(msg)}`} target="_blank" rel="noreferrer" className="btn-whatsapp gap-1.5 !px-3 !py-1.5 text-xs">
+                      <a
+                        href={`https://wa.me/${nums[0]}?text=${encodeURIComponent(msg)}`}
+                        target="_blank" rel="noreferrer"
+                        onClick={() => askWa({ id: `ab-${a.id}` }, waInfo)}
+                        className="btn-whatsapp gap-1.5 !px-3 !py-1.5 text-xs"
+                      >
                         <WhatsAppIcon className="h-4 w-4" /> {t('dashboard.abandoned.nudge')}
-                      </a>
-                    )}
-                    {nums[1] && (
-                      <a href={`https://wa.me/${nums[1]}?text=${encodeURIComponent(msg)}`} target="_blank" rel="noreferrer" title={t('dashboard.ordersSection.waAltHint')} className="btn-whatsapp gap-1 !px-2.5 !py-1.5 text-xs opacity-80">
-                        <WhatsAppIcon className="h-4 w-4" /> <span dir="ltr">+{nums[1].slice(0, 3)}</span>
                       </a>
                     )}
                     <button onClick={() => removeAbandoned(a.id)} aria-label={t('common.remove')} className="p-1.5 text-stone-500 transition hover:text-red-400"><TrashIcon className="h-4 w-4" /></button>
                   </div>
+                </div>
+                {waAsk?.id === `ab-${a.id}` && waAskCard(a.phone)}
                 </div>
               );
             })}
@@ -841,7 +880,29 @@ export default function OrdersManager() {
                 {/* رأس: الزبون + الحالة */}
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-stone-100">{o.customerName || '—'}</p>
+                    <p className="flex min-w-0 items-center gap-1.5">
+                      <span className="truncate text-sm font-bold text-stone-100">{o.customerName || '—'}</span>
+                      {/* زبونةٌ راجعة أم أوّلُ طلب: يُعرَفُ من نظرةٍ قبل قراءةِ التفاصيل. والضغطُ
+                          على الشارةِ يصفّي القائمةَ على طلباتِها هي. */}
+                      {(() => {
+                        const cs = customers[o.customerKey];
+                        if (!cs) return null;
+                        return cs.orders > 1 ? (
+                          <button
+                            onClick={() => setOq(o.customerPhone)}
+                            title={t('dashboard.ordersSection.custFilter')}
+                            className="bz-cust-chip is-back inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold"
+                          >
+                            {t('dashboard.ordersSection.custBack', { count: cs.orders })}
+                            {cs.spent > 0 && <span className="tabular-nums opacity-80">· ₪{Math.round(cs.spent)}</span>}
+                          </button>
+                        ) : (
+                          <span className="bz-cust-chip is-new inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-bold">
+                            {t('dashboard.ordersSection.custNew')}
+                          </span>
+                        );
+                      })()}
+                    </p>
                     <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-stone-400">
                       {o.customerPhone && <a href={`tel:${o.customerPhone.replace(/\s/g, '')}`} className="underline-offset-2 transition hover:text-gold-200 hover:underline" dir="ltr">{o.customerPhone}</a>}
                       <span>{new Date(o.createdAt).toLocaleString()}</span>
@@ -939,6 +1000,8 @@ export default function OrdersManager() {
                   status={o.status}
                   saving={savingId === o.id}
                   onChange={(st) => setStatus(o.id, st)}
+                  statusAt={o.statusAt}
+                  createdAt={o.createdAt}
                   locked={courierOf(o)
                     ? `${courierOf(o).label || t(`dashboard.ordersSection.${FLOW.includes(o.status) ? o.status : 'shipped'}`)} · ${t(`dashboard.${courierOf(o).key}.managed`)}`
                     : null}
@@ -977,35 +1040,7 @@ export default function OrdersManager() {
                   )}
 
                   {/* «انفتحت محادثة الزبون؟» — بعد فتحِ واتساب برقمٍ لم يُؤكَّد بعد */}
-                  {waAsk?.id === o.id && (
-                    <div className="bz-waask rounded-xl p-3">
-                      <p className="flex items-center gap-1.5 text-[12.5px] font-bold">
-                        <WhatsAppIcon className="h-4 w-4 shrink-0 text-[#1da851]" />
-                        {t('dashboard.ordersSection.waAskTitle')}
-                        <span dir="ltr" className="bz-waask-num ms-auto rounded-md px-1.5 py-0.5 text-[11px] font-semibold">+{waAsk.nums[waAsk.idx]}</span>
-                      </p>
-                      <div className="mt-2.5 grid grid-cols-2 gap-2">
-                        <button onClick={() => confirmWa(o.customerPhone, waAsk.nums[waAsk.idx])} className="bz-waask-yes min-h-[40px] rounded-lg px-2 text-xs font-bold">
-                          {t('dashboard.ordersSection.waAskYes')}
-                        </button>
-                        {waAsk.idx + 1 < waAsk.nums.length ? (
-                          <a
-                            href={`https://wa.me/${waAsk.nums[waAsk.idx + 1]}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            onClick={() => setWaAsk((a) => ({ ...a, idx: a.idx + 1 }))}
-                            className="bz-waask-no flex min-h-[40px] items-center justify-center rounded-lg px-2 text-center text-xs font-bold"
-                          >
-                            {t('dashboard.ordersSection.waAskTry', { code: `\u2066+${waAsk.nums[waAsk.idx + 1].slice(0, 3)}\u2069` })}
-                          </a>
-                        ) : (
-                          <button onClick={() => setWaAsk(null)} className="bz-waask-no min-h-[40px] rounded-lg px-2 text-xs font-bold">
-                            {t('dashboard.ordersSection.waAskNone')}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                  {waAsk?.id === o.id && waAskCard(o.customerPhone)}
 
                   {/* رسائلُ جاهزة: حالةُ الطلبِ للزبون، وتفاصيلُه لمندوبِ التوصيل */}
                   {(waNums.length > 0 || store?.deliveryPhone || store?.whatsapp) && (

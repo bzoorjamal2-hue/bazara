@@ -893,7 +893,10 @@
       "waAskTitle": "Did the customer's chat open?",
       "waAskYes": "Yes, save number ✓",
       "waAskTry": "No, try {{code}}",
-      "waAskNone": "No, not on WhatsApp"
+      "waAskNone": "No, not on WhatsApp",
+      "custBack": "🔁 {{count}} orders",
+      "custNew": "✨ First order",
+      "custFilter": "Show all of this customer's orders"
     },
     "addProduct": "Add new product",
     "product": {
@@ -909,6 +912,7 @@
     "all": "All",
     "unread": "Unread",
     "markAll": "Mark all",
+    "cat": {"all": "All", "orders": "Orders", "messages": "Messages", "stock": "Stock"},
     "clearAll": "Clear all",
     "more": "Load more",
     "today": "Today",

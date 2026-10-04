@@ -609,6 +609,8 @@ END $$;`,
     // وسمُ الإشعار: إشعارٌ بالوسمِ نفسِه يحلُّ محلَّ سابقِه (محادثةٌ واحدةٌ = إشعارٌ واحد)
     "ALTER TABLE notifications ADD COLUMN IF NOT EXISTS tag VARCHAR(80) NOT NULL DEFAULT '';",
     "CREATE INDEX IF NOT EXISTS idx_notifications_tag ON notifications(user_id, tag) WHERE tag <> '';",
+    // متى نبضت شاشةُ المحادثةِ المفتوحةُ آخرَ مرّة — لا إشعارَ برسالةٍ تراها التاجرةُ أمامَها
+    'ALTER TABLE ig_conversations ADD COLUMN IF NOT EXISTS viewing_at TIMESTAMPTZ;',
     // دفترُ أرقامِ واتساب الزبائن: المقدّمةُ (970/972) التي انفتحت عليها المحادثةُ فعلاً
     `CREATE TABLE IF NOT EXISTS customer_wa (
   store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,

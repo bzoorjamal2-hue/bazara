@@ -7,18 +7,19 @@ import Spinner from '../../components/Spinner.jsx';
 import {
   BackIcon, BagIcon, CameraIcon, ImageIcon, TrashIcon, XIcon, MicIcon, SparkleIcon,
   SendIcon, ReplyIcon, CopyIcon, ClockIcon, CheckIcon, ArrowDownIcon, InstagramIcon, FacebookIcon,
-  LinkOutIcon, WarnIcon, VideoIcon,
+  LinkOutIcon, WarnIcon, VideoIcon, TagIcon, SearchIcon,
 } from '../../components/icons.jsx';
-import { cloudinaryEnabled, cldThumb, cldBlur, cldOptimized } from '../../utils/cloudinary.js';
+import { cloudinaryEnabled, cldThumb, cldBlur, cldOptimized, cldVideoPoster } from '../../utils/cloudinary.js';
 import { uploadMedia } from '../../utils/media.js';
 import { Avatar, ConvertForm } from '../../components/OrderComposer.jsx';
 import {
   buildItems, guessKind, findMobile, cldAudioMp3, sameDay,
-  replyWindow, lastInboundAt, matchQuick, linkify, hostOf, shortUrl,
+  replyWindow, lastInboundAt, matchQuick, linkify, hostOf, shortUrl, normalizeAr,
 } from '../../utils/chat.js';
 import { useNotifications } from '../../context/NotificationsContext.jsx';
 import { clearDelivered } from '../../utils/push.js';
 import * as cache from '../../utils/chatCache.js';
+import { StatusBadge } from '../../components/OrderStatus.jsx';
 
 // شاشةُ المحادثةِ تُرسَمُ على ‎document.body، فتخرجُ من ‎.theme-pub — وكلُّ قواعدِ
 // الوضعِ النهاريِّ مكتوبةٌ ‎.theme-pub .x. فكانت الحقولُ والأزرارُ والنصوصُ داخلَها
@@ -285,6 +286,144 @@ function RichText({ text, media }) {
   );
 }
 
+// ═════════ ملفُّ الزبونة برأسِ المحادثة ═════════
+// من رقمِها (من طلبِها المحوَّلِ أو ممّا كتبَتْه بالمحادثة) نعرفُ إن كانت زبونةً راجعة:
+// كم طلبت وكم صرفت وآخرُ طلباتِها بحالاتِها — فتردُّ التاجرةُ على من تعرفُها بنبرةِ من
+// تعرفُها، وتجدُ طلبَها السابقَ بضغطةٍ بدل البحثِ عنه.
+function CustomerStrip({ phone }) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [cust, setCust] = useState(null);
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    setCust(null);
+    if (!phone) return undefined;
+    let on = true;
+    api.get('/orders/customer', { params: { phone } })
+      .then((r) => { if (on) setCust(r.data?.customer || null); })
+      .catch(() => {});
+    return () => { on = false; };
+  }, [phone]);
+  if (!cust) return null;
+  // البحثُ في قائمةِ الطلباتِ يُحفَظُ بذاكرةِ الجلسة (useSessionState) — نضعُ فيه الرقم
+  // فتُفتَحُ الطلباتُ مصفّاةً على هذه الزبونةِ وحدَها.
+  const openOrders = (q) => {
+    try { sessionStorage.setItem('bz_ss:orders:q', JSON.stringify(q)); } catch { /* تصفّحٌ خاصّ */ }
+    navigate('/dashboard?tab=myOrders');
+  };
+  return (
+    <div className="bz-chat-bar shrink-0 border-b">
+      <button onClick={() => setOpen((v) => !v)} className="flex w-full items-center gap-2 px-3 py-2 text-start">
+        <span className="bz-cust-chip is-back inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10.5px] font-bold">
+          {cust.orders > 1 ? t('dashboard.instagram.custBack') : t('dashboard.instagram.custKnown')}
+        </span>
+        <span className="bz-chat-muted min-w-0 flex-1 truncate text-[11.5px] font-semibold">
+          {t('dashboard.instagram.custStats', { count: cust.orders })}
+          {cust.spent > 0 && ` · ${t('dashboard.instagram.custSpent', { total: Math.round(cust.spent) })}`}
+        </span>
+        <svg className={`bz-chat-muted h-4 w-4 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden><path d="M6 9l6 6 6-6" /></svg>
+      </button>
+      {open && (
+        <div className="space-y-1 px-3 pb-2.5">
+          {cust.recent.map((o) => (
+            <button key={o.id} onClick={() => openOrders(o.reference || cust.phone)} className="bz-chat-row flex w-full items-center gap-2 rounded-xl px-2 py-1.5 text-start">
+              <StatusBadge status={o.status} />
+              <span dir="ltr" className="text-[11.5px] font-bold">{o.reference}</span>
+              <span className="bz-chat-muted ms-auto text-[11px] tabular-nums">₪{Math.round(o.total)} · {new Date(o.createdAt).toLocaleDateString()}</span>
+            </button>
+          ))}
+          {cust.orders > cust.recent.length && (
+            <button onClick={() => openOrders(cust.phone.replace(/^5/, '05'))} className="bz-chat-muted w-full py-1 text-center text-[11px] font-semibold underline underline-offset-2">
+              {t('dashboard.instagram.custAll')}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═════════ «أرسلي منتجاً» ═════════
+// لوحةٌ من أسفلِ الشاشةِ بمنتجاتِ المتجرِ وبحث: الضغطةُ على قطعةٍ تبعثُ صورتَها وسطراً
+// باسمِها وسعرِها ورابطِها. كانت التاجرةُ تخرجُ إلى متجرِها لتنسخَ الرابطَ وتعودَ.
+function ProductSheet({ onPick, onClose }) {
+  const { t } = useTranslation();
+  const [list, setList] = useState(() => cache.getProducts());
+  const [q, setQ] = useState('');
+  const [error, setError] = useState('');
+  useEffect(() => {
+    api.get('/products')
+      .then((r) => {
+        const items = (r.data.products || []).filter((p) => !p.hidden);
+        cache.setProducts(items);
+        setList(items);
+      })
+      .catch((e) => { if (!cache.getProducts()) setError(getErrorMessage(e)); });
+  }, []);
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+  const term = normalizeAr(q);
+  const shown = (list || []).filter((p) => !term || normalizeAr(p.name).includes(term));
+  const thumb = (p) => {
+    const raw = p.imageUrl || p.images?.[0] || '';
+    return raw ? cldThumb(raw, 240) : (p.videoUrl ? cldVideoPoster(p.videoUrl, 240) : '');
+  };
+  return (
+    <div className="fixed inset-0 z-[105] flex flex-col justify-end" role="dialog" aria-modal="true">
+      <button type="button" aria-label={t('common.close', { defaultValue: 'إغلاق' })} onClick={onClose} className="bz-sheet-backdrop absolute inset-0" />
+      <div className="bz-sheet relative flex max-h-[78%] flex-col rounded-t-3xl pb-[max(env(safe-area-inset-bottom),12px)]">
+        <span className="bz-sheet-grip mx-auto mt-2.5 h-1.5 w-10 shrink-0 rounded-full" aria-hidden />
+        <div className="flex shrink-0 items-center gap-2 px-4 pb-2 pt-3">
+          <p className="flex-1 text-[15px] font-bold">{t('dashboard.instagram.sendProduct')}</p>
+          <button onClick={onClose} className="bz-chat-icon rounded-full p-1.5" aria-label={t('common.close', { defaultValue: 'إغلاق' })}>
+            <XIcon className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="relative shrink-0 px-4 pb-3">
+          <SearchIcon className="bz-chat-muted pointer-events-none absolute start-7 top-1/2 h-4 w-4 -translate-y-[calc(50%+6px)]" />
+          <input
+            className="bz-chat-input w-full !ps-10"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder={t('dashboard.instagram.searchProduct')}
+          />
+        </div>
+        <div className="min-h-[160px] overflow-y-auto overscroll-contain px-4 pb-2">
+          {error ? (
+            <p className="bz-chat-err rounded-xl px-3 py-2 text-xs">{error}</p>
+          ) : list === null ? (
+            <div className="flex justify-center py-10"><Spinner /></div>
+          ) : shown.length === 0 ? (
+            <p className="bz-chat-muted py-10 text-center text-sm">{t('dashboard.instagram.noProducts')}</p>
+          ) : (
+            <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4">
+              {shown.map((p) => {
+                const img = thumb(p);
+                const sale = p.oldPrice && Number(p.oldPrice) > Number(p.price);
+                return (
+                  <button key={p.id} onClick={() => onPick(p)} className="bz-sheet-item group flex min-w-0 flex-col overflow-hidden rounded-2xl text-start transition">
+                    <span className="bz-sheet-img relative block aspect-square w-full overflow-hidden">
+                      {img ? <img src={img} alt="" loading="lazy" className="h-full w-full object-cover" /> : <span className="flex h-full items-center justify-center"><BagIcon className="h-6 w-6 opacity-40" /></span>}
+                      {sale && <span className="absolute start-1.5 top-1.5 rounded-full bg-red-600 px-1.5 py-0.5 text-[9px] font-bold text-white">{t('dashboard.instagram.sale')}</span>}
+                    </span>
+                    <span className="block px-2 pb-2 pt-1.5">
+                      <span className="line-clamp-2 block text-[11.5px] font-semibold leading-snug">{p.name}</span>
+                      <span className="mt-0.5 block text-[12px] font-extrabold tabular-nums">₪{Number(p.price).toFixed(0)}</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ═════════ مقياسٌ للتشخيص ═════════
 // يُفتَحُ بثلاثِ نقراتٍ على صورةِ الزبونِ في الرأس. سببُه أنّ وصفَ «يتقطّع» لا يكفي
 // لتحديدِ المكان: الأرقامُ تفصلُ بين ثلاثِ عللٍ مختلفةٍ تماماً —
@@ -354,6 +493,8 @@ export default function InstagramChat() {
   const recRef = useRef(null);
   const [hud, setHud] = useState(false);
   const [toast, setToast] = useState('');
+  const [showProducts, setShowProducts] = useState(false);
+  const [preparing, setPreparing] = useState(false);
   const taps = useRef([]);
   // ثلاثُ نقراتٍ على الصورةِ خلالَ ثانيةٍ تفتحُ المقياسَ وتغلقُه — بابٌ خفيٌّ لأنّه
   // للتشخيصِ لا للتاجرة، ولا يحتاجُ عنوانَ صفحةٍ يُكتَبُ في تطبيقٍ بلا شريطِ عنوان.
@@ -515,9 +656,19 @@ export default function InstagramChat() {
     const quicken = () => { gap = 6000; };
     const slacken = () => { gap = Math.min(30000, Math.round(gap * 1.5)); };
     pace.current = { quicken, slacken };
-    const onVisible = () => { if (!document.hidden) { quicken(); tick(); } };
+    // نبضاتُ التحديثِ تقولُ للخادم «التاجرةُ على هذه المحادثة» فلا يبعثُ إشعاراً برسالةٍ
+    // تراها أمامَها. وحين تغادرُها أو تُخفي التطبيقَ نقولُها صراحةً، فتعودُ الإشعاراتُ
+    // فوراً بدل انتظارِ انقضاءِ المهلةِ على الخادم.
+    const leave = () => { api.post(`/instagram/conversations/${id}/leave`).catch(() => {}); };
+    const onVisible = () => {
+      if (document.hidden) leave();
+      else { quicken(); tick(); }
+    };
     document.addEventListener('visibilitychange', onVisible);
-    return () => { stop = true; clearTimeout(timer); document.removeEventListener('visibilitychange', onVisible); };
+    return () => {
+      stop = true; clearTimeout(timer); document.removeEventListener('visibilitychange', onVisible);
+      leave();
+    };
   }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // لوحةُ المفاتيح تُقلّصُ النافذةَ المرئيّةَ ولا تُقلّصُ inset-0، فيغرقُ صندوقُ الكتابةِ
@@ -936,6 +1087,35 @@ export default function InstagramChat() {
     try { recRef.current.mr.stop(); } catch { /* أُوقف مسبقاً */ }
   };
 
+  // المنتجُ المختارُ: الخادمُ يُجهّزُ صورةً تقبلُها ميتا وسطرَ الاسمِ والسعرِ والرابط،
+  // ثمّ يمضيانِ في طابورِ الإرسالِ كأيِّ رسالةٍ فيظهرانِ فوراً بحالتِهما.
+  const sendProduct = async (p) => {
+    setShowProducts(false);
+    setPreparing(true);
+    setError('');
+    try {
+      const r = await api.post('/instagram/product-card', { productId: p.id });
+      const stamp = Date.now();
+      const now = new Date().toISOString();
+      if (r.data?.image) {
+        enqueue(
+          { id: `tmp-pimg-${stamp}`, direction: 'out', text: '', attachment_url: r.data.image, attachment_type: 'image', created_at: now },
+          { attachmentUrl: r.data.image },
+        );
+      }
+      if (r.data?.text) {
+        enqueue(
+          { id: `tmp-ptxt-${stamp}`, direction: 'out', text: r.data.text, created_at: now },
+          { text: r.data.text },
+        );
+      }
+    } catch (e) {
+      setError(getErrorMessage(e));
+    } finally {
+      setPreparing(false);
+    }
+  };
+
   const send = async () => {
     const body = text.trim();
     if ((!body && !photo) || uploading) return;
@@ -1067,6 +1247,8 @@ export default function InstagramChat() {
           </span>
         </div>
       )}
+
+      {data && <CustomerStrip phone={c.order_phone || guessedPhone} />}
 
       {showConvert && !converted && (
         <div className="bz-chat-bar max-h-[60%] shrink-0 overflow-y-auto border-b">
@@ -1415,6 +1597,17 @@ export default function InstagramChat() {
               </label>
             </>
           )}
+          <button
+            onClick={() => setShowProducts(true)}
+            disabled={preparing}
+            className="bz-chat-icon mb-0.5 shrink-0 rounded-full p-2 transition disabled:opacity-40"
+            title={t('dashboard.instagram.sendProduct')}
+            aria-label={t('dashboard.instagram.sendProduct')}
+          >
+            {preparing
+              ? <span className="block h-[22px] w-[22px] animate-spin rounded-full border-2 border-current border-t-transparent" />
+              : <TagIcon className="h-[22px] w-[22px]" />}
+          </button>
           <textarea
             ref={inputRef}
             className="bz-chat-input bz-chat-compose min-h-[42px] flex-1 resize-none"
@@ -1453,6 +1646,7 @@ export default function InstagramChat() {
 
       {hud && <PerfHud />}
       {viewing && <MediaViewer media={viewing} onClose={() => setViewing(null)} />}
+      {showProducts && <ProductSheet onPick={sendProduct} onClose={() => setShowProducts(false)} />}
     </div>,
     bzPortalRoot() || document.body
   );

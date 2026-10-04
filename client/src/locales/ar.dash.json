@@ -186,7 +186,15 @@
       "tab_unread": "غير مقروءة",
       "tab_waiting": "بانتظار ردّك",
       "tab_orders": "عليها طلب",
-      "noMatch": "ما في محادثات هون."
+      "noMatch": "ما في محادثات هون.",
+      "sendProduct": "أرسل منتج",
+      "noProducts": "ما في منتجات بهالاسم",
+      "sale": "تخفيض",
+      "custBack": "زبونة رجعت 🔁",
+      "custKnown": "زبونة عندك",
+      "custStats": "{{count}} طلبات سابقة",
+      "custSpent": "صرفت ₪{{total}}",
+      "custAll": "كلّ طلباتها"
     },
     "opost": {
       "title": "شركة التوصيل أوبتيموس",
