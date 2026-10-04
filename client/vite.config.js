@@ -16,7 +16,11 @@ export default defineConfig({
     react(),
     // تطبيق ويب تقدّمي (PWA): قابل للتثبيت على الجوال، يفتح بملء الشاشة، ويعمل جزئياً بلا إنترنت.
     VitePWA({
-      registerType: 'autoUpdate',
+      // ‏prompt لا autoUpdate: النسخةُ الجديدةُ تُنزَّلُ بالخلفيّةِ وتنتظر، ونطبّقُها نحن
+      // حين يغيبُ التطبيقُ عن الشاشة أو عند فتحِه (main.jsx). autoUpdate كان يُعيدُ
+      // تحميلَ الصفحةِ وسطَ الاستعمالِ بعد كلِّ نشرة — وثلاثُ نشراتٍ في ساعةٍ تعني ثلاثَ
+      // تحميلاتٍ مفاجئةٍ وتنزيلَ ٣ م.ب. كلَّ مرّة: بطءٌ يُحَسُّ في كلِّ تنقّل.
+      registerType: 'prompt',
       includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png', 'robots.txt'],
       manifest: {
         name: 'Bazara Store',
