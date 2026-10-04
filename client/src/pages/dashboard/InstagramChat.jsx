@@ -18,6 +18,7 @@ import {
 } from '../../utils/chat.js';
 import { useNotifications } from '../../context/NotificationsContext.jsx';
 import { clearDelivered } from '../../utils/push.js';
+import * as cache from '../../utils/chatCache.js';
 
 // شاشةُ المحادثةِ تُرسَمُ على ‎document.body، فتخرجُ من ‎.theme-pub — وكلُّ قواعدِ
 // الوضعِ النهاريِّ مكتوبةٌ ‎.theme-pub .x. فكانت الحقولُ والأزرارُ والنصوصُ داخلَها
@@ -333,8 +334,9 @@ export default function InstagramChat() {
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
 
-  const [data, setData] = useState(null); // { conversation, messages }
-  const [serverMore, setServerMore] = useState(false); // عند الخادمِ أقدمُ ممّا جلبنا
+  // محادثةٌ فُتحت قبلُ تُرسَمُ فوراً ممّا حفظناه، والخادمُ يُحدّثُها فوقَه بصمت
+  const [data, setData] = useState(() => cache.getChat(id)); // { conversation, messages }
+  const [serverMore, setServerMore] = useState(() => Boolean(cache.getChat(id)?.hasMore)); // عند الخادمِ أقدمُ ممّا جلبنا
   const [text, setTextRaw] = useState(() => readDraft(id));
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
@@ -378,15 +380,24 @@ export default function InstagramChat() {
     setError('');
     return api.get(`/instagram/conversations/${id}/messages`)
       .then((r) => {
-        setData(r.data);
+        // ما كتبَتْه التاجرةُ في الأثناءِ (والمحفوظُ معروضٌ) يبقى فوقَ ما جاء
+        setData((d) => ({
+          ...r.data,
+          messages: [...(r.data?.messages || []), ...((d?.messages || []).filter((m) => String(m.id).startsWith('tmp-')))],
+        }));
         setServerMore(Boolean(r.data?.hasMore));
+        cache.markConvRead(id);
         afterRead(r.data?.badge, true);
       })
       .catch((e) => setError(getErrorMessage(e)));
   };
+  // كلُّ ما وصلَ من الخادمِ يُحفَظُ لفتحةِ المحادثةِ القادمة
   useEffect(() => {
-    setData(null);
-    setServerMore(false);
+    if (data) cache.setChat(id, { ...data, hasMore: serverMore });
+  }, [data, serverMore]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    setData(cache.getChat(id));
+    setServerMore(Boolean(cache.getChat(id)?.hasMore));
     setTextRaw(readDraft(id));
     setReplyTo(null);
     setLimit(40);

@@ -6,6 +6,7 @@ import Spinner from '../../components/Spinner.jsx';
 import { InstagramIcon, FacebookIcon, BagIcon, BackIcon, CheckIcon, PlusIcon, SearchIcon, XIcon, ClockIcon } from '../../components/icons.jsx';
 import { startFbLogin, igRedirectUri } from '../../utils/fbSdk.js';
 import { filterConvs, listStamp, replyWindow } from '../../utils/chat.js';
+import * as cache from '../../utils/chatCache.js';
 import { PageHead } from '../../components/FormField.jsx';
 // المشتركُ مع شاشةِ المحادثةِ يسكنُ ملفّاً مستقلّاً، فلا تعتمدُ قطعةُ شاشةٍ على قطعةِ أخرى.
 import { Avatar, OrderComposer } from '../../components/OrderComposer.jsx';
@@ -17,7 +18,9 @@ function cleanOauthUrl() {
 
 export default function InstagramInbox() {
   const { t } = useTranslation();
-  const [status, setStatus] = useState(null);
+  // حالةُ الربطِ المحفوظةُ تُرسَمُ فوراً عند الرجوعِ من محادثة، ويُسأَلُ الخادمُ فوقَها
+  const [status, setStatusRaw] = useState(() => cache.getStatus());
+  const setStatus = (s) => { cache.setStatus(s); setStatusRaw(s); };
   const [error, setError] = useState('');
   const [pendingPages, setPendingPages] = useState(null); // عدّة صفحات بعد العودة من فيسبوك
 
@@ -213,7 +216,8 @@ const TABS = ['all', 'unread', 'waiting', 'orders'];
 function Inbox({ username, onDisconnected }) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const [convs, setConvs] = useState(null);
+  const [convs, setConvsRaw] = useState(() => cache.getConvs());
+  const setConvs = (list) => { cache.setConvs(list); setConvsRaw(list); };
   const [q, setQ] = useState('');
   const [tab, setTab] = useState('all');
   const [error, setError] = useState('');
