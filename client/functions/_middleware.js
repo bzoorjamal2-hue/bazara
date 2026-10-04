@@ -27,6 +27,23 @@ export async function onRequest({ request, next, env }) {
   const url = new URL(request.url);
   const path = url.pathname;
 
+  // ملفّاتُ البناء (/assets/*) أسماؤُها ببصمةِ محتواها، فتُخزَّنُ سنةً كاملة. وملفٌّ
+  // غيرُ موجودٍ كانت Pages تُجيبُه بالصفحةِ الرئيسيّة (سلوكُ التطبيقِ أحاديِّ الصفحة)
+  // بـ200 — فإن سُئلَ عن ملفِّ تنسيقٍ جديدٍ في الثواني التي لم ينتشرْ فيها النشرُ بعدُ
+  // على كلِّ خوادمِ كلاودفلير، خُزِّنت الصفحةُ مكانَه سنةً والموقعُ بلا تنسيق (حدثَ
+  // فعلاً بنشرِ ٤ تشرين). الآن: المفقودُ هنا «غيرُ موجود» صريحٌ لا يُخزَّن، فيُعادُ
+  // طلبُه بعد ثوانٍ ويصلُ الملفُّ الصحيح.
+  if (path.startsWith('/assets/')) {
+    const res = await next();
+    if ((res.headers.get('content-type') || '').includes('text/html')) {
+      return new Response('Not found', {
+        status: 404,
+        headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' },
+      });
+    }
+    return res;
+  }
+
   if (path.startsWith('/api/') || path.startsWith('/share/')) {
     return proxy(request, RENDER + path + url.search);
   }

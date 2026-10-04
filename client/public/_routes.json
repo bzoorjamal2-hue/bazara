@@ -1,5 +1,12 @@
 {
   "version": 1,
-  "include": ["/api/*", "/share/*", "/store/*", "/product/*", "/sitemap.xml"],
+  "include": [
+    "/api/*",
+    "/share/*",
+    "/store/*",
+    "/product/*",
+    "/sitemap.xml",
+    "/assets/*"
+  ],
   "exclude": []
 }

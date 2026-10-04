@@ -1770,7 +1770,7 @@ html.dark .bz-seg-on {
 
 /* تبويباتُ أنواعِ الإشعارات: شرائحُ بإطار، أخفُّ من مفتاحِ «الكل/غير المقروء» فوقها
    كي لا يتنافسا. تتمرّرُ أفقياً على الشاشاتِ الضيّقة بدل أن تلتفّ. */
-.bz-notif-cats { scrollbar-width: none; }
+.bz-notif-cats { scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .bz-notif-cats::-webkit-scrollbar { display: none; }
 .bz-notif-cat {
   display: inline-flex;
