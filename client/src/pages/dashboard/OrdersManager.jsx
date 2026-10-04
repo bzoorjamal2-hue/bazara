@@ -1,9 +1,10 @@
-import { useEffect, useState, Fragment } from 'react';
+import { useEffect, useRef, useState, Fragment } from 'react';
 import useSessionState from '../../hooks/useSessionState.js';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
+import OrderStatus, { StatusBadge } from '../../components/OrderStatus.jsx';
 import { buildWhatsappLink, waCandidates } from '../../utils/whatsapp.js';
 import { getCache, setCache } from '../../utils/apiCache.js';
 import { downloadXlsx } from '../../utils/xlsx.js';
@@ -13,7 +14,7 @@ import { printSheet } from '../../utils/printSheet.js';
 import { copyText } from '../../utils/links.js';
 import { PinIcon, NoteIcon, TicketIcon, WhatsAppIcon, TruckIcon, BellIcon, TrashIcon, BagIcon, ReceiptIcon, SearchIcon, XIcon, DownloadIcon, CheckIcon, CopyIcon, PhoneIcon, PrintIcon, ImageIcon } from '../../components/icons.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { useCouriers, syncCourierStatuses, courierOf, CourierLock, CourierSend } from '../../components/couriers.jsx';
+import { useCouriers, syncCourierStatuses, courierOf, CourierSend } from '../../components/couriers.jsx';
 import { PageHead, SectionHead } from '../../components/FormField.jsx';
 
 const FLOW = ['new', 'confirmed', 'shipped', 'delivered', 'cancelled'];
@@ -104,13 +105,34 @@ export default function OrdersManager() {
     pingOrdersChanged();
   };
 
-  const setStatus = async (id, status) => {
+  // شريطُ «تراجع» بعد كلِّ تغييرٍ للحالة: ضغطةٌ خاطئةٌ على مرحلةٍ أو زرٍّ تُصحَّحُ
+  // بضغطةٍ أخرى بدل البحثِ عن الطلبِ وإرجاعِه يدويّاً. الخادمُ يُرجعُ المخزونَ والكوبونَ
+  // مع الحالة، فالتراجعُ تراجعٌ كامل.
+  const [undo, setUndo] = useState(null); // { id, prev, next, name }
+  const undoTimer = useRef(0);
+  useEffect(() => () => clearTimeout(undoTimer.current), []);
+
+  const setStatus = async (id, status, { silent = false } = {}) => {
+    const before = (orders || []).find((o) => o.id === id);
+    const prev = before?.status;
+    if (!before || prev === status) return;
     setSavingId(id);
-    setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o))); // تفاؤلي
+    setError('');
+    setOrders((list) => list.map((o) => (o.id === id ? { ...o, status } : o))); // تفاؤلي
     try {
       await api.patch(`/orders/${id}/status`, { status });
       pingOrdersChanged(); // الشارة تنقص فوراً عند التأكيد/الشحن
+      if (navigator.vibrate) navigator.vibrate(12);
+      clearTimeout(undoTimer.current);
+      if (silent) {
+        setUndo(null);
+      } else {
+        setUndo({ id, prev, next: status, name: before.customerName || orderNo(before) });
+        undoTimer.current = setTimeout(() => setUndo(null), 6000);
+      }
     } catch (e) {
+      // كان الفشلُ يتركُ الحالةَ الجديدةَ على الشاشةِ والقديمةَ في القاعدة: نُرجعُها
+      setOrders((list) => list.map((o) => (o.id === id ? { ...o, status: prev } : o)));
       setError(getErrorMessage(e));
     } finally {
       setSavingId('');
@@ -156,9 +178,6 @@ export default function OrdersManager() {
     lines.push(t('dashboard.ordersSection.waStatus.thanks'));
     return lines.join('\n');
   };
-
-  // الخطوة التالية المنطقية بمسار الطلب — زرّ واحد بدل فتح القائمة كل مرّة
-  const NEXT = { new: 'confirmed', confirmed: 'shipped', shipped: 'delivered' };
 
   // رقم الطلب المعروض: المرجع القصير (BZ-…) الذي يعرفه الزبون. وإن غاب (طلبات
   // قديمة) نعرض آخر ٦ خانات من المعرّف بدل UUID كامل يملأ السطر.
@@ -807,7 +826,9 @@ export default function OrdersManager() {
                         <CheckIcon className="h-3 w-3 shrink-0" /> {t('dashboard.ordersSection.paidBadge')}
                       </span>
                     )}
-                    <span className={`badge ${BADGE[o.status] || ''}`}>{t(`dashboard.ordersSection.${o.status}`)}</span>
+                    {FLOW.includes(o.status)
+                      ? <StatusBadge status={o.status} />
+                      : <span className={`badge ${BADGE[o.status] || ''}`}>{t(`dashboard.ordersSection.${o.status}`)}</span>}
                   </span>
                 </div>
 
@@ -882,33 +903,18 @@ export default function OrdersManager() {
                   </div>
                 </div>
 
-                {/* تحديث الحالة + تواصل */}
+                {/* حالةُ الطلب: شريطُ المراحلِ وزرُّ الخطوةِ التالية والإلغاءُ بتأكيد */}
+                <OrderStatus
+                  status={o.status}
+                  saving={savingId === o.id}
+                  onChange={(st) => setStatus(o.id, st)}
+                  locked={courierOf(o)
+                    ? `${courierOf(o).label || t(`dashboard.ordersSection.${FLOW.includes(o.status) ? o.status : 'shipped'}`)} · ${t(`dashboard.${courierOf(o).key}.managed`)}`
+                    : null}
+                />
+
+                {/* تواصل وأدوات */}
                 <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-white/5 pt-3">
-                  <span className="text-xs text-stone-400">{t('dashboard.ordersSection.updateStatus')}:</span>
-                  {courierOf(o) ? (
-                    // الطلب بعهدة شركة التوصيل → الحالة مُقفلة (تُدار من عندهم)
-                    <CourierLock order={o} fallbackLabel={t(`dashboard.ordersSection.${FLOW.includes(o.status) ? o.status : 'shipped'}`)} />
-                  ) : (
-                    <div className="min-w-[140px]">
-                      <Select
-                        value={FLOW.includes(o.status) ? o.status : 'new'}
-                        onChange={(v) => setStatus(o.id, v)}
-                        options={FLOW.map((s) => ({ value: s, label: t(`dashboard.ordersSection.${s}`) }))}
-                      />
-                    </div>
-                  )}
-                  {/* الخطوة التالية بضغطة — أسرع من فتح القائمة لكل طلب */}
-                  {!courierOf(o) && NEXT[o.status] && (
-                    <button
-                      onClick={() => setStatus(o.id, NEXT[o.status])}
-                      disabled={savingId === o.id}
-                      title={t('dashboard.ordersSection.moveTo', { status: t(`dashboard.ordersSection.${NEXT[o.status]}`) })}
-                      className="inline-flex items-center gap-1 rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-400 transition hover:bg-emerald-500/20 disabled:opacity-50"
-                    >
-                      <CheckIcon className="h-4 w-4" /> {t(`dashboard.ordersSection.${NEXT[o.status]}`)}
-                    </button>
-                  )}
-                  {savingId === o.id && <span className="text-xs text-stone-500">…</span>}
                   {wa && (
                     <a href={wa} target="_blank" rel="noreferrer" className="btn-whatsapp gap-1.5 !px-3 !py-1.5 text-xs"><WhatsAppIcon className="h-4 w-4" /> {t('dashboard.ordersSection.contactWhatsapp')}{waAlt ? <span dir="ltr" className="opacity-75">+{waNums[0].slice(0, 3)}</span> : null}</a>
                   )}
@@ -980,6 +986,22 @@ export default function OrdersManager() {
             );
             });
           })()}
+        </div>
+      )}
+
+      {/* «تراجع»: يطفو فوقَ الشريطِ السفليِّ ستَّ ثوانٍ بعد كلِّ تغييرٍ للحالة */}
+      {undo && (
+        <div className="bz-undo fixed inset-x-0 z-[80] flex justify-center px-4" style={{ bottom: 'calc(env(safe-area-inset-bottom) + 96px)' }}>
+          <div className="bz-undo-card flex w-full max-w-sm items-center gap-3 rounded-2xl px-4 py-3 shadow-2xl">
+            <StatusBadge status={undo.next} />
+            <span className="min-w-0 flex-1 truncate text-[13px] font-semibold">{undo.name}</span>
+            <button
+              onClick={() => { const u = undo; setUndo(null); clearTimeout(undoTimer.current); setStatus(u.id, u.prev, { silent: true }); }}
+              className="bz-undo-btn shrink-0 rounded-lg px-2.5 py-1 text-[13px] font-extrabold"
+            >
+              {t('dashboard.ordersSection.undo')}
+            </button>
+          </div>
         </div>
       )}
     </div>

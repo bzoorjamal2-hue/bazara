@@ -876,7 +876,20 @@
       "paidBadge": "Items paid",
       "payLineCod": "Payment: cash on delivery — collect {{amount}} on handover",
       "payLineCard": "Payment: items paid by card — collect {{amount}} delivery fee on handover",
-      "payLineCardFree": "Payment: paid by card — nothing to collect on delivery"
+      "payLineCardFree": "Payment: paid by card — nothing to collect on delivery",
+      "actConfirm": "Confirm order",
+      "actShip": "Mark shipped",
+      "actDeliver": "Mark delivered",
+      "completed": "Order completed 🎉",
+      "cancelOrder": "Cancel",
+      "keepOrder": "No, keep it",
+      "cancelTitle": "Cancel this order?",
+      "cancelMsg": "If the order was confirmed, its items go back to stock. You can restore it later if needed.",
+      "cancelledTitle": "Order cancelled",
+      "cancelledSub": "Items were returned to stock if they had been deducted.",
+      "restore": "Restore order",
+      "undo": "Undo",
+      "cancelYes": "Yes, cancel it"
     },
     "addProduct": "Add new product",
     "product": {
