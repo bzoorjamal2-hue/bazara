@@ -609,6 +609,14 @@ END $$;`,
     // وسمُ الإشعار: إشعارٌ بالوسمِ نفسِه يحلُّ محلَّ سابقِه (محادثةٌ واحدةٌ = إشعارٌ واحد)
     "ALTER TABLE notifications ADD COLUMN IF NOT EXISTS tag VARCHAR(80) NOT NULL DEFAULT '';",
     "CREATE INDEX IF NOT EXISTS idx_notifications_tag ON notifications(user_id, tag) WHERE tag <> '';",
+    // دفترُ أرقامِ واتساب الزبائن: المقدّمةُ (970/972) التي انفتحت عليها المحادثةُ فعلاً
+    `CREATE TABLE IF NOT EXISTS customer_wa (
+  store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+  phone_key VARCHAR(12) NOT NULL,
+  wa VARCHAR(16) NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (store_id, phone_key)
+);`,
     // تنظيفُ ما تراكمَ قبل الدمج: كلُّ رسالةِ إنستغرامٍ كانت إشعاراً غيرَ مقروءٍ
     // مستقلّاً، فبلغت الشارةُ الآلاف. نُبقي الأحدثَ لكلِّ محادثةٍ ونقرأُ ما سبقَه،
     // ونقرأُ إشعاراتِ المحادثاتِ التي فُتحت أصلاً (لا غيرَ مقروءٍ فيها).

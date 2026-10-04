@@ -889,7 +889,11 @@
       "cancelledSub": "Items were returned to stock if they had been deducted.",
       "restore": "Restore order",
       "undo": "Undo",
-      "cancelYes": "Yes, cancel it"
+      "cancelYes": "Yes, cancel it",
+      "waAskTitle": "Did the customer's chat open?",
+      "waAskYes": "Yes, save number ✓",
+      "waAskTry": "No, try {{code}}",
+      "waAskNone": "No, not on WhatsApp"
     },
     "addProduct": "Add new product",
     "product": {

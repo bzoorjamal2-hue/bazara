@@ -5,7 +5,7 @@ import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
 import OrderStatus, { StatusBadge } from '../../components/OrderStatus.jsx';
-import { buildWhatsappLink, waCandidates } from '../../utils/whatsapp.js';
+import { buildWhatsappLink, waCandidates, phoneKey } from '../../utils/whatsapp.js';
 import { getCache, setCache } from '../../utils/apiCache.js';
 import { downloadXlsx } from '../../utils/xlsx.js';
 import { htmlToPngBlob, safeFileName, downloadBlob } from '../../utils/htmlImage.js';
@@ -50,6 +50,37 @@ export default function OrdersManager() {
   const couriers = useCouriers();
   // طلبات لم تكتمل (سلات متروكة ببيانات تواصل) — لمتابعتها برسالة وإنقاذ البيع
   const [abandoned, setAbandoned] = useState([]);
+
+  // ═════════ رقمُ واتساب الزبونِ الحقيقيّ ═════════
+  // أرقامُ 059/056 قد تكونُ على واتساب بمقدّمة ‎+970 أو ‎+972 ولا يقولُ الرقمُ أيُّهما.
+  // نفتحُ الأرجحَ ونسألُ «انفتحت المحادثة؟»؛ «لا» تفتحُ الأخرى، و«آه» تحفظُ الرقمَ
+  // للزبونِ عند الخادم — فكلُّ طلبٍ له بعدها يُفتَحُ بالرقمِ الصحيحِ بلا سؤال.
+  const [waBook, setWaBook] = useState({});
+  const [waAsk, setWaAsk] = useState(null); // { id, nums, idx }
+  const waOf = (phone) => {
+    if (!phone) return { nums: [], sure: true, saved: false };
+    const known = waBook[phoneKey(phone)];
+    if (known) return { nums: [known], sure: true, saved: true };
+    const nums = waCandidates(phone);
+    return { nums, sure: nums.length < 2, saved: false };
+  };
+  const askWa = (o, info) => {
+    if (info.sure) return;
+    setWaAsk({ id: o.id, nums: info.nums, idx: 0 });
+  };
+  const confirmWa = async (phone, wa) => {
+    const key = phoneKey(phone);
+    if (!key) return;
+    const before = waBook;
+    setWaBook((b) => ({ ...b, [key]: wa }));
+    setWaAsk(null);
+    try {
+      await api.put('/orders/whatsapp', { phone, wa });
+    } catch (e) {
+      setWaBook(before);
+      setError(getErrorMessage(e));
+    }
+  };
   // فلترة وبحث بالطلبات: حالة + اسم/هاتف/رقم طلب — للوصول لأي طلب بثوانٍ
   const [statusFilter, setStatusFilter] = useSessionState('orders:status', 'all');
   const [oq, setOq] = useSessionState('orders:q', '');
@@ -86,6 +117,7 @@ export default function OrdersManager() {
       if (!on) return;
       const list = r.data.orders;
       setOrders(list);
+      setWaBook(r.data.waBook || {});
       if (store?.id) setCache(`myorders:${store.id}`, list);
       // مزامنة حالة الشحنات المُرسلة (أوبتيموس/EPS/gobox) مع حالتها الحيّة هناك
       const patch = await syncCourierStatuses(list);
@@ -646,7 +678,7 @@ export default function OrdersManager() {
             {abandoned.map((a) => {
               const itemsTxt = (a.items || []).map((it) => `• ${it.name}${it.size ? ` (${it.size})` : ''}${it.color ? ` - ${it.color}` : ''} ×${it.qty}`).join('\n');
               const msg = t('dashboard.abandoned.waMsg', { name: a.name || '', store: store?.name || '', items: itemsTxt, total: Number(a.total || 0).toFixed(2) });
-              const nums = waCandidates(a.phone);
+              const nums = waOf(a.phone).nums;
               const pieces = (a.items || []).reduce((s, i) => s + (Number(i.qty) || 1), 0);
               return (
                 <div key={a.id} className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-gold-400/15 bg-black/20 p-3">
@@ -790,9 +822,8 @@ export default function OrdersManager() {
             const subtotal = (o.total - (o.deliveryFee || 0) + (o.discount || 0)).toFixed(2);
             // أرقام 059/056 قد تكون على واتساب بمقدمة 970 أو 972 — نجهّز المقدمتين:
             // الزر الرئيسي يفتح الأرجح، وبجانبه بديل صغير لو قال واتساب "غير موجود"
-            const waNums = o.customerPhone ? waCandidates(o.customerPhone) : [];
-            const wa = waNums[0] ? `https://wa.me/${waNums[0]}` : '';
-            const waAlt = waNums[1] ? `https://wa.me/${waNums[1]}` : '';
+            const waInfo = waOf(o.customerPhone);
+            const waNums = waInfo.nums;
             const k = dayKey(o.createdAt);
             const header = k !== lastDay ? (
               <div className="flex items-center gap-2 pt-2">
@@ -913,73 +944,107 @@ export default function OrdersManager() {
                     : null}
                 />
 
-                {/* تواصل وأدوات */}
-                <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-white/5 pt-3">
-                  {wa && (
-                    <a href={wa} target="_blank" rel="noreferrer" className="btn-whatsapp gap-1.5 !px-3 !py-1.5 text-xs"><WhatsAppIcon className="h-4 w-4" /> {t('dashboard.ordersSection.contactWhatsapp')}{waAlt ? <span dir="ltr" className="opacity-75">+{waNums[0].slice(0, 3)}</span> : null}</a>
+                {/* ═══ التواصلُ والأدوات ═══
+                    كانت ثلاثةَ صفوفٍ ملتفّةٍ بأحجامٍ وألوانٍ مختلفة: زرّا واتساب (‎+970 و‎+972)
+                    وأبلغ وأرسل وشركاتُ التوصيل وأربعُ أدوات — تتكسّرُ بحسبِ عرضِ الشاشة. صارت
+                    طبقاتٍ ثابتة: التواصلُ المباشرُ أوّلاً وأكبر، ثمّ الرسائلُ الجاهزة، ثمّ
+                    شركاتُ التوصيل، ثمّ أدواتُ الورقِ شريطاً واحداً مقسوماً. */}
+                <div className="mt-3 space-y-2 border-t border-white/5 pt-3">
+                  {(waNums.length > 0 || o.customerPhone) && (
+                    <div className="flex gap-2">
+                      {waNums.length > 0 && (
+                        <a
+                          href={`https://wa.me/${waNums[0]}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={() => askWa(o, waInfo)}
+                          className="btn-whatsapp min-h-[44px] min-w-0 flex-1 gap-2 !rounded-xl !px-3 !py-2 text-sm"
+                        >
+                          <WhatsAppIcon className="h-5 w-5 shrink-0" />
+                          <span className="truncate">{t('dashboard.ordersSection.contactWhatsapp')}</span>
+                          {waInfo.sure && waInfo.saved && <CheckIcon className="h-4 w-4 shrink-0 opacity-90" />}
+                        </a>
+                      )}
+                      {o.customerPhone && (
+                        <a
+                          href={`tel:${o.customerPhone.replace(/\s/g, '')}`}
+                          className="bz-oact min-h-[44px] shrink-0 gap-1.5 px-4 text-sm"
+                        >
+                          <PhoneIcon className="h-[18px] w-[18px]" /> {t('dashboard.ordersSection.callShort')}
+                        </a>
+                      )}
+                    </div>
                   )}
-                  {waAlt && (
-                    <a href={waAlt} target="_blank" rel="noreferrer" title={t('dashboard.ordersSection.waAltHint')} className="btn-whatsapp gap-1 !px-2.5 !py-1.5 text-xs opacity-80"><WhatsAppIcon className="h-4 w-4" /> <span dir="ltr">+{waNums[1].slice(0, 3)}</span></a>
-                  )}
-                  {/* رسالة جاهزة للزبون عن حالة طلبه الحالية (مع رقم التتبّع إن وُجد) */}
-                  {wa && (
-                    <a
-                      href={`https://wa.me/${waNums[0]}?text=${encodeURIComponent(orderStatusMsg(o))}`}
-                      target="_blank" rel="noreferrer"
-                      className="inline-flex items-center gap-1 rounded-xl border border-gold-400/30 px-3 py-1.5 text-xs font-semibold text-gold-200 transition hover:bg-gold-400/10"
-                    >
-                      <BellIcon className="h-4 w-4" /> {t('dashboard.ordersSection.notifyCustomer')}
-                    </a>
-                  )}
-                  {(store?.deliveryPhone || store?.whatsapp) && (
-                    <button onClick={() => sendToDelivery(o)} className="inline-flex items-center gap-1 rounded-xl border border-gold-400/30 px-3 py-1.5 text-xs font-semibold text-gold-200 transition hover:bg-gold-400/10">
-                      <TruckIcon className="inline h-4 w-4" /> {t('dashboard.ordersSection.sendDelivery')}
-                    </button>
-                  )}
-                  <CourierSend order={o} couriers={couriers} onSent={markSent} />
 
-                  {/* أدوات الطلب: اتصال · نسخ التفاصيل · صورة · طباعة.
-                      لكلٍّ اسمٌ صغيرٌ ظاهرٌ تحتَ أيقونتِه لا تلميحُ ‎title وحدَه:
-                      التلميحُ لا يظهرُ إلّا بتمريرِ الفأرة، ولا فأرةَ على الجوّالِ
-                      واللوح — فتبقى أربعُ أيقوناتٍ بلا شرحٍ أمامَ من تُدير متجرَها
-                      من هاتفِها، وهنّ الأكثريّة. و‎title يبقى للوصفِ الأطولِ
-                      على الحاسوب. */}
-                  <span className="ms-auto flex items-center gap-1.5">
-                    {o.customerPhone && (
-                      <a
-                        href={`tel:${o.customerPhone.replace(/\s/g, '')}`}
-                        title={t('dashboard.ordersSection.call')} aria-label={t('dashboard.ordersSection.call')}
-                        className="bz-ordertool"
-                      >
-                        <PhoneIcon className="h-[17px] w-[17px]" />
-                        <span>{t('dashboard.ordersSection.callShort')}</span>
-                      </a>
-                    )}
-                    <button
-                      onClick={() => copyOrder(o)}
-                      title={t('dashboard.ordersSection.copyOrder')} aria-label={t('dashboard.ordersSection.copyOrder')}
-                      className="bz-ordertool"
-                    >
-                      <CopyIcon className="h-[17px] w-[17px]" />
-                      <span>{t('dashboard.ordersSection.copyShort')}</span>
+                  {/* «انفتحت محادثة الزبون؟» — بعد فتحِ واتساب برقمٍ لم يُؤكَّد بعد */}
+                  {waAsk?.id === o.id && (
+                    <div className="bz-waask rounded-xl p-3">
+                      <p className="flex items-center gap-1.5 text-[12.5px] font-bold">
+                        <WhatsAppIcon className="h-4 w-4 shrink-0 text-[#1da851]" />
+                        {t('dashboard.ordersSection.waAskTitle')}
+                        <span dir="ltr" className="bz-waask-num ms-auto rounded-md px-1.5 py-0.5 text-[11px] font-semibold">+{waAsk.nums[waAsk.idx]}</span>
+                      </p>
+                      <div className="mt-2.5 grid grid-cols-2 gap-2">
+                        <button onClick={() => confirmWa(o.customerPhone, waAsk.nums[waAsk.idx])} className="bz-waask-yes min-h-[40px] rounded-lg px-2 text-xs font-bold">
+                          {t('dashboard.ordersSection.waAskYes')}
+                        </button>
+                        {waAsk.idx + 1 < waAsk.nums.length ? (
+                          <a
+                            href={`https://wa.me/${waAsk.nums[waAsk.idx + 1]}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={() => setWaAsk((a) => ({ ...a, idx: a.idx + 1 }))}
+                            className="bz-waask-no flex min-h-[40px] items-center justify-center rounded-lg px-2 text-center text-xs font-bold"
+                          >
+                            {t('dashboard.ordersSection.waAskTry', { code: `\u2066+${waAsk.nums[waAsk.idx + 1].slice(0, 3)}\u2069` })}
+                          </a>
+                        ) : (
+                          <button onClick={() => setWaAsk(null)} className="bz-waask-no min-h-[40px] rounded-lg px-2 text-xs font-bold">
+                            {t('dashboard.ordersSection.waAskNone')}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* رسائلُ جاهزة: حالةُ الطلبِ للزبون، وتفاصيلُه لمندوبِ التوصيل */}
+                  {(waNums.length > 0 || store?.deliveryPhone || store?.whatsapp) && (
+                    <div className="grid grid-cols-2 gap-2 [&>*:only-child]:col-span-2">
+                      {waNums.length > 0 && (
+                        <a
+                          href={`https://wa.me/${waNums[0]}?text=${encodeURIComponent(orderStatusMsg(o))}`}
+                          target="_blank" rel="noreferrer"
+                          onClick={() => askWa(o, waInfo)}
+                          className="bz-oact min-h-[40px] min-w-0 gap-1.5 px-2 text-xs"
+                        >
+                          <BellIcon className="h-4 w-4 shrink-0" /> <span className="truncate">{t('dashboard.ordersSection.notifyCustomer')}</span>
+                        </a>
+                      )}
+                      {(store?.deliveryPhone || store?.whatsapp) && (
+                        <button onClick={() => sendToDelivery(o)} className="bz-oact min-h-[40px] min-w-0 gap-1.5 px-2 text-xs">
+                          <TruckIcon className="h-4 w-4 shrink-0" /> <span className="truncate">{t('dashboard.ordersSection.sendDelivery')}</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* شركاتُ التوصيلِ المربوطة — أزرارُها ونماذجُها كما هي، بسطرٍ خاصٍّ بها */}
+                  <div className="flex flex-wrap items-center gap-2 empty:hidden">
+                    <CourierSend order={o} couriers={couriers} onSent={markSent} />
+                  </div>
+
+                  {/* أدواتُ الورق: شريطٌ واحدٌ مقسومٌ بالتساوي على أيِّ عرض */}
+                  <div className="bz-otools grid grid-cols-3 overflow-hidden rounded-xl">
+                    <button onClick={() => copyOrder(o)} title={t('dashboard.ordersSection.copyOrder')} className="bz-otool">
+                      <CopyIcon className="h-[17px] w-[17px] shrink-0" /> <span>{t('dashboard.ordersSection.copyShort')}</span>
                     </button>
-                    <button
-                      onClick={() => saveInvoiceImage(o)}
-                      title={t('dashboard.ordersSection.saveImage')} aria-label={t('dashboard.ordersSection.saveImage')}
-                      className="bz-ordertool"
-                    >
-                      <ImageIcon className="h-[17px] w-[17px]" />
-                      <span>{t('dashboard.ordersSection.saveImageShort')}</span>
+                    <button onClick={() => saveInvoiceImage(o)} title={t('dashboard.ordersSection.saveImage')} className="bz-otool">
+                      <ImageIcon className="h-[17px] w-[17px] shrink-0" /> <span>{t('dashboard.ordersSection.saveImageShort')}</span>
                     </button>
-                    <button
-                      onClick={() => printInvoice(o)}
-                      title={t('dashboard.ordersSection.printInvoice')} aria-label={t('dashboard.ordersSection.printInvoice')}
-                      className="bz-ordertool"
-                    >
-                      <PrintIcon className="h-[17px] w-[17px]" />
-                      <span>{t('dashboard.ordersSection.printShort')}</span>
+                    <button onClick={() => printInvoice(o)} title={t('dashboard.ordersSection.printInvoice')} className="bz-otool">
+                      <PrintIcon className="h-[17px] w-[17px] shrink-0" /> <span>{t('dashboard.ordersSection.printShort')}</span>
                     </button>
-                  </span>
+                  </div>
                 </div>
               </div>
               </Fragment>
