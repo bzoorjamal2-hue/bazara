@@ -128,4 +128,106 @@ test('تطبيعُ العربيّةِ يُزيلُ التطويلَ والتشك
   assert.equal(normalizeAr('فُسْـــتان'), 'فستان');
 });
 
+
+// ───────── نافذةُ الردّ والقائمة ─────────
+import { replyWindow, lastInboundAt, listStamp, filterConvs, matchQuick, WINDOW_MS } from './chat.js';
+
+test('النافذةُ مفتوحةٌ قبل مرورِ يومٍ ومغلقةٌ بعده', () => {
+  const now = Date.parse('2026-09-07T12:00:00Z');
+  const w1 = replyWindow('2026-09-07T10:00:00Z', now);
+  assert.equal(w1.open, true);
+  assert.equal(w1.msLeft, WINDOW_MS - 2 * 3600 * 1000);
+  const w2 = replyWindow('2026-09-06T11:00:00Z', now);
+  assert.equal(w2.open, false);
+  assert.equal(w2.msLeft, 0);
+});
+
+test('بلا رسالةٍ من الزبونِ لا نُعلنُ نافذةً مغلقة', () => {
+  const w = replyWindow(null);
+  assert.equal(w.known, false);
+  assert.equal(w.open, true);
+});
+
+test('آخرُ ما كتبَه الزبونُ يتخطّى ردودَ المتجرِ بعده', () => {
+  assert.equal(lastInboundAt([
+    { direction: 'in', created_at: 'a' },
+    { direction: 'in', created_at: 'b' },
+    { direction: 'out', created_at: 'c' },
+  ]), 'b');
+  assert.equal(lastInboundAt([{ direction: 'out', created_at: 'c' }]), null);
+});
+
+test('ختمُ القائمة: الآن، دقائق، الساعة، أمس، يومُ الأسبوع، تاريخ', () => {
+  const now = new Date(2026, 8, 10, 15, 0, 0);
+  assert.equal(listStamp(new Date(2026, 8, 10, 14, 59, 40), now).kind, 'now');
+  assert.deepEqual(listStamp(new Date(2026, 8, 10, 14, 45), now), { kind: 'min', value: 15 });
+  assert.equal(listStamp(new Date(2026, 8, 10, 9, 0), now).kind, 'time');
+  assert.equal(listStamp(new Date(2026, 8, 9, 23, 0), now).kind, 'yesterday');
+  assert.equal(listStamp(new Date(2026, 8, 6, 12, 0), now).kind, 'weekday');
+  assert.equal(listStamp(new Date(2026, 7, 1, 12, 0), now).kind, 'date');
+  assert.equal(listStamp('garbage', now).kind, 'none');
+});
+
+test('تبويباتُ الصندوقِ والبحثُ معاً', () => {
+  const convs = [
+    { id: 1, customer_name: 'سارة', unread: 2, last_dir: 'in' },
+    { id: 2, customer_name: 'ليلى', unread: 0, last_dir: 'out', order_id: 9 },
+    { id: 3, customer_name: 'هبة', unread: 0, last_dir: 'in', last_message: 'بدي عبايه' },
+  ];
+  assert.deepEqual(filterConvs(convs, { tab: 'unread' }).map((c) => c.id), [1]);
+  assert.deepEqual(filterConvs(convs, { tab: 'waiting' }).map((c) => c.id), [1, 3]);
+  assert.deepEqual(filterConvs(convs, { tab: 'orders' }).map((c) => c.id), [2]);
+  assert.deepEqual(filterConvs(convs, { q: 'عباية' }).map((c) => c.id), [3]);
+  assert.deepEqual(filterConvs(convs, { q: 'عباية', tab: 'unread' }).map((c) => c.id), []);
+});
+
+test('الردودُ الجاهزةُ تُفتَحُ بـ/ وتُصفّى بما بعدَها', () => {
+  const qr = ['متوفّر حبيبتي', 'السعر ١٢٠ شيكل', 'التوصيل يومين'];
+  assert.equal(matchQuick(qr, 'مرحبا'), null);
+  assert.deepEqual(matchQuick(qr, '/'), qr);
+  assert.deepEqual(matchQuick(qr, '/سعر'), ['السعر ١٢٠ شيكل']);
+  assert.deepEqual(matchQuick(qr, '/متوفر'), ['متوفّر حبيبتي'].filter((x) => normalizeAr(x).includes('متوفر')));
+});
+
+import { linkify, hostOf } from './chat.js';
+
+test('الرابطُ يُفصَلُ عن النصِّ وتُتركُ نقطةُ آخرِ الجملة', () => {
+  const parts = linkify('شوفي هاد: https://instagram.com/p/abc. حلو؟');
+  assert.deepEqual(parts.map((p) => p.type), ['text', 'url', 'text']);
+  assert.equal(parts[1].href, 'https://instagram.com/p/abc');
+  assert.equal(parts[2].value, '. حلو؟');
+});
+
+test('www بلا بروتوكولٍ يصيرُ رابطاً صالحاً', () => {
+  const parts = linkify('www.bazarastore.site/store/x');
+  assert.equal(parts[0].href, 'https://www.bazarastore.site/store/x');
+});
+
+test('رقمُ الجوّالِ يصيرُ رابطَ اتّصال', () => {
+  const parts = linkify('رقمي 059 123 4567 تمام');
+  const ph = parts.find((p) => p.type === 'phone');
+  assert.ok(ph);
+  assert.equal(ph.href, 'tel:0591234567');
+  const plain = linkify('رقمي 0591234567 بدي نمرة ٥٢').find((p) => p.type === 'phone');
+  assert.ok(plain, 'العشرةُ أرقامٍ المتّصلةُ تُلتقَطُ أيضاً');
+  assert.equal(plain.value, '0591234567');
+});
+
+test('نصٌّ بلا روابطَ يبقى قطعةً واحدة', () => {
+  assert.deepEqual(linkify('مرحبا'), [{ type: 'text', value: 'مرحبا' }]);
+  assert.deepEqual(linkify(''), []);
+});
+
+test('اسمُ الموقعِ بلا www', () => {
+  assert.equal(hostOf('https://www.instagram.com/p/x'), 'instagram.com');
+  assert.equal(hostOf('not a url'), '');
+});
+
+import { shortUrl } from './chat.js';
+test('الرابطُ الطويلُ يُختصَرُ للعرض', () => {
+  assert.equal(shortUrl('https://www.instagram.com/p/abc/'), 'instagram.com/p/abc');
+  const long = shortUrl('https://bazarastore.site/store/demo/p/123?utm_source=ig&utm_medium=dm');
+  assert.equal(long.length, 36);
+  assert.ok(long.endsWith('…'));
+});
 console.log(`\n${passed} اختباراً ناجحاً`);
