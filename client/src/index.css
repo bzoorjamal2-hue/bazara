@@ -6164,3 +6164,55 @@ html.dark .bz-dt-thumb { background: #EDEAE6; box-shadow: inset 0 0 0 1px rgba(0
 .bz-dh-count { color: rgba(31, 30, 29, 0.6); }
 html.dark .theme-pub .bz-dh-dot { background: #E4E2DE; color: #1F1E1D; }
 html.dark .theme-pub .bz-dh-count { color: rgba(239, 238, 236, 0.6); }
+
+/* ═════════ حالةُ الطلب: شريطُ المراحلِ والشارةُ وزرُّ الخطوةِ التالية ═════════
+   لكلِّ حالةٍ لونٌ واحدٌ يتبعُها أينما ظهرت (الشارة، الشريط، الزرّ، «تراجع»):
+   جديد كهرمانيّ · مؤكّد أزرق · مشحون بنفسجيّ · مُسلَّم أخضر · ملغى أحمر.
+   اللونُ متغيّرٌ (‎--st‎) يُكتَبُ مرّةً لكلِّ وضع، وكلُّ ما تحتَه يشتقُّ منه. */
+.bz-st-new { --st: 180 83 9; }
+.bz-st-confirmed { --st: 29 78 216; }
+.bz-st-shipped { --st: 109 40 217; }
+.bz-st-delivered { --st: 4 120 87; }
+.bz-st-cancelled { --st: 185 28 28; }
+html.dark .bz-st-new { --st: 251 191 36; }
+html.dark .bz-st-confirmed { --st: 96 165 250; }
+html.dark .bz-st-shipped { --st: 167 139 250; }
+html.dark .bz-st-delivered { --st: 52 211 153; }
+html.dark .bz-st-cancelled { --st: 248 113 113; }
+
+.bz-stbadge { background: rgb(var(--st) / 0.12); color: rgb(var(--st)); border: 1px solid rgb(var(--st) / 0.22); }
+.bz-stdot { background: rgb(var(--st)); }
+
+.bz-ost { background: rgb(var(--st) / 0.05); border: 1px solid rgb(var(--st) / 0.18); }
+.bz-ost-line { background: rgba(120, 113, 108, 0.22); transition: background-color 0.25s; }
+.bz-ost-line.is-on { background: rgb(var(--st)); }
+.bz-ost-dot.is-done { background: rgb(var(--st)); color: #ffffff; }
+.bz-ost-dot.is-here { background: rgb(var(--st)); color: #ffffff; box-shadow: 0 0 0 4px rgb(var(--st) / 0.2); }
+.bz-ost-dot.is-todo { background: #ffffff; color: rgba(87, 83, 78, 0.7); border: 1.5px dashed rgba(120, 113, 108, 0.45); }
+.bz-ost-dot.is-todo:not(:disabled):hover { border-color: rgb(var(--st)); color: rgb(var(--st)); }
+.bz-ost-dot:not(:disabled):active { transform: scale(0.9); }
+html.dark .bz-ost-dot.is-done, html.dark .bz-ost-dot.is-here { color: #171615; }
+html.dark .bz-ost-dot.is-todo { background: #1A1918; color: rgba(239, 238, 236, 0.45); border-color: rgba(239, 238, 236, 0.25); }
+.bz-ost-here-label, .bz-ost-title { color: rgb(var(--st)); }
+.bz-ost-sub { color: rgba(15, 15, 14, 0.55); }
+html.dark .bz-ost-sub { color: rgba(239, 238, 236, 0.5); }
+.bz-ost-ico { background: rgb(var(--st) / 0.14); color: rgb(var(--st)); }
+
+/* الزرُّ الكبير بلونِ الحالةِ التي ينقلُ إليها — فيُعرَفُ إلى أين قبلَ قراءتِه */
+.bz-ost-next { background: rgb(var(--st)); color: #ffffff; box-shadow: 0 6px 16px -8px rgb(var(--st) / 0.8); }
+.bz-ost-next:not(:disabled):active { transform: scale(0.97); }
+html.dark .bz-ost-next { color: #171615; box-shadow: none; }
+.bz-ost-done { background: rgb(var(--st) / 0.12); color: rgb(var(--st)); }
+.bz-ost-cancel { color: #b91c1c; background: rgba(185, 28, 28, 0.06); border: 1px solid rgba(185, 28, 28, 0.25); }
+.bz-ost-cancel:not(:disabled):hover { background: rgba(185, 28, 28, 0.12); }
+html.dark .bz-ost-cancel { color: #fca5a5; background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.3); }
+.bz-ost-ghost { color: rgb(var(--st)); border: 1px solid rgb(var(--st) / 0.4); background: transparent; }
+.bz-ost-ghost:not(:disabled):hover { background: rgb(var(--st) / 0.08); }
+
+/* شريطُ «تراجع» */
+.bz-undo-card { background: #ffffff; color: #1F1E1D; border: 1px solid rgb(var(--c-gold-300)); animation: bz-bubble-in 0.18s ease-out both; }
+html.dark .bz-undo-card { background: #232120; color: #EFEEEC; border-color: rgba(255, 255, 255, 0.08); }
+.bz-undo-btn { color: rgb(var(--c-wine)); }
+.bz-undo-btn:hover { background: rgba(23, 23, 23, 0.06); }
+html.dark .bz-undo-btn { color: rgb(var(--c-gold-300)); }
+html.dark .bz-undo-btn:hover { background: rgba(255, 255, 255, 0.06); }
