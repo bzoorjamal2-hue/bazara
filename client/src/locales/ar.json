@@ -922,7 +922,11 @@
       "cancelledSub": "القطع رجعت للمخزون إذا كانت انخصمت.",
       "restore": "استرجاع الطلب",
       "undo": "تراجع",
-      "cancelYes": "نعم، ألغيه"
+      "cancelYes": "نعم، ألغيه",
+      "waAskTitle": "انفتحت محادثة الزبون؟",
+      "waAskYes": "آه، احفظ الرقم ✓",
+      "waAskTry": "لا، جرّب {{code}}",
+      "waAskNone": "لا، ما عنده واتس"
     },
     "addProduct": "إضافة منتج جديد",
     "product": {

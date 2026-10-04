@@ -17,6 +17,7 @@ import { feeForCity, cityOfVillage } from '../config/deliveryCities.js';
 import { variantInStock } from './stockRequest.controller.js';
 import { normalizeMobile, isValidMobile } from '../utils/phone.js';
 import { paidOnline, codAmount } from '../utils/cod.js';
+import { phoneKey, validWa, loadWaBook, saveWa } from '../utils/waBook.js';
 
 // إشعار صاحب المتجر (بريد + إشعار دفع على الجوال) عند وصول طلب جديد — بالخلفية
 async function notifyOwnerNewOrder(storeId, info) {
@@ -917,6 +918,24 @@ export async function paytabsCallback(req, res) {
   }
 }
 
+// PUT /api/orders/whatsapp — { phone, wa }: حفظُ رقمِ واتساب الزبونِ الذي انفتحت
+// عليه المحادثةُ فعلاً. wa فارغٌ يمحو المحفوظَ (لتعادَ التجربة).
+export async function setCustomerWa(req, res, next) {
+  try {
+    const store = await getUserStore(req.user.id);
+    if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
+    const key = phoneKey(req.body?.phone);
+    if (!key) return res.status(400).json({ error: 'رقم الزبون غير صالح.' });
+    const raw = String(req.body?.wa || '');
+    const wa = raw ? validWa(raw, key) : '';
+    if (raw && !wa) return res.status(400).json({ error: 'رقم الواتساب لا يطابق رقم الزبون.' });
+    await saveWa(store.id, key, wa);
+    res.json({ ok: true, key, wa });
+  } catch (err) {
+    next(err);
+  }
+}
+
 // طلبات متجر المستخدم الحالي
 export async function listMyOrders(req, res, next) {
   try {
@@ -931,7 +950,10 @@ export async function listMyOrders(req, res, next) {
     );
     // تكاليف المنتجات الحالية — تُستعمل فقط للطلبات القديمة التي بلا لقطة تكلفة
     const costMap = await storeCostMap(store.id);
+    // أرقامُ واتساب التي أكّدتها التاجرةُ لزبائنِها (انظر utils/waBook.js)
+    const waBook = await loadWaBook(store.id);
     res.json({
+      waBook,
       orders: r.rows.map((o) => ({
         id: o.id,
         // رقم الطلب القصير (BZ-XXXX) هو ما يراه الزبون ويتتبّع به — لم يكن يُرسَل
@@ -939,6 +961,7 @@ export async function listMyOrders(req, res, next) {
         reference: o.reference || '',
         customerName: o.customer_name,
         customerPhone: o.customer_phone,
+        customerWa: waBook[phoneKey(o.customer_phone)] || '',
         items: o.items,
         total: Number(o.total),
         deliveryFee: Number(o.delivery_fee || 0),

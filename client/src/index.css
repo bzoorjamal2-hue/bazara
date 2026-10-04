@@ -6216,3 +6216,58 @@ html.dark .bz-undo-card { background: #232120; color: #EFEEEC; border-color: rgb
 .bz-undo-btn:hover { background: rgba(23, 23, 23, 0.06); }
 html.dark .bz-undo-btn { color: rgb(var(--c-gold-300)); }
 html.dark .bz-undo-btn:hover { background: rgba(255, 255, 255, 0.06); }
+
+/* ═════════ أزرارُ التواصلِ والأدواتِ ببطاقةِ الطلب ═════════
+   طبقاتٌ ثابتةٌ لا صفوفٌ ملتفّة: واتساب واتّصالٌ أكبرُ ما فيها، ثمّ رسالتان جاهزتان
+   بعرضٍ متساوٍ، ثمّ أدواتُ الورقِ شريطاً واحداً مقسوماً. كلُّ زرٍّ ‎44px‎ على الأقلّ
+   (حجمُ إصبع) ويتقلّصُ نصُّه لا شكلُه على الشاشاتِ الضيّقة. */
+.bz-oact {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  font-weight: 700;
+  background: #ffffff;
+  color: #1F1E1D;
+  border: 1px solid rgba(163, 162, 160, 0.4);
+  transition: background-color 0.15s, border-color 0.15s, transform 0.1s;
+}
+.bz-oact:active { transform: scale(0.97); }
+@media (hover: hover) { .bz-oact:hover { background: rgba(31, 30, 29, 0.05); border-color: rgba(31, 30, 29, 0.45); } }
+html.dark .bz-oact { background: rgba(255, 255, 255, 0.05); color: #EFEEEC; border-color: rgba(239, 238, 236, 0.16); }
+@media (hover: hover) { html.dark .bz-oact:hover { background: rgba(255, 255, 255, 0.09); border-color: rgba(239, 238, 236, 0.35); } }
+
+/* أدواتُ الورق: شريطٌ مقسومٌ بخطوطٍ رفيعة — أيقونةٌ واسمٌ جنباً لجنب */
+.bz-otools { border: 1px solid rgba(163, 162, 160, 0.32); }
+html.dark .bz-otools { border-color: rgba(239, 238, 236, 0.14); }
+.bz-otool {
+  display: flex;
+  min-height: 40px;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #55534F;
+  transition: background-color 0.15s, color 0.15s;
+}
+.bz-otool > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bz-otool + .bz-otool { border-inline-start: 1px solid rgba(163, 162, 160, 0.32); }
+html.dark .bz-otool { color: #B7B2AA; }
+html.dark .bz-otool + .bz-otool { border-inline-start-color: rgba(239, 238, 236, 0.14); }
+.bz-otool:active { background: rgba(31, 30, 29, 0.06); }
+@media (hover: hover) {
+  .bz-otool:hover { background: rgba(31, 30, 29, 0.05); color: #1F1E1D; }
+  html.dark .bz-otool:hover { background: rgba(255, 255, 255, 0.06); color: #F6F5F3; }
+}
+
+/* سؤالُ «انفتحت محادثة الزبون؟» — أخضرُ واتساب خفيف */
+.bz-waask { background: rgba(37, 211, 102, 0.08); border: 1px solid rgba(29, 168, 81, 0.3); color: #1F1E1D; animation: bz-bubble-in 0.18s ease-out both; }
+html.dark .bz-waask { background: rgba(37, 211, 102, 0.08); border-color: rgba(37, 211, 102, 0.28); color: #EFEEEC; }
+.bz-waask-num { background: rgba(29, 168, 81, 0.12); color: #166534; }
+html.dark .bz-waask-num { background: rgba(37, 211, 102, 0.14); color: #86efac; }
+.bz-waask-yes { background: linear-gradient(135deg, #25d366 0%, #1da851 100%); color: #ffffff; }
+.bz-waask-no { background: #ffffff; color: #1F1E1D; border: 1px solid rgba(163, 162, 160, 0.45); }
+html.dark .bz-waask-no { background: rgba(255, 255, 255, 0.05); color: #EFEEEC; border-color: rgba(239, 238, 236, 0.18); }
+.bz-waask-yes:active, .bz-waask-no:active { transform: scale(0.97); }
