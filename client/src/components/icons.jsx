@@ -238,6 +238,12 @@ export function UploadIcon({ className = 'h-5 w-5' }) { return svg(className, <p
 export function DownloadIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M12 4 V15 M7 10 L12 15 L17 10 M5 19 H19" />); }
 // ميكروفون — للرسائل الصوتيّة في صندوق رسائل إنستغرام
 export function MicIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="9" y="3" width="6" height="11" rx="3" /><path {...L} d="M5 11 a7 7 0 0 0 14 0 M12 18 V21 M9 21 H15" /></>); }
+// طائرةٌ ورقيّة لزرِّ الإرسال، وسهمُ الردِّ على رسالة — ينقلبان مع اتّجاهِ الكتابة
+export function SendIcon({ className = 'h-5 w-5' }) { return svg(`${className} rtl-flip`, <><path {...L} d="M4 12 L20 4 L14.5 20 L11.5 13 Z" /><path {...L} d="M11.5 13 L20 4" /></>); }
+export function ReplyIcon({ className = 'h-5 w-5' }) { return svg(`${className} rtl-flip`, <path {...L} d="M9.5 6 L4 11.5 L9.5 17 M4.5 11.5 H14 A6 6 0 0 1 20 17.5 V19" />); }
+// صحّتان متداخلتان: «وصلت» — تمييزاً عن ساعةِ «عم تنبعت»
+export function DoubleCheckIcon({ className = 'h-4 w-4' }) { return svg(className, <path {...L} d="M2.5 12.5 L6.5 16.5 L14 8 M10.5 15.5 L11.5 16.5 L21 7" />); }
+export function LinkOutIcon({ className = 'h-4 w-4' }) { return svg(`${className} rtl-flip`, <path {...L} d="M14 5 H19 V10 M19 5 L11 13 M17 14 V18 A1 1 0 0 1 16 19 H6 A1 1 0 0 1 5 18 V8 A1 1 0 0 1 6 7 H10" />); }
 export function CameraIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M4 8 H7 L9 5 H15 L17 8 H20 V19 H4 Z" /><circle {...L} cx="12" cy="13" r="3.4" /></>); }
 // قفل مغلق — الإيقاف الإداريّ (نظيره المفتوح أدناه لرفعه)
 export function LockIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="5" y="11" width="14" height="9" rx="2" /><path {...L} d="M8 11 V8 a4 4 0 0 1 8 0 V11" /></>); }

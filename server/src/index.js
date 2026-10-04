@@ -606,6 +606,21 @@ END $$;`,
     // الفهرس الوحيد المهم: قائمة مستخدمٍ مرتّبة زمنياً + عدّ غير المقروء
     'CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, created_at DESC);',
     'CREATE INDEX IF NOT EXISTS idx_notifications_unread ON notifications(user_id) WHERE read_at IS NULL;',
+    // وسمُ الإشعار: إشعارٌ بالوسمِ نفسِه يحلُّ محلَّ سابقِه (محادثةٌ واحدةٌ = إشعارٌ واحد)
+    "ALTER TABLE notifications ADD COLUMN IF NOT EXISTS tag VARCHAR(80) NOT NULL DEFAULT '';",
+    "CREATE INDEX IF NOT EXISTS idx_notifications_tag ON notifications(user_id, tag) WHERE tag <> '';",
+    // تنظيفُ ما تراكمَ قبل الدمج: كلُّ رسالةِ إنستغرامٍ كانت إشعاراً غيرَ مقروءٍ
+    // مستقلّاً، فبلغت الشارةُ الآلاف. نُبقي الأحدثَ لكلِّ محادثةٍ ونقرأُ ما سبقَه،
+    // ونقرأُ إشعاراتِ المحادثاتِ التي فُتحت أصلاً (لا غيرَ مقروءٍ فيها).
+    `UPDATE notifications n SET read_at = now()
+      WHERE n.type = 'instagram' AND n.read_at IS NULL AND EXISTS (
+        SELECT 1 FROM notifications m
+         WHERE m.user_id = n.user_id AND m.type = 'instagram' AND m.url = n.url AND m.id > n.id
+      );`,
+    `UPDATE notifications n SET read_at = now()
+       FROM ig_conversations c
+      WHERE n.type = 'instagram' AND n.read_at IS NULL AND c.unread = 0
+        AND n.url = '/dashboard/instagram/' || c.id::text;`,
     // Paytabs: دفع بالبطاقة اختياري لكل متجر — المالك يفعّله ويدخل بياناته
     "ALTER TABLE stores ADD COLUMN IF NOT EXISTS card_payment_enabled BOOLEAN NOT NULL DEFAULT false;",
     "ALTER TABLE stores ADD COLUMN IF NOT EXISTS paytabs_profile_id VARCHAR(40) DEFAULT '';",

@@ -63,15 +63,20 @@ function sendToToken(deviceToken, payload) {
         badge: Number.isFinite(payload.badge) ? Math.max(0, payload.badge) : 1,
       },
       url: payload.url || '/',
+      tag: payload.tag || '',
     });
-    const req = client.request({
+    const headers = {
       ':method': 'POST',
       ':path': `/3/device/${deviceToken}`,
       authorization: `bearer ${authToken()}`,
       'apns-topic': TOPIC,
       'apns-push-type': 'alert',
       'content-type': 'application/json',
-    });
+    };
+    // إشعارُ المحادثةِ نفسِها يحلُّ محلَّ سابقِه في شريطِ الآيفون بدل أن تتكدّسَ
+    // عشرون إشعارةً من زبونةٍ واحدة (حدُّ APNs للمعرّف ٦٤ بايتاً).
+    if (payload.tag) headers['apns-collapse-id'] = String(payload.tag).slice(0, 64);
+    const req = client.request(headers);
     let status = 0;
     req.on('response', (h) => { status = h[':status']; });
     req.on('end', () => { client.close(); resolve(status); });

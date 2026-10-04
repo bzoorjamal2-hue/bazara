@@ -181,3 +181,21 @@ export function disablePush() {
 export function pushStatus() {
   return isNative ? pushStatusNative() : pushStatusWeb();
 }
+
+// ====================== إطفاءُ إشعارِ محادثةٍ فُتحت ======================
+// فتحُ المحادثةِ يقرأُها، فلا معنى لبقاءِ إشعارِها في شريطِ الهاتف: تُغلَقُ إشعارةُ
+// الويب بوسمِها، وإشعارةُ التطبيقِ الأصليِّ برابطِها أو وسمِها. أفضلُ جهد — لا يرمي.
+export async function clearDelivered(tag, url) {
+  try {
+    const reg = await navigator.serviceWorker?.getRegistration?.();
+    const list = await reg?.getNotifications?.({ tag });
+    (list || []).forEach((n) => n.close());
+  } catch { /* المتصفّحُ لا يدعمُها */ }
+  if (!isNative) return;
+  try {
+    const { PushNotifications } = await import('@capacitor/push-notifications');
+    const { notifications = [] } = await PushNotifications.getDeliveredNotifications();
+    const mine = notifications.filter((n) => n?.data?.url === url || n?.data?.tag === tag);
+    if (mine.length) await PushNotifications.removeDeliveredNotifications({ notifications: mine });
+  } catch { /* تجاهل */ }
+}

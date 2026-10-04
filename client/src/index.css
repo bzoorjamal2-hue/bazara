@@ -4998,6 +4998,107 @@ html.dark .bz-chat-out .bz-chat-quote { background: rgba(23, 21, 15, 0.12); bord
 .bz-chat-react { background: #F9F9F8; box-shadow: 0 1px 4px rgba(23, 23, 23, 0.25); }
 html.dark .bz-chat-react { background: #232120; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5); }
 
+/* ═════════ المحادثةُ المتطوّرة: الدفقات، السحب، الحالة، الروابط، الصوت ═════════ */
+
+/* الفقاعاتُ المتلاصقةُ في الدفقةِ الواحدة: الزاويةُ الملاصقةُ لأختِها تضيقُ فتبدو
+   الدفقةُ كتلةً واحدة — كما في إنستغرام. خصوصيّةٌ مضاعفةٌ لتغلبَ صنفَ الاستدارةِ العامّ. */
+.bz-swipe.bz-join-top-out { border-start-start-radius: 6px; }
+.bz-swipe.bz-join-bottom-out { border-end-start-radius: 6px; }
+.bz-swipe.bz-join-top-in { border-start-end-radius: 6px; }
+.bz-swipe.bz-join-bottom-in { border-end-end-radius: 6px; }
+/* السحبُ الأفقيُّ للردِّ لا يأخذُه المتصفّحُ تمريراً، والعموديُّ يبقى له */
+.bz-swipe { touch-action: pan-y; will-change: auto; }
+
+/* صورةٌ أو فيديو بلا نصّ: بلا فقاعةٍ حولَه */
+.bz-swipe.bz-chat-bare { background: transparent; border: 0; box-shadow: none; padding: 0; overflow: visible; }
+
+/* الرسالةُ التي قفزنا إليها من مقتبَس: وميضٌ قصيرٌ يدلُّ العينَ عليها */
+.bz-flash { animation: bz-flash 1.3s ease-out; }
+@keyframes bz-flash {
+  0%, 30% { box-shadow: 0 0 0 4px rgba(214, 160, 60, 0.55); }
+  100% { box-shadow: 0 0 0 0 rgba(214, 160, 60, 0); }
+}
+@media (prefers-reduced-motion: reduce) { .bz-flash { animation: none; outline: 2px solid rgba(214, 160, 60, 0.7); } }
+
+/* فشلُ الإرسال: حدٌّ أحمرُ متقطّعٌ وسطرُ «إعادة» تحتها */
+.bz-swipe.bz-chat-failed { border: 1.5px dashed rgba(185, 28, 28, 0.65); }
+.bz-chat-fail-text { color: #b91c1c; }
+html.dark .bz-chat-fail-text { color: #fca5a5; }
+
+/* مهلةُ الردِّ تقتربُ من نهايتِها */
+.bz-chat-warn { background: rgba(217, 119, 6, 0.12); color: #92400e; border-bottom: 1px solid rgba(217, 119, 6, 0.25); }
+html.dark .bz-chat-warn { background: rgba(245, 158, 11, 0.12); color: #fcd34d; border-bottom-color: rgba(245, 158, 11, 0.25); }
+
+/* الروابطُ داخلَ الرسالة وبطاقةُ الموقعِ تحتَها */
+.bz-chat-link { color: inherit; }
+.bz-chat-in .bz-chat-link { color: #0b5cad; }
+html.dark .bz-chat-in .bz-chat-link { color: #8ec5ff; }
+.bz-chat-linkcard { background: rgba(23, 23, 23, 0.06); border: 1px solid rgba(23, 23, 23, 0.08); }
+html.dark .bz-chat-linkcard { background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.08); }
+.bz-chat-out .bz-chat-linkcard { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.18); }
+html.dark .bz-chat-out .bz-chat-linkcard { background: rgba(23, 21, 15, 0.10); border-color: rgba(23, 21, 15, 0.14); }
+.bz-chat-linkicon { background: rgba(23, 23, 23, 0.08); }
+html.dark .bz-chat-linkicon { background: rgba(255, 255, 255, 0.08); }
+.bz-chat-out .bz-chat-linkicon { background: rgba(255, 255, 255, 0.18); }
+html.dark .bz-chat-out .bz-chat-linkicon { background: rgba(23, 21, 15, 0.12); }
+
+/* الرسالةُ الصوتيّة */
+.bz-voice-btn { background: rgb(var(--c-wine)); color: rgb(var(--c-gold-50)); }
+html.dark .bz-voice-btn { background: rgb(var(--c-gold-300)); color: #171615; }
+.bz-voice-btn-out { background: rgba(255, 255, 255, 0.92); color: rgb(var(--c-wine)); }
+html.dark .bz-voice-btn-out { background: #171615; color: rgb(var(--c-gold-300)); }
+.bz-voice-track { background: rgba(23, 23, 23, 0.15); }
+html.dark .bz-voice-track { background: rgba(255, 255, 255, 0.15); }
+.bz-chat-out .bz-voice-track { background: rgba(255, 255, 255, 0.3); }
+html.dark .bz-chat-out .bz-voice-track { background: rgba(23, 21, 15, 0.2); }
+.bz-voice-fill { background: currentColor; transition: width 0.25s linear; }
+
+/* شارةُ القناةِ على صورةِ الزبون: حلقةٌ بلونِ السطحِ تفصلُها عن الصورة */
+.bz-chat-chan { box-shadow: 0 0 0 2px #ffffff; }
+html.dark .bz-chat-chan { box-shadow: 0 0 0 2px #1A1918; }
+.bz-chan-ig { background: linear-gradient(135deg, #f58529, #dd2a7b 55%, #8134af); }
+.bz-chan-fb { background: #1877f2; }
+
+/* لوحةُ الرسالة (ردّ · ❤️ · نسخ) */
+.bz-chat-panel { background: #ffffff; box-shadow: 0 6px 22px -8px rgba(23, 23, 23, 0.35); border: 1px solid rgb(var(--c-gold-300)); animation: bz-bubble-in 0.14s ease-out both; }
+html.dark .bz-chat-panel { background: #232120; border-color: rgba(255, 255, 255, 0.08); box-shadow: 0 6px 22px -8px rgba(0, 0, 0, 0.8); }
+
+/* زرُّ النزولِ لآخرِ المحادثة */
+.bz-chat-fab { background: #ffffff; color: rgb(var(--c-wine)); box-shadow: 0 4px 16px -4px rgba(23, 23, 23, 0.35); border: 1px solid rgb(var(--c-gold-300)); animation: bz-bubble-in 0.16s ease-out both; }
+html.dark .bz-chat-fab { background: #232120; color: rgb(var(--c-gold-200)); border-color: rgba(255, 255, 255, 0.08); box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.8); }
+
+/* زرُّ الإرسالِ الدائريّ بلونِ الهويّة */
+.bz-send-btn { background: rgb(var(--c-wine)); color: rgb(var(--c-gold-50)); }
+html.dark .bz-send-btn { background: rgb(var(--c-gold-300)); color: #171615; }
+.bz-send-btn:not(:disabled):active { transform: scale(0.92); }
+
+/* صندوقُ الكتابةِ يكبرُ مع النصّ: استدارةٌ ثابتةٌ لا حبّةٌ تتمطّط */
+.bz-chat-input.bz-chat-compose { border-radius: 21px; padding-top: 0.6rem; padding-bottom: 0.6rem; max-height: 132px; overflow-y: auto; }
+
+/* شريطُ «ردّ على» فوقَ الصندوق */
+.bz-chat-replybar { border-inline-start: 3px solid rgb(var(--c-wine)); }
+html.dark .bz-chat-replybar { border-inline-start-color: rgb(var(--c-gold-300)); }
+
+/* صفوفُ قائمةِ الردودِ الجاهزةِ بـ«/» */
+.bz-chat-row:hover, .bz-chat-row:focus-visible { background: rgb(var(--c-gold-100)); outline: none; }
+html.dark .bz-chat-row:hover, html.dark .bz-chat-row:focus-visible { background: rgba(255, 255, 255, 0.06); }
+
+/* ═════════ قائمةُ المحادثات ═════════ */
+.theme-pub .bz-inbox-tab { background: #ffffff; color: rgb(var(--c-wine-dark)); border: 1px solid rgb(var(--c-gold-300)); }
+html.dark .theme-pub .bz-inbox-tab { background: rgba(255, 255, 255, 0.06); color: #D6D2CB; border-color: rgba(255, 255, 255, 0.08); }
+.theme-pub .bz-inbox-tab-on { background: rgb(var(--c-wine)); color: rgb(var(--c-gold-50)); border-color: rgb(var(--c-wine)); }
+html.dark .theme-pub .bz-inbox-tab-on { background: rgb(var(--c-gold-300)); color: #171615; border-color: transparent; }
+.theme-pub .bz-inbox-tab-count { background: rgba(23, 23, 23, 0.10); }
+.theme-pub .bz-inbox-tab-on .bz-inbox-tab-count { background: rgba(255, 255, 255, 0.22); }
+html.dark .theme-pub .bz-inbox-tab-count { background: rgba(255, 255, 255, 0.12); }
+html.dark .theme-pub .bz-inbox-tab-on .bz-inbox-tab-count { background: rgba(23, 21, 15, 0.15); }
+.theme-pub .bz-inbox-row:hover { background: rgb(var(--c-gold-100)); }
+html.dark .theme-pub .bz-inbox-row:hover { background: rgba(255, 255, 255, 0.04); }
+.theme-pub .bz-inbox-row-unread { background: rgba(214, 160, 60, 0.07); }
+html.dark .theme-pub .bz-inbox-row-unread { background: rgba(214, 160, 60, 0.06); }
+.theme-pub .bz-inbox-warn { background: rgba(217, 119, 6, 0.12); color: #92400e; }
+html.dark .theme-pub .bz-inbox-warn { background: rgba(245, 158, 11, 0.14); color: #fcd34d; }
+
 /* ════════ لا بنّيَّ ليلاً ════════
    الوضعُ الليليُّ كان يبقى بنّيّاً بمواضعَ كثيرةٍ لسببين:
    ١) قواعدُ نهاريّةٌ تُحوّلُ أصنافاً عامّةً إلى البنّيّ (مثل ‎.theme-pub .bg-gold-400)

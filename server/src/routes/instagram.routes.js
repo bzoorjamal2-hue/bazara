@@ -12,6 +12,7 @@ import {
   convertToOrder,
   igOrderDraft,
   igReact,
+  igTyping,
   igQuickReplies,
   igSaveQuickReplies,
 } from '../controllers/instagram.controller.js';
@@ -39,6 +40,7 @@ router.get('/conversations', listConversations);
 router.get('/conversations/:id/messages', listMessages);
 router.post('/conversations/:id/reply', sendReply);
 router.post('/conversations/:id/react', igReact);
+router.post('/conversations/:id/typing', igTyping);
 router.get('/quick-replies', igQuickReplies);
 router.put('/quick-replies', igSaveQuickReplies);
 router.get('/conversations/:id/draft', igOrderDraft);

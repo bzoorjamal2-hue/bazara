@@ -69,3 +69,106 @@ export function cldAudioMp3(url) {
   if (typeof url !== 'string' || !url.includes('/upload/')) return url;
   return url.replace('/upload/', '/upload/f_mp3/').replace(/\.[a-z0-9]+(\?.*)?$/i, '.mp3');
 }
+
+// ───────── نافذةُ الأربعِ والعشرينَ ساعة ─────────
+// إنستغرام وماسنجر لا يسمحان بالردِّ بعد يومٍ من آخرِ رسالةٍ كتبَها الزبون. كانت
+// التاجرةُ لا تعرفُ ذلك إلّا حين يُرفَضُ ردُّها — فصارت المهلةُ تُرى قبلَ الكتابة.
+export const WINDOW_MS = 24 * 60 * 60 * 1000;
+
+// ‎{ known, open, msLeft }‎ — known=false حين لم يكتب الزبونُ شيئاً نعرفُه بعد.
+export function replyWindow(lastInAt, now = Date.now()) {
+  const t = lastInAt ? new Date(lastInAt).getTime() : NaN;
+  if (!Number.isFinite(t)) return { known: false, open: true, msLeft: Infinity };
+  const msLeft = t + WINDOW_MS - now;
+  return { known: true, open: msLeft > 0, msLeft: Math.max(0, msLeft) };
+}
+
+// آخرُ ما كتبَه الزبونُ نفسُه (لا ردُّ البائعةِ الآليّة) من قائمةِ رسائل.
+export function lastInboundAt(messages = []) {
+  for (let i = messages.length - 1; i >= 0; i -= 1) {
+    if (messages[i].direction === 'in') return messages[i].created_at;
+  }
+  return null;
+}
+
+// ختمُ الوقتِ في قائمةِ المحادثات، بلا لغة: الواجهةُ تُترجمُه. قصيرٌ عمداً —
+// «منذ ٣ ساعات» لا يتّسعُ لها السطرُ بجانبِ الاسم.
+export function listStamp(iso, now = new Date()) {
+  const at = new Date(iso);
+  if (Number.isNaN(at.getTime())) return { kind: 'none' };
+  const diff = Math.max(0, now - at);
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return { kind: 'now' };
+  if (min < 60) return { kind: 'min', value: min };
+  if (sameDay(at, now)) return { kind: 'time', at };
+  const yest = new Date(now); yest.setDate(now.getDate() - 1);
+  if (sameDay(at, yest)) return { kind: 'yesterday' };
+  if (diff < 6 * 24 * 60 * 60 * 1000) return { kind: 'weekday', at };
+  return { kind: 'date', at };
+}
+
+// تبويباتُ الصندوق. «بانتظار ردّك» أهمُّها: آخرُ كلمةٍ للزبون ولم يُردَّ عليه بعد —
+// غيرُ «غير مقروءة» التي تُصفَّرُ بمجرّدِ الفتح ولو لم يُكتَب حرف.
+export function filterConvs(convs = [], { q = '', tab = 'all' } = {}) {
+  const term = normalizeAr(q);
+  return convs.filter((c) => {
+    if (tab === 'unread' && !(c.unread > 0)) return false;
+    if (tab === 'waiting' && c.last_dir !== 'in') return false;
+    if (tab === 'orders' && !c.order_id) return false;
+    if (!term) return true;
+    return normalizeAr(`${c.customer_name || ''} ${c.customer_username || ''} ${c.last_message || ''}`).includes(term);
+  });
+}
+
+// «/» في أوّلِ الصندوقِ تفتحُ الردودَ الجاهزةَ مصفّاةً بما بعدَها — أسرعُ من التمريرِ
+// في الشريطِ لمن حفظت عشرين ردّاً. ‎null‎ يعني أنّ النصَّ ليس طلباً لها أصلاً.
+export function matchQuick(replies = [], text = '') {
+  if (!String(text).startsWith('/')) return null;
+  const term = normalizeAr(String(text).slice(1));
+  if (!term) return replies.slice();
+  return replies.filter((r) => normalizeAr(r).includes(term));
+}
+
+// ───────── روابطُ وأرقامٌ داخلَ الرسالة ─────────
+// الزبونةُ تلصقُ رابطَ منشورٍ أو منتج، أو تكتبُ رقمَها — وكانت تظهرُ نصّاً ميّتاً
+// يُنسَخُ حرفاً حرفاً. نقسمُ النصَّ قطعاً: نصٌّ عاديّ، ورابطٌ يُفتَح، ورقمٌ يُتّصلُ به.
+const LINK_RE = /((?:https?:\/\/|www\.)[^\s<>"'«»]+|(?:\+?970|00970)?0?5\d[\d\s-]{6,10}\d)/gi;
+// علاماتُ الترقيمِ في آخرِ الرابطِ جزءٌ من الجملةِ لا منه: «شوفي هاد: https://x.com/a.»
+const TRAIL_RE = /[.,!?؟،؛:)\]}]+$/;
+
+export function linkify(text = '') {
+  const s = String(text);
+  const out = [];
+  let last = 0;
+  for (const m of s.matchAll(LINK_RE)) {
+    let raw = m[0];
+    const start = m.index;
+    if (/^(https?:\/\/|www\.)/i.test(raw)) {
+      const trail = raw.match(TRAIL_RE);
+      if (trail) raw = raw.slice(0, -trail[0].length);
+      if (start > last) out.push({ type: 'text', value: s.slice(last, start) });
+      out.push({ type: 'url', value: raw, href: /^www\./i.test(raw) ? `https://${raw}` : raw });
+      last = start + raw.length;
+    } else {
+      const phone = findMobile(raw);
+      if (!phone) continue;
+      if (start > last) out.push({ type: 'text', value: s.slice(last, start) });
+      out.push({ type: 'phone', value: raw, href: `tel:${phone}` });
+      last = start + raw.length;
+    }
+  }
+  if (last < s.length) out.push({ type: 'text', value: s.slice(last) });
+  return out;
+}
+
+// اسمُ الموقعِ من الرابط للبطاقةِ تحتَ الرسالة: «instagram.com» لا الرابطُ كاملاً.
+// والرابطُ نفسُه يُعرَضُ مختصراً: بلا البروتوكولِ وبحدٍّ للطول — رابطُ منشورٍ كاملٌ
+// بمعاملاتِ التتبّعِ يملأُ الفقاعةَ أربعةَ أسطرٍ لا تُقرأ.
+export function shortUrl(url = '', max = 36) {
+  const bare = String(url).replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/$/, '');
+  return bare.length > max ? `${bare.slice(0, max - 1)}…` : bare;
+}
+
+export function hostOf(url = '') {
+  try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return ''; }
+}

@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
-import { InstagramIcon, FacebookIcon, BagIcon, BackIcon, CheckIcon, PlusIcon } from '../../components/icons.jsx';
+import { InstagramIcon, FacebookIcon, BagIcon, BackIcon, CheckIcon, PlusIcon, SearchIcon, XIcon, ClockIcon } from '../../components/icons.jsx';
 import { startFbLogin, igRedirectUri } from '../../utils/fbSdk.js';
-import { normalizeAr } from '../../utils/chat.js';
+import { filterConvs, listStamp, replyWindow } from '../../utils/chat.js';
 import { PageHead } from '../../components/FormField.jsx';
 // المشتركُ مع شاشةِ المحادثةِ يسكنُ ملفّاً مستقلّاً، فلا تعتمدُ قطعةُ شاشةٍ على قطعةِ أخرى.
 import { Avatar, OrderComposer } from '../../components/OrderComposer.jsx';
@@ -204,47 +204,82 @@ function ConnectCard({ status, pendingPages, onConnected, onPages }) {
   );
 }
 
-// ───────── الصندوق: قائمة المحادثات + محادثة مفتوحة ─────────
+// ───────── الصندوق: قائمة المحادثات ─────────
+// صفوفٌ بشكلِ تطبيقاتِ المحادثة: الصورةُ وعليها شارةُ القناة، والاسمُ عريضاً حين
+// يكونُ فيها جديد، وآخرُ ما قيل مع «أنت:» إن كانت الكلمةُ الأخيرةُ لنا، ووقتٌ قصير.
+// والتبويباتُ فوقَها تفرزُ ما يحتاجُ ردّاً عمّا انتهى.
+const TABS = ['all', 'unread', 'waiting', 'orders'];
+
 function Inbox({ username, onDisconnected }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [convs, setConvs] = useState(null);
   const [q, setQ] = useState('');
+  const [tab, setTab] = useState('all');
   const [error, setError] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
+  const locale = i18n.language === 'ar' ? 'ar' : 'en';
 
   const load = () =>
-    api.get('/instagram/conversations').then((r) => setConvs(r.data.conversations)).catch((e) => setError(getErrorMessage(e)));
+    api.get('/instagram/conversations')
+      .then((r) => { setConvs(r.data.conversations); setError(''); })
+      .catch((e) => setError(getErrorMessage(e)));
   useEffect(() => { load(); }, []);
 
-  // القائمةُ تتجدّدُ وحدَها كلَّ عشرِ ثوانٍ ما دامت الشاشةُ ظاهرة: رسالةٌ جديدةٌ تصلُ
-  // وأنت تنظرُ إلى القائمةِ يجبُ أن تُرى، لا أن تنتظرَ ضغطةَ «تحديث».
+  const refresh = async () => {
+    setRefreshing(true);
+    await load();
+    setRefreshing(false);
+  };
+
+  // القائمةُ تتجدّدُ وحدَها ما دامت الشاشةُ ظاهرة: رسالةٌ جديدةٌ تصلُ وأنت تنظرُ إلى
+  // القائمةِ يجبُ أن تُرى. عشرون ثانيةً لا عشر: القائمةُ تُقرَأُ لا تُراقَب، والرسالةُ
+  // الجديدةُ يصلُ معها إشعارٌ على كلِّ حال.
   useEffect(() => {
     const tick = () => { if (!document.hidden) load(); };
-    // عشرون ثانيةً لا عشر: القائمةُ تُقرَأُ لا تُراقَب، والرسالةُ الجديدةُ يصلُ معها
-    // إشعارٌ على كلِّ حال. والطلباتُ لها حدٌّ لا يُنفَقُ على ما لا يُنظَرُ إليه.
     const timer = setInterval(tick, 20000);
     document.addEventListener('visibilitychange', tick);
     return () => { clearInterval(timer); document.removeEventListener('visibilitychange', tick); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // بحثٌ في المحادثات: بالاسمِ أو المعرّفِ أو نصِّ آخرِ رسالة. المطابقةُ بعد تطبيعِ
-  // العربيّة، وإلّا لم تُطابَق «عبايه» بـ«عباية». والتصفيةُ هنا لا عند الخادم: المئةُ
-  // محادثةٍ في اليدِ أصلاً، وسؤالُ الخادمِ مع كلِّ حرفٍ تأخيرٌ بلا مقابل.
-  const shown = useMemo(() => {
-    const term = normalizeAr(q);
-    if (!term) return convs || [];
-    return (convs || []).filter((c) =>
-      normalizeAr(`${c.customer_name || ''} ${c.customer_username || ''} ${c.last_message || ''}`).includes(term));
-  }, [convs, q]);
+  // «منذ كم» تتقدّمُ وحدَها
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setTick((v) => v + 1), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const counts = useMemo(() => {
+    const list = convs || [];
+    return {
+      all: list.length,
+      unread: list.filter((c) => c.unread > 0).length,
+      waiting: list.filter((c) => c.last_dir === 'in').length,
+      orders: list.filter((c) => c.order_id).length,
+    };
+  }, [convs]);
+
+  // البحثُ بالاسمِ أو المعرّفِ أو نصِّ آخرِ رسالة، بعد تطبيعِ العربيّة — وإلّا لم
+  // تُطابَق «عبايه» بـ«عباية». والتصفيةُ هنا لا عند الخادم: المئةُ محادثةٍ في اليدِ أصلاً.
+  const shown = useMemo(() => filterConvs(convs || [], { q, tab }), [convs, q, tab]);
+
+  const stampText = (iso) => {
+    const s = listStamp(iso);
+    if (s.kind === 'now') return t('dashboard.instagram.justNow');
+    if (s.kind === 'min') return t('dashboard.instagram.minShort', { count: s.value });
+    if (s.kind === 'time') return s.at.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+    if (s.kind === 'yesterday') return t('common.yesterday', { defaultValue: locale === 'ar' ? 'أمس' : 'Yesterday' });
+    if (s.kind === 'weekday') return s.at.toLocaleDateString(locale, { weekday: 'short' });
+    if (s.kind === 'date') return s.at.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
+    return '';
+  };
 
   const disconnect = async () => {
     try { await api.post('/instagram/disconnect'); onDisconnected(); } catch (e) { setError(getErrorMessage(e)); }
   };
 
-  if (convs === null && !error) return <Spinner />;
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* شريط الحساب المربوط */}
       <div className="glass flex flex-wrap items-center justify-between gap-2 px-4 py-2.5">
         <span className="inline-flex items-center gap-2 text-sm text-stone-200">
@@ -252,7 +287,9 @@ function Inbox({ username, onDisconnected }) {
           {username ? <span dir="ltr" className="font-semibold text-gold-200">@{username}</span> : t('dashboard.instagram.connected')}
         </span>
         <div className="flex items-center gap-2">
-          <button onClick={load} className="btn-ghost !py-1.5 text-xs">{t('common.refresh')}</button>
+          <button onClick={refresh} disabled={refreshing} className="btn-ghost !py-1.5 text-xs disabled:opacity-60">
+            {refreshing ? t('common.loading') : t('common.refresh')}
+          </button>
           <button onClick={disconnect} className="text-xs text-stone-400 underline-offset-2 hover:text-red-300 hover:underline">{t('dashboard.instagram.disconnect')}</button>
         </div>
       </div>
@@ -261,43 +298,116 @@ function Inbox({ username, onDisconnected }) {
 
       {/* البحثُ لا يظهرُ إلّا حين يكونُ له معنى: محادثتان لا تُبحَثان */}
       {(convs || []).length > 4 && (
-        <input
-          className="input"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder={t('dashboard.instagram.searchChats')}
-        />
+        <div className="relative">
+          <SearchIcon className="pointer-events-none absolute start-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+          <input
+            className="input !ps-10"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder={t('dashboard.instagram.searchChats')}
+          />
+          {q && (
+            <button onClick={() => setQ('')} className="absolute end-2.5 top-1/2 -translate-y-1/2 rounded-full p-1 text-stone-400" aria-label={t('common.cancel')}>
+              <XIcon className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       )}
 
-      {(convs && convs.length === 0) ? (
-        <div className="glass p-10 text-center text-stone-400">{t('dashboard.instagram.empty')}</div>
-      ) : (
-        <div className="space-y-2">
-          {shown.map((c) => (
+      {/* التبويبات: «بانتظار ردّك» أهمُّها — آخرُ كلمةٍ للزبونِ ولم يُردَّ عليه */}
+      {(convs || []).length > 0 && (
+        <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5">
+          {TABS.map((k) => (
             <button
-              key={c.id}
-              onClick={() => navigate(`/dashboard/instagram/${c.id}`)}
-              className="glass flex w-full items-center gap-3 p-3 text-start transition hover:bg-white/5"
+              key={k}
+              onClick={() => setTab(k)}
+              className={`bz-inbox-tab inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${tab === k ? 'bz-inbox-tab-on' : ''}`}
             >
-              <Avatar url={c.customer_avatar} name={c.customer_name || c.customer_username} />
-              <span className="min-w-0 flex-1">
-                <span className="flex items-center gap-2">
-                  {/* من أينَ جاءت: الصندوقُ واحدٌ والقناتانِ اثنتان، والتاجرةُ تردُّ
-                      بنبرةٍ مختلفةٍ لزبونِ فيسبوكَ عن زبونةِ إنستغرام. */}
-                  {c.channel === 'messenger'
-                    ? <FacebookIcon className="h-3.5 w-3.5 shrink-0 text-sky-400" />
-                    : <InstagramIcon className="h-3.5 w-3.5 shrink-0 text-pink-400" />}
-                  <span className="truncate font-semibold text-stone-100">{c.customer_name || (c.customer_username ? `@${c.customer_username}` : t('dashboard.instagram.customer'))}</span>
-                  {c.order_id && <span className="bz-chat-ok shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold">{t('dashboard.instagram.hasOrder')}</span>}
+              {t(`dashboard.instagram.tab_${k}`)}
+              {k !== 'all' && counts[k] > 0 && (
+                <span className={`rounded-full px-1.5 text-[10px] font-bold ${k === 'unread' ? 'bg-gold-400 bz-on-gold' : 'bz-inbox-tab-count'}`}>
+                  {counts[k] > 99 ? '99+' : counts[k]}
                 </span>
-                <span className="mt-0.5 block truncate text-xs text-stone-400">{c.last_message || '—'}</span>
-              </span>
-              <span className="flex shrink-0 flex-col items-end gap-1">
-                <span className="text-[10px] text-stone-500">{new Date(c.last_at).toLocaleDateString()}</span>
-                {c.unread > 0 && <span className="rounded-full bg-gold-400 px-1.5 text-[10px] font-bold bz-on-gold">{c.unread}</span>}
-              </span>
+              )}
             </button>
           ))}
+        </div>
+      )}
+
+      {convs === null && !error ? (
+        <div className="glass overflow-hidden">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div key={i} className="flex items-center gap-3 border-b border-white/5 px-3 py-3.5 last:border-0">
+              <span className="h-12 w-12 shrink-0 animate-pulse rounded-full bg-stone-500/20" />
+              <span className="flex-1 space-y-2">
+                <span className="block h-3 w-1/3 animate-pulse rounded bg-stone-500/20" />
+                <span className="block h-3 w-2/3 animate-pulse rounded bg-stone-500/15" />
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : (convs && convs.length === 0) ? (
+        <div className="glass flex flex-col items-center gap-3 p-10 text-center text-stone-400">
+          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-pink-500 to-amber-500 text-white shadow-md">
+            <InstagramIcon className="h-7 w-7" />
+          </span>
+          {t('dashboard.instagram.empty')}
+        </div>
+      ) : shown.length === 0 ? (
+        <div className="glass p-8 text-center text-sm text-stone-400">{t('dashboard.instagram.noMatch')}</div>
+      ) : (
+        <div className="glass overflow-hidden">
+          {shown.map((c) => {
+            const unread = c.unread > 0;
+            const waiting = c.last_dir === 'in';
+            const win = waiting ? replyWindow(c.last_in_at) : null;
+            const closing = win && win.known && win.open && win.msLeft < 4 * 3600000;
+            const closed = win && win.known && !win.open;
+            const name = c.customer_name || (c.customer_username ? `@${c.customer_username}` : t('dashboard.instagram.customer'));
+            return (
+              <button
+                key={c.id}
+                onClick={() => navigate(`/dashboard/instagram/${c.id}`)}
+                className={`bz-inbox-row flex w-full items-center gap-3 border-b border-white/5 px-3 py-3 text-start transition last:border-0 ${unread ? 'bz-inbox-row-unread' : ''}`}
+              >
+                <span className="relative shrink-0">
+                  <Avatar url={c.customer_avatar} name={c.customer_name || c.customer_username} className="h-12 w-12 text-sm" />
+                  {/* من أينَ جاءت: الصندوقُ واحدٌ والقناتانِ اثنتان، والتاجرةُ تردُّ
+                      بنبرةٍ مختلفةٍ لزبونِ فيسبوكَ عن زبونةِ إنستغرام. */}
+                  <span className={`bz-chat-chan absolute -bottom-0.5 -end-0.5 flex h-[18px] w-[18px] items-center justify-center rounded-full text-white ${c.channel === 'messenger' ? 'bz-chan-fb' : 'bz-chan-ig'}`}>
+                    {c.channel === 'messenger' ? <FacebookIcon className="h-2.5 w-2.5" /> : <InstagramIcon className="h-2.5 w-2.5" />}
+                  </span>
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-2">
+                    <span className={`truncate text-[14.5px] ${unread ? 'font-extrabold text-stone-100' : 'font-semibold text-stone-100'}`}>{name}</span>
+                    {c.order_id && <span className="bz-chat-ok shrink-0 rounded-full px-2 py-0.5 text-[9.5px] font-bold">{t('dashboard.instagram.hasOrder')}</span>}
+                    <span className={`ms-auto shrink-0 text-[11px] ${unread ? 'font-bold text-gold-300' : 'text-stone-500'}`}>{stampText(c.last_at)}</span>
+                  </span>
+                  <span className="mt-0.5 flex items-center gap-2">
+                    <span className={`min-w-0 flex-1 truncate text-[13px] ${unread ? 'font-semibold text-stone-200' : 'text-stone-400'}`}>
+                      {c.last_dir === 'out' && <span className="text-stone-500">{t('dashboard.instagram.youPrefix')} </span>}
+                      {c.last_message || '—'}
+                    </span>
+                    {closing && (
+                      <span className="bz-inbox-warn inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold" title={t('dashboard.instagram.windowClosing')}>
+                        <ClockIcon className="h-3 w-3" />
+                        {t('dashboard.instagram.hoursShort', { count: Math.max(1, Math.floor(win.msLeft / 3600000)) })}
+                      </span>
+                    )}
+                    {closed && !unread && (
+                      <span className="shrink-0 text-[10px] text-stone-500" title={t('dashboard.instagram.windowClosed')}>{t('dashboard.instagram.windowEnded')}</span>
+                    )}
+                    {unread && (
+                      <span className="flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full bg-gold-400 px-1.5 text-[10.5px] font-bold bz-on-gold">
+                        {c.unread > 99 ? '99+' : c.unread}
+                      </span>
+                    )}
+                  </span>
+                </span>
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

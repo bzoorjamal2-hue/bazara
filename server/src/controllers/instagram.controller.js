@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { query } from '../config/db.js';
 import { encrypt, decrypt } from '../config/opost.js';
-import { notifyUser } from '../utils/notify.js';
+import { notifyUser, markReadByTag } from '../utils/notify.js';
 import { feeForCity, flatInternalLocalities, cityOfVillage } from '../config/deliveryCities.js';
 import { extractOrderDraft } from '../utils/orderExtract.js';
 import { imageBlock, transcribe, canHear } from '../utils/mediaUnderstand.js';
@@ -300,6 +300,22 @@ async function processWebhook(body) {
         [convId, msg.mid || null, isEcho ? 'out' : 'in', text, attachment, attType,
           msg.reply_to?.mid || '', storyUrl, echoIsBot]
       );
+
+      // عدّةُ صورٍ في رسالةٍ واحدة (الزبونةُ تختارُ أربعَ صورٍ من معرضِها وتبعثُها
+      // دفعةً) تصلُ مصفوفةً واحدة — وكنّا نحفظُ الأولى ونُسقطُ الباقي بصمت. كلُّ
+      // مرفقٍ إضافيٍّ صفٌّ مستقلٌّ بمعرّفٍ مشتقٍّ من معرّفِ الرسالة (فريدٌ ولا يتكرّر).
+      const extra = (msg.attachments || []).slice(1, 10);
+      for (let i = 0; i < extra.length; i += 1) {
+        const a = extra[i];
+        if (!a?.payload?.url) continue;
+        const url = await mirrorRemote(a.payload.url, 'ig/messages');
+        await query(
+          `INSERT INTO ig_messages (conversation_id, mid, direction, text, attachment_url, attachment_type, ai)
+           VALUES ($1, $2, $3, '', $4, $5, $6) ON CONFLICT (mid) DO NOTHING`,
+          [convId, msg.mid ? `${msg.mid}#${i + 2}` : null, isEcho ? 'out' : 'in', url,
+            attachmentKind(msg, a), echoIsBot]
+        ).catch((e) => console.error('ig extra attachment:', e.message));
+      }
 
       if (isEcho) continue; // ردّنا/ردّ المتجر — لا إشعار
 
@@ -1335,10 +1351,24 @@ export async function listConversations(req, res, next) {
   try {
     const store = await getUserStore(req.user.id);
     if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
+    // ومعها شيئان لا يُعرفان من سطرِ آخرِ رسالةٍ وحدَه: لمن كانت آخرُ كلمة (فتُكتَبُ
+    // «أنت:» وتُعرَفُ المحادثاتُ التي تنتظرُ ردّاً)، ومتى كتبَ الزبونُ آخرَ مرّة —
+    // منها تُحسَبُ نافذةُ الأربعِ والعشرين ساعة التي يُغلقُ إنستغرام الردَّ بعدها.
+    // الفهرسُ (conversation_id, created_at) يخدمُ الاستعلامين الفرعيّين.
     const r = await query(
-      `SELECT id, ig_sender_id, customer_name, customer_username, customer_avatar,
-              last_message, last_at, unread, order_id, channel
-       FROM ig_conversations WHERE store_id = $1 ORDER BY last_at DESC LIMIT 100`,
+      `SELECT c.id, c.ig_sender_id, c.customer_name, c.customer_username, c.customer_avatar,
+              c.last_message, c.last_at, c.unread, c.order_id, c.channel,
+              lm.direction AS last_dir, li.created_at AS last_in_at
+       FROM ig_conversations c
+       LEFT JOIN LATERAL (
+         SELECT direction FROM ig_messages WHERE conversation_id = c.id
+         ORDER BY created_at DESC LIMIT 1
+       ) lm ON true
+       LEFT JOIN LATERAL (
+         SELECT created_at FROM ig_messages WHERE conversation_id = c.id AND direction = 'in'
+         ORDER BY created_at DESC LIMIT 1
+       ) li ON true
+       WHERE c.store_id = $1 ORDER BY c.last_at DESC LIMIT 100`,
       [store.id]
     );
     res.json({ conversations: r.rows });
@@ -1355,6 +1385,11 @@ export async function listMessages(req, res, next) {
     // ?after=<وقت>: لا نُعيدُ المحادثةَ كلَّها كلَّ أربعِ ثوانٍ لنرى رسالةً واحدةً
     // جديدة. بلا هذا يصيرُ التحديثُ اللحظيُّ أثقلَ ممّا يُفيد.
     const after = String(req.query.after || '').trim();
+    // ?before=<وقت>: صفحةٌ أقدم. وبلا after ولا before نُعيدُ **الأحدثَ** لا الأقدم: كان
+    // الترتيبُ تصاعديّاً بحدِّ مئتين، فالمحادثةُ الطويلةُ تُفتَحُ على أوّلِ مئتي رسالةٍ
+    // فيها وتغيبُ عنها رسائلُ اليوم.
+    const before = String(req.query.before || '').trim();
+    const PAGE = 200;
     // عمودُ ai يميّزُ ردَّ البائعةِ الآليّةِ عن يدِ التاجرةِ بالمحادثة. وإن كان
     // الخادمُ لم تصلْه الترقيةُ بعدُ نُعيدُ الاستعلامَ بلا العمود: وسمٌ ناقصٌ أهونُ
     // من محادثةٍ لا تُفتَح.
@@ -1363,19 +1398,38 @@ export async function listMessages(req, res, next) {
     const run = (ai) => (after
       ? query(
           `SELECT ${cols(ai)} FROM ig_messages WHERE conversation_id = $1 AND created_at > $2
-           ORDER BY created_at ASC LIMIT 200`,
+           ORDER BY created_at ASC LIMIT ${PAGE}`,
           [conv.id, after]
         )
-      : query(
-          `SELECT ${cols(ai)} FROM ig_messages WHERE conversation_id = $1
-           ORDER BY created_at ASC LIMIT 200`,
-          [conv.id]
-        ));
+      : before
+        ? query(
+            `SELECT ${cols(ai)} FROM ig_messages WHERE conversation_id = $1 AND created_at < $2
+             ORDER BY created_at DESC LIMIT ${PAGE + 1}`,
+            [conv.id, before]
+          )
+        : query(
+            `SELECT ${cols(ai)} FROM ig_messages WHERE conversation_id = $1
+             ORDER BY created_at DESC LIMIT ${PAGE + 1}`,
+            [conv.id]
+          ));
     const r = await run(true).catch((e) => {
       if (e.code === '42703') return run(false);
       throw e;
     });
-    await query('UPDATE ig_conversations SET unread = 0 WHERE id = $1', [conv.id]);
+    // الصفحةُ تُجلَبُ بزيادةِ صفٍّ واحد: وجودُه يعني أنّ وراءَها أقدم
+    let rows = r.rows;
+    let hasMore = false;
+    if (!after) {
+      hasMore = rows.length > PAGE;
+      rows = rows.slice(0, PAGE).reverse();
+    }
+    // فتحُ المحادثةِ يقرأُ إشعارَها أيضاً، والعددُ الجديدُ يعودُ مع الردِّ فيُطفئُ الجرسَ
+    // والشارةَ فوراً. null = لم يكن هناك ما يُقرأ (أغلبُ نبضاتِ التحديث).
+    let badge = null;
+    if (!before) {
+      await query('UPDATE ig_conversations SET unread = 0 WHERE id = $1', [conv.id]);
+      badge = await markReadByTag(req.user.id, `ig-${conv.id}`, `/dashboard/instagram/${conv.id}`);
+    }
     res.json({
       conversation: {
         id: conv.id,
@@ -1384,8 +1438,11 @@ export async function listMessages(req, res, next) {
         customer_avatar: conv.customer_avatar,
         seen_at: conv.seen_at,
         order_id: conv.order_id,
+        channel: conv.channel || 'instagram',
       },
-      messages: r.rows,
+      messages: rows,
+      hasMore,
+      badge,
     });
   } catch (err) {
     next(err);
@@ -1468,6 +1525,21 @@ export async function sendReply(req, res, next) {
       await query('UPDATE ig_conversations SET last_message = $2, last_at = now(), unread = 0 WHERE id = $1', [conv.id, preview]);
     });
     res.json({ sent: true });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// POST /api/instagram/conversations/:id/typing — «عم تكتب…» عند الزبون ما دامت
+// التاجرةُ تكتب. إشارةٌ لا رسالة: نردُّ فوراً ونُرسلُها بلا انتظار، وفشلُها (نافذةٌ
+// مغلقةٌ أو شبكة) يُبلَعُ بصمت — لا يستحقُّ أن يُزعجَ أحداً ولا أن يفصلَ حساباً.
+export async function igTyping(req, res, next) {
+  try {
+    const conv = await getOwnedConversation(req.user.id, req.params.id);
+    if (!conv) return res.status(404).json({ error: 'المحادثة غير موجودة.' });
+    const token = decrypt(conv.ig_access_token);
+    res.status(204).end();
+    if (token) sendTyping(token, conv.ig_sender_id, req.body?.on !== false).catch(() => {});
   } catch (err) {
     next(err);
   }

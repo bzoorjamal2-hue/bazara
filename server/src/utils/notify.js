@@ -1,6 +1,6 @@
 import { query } from '../config/db.js';
 import { sendPushToUser } from '../config/push.js';
-import { sendNativeToUser } from '../config/nativePush.js';
+import { sendNativeToUser, sendBadgeToUser } from '../config/nativePush.js';
 
 // ───────────────────────── إشعارات المالكة ─────────────────────────
 //
@@ -16,25 +16,74 @@ const TITLE_MAX = 200;
 const BODY_MAX = 500;
 const URL_MAX = 300;
 
+const TAG_MAX = 80;
+
 // يحفظ الإشعار ويُرجع عدد غير المقروء بعده. الفشل لا يمنع الدفع.
+//
+// الإشعارُ ذو الوسم (tag) **يحلُّ محلَّ** سابقِه بالوسمِ نفسِه بدل أن يُضافَ إليه:
+// كانت كلُّ رسالةِ إنستغرامٍ صفّاً مستقلّاً، فزبونةٌ تكتبُ عشرين سطراً تُضيفُ عشرين
+// إلى شارةِ التطبيق، وتراكمَ الرقمُ حتّى الآلاف. صار لكلِّ محادثةٍ إشعارٌ واحدٌ
+// يحملُ آخرَ ما قيل — كما يفعلُ شريطُ الهاتفِ نفسُه بالوسم.
 async function record(userId, storeId, payload) {
+  const tag = String(payload.tag || '').slice(0, TAG_MAX);
+  const vals = [
+    userId,
+    storeId || null,
+    String(payload.type || 'general').slice(0, 30),
+    String(payload.title || '').slice(0, TITLE_MAX),
+    String(payload.body || '').slice(0, BODY_MAX),
+    String(payload.url || '/dashboard').slice(0, URL_MAX),
+  ];
   try {
+    if (tag) {
+      await query('DELETE FROM notifications WHERE user_id = $1 AND tag = $2', [userId, tag]);
+    }
     await query(
-      `INSERT INTO notifications (user_id, store_id, type, title, body, url)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      [
-        userId,
-        storeId || null,
-        String(payload.type || 'general').slice(0, 30),
-        String(payload.title || '').slice(0, TITLE_MAX),
-        String(payload.body || '').slice(0, BODY_MAX),
-        String(payload.url || '/dashboard').slice(0, URL_MAX),
-      ]
+      `INSERT INTO notifications (user_id, store_id, type, title, body, url, tag)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [...vals, tag]
     );
   } catch (e) {
-    console.error('notify.record:', e.message);
+    // خادمٌ لم تصلْه ترقيةُ عمودِ الوسمِ بعد: الإشعارُ أهمُّ من الدمج
+    if (e.code === '42703') {
+      await query(
+        `INSERT INTO notifications (user_id, store_id, type, title, body, url)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        vals
+      ).catch((err) => console.error('notify.record:', err.message));
+    } else {
+      console.error('notify.record:', e.message);
+    }
   }
   return unreadCount(userId);
+}
+
+// فتحُ المحادثةِ قراءةٌ لإشعارِها: كانت التاجرةُ تقرأُ الرسالةَ في المحادثةِ ويبقى
+// إشعارُها أحمرَ في الجرسِ وعلى الأيقونة حتّى تفتحَ الجرسَ وتضغطَه هو أيضاً.
+// المطابقةُ بالوسمِ أو بالرابط — الصفوفُ القديمةُ حُفظت قبلَ عمودِ الوسم.
+// يُرجعُ العددَ الجديدَ إن تغيّر شيء، وnull إن لم يكن هناك ما يُقرأ.
+export async function markReadByTag(userId, tag, url) {
+  try {
+    const r = await query(
+      `UPDATE notifications SET read_at = now()
+        WHERE user_id = $1 AND read_at IS NULL AND (tag = $2 OR url = $3)`,
+      [userId, String(tag || '').slice(0, TAG_MAX), String(url || '').slice(0, URL_MAX)]
+    ).catch((e) => {
+      if (e.code !== '42703') throw e;
+      return query(
+        'UPDATE notifications SET read_at = now() WHERE user_id = $1 AND read_at IS NULL AND url = $2',
+        [userId, String(url || '').slice(0, URL_MAX)]
+      );
+    });
+    if (!r.rowCount) return null;
+    const n = await unreadCount(userId);
+    // أيقونةُ الآيفون لا تعرفُ أنّها قُرئت إلّا بدفعةٍ صامتة
+    sendBadgeToUser(userId, n);
+    return n;
+  } catch (e) {
+    console.error('notify.markReadByTag:', e.message);
+    return null;
+  }
 }
 
 export async function unreadCount(userId) {
