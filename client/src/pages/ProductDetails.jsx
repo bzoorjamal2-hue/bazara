@@ -27,7 +27,8 @@ import SizeGuideModal from '../components/SizeGuideModal.jsx';
 import ImageInput from '../components/ImageInput.jsx';
 import { initPixels, trackPixel } from '../utils/pixels.js';
 import { setStoreScope } from '../utils/storeScope.js';
-import { productUrl, productPath, shareLink } from '../utils/links.js';
+import { productUrl, productPath } from '../utils/links.js';
+import { shareProduct as shareWithMedia, prepareProductShare } from '../utils/shareMedia.js';
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -145,17 +146,28 @@ export default function ProductDetails() {
     return () => document.removeEventListener('click', onDocClick);
   }, [selColor]);
 
-  const [shared, setShared] = useState(false);
+  const [shared, setShared] = useState(''); // '' | 'copied' | 'retry'
+  const [sharing, setSharing] = useState(false);
 
-  // مشاركةُ المنتج: رابطُه الحاملُ اسمَ متجرِه. زواحفُ واتساب وفيسبوك تُحوَّلُ عليه
-  // تلقائياً إلى صفحةِ المعاينةِ (OG) فتظهرُ صورةُ القطعةِ واسمُها وسعرُها، وتفتحُه
-  // الزبونةُ صفحةَ المنتجِ مباشرةً — رابطٌ واحدٌ للاثنين بلا /share/ وسيطة.
+  // مشاركةُ المنتج: على الجوّالِ بفيديو القطعةِ أو بصورةِ ستوري مرسومة، فيظهرُ إنستغرامُ
+  // بورقةِ المشاركةِ ويسألُ هو: منشور؟ ستوري؟ ريلز؟ (utils/shareMedia.js). وحيث لا تُقبَلُ
+  // الملفّاتُ يبقى الرابطُ الحاملُ اسمَ متجرِه — زواحفُ واتساب وفيسبوك تُحوَّلُ عليه إلى
+  // صفحةِ المعاينةِ (OG) فتظهرُ صورةُ القطعةِ واسمُها وسعرُها.
   const shareProduct = async () => {
-    const url = product?.id ? productUrl(product) : window.location.href;
-    const res = await shareLink({ title: product?.name, url });
-    if (res === 'copied') { setShared(true); setTimeout(() => setShared(false), 1800); }
-    else if (res === 'failed') window.prompt(t('product.copyManually'), url);
+    if (!product?.id || sharing) return;
+    setSharing(true);
+    const res = await shareWithMedia(product, storeObj);
+    setSharing(false);
+    if (res === 'copied' || res === 'retry') { setShared(res); setTimeout(() => setShared(''), res === 'retry' ? 3500 : 1800); }
+    else if (res === 'failed') window.prompt(t('product.copyManually'), productUrl(product));
   };
+
+  // صورةُ الستوري تُرسَمُ بهدوءٍ بعد أن تستقرَّ الصفحة، فتفتحُ الضغطةُ الورقةَ فوراً
+  useEffect(() => {
+    if (!product?.id) return undefined;
+    const tm = setTimeout(() => { prepareProductShare(product, storeObj); }, 2500);
+    return () => clearTimeout(tm);
+  }, [product?.id, storeObj?.slug]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // دليل اجتماعي حقيقي: عدد من شاهدوا المنتج خلال آخر 30 دقيقة (يحسبه الخادم
   // فعلياً بالذاكرة) — بدل الرقم الثابت التقديري السابق المشتق من معرّف المنتج.
@@ -395,8 +407,9 @@ export default function ProductDetails() {
                 <button
                   onClick={shareProduct}
                   aria-label={t('product.share')}
+                  aria-busy={sharing}
                   title={t('product.share')}
-                  className="bz-roundbtn flex h-10 w-10 items-center justify-center rounded-full"
+                  className={`bz-roundbtn flex h-10 w-10 items-center justify-center rounded-full ${sharing ? 'animate-pulse' : ''}`}
                 >
                   <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
@@ -405,7 +418,7 @@ export default function ProductDetails() {
                 </button>
                 {shared && (
                   <span className="absolute -bottom-8 end-0 z-10 whitespace-nowrap rounded-lg bg-wine px-2.5 py-1 text-xs font-semibold text-cream shadow-lg">
-                    {t('product.shareCopied')}
+                    {t(shared === 'retry' ? 'product.shareReady' : 'product.shareCopied')}
                   </span>
                 )}
               </div>

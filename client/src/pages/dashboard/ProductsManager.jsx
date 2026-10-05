@@ -3,12 +3,13 @@ import { phGlyph } from '../../utils/imageFallback.js';
 import useSessionState from '../../hooks/useSessionState.js';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
-import { productUrl, shareLink } from '../../utils/links.js';
+import { productUrl } from '../../utils/links.js';
+import { shareProduct as shareWithMedia } from '../../utils/shareMedia.js';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import ProductForm from './ProductForm.jsx';
 import ConfirmModal from '../../components/ConfirmModal.jsx';
-import { StarIcon, LinkIcon, BagIcon, SearchIcon, EditIcon, CopyIcon, TrashIcon, CheckIcon, XIcon, EyeIcon, EyeOffIcon } from '../../components/icons.jsx';
+import { StarIcon, ShareIcon, BagIcon, SearchIcon, EditIcon, CopyIcon, TrashIcon, CheckIcon, XIcon, EyeIcon, EyeOffIcon } from '../../components/icons.jsx';
 import { cldVideoPoster } from '../../utils/cloudinary.js';
 import { clearCachePrefixes } from '../../utils/apiCache.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -112,15 +113,18 @@ export default function ProductsManager({ onCount }) {
     }
   };
 
-  // رابطُ المنتجِ الحاملُ اسمَ المتجر — هو نفسُه رابطُ صفحتِه، وزواحفُ واتساب
-  // تُحوَّلُ عليه لصفحةِ المعاينةِ فتظهرُ الصورةُ والسعر. يُبنى على الدومينِ الرسميِّ
-  // لا على ما يصادفُ أن يكونَ بشريطِ العنوان، وإن تعذّرَ النسخُ عُرِضَ ليُنسَخَ يدوياً
-  // بدل أن تضغطَ التاجرةُ فلا يحدثَ شيءٌ ولا تعرفَ لماذا.
+  // على الجوّال: فيديو القطعةِ أو صورةُ ستوري مرسومة، فتختارُ التاجرةُ إنستغرامَ ويسألُها
+  // هو: منشور؟ ستوري؟ ريلز؟ (utils/shareMedia.js). وإلّا رابطُ المنتجِ الحاملُ اسمَ
+  // المتجر، وإن تعذّرَ نسخُه عُرِضَ ليُنسَخَ يدوياً بدل ضغطةٍ لا يحدثُ بعدَها شيء.
+  const [sharingId, setSharingId] = useState(null);
   const shareProduct = async (p) => {
-    const url = productUrl({ ...p, storeSlug: p.storeSlug || store?.slug });
-    const res = await shareLink({ title: p.name, url });
+    if (sharingId) return;
+    setSharingId(p.id);
+    const res = await shareWithMedia(p, store);
+    setSharingId(null);
     if (res === 'copied') flash(t('common.copied'));
-    else if (res === 'failed') window.prompt(t('product.copyManually'), url);
+    else if (res === 'retry') flash(t('product.shareReady'));
+    else if (res === 'failed') window.prompt(t('product.copyManually'), productUrl({ ...p, storeSlug: p.storeSlug || store?.slug }));
   };
 
   // المتبقي الكلي: مجموع كميات الألوان/النمر إن وُجدت وإلا المخزون العام —
@@ -228,8 +232,8 @@ export default function ProductsManager({ onCount }) {
             {p.hidden ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
           </button>
         )}
-        <button onClick={() => shareProduct(p)} title={t('product.shareProduct')} aria-label={t('product.shareProduct')} className={`${btn} hover:border-gold-400/50 hover:text-gold-200`}>
-          <LinkIcon className="h-4 w-4" />
+        <button onClick={() => shareProduct(p)} title={t('product.shareProduct')} aria-label={t('product.shareProduct')} aria-busy={sharingId === p.id} className={`${btn} ${sharingId === p.id ? 'animate-pulse text-gold-200' : ''} hover:border-gold-400/50 hover:text-gold-200`}>
+          <ShareIcon className="h-4 w-4" />
         </button>
         <button onClick={() => setModal(p)} title={t('common.edit')} aria-label={t('common.edit')} className={`${btn} hover:border-gold-400/50 hover:text-gold-200`}>
           <EditIcon className="h-4 w-4" />
