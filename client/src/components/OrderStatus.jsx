@@ -10,10 +10,10 @@ import { CheckIcon, ClockIcon, TruckIcon, PackageIcon, XIcon, LockIcon } from '.
 // والإلغاءُ وحدَه يُسأَلُ عنه قبلَ وقوعِه.
 
 export const STEPS = ['new', 'confirmed', 'shipped', 'delivered'];
-const NEXT = { new: 'confirmed', confirmed: 'shipped', shipped: 'delivered' };
+export const NEXT = { new: 'confirmed', confirmed: 'shipped', shipped: 'delivered' };
 const ICON = { new: ClockIcon, confirmed: CheckIcon, shipped: TruckIcon, delivered: PackageIcon };
 // نصُّ زرِّ الخطوةِ التالية: فعلٌ يُقرَأُ («أكّدي الطلب») لا اسمُ حالة («مؤكّد»)
-const ACTION = { confirmed: 'actConfirm', shipped: 'actShip', delivered: 'actDeliver' };
+export const ACTION = { confirmed: 'actConfirm', shipped: 'actShip', delivered: 'actDeliver' };
 
 // شارةُ الحالةِ الصغيرةُ برأسِ البطاقة، بلونِ حالتِها نفسِه
 export function StatusBadge({ status }) {

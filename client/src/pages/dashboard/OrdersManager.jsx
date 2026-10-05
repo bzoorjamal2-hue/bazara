@@ -4,7 +4,9 @@ import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import Select from '../../components/Select.jsx';
-import OrderStatus, { StatusBadge } from '../../components/OrderStatus.jsx';
+import OrderStatus, { StatusBadge, NEXT, ACTION } from '../../components/OrderStatus.jsx';
+import * as chatCache from '../../utils/chatCache.js';
+import { cldThumb, cldVideoPoster } from '../../utils/cloudinary.js';
 import { buildWhatsappLink, waCandidates, phoneKey } from '../../utils/whatsapp.js';
 import { getCache, setCache } from '../../utils/apiCache.js';
 import { downloadXlsx } from '../../utils/xlsx.js';
@@ -12,7 +14,7 @@ import { htmlToPngBlob, safeFileName, downloadBlob } from '../../utils/htmlImage
 import { PAPERS, getPaper, savePaper, paperCss, honorsPageSize, paperById } from '../../utils/invoicePaper.js';
 import { printSheet } from '../../utils/printSheet.js';
 import { copyText } from '../../utils/links.js';
-import { PinIcon, NoteIcon, TicketIcon, WhatsAppIcon, TruckIcon, BellIcon, TrashIcon, BagIcon, ReceiptIcon, SearchIcon, XIcon, DownloadIcon, CheckIcon, CopyIcon, PhoneIcon, PrintIcon, ImageIcon } from '../../components/icons.jsx';
+import { PinIcon, NoteIcon, TicketIcon, WhatsAppIcon, TruckIcon, BellIcon, TrashIcon, BagIcon, ReceiptIcon, SearchIcon, XIcon, DownloadIcon, CheckIcon, CopyIcon, PhoneIcon, PrintIcon, ImageIcon, ChevronDownIcon, GearIcon } from '../../components/icons.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useCouriers, syncCourierStatuses, courierOf, CourierSend } from '../../components/couriers.jsx';
 import { PageHead, SectionHead } from '../../components/FormField.jsx';
@@ -39,6 +41,37 @@ const BADGE = {
   pending: 'bg-orange-500/20 text-orange-200',
   failed: 'bg-red-500/20 text-red-200',
 };
+
+function thumbMap(list) {
+  const out = {};
+  for (const p of list || []) {
+    const raw = p.imageUrl || p.images?.[0] || '';
+    const src = raw ? cldThumb(raw, 160) : (p.videoUrl ? cldVideoPoster(p.videoUrl, 160) : '');
+    if (src) out[p.id] = src;
+  }
+  return out;
+}
+
+// صورُ القطعِ بالسطرِ المطويّ: صورةٌ واحدة، أو اثنتانِ متراكبتان إن كانت أكثرَ من قطعة،
+// أو الحرفُ الأوّلُ من اسمِ الزبونةِ إن لم تكن صورة.
+function OrderThumbs({ items, thumbs, name }) {
+  const pics = [...new Set((items || []).map((it) => thumbs[it.id]).filter(Boolean))].slice(0, 2);
+  const count = (items || []).length;
+  if (!pics.length) {
+    return (
+      <span className="bz-othumb grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-base font-bold">
+        {String(name || '؟').trim().charAt(0) || '؟'}
+      </span>
+    );
+  }
+  return (
+    <span className="relative h-12 w-12 shrink-0">
+      {pics[1] && <img src={pics[1]} alt="" loading="lazy" className="bz-othumb-img absolute -end-1 top-1 h-10 w-10 rotate-6 rounded-xl object-cover" />}
+      <img src={pics[0]} alt="" loading="lazy" className="bz-othumb-img absolute inset-0 h-12 w-12 rounded-2xl object-cover" />
+      {count > 1 && <span className="bz-othumb-n absolute -bottom-1 -start-1 grid h-5 min-w-[20px] place-items-center rounded-full px-1 text-[10px] font-extrabold">{count}</span>}
+    </span>
+  );
+}
 
 export default function OrdersManager() {
   const { t } = useTranslation();
@@ -115,6 +148,27 @@ export default function OrdersManager() {
     }
   };
   // فلترة وبحث بالطلبات: حالة + اسم/هاتف/رقم طلب — للوصول لأي طلب بثوانٍ
+  // البطاقةُ مطويّةٌ سطراً واحداً، وتنفتحُ بضغطة. كانت كلُّ بطاقةٍ مفتوحةً بكلِّ تفاصيلِها
+  // (القطع والمجاميع والمراحل وعشرةُ أزرار) فيأخذُ الطلبُ الواحدُ شاشةً ونصفاً، ويمرُّ
+  // الإصبعُ على عشرِ شاشاتٍ ليرى عشرةَ طلبات. الآن يُرى أكثرُها بنظرةٍ واحدة.
+  const [openIds, setOpenIds] = useState(() => new Set());
+  const toggleOpen = (id) => setOpenIds((prev) => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
+  const [toolsOpen, setToolsOpen] = useState(false);
+  // صورةُ القطعةِ بالسطرِ المطويّ: من منتجاتِ المتجر (القطعةُ بالطلبِ تحملُ معرّفَها لا صورتَها)
+  const [thumbs, setThumbs] = useState(() => thumbMap(chatCache.getProducts()));
+  useEffect(() => {
+    let on = true;
+    api.get('/products').then((r) => {
+      const list = r.data?.products || [];
+      chatCache.setProducts(list.filter((p) => !p.hidden));
+      if (on) setThumbs(thumbMap(list));
+    }).catch(() => {});
+    return () => { on = false; };
+  }, []);
   const [statusFilter, setStatusFilter] = useSessionState('orders:status', 'all');
   const [oq, setOq] = useSessionState('orders:q', '');
   const [toast, setToast] = useState(''); // رسالة خاطفة (نسخ التفاصيل)
@@ -749,84 +803,108 @@ export default function OrdersManager() {
         </div>
       )}
 
-      {/* شريط الفلترة والبحث — يظهر عندما تكثر الطلبات ليصل المالك لأي طلب بثوانٍ */}
-      {orders?.length > 3 && (
-        <div className="dash-section glass space-y-4 p-5 sm:p-6">
-          <SectionHead
-            icon={<ReceiptIcon className="h-5 w-5" />}
-            title={t('dashboard.ordersSection.title')}
-            desc={t('dashboard.ordersSection.ordersCount', { count: orders.length })}
-          />
-          {/* الأيقونة والحقل بحاوية واحدة (لا تراكب) + زرّ تفريغ */}
-          <div className="flex items-center gap-2 rounded-xl border border-gold-400/15 bg-black/20 px-3 focus-within:border-gold-400/60 focus-within:ring-2 focus-within:ring-gold-400/25">
-            <SearchIcon className="h-4 w-4 shrink-0 text-stone-400" />
-            <input
-              className="min-w-0 flex-1 bg-transparent py-2.5 text-sm text-stone-100 placeholder:text-stone-500 focus:outline-none"
-              placeholder={t('dashboard.ordersSection.searchPlaceholder')}
-              value={oq}
-              onChange={(e) => setOq(e.target.value)}
-            />
-            {oq && (
-              <button type="button" onClick={() => setOq('')} aria-label={t('common.cancel')} className="shrink-0 text-stone-400 transition hover:text-gold-200">
-                <XIcon className="h-4 w-4" />
-              </button>
-            )}
+      {/* ═══ ملخّصُ اليوم: ما يهمُّ أوّلَ ما تفتحُ الصفحة ═══ */}
+      {orders?.length > 0 && (() => {
+        const todayKey = dayKey(new Date().toISOString());
+        const today = orders.filter((o) => dayKey(o.createdAt) === todayKey);
+        const todaySum = today.filter((o) => o.status !== 'cancelled').reduce((n, o) => n + (Number(o.total) || 0), 0);
+        const waiting = statusCounts.new || 0;
+        return (
+          <div className="bz-osum grid grid-cols-3 overflow-hidden rounded-2xl">
+            <div className="bz-osum-cell px-3 py-3 text-center">
+              <p className="bz-osum-k text-[11px] font-semibold">{t('dashboard.ordersSection.sumToday')}</p>
+              <p className="bz-osum-v mt-0.5 font-display text-xl font-extrabold tabular-nums">{today.length}</p>
+            </div>
+            <div className="bz-osum-cell px-3 py-3 text-center">
+              <p className="bz-osum-k text-[11px] font-semibold">{t('dashboard.ordersSection.sumSales')}</p>
+              <p className="bz-osum-v mt-0.5 font-display text-xl font-extrabold tabular-nums">{t('common.currency')}{Math.round(todaySum)}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => waiting && setStatusFilter('new')}
+              className={`bz-osum-cell px-3 py-3 text-center ${waiting ? 'is-alert app-tap' : ''}`}
+            >
+              <p className="bz-osum-k text-[11px] font-semibold">{t('dashboard.ordersSection.sumWaiting')}</p>
+              <p className="bz-osum-v mt-0.5 font-display text-xl font-extrabold tabular-nums">{waiting}</p>
+            </button>
           </div>
-          <div className="flex flex-wrap gap-1.5">
+        );
+      })()}
+
+      {/* ═══ شريطُ البحثِ والحالات: يلتصقُ تحت الهيدر ويتبعُه حين ينزلق ═══
+          الحالاتُ تبويباتٌ بأعدادِها في سطرٍ يتمرّر، والطباعةُ والتصديرُ خلفَ زرِّ «أدوات»:
+          كانت كلُّها بصندوقٍ واحدٍ بطولِ الشاشة قبلَ أوّلِ طلب. */}
+      {orders?.length > 1 && (
+        <div className="bz-obar sticky top-[calc(var(--bz-headline-h)+var(--bz-tabbar-h,0px))] z-30 -mx-1 space-y-2 rounded-2xl px-1 py-2 transition-[top] duration-300 ease-out motion-reduce:transition-none">
+          <div className="flex items-center gap-2">
+            <div className="bz-osearch flex min-w-0 flex-1 items-center gap-2 rounded-xl px-3">
+              <SearchIcon className="h-4 w-4 shrink-0 text-stone-400" />
+              <input
+                className="min-w-0 flex-1 bg-transparent py-2.5 text-sm text-stone-100 placeholder:text-stone-500 focus:outline-none"
+                placeholder={t('dashboard.ordersSection.searchPlaceholder')}
+                value={oq}
+                onChange={(e) => setOq(e.target.value)}
+              />
+              {oq && (
+                <button type="button" onClick={() => setOq('')} aria-label={t('common.cancel')} className="shrink-0 text-stone-400 transition hover:text-gold-200">
+                  <XIcon className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setToolsOpen((v) => !v)}
+              aria-expanded={toolsOpen}
+              title={t('dashboard.ordersSection.tools')}
+              className={`bz-osearch app-tap grid h-[42px] w-[42px] shrink-0 place-items-center rounded-xl ${toolsOpen ? 'is-on' : ''}`}
+            >
+              <GearIcon className="h-[18px] w-[18px]" />
+            </button>
+          </div>
+          <div className="bz-ochips -mx-1 flex gap-1.5 overflow-x-auto px-1" role="tablist">
             {['all', ...FLOW].map((s) => {
               const n = s === 'all' ? (orders?.length || 0) : (statusCounts[s] || 0);
-              if (s !== 'all' && n === 0) return null; // حالة بلا طلبات لا تشغل مكاناً
+              if (s !== 'all' && n === 0) return null;
               const on = statusFilter === s;
               return (
                 <button
                   key={s}
+                  role="tab"
+                  aria-selected={on}
                   onClick={() => setStatusFilter(s)}
-                  // النشط بذهب صريح (hex): bg-gold-400 تنقلب نهاراً لبنّي و text-wine-dark
-                  // بنّي أغمق — بنّي على بنّي لا يُقرأ. الهيكس يتجاوز قلب الثيم.
-                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
-                    on
-                      ? 'border-[#999795] bg-[#999795] text-[#313130] shadow-sm'
-                      : 'border-gold-400/25 bg-gold-400/5 text-stone-300 hover:bg-gold-400/15 hover:text-gold-200'
-                  }`}
+                  data-status={s}
+                  className={`bz-ochip app-tap inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${on ? 'is-on' : ''}`}
                 >
+                  {s !== 'all' && <span className={`bz-ochip-dot bz-st-${s} h-1.5 w-1.5 rounded-full`} />}
                   {s === 'all' ? t('common.all') : t(`dashboard.ordersSection.${s}`)}
-                  <span className={`rounded-full px-1.5 text-[10px] font-bold ${on ? 'bg-[#313130]/15 text-[#313130]' : 'bg-gold-400/10 text-stone-400'}`}>{n}</span>
+                  <span className="bz-ochip-n tabular-nums">{n}</span>
                 </button>
               );
             })}
           </div>
-          {/* الطباعةُ والتصديرُ يعملانِ على هذه القائمة، فمكانُهما معها لا فوقَ
-              الصفحةِ كلِّها. كانا في خانةِ إجراءاتِ الرأسِ ومعهما مقاسُ الورق —
-              وهي تترصّ عموديّاً على الجوّال: ثلاثُ كتلٍ بعرضِ الشاشةِ بينَ عنوانِ
-              الصفحةِ وأوّلِ طلب. وصاحبةُ المتجرِ تفتحُ «الطلبات» لترى طلباً جديداً
-              لا لتصدّرَ ملفَّ إكسل. وصفٌّ ملتفٌّ هنا: سطرٌ واحدٌ خفيفٌ لا ثلاثة. */}
-          <div className="flex flex-wrap items-center gap-2 border-t border-gold-400/10 pt-3">
-            <span title={t('dashboard.paper.title')} className="shrink-0">
-              <Select
-                value={paper}
-                onChange={choosePaper}
-                options={PAPERS.map((x) => ({ value: x.id, label: t(`dashboard.paper.${x.id}`) }))}
-                className="w-32 whitespace-nowrap"
-              />
-            </span>
-            <button
-              onClick={printAllInvoices}
-              title={t('dashboard.ordersSection.printAll')}
-              className="bz-listtool"
-            >
-              <PrintIcon className="h-4 w-4 shrink-0" /> <span>{t('dashboard.ordersSection.printAll')}</span>
-            </button>
-            <button onClick={exportExcel} className="bz-listtool">
-              <DownloadIcon className="h-4 w-4 shrink-0" /> {t('dashboard.ordersSection.export')}
-            </button>
-            {paperFromDevice && (
-              <p className="w-full text-[11px] leading-snug text-stone-400">{t('dashboard.paper.deviceHint')}</p>
-            )}
-          </div>
-
-          {/* عدد النتائج عند وجود تصفية فعّالة */}
+          {toolsOpen && (
+            <div className="bz-otoolsbar flex flex-wrap items-center gap-2 rounded-xl p-2">
+              <span title={t('dashboard.paper.title')} className="shrink-0">
+                <Select
+                  value={paper}
+                  onChange={choosePaper}
+                  options={PAPERS.map((x) => ({ value: x.id, label: t(`dashboard.paper.${x.id}`) }))}
+                  className="w-32 whitespace-nowrap"
+                />
+              </span>
+              <button onClick={printAllInvoices} title={t('dashboard.ordersSection.printAll')} className="bz-listtool">
+                <PrintIcon className="h-4 w-4 shrink-0" /> <span>{t('dashboard.ordersSection.printAll')}</span>
+              </button>
+              <button onClick={exportExcel} className="bz-listtool">
+                <DownloadIcon className="h-4 w-4 shrink-0" /> {t('dashboard.ordersSection.export')}
+              </button>
+              {paperFromDevice && (
+                <p className="w-full text-[11px] leading-snug text-stone-400">{t('dashboard.paper.deviceHint')}</p>
+              )}
+            </div>
+          )}
           {(oq.trim() || statusFilter !== 'all') && visibleOrders.length > 0 && (
-            <p className="text-[11px] text-stone-400">{t('dashboard.product.showing', { shown: visibleOrders.length, total: orders.length })}</p>
+            <p className="px-1 text-[11px] text-stone-400">{t('dashboard.product.showing', { shown: visibleOrders.length, total: orders.length })}</p>
           )}
         </div>
       )}
@@ -863,6 +941,13 @@ export default function OrdersManager() {
             // الزر الرئيسي يفتح الأرجح، وبجانبه بديل صغير لو قال واتساب "غير موجود"
             const waInfo = waOf(o.customerPhone);
             const waNums = waInfo.nums;
+            const cs = customers[o.customerKey];
+            const open = openIds.has(o.id) || visibleOrders.length === 1;
+            const pieces = (o.items || []).reduce((n, it) => n + (Number(it.qty) || 1), 0);
+            // الخطوةُ التاليةُ على المطويّ — إلّا إن كانت شركةُ توصيلٍ تديرُ الحالة
+            // تظهرُ للطلبِ الجديدِ وحدَه: هو ما ينتظرُ قراراً الآن، ومراحلُ الشحنِ والتسليمِ
+            // داخلَ الطلبِ المفتوح — وإلّا عادت كلُّ بطاقةٍ ثلثَ شاشة.
+            const quickNext = o.status === 'new' && !courierOf(o) ? NEXT[o.status] : null;
             const k = dayKey(o.createdAt);
             const header = k !== lastDay ? (
               <div className="flex items-center gap-2 pt-2">
@@ -876,51 +961,108 @@ export default function OrdersManager() {
             return (
               <Fragment key={o.id}>
               {header}
-              <div className="glass p-4">
-                {/* رأس: الزبون + الحالة */}
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="flex min-w-0 items-center gap-1.5">
-                      <span className="truncate text-sm font-bold text-stone-100">{o.customerName || '—'}</span>
-                      {/* زبونةٌ راجعة أم أوّلُ طلب: يُعرَفُ من نظرةٍ قبل قراءةِ التفاصيل. والضغطُ
-                          على الشارةِ يصفّي القائمةَ على طلباتِها هي. */}
-                      {(() => {
-                        const cs = customers[o.customerKey];
-                        if (!cs) return null;
-                        return cs.orders > 1 ? (
-                          <button
-                            onClick={() => setOq(o.customerPhone)}
-                            title={t('dashboard.ordersSection.custFilter')}
-                            className="bz-cust-chip is-back inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold"
-                          >
-                            {t('dashboard.ordersSection.custBack', { count: cs.orders })}
-                            {cs.spent > 0 && <span className="tabular-nums opacity-80">· ₪{Math.round(cs.spent)}</span>}
-                          </button>
-                        ) : (
-                          <span className="bz-cust-chip is-new inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-bold">
-                            {t('dashboard.ordersSection.custNew')}
-                          </span>
-                        );
-                      })()}
-                    </p>
-                    <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-stone-400">
-                      {o.customerPhone && <a href={`tel:${o.customerPhone.replace(/\s/g, '')}`} className="underline-offset-2 transition hover:text-gold-200 hover:underline" dir="ltr">{o.customerPhone}</a>}
-                      <span>{new Date(o.createdAt).toLocaleString()}</span>
-                    </p>
+              <div className={`bz-ocard glass overflow-hidden ${open ? 'is-open' : ''}`} data-status={o.status}>
+                {/* ═══ السطرُ المطويّ: من، وكم، وأين وصل — بنظرة ═══ */}
+                <button
+                  type="button"
+                  onClick={() => toggleOpen(o.id)}
+                  aria-expanded={open}
+                  className="bz-orow app-tap flex w-full items-center gap-3 p-3.5 text-start"
+                >
+                  <OrderThumbs items={o.items} thumbs={thumbs} name={o.customerName} />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex min-w-0 items-center gap-1.5">
+                      <span className="truncate text-[14.5px] font-bold text-stone-100">{o.customerName || '—'}</span>
+                      {cs && (
+                        <span className={`bz-cust-chip ${cs.orders > 1 ? 'is-back' : 'is-new'} inline-flex shrink-0 items-center gap-1 rounded-full px-1.5 py-px text-[9.5px] font-bold`}>
+                          {cs.orders > 1 ? `🔁 ${cs.orders}` : '✨'}
+                        </span>
+                      )}
+                    </span>
+                    <span className="mt-0.5 block truncate text-[11.5px] text-stone-400">
+                      {[
+                        t('dashboard.abandoned.itemsCount', { count: pieces }),
+                        o.city,
+                        new Date(o.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                      ].filter(Boolean).join(' · ')}
+                    </span>
+                  </span>
+                  <span className="flex shrink-0 flex-col items-end gap-1">
+                    <span className="font-display text-[15.5px] font-extrabold tabular-nums text-gold-300">{t('common.currency')}{Number(o.total).toFixed(0)}</span>
+                    {FLOW.includes(o.status)
+                      ? <StatusBadge status={o.status} />
+                      : <span className={`badge ${BADGE[o.status] || ''}`}>{t(`dashboard.ordersSection.${o.status}`)}</span>}
+                  </span>
+                  <ChevronDownIcon className={`bz-ochev h-4 w-4 shrink-0 text-stone-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* أزرارٌ سريعةٌ على المطويّ: الخطوةُ التاليةُ والتواصلُ بلا فتحِ الطلب —
+                    الطلبُ الجديدُ يُؤكَّدُ بضغطتين. لا تظهرُ لطلبٍ انتهت رحلتُه. */}
+                {!open && quickNext && (
+                  <div className="bz-oquick flex items-center gap-2 px-3.5 pb-3">
+                    <button
+                      type="button"
+                      onClick={() => setStatus(o.id, quickNext)}
+                      disabled={savingId === o.id}
+                      className={`bz-oquick-go bz-ost-next bz-st-${quickNext} min-h-[38px] min-w-0 flex-1 rounded-xl px-3 text-[13px] font-extrabold disabled:opacity-60`}
+                    >
+                      {t(`dashboard.ordersSection.${ACTION[quickNext]}`)}
+                    </button>
+                    {waNums.length > 0 && (
+                      <a
+                        href={`https://wa.me/${waNums[0]}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={() => askWa(o, waInfo)}
+                        aria-label={t('dashboard.ordersSection.contactWhatsapp')}
+                        className="bz-oquick-ico is-wa grid h-[38px] w-[38px] shrink-0 place-items-center rounded-xl"
+                      >
+                        <WhatsAppIcon className="h-5 w-5" />
+                      </a>
+                    )}
+                    {o.customerPhone && (
+                      <a
+                        href={`tel:${o.customerPhone.replace(/\s/g, '')}`}
+                        aria-label={t('dashboard.ordersSection.callShort')}
+                        className="bz-oquick-ico grid h-[38px] w-[38px] shrink-0 place-items-center rounded-xl"
+                      >
+                        <PhoneIcon className="h-[18px] w-[18px]" />
+                      </a>
+                    )}
                   </div>
+                )}
+                {!open && waAsk?.id === o.id && <div className="px-3.5 pb-3.5">{waAskCard(o.customerPhone)}</div>}
+
+                {open && (
+                <div className="bz-obody border-t px-4 pb-4 pt-3">
+                {/* التفاصيلُ كما كانت: الرقمُ والهاتفُ والتاريخُ الكاملُ والدفع، ثمّ كلُّ شيء */}
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-stone-400">
+                    {o.customerPhone && <a href={`tel:${o.customerPhone.replace(/\s/g, '')}`} className="underline-offset-2 transition hover:text-gold-200 hover:underline" dir="ltr">{o.customerPhone}</a>}
+                    <span>{new Date(o.createdAt).toLocaleString()}</span>
+                  </p>
                   <span className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
-                    {/* رقم الطلب القصير الذي يراه الزبون (BZ-…) لا معرّف قاعدة البيانات الطويل */}
+                    {cs && cs.orders > 1 && (
+                      <button
+                        onClick={() => setOq(o.customerPhone)}
+                        title={t('dashboard.ordersSection.custFilter')}
+                        className="bz-cust-chip is-back inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold"
+                      >
+                        {t('dashboard.ordersSection.custBack', { count: cs.orders })}
+                        {cs.spent > 0 && <span className="tabular-nums opacity-80">· ₪{Math.round(cs.spent)}</span>}
+                      </button>
+                    )}
+                    {cs && cs.orders <= 1 && (
+                      <span className="bz-cust-chip is-new inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-bold">
+                        {t('dashboard.ordersSection.custNew')}
+                      </span>
+                    )}
                     <span className="rounded-full bg-gold-400/10 px-2 py-0.5 text-[10px] font-bold text-stone-400" dir="ltr">{orderNo(o)}</span>
-                    {/* شارةُ «مدفوع» تُميّزُ طلبَ البطاقةِ بنظرة: بلا هذا كان طلبُ
-                        الفيزا يبدو كطلبِ الاستلامِ تماماً بالقائمة */}
                     {o.paymentMethod === 'card' && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-200">
                         <CheckIcon className="h-3 w-3 shrink-0" /> {t('dashboard.ordersSection.paidBadge')}
                       </span>
                     )}
-                    {FLOW.includes(o.status)
-                      ? <StatusBadge status={o.status} />
-                      : <span className={`badge ${BADGE[o.status] || ''}`}>{t(`dashboard.ordersSection.${o.status}`)}</span>}
                   </span>
                 </div>
 
@@ -1081,6 +1223,8 @@ export default function OrdersManager() {
                     </button>
                   </div>
                 </div>
+                </div>
+                )}
               </div>
               </Fragment>
             );

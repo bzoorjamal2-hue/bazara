@@ -188,6 +188,8 @@
       "tab_orders": "عليها طلب",
       "noMatch": "ما في محادثات هون.",
       "sendProduct": "أرسل منتج",
+      "viewProduct": "عرض المنتج",
+      "sentProduct": "أرسلتِ منتج: {{name}}",
       "noProducts": "ما في منتجات بهالاسم",
       "sale": "تخفيض",
       "custBack": "زبونة رجعت 🔁",

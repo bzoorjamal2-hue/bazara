@@ -185,6 +185,8 @@
       "tab_orders": "With order",
       "noMatch": "No conversations here.",
       "sendProduct": "Send a product",
+      "viewProduct": "View product",
+      "sentProduct": "Sent a product: {{name}}",
       "noProducts": "No matching products",
       "sale": "Sale",
       "custBack": "Returning 🔁",

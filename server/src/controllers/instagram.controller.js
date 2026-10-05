@@ -1369,8 +1369,11 @@ export async function listConversations(req, res, next) {
     const r = await query(
       `SELECT c.id, c.ig_sender_id, c.customer_name, c.customer_username, c.customer_avatar,
               c.last_message, c.last_at, c.unread, c.order_id, c.channel,
-              lm.direction AS last_dir, li.created_at AS last_in_at
+              lm.direction AS last_dir, li.created_at AS last_in_at,
+              o.status AS order_status
        FROM ig_conversations c
+       -- حالةُ الطلبِ المحوَّلِ منها: «جديد/مؤكّد/بالشحن…» بالقائمة بدل «صارت طلب» العامّة
+       LEFT JOIN orders o ON o.id = c.order_id AND o.store_id = c.store_id
        LEFT JOIN LATERAL (
          SELECT direction FROM ig_messages WHERE conversation_id = c.id
          ORDER BY created_at DESC LIMIT 1

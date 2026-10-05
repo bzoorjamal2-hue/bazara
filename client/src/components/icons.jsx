@@ -229,6 +229,7 @@ export function ClockIcon({ className = 'h-5 w-5' }) { return svg(className, <><
 export function HourglassIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M6 3.5 H18 M6 20.5 H18" /><path {...L} d="M7.6 3.5 V6.2 C7.6 9.2 12 10.9 12 12 C12 13.1 7.6 14.8 7.6 17.8 V20.5" /><path {...L} d="M16.4 3.5 V6.2 C16.4 9.2 12 10.9 12 12 C12 13.1 16.4 14.8 16.4 17.8 V20.5" /></>); }
 export function WarnIcon({ className = 'h-5 w-5' }) { return svg(className, <><path {...L} d="M10.3 4.5 A2 2 0 0 1 13.7 4.5 L20.8 17.4 A2 2 0 0 1 19.1 20.4 H4.9 A2 2 0 0 1 3.2 17.4 Z" /><path {...L} d="M12 9.9 V14.1" /><circle cx="12" cy="17" r="0.95" fill="currentColor" /></>); }
 export function ArrowUpIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M12 5 V19 M6 11 L12 5 L18 11" />); }
+export function ChevronDownIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M6 9 L12 15 L18 9" />); }
 export function ArrowDownIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M12 5 V19 M6 13 L12 19 L18 13" />); }
 export function PhoneShareIcon({ className = 'h-5 w-5' }) { return svg(className, <><rect {...L} x="6" y="3" width="12" height="18" rx="2" /><path {...L} d="M10 18 H14" /></>); }
 export function HandIcon({ className = 'h-5 w-5' }) { return svg(className, <path {...L} d="M9 11 V5.5 A1.5 1.5 0 0 1 12 5.5 V10 M12 9 A1.5 1.5 0 0 1 15 9 V11 M15 10 A1.5 1.5 0 0 1 18 10 V15 A6 6 0 0 1 6 15 V12 A1.5 1.5 0 0 1 9 12" />); }
