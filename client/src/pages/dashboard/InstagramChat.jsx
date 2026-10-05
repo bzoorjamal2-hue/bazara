@@ -18,6 +18,7 @@ import {
 import { useNotifications } from '../../context/NotificationsContext.jsx';
 import { clearDelivered } from '../../utils/push.js';
 import * as cache from '../../utils/chatCache.js';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { StatusBadge } from '../../components/OrderStatus.jsx';
 
 // شاشةُ المحادثةِ تُرسَمُ على ‎document.body، فتخرجُ من ‎.theme-pub — وكلُّ قواعدِ
@@ -513,6 +514,8 @@ export default function InstagramChat() {
   dataRef.current = data;
   const [quick, setQuick] = useState([]);
   const [editQuick, setEditQuick] = useState(false);
+  const { store: myStore } = useAuth();
+  const [suggesting, setSuggesting] = useState(false);
   const [newQuick, setNewQuick] = useState('');
   const [recording, setRecording] = useState(false);
   const [recSecs, setRecSecs] = useState(0);
@@ -1186,6 +1189,34 @@ export default function InstagramChat() {
 
   const c = data?.conversation || {};
   const name = c.customer_name || (c.customer_username ? `@${c.customer_username}` : t('dashboard.instagram.customer'));
+
+  // متغيّراتُ الردودِ الجاهزة: «أهلين {الاسم} 🌷 طلبك {رقم_الطلب} انشحن» تُملأُ لحظةَ
+  // الإدراج. وما لا قيمةَ له (محادثةٌ بلا طلب) يُحذَفُ مع فراغِه بدل أن يبقى بأقواسِه.
+  const fillVars = (s) => String(s)
+    .replace(/\{(الاسم|name)\}/g, (c.customer_name || '').trim().split(/\s+/)[0] || '')
+    .replace(/\{(رقم_الطلب|order)\}/g, c.order_ref || '')
+    .replace(/\{(المتجر|store)\}/g, myStore?.name || '')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/ ([،,.!؟?])/g, '$1')
+    .trim();
+
+  // «اقترح ردّ»: البائعةُ الآليّةُ تكتبُ ردّاً بخانةِ الكتابة — لا يُرسَلُ إلّا بإرسالِها هي
+  const suggest = async () => {
+    if (suggesting) return;
+    setSuggesting(true);
+    setError('');
+    try {
+      const r = await api.post(`/instagram/conversations/${id}/suggest`);
+      const reply = String(r.data?.reply || '').trim();
+      if (reply) { setText(reply); inputRef.current?.focus(); }
+      else setError(t('dashboard.instagram.suggestEmpty'));
+    } catch (e) {
+      setError(getErrorMessage(e));
+    } finally {
+      setSuggesting(false);
+    }
+  };
+  const canSuggest = all.some((m) => m.direction === 'in');
   const converted = Boolean(c.order_id);
   const messenger = c.channel === 'messenger';
   const seenAt = c.seen_at;
@@ -1523,7 +1554,7 @@ export default function InstagramChat() {
           {slash.length ? slash.map((qr, i) => (
             <button
               key={`s-${qr}-${i}`}
-              onClick={() => { setText(qr); inputRef.current?.focus(); }}
+              onClick={() => { setText(fillVars(qr)); inputRef.current?.focus(); }}
               className="bz-chat-row block w-full truncate px-4 py-2 text-start text-[13px]"
             >
               {qr}
@@ -1539,13 +1570,26 @@ export default function InstagramChat() {
       {/* الردودُ الجاهزة: «متوفّر» و«السعر» تُكتَبان عشرين مرّةً في اليوم. شريطٌ يمرّرُ
           أفقيّاً فوقَ صندوقِ الكتابة، والضغطةُ تضعُ النصَّ في الصندوقِ لا تُرسلُه —
           فيبقى للتاجرةِ أن تُضيفَ كلمةً قبل الإرسال. */}
-      {!recording && !slash && (quick.length > 0 || editQuick) && (
+      {!recording && !slash && (quick.length > 0 || editQuick || canSuggest) && (
         <div className="bz-chat-bar shrink-0 border-t px-2 pt-2">
           <div className="flex gap-1.5 overflow-x-auto pb-2">
+            {canSuggest && (
+              <button
+                type="button"
+                onClick={suggest}
+                disabled={suggesting}
+                className="bz-chat-suggest inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-3 py-1.5 text-[11.5px] font-bold disabled:opacity-70"
+              >
+                {suggesting
+                  ? <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  : <SparkleIcon className="h-3.5 w-3.5" />}
+                {suggesting ? t('dashboard.instagram.suggesting') : t('dashboard.instagram.suggest')}
+              </button>
+            )}
             {quick.map((qr, i) => (
               <button
                 key={`${qr}-${i}`}
-                onClick={() => { setText(text ? `${text} ${qr}` : qr); setEditQuick(false); }}
+                onClick={() => { const v = fillVars(qr); setText(text ? `${text} ${v}` : v); setEditQuick(false); }}
                 className="bz-chat-day shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-[11.5px] font-semibold"
               >
                 {qr}
@@ -1574,6 +1618,7 @@ export default function InstagramChat() {
                   {t('common.add', { defaultValue: 'إضافة' })}
                 </button>
               </div>
+              <p className="bz-chat-muted px-1 text-[11px] leading-relaxed">{t('dashboard.instagram.quickVarsHint')}</p>
               {quick.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {quick.map((qr, i) => (

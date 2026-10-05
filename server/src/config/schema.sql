@@ -348,3 +348,5 @@ ALTER TABLE stores ADD COLUMN IF NOT EXISTS bot_haggle_margin NUMERIC(10,2) NOT 
 ALTER TABLE ig_conversations ADD COLUMN IF NOT EXISTS channel VARCHAR(16) NOT NULL DEFAULT 'instagram';
 -- متى أرسلت البائعة آخر رسالة — حارس «التاجرة على الشاشة» يقيس عليه
 ALTER TABLE ig_conversations ADD COLUMN IF NOT EXISTS bot_sent_at TIMESTAMPTZ;
+-- متى وصل المتجر آخر تقرير أسبوعي — حارس «مرّة بالأسبوع»
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS weekly_report_at TIMESTAMPTZ;

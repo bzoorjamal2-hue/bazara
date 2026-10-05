@@ -194,7 +194,7 @@ export default function ProductDetails() {
         .filter((x) => x.id !== p.id)
         .map((x) => ({ ...x, storeSlug: p.storeSlug }));
       setRelated(all.filter((x) => x.category === p.category).slice(0, 10));
-      setComplementary(all.filter((x) => x.category !== p.category).slice(0, 10));
+      setComplementary(completeLook(p, all));
     };
     const cached = getCache(`store:${p.storeSlug}`);
     if (cached) apply(cached); // عرض فوري من المخزّن ثم تحديث بالخلفية
@@ -876,4 +876,32 @@ function Reviews({ productId, reviews, onAdded }) {
       {zoom && <Lightbox images={[zoom]} index={0} onClose={() => setZoom('')} />}
     </section>
   );
+}
+
+// «أكملي إطلالتك»: كانت أوّلَ عشرِ قطعٍ من فئةٍ أخرى بترتيبِ المتجر — فستانٌ تقترحُ
+// معه ثلاثَ عباياتٍ وطقمين، وقطعٌ نفدت. صارت تُرتَّبُ بما يُلبَسُ معه فعلاً: الملابسُ
+// يُكمِلُها الحذاءُ ثمّ الإكسسوار، والحذاءُ تُكمِلُه الشنطةُ ثمّ الثياب. وتتناوبُ الفئاتُ
+// داخلَ كلِّ قسمٍ (حذاءٌ، شنطة، حذاء…) فلا يحتلُّ الشريطَ صنفٌ واحد، والنافدُ آخرُ الشريط.
+const PAIRS = {
+  clothing: ['shoes', 'accessories', 'clothing'],
+  shoes: ['accessories', 'clothing', 'shoes'],
+  accessories: ['clothing', 'shoes', 'accessories'],
+};
+function completeLook(p, all, n = 10) {
+  const dept = (x) => (PAIRS[x?.department] ? x.department : 'clothing');
+  const order = PAIRS[dept(p)];
+  const pool = all.filter((x) => x.category !== p.category);
+  const out = [];
+  for (const d of order) {
+    const inDept = pool.filter((x) => dept(x) === d);
+    const fresh = inDept.filter((x) => x.stock !== 0);
+    // تناوبُ الفئات: أوّلُ قطعةٍ من كلِّ فئة، ثمّ الثانية…
+    const byCat = new Map();
+    for (const x of fresh) { if (!byCat.has(x.category)) byCat.set(x.category, []); byCat.get(x.category).push(x); }
+    const queues = [...byCat.values()];
+    for (let i = 0; queues.some((q) => q.length > i); i++) queues.forEach((q) => { if (q[i]) out.push(q[i]); });
+    out.push(...inDept.filter((x) => x.stock === 0));
+  }
+  const fresh = out.filter((x) => x.stock !== 0);
+  return [...fresh, ...out.filter((x) => x.stock === 0)].slice(0, n);
 }

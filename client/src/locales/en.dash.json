@@ -185,6 +185,10 @@
       "tab_orders": "With order",
       "noMatch": "No conversations here.",
       "sendProduct": "Send a product",
+      "suggest": "Suggest reply",
+      "suggesting": "Writing…",
+      "suggestEmpty": "Couldn't suggest a reply right now — try again shortly.",
+      "quickVarsHint": "💡 Use {name}, {order} and {store} — they fill in automatically, e.g. “Hi {name} 🌷 your order {order} has shipped”",
       "viewProduct": "View product",
       "sentProduct": "Sent a product: {{name}}",
       "noProducts": "No matching products",
@@ -861,6 +865,40 @@
     },
     "nav": {
       "landing": "Landing page"
+    },
+    "customers": {
+      "title": "Customers",
+      "hint": "Everyone who ordered from your store, top spenders first. See who came back, who bought once and disappeared, and send them a WhatsApp offer in one tap.",
+      "sumAll": "Customers",
+      "sumBack": "Came back",
+      "sumSpent": "Total spent",
+      "search": "Search by name, phone or city…",
+      "tabs": {
+        "all": "All",
+        "back": "Returning",
+        "once": "Bought once",
+        "gone": "Gone quiet"
+      },
+      "goneHint": "They bought from you but haven't ordered in over {{days}} days — a kind message with an offer brings many back.",
+      "offer": "Offer text",
+      "offerHint": "{name} and {store} are filled in for each customer.",
+      "offerReset": "Restore default",
+      "offerDefault": "Hi {name} 🌷 we miss you at {store}! New pieces just landed, and there's a special discount on your next order 🎁 Want me to send you photos?",
+      "sendOffer": "Send a WhatsApp offer",
+      "call": "Call",
+      "badgeBack": "Returning",
+      "badgeGone": "Gone quiet",
+      "last": "Last order {{when}}",
+      "today": "today",
+      "daysAgo_one": "a day ago",
+      "daysAgo_other": "{{count}} days ago",
+      "cancelled_one": "cancelled once",
+      "cancelled_other": "cancelled {{count}}×",
+      "orders_one": "1 order",
+      "orders_other": "{{count}} orders",
+      "noMatch": "No customers in this view.",
+      "emptyTitle": "No customers yet",
+      "empty": "Once your first order arrives, its customer shows up here with everything they bought."
     }
   },
   "admin": {

@@ -15,6 +15,7 @@ import {
   igTyping,
   igProductCard,
   igLeave,
+  igSuggest,
   igQuickReplies,
   igSaveQuickReplies,
 } from '../controllers/instagram.controller.js';
@@ -31,6 +32,16 @@ const connectLimiter = rateLimit({
   message: { error: 'محاولات كثيرة. حاول لاحقاً.' },
 });
 
+// «اقترح ردّ» يكلّفُ نداءَ نموذج: سقفٌ لكلِّ حسابٍ يمنعُ ضغطاً متكرّراً بالخطأ من أن يصيرَ فاتورة
+const suggestLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => `sg:${req.user?.id || req.ip}`,
+  message: { error: 'اقتراحات كثيرة خلال وقت قصير. جرّبي بعد دقائق.' },
+});
+
 router.use(requireAuth); // كل هذه المسارات تخصّ صاحب المتجر (الـ webhook مسجَّل منفصلاً)
 
 router.get('/status', igStatus);
@@ -44,6 +55,7 @@ router.post('/conversations/:id/reply', sendReply);
 router.post('/conversations/:id/react', igReact);
 router.post('/conversations/:id/typing', igTyping);
 router.post('/conversations/:id/leave', igLeave);
+router.post('/conversations/:id/suggest', suggestLimiter, igSuggest);
 router.post('/product-card', igProductCard);
 router.get('/quick-replies', igQuickReplies);
 router.put('/quick-replies', igSaveQuickReplies);

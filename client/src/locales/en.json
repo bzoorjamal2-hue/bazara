@@ -847,6 +847,13 @@
       "notes": "Notes",
       "contactWhatsapp": "Contact on WhatsApp",
       "searchPlaceholder": "Search by name, phone or order no…",
+      "select": "Select",
+      "selectHint": "Tap orders to select them",
+      "selectAll": "Select all",
+      "selectNone": "Clear",
+      "bulkConfirm": "Confirm {{count}}",
+      "bulkConfirmed": "{{count}} orders confirmed ✓",
+      "bulkCourier": "Courier",
       "sumToday": "Today's orders",
       "sumSales": "Today's sales",
       "sumWaiting": "Awaiting confirmation",
@@ -900,7 +907,11 @@
       "waAskNone": "No, not on WhatsApp",
       "custBack": "🔁 {{count}} orders",
       "custNew": "✨ First order",
-      "custFilter": "Show all of this customer's orders"
+      "custFilter": "Show all of this customer's orders",
+      "week": "Sales, last 7 days",
+      "weekVs": "vs. the week before",
+      "weekOrders_one": "1 order",
+      "weekOrders_other": "{{count}} orders"
     },
     "addProduct": "Add new product",
     "product": {
@@ -916,7 +927,12 @@
     "all": "All",
     "unread": "Unread",
     "markAll": "Mark all",
-    "cat": {"all": "All", "orders": "Orders", "messages": "Messages", "stock": "Stock"},
+    "cat": {
+      "all": "All",
+      "orders": "Orders",
+      "messages": "Messages",
+      "stock": "Stock"
+    },
     "clearAll": "Clear all",
     "more": "Load more",
     "today": "Today",

@@ -158,6 +158,16 @@ export default function OrdersManager() {
     return next;
   });
   const [toolsOpen, setToolsOpen] = useState(false);
+  // وضعُ التحديد: تعليمُ عدّةِ طلباتٍ ثمّ تأكيدُها أو طباعتُها أو إرسالُها للمندوبِ دفعةً واحدة
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState(() => new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const toggleSel = (id) => setSelected((prev) => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
+  const exitSelect = () => { setSelectMode(false); setSelected(new Set()); };
   // صورةُ القطعةِ بالسطرِ المطويّ: من منتجاتِ المتجر (القطعةُ بالطلبِ تحملُ معرّفَها لا صورتَها)
   const [thumbs, setThumbs] = useState(() => thumbMap(chatCache.getProducts()));
   useEffect(() => {
@@ -171,6 +181,12 @@ export default function OrdersManager() {
   }, []);
   const [statusFilter, setStatusFilter] = useSessionState('orders:status', 'all');
   const [oq, setOq] = useSessionState('orders:q', '');
+  // «طلباتها» من صفحة «زبائني»: الصفحةُ حيّةٌ بالخلفيّة فلا تقرأُ ذاكرةَ الجلسةِ من جديد
+  useEffect(() => {
+    const on = (e) => { setOq(String(e.detail || '')); setStatusFilter('all'); };
+    window.addEventListener('bz:orders-search', on);
+    return () => window.removeEventListener('bz:orders-search', on);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [toast, setToast] = useState(''); // رسالة خاطفة (نسخ التفاصيل)
   const [paper, setPaperState] = useState(getPaper); // مقاس ورق الطابعة (لكل جهاز)
   const choosePaper = (id) => { setPaperState(id); savePaper(id); };
@@ -261,9 +277,7 @@ export default function OrdersManager() {
   };
 
   // إرسال الطلب عبر واتساب برسالة جاهزة — لشركة التوصيل إن حُدّدت، وإلا لواتساب صاحب المتجر
-  const sendToDelivery = (o) => {
-    const num = store?.deliveryPhone || store?.whatsapp;
-    if (!num) return;
+  const deliveryText = (o) => {
     const cur = t('common.currency');
     const items = (o.items || []).map((it) => `• ${it.name}${it.size ? ` (${it.size})` : ''}${it.color ? ` - ${it.color}` : ''} ×${it.qty}`).join('\n');
     const msg = [
@@ -279,6 +293,37 @@ export default function OrdersManager() {
       `الإجمالي: ${cur}${Number(o.total).toFixed(2)} (الدفع عند الاستلام)`,
       o.notes ? `ملاحظات: ${o.notes}` : '',
     ].filter(Boolean).join('\n');
+    return msg;
+  };
+  const sendToDelivery = (o) => {
+    const num = store?.deliveryPhone || store?.whatsapp;
+    if (!num) return;
+    window.open(buildWhatsappLink(num, deliveryText(o)), '_blank');
+  };
+
+  // ═══ الإجراءاتُ الجماعيّة ═══
+  const selectedOrders = () => (orders || []).filter((o) => selected.has(o.id));
+  const bulkConfirm = async () => {
+    const list = selectedOrders().filter((o) => o.status === 'new' && !courierOf(o));
+    if (!list.length) return;
+    setBulkBusy(true);
+    // واحداً واحداً لا معاً: كلُّ تأكيدٍ يخصمُ مخزوناً، والخادمُ يحسبُه بالتتابع
+    for (const o of list) await setStatus(o.id, 'confirmed', { silent: true });
+    setBulkBusy(false);
+    setToast(t('dashboard.ordersSection.bulkConfirmed', { count: list.length }));
+    setTimeout(() => setToast(''), 2500);
+    exitSelect();
+  };
+  const bulkPrint = () => {
+    const list = selectedOrders();
+    if (list.length) printHtml(list.map(invoiceBody).join(''), t('dashboard.ordersSection.invoice'));
+  };
+  // رسالةٌ واحدةٌ للمندوبِ بكلِّ الطلباتِ المحدَّدة، مفصولةً بخطّ — بدل فتحِ واتساب لكلِّ طلب
+  const bulkDelivery = () => {
+    const num = store?.deliveryPhone || store?.whatsapp;
+    const list = selectedOrders();
+    if (!num || !list.length) return;
+    const msg = list.map((o, i) => `(${i + 1}/${list.length})\n${deliveryText(o)}`).join('\n\n━━━━━━━━━━\n\n');
     window.open(buildWhatsappLink(num, msg), '_blank');
   };
 
@@ -827,6 +872,7 @@ export default function OrdersManager() {
               <p className="bz-osum-k text-[11px] font-semibold">{t('dashboard.ordersSection.sumWaiting')}</p>
               <p className="bz-osum-v mt-0.5 font-display text-xl font-extrabold tabular-nums">{waiting}</p>
             </button>
+            <WeekBars orders={orders} />
           </div>
         );
       })()}
@@ -851,6 +897,16 @@ export default function OrdersManager() {
                 </button>
               )}
             </div>
+            <button
+              type="button"
+              onClick={() => (selectMode ? exitSelect() : setSelectMode(true))}
+              aria-pressed={selectMode}
+              title={t('dashboard.ordersSection.select')}
+              className={`bz-osearch app-tap flex h-[42px] shrink-0 items-center gap-1 rounded-xl px-3 text-xs font-bold ${selectMode ? 'is-on' : ''}`}
+            >
+              <CheckIcon className="h-4 w-4" />
+              {t('dashboard.ordersSection.select')}
+            </button>
             <button
               type="button"
               onClick={() => setToolsOpen((v) => !v)}
@@ -882,6 +938,18 @@ export default function OrdersManager() {
               );
             })}
           </div>
+          {selectMode && (
+            <div className="flex items-center justify-between gap-2 px-1 text-[12px]">
+              <span className="text-stone-400">{t('dashboard.ordersSection.selectHint')}</span>
+              <button
+                type="button"
+                onClick={() => setSelected(selected.size === visibleOrders.length ? new Set() : new Set(visibleOrders.map((o) => o.id)))}
+                className="shrink-0 font-bold text-gold-300 underline-offset-2 hover:underline"
+              >
+                {selected.size === visibleOrders.length && visibleOrders.length ? t('dashboard.ordersSection.selectNone') : t('dashboard.ordersSection.selectAll')}
+              </button>
+            </div>
+          )}
           {toolsOpen && (
             <div className="bz-otoolsbar flex flex-wrap items-center gap-2 rounded-xl p-2">
               <span title={t('dashboard.paper.title')} className="shrink-0">
@@ -942,7 +1010,8 @@ export default function OrdersManager() {
             const waInfo = waOf(o.customerPhone);
             const waNums = waInfo.nums;
             const cs = customers[o.customerKey];
-            const open = openIds.has(o.id) || visibleOrders.length === 1;
+            const picked = selected.has(o.id);
+            const open = !selectMode && (openIds.has(o.id) || visibleOrders.length === 1);
             const pieces = (o.items || []).reduce((n, it) => n + (Number(it.qty) || 1), 0);
             // الخطوةُ التاليةُ على المطويّ — إلّا إن كانت شركةُ توصيلٍ تديرُ الحالة
             // تظهرُ للطلبِ الجديدِ وحدَه: هو ما ينتظرُ قراراً الآن، ومراحلُ الشحنِ والتسليمِ
@@ -961,12 +1030,13 @@ export default function OrdersManager() {
             return (
               <Fragment key={o.id}>
               {header}
-              <div className={`bz-ocard glass overflow-hidden ${open ? 'is-open' : ''}`} data-status={o.status}>
+              <div className={`bz-ocard glass overflow-hidden ${open ? 'is-open' : ''} ${picked ? 'is-picked' : ''}`} data-status={o.status}>
                 {/* ═══ السطرُ المطويّ: من، وكم، وأين وصل — بنظرة ═══ */}
                 <button
                   type="button"
-                  onClick={() => toggleOpen(o.id)}
-                  aria-expanded={open}
+                  onClick={() => (selectMode ? toggleSel(o.id) : toggleOpen(o.id))}
+                  aria-expanded={selectMode ? undefined : open}
+                  aria-pressed={selectMode ? picked : undefined}
                   className="bz-orow app-tap flex w-full items-center gap-3 p-3.5 text-start"
                 >
                   <OrderThumbs items={o.items} thumbs={thumbs} name={o.customerName} />
@@ -993,12 +1063,18 @@ export default function OrdersManager() {
                       ? <StatusBadge status={o.status} />
                       : <span className={`badge ${BADGE[o.status] || ''}`}>{t(`dashboard.ordersSection.${o.status}`)}</span>}
                   </span>
-                  <ChevronDownIcon className={`bz-ochev h-4 w-4 shrink-0 text-stone-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+                  {selectMode ? (
+                    <span className={`bz-ocheck grid h-6 w-6 shrink-0 place-items-center rounded-full ${picked ? 'is-on' : ''}`}>
+                      {picked && <CheckIcon className="h-3.5 w-3.5" />}
+                    </span>
+                  ) : (
+                    <ChevronDownIcon className={`bz-ochev h-4 w-4 shrink-0 text-stone-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+                  )}
                 </button>
 
                 {/* أزرارٌ سريعةٌ على المطويّ: الخطوةُ التاليةُ والتواصلُ بلا فتحِ الطلب —
                     الطلبُ الجديدُ يُؤكَّدُ بضغطتين. لا تظهرُ لطلبٍ انتهت رحلتُه. */}
-                {!open && quickNext && (
+                {!open && !selectMode && quickNext && (
                   <div className="bz-oquick flex items-center gap-2 px-3.5 pb-3">
                     <button
                       type="button"
@@ -1233,6 +1309,36 @@ export default function OrdersManager() {
         </div>
       )}
 
+      {/* شريطُ الإجراءاتِ الجماعيّة: يطفو فوقَ الشريطِ السفليِّ ما دام هناك تحديد */}
+      {selectMode && selected.size > 0 && (() => {
+        const sel = selectedOrders();
+        const newCount = sel.filter((o) => o.status === 'new' && !courierOf(o)).length;
+        const canCourier = Boolean(store?.deliveryPhone || store?.whatsapp);
+        return (
+          <div className="fixed inset-x-0 z-[80] flex justify-center px-3" style={{ bottom: 'calc(env(safe-area-inset-bottom) + 96px)' }}>
+            <div className="bz-bulkbar flex w-full max-w-md items-center gap-1.5 rounded-2xl p-2 shadow-2xl">
+              <span className="bz-bulkbar-n shrink-0 rounded-xl px-2.5 py-2 text-[13px] font-extrabold tabular-nums">{sel.length}</span>
+              {newCount > 0 && (
+                <button onClick={bulkConfirm} disabled={bulkBusy} className="bz-ost-next bz-st-confirmed min-h-[40px] min-w-0 flex-1 rounded-xl px-2 text-[12.5px] font-extrabold disabled:opacity-60">
+                  {bulkBusy ? '…' : t('dashboard.ordersSection.bulkConfirm', { count: newCount })}
+                </button>
+              )}
+              <button onClick={bulkPrint} className="bz-bulkbar-btn flex min-h-[40px] shrink-0 items-center gap-1 rounded-xl px-2.5 text-[12px] font-bold">
+                <PrintIcon className="h-4 w-4" /> {t('dashboard.ordersSection.printShort')}
+              </button>
+              {canCourier && (
+                <button onClick={bulkDelivery} className="bz-bulkbar-btn flex min-h-[40px] shrink-0 items-center gap-1 rounded-xl px-2.5 text-[12px] font-bold">
+                  <TruckIcon className="h-4 w-4" /> {t('dashboard.ordersSection.bulkCourier')}
+                </button>
+              )}
+              <button onClick={exitSelect} aria-label={t('common.cancel')} className="bz-bulkbar-btn grid h-10 w-10 shrink-0 place-items-center rounded-xl">
+                <XIcon className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* «تراجع»: يطفو فوقَ الشريطِ السفليِّ ستَّ ثوانٍ بعد كلِّ تغييرٍ للحالة */}
       {undo && (
         <div className="bz-undo fixed inset-x-0 z-[80] flex justify-center px-4" style={{ bottom: 'calc(env(safe-area-inset-bottom) + 96px)' }}>
@@ -1248,6 +1354,92 @@ export default function OrdersManager() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ═════ مبيعاتُ آخرِ ٧ أيّام: سبعةُ أعمدةٍ تحت ملخّصِ اليوم ═════
+// تُحسَبُ من الطلباتِ المحمّلةِ نفسِها (آخرُ ٢٠٠) بلا طلبٍ إضافيّ: كلُّ طلبٍ غيرِ ملغى
+// بقيمتِه، كما يحسبُ «مبيعات اليوم» فوقها. اليومُ عمودٌ داكن، والباقي رماديّ؛ ضغطةٌ على
+// عمودٍ تكتبُ يومَه وقيمتَه بالرأس. والمقارنةُ بالأسبوعِ الذي قبله لا تظهرُ إلّا إن كانت
+// الطلباتُ المحمّلةُ تغطّيه كلَّه — وإلّا لكانت نسبةً كاذبة.
+function WeekBars({ orders }) {
+  const { t, i18n } = useTranslation();
+  const [pick, setPick] = useState(null);
+  const DAY = 86400000;
+  const start = new Date(); start.setHours(0, 0, 0, 0);
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(start.getTime() - (6 - i) * DAY);
+    return { d, key: dayKey(d.toISOString()), sum: 0, n: 0 };
+  });
+  const byKey = Object.fromEntries(days.map((x) => [x.key, x]));
+  const weekFrom = days[0].d.getTime();
+  const prevFrom = weekFrom - 7 * DAY;
+  let prev = 0;
+  let oldest = Infinity;
+  for (const o of orders) {
+    const ts = new Date(o.createdAt).getTime();
+    if (ts < oldest) oldest = ts;
+    if (o.status === 'cancelled') continue;
+    const v = Number(o.total) || 0;
+    const slot = byKey[dayKey(o.createdAt)];
+    if (slot && ts >= weekFrom) { slot.sum += v; slot.n += 1; }
+    else if (ts >= prevFrom && ts < weekFrom) prev += v;
+  }
+  const total = days.reduce((n, x) => n + x.sum, 0);
+  const max = Math.max(...days.map((x) => x.sum), 1);
+  const covered = orders.length < 200 || oldest <= prevFrom;
+  const pct = covered && prev > 0 ? Math.round(((total - prev) / prev) * 100) : null;
+  const locale = i18n.language === 'en' ? 'en-GB' : 'ar-EG';
+  // الحرفُ الواحدُ (ح، ج) لا يُقرأ: أسماءٌ قصيرةٌ بلا «ال» تتّسعُ لعمودِها
+  const AR_SHORT = ['أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'];
+  const wd = (d, long) => (long || i18n.language === 'en'
+    ? d.toLocaleDateString(locale, { weekday: long ? 'long' : 'short' })
+    : AR_SHORT[d.getDay()]);
+  const cur = t('common.currency');
+  const sel = pick != null ? days[pick] : null;
+  if (!total && !prev) return null;
+  return (
+    <div className="bz-oweek col-span-3 px-3.5 pb-3 pt-2.5">
+      <div className="flex items-baseline justify-between gap-2">
+        <p className="bz-osum-k text-[11px] font-semibold">
+          {sel ? `${wd(sel.d, true)} · ${t('dashboard.ordersSection.weekOrders', { count: sel.n })}` : t('dashboard.ordersSection.week')}
+        </p>
+        <p className="flex items-baseline gap-1.5">
+          {!sel && pct != null && (
+            <span className={`bz-oweek-pct text-[10.5px] font-bold tabular-nums ${pct >= 0 ? 'is-up' : 'is-down'}`} title={t('dashboard.ordersSection.weekVs')}>
+              {pct >= 0 ? '▲' : '▼'}{Math.abs(pct)}%
+            </span>
+          )}
+          <span className="bz-osum-v font-display text-[15px] font-extrabold tabular-nums">{cur}{Math.round(sel ? sel.sum : total).toLocaleString()}</span>
+        </p>
+      </div>
+      <div className="mt-2 flex h-14 items-end gap-1.5" role="list">
+        {days.map((x, i) => {
+          const today = i === 6;
+          const on = pick === i;
+          return (
+            <button
+              key={x.key}
+              type="button"
+              role="listitem"
+              onClick={() => setPick(on ? null : i)}
+              aria-label={`${wd(x.d, true)}: ${cur}${Math.round(x.sum)}`}
+              className="group flex h-full flex-1 flex-col items-center justify-end"
+            >
+              <span
+                className={`bz-oweek-bar w-full max-w-[28px] rounded-t-md rounded-b-[3px] ${today ? 'is-today' : ''} ${on ? 'is-on' : ''} ${pick != null && !on ? 'is-dim' : ''}`}
+                style={{ height: x.sum ? `${Math.max(8, (x.sum / max) * 100)}%` : '3px' }}
+              />
+            </button>
+          );
+        })}
+      </div>
+      <div className="mt-1 flex gap-1.5">
+        {days.map((x, i) => (
+          <span key={x.key} className={`flex-1 text-center text-[10px] ${i === 6 ? 'bz-osum-v font-bold' : 'bz-osum-k'}`}>{i === 6 ? t('dashboard.ordersSection.today') : wd(x.d)}</span>
+        ))}
+      </div>
     </div>
   );
 }
