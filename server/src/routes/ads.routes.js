@@ -3,6 +3,7 @@ import rateLimit from 'express-rate-limit';
 import {
   listAds, generateAd, createAd, updateAd, deleteAd,
   listAccounts, connectAccount, publishAd, toggleAd, adInsights,
+  duplicateAd, adsOverview, interestSearch, audienceEstimate,
 } from '../controllers/ads.controller.js';
 import { requireAuth } from '../middleware/auth.js';
 
@@ -21,6 +22,10 @@ const genLimiter = rateLimit({
 router.use(requireAuth);
 
 router.get('/', listAds);
+router.get('/insights', adsOverview);
+router.get('/interests', interestSearch);
+router.post('/estimate', audienceEstimate);
+router.post('/:id/duplicate', duplicateAd);
 router.post('/generate', genLimiter, generateAd);
 router.post('/', createAd);
 router.put('/:id', updateAd);
