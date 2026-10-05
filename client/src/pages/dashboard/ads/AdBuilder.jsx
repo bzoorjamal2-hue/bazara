@@ -229,7 +229,8 @@ export default function AdBuilder({ data, campaign, onDone, onBack, setErr, setM
               goal={goal} format={settings.format} size={creative.size}
               image={imageUrl || (product?.image ? cldThumb(product.image, 720) : '')}
               video={product?.video} copy={copy} store={data.store}
-              domain={siteOrigin().replace(/^https?:\/\//, '')}
+              igHandle={data.store?.igUsername}
+              link={product ? `${siteOrigin()}/store/${data.store?.slug}/product/${product.id}` : storeUrl(data.store?.slug || '')}
             />
           </div>
 
