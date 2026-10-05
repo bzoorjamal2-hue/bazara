@@ -1438,9 +1438,11 @@ export async function listMessages(req, res, next) {
       rows = rows.slice(0, PAGE).reverse();
     }
     let orderPhone = '';
+    let orderRef = '';
     if (conv.order_id && !before) {
-      const op = await query('SELECT customer_phone FROM orders WHERE id = $1 AND store_id = $2', [conv.order_id, conv.store_id]).catch(() => ({ rows: [] }));
+      const op = await query('SELECT customer_phone, reference FROM orders WHERE id = $1 AND store_id = $2', [conv.order_id, conv.store_id]).catch(() => ({ rows: [] }));
       orderPhone = op.rows[0]?.customer_phone || '';
+      orderRef = op.rows[0]?.reference || '';
     }
     // فتحُ المحادثةِ يقرأُ إشعارَها أيضاً، والعددُ الجديدُ يعودُ مع الردِّ فيُطفئُ الجرسَ
     // والشارةَ فوراً. null = لم يكن هناك ما يُقرأ (أغلبُ نبضاتِ التحديث).
@@ -1465,6 +1467,8 @@ export async function listMessages(req, res, next) {
         order_id: conv.order_id,
         // رقمُ الزبونةِ من طلبِها المحوَّلِ من المحادثة — منه يُبنى ملفُّها برأسِ المحادثة
         order_phone: orderPhone,
+        // رقمُ الطلبِ القصيرُ (BZ-…) — يملأُ {رقم_الطلب} بالردودِ الجاهزة
+        order_ref: orderRef,
         channel: conv.channel || 'instagram',
       },
       messages: rows,
@@ -1602,6 +1606,53 @@ export async function igProductCard(req, res, next) {
       `🔗 ${site}${productPath(row.store_slug, row.id)}`,
     ].join('\n');
     res.json({ image, text });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// POST /api/instagram/conversations/:id/suggest — «اقترح ردّ»: البائعةُ الآليّةُ نفسُها
+// (المحادثةُ وآخرُ عشرين رسالةً والكتالوجُ والأسعارُ ودرجةُ المفاصلة) تكتبُ ردّاً
+// تراه التاجرةُ بخانةِ الكتابةِ فتعدّلُه أو تبعثُه. لا شيءَ يُرسَلُ ولا يُسجَّلُ ولا
+// يُعَدُّ من هنا: agentReply نفسُها بلا آثار، والإرسالُ والحفظُ في الـwebhook وحدَه.
+// يعملُ ولو كانت البائعةُ مطفأةً على المتجر — الاقتراحُ قرارُ التاجرةِ لا البائعة.
+export async function igSuggest(req, res, next) {
+  try {
+    const conv = await getOwnedConversation(req.user.id, req.params.id);
+    if (!conv) return res.status(404).json({ error: 'المحادثة غير موجودة.' });
+    const bot = await loadBot(conv.store_id);
+    if (!bot) return res.status(409).json({ error: 'الاقتراح غير متاح حالياً.' });
+    const hist = await query(
+      `SELECT direction, text FROM ig_messages
+       WHERE conversation_id = $1 AND text <> '' ORDER BY created_at DESC LIMIT 20`,
+      [conv.id]
+    );
+    const messages = hist.rows.reverse()
+      .map((m) => ({ role: m.direction === 'in' ? 'user' : 'assistant', content: m.text }));
+    // النموذجُ يقرأُ محادثةً تبدأُ بالزبونةِ وتنتهي بها: الاقتراحُ ردٌّ على آخرِ ما قالته.
+    // آخرُ سطرٍ من التاجرة يُقرأُ عند النموذجِ تكملةً لكلامِه هو لا ردّاً جديداً.
+    while (messages.length && messages[0].role !== 'user') messages.shift();
+    while (messages.length && messages[messages.length - 1].role !== 'user') messages.pop();
+    if (!messages.length) return res.json({ reply: '' });
+    const out = await agentReply({
+      store: { id: conv.store_id, name: bot.name || 'متجرنا' },
+      bot,
+      messages,
+      stage: Number(conv.bot_stage) || 0,
+      customerName: conv.customer_name || conv.customer_username || '',
+      adRef: conv.ad_ref && typeof conv.ad_ref === 'object' ? conv.ad_ref : null,
+    });
+    // الاقتراحُ يُخصَمُ من حصّةِ البائعةِ الشهريّة كأيِّ ردٍّ ذكيّ — فلا يصيرُ باباً
+    // مفتوحاً لصرفِ التوكنز. ولا يُعَدُّ في «ردود البائعة» لأنّ التاجرةَ هي من ترسل.
+    if (out.usedAi) {
+      const m = new Date().toISOString().slice(0, 7);
+      query(
+        `UPDATE stores SET bot_quota_used = CASE WHEN bot_quota_month = $2 THEN bot_quota_used + 1 ELSE 1 END,
+                           bot_quota_month = $2 WHERE id = $1`,
+        [conv.store_id, m]
+      ).catch(() => {});
+    }
+    res.json({ reply: String(out.reply || '').trim(), ai: Boolean(out.usedAi) });
   } catch (err) {
     next(err);
   }

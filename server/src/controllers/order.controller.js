@@ -977,6 +977,44 @@ export async function getCustomer(req, res, next) {
   }
 }
 
+// GET /api/orders/customers — كلُّ زبائنِ المتجرِ مجمّعين برقمِهم، الأكثرُ شراءً أوّلاً.
+// منها تعرفُ التاجرةُ مين رجعت تشتري ومين اشترت مرّة وغابت، وتبعثُ لها عرضاً.
+export async function listCustomers(req, res, next) {
+  try {
+    const store = await getUserStore(req.user.id);
+    if (!store) return res.status(404).json({ error: 'لا يوجد متجر.' });
+    const r = await query(
+      `SELECT RIGHT(regexp_replace(customer_phone, '\\D', '', 'g'), 9) AS k,
+              (ARRAY_AGG(customer_name ORDER BY created_at DESC))[1] AS name,
+              (ARRAY_AGG(customer_phone ORDER BY created_at DESC))[1] AS phone,
+              (ARRAY_AGG(city ORDER BY created_at DESC))[1] AS city,
+              COUNT(*)::int AS orders,
+              COUNT(*) FILTER (WHERE ${SOLD})::int AS done,
+              COUNT(*) FILTER (WHERE status = 'cancelled')::int AS cancelled,
+              COALESCE(SUM(total) FILTER (WHERE ${SOLD}), 0)::float AS spent,
+              MIN(created_at) AS first_at,
+              MAX(created_at) AS last_at
+         FROM orders
+        WHERE store_id = $1 AND status NOT IN ('pending','failed')
+          AND customer_phone IS NOT NULL AND customer_phone <> ''
+        GROUP BY 1
+        ORDER BY spent DESC, orders DESC, last_at DESC
+        LIMIT 2000`,
+      [store.id]
+    );
+    const book = await loadWaBook(store.id).catch(() => ({}));
+    res.json({
+      customers: r.rows.filter((x) => phoneKey(x.phone)).map((x) => ({
+        key: x.k, name: x.name || '', phone: x.phone, city: x.city || '', wa: book[x.k] || '',
+        orders: x.orders, done: x.done, cancelled: x.cancelled, spent: Number(x.spent),
+        firstAt: x.first_at, lastAt: x.last_at,
+      })),
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 // PUT /api/orders/whatsapp — { phone, wa }: حفظُ رقمِ واتساب الزبونِ الذي انفتحت
 // عليه المحادثةُ فعلاً. wa فارغٌ يمحو المحفوظَ (لتعادَ التجربة).
 export async function setCustomerWa(req, res, next) {

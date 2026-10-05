@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useNotifications } from '../context/NotificationsContext.jsx';
 import useScrollLock from '../hooks/useScrollLock.js';
 import CloseButton from './CloseButton.jsx';
-import { BagIcon, CartIcon, WarnIcon, TruckIcon, InstagramIcon, BellIcon, SparkleIcon } from './icons.jsx';
+import { BagIcon, CartIcon, WarnIcon, TruckIcon, InstagramIcon, BellIcon, SparkleIcon, ChartIcon } from './icons.jsx';
 
 // ─────────────────────── جرس الإشعارات ───────────────────────
 // كان الدفع وحده: يصل الإشعار للهاتف، تمسحه المالكة أو يفوتها وهي نائمة،
@@ -21,6 +21,7 @@ const TYPES = {
   shipping: { Icon: TruckIcon, tone: 'teal' },
   instagram: { Icon: InstagramIcon, tone: 'pink' },
   stockRequest: { Icon: BellIcon, tone: 'violet' },
+  report: { Icon: ChartIcon, tone: 'teal' },
   general: { Icon: SparkleIcon, tone: 'gold' },
 };
 const typeOf = (k) => TYPES[k] || TYPES.general;
@@ -29,7 +30,7 @@ const typeOf = (k) => TYPES[k] || TYPES.general;
 // الرسالةُ المستعجلةُ تحت عشرين طلباً. كلُّ تبويبٍ يجمعُ أنواعاً تُعالَجُ بنفسِ الطريقة،
 // ولا يظهرُ إلّا إن كان فيه شيء.
 const CATS = [
-  { key: 'orders', types: ['order', 'abandoned', 'shipping'] },
+  { key: 'orders', types: ['order', 'abandoned', 'shipping', 'report'] },
   { key: 'messages', types: ['instagram'] },
   { key: 'stock', types: ['stock', 'stockRequest'] },
 ];

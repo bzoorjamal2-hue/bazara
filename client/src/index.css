@@ -6410,3 +6410,45 @@ html.dark .bz-pcard img { background: #2E2C2A; }
 .bz-pcard-btn { background: #1F1E1D; color: #ffffff; transition: transform 0.1s, opacity 0.15s; }
 .bz-pcard-btn:active { transform: scale(0.97); }
 html.dark .bz-pcard-btn { background: #EFEEEC; color: #1d1c1b; }
+
+/* ═════ التحديدُ الجماعيُّ للطلبات ═════ */
+.bz-ocheck { border: 2px solid rgba(23, 23, 23, 0.25); color: #fff; transition: background-color 0.15s, border-color 0.15s; }
+.bz-ocheck.is-on { background: #1F1E1D; border-color: #1F1E1D; }
+html.dark .bz-ocheck { border-color: rgba(239, 238, 236, 0.3); color: #1d1c1b; }
+html.dark .bz-ocheck.is-on { background: #EFEEEC; border-color: #EFEEEC; }
+.theme-pub .dash .bz-ocard.is-picked { box-shadow: 0 0 0 2px #1F1E1D, 0 18px 36px -24px rgba(23, 23, 23, 0.3); }
+html.dark .theme-pub .dash .bz-ocard.is-picked { box-shadow: 0 0 0 2px #EFEEEC, 0 18px 36px -24px rgba(0, 0, 0, 0.7); }
+.bz-bulkbar { background: #1F1E1D; color: #fff; }
+.bz-bulkbar-n { background: rgba(255, 255, 255, 0.12); }
+.bz-bulkbar-btn { background: rgba(255, 255, 255, 0.10); color: #fff; transition: background-color 0.15s, transform 0.1s; }
+.bz-bulkbar-btn:active { transform: scale(0.96); }
+html.dark .bz-bulkbar { background: #EFEEEC; color: #1d1c1b; }
+html.dark .bz-bulkbar-n, html.dark .bz-bulkbar-btn { background: rgba(0, 0, 0, 0.08); color: #1d1c1b; }
+
+/* «اقترح ردّ»: بلونِ إنستغرام الخافت كي يُميَّزَ عن الردودِ الجاهزةِ بجانبِه */
+.bz-chat-suggest { background: linear-gradient(135deg, rgba(214, 41, 118, 0.10), rgba(150, 47, 191, 0.10)); color: #9D174D; box-shadow: inset 0 0 0 1px rgba(214, 41, 118, 0.25); }
+html.dark .bz-chat-suggest { background: linear-gradient(135deg, rgba(244, 114, 182, 0.14), rgba(192, 132, 252, 0.14)); color: #F9A8D4; box-shadow: inset 0 0 0 1px rgba(244, 114, 182, 0.3); }
+
+/* ═════ «زبائني» ═════ */
+.bz-cust-ava { background: linear-gradient(135deg, #EDEBE7, #DAD6CF); color: #5A5754; }
+html.dark .bz-cust-ava { background: linear-gradient(135deg, #2E2C2A, #22201F); color: #CFCBC4; }
+.bz-cust-ava.is-top { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--rk); }
+html.dark .bz-cust-ava.is-top { box-shadow: 0 0 0 2px #1d1c1b, 0 0 0 4px var(--rk); }
+.bz-cust-ava.is-top1 { --rk: #D4A63A; }
+.bz-cust-ava.is-top2 { --rk: #A8A9AD; }
+.bz-cust-ava.is-top3 { --rk: #B87333; }
+.bz-cust-rank { background: var(--rk); color: #fff; box-shadow: 0 0 0 2px #fff; }
+html.dark .bz-cust-rank { box-shadow: 0 0 0 2px #1d1c1b; }
+
+/* ═════ مبيعاتُ آخرِ ٧ أيّام (تحت ملخّصِ الطلبات) ═════ */
+.bz-oweek { border-top: 1px solid rgba(23, 23, 23, 0.08); }
+html.dark .bz-oweek { border-color: rgba(239, 238, 236, 0.10); }
+.bz-oweek-bar { background: rgba(23, 23, 23, 0.14); transition: height 0.4s cubic-bezier(.2,.8,.2,1), background-color 0.15s, opacity 0.15s; }
+.bz-oweek-bar.is-today, .bz-oweek-bar.is-on { background: #1F1E1D; }
+.bz-oweek-bar.is-dim { opacity: 0.45; }
+html.dark .bz-oweek-bar { background: rgba(239, 238, 236, 0.18); }
+html.dark .bz-oweek-bar.is-today, html.dark .bz-oweek-bar.is-on { background: #EFEEEC; }
+.bz-oweek-pct.is-up { color: #047857; }
+.bz-oweek-pct.is-down { color: #B91C1C; }
+html.dark .bz-oweek-pct.is-up { color: #34D399; }
+html.dark .bz-oweek-pct.is-down { color: #F87171; }

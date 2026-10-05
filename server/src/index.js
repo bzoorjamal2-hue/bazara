@@ -25,6 +25,7 @@ import siteRoutes from './routes/site.routes.js';
 import opostRoutes from './routes/opost.routes.js';
 import { syncAllConnectedStores } from './controllers/opost.controller.js';
 import { notifyAbandonedCheckouts } from './controllers/abandoned.controller.js';
+import { sendWeeklyReports } from './utils/weeklyReport.js';
 import epsRoutes from './routes/eps.routes.js';
 import { epsWebhook, syncAllEpsStores } from './controllers/eps.controller.js';
 import goboxRoutes from './routes/gobox.routes.js';
@@ -771,6 +772,8 @@ END $$;`,
     // الحسابُ الإعلانيُّ الذي ربطَتْه التاجرةُ وعملتُه — العملةُ تُقرأُ من ميتا لا تُفترَض
     "ALTER TABLE stores ADD COLUMN IF NOT EXISTS ads_account_id VARCHAR(40) NOT NULL DEFAULT '';",
     "ALTER TABLE stores ADD COLUMN IF NOT EXISTS ads_currency VARCHAR(8) NOT NULL DEFAULT '';",
+    // متى وصلَ المتجرَ آخرُ تقريرٍ أسبوعيّ — حارسُ «مرّة بالأسبوع» (utils/weeklyReport.js)
+    "ALTER TABLE stores ADD COLUMN IF NOT EXISTS weekly_report_at TIMESTAMPTZ;",
     // محرّكُ الوسائط: طابورُ معالجةِ الفيديو بالقاعدةِ لا بالذاكرة — إعادةُ تشغيلِ الخادمِ
     // بمنتصفِ مهمّةٍ لا تُضيّعُها (utils/mediaWorker.js ← resumePending)
     `CREATE TABLE IF NOT EXISTS media_jobs (
@@ -831,6 +834,9 @@ function start() {
   // إشعار المالك عن السلات المتروكة الجديدة — أندر أيضاً لتوفير الحوسبة (تأخير مقبول)
   setInterval(() => { notifyAbandonedCheckouts().catch(() => {}); }, SYNC_MS);
   setTimeout(() => { notifyAbandonedCheckouts().catch(() => {}); }, 2 * 60 * 1000);
+  // التقريرُ الأسبوعيّ للتاجرات — لا يلمسُ القاعدةَ إلّا صباحَ الأحد (utils/weeklyReport.js)
+  setInterval(() => { sendWeeklyReports().catch(() => {}); }, SYNC_MS);
+  setTimeout(() => { sendWeeklyReports().catch(() => {}); }, 3 * 60 * 1000);
 }
 
 // تنفيذ schema.sql كاملاً عند الإقلاع.

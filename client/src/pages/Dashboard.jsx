@@ -29,6 +29,7 @@ const load = {
   StoreSettings: () => import('./dashboard/StoreSettings.jsx'),
   ProductsManager: () => import('./dashboard/ProductsManager.jsx'),
   OrdersManager: () => import('./dashboard/OrdersManager.jsx'),
+  CustomersManager: () => import('./dashboard/CustomersManager.jsx'),
   CouponsManager: () => import('./dashboard/CouponsManager.jsx'),
   ReferralsManager: () => import('./dashboard/ReferralsManager.jsx'),
   AnalyticsManager: () => import('./dashboard/AnalyticsManager.jsx'),
@@ -53,6 +54,7 @@ const Profile = lazy(() => retryImport(load.Profile));
 const StoreSettings = lazy(() => retryImport(load.StoreSettings));
 const ProductsManager = lazy(() => retryImport(load.ProductsManager));
 const OrdersManager = lazy(() => retryImport(load.OrdersManager));
+const CustomersManager = lazy(() => retryImport(load.CustomersManager));
 const CouponsManager = lazy(() => retryImport(load.CouponsManager));
 const ReferralsManager = lazy(() => retryImport(load.ReferralsManager));
 const AnalyticsManager = lazy(() => retryImport(load.AnalyticsManager));
@@ -78,6 +80,7 @@ const PayoutsManager = lazy(() => retryImport(load.PayoutsManager));
 const SECTIONS = [
   { key: 'overview', Icon: HomeIcon },
   { key: 'myOrders', Icon: ReceiptIcon },
+  { key: 'customers', Icon: UsersIcon },
   { key: 'myProducts', Icon: BagIcon },
   { key: 'instagram', Icon: InstagramIcon },
   { key: 'salesBot', Icon: SparkleIcon },
@@ -263,6 +266,7 @@ export default function Dashboard() {
             {sec === 'myProducts' && !isAdmin && <ProductsManager onCount={setProductsCount} />}
             {sec === 'instagram' && !isAdmin && <InstagramInbox />}
             {sec === 'myOrders' && !isAdmin && <OrdersManager />}
+            {sec === 'customers' && !isAdmin && <CustomersManager />}
             {sec === 'coupons' && !isAdmin && <CouponsManager />}
             {sec === 'referrals' && !isAdmin && <ReferralsManager />}
             {sec === 'campaign' && !isAdmin && <CampaignManager />}

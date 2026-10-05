@@ -412,6 +412,7 @@ export default function Navbar() {
           { key: 'overview', label: t('dashboard.overview'), Icon: GridIcon },
           { key: 'myProducts', label: t('dashboard.myProducts'), Icon: BagIcon },
           { key: 'myOrders', label: t('dashboard.myOrders'), Icon: ReceiptIcon },
+          { key: 'customers', label: t('dashboard.customers.title'), Icon: UsersIcon },
           { key: 'stockRequests', label: t('dashboard.stockRequests.title'), Icon: BellIcon, badgeTone: 'green' },
         ] },
         { id: 'grow', title: t('dashboard.menu.grow'), items: [
