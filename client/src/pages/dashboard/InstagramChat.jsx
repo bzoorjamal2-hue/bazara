@@ -14,8 +14,7 @@ import { uploadMedia } from '../../utils/media.js';
 import { Avatar, ConvertForm } from '../../components/OrderComposer.jsx';
 import {
   buildItems, guessKind, findMobile, cldAudioMp3, sameDay,
-  replyWindow, lastInboundAt, matchQuick, linkify, hostOf, shortUrl, normalizeAr,
-} from '../../utils/chat.js';
+  replyWindow, lastInboundAt, matchQuick, linkify, hostOf, shortUrl, normalizeAr, mergeProductCards, productCard } from '../../utils/chat.js';
 import { useNotifications } from '../../context/NotificationsContext.jsx';
 import { clearDelivered } from '../../utils/push.js';
 import * as cache from '../../utils/chatCache.js';
@@ -290,6 +289,33 @@ function RichText({ text, media }) {
 // من رقمِها (من طلبِها المحوَّلِ أو ممّا كتبَتْه بالمحادثة) نعرفُ إن كانت زبونةً راجعة:
 // كم طلبت وكم صرفت وآخرُ طلباتِها بحالاتِها — فتردُّ التاجرةُ على من تعرفُها بنبرةِ من
 // تعرفُها، وتجدُ طلبَها السابقَ بضغطةٍ بدل البحثِ عنه.
+// ═════ بطاقةُ منتجٍ بالمحادثة ═════
+// ما أرسلته التاجرةُ من «أرسل منتج» يُرسَمُ كما تراه الزبونةُ بالمتجر: الصورة، والاسم،
+// والسعرُ (والقديمُ مشطوباً)، وزرٌّ يفتحُ القطعة — لا صورةٌ وحدَها ثمّ فقاعةُ رابطٍ خام.
+function ProductBubble({ card, image, onOpen }) {
+  const { t } = useTranslation();
+  return (
+    <div className="bz-pcard w-[min(232px,64vw)] overflow-hidden rounded-[18px]">
+      {image && (
+        <button type="button" onClick={() => onOpen({ url: image, kind: 'image' })} className="block w-full">
+          <img src={cldThumb(image, 480)} alt="" loading="lazy" className="aspect-[4/5] w-full object-cover" />
+        </button>
+      )}
+      <div className="px-3 pb-3 pt-2.5">
+        <p className="line-clamp-2 text-[13.5px] font-bold leading-snug">{card.name}</p>
+        <p className="mt-1 flex items-baseline gap-1.5">
+          <span className="text-[14.5px] font-extrabold tabular-nums">{card.price}</span>
+          {card.oldPrice && <s className="bz-chat-muted text-[11.5px] tabular-nums">{card.oldPrice}</s>}
+        </p>
+        <a href={card.url} target="_blank" rel="noreferrer" className="bz-pcard-btn mt-2.5 flex items-center justify-center gap-1.5 rounded-xl py-2 text-[12.5px] font-bold">
+          <LinkOutIcon className="h-3.5 w-3.5" />
+          {t('dashboard.instagram.viewProduct')}
+        </a>
+      </div>
+    </div>
+  );
+}
+
 function CustomerStrip({ phone }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -723,7 +749,7 @@ export default function InstagramChat() {
   );
   const shown = useMemo(() => (limit >= all.length ? all : all.slice(all.length - limit)), [all, limit]);
   const hasOlder = all.length > shown.length || serverMore;
-  const items = useMemo(() => buildItems(shown), [shown]);
+  const items = useMemo(() => buildItems(mergeProductCards(shown)), [shown]);
 
   // خريطةُ المعرّفاتِ لعرضِ المقتبَس: الردُّ يحملُ معرّفَ المردودِ عليه لا نصَّه.
   const byMid = useMemo(() => {
@@ -1323,7 +1349,8 @@ export default function InstagramChat() {
                 const media = Boolean(m.attachment_url);
                 const kind = media ? mediaKind(m.attachment_url, m.attachment_type) : '';
                 // الصورةُ والفيديو والملصقُ بلا نصٍّ يُعرَضون بلا فقاعةٍ حولَهم — كما في إنستغرام
-                const bare = media && !m.text && kind !== 'audio' && kind !== 'file' && !m.story_url && !(m.reply_to_mid && byMid.get(m.reply_to_mid));
+                const card = !media ? productCard(m.text) : null;
+                const bare = Boolean(card) || (media && !m.text && kind !== 'audio' && kind !== 'file' && !m.story_url && !(m.reply_to_mid && byMid.get(m.reply_to_mid)));
                 const failed = m.status === 'failed';
                 const sending = m.status === 'sending';
                 const quoted = m.reply_to_mid ? byMid.get(m.reply_to_mid) || byMid.get(metaMid(m.reply_to_mid)) : null;
@@ -1365,7 +1392,9 @@ export default function InstagramChat() {
                           </button>
                         )}
                         {media && <Attachment url={m.attachment_url} type={m.attachment_type} out={out} onOpen={setViewing} />}
-                        {m.text && <RichText text={m.text} media={media} />}
+                        {card
+                          ? <ProductBubble card={card} image={m.card_image} onOpen={setViewing} />
+                          : (m.text && <RichText text={m.text} media={media} />)}
                         {/* التفاعلُ يجلسُ على حافّةِ الفقاعةِ كما في تطبيقاتِ المحادثة */}
                         {m.reaction && (
                           <span className="bz-chat-react absolute -bottom-3 end-2.5 rounded-full px-1.5 py-0.5 text-[12px] leading-none">❤️</span>

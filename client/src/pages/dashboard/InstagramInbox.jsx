@@ -5,7 +5,7 @@ import api, { getErrorMessage } from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import { InstagramIcon, FacebookIcon, BagIcon, BackIcon, CheckIcon, PlusIcon, SearchIcon, XIcon, ClockIcon } from '../../components/icons.jsx';
 import { startFbLogin, igRedirectUri } from '../../utils/fbSdk.js';
-import { filterConvs, listStamp, replyWindow } from '../../utils/chat.js';
+import { filterConvs, listStamp, replyWindow, productCard } from '../../utils/chat.js';
 import * as cache from '../../utils/chatCache.js';
 import { PageHead } from '../../components/FormField.jsx';
 // المشتركُ مع شاشةِ المحادثةِ يسكنُ ملفّاً مستقلّاً، فلا تعتمدُ قطعةُ شاشةٍ على قطعةِ أخرى.
@@ -375,7 +375,10 @@ function Inbox({ username, onDisconnected }) {
                 className={`bz-inbox-row flex w-full items-center gap-3 border-b border-white/5 px-3 py-3 text-start transition last:border-0 ${unread ? 'bz-inbox-row-unread' : ''}`}
               >
                 <span className="relative shrink-0">
-                  <Avatar url={c.customer_avatar} name={c.customer_name || c.customer_username} className="h-12 w-12 text-sm" />
+                  {/* حلقةٌ بألوانِ إنستغرام حولَ صورةِ من كتبَ ولم يُقرأ — كقصصِ إنستغرام تماماً */}
+                  <span className={`bz-igava block rounded-full p-[2.5px] ${unread ? 'is-new' : ''}`}>
+                    <Avatar url={c.customer_avatar} name={c.customer_name || c.customer_username} className="bz-igava-in h-12 w-12 text-sm" />
+                  </span>
                   {/* من أينَ جاءت: الصندوقُ واحدٌ والقناتانِ اثنتان، والتاجرةُ تردُّ
                       بنبرةٍ مختلفةٍ لزبونِ فيسبوكَ عن زبونةِ إنستغرام. */}
                   <span className={`bz-chat-chan absolute -bottom-0.5 -end-0.5 flex h-[18px] w-[18px] items-center justify-center rounded-full text-white ${c.channel === 'messenger' ? 'bz-chan-fb' : 'bz-chan-ig'}`}>
@@ -385,13 +388,29 @@ function Inbox({ username, onDisconnected }) {
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-2">
                     <span className={`truncate text-[14.5px] ${unread ? 'font-extrabold text-stone-100' : 'font-semibold text-stone-100'}`}>{name}</span>
-                    {c.order_id && <span className="bz-chat-ok shrink-0 rounded-full px-2 py-0.5 text-[9.5px] font-bold">{t('dashboard.instagram.hasOrder')}</span>}
+                    {/* حالةُ طلبِها الفعليّة بلونِها، لا «صارت طلب» عامّة */}
+                    {c.order_id && (c.order_status ? (
+                      <span className={`bz-stbadge bz-st-${c.order_status} inline-flex shrink-0 items-center gap-1 rounded-full px-1.5 py-px text-[9.5px] font-bold`}>
+                        <BagIcon className="h-3 w-3" />
+                        {t(`dashboard.ordersSection.${c.order_status}`)}
+                      </span>
+                    ) : (
+                      <span className="bz-chat-ok shrink-0 rounded-full px-2 py-0.5 text-[9.5px] font-bold">{t('dashboard.instagram.hasOrder')}</span>
+                    ))}
                     <span className={`ms-auto shrink-0 text-[11px] ${unread ? 'font-bold text-gold-300' : 'text-stone-500'}`}>{stampText(c.last_at)}</span>
                   </span>
                   <span className="mt-0.5 flex items-center gap-2">
                     <span className={`min-w-0 flex-1 truncate text-[13px] ${unread ? 'font-semibold text-stone-200' : 'text-stone-400'}`}>
-                      {c.last_dir === 'out' && <span className="text-stone-500">{t('dashboard.instagram.youPrefix')} </span>}
-                      {c.last_message || '—'}
+                      {(() => {
+                        const card = productCard(c.last_message);
+                        if (card) return `🛍️ ${t('dashboard.instagram.sentProduct', { name: card.name })}`;
+                        return (
+                          <>
+                            {c.last_dir === 'out' && <span className="text-stone-500">{t('dashboard.instagram.youPrefix')} </span>}
+                            {c.last_message || '—'}
+                          </>
+                        );
+                      })()}
                     </span>
                     {closing && (
                       <span className="bz-inbox-warn inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold" title={t('dashboard.instagram.windowClosing')}>

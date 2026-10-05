@@ -172,3 +172,35 @@ export function shortUrl(url = '', max = 36) {
 export function hostOf(url = '') {
   try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return ''; }
 }
+
+// بطاقةُ منتجٍ أرسلتها التاجرةُ من المحادثة (انظر igProductCard على الخادم):
+//   «✨ الاسم ⏎ 💰 ₪120 [بدل ₪180] ⏎ 🔗 الرابط»
+// تُفكُّ هنا لتُرسَمَ بطاقةً بالمحادثة وسطراً مرتّباً بالقائمة بدل نصِّها الخام.
+export function productCard(text) {
+  const m = /^✨\s*([^\n]+)\n💰\s*([^\n]+)\n🔗\s*(\S+)\s*$/.exec(String(text || '').trim());
+  if (!m) return null;
+  const [price, old] = m[2].split(/\s+بدل\s+/);
+  return { name: m[1].trim(), price: (price || '').trim(), oldPrice: (old || '').trim(), url: m[3] };
+}
+
+// صورةُ المنتجِ وسطرُه يُرسَلانِ رسالتين (هكذا تقبلُهما ميتا)، لكنّهما بطاقةٌ واحدة:
+// صورةٌ صادرةٌ يتبعُها سطرُ منتجٍ صادرٌ خلالَ ثلاثِ دقائقَ تُدمَجانِ للعرض. والصورةُ
+// الفاشلةُ لا تُدمَج — تبقى بفقاعتِها وزرِّ إعادتِها.
+export function mergeProductCards(list) {
+  const out = [];
+  for (const m of list) {
+    const prev = out[out.length - 1];
+    const prevIsImage = prev && prev.attachment_url && !(prev.text || '').trim()
+      && (prev.attachment_type === 'image' || guessKind(prev.attachment_url) === 'image' || /\/i\/[a-f0-9]{32}\//.test(prev.attachment_url));
+    if (
+      prevIsImage && prev.direction === 'out' && m.direction === 'out' && prev.status !== 'failed'
+      && productCard(m.text)
+      && Math.abs(new Date(m.created_at) - new Date(prev.created_at)) < 3 * 60000
+    ) {
+      out[out.length - 1] = { ...m, card_image: prev.attachment_url };
+      continue;
+    }
+    out.push(m);
+  }
+  return out;
+}
