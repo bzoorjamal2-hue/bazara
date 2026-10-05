@@ -43,10 +43,10 @@ const MAX_CAMPAIGNS = 60; // طابورٌ لا مستودع
 async function getUserStore(userId) {
   // اللهجةُ اختارَتها التاجرةُ مرّةً بتبويبِ البائعة، فلا تُسألُ عنها ثانيةً هنا:
   // صوتُ المتجرِ واحدٌ بالمحادثةِ والإعلان.
-  const cols = 'id, name, slug, logo_url, theme_color, bot_dialect, ads_account_id, ads_currency, ig_page_id, ig_user_id, fb_pixel';
+  const cols = 'id, name, slug, logo_url, theme_color, bot_dialect, ads_account_id, ads_currency, ig_page_id, ig_user_id, ig_username, fb_pixel';
   const r = await query(`SELECT ${cols} FROM stores WHERE user_id = $1`, [userId])
     .catch((e) => (e.code === '42703'
-      ? query("SELECT id, name, slug, logo_url, theme_color, 'ps' AS bot_dialect, '' AS ads_account_id, '' AS ads_currency, ig_page_id, ig_user_id, '' AS fb_pixel FROM stores WHERE user_id = $1", [userId])
+      ? query("SELECT id, name, slug, logo_url, theme_color, 'ps' AS bot_dialect, '' AS ads_account_id, '' AS ads_currency, ig_page_id, ig_user_id, '' AS ig_username, '' AS fb_pixel FROM stores WHERE user_id = $1", [userId])
       : Promise.reject(e)));
   return r.rows[0] || null;
 }
@@ -115,7 +115,7 @@ export async function listAds(req, res, next) {
         image: productMedia(p),
         video: p.video_url || '',
       })),
-      store: { name: store.name, slug: store.slug, logo: store.logo_url || '', color: store.theme_color || '' },
+      store: { name: store.name, slug: store.slug, logo: store.logo_url || '', color: store.theme_color || '', igUsername: store.ig_username || '' },
       smart: Boolean(process.env.ANTHROPIC_API_KEY || process.env.GEMINI_API_KEY),
       // النشرُ المباشرُ إلى ميتا: نقولُ للواجهةِ إن كان مفتوحاً وبأيِّ حسابٍ وعملة،
       // فلا يظهرُ زرٌّ لا يعملُ ولا تُعرَضُ ميزانيّةٌ بعملةٍ غيرِ عملةِ الحساب.
@@ -348,9 +348,12 @@ export async function publishAd(req, res) {
     const settings = readSettings(c.settings);
 
     const site = (process.env.PUBLIC_SITE_URL || 'https://bazarastore.site').replace(/\/$/, '');
+    // الكبسةُ تفتحُ صفحةَ القطعةِ بمتجرِ التاجرةِ نفسِه، ومعها وسومُ المصدرِ المعياريّة
+    // (UTM) — فتعرفُ أيُّ أداةِ تحليلٍ أنّ الزيارةَ جاءت من هذا الإعلانِ بعينِه.
+    const utm = `utm_source=meta&utm_medium=paid_social&utm_campaign=bazara_${String(c.id).slice(0, 8)}`;
     const link = c.product_id
-      ? `${site}/store/${store.slug}/product/${c.product_id}`
-      : `${site}/store/${store.slug}`;
+      ? `${site}/store/${store.slug}/product/${c.product_id}?${utm}`
+      : `${site}/store/${store.slug}?${utm}`;
 
     let videoUrl = '';
     if (settings.format === 'video') {

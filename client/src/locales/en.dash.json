@@ -1752,7 +1752,16 @@
         "ig_feed": "Instagram shows two lines of text and no headline — the image does the talking.",
         "ig_story": "Stories show no text at all. The whole message must be in the image or video.",
         "ig_reels": "Reels show two lines above the button. Video works better here than an image."
-      }
+      },
+      "reels": "Reels",
+      "audio": "Original audio",
+      "seeMore": "See more",
+      "fbCounts": "12 comments · 8 shares",
+      "fbLike": "Like",
+      "fbComment": "Comment",
+      "fbShare": "Share",
+      "goesPage": "On tap, it opens this product's page in your store directly:",
+      "goesDm": "On tap, it opens a DM with your store's account — and the sales assistant takes over:"
     },
     "b": {
       "publishedOk": "Campaign created on Meta — paused. Turn it on from the campaigns board when you're ready.",
