@@ -39,10 +39,14 @@ function stepTime(iso, t, lang) {
   return at.toLocaleDateString(lang, { day: 'numeric', month: 'short' });
 }
 
-export default function OrderStatus({ status, onChange, saving = false, locked = null, statusAt = {}, createdAt = null }) {
+// auto: المتجرُ مربوطٌ بشركةِ توصيل — { name, action }. الشحنُ والتسليمُ يصيران من عندِها
+// لا بضغطةِ يد: الزرُّ الرئيسيُّ «إرسال لـ…» (action) بدل «اشحنيه»، والمرحلتان الأخيرتان
+// للعرضِ فقط. ويبقى «سلّمتيه بإيدك؟» لطلبٍ استلمته الزبونةُ من المحلّ مباشرة.
+export default function OrderStatus({ status, onChange, saving = false, locked = null, statusAt = {}, createdAt = null, auto = null }) {
   const { t, i18n } = useTranslation();
   const lang = i18n.language === 'ar' ? 'ar' : 'en';
   const [askCancel, setAskCancel] = useState(false);
+  const [askHand, setAskHand] = useState(false);
   const cur = STEPS.includes(status) || status === 'cancelled' ? status : 'new';
   const idx = STEPS.indexOf(cur);
   const next = NEXT[cur];
@@ -91,7 +95,7 @@ export default function OrderStatus({ status, onChange, saving = false, locked =
               )}
               <button
                 type="button"
-                disabled={Boolean(locked) || saving || here}
+                disabled={Boolean(locked) || saving || here || (auto && (s === 'shipped' || s === 'delivered'))}
                 onClick={() => onChange(s)}
                 aria-current={here ? 'step' : undefined}
                 title={t('dashboard.ordersSection.moveTo', { status: t(`dashboard.ordersSection.${s}`) })}
@@ -113,12 +117,33 @@ export default function OrderStatus({ status, onChange, saving = false, locked =
         })}
       </ol>
 
+      {locked ? null : auto ? (
+        // مربوطةٌ بشركةِ توصيل: الإرسالُ هو الخطوةُ التالية، والحالةُ تمشي بعدَه وحدَها
+        <div className="mt-3 space-y-2">
+          <div className="flex items-stretch gap-2">
+            <div className="min-w-0 flex-1">{auto.action}</div>
+            <button
+              onClick={() => setAskCancel(true)}
+              disabled={saving}
+              className="bz-ost-cancel min-h-[42px] shrink-0 self-start rounded-xl px-3.5 text-xs font-bold transition disabled:opacity-50"
+            >
+              {t('dashboard.ordersSection.cancelOrder')}
+            </button>
+          </div>
+          <p className="bz-ost-sub flex flex-wrap items-center justify-center gap-x-1.5 text-center text-[11px] font-semibold">
+            <span>{t('dashboard.ordersSection.autoNote', { name: auto.name })}</span>
+            <button type="button" onClick={() => setAskHand(true)} disabled={saving} className="underline underline-offset-2">
+              {t('dashboard.ordersSection.handDelivered')}
+            </button>
+          </p>
+        </div>
+      ) : null}
       {locked ? (
         // بعهدةِ شركةِ التوصيل: الحالةُ تتحدّثُ من عندهم، والمراحلُ للعرضِ فقط
         <p className="bz-ost-sub mt-3 flex items-center justify-center gap-1.5 text-[11px] font-semibold">
           <LockIcon className="h-3.5 w-3.5" /> {locked}
         </p>
-      ) : (
+      ) : auto ? null : (
         <div className="mt-3 flex items-center gap-2">
           {next ? (
             <button
@@ -146,6 +171,14 @@ export default function OrderStatus({ status, onChange, saving = false, locked =
         </div>
       )}
 
+      <ConfirmModal
+        open={askHand}
+        title={t('dashboard.ordersSection.handTitle')}
+        message={t('dashboard.ordersSection.handMsg')}
+        confirmLabel={t('dashboard.ordersSection.handYes')}
+        onConfirm={() => { setAskHand(false); onChange('delivered'); }}
+        onCancel={() => setAskHand(false)}
+      />
       <ConfirmModal
         open={askCancel}
         title={t('dashboard.ordersSection.cancelTitle')}

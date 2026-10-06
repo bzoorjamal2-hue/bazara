@@ -6775,3 +6775,11 @@ html.dark .bz-ad-pill.is-warn { color: #fbbf24; }
 html.dark .bz-ad-pill.is-bad { color: #ffb1b1; }
 /* المعاينةُ تقلّدُ تطبيقَي ميتا بألوانِهما الحقيقيّة — لا يقلبُها الوضعُ الليليُّ للموقع */
 html.dark .theme-pub .bz-ad-phone .bg-white { background-color: #ffffff; }
+
+/* ═════ قائمةُ أفعالِ الطلباتِ المحدَّدة ═════ */
+.bz-bulk-ico { background: rgba(23, 23, 23, 0.06); color: #1F1E1D; }
+html.dark .bz-bulk-ico { background: rgba(255, 255, 255, 0.07); color: #EFEEEC; }
+.bz-bulk-ico.is-danger { background: rgba(208, 59, 59, 0.10); color: #b42323; }
+html.dark .bz-bulk-ico.is-danger { color: #ffb1b1; background: rgba(208, 59, 59, 0.16); }
+.bz-sheet-item.is-danger { color: #b42323; }
+html.dark .bz-sheet-item.is-danger { color: #ffb1b1; }

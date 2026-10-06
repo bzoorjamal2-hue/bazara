@@ -1,16 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import Select from './Select.jsx';
 import { TruckIcon, CheckIcon } from './icons.jsx';
-import { bestMatch, bestMatchScored, stripNames } from '../utils/match.js';
-
-// تخزين مؤقّت لمناطق كل مدينة (مشترك بين كل الطلبات) — يقلّل استدعاءات الـ API
-const areaCache = new Map();
+import { opostAreas, opostAuto, opostDetail } from '../utils/courierAuto.js';
 
 // زر "إرسال لأوبتيموس" — يطابق المدينة/المنطقة تلقائياً من الطلب ويبعت بضغطة،
 // ويفتح الاختيار اليدوي فقط لو ما قدر يطابق. props: order, cities[], types[], onSent
-export default function OpostSend({ order, cities = [], types = [], defaultType = '', onSent }) {
+// big: زرٌّ رئيسيٌّ عريضٌ بشريطِ الحالة · autoStart: يبدأُ الإرسالَ الذكيَّ فورَ ظهوره
+export default function OpostSend({ order, cities = [], types = [], defaultType = '', onSent, big = false, autoStart = false }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [cityId, setCityId] = useState('');
@@ -23,6 +21,14 @@ export default function OpostSend({ order, cities = [], types = [], defaultType 
   const [hint, setHint] = useState('');
   const [tracking, setTracking] = useState(order.opostTracking || '');
 
+  // «ابعتي لـ…» من الصفّ المطويّ: يبدأُ الإرسالُ فورَ فتحِ البطاقة، مرّةً واحدة.
+  // الخطّافاتُ قبلَ أيِّ رجوعٍ مبكّر — والدالّةُ تُقرَأُ من مرجعٍ يُملأُ أدناه.
+  const started = useRef(false);
+  const smartRef = useRef(null);
+  useEffect(() => {
+    if (autoStart && !started.current && !tracking) { started.current = true; smartRef.current?.(); }
+  }, [autoStart]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // أُرسل مسبقاً → نعرض رقم التتبّع فقط
   if (tracking) {
     return (
@@ -33,12 +39,9 @@ export default function OpostSend({ order, cities = [], types = [], defaultType 
   }
 
   const loadAreas = async (id) => {
-    if (areaCache.has(id)) { setAreas(areaCache.get(id)); return areaCache.get(id); }
     setLoadingAreas(true);
     try {
-      const r = await api.get('/opost/areas', { params: { city: id } });
-      const list = r.data.areas || [];
-      areaCache.set(id, list);
+      const list = await opostAreas(id);
       setAreas(list);
       return list;
     } catch (e) {
@@ -56,8 +59,7 @@ export default function OpostSend({ order, cities = [], types = [], defaultType 
 
   // العنوان التفصيلي = عنوان الزبون بعد إزالة اسم المدينة والقرية (اللي راحوا لحقلَي
   // المدينة والمنطقة) — يبقى الوصف الإضافي فقط بلا تكرار. اسم القرية نمرّره لتنظيفه.
-  const detailFor = (areaName) =>
-    stripNames(order.address, [order.city, order.area, areaName].filter(Boolean)) || '';
+  const detailFor = (areaName) => opostDetail(order, areaName);
 
   const doSend = async (c, a, ty, detail) => {
     setBusy(true); setError('');
@@ -80,34 +82,20 @@ export default function OpostSend({ order, cities = [], types = [], defaultType 
   // نفتح اللوحة مع أفضل ترشيح لتأكيد سريع — حتى لا تروح شحنة بمنطقة غلط.
   const handleSmartSend = async () => {
     setError(''); setHint('');
-    // 1) المحافظة (city في أوبتيموس = محافظة)
-    const city = bestMatch(order.city, cities) || bestMatch(order.address, cities);
-    if (!city) { setHint(t('dashboard.opost.pickAreaHint')); setOpen(true); return; }
     setBusy(true);
-    setCityId(String(city.id));
-    const list = await loadAreas(String(city.id));
-    // 2) القرية/المنطقة — أولاً: لو العنوان كما هو مطابق تماماً لاسم منطقة
-    // (زبون كتب "جنين البلد" حرفياً) نعتمده فوراً. غير هيك نطابق على
-    // العنوان+مدينة الزبون بعد إزالة اسم المحافظة المطابَقة منه: المحافظة حُسمت
-    // بحقلها، وإبقاء اسمها (جنين) كان يخلّي مناطق تحمل اسم المحافظة
-    // ("جنين البلد") تتفوّق على القرية الصحيحة (رابا) — وهذا بالضبط ما أرسل
-    // شحنة رابا إلى جنين البلد.
-    // الطلبات الجديدة فيها القرية بحقلها المستقل (order.area) — الزبون اختارها من
-    // قائمة قرى مدينته، فالمطابقة تكون بالاسم مباشرة وترسل الشحنة بضغطة بلا سؤال.
-    const byField = order.area ? bestMatchScored(order.area, list) : null;
-    const rawExact = bestMatchScored(order.address, list);
-    const areaText = stripNames(`${order.address || ''} ${order.city || ''}`, [city.name]);
-    const m = (byField && byField.score >= 60) ? byField
-      : rawExact?.score === 100 ? rawExact
-        : bestMatchScored(areaText, list);
-    // ثقة كافية (تطابق كلمات كامل أو تامّ) → إرسال مباشر بلا فتح اللوحة
-    if (m && m.score >= 60) { await doSend(String(city.id), String(m.it.id), typeId, detailFor(m.it.name)); return; }
+    let a;
+    try { a = await opostAuto(order, { cities, shipmentType: typeId }); } catch (e) { setError(getErrorMessage(e)); setBusy(false); setOpen(true); return; }
+    // ثقة كافية → إرسال مباشر بلا فتح اللوحة (utils/courierAuto.js)
+    if (a.ok) { await doSend(a.body.city, a.body.area, a.body.shipmentType, a.body.address); return; }
     // غير مؤكّد: نفتح اللوحة مع أفضل ترشيح لتأكيد بضغطة
-    if (m) { setAreaId(String(m.it.id)); setHint(t('dashboard.opost.verifyArea')); }
-    else { setAreaId(''); setHint(t('dashboard.opost.pickAreaHint')); }
+    if (a.cityId) { setCityId(a.cityId); setAreas(a.areas || []); }
+    setAreaId(a.areaId || '');
+    setHint(t(a.reason === 'verifyArea' ? 'dashboard.opost.verifyArea' : 'dashboard.opost.pickAreaHint'));
     setBusy(false);
     setOpen(true);
   };
+
+  smartRef.current = handleSmartSend;
 
   // الزر الرئيسي (قبل فتح اللوحة)
   if (!open) {
@@ -115,9 +103,11 @@ export default function OpostSend({ order, cities = [], types = [], defaultType 
       <button
         onClick={handleSmartSend}
         disabled={busy}
-        className="inline-flex items-center gap-1 rounded-xl bg-wine px-3 py-1.5 text-xs font-semibold text-cream shadow-sm transition hover:bg-wine-dark disabled:opacity-60"
+        className={big
+          ? 'bz-ost-next bz-st-shipped flex min-h-[42px] w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold transition disabled:opacity-60'
+          : 'inline-flex items-center gap-1 rounded-xl bg-wine px-3 py-1.5 text-xs font-semibold text-cream shadow-sm transition hover:bg-wine-dark disabled:opacity-60'}
       >
-        <TruckIcon className="inline h-4 w-4" /> {busy ? t('common.loading') : t('dashboard.opost.sendBtn')}
+        <TruckIcon className={big ? 'h-[18px] w-[18px]' : 'inline h-4 w-4'} /> {busy ? t('common.loading') : t('dashboard.opost.sendBtn')}
       </button>
     );
   }

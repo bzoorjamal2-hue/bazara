@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState, Fragment } from 'react';
+import { createPortal } from 'react-dom';
+import modalRoot from '../../utils/modalRoot.js';
+import ConfirmModal from '../../components/ConfirmModal.jsx';
 import useSessionState from '../../hooks/useSessionState.js';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../api/client.js';
@@ -16,7 +19,8 @@ import { printSheet } from '../../utils/printSheet.js';
 import { copyText } from '../../utils/links.js';
 import { PinIcon, NoteIcon, TicketIcon, WhatsAppIcon, TruckIcon, BellIcon, TrashIcon, BagIcon, ReceiptIcon, SearchIcon, XIcon, DownloadIcon, CheckIcon, CopyIcon, PhoneIcon, PrintIcon, ImageIcon, ChevronDownIcon, GearIcon } from '../../components/icons.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { useCouriers, syncCourierStatuses, courierOf, CourierSend } from '../../components/couriers.jsx';
+import { useCouriers, syncCourierStatuses, courierOf, CourierSend, linkedCourier } from '../../components/couriers.jsx';
+import { autoSend } from '../../utils/courierAuto.js';
 import { PageHead, SectionHead } from '../../components/FormField.jsx';
 
 const FLOW = ['new', 'confirmed', 'shipped', 'delivered', 'cancelled'];
@@ -81,6 +85,13 @@ export default function OrdersManager() {
   const [savingId, setSavingId] = useState('');
   // ربط شركات التوصيل (أوبتيموس/EPS/gobox): حالة الربط + المدن/الأنواع مرّة واحدة للصفحة
   const couriers = useCouriers();
+  // الشركةُ المربوطةُ بالمتجر: معها لا تُحرَّكُ الحالةُ باليد بعدَ التأكيد — الإرسالُ لها
+  // هو الخطوةُ التالية، والشحنُ والتسليمُ يأتيان من عندِها (المزامنةُ والـwebhook)
+  const linked = linkedCourier(couriers);
+  // «ابعتي لـ…» من الصفِّ المطويّ: تُفتَحُ البطاقةُ ويبدأُ الإرسالُ وحدَه
+  const [autoSendId, setAutoSendId] = useState('');
+  const [bulkSheet, setBulkSheet] = useState(false);
+  const [askBulkCancel, setAskBulkCancel] = useState(false);
   // طلبات لم تكتمل (سلات متروكة ببيانات تواصل) — لمتابعتها برسالة وإنقاذ البيع
   const [abandoned, setAbandoned] = useState([]);
 
@@ -154,7 +165,7 @@ export default function OrdersManager() {
   const [openIds, setOpenIds] = useState(() => new Set());
   const toggleOpen = (id) => setOpenIds((prev) => {
     const next = new Set(prev);
-    if (next.has(id)) next.delete(id); else next.add(id);
+    if (next.has(id)) { next.delete(id); setAutoSendId((cur) => (cur === id ? '' : cur)); } else next.add(id);
     return next;
   });
   const [toolsOpen, setToolsOpen] = useState(false);
@@ -225,7 +236,17 @@ export default function OrdersManager() {
       if (store?.id) setCache(`myorders:${store.id}`, list);
       // مزامنة حالة الشحنات المُرسلة (أوبتيموس/EPS/gobox) مع حالتها الحيّة هناك
       const patch = await syncCourierStatuses(list);
-      if (on && patch) setOrders((prev) => prev.map((o) => (patch[o.id] ? { ...o, ...patch[o.id] } : o)));
+      if (on && patch) {
+        setOrders((prev) => prev.map((o) => (patch[o.id] ? { ...o, ...patch[o.id] } : o)));
+        // المزامنةُ تُحدّثُ حالةَ الطلبِ نفسَها بالخادم (وصلَ → «تم التسليم»، رجعَ → «ملغى»)،
+        // لكنّ الشاشةَ كانت تعرضُ حالةَ ما قبلَها حتى إعادةِ فتحِ الصفحة. فإن تغيّرت حالةُ
+        // شحنةٍ نُعيدُ قراءةَ القائمةِ مرّةً واحدة.
+        const changed = list.some((o) => patch[o.id] && Object.entries(patch[o.id]).some(([k, v]) => o[k] !== v));
+        if (changed) {
+          const r2 = await api.get('/orders/mine').catch(() => null);
+          if (on && r2) setOrders(r2.data.orders);
+        }
+      }
     }).catch((e) => on && setError(getErrorMessage(e)));
     return () => { on = false; };
   }, []);
@@ -325,6 +346,49 @@ export default function OrdersManager() {
     if (!num || !list.length) return;
     const msg = list.map((o, i) => `(${i + 1}/${list.length})\n${deliveryText(o)}`).join('\n\n━━━━━━━━━━\n\n');
     window.open(buildWhatsappLink(num, msg), '_blank');
+  };
+  const flash = (msg, ms = 3200) => { setToast(msg); setTimeout(() => setToast(''), ms); };
+  // من المحدَّد: ما ينتظرُ الإرسالَ لشركةِ التوصيلِ المربوطة، وما يُلغى، وما يُؤكَّد
+  const sendable = (list) => (linked ? list.filter((o) => !courierOf(o) && (o.status === 'new' || o.status === 'confirmed')) : []);
+  const cancellable = (list) => list.filter((o) => !courierOf(o) && o.status !== 'cancelled' && o.status !== 'delivered');
+  // إرسالٌ جماعيٌّ للشركةِ المربوطة بالمطابقةِ نفسِها التي يستعملُها زرُّ الطلبِ الواحد
+  // (utils/courierAuto.js). ما تأكّدت مدينتُه/قريتُه يُرسَلُ فوراً، وما يحتاجُ اختياراً
+  // يدويّاً يبقى محدَّداً لتفتحيه — لا شحنةَ تُرسَلُ لقريةٍ مخمَّنة.
+  const bulkSend = async () => {
+    const list = sendable(selectedOrders());
+    if (!list.length || !linked) return;
+    setBulkBusy(true);
+    let sent = 0;
+    const manual = [];
+    for (const o of list) {
+      const r = await autoSend(linked.key, o, couriers);
+      if (r.ok) { sent += 1; markSent(o.id, r.tracking, linked.key); } else manual.push(o.id);
+    }
+    setBulkBusy(false);
+    setBulkSheet(false);
+    const parts = [];
+    if (sent) parts.push(t('dashboard.ordersSection.bulkSent', { count: sent, name: linked.name }));
+    if (manual.length) parts.push(t('dashboard.ordersSection.bulkManual', { count: manual.length }));
+    flash(parts.join(' · '), 5000);
+    if (manual.length) { setSelected(new Set(manual)); setOpenIds((prev) => new Set([...prev, ...manual])); } else exitSelect();
+  };
+  const bulkCancel = async () => {
+    const list = cancellable(selectedOrders());
+    setAskBulkCancel(false);
+    if (!list.length) return;
+    setBulkBusy(true);
+    for (const o of list) await setStatus(o.id, 'cancelled', { silent: true });
+    setBulkBusy(false);
+    setBulkSheet(false);
+    flash(t('dashboard.ordersSection.bulkCancelled', { count: list.length }));
+    exitSelect();
+  };
+  const bulkCopy = async () => {
+    const list = selectedOrders();
+    if (!list.length) return;
+    const ok = await copyText(list.map(orderText).join('\n\n━━━━━━━━━━\n\n'));
+    setBulkSheet(false);
+    flash(ok ? t('common.copied') : t('common.copyFailed'), 1800);
   };
 
   // رسالة جاهزة للزبون عن حالة طلبه الحالية (مع شركة التوصيل ورقم التتبّع إن وُجدا)
@@ -558,8 +622,10 @@ export default function OrdersManager() {
   //   ١) الطلبات — سطر لكل طلب   ٢) القطع المباعة — سطر لكل قطعة (للجرد والأكثر مبيعاً)
   //   ٣) ملخّص — عدد الطلبات ومبيعاتها لكل حالة
   // العناوين مثبّتة بتصفية تلقائية، والمبالغ أرقام حقيقية لا نصّ فتُجمَع بـExcel مباشرةً.
-  const exportExcel = () => {
-    if (!orders?.length) return;
+  // subset: الطلباتُ المحدَّدةُ فقط (من شريطِ التحديد) — وإلّا كلُّ الطلبات
+  const exportExcel = (subset) => {
+    const list = Array.isArray(subset) ? subset : orders;
+    if (!list?.length) return;
     const o2 = (k) => t(`dashboard.ordersSection.${k}`);
     const p2 = (k) => t(`dashboard.product.${k}`);
     const dest = (o) => [o.city, o.area && o.area !== o.city ? o.area : ''].filter(Boolean).join(' - ');
@@ -592,7 +658,7 @@ export default function OrdersManager() {
         { header: o2('status'), width: 14 },
       ],
       totalLabel: o2('total'),
-      rows: orders.map((o) => [
+      rows: list.map((o) => [
         o.id,
         o.createdAt,
         o.customerName || '',
@@ -617,7 +683,7 @@ export default function OrdersManager() {
 
     // ورقة القطع: سطر مستقلّ لكل قطعة بكل طلب — أساس الجرد ومعرفة الأكثر مبيعاً
     const itemRows = [];
-    orders.forEach((o) => (o.items || []).forEach((it) => itemRows.push([
+    list.forEach((o) => (o.items || []).forEach((it) => itemRows.push([
       o.id,
       o.createdAt,
       o.customerName || '',
@@ -648,7 +714,7 @@ export default function OrdersManager() {
     };
 
     // المبيعات المحتسَبة = الطلبات المؤكّدة/المشحونة/المسلّمة (كما بصفحة الإحصائيات)
-    const paid = orders.filter((o) => ['confirmed', 'shipped', 'delivered'].includes(o.status));
+    const paid = list.filter((o) => ['confirmed', 'shipped', 'delivered'].includes(o.status));
     const money = (n) => Number(Number(n || 0).toFixed(2));
     // تجميع عام: يبني جدولاً من مفتاح → مجاميع، ويُرتّب تنازلياً بالمبيعات
     const groupBy = (list, keyOf, extra = () => ({})) => {
@@ -1017,6 +1083,8 @@ export default function OrdersManager() {
             // تظهرُ للطلبِ الجديدِ وحدَه: هو ما ينتظرُ قراراً الآن، ومراحلُ الشحنِ والتسليمِ
             // داخلَ الطلبِ المفتوح — وإلّا عادت كلُّ بطاقةٍ ثلثَ شاشة.
             const quickNext = o.status === 'new' && !courierOf(o) ? NEXT[o.status] : null;
+            // مع شركةٍ مربوطة: الزرُّ السريعُ «ابعتي لـ…» لا «أكّدي» — الإرسالُ نفسُه تأكيد
+            const quickSend = linked && !courierOf(o) && (o.status === 'new' || o.status === 'confirmed');
             const k = dayKey(o.createdAt);
             const header = k !== lastDay ? (
               <div className="flex items-center gap-2 pt-2">
@@ -1074,16 +1142,26 @@ export default function OrdersManager() {
 
                 {/* أزرارٌ سريعةٌ على المطويّ: الخطوةُ التاليةُ والتواصلُ بلا فتحِ الطلب —
                     الطلبُ الجديدُ يُؤكَّدُ بضغطتين. لا تظهرُ لطلبٍ انتهت رحلتُه. */}
-                {!open && !selectMode && quickNext && (
+                {!open && !selectMode && (quickNext || quickSend) && (
                   <div className="bz-oquick flex items-center gap-2 px-3.5 pb-3">
-                    <button
-                      type="button"
-                      onClick={() => setStatus(o.id, quickNext)}
-                      disabled={savingId === o.id}
-                      className={`bz-oquick-go bz-ost-next bz-st-${quickNext} min-h-[38px] min-w-0 flex-1 rounded-xl px-3 text-[13px] font-extrabold disabled:opacity-60`}
-                    >
-                      {t(`dashboard.ordersSection.${ACTION[quickNext]}`)}
-                    </button>
+                    {quickSend ? (
+                      <button
+                        type="button"
+                        onClick={() => { setAutoSendId(o.id); if (!open) toggleOpen(o.id); }}
+                        className="bz-oquick-go bz-ost-next bz-st-shipped flex min-h-[38px] min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-[13px] font-extrabold"
+                      >
+                        <TruckIcon className="h-4 w-4 shrink-0" /> {t('dashboard.ordersSection.sendTo', { name: linked.name })}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setStatus(o.id, quickNext)}
+                        disabled={savingId === o.id}
+                        className={`bz-oquick-go bz-ost-next bz-st-${quickNext} min-h-[38px] min-w-0 flex-1 rounded-xl px-3 text-[13px] font-extrabold disabled:opacity-60`}
+                      >
+                        {t(`dashboard.ordersSection.${ACTION[quickNext]}`)}
+                      </button>
+                    )}
                     {waNums.length > 0 && (
                       <a
                         href={`https://wa.me/${waNums[0]}`}
@@ -1223,6 +1301,10 @@ export default function OrdersManager() {
                   locked={courierOf(o)
                     ? `${courierOf(o).label || t(`dashboard.ordersSection.${FLOW.includes(o.status) ? o.status : 'shipped'}`)} · ${t(`dashboard.${courierOf(o).key}.managed`)}`
                     : null}
+                  auto={linked && !courierOf(o) && (o.status === 'new' || o.status === 'confirmed') ? {
+                    name: linked.name,
+                    action: <CourierSend order={o} couriers={couriers} onSent={markSent} big autoStart={autoSendId === o.id} />,
+                  } : null}
                 />
 
                 {/* ═══ التواصلُ والأدوات ═══
@@ -1282,9 +1364,12 @@ export default function OrdersManager() {
                   )}
 
                   {/* شركاتُ التوصيلِ المربوطة — أزرارُها ونماذجُها كما هي، بسطرٍ خاصٍّ بها */}
-                  <div className="flex flex-wrap items-center gap-2 empty:hidden">
-                    <CourierSend order={o} couriers={couriers} onSent={markSent} />
-                  </div>
+                  {/* أُرسلَ لشركة: رقمُ التتبّعِ والبوليصة. وقبلَ الإرسالِ زرُّه بشريطِ الحالةِ أعلاه */}
+                  {(courierOf(o) || !linked) && (
+                    <div className="flex flex-wrap items-center gap-2 empty:hidden">
+                      <CourierSend order={o} couriers={couriers} onSent={markSent} />
+                    </div>
+                  )}
 
                   {/* أدواتُ الورق: شريطٌ واحدٌ مقسومٌ بالتساوي على أيِّ عرض */}
                   <div className="bz-otools grid grid-cols-3 overflow-hidden rounded-xl">
@@ -1309,28 +1394,28 @@ export default function OrdersManager() {
         </div>
       )}
 
-      {/* شريطُ الإجراءاتِ الجماعيّة: يطفو فوقَ الشريطِ السفليِّ ما دام هناك تحديد */}
+      {/* شريطُ الإجراءاتِ الجماعيّة: يطفو فوقَ الشريطِ السفليِّ ما دام هناك تحديد.
+          زرٌّ رئيسيٌّ واحدٌ بحسبِ الحال (الإرسالُ للشركة، أو التأكيد، أو الطباعة)،
+          و«⋯» يفتحُ كلَّ ما يُعمَلُ بالمحدَّد بقائمةٍ واضحة. */}
       {selectMode && selected.size > 0 && (() => {
         const sel = selectedOrders();
         const newCount = sel.filter((o) => o.status === 'new' && !courierOf(o)).length;
-        const canCourier = Boolean(store?.deliveryPhone || store?.whatsapp);
+        const sendCount = sendable(sel).length;
+        const primary = sendCount && linked?.key !== 'gobox'
+          ? { label: t('dashboard.ordersSection.bulkSendTo', { count: sendCount, name: linked.name }), run: bulkSend, cls: 'bz-st-shipped' }
+          : newCount
+            ? { label: t('dashboard.ordersSection.bulkConfirm', { count: newCount }), run: bulkConfirm, cls: 'bz-st-confirmed' }
+            : { label: t('dashboard.ordersSection.bulkPrint', { count: sel.length }), run: bulkPrint, cls: 'bz-st-delivered' };
         return (
           <div className="fixed inset-x-0 z-[80] flex justify-center px-3" style={{ bottom: 'calc(env(safe-area-inset-bottom) + 96px)' }}>
             <div className="bz-bulkbar flex w-full max-w-md items-center gap-1.5 rounded-2xl p-2 shadow-2xl">
               <span className="bz-bulkbar-n shrink-0 rounded-xl px-2.5 py-2 text-[13px] font-extrabold tabular-nums">{sel.length}</span>
-              {newCount > 0 && (
-                <button onClick={bulkConfirm} disabled={bulkBusy} className="bz-ost-next bz-st-confirmed min-h-[40px] min-w-0 flex-1 rounded-xl px-2 text-[12.5px] font-extrabold disabled:opacity-60">
-                  {bulkBusy ? '…' : t('dashboard.ordersSection.bulkConfirm', { count: newCount })}
-                </button>
-              )}
-              <button onClick={bulkPrint} className="bz-bulkbar-btn flex min-h-[40px] shrink-0 items-center gap-1 rounded-xl px-2.5 text-[12px] font-bold">
-                <PrintIcon className="h-4 w-4" /> {t('dashboard.ordersSection.printShort')}
+              <button onClick={primary.run} disabled={bulkBusy} className={`bz-ost-next ${primary.cls} min-h-[40px] min-w-0 flex-1 truncate rounded-xl px-2 text-[12.5px] font-extrabold disabled:opacity-60`}>
+                {bulkBusy ? '…' : primary.label}
               </button>
-              {canCourier && (
-                <button onClick={bulkDelivery} className="bz-bulkbar-btn flex min-h-[40px] shrink-0 items-center gap-1 rounded-xl px-2.5 text-[12px] font-bold">
-                  <TruckIcon className="h-4 w-4" /> {t('dashboard.ordersSection.bulkCourier')}
-                </button>
-              )}
+              <button onClick={() => setBulkSheet(true)} aria-label={t('dashboard.ordersSection.bulkMore')} className="bz-bulkbar-btn flex min-h-[40px] shrink-0 items-center gap-1 rounded-xl px-3 text-[12px] font-bold">
+                <span className="text-lg leading-none" aria-hidden>⋯</span> {t('dashboard.ordersSection.bulkMoreShort')}
+              </button>
               <button onClick={exitSelect} aria-label={t('common.cancel')} className="bz-bulkbar-btn grid h-10 w-10 shrink-0 place-items-center rounded-xl">
                 <XIcon className="h-4 w-4" />
               </button>
@@ -1338,6 +1423,59 @@ export default function OrdersManager() {
           </div>
         );
       })()}
+
+      {bulkSheet && selected.size > 0 && createPortal((() => {
+        const sel = selectedOrders();
+        const newCount = sel.filter((o) => o.status === 'new' && !courierOf(o)).length;
+        const sendCount = sendable(sel).length;
+        const cancelCount = cancellable(sel).length;
+        const deliveryNum = store?.deliveryPhone || store?.whatsapp;
+        const rows = [
+          linked && { k: 'send', Icon: TruckIcon, label: t('dashboard.ordersSection.bulkSendTo', { count: sendCount, name: linked.name }), hint: linked.key === 'gobox' ? t('dashboard.ordersSection.bulkGoboxHint') : t('dashboard.ordersSection.bulkSendHint'), run: bulkSend, off: !sendCount || linked.key === 'gobox' },
+          { k: 'confirm', Icon: CheckIcon, label: t('dashboard.ordersSection.bulkConfirm', { count: newCount }), hint: t('dashboard.ordersSection.bulkConfirmHint'), run: bulkConfirm, off: !newCount },
+          { k: 'print', Icon: PrintIcon, label: t('dashboard.ordersSection.bulkPrint', { count: sel.length }), hint: t('dashboard.ordersSection.bulkPrintHint'), run: () => { setBulkSheet(false); bulkPrint(); } },
+          { k: 'excel', Icon: DownloadIcon, label: t('dashboard.ordersSection.bulkExcel', { count: sel.length }), hint: t('dashboard.ordersSection.bulkExcelHint'), run: () => { setBulkSheet(false); exportExcel(sel); } },
+          { k: 'copy', Icon: CopyIcon, label: t('dashboard.ordersSection.bulkCopy', { count: sel.length }), hint: t('dashboard.ordersSection.bulkCopyHint'), run: bulkCopy },
+          deliveryNum && { k: 'wa', Icon: WhatsAppIcon, label: t('dashboard.ordersSection.bulkCourier'), hint: t('dashboard.ordersSection.bulkWaHint'), run: () => { setBulkSheet(false); bulkDelivery(); } },
+          { k: 'cancel', Icon: XIcon, label: t('dashboard.ordersSection.bulkCancel', { count: cancelCount }), hint: t('dashboard.ordersSection.bulkCancelHint'), run: () => setAskBulkCancel(true), off: !cancelCount, danger: true },
+        ].filter(Boolean);
+        return (
+          <div className="fixed inset-0 z-[105] flex flex-col justify-end" role="dialog" aria-modal="true" aria-label={t('dashboard.ordersSection.bulkMore')}>
+            <button type="button" aria-label={t('common.close', { defaultValue: 'إغلاق' })} onClick={() => setBulkSheet(false)} className="bz-sheet-backdrop absolute inset-0" />
+            <div className="bz-sheet relative mx-auto flex max-h-[85%] w-full max-w-lg flex-col rounded-t-3xl pb-[max(env(safe-area-inset-bottom),14px)]">
+              <span className="bz-sheet-grip mx-auto mt-2.5 h-1.5 w-10 shrink-0 rounded-full" aria-hidden />
+              <div className="flex shrink-0 items-center gap-2 px-5 pb-2 pt-3">
+                <p className="flex-1 text-[16px] font-extrabold">{t('dashboard.ordersSection.bulkTitle', { count: sel.length })}</p>
+                <button onClick={() => setBulkSheet(false)} className="rounded-full p-1.5" aria-label={t('common.close', { defaultValue: 'إغلاق' })}><XIcon className="h-5 w-5" /></button>
+              </div>
+              <ul className="min-h-0 space-y-1.5 overflow-y-auto overscroll-contain px-4 pb-2">
+                {rows.map((r) => (
+                  <li key={r.k}>
+                    <button type="button" onClick={r.run} disabled={r.off || bulkBusy}
+                      className={`bz-sheet-item flex w-full items-center gap-3 rounded-2xl p-3 text-start transition disabled:opacity-40 ${r.danger ? 'is-danger' : ''}`}>
+                      <span className={`bz-bulk-ico grid h-10 w-10 shrink-0 place-items-center rounded-xl ${r.danger ? 'is-danger' : ''}`}><r.Icon className="h-5 w-5" /></span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-[14px] font-extrabold">{r.label}</span>
+                        <span className="bz-sheet-muted block text-[11.5px] leading-snug">{r.hint}</span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        );
+      })(), modalRoot())}
+
+      <ConfirmModal
+        open={askBulkCancel}
+        title={t('dashboard.ordersSection.cancelTitle')}
+        message={t('dashboard.ordersSection.bulkCancelMsg', { count: cancellable(selectedOrders()).length })}
+        confirmLabel={t('dashboard.ordersSection.cancelYes')}
+        cancelLabel={t('dashboard.ordersSection.keepOrder')}
+        onConfirm={bulkCancel}
+        onCancel={() => setAskBulkCancel(false)}
+      />
 
       {/* «تراجع»: يطفو فوقَ الشريطِ السفليِّ ستَّ ثوانٍ بعد كلِّ تغييرٍ للحالة */}
       {undo && (

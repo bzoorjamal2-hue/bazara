@@ -131,20 +131,29 @@ export function CourierLock({ order, fallbackLabel }) {
 }
 
 // أزرار الإرسال للشركات المربوطة (تختفي البقيّة بعد إرسال الطلب لواحدة منها)
-export function CourierSend({ order, couriers, onSent }) {
+export function CourierSend({ order, couriers, onSent, big = false, autoStart = false }) {
   const { opost, eps, gobox } = couriers;
   const sent = (key) => (id, tracking) => onSent?.(id, tracking, key);
   return (
     <>
       {(opost.connected || order.opostTracking) && !order.epsTracking && !order.goboxTracking && (
-        <OpostSend order={order} cities={opost.cities} types={opost.types} defaultType={opost.defaultType} onSent={sent('opost')} />
+        <OpostSend order={order} cities={opost.cities} types={opost.types} defaultType={opost.defaultType} onSent={sent('opost')} big={big} autoStart={autoStart} />
       )}
       {(eps.connected || order.epsTracking) && !order.opostTracking && !order.goboxTracking && (
-        <EpsSend order={order} cities={eps.cities} onSent={sent('eps')} />
+        <EpsSend order={order} cities={eps.cities} onSent={sent('eps')} big={big} autoStart={autoStart} />
       )}
       {(gobox.connected || order.goboxTracking) && !order.opostTracking && !order.epsTracking && (
-        <GoboxSend order={order} onSent={sent('gobox')} />
+        <GoboxSend order={order} onSent={sent('gobox')} big={big} autoStart={autoStart} />
       )}
     </>
   );
+}
+
+// الشركةُ المربوطةُ بالمتجر (الأولى إن رُبطت أكثرُ من واحدة) — منها يُعرَفُ أنّ الحالةَ
+// بعدَ الشحنِ تُدارُ من عندِها لا باليد
+export function linkedCourier(couriers) {
+  if (couriers?.opost?.connected) return { key: 'opost', name: 'أوبتيموس' };
+  if (couriers?.eps?.connected) return { key: 'eps', name: 'EPS' };
+  if (couriers?.gobox?.connected) return { key: 'gobox', name: 'gobox' };
+  return null;
 }

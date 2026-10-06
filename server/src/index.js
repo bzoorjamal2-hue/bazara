@@ -33,6 +33,7 @@ import { goboxWebhook, syncAllGoboxStores } from './controllers/gobox.controller
 import instagramRoutes from './routes/instagram.routes.js';
 import botRoutes from './routes/bot.routes.js';
 import adsRoutes from './routes/ads.routes.js';
+import printRoutes from './routes/print.routes.js';
 import mediaRoutes from './routes/media.routes.js';
 import { resumePending } from './utils/mediaWorker.js';
 import { r2Enabled } from './utils/r2.js';
@@ -170,6 +171,7 @@ app.use('/api/instagram', instagramRoutes);
 app.use('/api/bot', botRoutes);
 app.use('/api/ads', adsRoutes);
 app.use('/api/media', mediaRoutes);
+app.use('/api', printRoutes); // طباعةُ الفواتيرِ من داخلِ التطبيق (routes/print.routes.js)
 
 // مسارات SEO (على الجذر)
 app.get('/robots.txt', robots);

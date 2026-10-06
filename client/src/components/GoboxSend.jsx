@@ -8,9 +8,10 @@ import VillageSearch from './VillageSearch.jsx';
 // تحمل region+city+village معاً. لأنها دقيقة جداً (لا يمكن تخمينها من اسم المدينة)،
 // نفتح لوحة بحث مُعبّأة بمدينة الزبون ليختار المالك القرية الصحيحة ثم يرسل.
 // props: order, onSent
-export default function GoboxSend({ order, onSent }) {
+export default function GoboxSend({ order, onSent, big = false, autoStart = false }) {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
+  // gobox يختارُ القريةَ دائماً يدويّاً — «ابعتي» من الصفِّ المطويِّ يفتحُ الاختيارَ مباشرة
+  const [open, setOpen] = useState(Boolean(autoStart));
   const [village, setVillage] = useState(null); // { region, city, village, label }
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -64,9 +65,11 @@ export default function GoboxSend({ order, onSent }) {
     return (
       <button
         onClick={() => { setError(''); setOpen(true); }}
-        className="inline-flex items-center gap-1 rounded-xl bg-wine px-3 py-1.5 text-xs font-semibold text-cream shadow-sm transition hover:bg-wine-dark"
+        className={big
+          ? 'bz-ost-next bz-st-shipped flex min-h-[42px] w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold transition'
+          : 'inline-flex items-center gap-1 rounded-xl bg-wine px-3 py-1.5 text-xs font-semibold text-cream shadow-sm transition hover:bg-wine-dark'}
       >
-        <TruckIcon className="inline h-4 w-4" /> {t('dashboard.gobox.sendBtn')}
+        <TruckIcon className={big ? 'h-[18px] w-[18px]' : 'inline h-4 w-4'} /> {t('dashboard.gobox.sendBtn')}
       </button>
     );
   }
