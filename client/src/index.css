@@ -6594,3 +6594,184 @@ html.dark .bz-fin-amount:focus-within { border-color: rgba(239, 238, 236, 0.55);
 .bz-fin-chip.is-on, .bz-fin-cat.is-on { background: #1F1E1D; color: #fff; border-color: #1F1E1D; }
 html.dark .bz-fin-chip, html.dark .bz-fin-cat { border-color: rgba(239, 238, 236, 0.18); }
 html.dark .bz-fin-chip.is-on, html.dark .bz-fin-cat.is-on { background: #EFEEEC; color: #1d1c1b; border-color: #EFEEEC; }
+
+/* ═════════ مصنعُ الإعلانات ═════════
+   نفسُ لغةِ صفحاتِ الطلباتِ والمالية: بطاقاتٌ بيضاءُ بحدٍّ رفيعٍ نهاراً، زجاجٌ خافتٌ ليلاً،
+   والحبرُ الداكنُ هو لونُ «المختار» — لا ذهبٌ ولا خمريّ من الثيمِ القديم. */
+.bz-ad { --ad-ink: #1F1E1D; --ad-mute: #7A7672; --ad-card: #ffffff; --ad-line: rgba(23, 23, 23, 0.09); --ad-soft: rgba(23, 23, 23, 0.035); --ad-accent: #2a78d6; color: var(--ad-ink); }
+html.dark .bz-ad { --ad-ink: #EFEEEC; --ad-mute: #A9A49D; --ad-card: rgba(255, 255, 255, 0.04); --ad-line: rgba(239, 238, 236, 0.11); --ad-soft: rgba(255, 255, 255, 0.045); --ad-accent: #6da7ec; }
+.bz-ad-muted { color: var(--ad-mute); }
+.bz-ad-card, .bz-ad-steps, .bz-ad-navbar { background: var(--ad-card); border: 1px solid var(--ad-line); box-shadow: 0 1px 2px rgba(23, 23, 23, 0.04), 0 18px 36px -26px rgba(23, 23, 23, 0.25); }
+html.dark .bz-ad-card, html.dark .bz-ad-steps { box-shadow: 0 18px 36px -24px rgba(0, 0, 0, 0.7); }
+.bz-ad-navbar { background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 14px 32px -14px rgba(23, 23, 23, 0.45); }
+html.dark .bz-ad-navbar { background: rgba(26, 25, 24, 0.94); box-shadow: 0 14px 32px -12px rgba(0, 0, 0, 0.85); }
+.bz-ad-soft { background: var(--ad-soft); color: var(--ad-ink); }
+.bz-ad-link { color: var(--ad-ink); opacity: 0.75; transition: opacity 0.15s; }
+.bz-ad-link:hover { opacity: 1; }
+.bz-ad-primary { background: #1F1E1D; color: #fff; box-shadow: 0 10px 22px -12px rgba(23, 23, 23, 0.7); transition: transform 0.1s; }
+.bz-ad-primary:active { transform: scale(0.98); }
+html.dark .bz-ad-primary { background: #EFEEEC; color: #1d1c1b; }
+.bz-ad-ghost { color: var(--ad-ink); border: 1px solid rgba(163, 162, 160, 0.45); background: transparent; transition: background-color 0.15s; }
+.bz-ad-ghost:hover { background: var(--ad-soft); }
+html.dark .bz-ad-ghost { border-color: rgba(239, 238, 236, 0.2); }
+.bz-ad-chip { color: var(--ad-ink); border: 1px solid rgba(163, 162, 160, 0.42); background: var(--ad-card); transition: background-color 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s; }
+.bz-ad-chip.is-on { background: #1F1E1D; color: #fff; border-color: #1F1E1D; box-shadow: 0 8px 18px -10px rgba(23, 23, 23, 0.6); }
+html.dark .bz-ad-chip { border-color: rgba(239, 238, 236, 0.16); }
+html.dark .bz-ad-chip.is-on { background: #EFEEEC; color: #1d1c1b; border-color: #EFEEEC; }
+.bz-ad-input { color: var(--ad-ink); background: var(--ad-soft); border: 1px solid var(--ad-line); transition: border-color 0.15s, box-shadow 0.15s; }
+.bz-ad-input:focus-within, .bz-ad-input:focus { outline: none; border-color: rgba(23, 23, 23, 0.5); box-shadow: 0 0 0 3px rgba(23, 23, 23, 0.07); }
+html.dark .bz-ad-input:focus-within, html.dark .bz-ad-input:focus { border-color: rgba(239, 238, 236, 0.5); }
+.bz-ad-input input::-webkit-outer-spin-button, .bz-ad-input input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.bz-ad-tag { background: var(--ad-soft); border: 1px solid var(--ad-line); }
+.bz-ad-note { background: rgba(250, 178, 25, 0.10); border: 1px solid rgba(214, 140, 0, 0.3); color: #7c4a03; }
+html.dark .bz-ad-note { background: rgba(250, 178, 25, 0.08); border-color: rgba(250, 178, 25, 0.25); color: #fcd34d; }
+.bz-ad-warn-t { color: #b45309; }
+html.dark .bz-ad-warn-t { color: #fbbf24; }
+.bz-ad-row { border-top: 1px solid var(--ad-line); }
+.bz-ad-pickchip { background: var(--ad-card); border: 1px solid var(--ad-line); }
+
+/* شريطُ الخطوات */
+.bz-ad-step-bar { background: rgba(23, 23, 23, 0.10); transition: background-color 0.25s; }
+html.dark .bz-ad-step-bar { background: rgba(255, 255, 255, 0.12); }
+.bz-ad-step.is-done .bz-ad-step-bar { background: #1F1E1D; opacity: 0.55; }
+.bz-ad-step.is-on .bz-ad-step-bar { background: #1F1E1D; }
+html.dark .bz-ad-step.is-done .bz-ad-step-bar, html.dark .bz-ad-step.is-on .bz-ad-step-bar { background: #EFEEEC; }
+.bz-ad-step-lbl { color: var(--ad-mute); }
+.bz-ad-step.is-on .bz-ad-step-lbl { color: var(--ad-ink); }
+.bz-ad-step:disabled { cursor: default; }
+.bz-ad-step:disabled .bz-ad-step-lbl { opacity: 0.55; }
+
+/* بطاقاتُ الاختيار: الهدف، والنسخ، والقطع */
+.bz-ad-goal, .bz-ad-variant { background: var(--ad-card); border: 1.5px solid var(--ad-line); color: var(--ad-ink); transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s; }
+.bz-ad-goal.is-on, .bz-ad-variant.is-on { border-color: #1F1E1D; box-shadow: 0 0 0 1px #1F1E1D, 0 14px 28px -18px rgba(23, 23, 23, 0.5); }
+html.dark .bz-ad-goal.is-on, html.dark .bz-ad-variant.is-on { border-color: #EFEEEC; box-shadow: 0 0 0 1px #EFEEEC; }
+.bz-ad-goal-ico { background: var(--ad-soft); color: var(--ad-ink); }
+.bz-ad-goal.is-on .bz-ad-goal-ico { background: #1F1E1D; color: #fff; }
+html.dark .bz-ad-goal.is-on .bz-ad-goal-ico { background: #EFEEEC; color: #1d1c1b; }
+.bz-ad-radio { border: 2px solid rgba(23, 23, 23, 0.25); color: #fff; }
+.bz-ad-radio.is-on { background: #1F1E1D; border-color: #1F1E1D; }
+html.dark .bz-ad-radio { border-color: rgba(239, 238, 236, 0.3); color: #1d1c1b; }
+html.dark .bz-ad-radio.is-on { background: #EFEEEC; border-color: #EFEEEC; }
+.bz-ad-piece { box-shadow: 0 0 0 1px var(--ad-line); transition: box-shadow 0.15s, transform 0.1s; }
+.bz-ad-piece.is-on { box-shadow: 0 0 0 3px #1F1E1D; }
+html.dark .bz-ad-piece.is-on { box-shadow: 0 0 0 3px #EFEEEC; }
+.bz-ad-piece-check { background: rgba(255, 255, 255, 0.85); border: 1.5px solid rgba(23, 23, 23, 0.2); color: #fff; }
+.bz-ad-piece-check.is-on { background: #1F1E1D; border-color: #fff; }
+
+/* «عم نكتب…» */
+.bz-ad-writing { background: var(--ad-card); border: 1px dashed rgba(163, 162, 160, 0.6); }
+.bz-ad-shimmer { background: linear-gradient(90deg, var(--ad-soft) 0%, rgba(163, 162, 160, 0.28) 50%, var(--ad-soft) 100%); background-size: 200% 100%; animation: bz-ad-shim 1.3s linear infinite; }
+@keyframes bz-ad-shim { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+.bz-ad-spin { animation: bz-ad-spin 1.6s linear infinite; }
+@keyframes bz-ad-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .bz-ad-shimmer, .bz-ad-spin { animation: none; } }
+
+/* التصميم: مسرحُ الصورة ورسومُ القوالب */
+.bz-ad-stage { background: radial-gradient(circle at 50% 35%, #ffffff 0%, #ECE9E4 70%); border: 1px solid var(--ad-line); }
+html.dark .bz-ad-stage { background: radial-gradient(circle at 50% 35%, #2E2C2A 0%, #161514 75%); }
+.bz-ad-g-img { fill: #C9B8A4; }
+.bz-ad-g-panel { fill: #F4F1EC; stroke: rgba(23, 23, 23, 0.12); }
+.bz-ad-g-ink { fill: #1F1E1D; }
+.bz-ad-g-ink-on { fill: #ffffff; }
+.bz-ad-chip.is-on .bz-ad-g-panel { fill: #3a3836; stroke: none; }
+.bz-ad-chip.is-on .bz-ad-g-ink { fill: #ffffff; }
+html.dark .bz-ad-chip.is-on .bz-ad-g-panel { fill: #D8D4CD; }
+html.dark .bz-ad-chip.is-on .bz-ad-g-ink { fill: #1F1E1D; }
+.bz-ad-sizebox { border: 2px solid currentColor; opacity: 0.8; }
+
+/* اختيارٌ مقطّع (الجنس، المدّة، المعاينة) */
+.bz-ad-seg { background: var(--ad-soft); scrollbar-width: none; }
+.bz-ad-seg::-webkit-scrollbar { display: none; }
+.bz-ad-segbtn { color: var(--ad-mute); transition: background-color 0.15s, color 0.15s; }
+.bz-ad-segbtn.is-on { background: #1F1E1D; color: #fff; box-shadow: 0 6px 14px -8px rgba(23, 23, 23, 0.6); }
+html.dark .bz-ad-segbtn.is-on { background: #EFEEEC; color: #1d1c1b; }
+.bz-ad-pop { background: var(--ad-card); border: 1px solid var(--ad-line); box-shadow: 0 20px 40px -16px rgba(23, 23, 23, 0.4); }
+html.dark .bz-ad-pop { background: #232120; }
+.bz-ad-popitem:hover { background: var(--ad-soft); }
+
+/* الميزانية */
+.bz-ad-total { background: #1F1E1D; color: #fff; }
+html.dark .bz-ad-total { background: #EFEEEC; color: #1d1c1b; }
+.bz-ad-range { -webkit-appearance: none; appearance: none; height: 6px; border-radius: 999px; background: rgba(23, 23, 23, 0.12); outline: none; }
+html.dark .bz-ad-range { background: rgba(255, 255, 255, 0.14); }
+.bz-ad-range::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; border-radius: 50%; background: #1F1E1D; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(23, 23, 23, 0.35); cursor: pointer; }
+.bz-ad-range::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: #1F1E1D; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(23, 23, 23, 0.35); cursor: pointer; }
+html.dark .bz-ad-range::-webkit-slider-thumb { background: #EFEEEC; border-color: #1d1c1b; }
+html.dark .bz-ad-range::-moz-range-thumb { background: #EFEEEC; border-color: #1d1c1b; }
+
+.bz-ad-toggle { background: var(--ad-soft); border: 1px solid var(--ad-line); color: var(--ad-ink); }
+.bz-ad-toggle.is-on { border-color: rgba(4, 120, 87, 0.35); background: rgba(16, 185, 129, 0.07); }
+.bz-ad-switch { background: rgba(120, 113, 108, 0.45); }
+.bz-ad-toggle.is-on .bz-ad-switch { background: #059669; }
+
+/* الفحص */
+.bz-ad-ok { background: rgba(16, 185, 129, 0.09); color: #047857; }
+html.dark .bz-ad-ok { color: #34d399; }
+.bz-ad-chk.is-error { background: rgba(208, 59, 59, 0.08); color: #b42323; }
+.bz-ad-chk.is-warn { background: rgba(250, 178, 25, 0.10); color: #8a5300; }
+.bz-ad-chk.is-tip { background: var(--ad-soft); color: var(--ad-ink); }
+html.dark .bz-ad-chk.is-error { color: #ffb1b1; background: rgba(208, 59, 59, 0.14); }
+html.dark .bz-ad-chk.is-warn { color: #fcd34d; background: rgba(250, 178, 25, 0.08); }
+
+/* لوحةُ الحملات: البطاقةُ الداكنةُ أعلاها */
+.bz-ad-hero { background: radial-gradient(120% 140% at 0% 0%, #3b3632 0%, #1b1918 55%, #121110 100%); color: #fff; box-shadow: 0 24px 48px -26px rgba(23, 23, 23, 0.8); min-height: 210px; }
+.bz-ad-hero::after { content: ''; position: absolute; inset: auto -20% -60% auto; width: 70%; height: 120%; background: radial-gradient(circle, rgba(201, 169, 110, 0.28) 0%, transparent 65%); pointer-events: none; }
+.bz-ad-hero-kick { color: #C9A96E; letter-spacing: 0.02em; }
+.bz-ad-hero-sub { color: rgba(255, 255, 255, 0.72); }
+.bz-ad-hero-btn { background: #fff; color: #1F1E1D; box-shadow: 0 10px 24px -10px rgba(0, 0, 0, 0.6); transition: transform 0.1s; }
+.bz-ad-hero-btn:active { transform: scale(0.97); }
+.bz-ad-hero-pic { width: 98px; height: 128px; box-shadow: 0 16px 30px -12px rgba(0, 0, 0, 0.8), 0 0 0 3px rgba(255, 255, 255, 0.92); }
+.bz-ad-hero-pic.is-0 { inset-inline-end: 34px; top: 2px; transform: rotate(-7deg); z-index: 1; }
+.bz-ad-hero-pic.is-1 { inset-inline-end: 4px; top: 34px; transform: rotate(6deg); z-index: 2; }
+.bz-ad-hero-pic.is-2 { inset-inline-end: 64px; top: 58px; transform: rotate(-2deg); z-index: 3; }
+[dir='rtl'] .bz-ad-hero-pic.is-0 { transform: rotate(7deg); }
+[dir='rtl'] .bz-ad-hero-pic.is-1 { transform: rotate(-6deg); }
+[dir='rtl'] .bz-ad-hero-pic.is-2 { transform: rotate(2deg); }
+
+.bz-ad-roas { background: var(--ad-soft); border: 1px solid var(--ad-line); }
+.bz-ad-roas.is-good { background: rgba(16, 185, 129, 0.08); border-color: rgba(4, 120, 87, 0.28); }
+.bz-ad-path li + li::before { content: ''; position: absolute; inset-inline-start: 17.5px; top: -10px; height: 20px; width: 1.5px; background: var(--ad-line); }
+.bz-ad-path-dot { background: var(--ad-soft); color: var(--ad-ink); border: 1px solid var(--ad-line); }
+.bz-ad-path-dot.is-strong { background: #1F1E1D; color: #fff; border-color: #1F1E1D; }
+html.dark .bz-ad-path-dot.is-strong { background: #EFEEEC; color: #1d1c1b; }
+
+.bz-ad-grid { stroke: var(--ad-line); }
+.bz-ad-axis { stroke: rgba(120, 113, 108, 0.45); }
+.bz-ad-axis-t { fill: var(--ad-mute); }
+.bz-ad-barfill { fill: var(--ad-accent); opacity: 0.85; transition: opacity 0.15s; }
+.bz-ad-barfill.is-on { opacity: 1; }
+
+/* حالاتُ الحملة: نقطةٌ وكلمة */
+.bz-ad-dot.is-draft { background: #a3a2a0; }
+.bz-ad-dot.is-ready { background: #2a78d6; }
+.bz-ad-dot.is-active { background: #0ca30c; }
+.bz-ad-dot.is-paused { background: #d97706; }
+.bz-ad-state { background: var(--ad-soft); color: var(--ad-ink); }
+.bz-ad-state.is-active { background: rgba(12, 163, 12, 0.10); color: #067a06; }
+.bz-ad-state.is-paused { background: rgba(217, 119, 6, 0.10); color: #a35a00; }
+.bz-ad-state.is-ready { background: rgba(42, 120, 214, 0.10); color: #1c5cab; }
+html.dark .bz-ad-state.is-active { color: #6ee26e; }
+html.dark .bz-ad-state.is-paused { color: #fbbf24; }
+html.dark .bz-ad-state.is-ready { color: #86b6ef; }
+.bz-ad-meta { background: var(--ad-soft); color: var(--ad-mute); }
+.bz-ad-mstats { border-top: 1px solid var(--ad-line); border-bottom: 1px solid var(--ad-line); }
+.bz-ad-mcell:nth-child(3n + 2) { border-inline: 1px solid var(--ad-line); }
+.bz-ad-mcell:nth-child(n + 4) { border-top: 1px solid var(--ad-line); }
+.bz-ad-icobtn { color: var(--ad-ink); border: 1px solid rgba(163, 162, 160, 0.42); transition: background-color 0.15s, color 0.15s; }
+.bz-ad-icobtn:hover { background: var(--ad-soft); }
+.bz-ad-icobtn.is-danger:hover { color: #b42323; background: rgba(208, 59, 59, 0.08); }
+html.dark .bz-ad-icobtn { border-color: rgba(239, 238, 236, 0.16); }
+.bz-ad-livesw { background: rgba(120, 113, 108, 0.45); }
+.bz-ad-livesw.is-on { background: #0ca30c; }
+.bz-ad-acc { background: var(--ad-soft); color: var(--ad-ink); }
+.bz-ad-acc.is-ok { background: rgba(12, 163, 12, 0.12); color: #067a06; }
+html.dark .bz-ad-acc.is-ok { color: #6ee26e; }
+.bz-ad-pill.is-ok { background: rgba(12, 163, 12, 0.10); color: #067a06; }
+.bz-ad-pill.is-warn { background: rgba(217, 119, 6, 0.10); color: #a35a00; }
+.bz-ad-pill.is-bad { background: rgba(208, 59, 59, 0.10); color: #b42323; }
+.bz-ad-pill.is-soft { background: var(--ad-soft); color: var(--ad-mute); }
+html.dark .bz-ad-pill.is-ok { color: #6ee26e; }
+html.dark .bz-ad-pill.is-warn { color: #fbbf24; }
+html.dark .bz-ad-pill.is-bad { color: #ffb1b1; }
+/* المعاينةُ تقلّدُ تطبيقَي ميتا بألوانِهما الحقيقيّة — لا يقلبُها الوضعُ الليليُّ للموقع */
+html.dark .theme-pub .bz-ad-phone .bg-white { background-color: #ffffff; }

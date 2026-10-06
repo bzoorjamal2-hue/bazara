@@ -82,7 +82,7 @@ const clip = (s, n) => {
 // ───────────────────── إطارُ الجوّال ─────────────────────
 function Phone({ dark, children }) {
   return (
-    <div className="relative mx-auto w-[300px] max-w-full rounded-[44px] bg-[#1a1a1a] p-[10px] shadow-[0_30px_60px_-20px_rgba(0,0,0,0.45),inset_0_0_0_1.5px_#3a3a3a]">
+    <div className="bz-ad-phone relative mx-auto w-[300px] max-w-full rounded-[44px] bg-[#1a1a1a] p-[10px] shadow-[0_30px_60px_-20px_rgba(0,0,0,0.45),inset_0_0_0_1.5px_#3a3a3a]">
       <div className={`relative h-[664px] overflow-hidden rounded-[34px] ${dark ? 'bg-black text-white' : 'bg-white text-[#0c0c0c]'}`} style={APP_FONT}>
         {/* شريطُ الحالة وجزيرةُ الكاميرا */}
         <div className={`absolute inset-x-0 top-0 z-30 flex h-11 items-center justify-between px-7 text-[13px] font-semibold ${dark ? 'text-white' : 'text-black'}`} dir="ltr">
@@ -127,18 +127,18 @@ export default function AdPreview({ goal, format, size = 'square', image, video,
 
   return (
     <div className="space-y-4">
-      <div className="mx-auto grid max-w-md grid-cols-4 gap-1 rounded-2xl bg-black/5 p-1" role="tablist" aria-label={t('adStudio.pv.title')}>
+      <div className="bz-ad-seg mx-auto grid max-w-md grid-cols-4 gap-1 rounded-2xl p-1" role="tablist" aria-label={t('adStudio.pv.title')}>
         {VIEWS.map((v) => (
           <button
             key={v} type="button" role="tab" aria-selected={view === v} onClick={() => setView(v)}
-            className={`rounded-xl px-1.5 py-2 text-[11px] font-bold transition ${view === v ? 'bg-white text-[#1f1e1d] shadow-sm' : 'text-stone-400 hover:text-stone-200'}`}
+            className={`bz-ad-segbtn rounded-xl px-1.5 py-2 text-[12px] font-bold ${view === v ? 'is-on' : ''}`}
           >
             {t(`adStudio.pv.v.${v}`)}
           </button>
         ))}
       </div>
 
-      <div className="rounded-3xl bg-gradient-to-b from-[#ece9e4] to-[#d9d4cc] px-3 py-6">
+      <div className="bz-ad-stage rounded-3xl px-3 py-6">
         {/* ═══ خلاصةُ إنستغرام ═══ */}
         {view === 'ig_feed' && (
           <Phone>
@@ -289,16 +289,16 @@ export default function AdPreview({ goal, format, size = 'square', image, video,
       </div>
 
       {/* أين تذهبُ الكبسة — الجوابُ الذي تسألُ عنه كلُّ تاجرةٍ قبلَ أن تدفع */}
-      <div className="flex items-start gap-3 rounded-2xl border border-gold-400/20 bg-black/20 p-3.5">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gold-400/15 text-gold-200">
+      <div className="bz-ad-soft flex items-start gap-3 rounded-2xl p-3.5">
+        <span className="bz-ad-goal-ico grid h-9 w-9 shrink-0 place-items-center rounded-xl">
           {isMsg ? <SendIcon className="h-4 w-4" /> : <LinkOutIcon className="h-4 w-4" />}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-bold text-stone-200">{t(isMsg ? 'adStudio.pv.goesDm' : 'adStudio.pv.goesPage')}</p>
-          <p className="mt-0.5 truncate text-[11px] text-stone-400" dir="ltr" style={{ textAlign: 'right' }}>
+          <p className="text-[12.5px] font-bold">{t(isMsg ? 'adStudio.pv.goesDm' : 'adStudio.pv.goesPage')}</p>
+          <p className="bz-ad-muted mt-0.5 truncate text-[11px]" dir="ltr" style={{ textAlign: 'right' }}>
             {isMsg ? `instagram.com/${handle}` : String(link || '').replace(/^https?:\/\//, '')}
           </p>
-          <p className="mt-1 text-[11px] leading-relaxed text-stone-500">{t(`adStudio.pv.note.${view}`)}</p>
+          <p className="bz-ad-muted mt-1 text-[11.5px] leading-relaxed">{t(`adStudio.pv.note.${view}`)}</p>
         </div>
       </div>
     </div>

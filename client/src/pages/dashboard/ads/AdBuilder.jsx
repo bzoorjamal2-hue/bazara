@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../../../api/client.js';
-import Select from '../../../components/Select.jsx';
-import { SectionHead, Field, Tip } from '../../../components/FormField.jsx';
+import { Tip } from '../../../components/FormField.jsx';
 import {
-  SparkleIcon, ImageIcon, UsersIcon, CashIcon, CheckIcon, WarnIcon, CopyIcon, DownloadIcon,
-  TagIcon, XIcon, VideoIcon, PinIcon, ClockIcon, EyeIcon, MegaphoneIcon, SearchIcon, HelpIcon,
-  BackIcon, GridIcon,
+  SparkleIcon, ImageIcon, CheckIcon, WarnIcon, CopyIcon, DownloadIcon,
+  XIcon, VideoIcon, PinIcon, ClockIcon, MegaphoneIcon, SearchIcon, HelpIcon,
+  BackIcon, ForwardIcon, GridIcon, BagIcon, SendIcon, LinkIcon, UsersIcon, EditIcon,
 } from '../../../components/icons.jsx';
 import { cldThumb } from '../../../utils/cloudinary.js';
 import { copyText, storeUrl, siteOrigin } from '../../../utils/links.js';
@@ -15,17 +14,26 @@ import { AD_CITIES, PLACEMENT_KEYS } from '../../../utils/adCities.js';
 import AdPreview from './AdPreview.jsx';
 import { runChecks, blocking } from './adChecks.js';
 
-// بانيةُ الإعلان — من قطعةٍ بالمتجرِ إلى حملةٍ كاملة: النصّ، والوسيطة (صورةٌ مرسومةٌ أو
-// فيديو القطعة)، والجمهور، وأماكنُ الظهور، والميزانيّةُ والموعد — ثمّ فحصٌ ومعاينةٌ
-// ونشرٌ إلى ميتا موقوفاً. لا شيءَ يُصرَفُ بلا ضغطةِ «شغّلي» من لوحةِ الحملات.
+// بانيةُ الإعلان — خطواتٌ لا استمارة.
+//
+// كانت ستُّ بطاقاتٍ فوقَ بعضِها بشاشةٍ واحدة: القطعة والهدف والنصّ والصورة والجمهور والميزانية
+// والمعاينة — تمرُّ التاجرةُ بأربعين خانةً قبلَ أن ترى إعلانَها. صارت ستَّ خطواتٍ، كلُّ خطوةٍ
+// سؤالٌ واحد، وشريطُ تقدّمٍ فوقها وزرّا «السابق/التالي» تحتها — كما تفعلُ تطبيقاتُ الإعلاناتِ
+// الكبيرة. والخطواتُ كلُّها تبقى مركّبةً (مخفيّةً لا محذوفة): لوحةُ رسمِ الصورةِ تعيشُ بخطوةِ
+// التصميم، والنشرُ بالخطوةِ الأخيرةِ يرفعُ ما رُسِمَ عليها.
+//
+// لا شيءَ يُصرَفُ بلا ضغطةِ «شغّليها» من لوحةِ الحملات: النشرُ يُنشئُ الحملةَ موقوفة.
 
-const CARD = 'dash-section glass space-y-4 p-5 sm:p-6';
-const BOX = 'rounded-2xl border border-gold-400/15 bg-black/20 p-4';
-const GOALS = ['sales', 'messages', 'traffic', 'awareness'];
+const STEPS = ['piece', 'goal', 'copy', 'design', 'audience', 'launch'];
+const GOALS = [
+  { k: 'sales', Icon: BagIcon },
+  { k: 'messages', Icon: SendIcon },
+  { k: 'traffic', Icon: LinkIcon },
+  { k: 'awareness', Icon: MegaphoneIcon },
+];
+const TONES = ['warm', 'luxury', 'playful'];
 const SIZES = Object.keys(AD_SIZES);
-const chip = (on) => `rounded-xl border px-3 py-2.5 text-xs font-bold transition ${
-  on ? 'border-[#999795] bg-[#999795] text-[#313130] shadow-sm' : 'border-gold-400/25 text-stone-300 hover:bg-gold-400/10 hover:text-gold-200'
-}`;
+const BUDGETS = [15, 25, 40, 60, 100];
 const DEFAULT_SETTINGS = { format: 'image', placements: [], startAt: '', abTest: false };
 
 export default function AdBuilder({ data, campaign, onDone, onBack, setErr, setMsg }) {
@@ -45,7 +53,10 @@ export default function AdBuilder({ data, campaign, onDone, onBack, setErr, setM
   const [settings, setSettings] = useState({ ...DEFAULT_SETTINGS, ...(campaign?.settings || {}) });
   const [editingId, setEditingId] = useState(campaign?.id || '');
   const [imageUrl, setImageUrl] = useState('');
+  // حملةٌ محفوظةٌ تُفتَحُ على المعاينة؛ الجديدةُ من أوّلِها
+  const [step, setStep] = useState(campaign ? STEPS.length - 1 : 0);
   const canvasRef = useRef(null);
+  const topRef = useRef(null);
 
   const product = useMemo(() => (data.products || []).find((p) => p.id === productId) || null, [data, productId]);
   const copy = gen?.copies?.[chosen];
@@ -56,15 +67,23 @@ export default function AdBuilder({ data, campaign, onDone, onBack, setErr, setM
     setSettings((s) => ({ ...s, format: product?.video ? 'video' : 'image' }));
   }, [product?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const goTo = (i) => {
+    setStep(i);
+    setErr('');
+    requestAnimationFrame(() => topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  };
+
   const generate = async () => {
     if (!productId) return;
     setBusy('gen'); setErr(''); setMsg('');
+    requestAnimationFrame(() => topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
     try {
       const r = await api.post('/ads/generate', { productId, goal, tone });
       setGen((g) => ({ ...r.data, audience: { ...r.data.audience, cities: g?.audience?.cities || [] } }));
       setChosen(0);
       const sale = r.data.facts?.sale;
       setCreative((c) => ({ ...c, badge: sale ? t('adStudio.badgeSale', { n: sale.off }) : t('adStudio.badgeNew') }));
+      goTo(2);
     } catch (e) { setErr(getErrorMessage(e)); }
     setBusy('');
   };
@@ -117,161 +136,304 @@ export default function AdBuilder({ data, campaign, onDone, onBack, setErr, setM
   const checks = gen ? runChecks({ product, copy, gen, creative, settings, goal, publishing }) : [];
   const blocked = blocking(checks);
 
+  // متى تُفتَحُ كلُّ خطوة: لا نصَّ قبلَ قطعة، ولا تصميمَ قبلَ نصّ
+  const reachable = (i) => {
+    if (live) return true;
+    if (i <= 0) return true;
+    if (i === 1) return Boolean(productId);
+    return Boolean(gen && copy && productId);
+  };
+  const isLast = step === STEPS.length - 1;
+  const nextOk = step === 0 ? Boolean(productId) : step === 1 ? Boolean(gen) : true;
+
   return (
-    <div className="space-y-4">
-      <button type="button" onClick={onBack} className="inline-flex items-center gap-1.5 text-xs font-bold text-stone-400 transition hover:text-gold-200">
-        <BackIcon className="h-4 w-4" /> {t('adStudio.b.back')}
-      </button>
+    <div className="bz-ad space-y-4" ref={topRef} style={{ scrollMarginTop: 'calc(var(--bz-headline-h, 64px) + 12px)' }}>
+      <div className="flex items-center justify-between gap-2">
+        <button type="button" onClick={onBack} className="bz-ad-link inline-flex items-center gap-1.5 text-[13px] font-bold">
+          <BackIcon className="h-4 w-4" /> {t('adStudio.b.back')}
+        </button>
+        {product && (
+          <span className="bz-ad-pickchip inline-flex max-w-[60%] items-center gap-2 rounded-full py-1 pe-3 ps-1">
+            <span className="h-7 w-7 shrink-0 overflow-hidden rounded-full">{product.image ? <img src={cldThumb(product.image, 80)} alt="" className="h-full w-full object-cover" /> : null}</span>
+            <span className="truncate text-[12px] font-bold">{product.name}</span>
+          </span>
+        )}
+      </div>
+
+      {/* ═══ شريطُ الخطوات ═══ */}
+      <nav className="bz-ad-steps rounded-3xl p-3" aria-label={t('adStudio.w.stepsLabel')}>
+        <div className="flex items-baseline justify-between gap-2 px-1">
+          <p className="text-[15px] font-extrabold">{t(`adStudio.w.s.${STEPS[step]}.title`)}</p>
+          <p className="bz-ad-muted text-[12px] font-bold tabular-nums">{t('adStudio.w.stepOf', { n: step + 1, total: STEPS.length })}</p>
+        </div>
+        <ol className="mt-3 grid grid-cols-6 gap-1.5">
+          {STEPS.map((s, i) => {
+            const done = i < step;
+            const on = i === step;
+            const ok = reachable(i);
+            return (
+              <li key={s}>
+                <button
+                  type="button"
+                  onClick={() => ok && goTo(i)}
+                  disabled={!ok}
+                  aria-current={on ? 'step' : undefined}
+                  className={`bz-ad-step group flex w-full flex-col items-center gap-1.5 ${on ? 'is-on' : ''} ${done ? 'is-done' : ''}`}
+                >
+                  <span className="bz-ad-step-bar h-1.5 w-full rounded-full" />
+                  <span className="bz-ad-step-lbl truncate text-[10.5px] font-bold">{t(`adStudio.w.s.${s}.short`)}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ol>
+      </nav>
 
       {live && (
-        <p className="flex items-start gap-2 rounded-2xl border border-gold-400/30 bg-gold-400/10 px-4 py-3 text-sm font-semibold text-gold-200">
+        <p className="bz-ad-note flex items-start gap-2 rounded-2xl px-4 py-3 text-[13px] font-semibold">
           <WarnIcon className="mt-px h-4 w-4 shrink-0" /> {t('adStudio.b.liveNote')}
         </p>
       )}
 
-      {/* ═══ ١ · القطعة والهدف ═══ */}
-      <div className={CARD}>
-        <SectionHead icon={<TagIcon className="h-5 w-5" />} title={t('adStudio.pick.title')} desc={t('adStudio.pick.desc')} />
-        <ProductPicker products={data.products} value={productId} onChange={setProductId} disabled={live} />
+      {/* ═══ ١ · القطعة ═══ */}
+      <section hidden={step !== 0} className="bz-ad-card space-y-3 rounded-3xl p-4">
+        <p className="bz-ad-muted text-[13px]">{t('adStudio.w.s.piece.desc')}</p>
+        <ProductPicker products={data.products} value={productId} onChange={(id) => { setProductId(id); }} disabled={live} />
+      </section>
 
-        <Field label={t('adStudio.goal.label')} tip={t('adStudio.b.goalTip')}>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {GOALS.map((g) => (
-              <button key={g} type="button" disabled={live} onClick={() => setGoal(g)} className={chip(goal === g)}>
-                {t(`adStudio.goal.${g}`)}
+      {/* ═══ ٢ · الهدف والنبرة ═══ */}
+      {busy === 'gen' && <Writing t={t} />}
+
+      <section hidden={step !== 1 || busy === 'gen'} className="space-y-4">
+        <div className="bz-ad-card space-y-3 rounded-3xl p-4">
+          <p className="flex items-center gap-1.5 text-[14px] font-extrabold">{t('adStudio.w.goalQ')} <Tip text={t('adStudio.b.goalTip')} /></p>
+          <div className="grid grid-cols-2 gap-2.5">
+            {GOALS.map(({ k, Icon }) => {
+              const on = goal === k;
+              return (
+                <button key={k} type="button" disabled={live} onClick={() => setGoal(k)} aria-pressed={on}
+                  className={`bz-ad-goal app-tap flex flex-col items-start gap-2 rounded-2xl p-3.5 text-start ${on ? 'is-on' : ''}`}>
+                  <span className="flex w-full items-center justify-between">
+                    <span className="bz-ad-goal-ico grid h-10 w-10 place-items-center rounded-xl"><Icon className="h-5 w-5" /></span>
+                    <span className={`bz-ad-radio grid h-5 w-5 place-items-center rounded-full ${on ? 'is-on' : ''}`}>{on && <CheckIcon className="h-3 w-3" />}</span>
+                  </span>
+                  <span className="text-[14px] font-extrabold">{t(`adStudio.goal.${k}`)}</span>
+                  <span className="bz-ad-muted text-[11.5px] leading-snug">{t(`adStudio.w.goalShort.${k}`)}</span>
+                </button>
+              );
+            })}
+          </div>
+          <p className="bz-ad-soft rounded-2xl px-3.5 py-2.5 text-[12px] leading-relaxed">{t(`adStudio.b.goalWhat.${goal}`)}</p>
+        </div>
+
+        <div className="bz-ad-card space-y-3 rounded-3xl p-4">
+          <p className="flex items-center gap-1.5 text-[14px] font-extrabold">{t('adStudio.w.toneQ')} <Tip text={t('adStudio.tone.tip')} /></p>
+          <div className="grid grid-cols-3 gap-2">
+            {TONES.map((k) => (
+              <button key={k} type="button" disabled={live} onClick={() => setTone(k)} aria-pressed={tone === k}
+                className={`bz-ad-chip app-tap flex flex-col items-center gap-1 rounded-2xl px-2 py-3 text-center ${tone === k ? 'is-on' : ''}`}>
+                <span className="text-lg" aria-hidden>{{ warm: '🤍', luxury: '✨', playful: '🎈' }[k]}</span>
+                <span className="text-[12px] font-bold leading-tight">{t(`adStudio.tone.${k}`)}</span>
               </button>
             ))}
           </div>
-          <p className="mt-2 text-[11px] leading-relaxed text-stone-400">{t(`adStudio.b.goalWhat.${goal}`)}</p>
-        </Field>
+          {!data.smart && (
+            <p className="bz-ad-note flex items-start gap-2 rounded-xl px-3.5 py-2.5 text-[12px] font-semibold leading-relaxed">
+              <WarnIcon className="mt-px h-4 w-4 shrink-0" /> {t('adStudio.freeMode')}
+            </p>
+          )}
+        </div>
 
-        <Field label={t('adStudio.tone.label')} tip={t('adStudio.tone.tip')}>
-          <Select value={tone} onChange={setTone} options={['warm', 'luxury', 'playful'].map((k) => ({ value: k, label: t(`adStudio.tone.${k}`) }))} />
-        </Field>
-
-        {!live && (
-          <button onClick={generate} disabled={!productId || Boolean(busy)} className="btn-primary w-full gap-2 disabled:opacity-50">
-            <SparkleIcon className="h-5 w-5" /> {busy === 'gen' ? t('adStudio.generating') : gen ? t('adStudio.b.regenerate') : t('adStudio.generate')}
-          </button>
-        )}
-        {!data.smart && (
-          <p className="flex items-start gap-2 rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-2.5 text-xs font-semibold leading-relaxed text-amber-300">
-            <WarnIcon className="mt-px h-4 w-4 shrink-0" /> {t('adStudio.freeMode')}
-          </p>
-        )}
-      </div>
+      </section>
 
       {gen && copy && (
         <>
-          {/* ═══ ٢ · النصّ ═══ */}
-          <div className={CARD}>
-            <SectionHead icon={<SparkleIcon className="h-5 w-5" />} title={t('adStudio.copy.title')} desc={t('adStudio.copy.desc')} />
-            <div className="space-y-2">
-              {gen.copies.map((c, i) => (
-                <button
-                  key={i} type="button" onClick={() => setChosen(i)}
-                  className={`block w-full rounded-2xl border p-4 text-start transition ${chosen === i ? 'border-[#999795] bg-gold-400/10' : 'border-gold-400/15 bg-black/20 hover:border-gold-400/40'}`}
-                >
-                  <span className="flex items-center justify-between gap-2">
-                    <span className="truncate text-sm font-extrabold text-stone-100">{c.headline}</span>
-                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${chosen === i ? 'bg-[#999795] text-[#313130]' : 'bg-gold-400/10 text-gold-200'}`}>
-                      {t('adStudio.copy.n', { n: i + 1 })}
+          {/* ═══ ٣ · النصّ ═══ */}
+          <section hidden={step !== 2} className="space-y-4">
+            <div className="space-y-2.5">
+              {gen.copies.map((c, i) => {
+                const on = chosen === i;
+                return (
+                  <button key={i} type="button" onClick={() => setChosen(i)} aria-pressed={on}
+                    className={`bz-ad-variant app-tap block w-full rounded-3xl p-4 text-start ${on ? 'is-on' : ''}`}>
+                    <span className="flex items-center gap-2.5">
+                      <span className={`bz-ad-radio grid h-5 w-5 shrink-0 place-items-center rounded-full ${on ? 'is-on' : ''}`}>{on && <CheckIcon className="h-3 w-3" />}</span>
+                      <span className="bz-ad-muted text-[11px] font-extrabold">{t('adStudio.copy.n', { n: i + 1 })}</span>
                     </span>
-                  </span>
-                  <span className="mt-1.5 line-clamp-3 block whitespace-pre-wrap text-xs leading-relaxed text-stone-300">{c.primary}</span>
-                </button>
-              ))}
+                    <span className="mt-2 block text-[15px] font-extrabold leading-snug">{c.headline}</span>
+                    <span className="bz-ad-muted mt-1.5 line-clamp-3 block whitespace-pre-wrap text-[12.5px] leading-relaxed">{c.primary}</span>
+                  </button>
+                );
+              })}
             </div>
 
-            <Field label={t('adStudio.copy.headline')} tip={t('adStudio.copy.headlineTip')} max={60} value={copy.headline}>
-              <input className="input" maxLength={60} value={copy.headline} disabled={live} onChange={(e) => patchCopy(chosen, { headline: e.target.value })} />
-            </Field>
-            <Field label={t('adStudio.copy.primary')} tip={t('adStudio.copy.primaryTip')} max={600} value={copy.primary}>
-              <textarea className="input resize-none" rows={5} maxLength={600} value={copy.primary} disabled={live} onChange={(e) => patchCopy(chosen, { primary: e.target.value })} />
-            </Field>
-
-            {copy.hashtags?.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {copy.hashtags.map((h, i) => (
-                  <span key={i} className="rounded-full border border-gold-400/25 bg-gold-400/5 px-2.5 py-1 text-[11px] font-semibold text-stone-300">{h}</span>
-                ))}
-              </div>
-            )}
+            <div className="bz-ad-card space-y-3 rounded-3xl p-4">
+              <p className="flex items-center gap-1.5 text-[13px] font-extrabold"><EditIcon className="h-4 w-4" /> {t('adStudio.w.editChosen', { n: chosen + 1 })}</p>
+              <label className="block">
+                <span className="bz-ad-muted flex items-center justify-between text-[12px] font-bold">
+                  <span className="flex items-center gap-1.5">{t('adStudio.copy.headline')} <Tip text={t('adStudio.copy.headlineTip')} /></span>
+                  <span className={`tabular-nums ${copy.headline.length > 40 ? 'bz-ad-warn-t' : ''}`}>{copy.headline.length}/60</span>
+                </span>
+                <input className="bz-ad-input mt-1 w-full rounded-xl px-3.5 py-2.5 text-[14px] font-bold" maxLength={60} value={copy.headline} disabled={live} onChange={(e) => patchCopy(chosen, { headline: e.target.value })} />
+              </label>
+              <label className="block">
+                <span className="bz-ad-muted flex items-center justify-between text-[12px] font-bold">
+                  <span className="flex items-center gap-1.5">{t('adStudio.copy.primary')} <Tip text={t('adStudio.copy.primaryTip')} /></span>
+                  <span className="tabular-nums">{copy.primary.length}/600</span>
+                </span>
+                <textarea className="bz-ad-input mt-1 w-full resize-none rounded-xl px-3.5 py-2.5 text-[13.5px] leading-relaxed" rows={6} maxLength={600} value={copy.primary} disabled={live} onChange={(e) => patchCopy(chosen, { primary: e.target.value })} />
+              </label>
+              {copy.hashtags?.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {copy.hashtags.map((h, i) => <span key={i} className="bz-ad-tag rounded-full px-2.5 py-1 text-[11.5px] font-bold" dir="auto">{h}</span>)}
+                </div>
+              )}
+              <CopyButton text={`${copy.primary}\n\n${(copy.hashtags || []).join(' ')}`.trim()} label={t('adStudio.copy.copyAll')} done={t('common.copied')} />
+            </div>
 
             {gen.copies.length > 1 && (
-              <Toggle
-                on={settings.abTest} disabled={live}
-                onChange={(v) => setSettings((s) => ({ ...s, abTest: v }))}
-                label={t('adStudio.b.abTest')} hint={t('adStudio.b.abTestHint')}
-              />
+              <Toggle on={settings.abTest} disabled={live} onChange={(v) => setSettings((s) => ({ ...s, abTest: v }))}
+                label={t('adStudio.b.abTest')} hint={t('adStudio.b.abTestHint')} />
             )}
+            {!live && (
+              <button type="button" onClick={() => goTo(1)} className="bz-ad-link mx-auto flex items-center gap-1.5 text-[12.5px] font-bold">
+                <SparkleIcon className="h-4 w-4" /> {t('adStudio.w.rewrite')}
+              </button>
+            )}
+          </section>
 
-            <CopyButton text={`${copy.primary}\n\n${(copy.hashtags || []).join(' ')}`.trim()} label={t('adStudio.copy.copyAll')} done={t('common.copied')} />
-          </div>
-
-          {/* ═══ ٣ · الصورة أو الفيديو ═══ */}
-          <CreativeCard
-            product={product} store={data.store} headline={copy.headline} sub={copy.cta} facts={gen.facts}
-            creative={creative} setCreative={setCreative} settings={settings} setSettings={setSettings}
-            canvasRef={canvasRef} onRendered={setImageUrl} onError={setErr} live={live}
-          />
-
-          {/* ═══ ٤ · الجمهور ═══ */}
-          <AudienceCard gen={gen} setGen={setGen} goal={goal} settings={settings} setSettings={setSettings} publishing={publishing} live={live} />
-
-          {/* ═══ ٥ · الميزانية والموعد ═══ */}
-          <BudgetCard gen={gen} setGen={setGen} settings={settings} setSettings={setSettings} currency={publishing.currency} live={live} />
-
-          {/* ═══ ٦ · المعاينة والفحص ═══ */}
-          <div className={CARD}>
-            <SectionHead icon={<EyeIcon className="h-5 w-5" />} title={t('adStudio.pv.title')} desc={t('adStudio.pv.desc')} />
-            <AdPreview
-              goal={goal} format={settings.format} size={creative.size}
-              image={imageUrl || (product?.image ? cldThumb(product.image, 720) : '')}
-              video={product?.video} copy={copy} store={data.store}
-              igHandle={data.store?.igUsername}
-              link={product ? `${siteOrigin()}/store/${data.store?.slug}/product/${product.id}` : storeUrl(data.store?.slug || '')}
+          {/* ═══ ٤ · التصميم ═══ */}
+          <section hidden={step !== 3}>
+            <CreativeCard
+              product={product} store={data.store} headline={copy.headline} sub={copy.cta} facts={gen.facts}
+              creative={creative} setCreative={setCreative} settings={settings} setSettings={setSettings}
+              canvasRef={canvasRef} onRendered={setImageUrl} onError={setErr} live={live}
             />
-          </div>
+          </section>
 
-          <div className={CARD}>
-            <SectionHead icon={<CheckIcon className="h-5 w-5" />} title={t('adStudio.chk.title')} desc={t('adStudio.chk.desc')} />
-            {checks.length === 0 ? (
-              <p className="flex items-center gap-2 text-sm font-semibold text-emerald-300"><CheckIcon className="h-4 w-4" /> {t('adStudio.chk.allGood')}</p>
-            ) : (
-              <ul className="space-y-1.5">
-                {checks.map((c) => (
-                  <li key={c.key} className={`flex items-start gap-2 rounded-xl px-3 py-2 text-xs leading-relaxed ${
-                    c.level === 'error' ? 'bg-red-500/10 text-red-300' : c.level === 'warn' ? 'bg-amber-500/10 text-amber-300' : 'bg-black/20 text-stone-300'
-                  }`}>
-                    {c.level === 'tip' ? <HelpIcon className="mt-px h-4 w-4 shrink-0" /> : <WarnIcon className="mt-px h-4 w-4 shrink-0" />}
-                    <span>{t(`adStudio.chk.${c.key}`, c.params)}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          {/* ═══ ٥ · الجمهور والميزانية ═══ */}
+          <section hidden={step !== 4} className="space-y-4">
+            <AudienceCard gen={gen} setGen={setGen} goal={goal} settings={settings} setSettings={setSettings} publishing={publishing} live={live} />
+            <BudgetCard gen={gen} setGen={setGen} settings={settings} setSettings={setSettings} currency={publishing.currency} live={live} />
+          </section>
 
-          {!live && (
-            <div className={`${CARD} !space-y-3`}>
-              {publishing.enabled && (
-                <>
-                  <button onClick={publish} disabled={Boolean(busy) || blocked || !publishing.accountId} className="btn-primary w-full gap-2 disabled:opacity-50">
-                    <MegaphoneIcon className="h-5 w-5" /> {busy === 'publish' ? t('adStudio.b.publishing') : t('adStudio.b.publish')}
-                  </button>
-                  <Tip text={t(publishing.accountId ? 'adStudio.b.publishTip' : 'adStudio.b.needAccount')} />
-                </>
-              )}
-              <div className="flex flex-wrap gap-2">
-                <button onClick={() => saveAndBack('ready')} disabled={Boolean(busy)} className={`${publishing.enabled ? 'btn-ghost' : 'btn-primary'} flex-1 gap-2 disabled:opacity-50`}>
-                  <CheckIcon className="h-5 w-5" /> {editingId ? t('adStudio.update') : t('adStudio.saveReady')}
-                </button>
-                <button onClick={() => saveAndBack('draft')} disabled={Boolean(busy)} className="btn-ghost flex-1">{t('adStudio.saveDraft')}</button>
-              </div>
+          {/* ═══ ٦ · المعاينة والنشر ═══ */}
+          <section hidden={step !== 5} className="space-y-4">
+            <Summary t={t} product={product} copy={copy} goal={goal} gen={gen} settings={settings} goTo={goTo} live={live} />
+
+            <div className="bz-ad-card rounded-3xl p-4">
+              <AdPreview
+                goal={goal} format={settings.format} size={creative.size}
+                image={imageUrl || (product?.image ? cldThumb(product.image, 720) : '')}
+                video={product?.video} copy={copy} store={data.store}
+                igHandle={data.store?.igUsername}
+                link={product ? `${siteOrigin()}/store/${data.store?.slug}/product/${product.id}` : storeUrl(data.store?.slug || '')}
+              />
             </div>
-          )}
+
+            <div className="bz-ad-card space-y-3 rounded-3xl p-4">
+              <p className="text-[14px] font-extrabold">{t('adStudio.chk.title')}</p>
+              {checks.length === 0 ? (
+                <p className="bz-ad-ok flex items-center gap-2 rounded-2xl px-3.5 py-3 text-[13px] font-bold"><CheckIcon className="h-4 w-4" /> {t('adStudio.chk.allGood')}</p>
+              ) : (
+                <ul className="space-y-1.5">
+                  {checks.map((c) => (
+                    <li key={c.key} className={`bz-ad-chk is-${c.level} flex items-start gap-2.5 rounded-2xl px-3.5 py-2.5 text-[12.5px] leading-relaxed`}>
+                      {c.level === 'tip' ? <HelpIcon className="mt-px h-4 w-4 shrink-0" /> : <WarnIcon className="mt-px h-4 w-4 shrink-0" />}
+                      <span>{t(`adStudio.chk.${c.key}`, c.params)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {!live && (
+              <div className="bz-ad-card space-y-2.5 rounded-3xl p-4">
+                {publishing.enabled && (
+                  <>
+                    <button onClick={publish} disabled={Boolean(busy) || blocked || !publishing.accountId} className="bz-ad-primary app-tap flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-[15px] font-extrabold disabled:opacity-50">
+                      <MegaphoneIcon className="h-5 w-5" /> {busy === 'publish' ? t('adStudio.b.publishing') : t('adStudio.b.publish')}
+                    </button>
+                    <p className="bz-ad-muted text-center text-[11.5px] leading-relaxed">{t(publishing.accountId ? 'adStudio.b.publishTip' : 'adStudio.b.needAccount')}</p>
+                  </>
+                )}
+                <div className="grid grid-cols-2 gap-2">
+                  <button onClick={() => saveAndBack('ready')} disabled={Boolean(busy)} className={`${publishing.enabled ? 'bz-ad-ghost' : 'bz-ad-primary'} app-tap flex items-center justify-center gap-1.5 rounded-2xl py-3 text-[13px] font-extrabold disabled:opacity-50`}>
+                    <CheckIcon className="h-4 w-4" /> {editingId ? t('adStudio.update') : t('adStudio.saveReady')}
+                  </button>
+                  <button onClick={() => saveAndBack('draft')} disabled={Boolean(busy)} className="bz-ad-ghost app-tap rounded-2xl py-3 text-[13px] font-bold disabled:opacity-50">{t('adStudio.saveDraft')}</button>
+                </div>
+              </div>
+            )}
+          </section>
         </>
       )}
+
+      {/* ═══ السابق / التالي — تحتَ الإبهام ═══ */}
+      <div className="bz-ad-navbar sticky z-30 flex items-center gap-2 rounded-2xl p-2" style={{ bottom: 'calc(env(safe-area-inset-bottom) + 92px)' }}>
+        <button type="button" onClick={() => (step ? goTo(step - 1) : onBack())} className="bz-ad-ghost app-tap flex h-12 items-center gap-1 rounded-xl px-4 text-[13px] font-bold">
+          <BackIcon className="h-4 w-4" /> {step ? t('adStudio.w.prev') : t('adStudio.w.cancel')}
+        </button>
+        {step === 1 && !live ? (
+          <button type="button" onClick={generate} disabled={!productId || Boolean(busy)} className="bz-ad-primary app-tap flex h-12 flex-1 items-center justify-center gap-2 rounded-xl text-[14px] font-extrabold disabled:opacity-50">
+            <SparkleIcon className="h-5 w-5" /> {busy === 'gen' ? t('adStudio.generating') : gen ? t('adStudio.b.regenerate') : t('adStudio.w.writeIt')}
+          </button>
+        ) : !isLast ? (
+          <button type="button" onClick={() => goTo(step + 1)} disabled={!nextOk || !reachable(step + 1)} className="bz-ad-primary app-tap flex h-12 flex-1 items-center justify-center gap-2 rounded-xl text-[14px] font-extrabold disabled:opacity-50">
+            {t(`adStudio.w.next.${STEPS[step + 1]}`)} <ForwardIcon className="h-4 w-4" />
+          </button>
+        ) : (
+          <span className="bz-ad-muted flex-1 text-center text-[12px] font-semibold">{live ? t('adStudio.w.liveEnd') : t('adStudio.w.lastHint')}</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ───────────────────── «عم نكتب…» ─────────────────────
+function Writing({ t }) {
+  return (
+    <div className="bz-ad-writing space-y-3 rounded-3xl p-4" role="status" aria-live="polite">
+      <p className="flex items-center gap-2 text-[13px] font-extrabold"><SparkleIcon className="bz-ad-spin h-4 w-4" /> {t('adStudio.w.writing')}</p>
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="space-y-1.5">
+          <span className="bz-ad-shimmer block h-3.5 w-2/3 rounded-full" />
+          <span className="bz-ad-shimmer block h-2.5 w-full rounded-full" />
+          <span className="bz-ad-shimmer block h-2.5 w-5/6 rounded-full" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ───────────────────── ملخّصُ الحملةِ قبلَ النشر ─────────────────────
+function Summary({ t, product, copy, goal, gen, settings, goTo, live }) {
+  const a = gen.audience || {};
+  const rows = [
+    { k: 'goal', step: 1, v: t(`adStudio.goal.${goal}`) },
+    { k: 'copy', step: 2, v: copy.headline },
+    { k: 'design', step: 3, v: t(settings.format === 'video' ? 'adStudio.b.fmtVideo' : 'adStudio.b.fmtImage') },
+    { k: 'audience', step: 4, v: `${t(`adStudio.target.g.${a.genders || 'female'}`)} · ${a.ageMin ?? 18}–${a.ageMax ?? 45} · ${(a.cities || []).length ? a.cities.slice(0, 2).join('، ') + ((a.cities.length > 2) ? ` +${a.cities.length - 2}` : '') : t('adStudio.b.allPalestine')}` },
+    { k: 'budget', step: 4, v: t('adStudio.w.budgetLine', { per: gen.budget, days: gen.days, total: (Number(gen.budget) || 0) * (Number(gen.days) || 0) }) },
+  ];
+  return (
+    <div className="bz-ad-card overflow-hidden rounded-3xl">
+      <div className="flex items-center gap-3 p-4">
+        <span className="h-14 w-14 shrink-0 overflow-hidden rounded-2xl">{product?.image ? <img src={cldThumb(product.image, 160)} alt="" className="h-full w-full object-cover" /> : null}</span>
+        <div className="min-w-0 flex-1">
+          <p className="bz-ad-muted text-[11px] font-bold">{t('adStudio.w.summary')}</p>
+          <p className="truncate text-[15px] font-extrabold">{product?.name}</p>
+        </div>
+      </div>
+      <ul>
+        {rows.map((r) => (
+          <li key={r.k} className="bz-ad-row flex items-center gap-3 px-4 py-2.5">
+            <span className="bz-ad-muted w-20 shrink-0 text-[12px] font-bold">{r.k === 'budget' ? t('adStudio.w.budgetShort') : t(`adStudio.w.s.${r.k}.short`)}</span>
+            <span className="min-w-0 flex-1 truncate text-[13px] font-bold">{r.v}</span>
+            {!live && <button type="button" onClick={() => goTo(r.step)} className="bz-ad-link shrink-0 text-[12px] font-bold">{t('adStudio.w.change')}</button>}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -285,36 +447,35 @@ function ProductPicker({ products, value, onChange, disabled }) {
     const all = s ? products.filter((p) => p.name.toLowerCase().includes(s)) : products;
     // القطعةُ المختارةُ تبقى ظاهرةً ولو لم تطابقِ البحث
     const picked = products.find((p) => p.id === value);
-    const top = all.slice(0, 15);
-    return picked && !top.includes(picked) ? [picked, ...top.slice(0, 14)] : top;
+    const top = all.slice(0, 24);
+    return picked && !top.includes(picked) ? [picked, ...top.slice(0, 23)] : top;
   }, [products, q, value]);
 
-  if (!products.length) return <p className="py-4 text-center text-sm text-stone-400">{t('adStudio.pick.empty')}</p>;
+  if (!products.length) return <p className="bz-ad-muted py-6 text-center text-sm">{t('adStudio.pick.empty')}</p>;
   return (
-    <div className="space-y-2">
-      {products.length > 10 && (
-        <label className="flex items-center gap-2 rounded-xl border border-gold-400/20 bg-black/20 px-3">
-          <SearchIcon className="h-4 w-4 shrink-0 text-stone-400" />
-          <input className="w-full bg-transparent py-2.5 text-sm text-stone-100 outline-none placeholder:text-stone-500" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('adStudio.b.searchProduct')} />
+    <div className="space-y-3">
+      {products.length > 6 && (
+        <label className="bz-ad-input flex items-center gap-2 rounded-xl px-3">
+          <SearchIcon className="h-4 w-4 shrink-0 opacity-50" />
+          <input className="w-full bg-transparent py-2.5 text-sm outline-none" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('adStudio.b.searchProduct')} />
         </label>
       )}
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+      <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4">
         {list.map((p) => {
           const on = p.id === value;
           return (
-            <button
-              key={p.id} type="button" disabled={disabled} onClick={() => onChange(p.id)}
-              className={`group overflow-hidden rounded-2xl border text-start transition disabled:cursor-default ${on ? 'border-[#999795] ring-2 ring-[#999795]' : 'border-gold-400/20 hover:border-gold-400/50'}`}
-            >
-              <span className="dash-avatar relative block aspect-square w-full overflow-hidden">
+            <button key={p.id} type="button" disabled={disabled} onClick={() => onChange(p.id)} aria-pressed={on}
+              className={`bz-ad-piece app-tap group relative overflow-hidden rounded-2xl text-start disabled:cursor-default ${on ? 'is-on' : ''}`}>
+              <span className="relative block aspect-[4/5] w-full overflow-hidden">
                 {p.image
-                  ? <img src={cldThumb(p.image, 240)} alt="" className="h-full w-full object-cover" />
-                  : <span className="flex h-full w-full items-center justify-center"><ImageIcon className="h-5 w-5 text-stone-500" /></span>}
-                {p.video && <span className="absolute bottom-1 end-1 grid h-5 w-5 place-items-center rounded-md bg-black/60 text-cream"><VideoIcon className="h-3 w-3" /></span>}
-              </span>
-              <span className="block px-2 py-1.5">
-                <span className="block truncate text-[11px] font-bold text-stone-200">{p.name}</span>
-                <span className="block text-[10px] tabular-nums text-stone-400">₪{p.price}</span>
+                  ? <img src={cldThumb(p.image, 300)} alt="" className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+                  : <span className="flex h-full w-full items-center justify-center"><ImageIcon className="h-5 w-5 opacity-40" /></span>}
+                {p.video && <span className="absolute start-1.5 top-1.5 inline-flex items-center gap-0.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[9.5px] font-bold text-white"><VideoIcon className="h-3 w-3" /></span>}
+                <span className={`bz-ad-piece-check absolute end-1.5 top-1.5 grid h-6 w-6 place-items-center rounded-full ${on ? 'is-on' : ''}`}>{on && <CheckIcon className="h-3.5 w-3.5" />}</span>
+                <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 pb-1.5 pt-6 text-white">
+                  <span className="block truncate text-[11px] font-bold">{p.name}</span>
+                  <span className="block text-[10.5px] font-bold tabular-nums opacity-90">₪{p.price}</span>
+                </span>
               </span>
             </button>
           );
@@ -324,7 +485,19 @@ function ProductPicker({ products, value, onChange, disabled }) {
   );
 }
 
-// ───────────────────── الوسيطة ─────────────────────
+// رسمٌ تخطيطيٌّ لكلِّ قالب — يُرى الفرقُ قبلَ الضغط
+function TemplateGlyph({ k }) {
+  return (
+    <svg viewBox="0 0 40 40" className="h-12 w-12" aria-hidden="true">
+      {k === 'bold' && (<><rect x="2" y="2" width="36" height="36" rx="6" className="bz-ad-g-img" /><rect x="7" y="24" width="20" height="3.5" rx="1.5" className="bz-ad-g-ink-on" /><rect x="7" y="30" width="12" height="3" rx="1.5" className="bz-ad-g-ink-on" opacity=".7" /></>)}
+      {k === 'soft' && (<><rect x="2" y="2" width="36" height="36" rx="6" className="bz-ad-g-panel" /><rect x="2" y="2" width="36" height="22" rx="6" className="bz-ad-g-img" /><rect x="8" y="28" width="22" height="3" rx="1.5" className="bz-ad-g-ink" /><rect x="8" y="33" width="14" height="2.5" rx="1.25" className="bz-ad-g-ink" opacity=".6" /></>)}
+      {k === 'split' && (<><rect x="2" y="2" width="36" height="36" rx="6" className="bz-ad-g-panel" /><rect x="20" y="2" width="18" height="36" rx="6" className="bz-ad-g-img" /><rect x="5" y="13" width="12" height="3" rx="1.5" className="bz-ad-g-ink" /><rect x="5" y="19" width="9" height="5" rx="1.5" className="bz-ad-g-ink" /><rect x="5" y="27" width="10" height="2.5" rx="1.25" className="bz-ad-g-ink" opacity=".6" /></>)}
+    </svg>
+  );
+}
+const SIZE_BOX = { square: [26, 26], story: [18, 32], wide: [34, 18] };
+
+// ───────────────────── التصميم ─────────────────────
 function CreativeCard({ product, store, headline, sub, facts, creative, setCreative, settings, setSettings, canvasRef, onRendered, onError, live }) {
   const { t } = useTranslation();
   const [drawing, setDrawing] = useState(false);
@@ -368,65 +541,80 @@ function CreativeCard({ product, store, headline, sub, facts, creative, setCreat
   };
 
   const pick = (k, v) => setCreative((c) => ({ ...c, [k]: v }));
+  const badges = [
+    facts?.sale ? t('adStudio.badgeSale', { n: facts.sale.off }) : null,
+    t('adStudio.badgeNew'), t('adStudio.w.badgeHot'), t('adStudio.w.badgeLimited'),
+  ].filter(Boolean);
 
   return (
-    <div className={CARD}>
-      <SectionHead icon={<ImageIcon className="h-5 w-5" />} title={t('adStudio.b.mediaTitle')} desc={t('adStudio.b.mediaDesc')} />
+    <div className="space-y-4">
+      {/* اللوحةُ أوّلاً وكبيرةً: هي ما سيراه الناس */}
+      <div className="bz-ad-stage relative flex justify-center rounded-3xl p-5">
+        <canvas ref={canvasRef} className={`h-auto w-full max-w-[300px] rounded-2xl shadow-xl transition-opacity ${drawing ? 'opacity-60' : 'opacity-100'}`} />
+        {isVideo && <span className="absolute start-4 top-4 inline-flex items-center gap-1 rounded-full bg-black/65 px-2.5 py-1 text-[11px] font-bold text-white"><VideoIcon className="h-3.5 w-3.5" /> {t('adStudio.b.coverCaption')}</span>}
+      </div>
 
-      <Field label={t('adStudio.b.format')} tip={t('adStudio.b.formatTip')}>
-        <div className="grid grid-cols-2 gap-2">
-          <button type="button" disabled={live} onClick={() => setSettings((s) => ({ ...s, format: 'image' }))} className={`${chip(!isVideo)} inline-flex items-center justify-center gap-1.5`}>
-            <ImageIcon className="h-4 w-4" /> {t('adStudio.b.fmtImage')}
-          </button>
-          <button type="button" disabled={live || !product?.video} onClick={() => setSettings((s) => ({ ...s, format: 'video' }))} className={`${chip(isVideo)} inline-flex items-center justify-center gap-1.5 disabled:opacity-40`}>
-            <VideoIcon className="h-4 w-4" /> {t('adStudio.b.fmtVideo')}
-          </button>
+      <div className="bz-ad-card space-y-4 rounded-3xl p-4">
+        <div>
+          <p className="flex items-center gap-1.5 text-[13px] font-extrabold">{t('adStudio.b.format')} <Tip text={t('adStudio.b.formatTip')} /></p>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <button type="button" disabled={live} onClick={() => setSettings((s) => ({ ...s, format: 'image' }))} className={`bz-ad-chip app-tap flex items-center justify-center gap-2 rounded-2xl py-3 text-[13px] font-bold ${!isVideo ? 'is-on' : ''}`}>
+              <ImageIcon className="h-4 w-4" /> {t('adStudio.b.fmtImage')}
+            </button>
+            <button type="button" disabled={live || !product?.video} onClick={() => setSettings((s) => ({ ...s, format: 'video' }))} className={`bz-ad-chip app-tap flex items-center justify-center gap-2 rounded-2xl py-3 text-[13px] font-bold disabled:opacity-40 ${isVideo ? 'is-on' : ''}`}>
+              <VideoIcon className="h-4 w-4" /> {t('adStudio.b.fmtVideo')}
+            </button>
+          </div>
+          <p className="bz-ad-muted mt-1.5 text-[11.5px]">{isVideo ? t('adStudio.b.videoNote') : !product?.video ? t('adStudio.b.noVideo') : t('adStudio.w.videoAvail')}</p>
         </div>
-        {!product?.video && <p className="mt-1.5 text-[11px] text-stone-500">{t('adStudio.b.noVideo')}</p>}
-      </Field>
 
-      {isVideo && (
-        <p className={`${BOX} text-xs leading-relaxed text-stone-300`}>{t('adStudio.b.videoNote')}</p>
-      )}
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label={t(isVideo ? 'adStudio.b.coverTemplate' : 'adStudio.creative.template')} tip={t('adStudio.creative.templateTip')}>
-          <div className="grid grid-cols-3 gap-2">
+        <div>
+          <p className="flex items-center gap-1.5 text-[13px] font-extrabold">{t(isVideo ? 'adStudio.b.coverTemplate' : 'adStudio.creative.template')} <Tip text={t('adStudio.creative.templateTip')} /></p>
+          <div className="mt-2 grid grid-cols-3 gap-2">
             {AD_TEMPLATES.map((k) => (
-              <button key={k} type="button" onClick={() => pick('template', k)} className={`${chip(creative.template === k)} !px-2 !py-2 !text-[11px]`}>
-                {t(`adStudio.creative.tpl.${k}`)}
+              <button key={k} type="button" onClick={() => pick('template', k)} aria-pressed={creative.template === k}
+                className={`bz-ad-chip app-tap flex flex-col items-center gap-1.5 rounded-2xl py-3 ${creative.template === k ? 'is-on' : ''}`}>
+                <TemplateGlyph k={k} />
+                <span className="text-[12px] font-bold">{t(`adStudio.creative.tpl.${k}`)}</span>
               </button>
             ))}
           </div>
-        </Field>
-        <Field label={t('adStudio.creative.size')} tip={t('adStudio.creative.sizeTip')}>
-          <div className="grid grid-cols-3 gap-2">
-            {SIZES.map((k) => (
-              <button key={k} type="button" onClick={() => pick('size', k)} className={`${chip(creative.size === k)} !px-2 !py-2 !text-[11px]`}>
-                {t(`adStudio.creative.sz.${k}`)}
-              </button>
-            ))}
-          </div>
-        </Field>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label={t('adStudio.creative.badge')} tip={t('adStudio.creative.badgeTip')} max={24} value={creative.badge}>
-          <input className="input" maxLength={24} value={creative.badge} onChange={(e) => pick('badge', e.target.value)} />
-        </Field>
-        <div className="flex items-end">
-          <Toggle on={creative.showPrice} onChange={(v) => pick('showPrice', v)} label={t('adStudio.creative.showPrice')} />
         </div>
-      </div>
 
-      <div className={`${BOX} flex justify-center`}>
-        <canvas ref={canvasRef} className={`h-auto w-full max-w-[280px] rounded-xl transition-opacity ${drawing ? 'opacity-60' : 'opacity-100'}`} />
-      </div>
-      {isVideo && <p className="text-center text-[11px] text-stone-500">{t('adStudio.b.coverCaption')}</p>}
+        <div>
+          <p className="flex items-center gap-1.5 text-[13px] font-extrabold">{t('adStudio.creative.size')} <Tip text={t('adStudio.creative.sizeTip')} /></p>
+          <div className="mt-2 grid grid-cols-3 gap-2">
+            {SIZES.map((k) => {
+              const [w, h] = SIZE_BOX[k] || [26, 26];
+              return (
+                <button key={k} type="button" onClick={() => pick('size', k)} aria-pressed={creative.size === k}
+                  className={`bz-ad-chip app-tap flex flex-col items-center gap-1.5 rounded-2xl py-3 ${creative.size === k ? 'is-on' : ''}`}>
+                  <span className="grid h-9 place-items-center"><span className="bz-ad-sizebox block rounded-[4px]" style={{ width: w, height: h }} /></span>
+                  <span className="text-[12px] font-bold">{t(`adStudio.creative.sz.${k}`)}</span>
+                  <span className="bz-ad-muted text-[10px] font-bold tabular-nums" dir="ltr">{AD_SIZES[k].ar}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-      <button onClick={download} className="btn-ghost w-full gap-2">
-        <DownloadIcon className="h-5 w-5" /> {t('adStudio.creative.download')}
-      </button>
+        <div>
+          <p className="flex items-center gap-1.5 text-[13px] font-extrabold">{t('adStudio.creative.badge')} <Tip text={t('adStudio.creative.badgeTip')} /></p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            <button type="button" onClick={() => pick('badge', '')} className={`bz-ad-chip app-tap rounded-full px-3 py-1.5 text-[12px] font-bold ${!creative.badge ? 'is-on' : ''}`}>{t('adStudio.w.noBadge')}</button>
+            {badges.map((b) => (
+              <button key={b} type="button" onClick={() => pick('badge', b)} className={`bz-ad-chip app-tap rounded-full px-3 py-1.5 text-[12px] font-bold ${creative.badge === b ? 'is-on' : ''}`}>{b}</button>
+            ))}
+          </div>
+          <input className="bz-ad-input mt-2 w-full rounded-xl px-3.5 py-2.5 text-[13px]" maxLength={24} value={creative.badge} placeholder={t('adStudio.w.badgeCustom')} onChange={(e) => pick('badge', e.target.value)} />
+        </div>
+
+        <Toggle on={creative.showPrice} onChange={(v) => pick('showPrice', v)} label={t('adStudio.creative.showPrice')} />
+
+        <button onClick={download} className="bz-ad-ghost app-tap flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-[13px] font-bold">
+          <DownloadIcon className="h-4 w-4" /> {t('adStudio.creative.download')}
+        </button>
+      </div>
     </div>
   );
 }
@@ -458,49 +646,60 @@ function AudienceCard({ gen, setGen, goal, settings, setSettings, publishing, li
   });
 
   return (
-    <div className={CARD}>
-      <SectionHead icon={<UsersIcon className="h-5 w-5" />} title={t('adStudio.b.audTitle')} desc={t('adStudio.target.desc')} />
+    <div className="bz-ad-card space-y-5 rounded-3xl p-4">
+      <p className="flex items-center gap-2 text-[14px] font-extrabold"><UsersIcon className="h-5 w-5" /> {t('adStudio.w.whoSees')}</p>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label={t('adStudio.target.age')} tip={t('adStudio.target.ageTip')}>
-          <div className="flex items-center gap-2">
-            <input type="number" min="18" max="65" disabled={live} className="input w-full text-center tabular-nums" value={a.ageMin ?? 18} onChange={(e) => setA({ ageMin: Number(e.target.value) })} />
-            <span className="shrink-0 text-xs text-stone-400">—</span>
-            <input type="number" min="18" max="65" disabled={live} className="input w-full text-center tabular-nums" value={a.ageMax ?? 45} onChange={(e) => setA({ ageMax: Number(e.target.value) })} />
-          </div>
-        </Field>
-        <Field label={t('adStudio.target.genders')} tip={t('adStudio.target.gendersTip')}>
-          <Select value={a.genders || 'female'} onChange={(v) => !live && setA({ genders: v })} options={['female', 'male', 'all'].map((k) => ({ value: k, label: t(`adStudio.target.g.${k}`) }))} />
-        </Field>
+      <div>
+        <p className="bz-ad-muted flex items-center gap-1.5 text-[12px] font-bold">{t('adStudio.target.genders')} <Tip text={t('adStudio.target.gendersTip')} /></p>
+        <div className="bz-ad-seg mt-1.5 grid grid-cols-3 gap-1 rounded-2xl p-1">
+          {['female', 'male', 'all'].map((k) => (
+            <button key={k} type="button" disabled={live} onClick={() => setA({ genders: k })} aria-pressed={(a.genders || 'female') === k}
+              className={`bz-ad-segbtn rounded-xl py-2 text-[13px] font-bold ${(a.genders || 'female') === k ? 'is-on' : ''}`}>{t(`adStudio.target.g.${k}`)}</button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="bz-ad-muted flex items-center gap-1.5 text-[12px] font-bold">{t('adStudio.target.age')} <Tip text={t('adStudio.target.ageTip')} /></p>
+        <div className="mt-1.5 flex items-center gap-2">
+          <label className="bz-ad-input flex flex-1 items-center gap-2 rounded-xl px-3">
+            <span className="bz-ad-muted text-[11px] font-bold">{t('adStudio.w.from')}</span>
+            <input type="number" min="18" max="65" disabled={live} className="w-full bg-transparent py-2.5 text-center text-[15px] font-extrabold tabular-nums outline-none" value={a.ageMin ?? 18} onChange={(e) => setA({ ageMin: Number(e.target.value) })} />
+          </label>
+          <span className="bz-ad-muted">—</span>
+          <label className="bz-ad-input flex flex-1 items-center gap-2 rounded-xl px-3">
+            <span className="bz-ad-muted text-[11px] font-bold">{t('adStudio.w.to')}</span>
+            <input type="number" min="18" max="65" disabled={live} className="w-full bg-transparent py-2.5 text-center text-[15px] font-extrabold tabular-nums outline-none" value={a.ageMax ?? 45} onChange={(e) => setA({ ageMax: Number(e.target.value) })} />
+          </label>
+        </div>
       </div>
 
       <CityPicker values={a.cities || []} onChange={(v) => setA({ cities: v })} disabled={live} />
 
       <InterestInput values={a.interests || []} onChange={(v) => setA({ interests: v })} suggest={publishing.enabled} disabled={live} />
 
-      <Field label={t('adStudio.b.placements')} tip={t('adStudio.b.placementsTip')}>
+      <div>
+        <p className="bz-ad-muted mb-1.5 flex items-center gap-1.5 text-[12px] font-bold">{t('adStudio.b.placements')} <Tip text={t('adStudio.b.placementsTip')} /></p>
         <Toggle on={auto} disabled={live} onChange={(v) => setSettings((s) => ({ ...s, placements: v ? [] : ['ig_feed', 'ig_story', 'ig_reels', 'fb_feed'] }))}
           label={t('adStudio.b.autoPlacements')} hint={t('adStudio.b.autoPlacementsHint')} />
         {!auto && (
-          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="mt-2 grid grid-cols-2 gap-2">
             {PLACEMENT_KEYS.map((k) => (
-              <button key={k} type="button" disabled={live} onClick={() => togglePlacement(k)} className={`${chip(settings.placements.includes(k))} !py-2 !text-[11px]`}>
+              <button key={k} type="button" disabled={live} onClick={() => togglePlacement(k)} className={`bz-ad-chip app-tap rounded-xl py-2.5 text-[12px] font-bold ${settings.placements.includes(k) ? 'is-on' : ''}`}>
                 {t(`adStudio.b.pl.${k}`)}
               </button>
             ))}
           </div>
         )}
-      </Field>
+      </div>
 
       {publishing.enabled && (
-        <div className={`${BOX} flex flex-wrap items-center justify-between gap-2`}>
-          <span className="flex items-center gap-1.5 text-xs font-medium text-stone-400"><GridIcon className="h-4 w-4" /> {t('adStudio.b.estTitle')}</span>
+        <div className="bz-ad-soft flex flex-wrap items-center justify-between gap-2 rounded-2xl p-3.5">
+          <span className="flex items-center gap-1.5 text-[12.5px] font-bold"><GridIcon className="h-4 w-4" /> {t('adStudio.b.estTitle')}</span>
           {est?.available && est.lower ? (
-            <span className="rounded-full bg-gold-400/10 px-3 py-1 text-sm font-extrabold tabular-nums text-gold-200">
-              {compact(est.lower)} – {compact(est.upper)}
-            </span>
+            <span className="text-[16px] font-extrabold tabular-nums" dir="ltr">{compact(est.lower)} – {compact(est.upper)}</span>
           ) : (
-            <button type="button" onClick={estimate} disabled={estBusy} className="btn-ghost !py-1.5 text-xs">
+            <button type="button" onClick={estimate} disabled={estBusy} className="bz-ad-ghost app-tap rounded-xl px-3 py-1.5 text-[12px] font-bold">
               {estBusy ? t('common.loading') : est ? t('adStudio.b.estFail') : t('adStudio.b.estBtn')}
             </button>
           )}
@@ -517,19 +716,20 @@ function CityPicker({ values, onChange, disabled }) {
   const groups = ['wb', 'quds', 'dakhel'];
   const toggle = (ar) => onChange(values.includes(ar) ? values.filter((x) => x !== ar) : [...values, ar].slice(0, 15));
   return (
-    <Field label={t('adStudio.target.locations')} tip={t('adStudio.b.citiesTip')}>
-      <button type="button" disabled={disabled} onClick={() => onChange([])} className={`${chip(!values.length)} mb-2 inline-flex items-center gap-1.5 !py-2`}>
+    <div>
+      <p className="bz-ad-muted flex items-center gap-1.5 text-[12px] font-bold">{t('adStudio.target.locations')} <Tip text={t('adStudio.b.citiesTip')} /></p>
+      <button type="button" disabled={disabled} onClick={() => onChange([])} className={`bz-ad-chip app-tap mt-1.5 inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[12.5px] font-bold ${!values.length ? 'is-on' : ''}`}>
         <PinIcon className="h-4 w-4" /> {t('adStudio.b.allPalestine')}
       </button>
       {groups.map((g) => (
-        <div key={g} className="mb-2">
-          <p className="mb-1 text-[10px] font-bold text-stone-500">{t(`adStudio.b.grp.${g}`)}</p>
+        <div key={g} className="mt-2.5">
+          <p className="bz-ad-muted mb-1 text-[10.5px] font-extrabold">{t(`adStudio.b.grp.${g}`)}</p>
           <div className="flex flex-wrap gap-1.5">
             {AD_CITIES.filter((c) => c.group === g).map((c) => {
               const on = values.includes(c.ar);
               return (
                 <button key={c.ar} type="button" disabled={disabled} onClick={() => toggle(c.ar)} aria-pressed={on}
-                  className={`rounded-full px-3 py-1.5 text-[11px] font-bold ring-1 transition ${on ? 'bg-wine text-cream ring-wine' : 'text-stone-300 ring-gold-400/25 hover:bg-gold-400/10'}`}>
+                  className={`bz-ad-chip app-tap rounded-full px-3 py-1.5 text-[12px] font-bold ${on ? 'is-on' : ''}`}>
                   {c.ar}
                 </button>
               );
@@ -537,7 +737,7 @@ function CityPicker({ values, onChange, disabled }) {
           </div>
         </div>
       ))}
-    </Field>
+    </div>
   );
 }
 
@@ -563,19 +763,20 @@ function InterestInput({ values, onChange, suggest, disabled }) {
   };
 
   return (
-    <Field label={t('adStudio.target.interests')} tip={t('adStudio.target.interestsTip')}>
-      <div className="relative">
+    <div>
+      <p className="bz-ad-muted flex items-center gap-1.5 text-[12px] font-bold">{t('adStudio.target.interests')} <Tip text={t('adStudio.target.interestsTip')} /></p>
+      <div className="relative mt-1.5">
         <div className="flex gap-2">
-          <input className="input flex-1" value={text} disabled={disabled} onChange={(e) => setText(e.target.value)}
+          <input className="bz-ad-input min-w-0 flex-1 rounded-xl px-3.5 py-2.5 text-[13px]" value={text} disabled={disabled} onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } }} placeholder={t('adStudio.target.chipPlaceholder')} />
-          <button type="button" disabled={disabled} onClick={() => add()} className="btn-ghost shrink-0 px-4 text-xs">{t('common.add')}</button>
+          <button type="button" disabled={disabled} onClick={() => add()} className="bz-ad-ghost app-tap shrink-0 rounded-xl px-4 text-[12.5px] font-bold">{t('common.add')}</button>
         </div>
         {items.length > 0 && (
-          <div className="absolute inset-x-0 top-full z-20 mt-1 max-h-60 overflow-auto rounded-2xl border border-gold-400/25 bg-[#1f1e1d] p-1 shadow-2xl">
+          <div className="bz-ad-pop absolute inset-x-0 top-full z-20 mt-1 max-h-60 overflow-auto rounded-2xl p-1">
             {items.map((it) => (
-              <button key={it.id} type="button" onClick={() => add(it.name)} className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-start text-xs text-stone-200 hover:bg-gold-400/10">
+              <button key={it.id} type="button" onClick={() => add(it.name)} className="bz-ad-popitem flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-start text-[12.5px]">
                 <span className="truncate">{it.name}</span>
-                {it.size && <span className="shrink-0 tabular-nums text-stone-500">{compact(it.size)}</span>}
+                {it.size && <span className="bz-ad-muted shrink-0 tabular-nums">{compact(it.size)}</span>}
               </button>
             ))}
           </div>
@@ -584,10 +785,10 @@ function InterestInput({ values, onChange, suggest, disabled }) {
       {values.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {values.map((v) => (
-            <span key={v} className="inline-flex items-center gap-1 rounded-full border border-gold-400/25 bg-gold-400/5 px-2.5 py-1 text-[11px] font-semibold text-stone-300">
+            <span key={v} className="bz-ad-tag inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-bold">
               {v}
               {!disabled && (
-                <button type="button" onClick={() => onChange(values.filter((x) => x !== v))} className="text-stone-400 transition hover:text-red-300" aria-label={t('common.delete')}>
+                <button type="button" onClick={() => onChange(values.filter((x) => x !== v))} className="opacity-60 transition hover:opacity-100" aria-label={t('common.delete')}>
                   <XIcon className="h-3 w-3" />
                 </button>
               )}
@@ -595,14 +796,16 @@ function InterestInput({ values, onChange, suggest, disabled }) {
           ))}
         </div>
       )}
-    </Field>
+    </div>
   );
 }
 
 // ───────────────────── الميزانية والموعد ─────────────────────
 function BudgetCard({ gen, setGen, settings, setSettings, currency, live }) {
-  const { t } = useTranslation();
-  const total = (Number(gen.budget) || 0) * (Number(gen.days) || 0);
+  const { t, i18n } = useTranslation();
+  const budget = Number(gen.budget) || 0;
+  const days = Number(gen.days) || 0;
+  const total = budget * days;
   const local = (iso) => {
     if (!iso) return '';
     const d = new Date(iso);
@@ -610,49 +813,55 @@ function BudgetCard({ gen, setGen, settings, setSettings, currency, live }) {
     const p = (n) => String(n).padStart(2, '0');
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
   };
-  const end = settings.startAt
-    ? new Date(new Date(settings.startAt).getTime() + (Number(gen.days) || 0) * 86400000)
-    : null;
+  const end = settings.startAt ? new Date(new Date(settings.startAt).getTime() + days * 86400000) : null;
+  const lang = i18n.language === 'en' ? 'en-GB' : 'ar-PS-u-nu-latn';
 
   return (
-    <div className={CARD}>
-      <SectionHead icon={<CashIcon className="h-5 w-5" />} title={t('adStudio.b.budgetTitle')} desc={t('adStudio.b.budgetDesc')} />
+    <div className="bz-ad-card space-y-5 rounded-3xl p-4">
+      <p className="flex items-center gap-2 text-[14px] font-extrabold">{t('adStudio.w.howMuch')} <Tip text={t('adStudio.target.budgetTip')} /></p>
 
-      <Field label={t('adStudio.target.budget')} tip={t('adStudio.target.budgetTip')}>
-        <div className="mb-2 flex flex-wrap gap-1.5">
-          {[15, 25, 40, 60, 100].map((v) => (
+      {/* المجموعُ كبيراً: هو ما سيخرجُ من الحساب */}
+      <div className="bz-ad-total rounded-3xl p-4 text-center">
+        <p className="text-[12px] font-bold opacity-80">{t('adStudio.target.total')}</p>
+        <p className="font-display text-[40px] font-extrabold leading-tight tabular-nums">₪{total.toLocaleString('en-US')}</p>
+        <p className="text-[12.5px] font-semibold opacity-85">{t('adStudio.w.perDayTimes', { per: budget, days })}</p>
+      </div>
+
+      <div>
+        <div className="flex items-baseline justify-between">
+          <p className="bz-ad-muted text-[12px] font-bold">{t('adStudio.w.perDay')}</p>
+          <p className="text-[18px] font-extrabold tabular-nums">₪{budget}</p>
+        </div>
+        <input type="range" min="5" max="200" step="5" disabled={live} value={Math.min(200, Math.max(5, budget))} onChange={(e) => setGen((g) => ({ ...g, budget: Number(e.target.value) }))} className="bz-ad-range mt-2 w-full" />
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {BUDGETS.map((v) => (
             <button key={v} type="button" disabled={live} onClick={() => setGen((g) => ({ ...g, budget: v }))}
-              className={`rounded-full px-3 py-1.5 text-[11px] font-bold tabular-nums ring-1 transition ${Number(gen.budget) === v ? 'bg-wine text-cream ring-wine' : 'text-stone-300 ring-gold-400/25 hover:bg-gold-400/10'}`}>
-              ₪{v}
-            </button>
+              className={`bz-ad-chip app-tap rounded-full px-3 py-1.5 text-[12px] font-bold tabular-nums ${budget === v ? 'is-on' : ''}`}>₪{v}</button>
           ))}
         </div>
-        <input type="number" min="0" disabled={live} className="input tabular-nums" value={gen.budget} onChange={(e) => setGen((g) => ({ ...g, budget: Number(e.target.value) }))} />
-      </Field>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label={t('adStudio.target.days')} tip={t('adStudio.target.daysTip')}>
-          <input type="number" min="1" max="60" disabled={live} className="input tabular-nums" value={gen.days} onChange={(e) => setGen((g) => ({ ...g, days: Number(e.target.value) }))} />
-        </Field>
-        <Field label={t('adStudio.b.start')} tip={t('adStudio.b.startTip')}>
-          <input type="datetime-local" disabled={live} className="input tabular-nums" value={local(settings.startAt)}
-            onChange={(e) => setSettings((s) => ({ ...s, startAt: e.target.value ? new Date(e.target.value).toISOString() : '' }))} />
-        </Field>
       </div>
 
-      <div className={`${BOX} space-y-2`}>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="flex items-center gap-1.5 text-xs font-medium text-stone-400"><CashIcon className="h-4 w-4" /> {t('adStudio.target.total')}</span>
-          <span className="rounded-full bg-gold-400/10 px-3 py-1 text-sm font-extrabold tabular-nums text-gold-200">₪{total}</span>
+      <div>
+        <div className="flex items-baseline justify-between">
+          <p className="bz-ad-muted flex items-center gap-1.5 text-[12px] font-bold">{t('adStudio.target.days')} <Tip text={t('adStudio.target.daysTip')} /></p>
+          <p className="text-[18px] font-extrabold tabular-nums">{t('adStudio.daysN', { n: days })}</p>
         </div>
-        <p className="flex items-center gap-1.5 text-[11px] text-stone-400">
+        <input type="range" min="1" max="30" step="1" disabled={live} value={Math.min(30, Math.max(1, days))} onChange={(e) => setGen((g) => ({ ...g, days: Number(e.target.value) }))} className="bz-ad-range mt-2 w-full" />
+      </div>
+
+      <div>
+        <p className="bz-ad-muted flex items-center gap-1.5 text-[12px] font-bold">{t('adStudio.b.start')} <Tip text={t('adStudio.b.startTip')} /></p>
+        <input type="datetime-local" disabled={live} className="bz-ad-input mt-1.5 w-full rounded-xl px-3.5 py-2.5 text-[13px] tabular-nums" value={local(settings.startAt)}
+          onChange={(e) => setSettings((s) => ({ ...s, startAt: e.target.value ? new Date(e.target.value).toISOString() : '' }))} />
+        <p className="bz-ad-muted mt-1.5 flex items-center gap-1.5 text-[11.5px]">
           <ClockIcon className="h-3.5 w-3.5" />
-          {end ? t('adStudio.b.runsUntil', { date: end.toLocaleDateString() }) : t('adStudio.b.runsSoon', { n: gen.days })}
+          {end ? t('adStudio.b.runsUntil', { date: end.toLocaleDateString(lang, { day: 'numeric', month: 'long' }) }) : t('adStudio.b.runsSoon', { n: days })}
         </p>
       </div>
-      <Tip text={t('adStudio.target.totalTip')} />
+
+      <p className="bz-ad-muted text-[11.5px] leading-relaxed">{t('adStudio.target.totalTip')}</p>
       {currency && currency !== 'ILS' && (
-        <p className="flex items-start gap-2 text-[11px] font-semibold text-amber-300"><WarnIcon className="mt-px h-4 w-4 shrink-0" /> {t('adStudio.b.currencyWarn', { cur: currency })}</p>
+        <p className="bz-ad-note flex items-start gap-2 rounded-xl px-3 py-2 text-[11.5px] font-semibold"><WarnIcon className="mt-px h-4 w-4 shrink-0" /> {t('adStudio.b.currencyWarn', { cur: currency })}</p>
       )}
     </div>
   );
@@ -663,14 +872,14 @@ function Toggle({ on, onChange, label, hint, disabled }) {
   return (
     <button
       type="button" role="switch" aria-checked={on} disabled={disabled} onClick={() => onChange(!on)}
-      className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-start transition disabled:opacity-60 ${on ? 'border-emerald-400/40 bg-emerald-500/10' : 'border-gold-400/20 bg-black/20'}`}
+      className={`bz-ad-toggle flex w-full items-center gap-3 rounded-2xl p-3.5 text-start transition disabled:opacity-60 ${on ? 'is-on' : ''}`}
     >
-      <span className={`relative h-6 w-11 shrink-0 rounded-full transition ${on ? 'bg-emerald-500' : 'bg-stone-500/50'}`}>
+      <span className="bz-ad-switch relative h-6 w-11 shrink-0 rounded-full transition">
         <span className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all ${on ? 'start-6' : 'start-1'}`} />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-xs font-bold text-stone-200">{label}</span>
-        {hint && <span className="mt-0.5 block text-[11px] leading-relaxed text-stone-400">{hint}</span>}
+        <span className="block text-[13px] font-bold">{label}</span>
+        {hint && <span className="bz-ad-muted mt-0.5 block text-[11.5px] leading-relaxed">{hint}</span>}
       </span>
     </button>
   );
@@ -682,7 +891,7 @@ function CopyButton({ text, label, done }) {
     if (await copyText(text)) { setOk(true); setTimeout(() => setOk(false), 2000); }
   };
   return (
-    <button onClick={click} className="btn-ghost w-full gap-2">
+    <button onClick={click} className="bz-ad-ghost app-tap flex w-full items-center justify-center gap-2 rounded-2xl py-2.5 text-[12.5px] font-bold">
       {ok ? <CheckIcon className="h-4 w-4" /> : <CopyIcon className="h-4 w-4" />} {ok ? done : label}
     </button>
   );
