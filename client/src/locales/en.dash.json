@@ -1915,6 +1915,98 @@
       "tryVideo": "This product has a video — video ads for fashion usually perform better and cheaper.",
       "pastStart": "The start time has passed — it will start as soon as you turn it on.",
       "abBudget": "With 3 versions, each gets about ₪{{per}} a day at first. A bigger budget makes the comparison clearer."
+    },
+    "w": {
+      "stepsLabel": "Ad steps",
+      "stepOf": "{{n}} of {{total}}",
+      "s": {
+        "piece": {
+          "title": "Pick the piece",
+          "short": "Piece",
+          "desc": "Which piece do you want to advertise? Pieces with video are marked 🎬 — video sells more."
+        },
+        "goal": {
+          "title": "What's the ad for?",
+          "short": "Goal"
+        },
+        "copy": {
+          "title": "Choose the copy",
+          "short": "Copy"
+        },
+        "design": {
+          "title": "Design the ad",
+          "short": "Design"
+        },
+        "audience": {
+          "title": "Who and how much?",
+          "short": "Audience"
+        },
+        "launch": {
+          "title": "Review and publish",
+          "short": "Publish"
+        }
+      },
+      "goalQ": "What matters most?",
+      "goalShort": {
+        "sales": "People buying on the site",
+        "messages": "People sending you a DM",
+        "traffic": "People opening the piece",
+        "awareness": "Many people knowing your store"
+      },
+      "toneQ": "How should it sound?",
+      "editChosen": "Edit version {{n}}",
+      "rewrite": "Not quite — write new versions",
+      "writing": "Writing 3 versions of your ad…",
+      "summary": "Ad summary",
+      "budgetShort": "Budget",
+      "budgetLine": "₪{{per}}/day × {{days}} days = ₪{{total}}",
+      "change": "Change",
+      "prev": "Back",
+      "cancel": "Cancel",
+      "writeIt": "Write my ad",
+      "next": {
+        "goal": "Next: goal",
+        "copy": "Next: copy",
+        "design": "Next: design",
+        "audience": "Next: audience",
+        "launch": "Next: preview"
+      },
+      "liveEnd": "Published campaign — view only",
+      "lastHint": "Review above and publish when ready",
+      "badgeHot": "Best seller",
+      "badgeLimited": "Limited stock",
+      "noBadge": "No badge",
+      "badgeCustom": "Or type your own…",
+      "videoAvail": "This piece has a video — try it, video stops the scroll.",
+      "whoSees": "Who sees the ad?",
+      "from": "From",
+      "to": "To",
+      "howMuch": "How much do you want to spend?",
+      "perDayTimes": "₪{{per}} a day for {{days}} days",
+      "perDay": "Per day"
+    },
+    "h": {
+      "kick": "✦ Ad Studio",
+      "title": "A ready ad in 2 minutes",
+      "sub": "Pick a piece; AI writes the copy and designs the image; you review and publish.",
+      "roasQ": "Every shekel on ads brought back",
+      "roasLine": "You spent {{spend}} and sold {{revenue}}",
+      "noRoas": "No ad sales in this period yet",
+      "noRoasHint": "The steps below show where people drop: they see but don't click? click but don't message?",
+      "noData": "No results in this period",
+      "noDataHint": "Once an ad runs, you'll see the shekel's journey here: from spend to sale.",
+      "path": {
+        "spend": "Spent",
+        "reach": "Saw the ad",
+        "clicks": "Clicked",
+        "chats": "Messaged you",
+        "orders": "Ordered",
+        "revenue": "Sold"
+      },
+      "fromBazara": "From Bazara",
+      "emptyTitle": "No ads yet",
+      "firstAd": "Make your first ad",
+      "continue": "Continue"
     }
   }
 }
