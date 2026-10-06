@@ -339,7 +339,8 @@ export async function markCollected(req, res, next) {
            RETURNING id`,
           [store.id, courier]
         );
-    res.json({ ok: true, count: r.rows.length });
+    // المعرّفاتُ ترجعُ كي تُعرَضَ «تراجع» بعد التعليم — الضغطُ الخاطئُ يُصلَحُ بضغطة
+    res.json({ ok: true, count: r.rows.length, ids: r.rows.map((x) => x.id) });
   } catch (err) {
     next(err);
   }
