@@ -167,6 +167,8 @@ function readSettings(raw) {
     placements: (Array.isArray(x.placements) ? x.placements : []).filter((k) => PLACEMENT_KEYS.includes(k)),
     startAt: start && !Number.isNaN(start.getTime()) ? start.toISOString() : '',
     abTest: x.abTest === true,
+    // فيديو بغلافٍ صمّمته التاجرة؛ وإلّا فلقطةٌ من الفيديو تختارُها ميتا
+    customCover: x.customCover === true,
   };
 }
 
@@ -356,12 +358,15 @@ export async function publishAd(req, res) {
       : `${site}/store/${store.slug}?${utm}`;
 
     let videoUrl = '';
+    let posterUrl = '';
     if (settings.format === 'video') {
       const p = c.product_id
         ? (await query('SELECT video_url FROM products WHERE id = $1 AND store_id = $2', [c.product_id, store.id])).rows[0]
         : null;
       videoUrl = videoMp4(p?.video_url);
       if (!videoUrl) return res.status(400).json({ error: 'القطعة ما إلها فيديو صالح. اختاري «صورة» بدل الفيديو.' });
+      // غلافُ محرّكِنا جاهزٌ بجانبِ الفيديو — احتياطٌ إن لم تُعطِ ميتا لقطاتِها بعد
+      if (/\/720\.mp4$/.test(videoUrl)) posterUrl = videoUrl.replace(/720\.mp4$/, 'poster.jpg');
     }
 
     const out = await publishCampaign({
@@ -372,6 +377,7 @@ export async function publishAd(req, res) {
       pixelId: c.goal === 'sales' ? (store.fb_pixel || '') : '',
       imageBase64: String(req.body.imageBase64 || ''),
       videoUrl,
+      posterUrl,
       name: c.name,
       goal: c.goal,
       // المقارنةُ تنشرُ النسخَ الثلاثَ معاً، والنسخةُ المختارةُ أوّلُها

@@ -1983,7 +1983,11 @@
       "to": "To",
       "howMuch": "How much do you want to spend?",
       "perDayTimes": "₪{{per}} a day for {{days}} days",
-      "perDay": "Per day"
+      "perDay": "Per day",
+      "videoAsIs": "The video itself",
+      "autoCoverNote": "The ad runs with the piece's own video, and Meta picks a frame from it as the cover automatically — just like Ads Manager.",
+      "customCover": "Design a custom cover (optional)",
+      "customCoverHint": "If you want the first thing people see to be an image with a headline and price instead of a video frame."
     },
     "h": {
       "kick": "✦ Ad Studio",
