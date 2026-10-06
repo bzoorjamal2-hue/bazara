@@ -1,14 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api, { getErrorMessage } from '../api/client.js';
 import Select from './Select.jsx';
 import { TruckIcon, CheckIcon, ReceiptIcon } from './icons.jsx';
-import { norm, bestMatch } from '../utils/match.js';
+import { epsAuto } from '../utils/courierAuto.js';
 
 // زر "إرسال لـ EPS" — نظام LogesTechs يعتمد المدينة فقط (بلا مناطق):
 // يطابق مدينة الزبون تلقائياً ويبعت بضغطة عند التطابق المؤكّد، وإلا يفتح الاختيار اليدوي.
 // props: order, cities[], onSent
-export default function EpsSend({ order, cities = [], onSent }) {
+export default function EpsSend({ order, cities = [], onSent, big = false, autoStart = false }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [cityId, setCityId] = useState('');
@@ -28,6 +28,13 @@ export default function EpsSend({ order, cities = [], onSent }) {
       setAwbBusy(false);
     }
   };
+
+  // «ابعتي لـ…» من الصفّ المطويّ: يبدأُ الإرسالُ فورَ فتحِ البطاقة، مرّةً واحدة
+  const started = useRef(false);
+  const smartRef = useRef(null);
+  useEffect(() => {
+    if (autoStart && !started.current && !tracking) { started.current = true; smartRef.current?.(); }
+  }, [autoStart]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // أُرسل مسبقاً → رقم التتبّع + زر البوليصة
   if (tracking) {
@@ -63,14 +70,13 @@ export default function EpsSend({ order, cities = [], onSent }) {
   // مع مدينة الزبون المكتوبة — غير هيك نفتح اللوحة للتأكيد (الدقّة أهمّ).
   const handleSmartSend = () => {
     setError(''); setHint('');
-    const city = bestMatch(order.city, cities) || bestMatch(order.address, cities);
-    if (!city) { setHint(t('dashboard.eps.pickCityHint')); setOpen(true); return; }
-    const exact = norm(city.name) === norm(order.city);
-    if (exact) { doSend(String(city.id)); return; }
-    setCityId(String(city.id));
-    setHint(t('dashboard.eps.verifyCity'));
+    const a = epsAuto(order, cities); // utils/courierAuto.js
+    if (a.ok) { doSend(a.body.city); return; }
+    if (a.cityId) setCityId(a.cityId);
+    setHint(t(a.reason === 'verifyCity' ? 'dashboard.eps.verifyCity' : 'dashboard.eps.pickCityHint'));
     setOpen(true);
   };
+  smartRef.current = handleSmartSend;
 
   // الزر الرئيسي (قبل فتح اللوحة)
   if (!open) {
@@ -78,9 +84,11 @@ export default function EpsSend({ order, cities = [], onSent }) {
       <button
         onClick={handleSmartSend}
         disabled={busy}
-        className="inline-flex items-center gap-1 rounded-xl bg-wine px-3 py-1.5 text-xs font-semibold text-cream shadow-sm transition hover:bg-wine-dark disabled:opacity-60"
+        className={big
+          ? 'bz-ost-next bz-st-shipped flex min-h-[42px] w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold transition disabled:opacity-60'
+          : 'inline-flex items-center gap-1 rounded-xl bg-wine px-3 py-1.5 text-xs font-semibold text-cream shadow-sm transition hover:bg-wine-dark disabled:opacity-60'}
       >
-        <TruckIcon className="inline h-4 w-4" /> {busy ? t('common.loading') : t('dashboard.eps.sendBtn')}
+        <TruckIcon className={big ? 'h-[18px] w-[18px]' : 'inline h-4 w-4'} /> {busy ? t('common.loading') : t('dashboard.eps.sendBtn')}
       </button>
     );
   }

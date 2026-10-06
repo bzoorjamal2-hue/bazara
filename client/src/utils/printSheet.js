@@ -10,7 +10,23 @@
 // في index.css بتخفي كل شي غيرها، فما بيطلع بالورقة إلا الفاتورة. وميزة زيادة:
 // خطوط التطبيق (Cairo) محمّلة أصلاً بالصفحة، فتطبع بخطّها الحقيقي لا ببديلٍ عنه.
 
+import { Capacitor } from '@capacitor/core';
+import api, { getErrorMessage } from '../api/client.js';
+
 export const PRINT_ROOT_ID = 'bz-print-root';
+
+// داخلَ تطبيقِ الجوّال (WebView) لا تعملُ window.print() أبداً — لا آيفون ولا أندرويد.
+// فنرفعُ الورقةَ للخادمِ ونفتحُ رابطَها المؤقّت: نطاقُه غيرُ نطاقِ التطبيق، فيفتحُه
+// التطبيقُ بمتصفّحِ الجوّالِ نفسِه، وهناك يظهرُ حوارُ الطباعةِ (أو الحفظِ PDF) وحدَه.
+// (server/src/routes/print.routes.js)
+async function printViaBrowser(html, css, title, dir) {
+  try {
+    const r = await api.post('/print-jobs', { html, css, title, dir });
+    if (r.data?.url) window.location.href = r.data.url;
+  } catch (e) {
+    window.alert(getErrorMessage(e) || 'تعذّرت الطباعة. جرّبي مرّة تانية.');
+  }
+}
 
 // نحصر أنماط الفاتورة داخل الحاوية كي لا تتسرّب لباقي اللوحة (الأنماط مكتوبة
 // لمستند مستقلّ: body وh1 وtable…). body/html تصير الحاوية نفسها، وغيرها يصير
@@ -37,6 +53,7 @@ export function scopeCss(css, scope) {
  *        شهادةُ الزبونة فبلغةِ الموقعِ التي اختارتها — فلا تطلعُ إنجليزيّةً مقلوبة.
  */
 export function printSheet(html, css, title, dir = 'rtl') {
+  if (Capacitor.isNativePlatform()) { printViaBrowser(html, css, title, dir); return; }
   let root = document.getElementById(PRINT_ROOT_ID);
   if (!root) {
     root = document.createElement('div');
