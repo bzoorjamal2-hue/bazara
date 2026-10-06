@@ -6452,3 +6452,145 @@ html.dark .bz-oweek-bar.is-today, html.dark .bz-oweek-bar.is-on { background: #E
 .bz-oweek-pct.is-down { color: #B91C1C; }
 html.dark .bz-oweek-pct.is-up { color: #34D399; }
 html.dark .bz-oweek-pct.is-down { color: #F87171; }
+
+/* ═════════ الأرباح والمصاريف ═════════
+   ألوانُ شريطِ «وين راحت الفلوس» مفحوصةٌ لعمى الألوان (فاتح وداكن): ربحٌ فيروزيّ، بضاعةٌ
+   زرقاء، توصيلٌ برتقاليّ، مصاريفُ بنفسجيّة — وكلُّها معها قيمتُها مكتوبة فلا يحملُ اللونُ
+   المعنى وحدَه. الحالةُ (ربح/خسارة) أيقونةٌ وكلمةٌ لا لونٌ فقط. */
+.bz-fin { --fin-ink: #1F1E1D; --fin-mute: #7A7672; --fin-card: #ffffff; --fin-line: rgba(23, 23, 23, 0.08);
+  --c-profit: #1baf7a; --c-cogs: #2a78d6; --c-ship: #eb6834; --c-exp: #4a3aa7; padding-bottom: 24px; }
+html.dark .bz-fin { --fin-ink: #EFEEEC; --fin-mute: #A9A49D; --fin-card: rgba(255, 255, 255, 0.04); --fin-line: rgba(239, 238, 236, 0.10);
+  --c-profit: #199e70; --c-cogs: #3987e5; --c-ship: #d95926; --c-exp: #9085e9; }
+.bz-fin-muted { color: var(--fin-mute); }
+.bz-fin-card, .bz-fin-hero, .bz-fin-month, .bz-fin-tabs { color: var(--fin-ink); background: var(--fin-card); border: 1px solid var(--fin-line); box-shadow: 0 1px 2px rgba(23, 23, 23, 0.04), 0 18px 36px -26px rgba(23, 23, 23, 0.25); }
+html.dark .bz-fin-card, html.dark .bz-fin-hero, html.dark .bz-fin-month, html.dark .bz-fin-tabs { box-shadow: 0 18px 36px -24px rgba(0, 0, 0, 0.7); }
+.bz-fin-hero { background: linear-gradient(160deg, #ffffff 0%, #F6F4F0 100%); }
+html.dark .bz-fin-hero { background: linear-gradient(160deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%); }
+.bz-fin-ghost { color: var(--fin-ink, #1F1E1D); border: 1px solid rgba(163, 162, 160, 0.45); background: transparent; transition: background-color 0.15s; }
+.bz-fin-ghost:hover { background: rgba(23, 23, 23, 0.05); }
+html.dark .bz-fin-ghost { color: #EFEEEC; border-color: rgba(239, 238, 236, 0.2); }
+html.dark .bz-fin-ghost:hover { background: rgba(255, 255, 255, 0.06); }
+.bz-fin-arrow { color: var(--fin-ink); background: rgba(23, 23, 23, 0.04); }
+html.dark .bz-fin-arrow { background: rgba(255, 255, 255, 0.06); }
+
+/* حالةُ الشهر: ربح/خسارة — أيقونةٌ وكلمة */
+.bz-fin-state.is-gain { background: rgba(12, 163, 12, 0.10); color: #067a06; }
+.bz-fin-state.is-loss { background: rgba(208, 59, 59, 0.10); color: #b42323; }
+html.dark .bz-fin-state.is-gain { background: rgba(12, 163, 12, 0.16); color: #6ee26e; }
+html.dark .bz-fin-state.is-loss { background: rgba(208, 59, 59, 0.18); color: #ff9a9a; }
+.bz-fin-delta { background: rgba(23, 23, 23, 0.05); color: var(--fin-ink); }
+.bz-fin-delta.is-up { color: #067a06; } .bz-fin-delta.is-down { color: #b42323; }
+html.dark .bz-fin-delta { background: rgba(255, 255, 255, 0.06); }
+html.dark .bz-fin-delta.is-up { color: #6ee26e; } html.dark .bz-fin-delta.is-down { color: #ff9a9a; }
+
+/* الشريطُ المقسوم: فاصلُ ٢px بين القطع بلونِ السطح */
+.bz-fin-bar { background: rgba(23, 23, 23, 0.06); gap: 2px; }
+html.dark .bz-fin-bar { background: rgba(255, 255, 255, 0.06); }
+.bz-fin-seg, .bz-fin-dot { display: block; }
+.bz-fin-seg { min-width: 4px; }
+.is-profit.bz-fin-seg, .is-profit.bz-fin-dot { background: var(--c-profit); }
+.is-cogs.bz-fin-seg, .is-cogs.bz-fin-dot { background: var(--c-cogs); }
+.is-ship.bz-fin-seg, .is-ship.bz-fin-dot { background: var(--c-ship); }
+.is-exp.bz-fin-seg, .is-exp.bz-fin-dot { background: var(--c-exp); }
+.bz-fin-lossnote { background: rgba(208, 59, 59, 0.08); color: #b42323; }
+html.dark .bz-fin-lossnote { background: rgba(208, 59, 59, 0.14); color: #ffb1b1; }
+
+/* تنبيه «فلوسك عند الشركة» */
+.bz-fin-alert { color: var(--fin-ink); background: rgba(250, 178, 25, 0.10); border: 1px solid rgba(214, 140, 0, 0.30); }
+.bz-fin-alert-ico { background: rgba(214, 140, 0, 0.16); color: #9a5b00; }
+html.dark .bz-fin-alert { background: rgba(250, 178, 25, 0.08); border-color: rgba(250, 178, 25, 0.25); }
+html.dark .bz-fin-alert-ico { color: #fcd34d; background: rgba(250, 178, 25, 0.14); }
+
+/* التبويبات */
+.bz-fin-tabs { background: rgba(23, 23, 23, 0.04); box-shadow: none; }
+html.dark .bz-fin-tabs { background: rgba(255, 255, 255, 0.04); box-shadow: none; }
+.bz-fin-tab { color: var(--fin-mute); transition: background-color 0.15s, color 0.15s, box-shadow 0.15s; }
+.bz-fin-tab.is-on { background: #1F1E1D; color: #fff; box-shadow: 0 6px 14px -8px rgba(23, 23, 23, 0.6); }
+html.dark .bz-fin-tab.is-on { background: #EFEEEC; color: #1d1c1b; }
+.bz-fin-badge { min-width: 19px; padding: 0 5px; border-radius: 999px; font-size: 10.5px; line-height: 18px; text-align: center; background: rgba(23, 23, 23, 0.08); }
+.bz-fin-tab.is-on .bz-fin-badge { background: rgba(255, 255, 255, 0.2); }
+.bz-fin-badge.is-warn { background: #D97706; color: #fff; }
+html.dark .bz-fin-badge { background: rgba(255, 255, 255, 0.1); }
+html.dark .bz-fin-tab.is-on .bz-fin-badge { background: rgba(0, 0, 0, 0.12); }
+html.dark .bz-fin-badge.is-warn { background: #F59E0B; color: #1d1c1b; }
+
+/* سطورُ الكشف */
+.bz-fin-line + .bz-fin-line { border-top: 1px solid var(--fin-line); }
+.bz-fin-line.is-sub { background: rgba(23, 23, 23, 0.025); }
+html.dark .bz-fin-line.is-sub { background: rgba(255, 255, 255, 0.03); }
+.bz-fin-op { background: rgba(23, 23, 23, 0.06); color: var(--fin-ink); }
+.bz-fin-op.is-plus { background: rgba(27, 175, 122, 0.14); color: #0d7a52; }
+.bz-fin-op.is-minus { background: rgba(23, 23, 23, 0.06); color: var(--fin-mute); }
+.bz-fin-op.is-eq { background: #1F1E1D; color: #fff; }
+html.dark .bz-fin-op { background: rgba(255, 255, 255, 0.07); }
+html.dark .bz-fin-op.is-plus { background: rgba(25, 158, 112, 0.2); color: #5fe0b0; }
+html.dark .bz-fin-op.is-eq { background: #EFEEEC; color: #1d1c1b; }
+.bz-fin-total { border-top: 2px solid var(--fin-ink); }
+
+.bz-fin-warn { background: rgba(250, 178, 25, 0.10); border: 1px solid rgba(214, 140, 0, 0.3); color: #7c4a03; }
+.bz-fin-warn-btn { background: #1F1E1D; color: #fff; }
+html.dark .bz-fin-warn { background: rgba(250, 178, 25, 0.08); border-color: rgba(250, 178, 25, 0.25); color: #fcd34d; }
+html.dark .bz-fin-warn-btn { background: #EFEEEC; color: #1d1c1b; }
+
+/* أعمدةُ الأشهر: الربحُ بلونِ الربح، والخسارةُ أحمر */
+.bz-fin-tbar { background: var(--c-profit); opacity: 0.45; transition: opacity 0.15s; }
+.bz-fin-tbar.is-neg { background: #d03b3b; }
+.bz-fin-tbar.is-on { opacity: 1; }
+
+/* مسارُ التحصيل */
+.bz-fin-flow { border: 1px solid var(--fin-line); color: var(--fin-ink); }
+.bz-fin-flow.is-transit svg { color: #2a78d6; }
+.bz-fin-flow.is-pending { background: rgba(250, 178, 25, 0.10); border-color: rgba(214, 140, 0, 0.3); }
+.bz-fin-flow.is-pending svg { color: #b86e00; }
+.bz-fin-flow.is-done { background: rgba(27, 175, 122, 0.08); border-color: rgba(27, 175, 122, 0.28); }
+.bz-fin-flow.is-done svg { color: #0d7a52; }
+html.dark .bz-fin-flow.is-transit svg { color: #6da7ec; }
+html.dark .bz-fin-flow.is-pending svg { color: #fcd34d; }
+html.dark .bz-fin-flow.is-done svg { color: #5fe0b0; }
+.bz-fin-icotile { background: rgba(23, 23, 23, 0.05); color: var(--fin-ink); }
+html.dark .bz-fin-icotile { background: rgba(255, 255, 255, 0.07); }
+.bz-fin-mini { border: 1px solid var(--fin-line); }
+.bz-fin-minicell + .bz-fin-minicell { border-inline-start: 1px solid var(--fin-line); }
+.bz-fin-strong { color: #b86e00; }
+html.dark .bz-fin-strong { color: #fcd34d; }
+.bz-fin-primary { background: #1F1E1D; color: #fff; box-shadow: 0 10px 22px -12px rgba(23, 23, 23, 0.7); transition: transform 0.1s; }
+.bz-fin-primary:active { transform: scale(0.98); }
+html.dark .bz-fin-primary { background: #EFEEEC; color: #1d1c1b; }
+.bz-fin-row { color: var(--fin-ink); border-top: 1px solid var(--fin-line); transition: background-color 0.15s; }
+.bz-fin-row.is-on { background: rgba(23, 23, 23, 0.04); }
+html.dark .bz-fin-row.is-on { background: rgba(255, 255, 255, 0.05); }
+.bz-fin-late { background: rgba(208, 59, 59, 0.10); color: #b42323; }
+html.dark .bz-fin-late { background: rgba(208, 59, 59, 0.18); color: #ffb1b1; }
+
+/* المصاريف */
+.bz-fin-sug { border: 1px dashed rgba(163, 162, 160, 0.55); }
+html.dark .bz-fin-sug { border-color: rgba(239, 238, 236, 0.18); }
+.bz-fin-track { background: rgba(23, 23, 23, 0.06); }
+html.dark .bz-fin-track { background: rgba(255, 255, 255, 0.07); }
+.bz-fin-fill { background: var(--c-exp); }
+.bz-fin-day { color: var(--fin-mute); background: rgba(23, 23, 23, 0.03); border-top: 1px solid var(--fin-line); }
+.bz-fin-day:first-child { border-top: 0; }
+html.dark .bz-fin-day { background: rgba(255, 255, 255, 0.03); }
+.bz-fin-day + .bz-fin-row { border-top: 0; }
+.bz-fin-del { color: var(--fin-mute); transition: background-color 0.15s, color 0.15s; }
+.bz-fin-del:hover { background: rgba(208, 59, 59, 0.1); color: #b42323; }
+
+/* الزرُّ العائم والإشعارُ السفليّ */
+.bz-fin-fab { background: #1F1E1D; color: #fff; box-shadow: 0 14px 30px -10px rgba(23, 23, 23, 0.65); }
+html.dark .bz-fin-fab { background: #EFEEEC; color: #1d1c1b; box-shadow: 0 14px 30px -10px rgba(0, 0, 0, 0.9); }
+.bz-fin-toast { background: #1F1E1D; color: #fff; box-shadow: 0 16px 34px -12px rgba(23, 23, 23, 0.7); animation: bz-fin-toast 0.25s ease-out; }
+html.dark .bz-fin-toast { background: #EFEEEC; color: #1d1c1b; }
+@keyframes bz-fin-toast { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .bz-fin-toast { animation: none; } }
+
+/* ورقةُ المصروف */
+.bz-fin-amount { border: 1.5px solid rgba(23, 23, 23, 0.16); background: rgba(23, 23, 23, 0.025); }
+.bz-fin-amount:focus-within { border-color: rgba(23, 23, 23, 0.6); box-shadow: 0 0 0 3px rgba(23, 23, 23, 0.08); }
+html.dark .bz-fin-amount { border-color: rgba(239, 238, 236, 0.18); background: rgba(255, 255, 255, 0.04); }
+html.dark .bz-fin-amount:focus-within { border-color: rgba(239, 238, 236, 0.55); }
+.bz-fin-amount input::-webkit-outer-spin-button, .bz-fin-amount input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.bz-fin-amount input { -moz-appearance: textfield; color: inherit; }
+.bz-fin-chip, .bz-fin-cat { border: 1px solid rgba(163, 162, 160, 0.45); background: transparent; color: inherit; transition: background-color 0.15s, color 0.15s, border-color 0.15s; }
+.bz-fin-chip.is-on, .bz-fin-cat.is-on { background: #1F1E1D; color: #fff; border-color: #1F1E1D; }
+html.dark .bz-fin-chip, html.dark .bz-fin-cat { border-color: rgba(239, 238, 236, 0.18); }
+html.dark .bz-fin-chip.is-on, html.dark .bz-fin-cat.is-on { background: #EFEEEC; color: #1d1c1b; border-color: #EFEEEC; }
