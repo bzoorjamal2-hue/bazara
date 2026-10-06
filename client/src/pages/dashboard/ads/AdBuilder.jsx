@@ -7,7 +7,7 @@ import {
   XIcon, VideoIcon, PinIcon, ClockIcon, MegaphoneIcon, SearchIcon, HelpIcon,
   BackIcon, ForwardIcon, GridIcon, BagIcon, SendIcon, LinkIcon, UsersIcon, EditIcon,
 } from '../../../components/icons.jsx';
-import { cldThumb } from '../../../utils/cloudinary.js';
+import { cldThumb, cldVideoMp4, cldVideoPoster } from '../../../utils/cloudinary.js';
 import { copyText, storeUrl, siteOrigin } from '../../../utils/links.js';
 import { drawAd, downloadCanvas, AD_SIZES, AD_TEMPLATES } from '../../../utils/adCanvas.js';
 import { AD_CITIES, PLACEMENT_KEYS } from '../../../utils/adCities.js';
@@ -123,7 +123,9 @@ export default function AdBuilder({ data, campaign, onDone, onBack, setErr, setM
     if (!id) return;
     setBusy('publish'); setErr('');
     try {
-      const imageBase64 = canvasRef.current.toDataURL('image/jpeg', 0.92);
+      // فيديو بلا غلافٍ مصمَّم: ميتا تأخذُ لقطةً من الفيديو نفسِه — كما في Ads Manager
+      const autoCover = settings.format === 'video' && !settings.customCover;
+      const imageBase64 = autoCover ? '' : canvasRef.current.toDataURL('image/jpeg', 0.92);
       await api.post(`/ads/${id}/publish`, { imageBase64 }, { timeout: 240000 });
       setMsg(t('adStudio.b.publishedOk'));
       onDone();
@@ -541,6 +543,8 @@ function CreativeCard({ product, store, headline, sub, facts, creative, setCreat
   };
 
   const pick = (k, v) => setCreative((c) => ({ ...c, [k]: v }));
+  // الفيديو غلافُه لقطةٌ منه تلقائيّاً؛ أدواتُ التصميمِ للصورةِ أو لمن تريدُ غلافاً خاصّاً
+  const designer = !isVideo || settings.customCover;
   const badges = [
     facts?.sale ? t('adStudio.badgeSale', { n: facts.sale.off }) : null,
     t('adStudio.badgeNew'), t('adStudio.w.badgeHot'), t('adStudio.w.badgeLimited'),
@@ -550,8 +554,16 @@ function CreativeCard({ product, store, headline, sub, facts, creative, setCreat
     <div className="space-y-4">
       {/* اللوحةُ أوّلاً وكبيرةً: هي ما سيراه الناس */}
       <div className="bz-ad-stage relative flex justify-center rounded-3xl p-5">
-        <canvas ref={canvasRef} className={`h-auto w-full max-w-[300px] rounded-2xl shadow-xl transition-opacity ${drawing ? 'opacity-60' : 'opacity-100'}`} />
-        {isVideo && <span className="absolute start-4 top-4 inline-flex items-center gap-1 rounded-full bg-black/65 px-2.5 py-1 text-[11px] font-bold text-white"><VideoIcon className="h-3.5 w-3.5" /> {t('adStudio.b.coverCaption')}</span>}
+        {/* اللوحةُ تبقى مركّبةً دائماً — منها تُرفَعُ الصورةُ عند النشر */}
+        <canvas ref={canvasRef} className={`h-auto w-full max-w-[300px] rounded-2xl shadow-xl transition-opacity ${designer ? '' : 'hidden'} ${drawing ? 'opacity-60' : 'opacity-100'}`} />
+        {!designer && product?.video && (
+          <video src={cldVideoMp4(product.video, 720)} poster={cldVideoPoster(product.video, 720) || undefined} muted autoPlay loop playsInline className="aspect-[4/5] w-full max-w-[260px] rounded-2xl object-cover shadow-xl" />
+        )}
+        {isVideo && (
+          <span className="absolute start-4 top-4 inline-flex items-center gap-1 rounded-full bg-black/65 px-2.5 py-1 text-[11px] font-bold text-white">
+            <VideoIcon className="h-3.5 w-3.5" /> {designer ? t('adStudio.b.coverCaption') : t('adStudio.w.videoAsIs')}
+          </span>
+        )}
       </div>
 
       <div className="bz-ad-card space-y-4 rounded-3xl p-4">
@@ -565,8 +577,15 @@ function CreativeCard({ product, store, headline, sub, facts, creative, setCreat
               <VideoIcon className="h-4 w-4" /> {t('adStudio.b.fmtVideo')}
             </button>
           </div>
-          <p className="bz-ad-muted mt-1.5 text-[11.5px]">{isVideo ? t('adStudio.b.videoNote') : !product?.video ? t('adStudio.b.noVideo') : t('adStudio.w.videoAvail')}</p>
+          <p className="bz-ad-muted mt-1.5 text-[11.5px]">{isVideo ? t('adStudio.w.autoCoverNote') : !product?.video ? t('adStudio.b.noVideo') : t('adStudio.w.videoAvail')}</p>
         </div>
+
+        {isVideo && (
+          <Toggle on={Boolean(settings.customCover)} disabled={live} onChange={(v) => setSettings((s) => ({ ...s, customCover: v }))}
+            label={t('adStudio.w.customCover')} hint={t('adStudio.w.customCoverHint')} />
+        )}
+
+        {designer && (<>
 
         <div>
           <p className="flex items-center gap-1.5 text-[13px] font-extrabold">{t(isVideo ? 'adStudio.b.coverTemplate' : 'adStudio.creative.template')} <Tip text={t('adStudio.creative.templateTip')} /></p>
@@ -614,6 +633,7 @@ function CreativeCard({ product, store, headline, sub, facts, creative, setCreat
         <button onClick={download} className="bz-ad-ghost app-tap flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-[13px] font-bold">
           <DownloadIcon className="h-4 w-4" /> {t('adStudio.creative.download')}
         </button>
+        </>)}
       </div>
     </div>
   );

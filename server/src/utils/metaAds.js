@@ -240,6 +240,20 @@ export async function uploadAdVideo(accountId, fileUrl, token = ADS_DEV_TOKEN) {
   throw new Error('الفيديو لسّا عمّ يتجهّز عند ميتا. جرّبي النشر بعد دقيقتين.');
 }
 
+// غلافُ الفيديو كما يختارُه Ads Manager نفسُه: لقطةٌ من الفيديو تولّدُها ميتا بعدَ
+// المعالجة (المفضّلةُ عندها أوّلاً). كانت التاجرةُ تُطالَبُ بتصميمِ غلافٍ لكلِّ إعلانِ
+// فيديو لأنّ الواجهةَ البرمجيّةَ تشترطُ غلافاً — ومديرُ الإعلاناتِ لا يسألُ عنه أصلاً.
+export async function videoThumbnail(videoId, token = ADS_DEV_TOKEN) {
+  try {
+    const r = await graph(`/${videoId}/thumbnails`, { token });
+    const list = Array.isArray(r.data) ? r.data : [];
+    const best = list.find((x) => x.is_preferred) || list[0];
+    return best?.uri || '';
+  } catch {
+    return '';
+  }
+}
+
 // ───────────────────── التصميم ─────────────────────
 
 // زرُّ الإعلان: للرسائلِ يفتحُ المحادثة، ولغيرِها يفتحُ صفحةَ القطعة.
@@ -254,16 +268,16 @@ function ctaFor(objective, { igId, link }) {
 }
 
 export async function createCreative(accountId, opts, token = ADS_DEV_TOKEN) {
-  const { name, pageId, igId, imageHash, videoId, message, headline, description, link, objective } = opts;
+  const { name, pageId, igId, imageHash, thumbUrl, videoId, message, headline, description, link, objective } = opts;
   const cta = ctaFor(objective, { igId, link });
 
-  // فيديو: الصورةُ المرسومةُ تصيرُ غلافَه (ميتا تشترطُ غلافاً لكلِّ إعلانِ فيديو)
+  // فيديو: ميتا تشترطُ غلافاً — غلافٌ صمّمته التاجرةُ إن اختارت، وإلّا لقطةٌ من الفيديو نفسِه
   const spec = videoId
     ? {
       page_id: pageId,
       video_data: {
         video_id: videoId,
-        image_hash: imageHash,
+        ...(imageHash ? { image_hash: imageHash } : { image_url: thumbUrl }),
         message,
         title: headline,
         ...(description ? { link_description: description } : {}),
@@ -467,7 +481,7 @@ async function rollback(ids, token) {
  * الإعلانيّ. يعيدُ المعرّفاتِ كي تُحفَظَ ويُفتَحَ بها Ads Manager.
  */
 export async function publishCampaign({
-  accountId, currency, pageId, igId, pixelId, imageBase64, videoUrl,
+  accountId, currency, pageId, igId, pixelId, imageBase64, videoUrl, posterUrl,
   name, goal, copies, link, audience, budget, days, startAt, placements,
 }, token = ADS_DEV_TOKEN) {
   if (!token) throw new Error('لا يوجد توكن إعلانات على الخادم.');
@@ -480,8 +494,11 @@ export async function publishCampaign({
   const minor = zeroDecimal.includes(currency) ? Math.round(budget) : Math.round(budget * 100);
 
   // الوسائطُ أوّلاً — قبلَ أن يُنشَأَ عندَ ميتا أيُّ شيءٍ يحتاجُ تراجعاً
-  const imageHash = await uploadAdImage(accountId, imageBase64, token);
+  // إعلانُ الصورةِ يحتاجُ صورتَه، وإعلانُ الفيديو لا يحتاجُ غلافاً مصمّماً إلّا إن أُرسِل
+  const imageHash = imageBase64 || !videoUrl ? await uploadAdImage(accountId, imageBase64, token) : '';
   const videoId = videoUrl ? await uploadAdVideo(accountId, videoUrl, token) : '';
+  const thumbUrl = videoId && !imageHash ? (await videoThumbnail(videoId, token)) || posterUrl || '' : '';
+  if (videoId && !imageHash && !thumbUrl) throw new Error('ما قدرنا نجيب لقطة غلاف من الفيديو. صمّمي غلاف من خطوة التصميم وجرّبي مرّة تانية.');
 
   const campaign = await createCampaign(accountId, { name, goal, pixelId }, token);
   const made = [campaign.id];
@@ -510,7 +527,7 @@ export async function publishCampaign({
       const tag = list.length > 1 ? ` ${i + 1}` : '';
       const creative = await createCreative(accountId, {
         name: `${name} — التصميم${tag}`,
-        pageId, igId, imageHash, videoId,
+        pageId, igId, imageHash, thumbUrl, videoId,
         message: copy.primary,
         headline: copy.headline,
         description: copy.cta,
