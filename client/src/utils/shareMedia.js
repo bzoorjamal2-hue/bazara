@@ -110,9 +110,10 @@ export async function shareProduct(p, store) {
   const file = await fileFor(p, store);
   if (!file) return shareLink({ title, url });
   try {
-    // النصُّ يرافقُ الملفّ: واتساب يجعلُه تعليقاً تحتَ الصورةِ أو الفيديو فيصلُ الرابط،
-    // وإنستغرامُ يتجاهلُه — والرابطُ مكتوبٌ على صورةِ الستوري نفسِها.
-    await navigator.share({ files: [file], title, text: `${title}\n${url}` });
+    // الرابطُ وحدَه يرافقُ الملفّ: واتساب يجعلُه تعليقاً تحتَ الصورةِ أو الفيديو، وإنستغرامُ
+    // يتجاهلُه (الرابطُ مكتوبٌ على صورةِ الستوري نفسِها). كان الاسمُ يسبقُه بسطرٍ فيخرجُ
+    // «نسخ» من الورقة نصّاً مخلوطاً لا رابطاً نظيفاً — والاسمُ يظهرُ ببطاقةِ المعاينةِ أصلاً.
+    await navigator.share({ files: [file], title, text: url });
     return 'shared';
   } catch (err) {
     if (err?.name === 'AbortError') return 'shared';
