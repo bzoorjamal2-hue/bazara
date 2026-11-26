@@ -17,35 +17,33 @@ export default function ScrollToTopButton() {
   // ارتفاعُ ما تحتَنا (زرُّ المساعِدةِ + فراغُه) لا موضعُنا المطلق — انظر أدناه
   const [stack, setStack] = useState(0);
 
-  useEffect(() => {
-    // بلا requestAnimationFrame: لا يعمل بالتبويبات الخلفية، و React يتجاهل نفس القيمة
-    const onScroll = () => setShow(window.scrollY > 600);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
-  // نقيسُ زرَّ المساعِدةِ (إن وُجد بهذه الصفحة) ونجلسُ فوقَه. نعيدُ القياسَ عند الظهورِ
-  // وبعدَ لحظة — قد يُركَّبُ الزرُّ بعدَ تحميلِ بياناتِ المتجرِ فيتغيّرُ الترتيب.
+  // نقيسُ زرَّ المساعِدةِ (إن وُجد بهذه الصفحة) ونجلسُ فوقَه — **مع كلِّ تمرير**، لا مرّةً
+  // عند الظهورِ وبعدَ لحظة كما كان: الزرُّ يُركَّبُ بعدَ تحميلِ بياناتِ المتجر، والتنقّلُ
+  // بين الصفحاتِ يُبقي هذا الزرَّ ظاهراً بلا إعادةِ قياس — فكان يبقى على قياسِ صفحةٍ بلا
+  // مساعِدة (صفر) ويقعدُ فوقَها تماماً. القياسُ رخيص، و React يتجاهلُ القيمةَ نفسَها.
   //
-  // والمقيسُ ارتفاعُه لا موضعُه: كان يُحسَبُ موضعٌ مطلقٌ بالبكسل من حافّةِ الشاشة،
-  // فيجمُدُ عندَه. ولمّا صارت الأزرارُ تنزلُ مع الشريطِ السفليِّ بقيَ هذا وحدَه
-  // معلّقاً حيث كان. أمّا الارتفاعُ فثابتٌ لا يتغيّرُ بحركةِ الشريط، فنبني عليه
-  // موضعاً نسبيّاً من ‎--bz-fab-bottom نفسِه — فينزلُ الثلاثةُ معاً بمدّةٍ واحدة.
-  //
+  // والمقيسُ ارتفاعُه لا موضعُه: الارتفاعُ ثابتٌ لا يتغيّرُ بحركةِ الشريطِ السفليّ، فنبني
+  // عليه موضعاً نسبيّاً من ‎--bz-fab-bottom نفسِه — فينزلُ الثلاثةُ معاً بمدّةٍ واحدة.
   // و‎offsetHeight لا ‎getBoundingClientRect: الأخيرُ يقرأُ المقاسَ بعدَ التحويل،
   // فلو قِسناه والمؤشّرُ فوقَ الزرِّ (‎scale 1.06) لجاءَ أكبرَ من حقيقتِه.
   useEffect(() => {
-    if (!show) return undefined;
-    const measure = () => {
+    const update = () => {
+      const on = window.scrollY > 600;
+      setShow(on);
+      if (!on) return;
       const el = document.querySelector('[data-fab="stylist"]');
-      setStack(el ? el.offsetHeight + GAP : 0);
+      setStack(el && el.offsetHeight ? el.offsetHeight + GAP : 0);
     };
-    measure();
-    const id = setTimeout(measure, 700);
-    window.addEventListener('resize', measure);
-    return () => { clearTimeout(id); window.removeEventListener('resize', measure); };
-  }, [show]);
+    update();
+    const id = setInterval(update, 1500); // زرٌّ رُكِّبَ أو أُزيلَ والصفحةُ ساكنة
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+    };
+  }, []);
 
   if (!show) return null;
   return (
