@@ -72,6 +72,15 @@ export default function StylistChat({ store, whatsapp = '', marketplace = false 
     if (open && scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, busy, open]);
 
+  // ممدودٌ بأعلى الصفحة، دائرةٌ مع النزول (انظر الزرّ أدناه)
+  const [wide, setWide] = useState(true);
+  useEffect(() => {
+    const onScroll = () => setWide(window.scrollY < 320);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   if (disabled || !convKey) return null;
 
   const send = async (text, imgArg) => {
@@ -126,6 +135,7 @@ export default function StylistChat({ store, whatsapp = '', marketplace = false 
   // هويّةُ اللوحة: وجهُ المتجرِ واسمُه وترحيبُه — وللسوقِ العامّ صيغتُه
   const storeName = (store?.name || '').trim();
   const logoSrc = !marketplace && store?.logoUrl ? cldThumb(store.logoUrl, 120) : '';
+  const fabLogo = !marketplace && store?.logoUrl ? cldThumb(store.logoUrl, 160) : '';
   const headTitle = marketplace || !storeName ? t('assistant.title') : storeName;
   const headRole = marketplace || !storeName ? t('assistant.subtitle') : t('assistant.title');
   const headBg = marketplace ? '' : panelImage(store, 640);
@@ -137,18 +147,32 @@ export default function StylistChat({ store, whatsapp = '', marketplace = false 
 
   return (
     <>
-      {/* الزر العائم — على الجهة المقابلة للواتساب كي لا يتداخلا. دائرةٌ بيضاءُ
-          هادئةٌ بأيقونةٍ حبريّة (bz-fab): إجراءٌ ثانويٌّ لا ينافسُ زرَّ الشراء */}
+      {/* الزرُّ العائم — وجهُ المتجرِ لا نجمةٌ عامّة: شعارُه الذي رفعَه صاحبُه، وبجانبِه
+          سؤالُ الزبونةِ نفسُه «شو بيلبقلي؟». فتعرفُ من أوّلِ نظرةٍ أنّ هذه مساعِدةُ هذا
+          المتجرِ تحديداً وماذا تفعل — لا أيقونةً تحتاجُ تخميناً. والنجمةُ صارت شارةً صغيرةً
+          على زاويةِ الشعار: تقولُ «ذكاء» همساً لا صراخاً.
+          بأعلى الصفحةِ يظهرُ ممدوداً بالكلام؛ ومع النزولِ بين القطعِ ينطوي دائرةً بالشعارِ
+          وحدَه فلا يغطّي صورَها. ويبقى ارتفاعُه ٥٦ في الحالتين — زرُّ الصعودِ يقيسُه ليقعدَ
+          فوقَه (لا تُزل data-fab). على الجهةِ المقابلةِ للواتساب كي لا يتداخلا. */}
       <button
         type="button"
         onClick={() => setOpen(true)}
         aria-label={t('assistant.fab')}
-        // زر «العودة للأعلى» يقيس هذا العنصر ليجلس فوقه بلا تصادم — لا تُزل السمة
         data-fab="stylist"
-        className="bz-fab bz-fab-pos group fixed start-5 z-40 flex h-14 w-14 items-center justify-center rounded-full"
+        className={`bz-fab bz-fab-pos bz-sty-fab group fixed start-5 z-40 flex h-14 items-center rounded-full ${wide ? 'is-wide' : ''}`}
         style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + var(--bz-fab-bottom))' }}
       >
-        <SparkleIcon className="h-7 w-7 transition-transform duration-500 group-hover:rotate-[18deg]" />
+        <span className="bz-sty-face">
+          {fabLogo ? (
+            <img src={fabLogo} alt="" className="bz-sty-logo" draggable="false" />
+          ) : (
+            <SparkleIcon className="h-7 w-7 transition-transform duration-500 group-hover:rotate-[18deg]" />
+          )}
+          {fabLogo && (
+            <span className="bz-sty-badge" aria-hidden="true"><SparkleIcon className="h-[11px] w-[11px]" /></span>
+          )}
+        </span>
+        <span className="bz-sty-label" aria-hidden={!wide}>{t('assistant.fabAsk')}</span>
       </button>
 
       {open && createPortal(
