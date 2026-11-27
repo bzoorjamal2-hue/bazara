@@ -159,7 +159,7 @@ export default function StylistChat({ store, whatsapp = '', marketplace = false 
         onClick={() => setOpen(true)}
         aria-label={t('assistant.fab')}
         data-fab="stylist"
-        className={`bz-fab bz-fab-pos bz-sty-fab group fixed start-5 z-40 flex h-14 items-center rounded-full ${wide ? 'is-wide' : ''}`}
+        className={`bz-fab bz-fab-pos bz-sty-fab group fixed isolate start-5 z-40 flex h-14 items-center rounded-full ${wide ? 'is-wide' : ''}`}
         style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + var(--bz-fab-bottom))' }}
       >
         <span className="bz-sty-face">
@@ -172,7 +172,13 @@ export default function StylistChat({ store, whatsapp = '', marketplace = false 
             <span className="bz-sty-badge" aria-hidden="true"><SparkleIcon className="h-[11px] w-[11px]" /></span>
           )}
         </span>
-        <span className="bz-sty-label" aria-hidden={!wide}>{t('assistant.fabAsk')}</span>
+        {/* سطران كأزرارِ الماركات: ما هذا (صغيرٌ رماديّ) ثمّ الدعوةُ (عريضة) */}
+        <span className="bz-sty-label" aria-hidden={!wide}>
+          <span className="bz-sty-kicker">{t('assistant.fab')}</span>
+          <span className="bz-sty-ask">{t('assistant.fabAsk')}</span>
+        </span>
+        {/* لمعةٌ ناعمةٌ تمرُّ كلَّ بضعِ ثوانٍ — حياةٌ هادئةٌ لا وميض */}
+        <span className="bz-sty-shine" aria-hidden="true" />
       </button>
 
       {open && createPortal(
