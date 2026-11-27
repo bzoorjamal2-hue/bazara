@@ -58,6 +58,17 @@ export async function onRequest({ request, next, env }) {
     if (legacyProduct) return proxy(request, `${RENDER}/share/product/${legacyProduct[1]}`);
   }
 
+  // ‏‎/index.html‎ بالصفحةِ نفسِها لا بتحويلة. الحافّةُ تحوّلُه إلى ‎/‎ (308)، وعاملُ الخدمة
+  // (PWA) يطلبُه حين لا يجدُ نسختَه المحفوظة — سفاري ومتصفّحُ التطبيقِ يمسحانِ المحفوظَ
+  // أحياناً — فيعيدُ الردَّ المحوَّلَ للتنقّل، وسفاري يرفضُه: «Response served by service
+  // worker has redirections» وصفحةٌ سوداءُ بدلَ الموقع.
+  if (path === '/index.html') {
+    const shell = await env.ASSETS.fetch(new URL('/', url));
+    const headers = new Headers(shell.headers);
+    headers.set('cache-control', 'no-cache');
+    return new Response(shell.body, { status: shell.status, headers });
+  }
+
   if (path === '/sitemap.xml') {
     return toResponse(await renderSitemap(() => env.ASSETS.fetch(new URL('/sitemap-build.xml', url))));
   }
