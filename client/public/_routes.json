@@ -6,6 +6,7 @@
     "/store/*",
     "/product/*",
     "/sitemap.xml",
+    "/index.html",
     "/assets/*"
   ],
   "exclude": []
